@@ -53,11 +53,11 @@
   --spacing: 0.25rem;
   
   /* Ministry-specific colors */
-  --ministry-navy: hsl(221 55% 23%);
-  --ministry-charcoal: hsl(210 18% 22%);
-  --ministry-steel: hsl(204 46% 55%);
-  --ministry-slate: hsl(215 16% 47%);
-  --ministry-gold: hsl(41 96% 48%);
+  --ministry-navy: hsl(0 0% 0%);
+  --ministry-charcoal: hsl(0 0% 10%);
+  --ministry-steel: hsl(0 0% 30%);
+  --ministry-slate: hsl(0 0% 40%);
+  --ministry-gold: hsl(49 100% 49%);
   --ministry-success: hsl(158 64% 52%);
 }
 
@@ -108,11 +108,11 @@
   --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
 
   /* Ministry-specific colors for dark mode */
-  --ministry-navy: hsl(221 45% 35%);
-  --ministry-charcoal: hsl(210 18% 35%);
-  --ministry-steel: hsl(204 46% 65%);
-  --ministry-slate: hsl(215 16% 60%);
-  --ministry-gold: hsl(41 96% 58%);
+  --ministry-navy: hsl(0 0% 20%);
+  --ministry-charcoal: hsl(0 0% 25%);
+  --ministry-steel: hsl(0 0% 50%);
+  --ministry-slate: hsl(0 0% 60%);
+  --ministry-gold: hsl(49 100% 59%);
   --ministry-success: hsl(158 64% 62%);
 }
 
