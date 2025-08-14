@@ -1,0 +1,306 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import DiscussionCard from "@/components/discussion-card";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertDiscussionSchema } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb } from "lucide-react";
+import { z } from "zod";
+
+const categories = [
+  { id: 'leadership', label: 'Leadership', icon: BookOpen },
+  { id: 'marriage', label: 'Marriage', icon: Heart },
+  { id: 'parenting', label: 'Parenting', icon: Users },
+  { id: 'faith', label: 'Faith', icon: Lightbulb },
+];
+
+const createDiscussionSchema = insertDiscussionSchema.extend({
+  title: z.string().min(5, "Title must be at least 5 characters"),
+  content: z.string().min(10, "Content must be at least 10 characters"),
+});
+
+export default function Community() {
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: discussions = [], isLoading } = useQuery({
+    queryKey: ["/api/discussions", selectedCategory || undefined],
+    retry: false,
+  });
+
+  const form = useForm({
+    resolver: zodResolver(createDiscussionSchema),
+    defaultValues: {
+      title: '',
+      content: '',
+      category: '',
+    },
+  });
+
+  const createDiscussion = useMutation({
+    mutationFn: async (data: z.infer<typeof createDiscussionSchema>) => {
+      await apiRequest('POST', '/api/discussions', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
+      toast({
+        title: "Success",
+        description: "Discussion created successfully!",
+      });
+      setDialogOpen(false);
+      form.reset();
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to create discussion. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: z.infer<typeof createDiscussionSchema>) => {
+    createDiscussion.mutate(data);
+  };
+
+  // Mock community stats
+  const stats = {
+    totalMembers: 1247,
+    activeToday: 456,
+    newPosts: 23,
+  };
+
+  return (
+    <div className="pb-20">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal text-white px-6 pt-12 pb-6">
+        <h1 className="text-2xl font-bold mb-2" data-testid="text-community-title">Community</h1>
+        <p className="text-blue-200 text-sm" data-testid="text-community-subtitle">
+          Iron sharpens iron among brothers
+        </p>
+      </div>
+
+      {/* Community Stats */}
+      <div className="px-6 -mt-3 relative z-10 mb-6">
+        <Card className="shadow-lg" data-testid="card-stats">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <p className="text-2xl font-bold text-ministry-navy" data-testid="text-total-members">
+                  {stats.totalMembers.toLocaleString()}
+                </p>
+                <p className="text-xs text-ministry-slate">Members</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-ministry-steel" data-testid="text-active-today">
+                  {stats.activeToday}
+                </p>
+                <p className="text-xs text-ministry-slate">Active Today</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-ministry-success" data-testid="text-new-posts">
+                  {stats.newPosts}
+                </p>
+                <p className="text-xs text-ministry-slate">New Posts</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="px-6 mb-6">
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button 
+              className="w-full bg-ministry-gold text-ministry-navy py-4 rounded-2xl font-bold shadow-lg hover:bg-ministry-gold/90 flex items-center justify-center space-x-2"
+              data-testid="button-new-discussion"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Start New Discussion</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md mx-auto" data-testid="dialog-new-discussion">
+            <DialogHeader>
+              <DialogTitle>Start New Discussion</DialogTitle>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="What would you like to discuss?"
+                          {...field}
+                          data-testid="input-discussion-title"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-discussion-category">
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Content</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Share your thoughts..."
+                          className="min-h-[100px]"
+                          {...field}
+                          data-testid="textarea-discussion-content"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setDialogOpen(false)}
+                    className="flex-1"
+                    data-testid="button-cancel-discussion"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={createDiscussion.isPending}
+                    className="flex-1 bg-ministry-navy hover:bg-ministry-charcoal"
+                    data-testid="button-create-discussion"
+                  >
+                    {createDiscussion.isPending ? "Creating..." : "Create"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Discussion Categories */}
+      <div className="px-6 mb-6">
+        <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Popular Topics</h2>
+        
+        <div className="grid grid-cols-2 gap-3">
+          {categories.map((category) => {
+            const Icon = category.icon;
+            return (
+              <Button
+                key={category.id}
+                variant="outline"
+                onClick={() => setSelectedCategory(selectedCategory === category.id ? '' : category.id)}
+                className={`h-auto p-4 border-gray-100 hover:shadow-sm ${
+                  selectedCategory === category.id ? 'bg-ministry-steel/10 border-ministry-steel' : ''
+                }`}
+                data-testid={`button-category-${category.id}`}
+              >
+                <div className="flex items-center space-x-3 w-full">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                    selectedCategory === category.id ? 'bg-ministry-steel/20' : 'bg-ministry-steel/20'
+                  }`}>
+                    <Icon className="w-5 h-5 text-ministry-steel" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold text-sm text-ministry-charcoal">{category.label}</h3>
+                    <p className="text-xs text-ministry-slate">
+                      {Math.floor(Math.random() * 200) + 50} posts
+                    </p>
+                  </div>
+                </div>
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Recent Discussions */}
+      <div className="px-6">
+        <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Recent Discussions</h2>
+        
+        {isLoading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-navy mx-auto mb-4"></div>
+            <p className="text-ministry-slate">Loading discussions...</p>
+          </div>
+        ) : discussions.length === 0 ? (
+          <div className="text-center py-8" data-testid="empty-discussions">
+            <MessageCircle className="w-12 h-12 text-ministry-slate mx-auto mb-4" />
+            <p className="text-ministry-slate mb-4">No discussions yet</p>
+            <p className="text-sm text-ministry-slate">Be the first to start a conversation!</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {discussions.map((discussion: any) => (
+              <DiscussionCard 
+                key={discussion.id} 
+                discussion={discussion}
+                data-testid={`discussion-${discussion.id}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
