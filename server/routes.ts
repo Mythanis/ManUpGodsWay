@@ -341,7 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdBy: userId,
       };
 
-      const allParticipantIds = [...new Set([userId, ...participantIds])];
+      const allParticipantIds = Array.from(new Set([userId, ...participantIds]));
       const conversation = await storage.createGroupConversation(conversationData, allParticipantIds);
       res.status(201).json(conversation);
     } catch (error) {
