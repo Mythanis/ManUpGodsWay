@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Heart, MessageCircle, Send } from "lucide-react";
+import { Heart, MessageCircle, Send, ChevronDown, ChevronUp } from "lucide-react";
 import { z } from "zod";
 
 interface DiscussionCardProps {
@@ -24,9 +25,18 @@ const replySchema = z.object({
 
 export default function DiscussionCard({ discussion }: DiscussionCardProps) {
   const [showReplyForm, setShowReplyForm] = useState(false);
+  const [showReplies, setShowReplies] = useState(false);
+  const [userHasLiked, setUserHasLiked] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch replies when expanded
+  const { data: replies = [] } = useQuery({
+    queryKey: ["/api/discussions", discussion.id, "replies"],
+    enabled: showReplies,
+    retry: false,
+  });
 
   const form = useForm({
     resolver: zodResolver(replySchema),
@@ -42,6 +52,7 @@ export default function DiscussionCard({ discussion }: DiscussionCardProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/discussions", discussion.id, "replies"] });
       toast({
         title: "Success",
         description: "Reply posted successfully!",
@@ -65,6 +76,39 @@ export default function DiscussionCard({ discussion }: DiscussionCardProps) {
       toast({
         title: "Error",
         description: `Failed to post reply: ${error.message || 'Please try again.'}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleLike = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', `/api/discussions/${discussion.id}/like`, {});
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
+      setUserHasLiked(!userHasLiked);
+      toast({
+        title: "Success",
+        description: userHasLiked ? "Removed like" : "Discussion liked!",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: `Failed to update like: ${error.message || 'Please try again.'}`,
         variant: "destructive",
       });
     },
@@ -137,21 +181,31 @@ export default function DiscussionCard({ discussion }: DiscussionCardProps) {
                 <Button 
                   variant="ghost"
                   size="sm"
-                  className="flex items-center space-x-1 text-ministry-slate hover:text-ministry-steel p-1"
+                  onClick={() => toggleLike.mutate()}
+                  disabled={toggleLike.isPending}
+                  className={`flex items-center space-x-1 p-1 ${
+                    userHasLiked 
+                      ? 'text-red-500 hover:text-red-600' 
+                      : 'text-ministry-slate hover:text-ministry-steel'
+                  }`}
                   data-testid="button-like"
                 >
-                  <Heart className="w-4 h-4" />
+                  <Heart className={`w-4 h-4 ${userHasLiked ? 'fill-current' : ''}`} />
                   <span className="text-xs">{discussion.likes || 0}</span>
                 </Button>
                 
                 <Button 
                   variant="ghost"
                   size="sm"
+                  onClick={() => setShowReplies(!showReplies)}
                   className="flex items-center space-x-1 text-ministry-slate hover:text-ministry-steel p-1"
                   data-testid="button-replies"
                 >
                   <MessageCircle className="w-4 h-4" />
                   <span className="text-xs">{discussion.replyCount || 0} replies</span>
+                  {discussion.replyCount > 0 && (
+                    showReplies ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />
+                  )}
                 </Button>
               </div>
               
@@ -168,6 +222,34 @@ export default function DiscussionCard({ discussion }: DiscussionCardProps) {
           </div>
         </div>
         
+        {/* Show replies if expanded */}
+        {showReplies && discussion.replyCount > 0 && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="space-y-3">
+              {replies.map((reply: any) => (
+                <div key={reply.id} className="flex items-start space-x-3 ml-4 p-3 bg-gray-50 rounded-lg">
+                  <img 
+                    src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=4A90B8&color=fff&size=32`}
+                    alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="font-medium text-xs text-ministry-charcoal">
+                        {reply.user?.firstName} {reply.user?.lastName?.charAt(0)}.
+                      </span>
+                      <span className="text-xs text-ministry-slate">
+                        • {getTimeAgo(reply.createdAt)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-ministry-slate">{reply.content}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {showReplyForm && (
           <div className="mt-4 pt-4 border-t border-gray-100">
             <Form {...form}>

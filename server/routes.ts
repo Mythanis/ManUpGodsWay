@@ -152,10 +152,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Discussion routes
   app.get('/api/discussions', async (req, res) => {
     try {
-      const { category, limit } = req.query;
+      const { category, limit, sortBy } = req.query;
       const discussions = await storage.getDiscussions(
         category as string,
-        limit ? parseInt(limit as string) : undefined
+        limit ? parseInt(limit as string) : undefined,
+        sortBy as string
       );
       res.json(discussions);
     } catch (error) {
@@ -196,6 +197,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/discussions/:id/replies', async (req, res) => {
+    try {
+      const replies = await storage.getDiscussionReplies(req.params.id);
+      res.json(replies);
+    } catch (error) {
+      console.error("Error fetching replies:", error);
+      res.status(500).json({ message: "Failed to fetch replies" });
+    }
+  });
+
   app.post('/api/discussions/:id/replies', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -213,6 +224,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid reply data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create reply" });
+    }
+  });
+
+  app.post('/api/discussions/:id/like', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const discussionId = req.params.id;
+      
+      const result = await storage.toggleDiscussionLike(discussionId, userId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      res.status(500).json({ message: "Failed to update like" });
     }
   });
 

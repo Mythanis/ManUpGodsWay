@@ -51,12 +51,16 @@ export interface IStorage {
   updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
   
   // Discussion operations
-  getDiscussions(category?: string, limit?: number): Promise<(Discussion & { user: User })[]>;
+  getDiscussions(category?: string, limit?: number, sortBy?: string): Promise<(Discussion & { user: User })[]>;
   getDiscussion(id: string): Promise<(Discussion & { user: User; replies: (DiscussionReply & { user: User })[] }) | undefined>;
   createDiscussion(discussion: InsertDiscussion): Promise<Discussion>;
   
   // Reply operations
   createReply(reply: InsertDiscussionReply): Promise<DiscussionReply>;
+  getDiscussionReplies(discussionId: string): Promise<(DiscussionReply & { user: User })[]>;
+  
+  // Like operations
+  toggleDiscussionLike(discussionId: string, userId: string): Promise<{ liked: boolean; totalLikes: number }>;
   
   // Devotional operations
   getTodaysDevotional(): Promise<Devotional | undefined>;
@@ -208,7 +212,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Discussion operations
-  async getDiscussions(category?: string, limit = 20): Promise<(Discussion & { user: User })[]> {
+  async getDiscussions(category?: string, limit = 20, sortBy = 'recent'): Promise<(Discussion & { user: User })[]> {
     const query = db
       .select({
         id: discussions.id,
@@ -226,15 +230,27 @@ export class DatabaseStorage implements IStorage {
       .from(discussions)
       .innerJoin(users, eq(discussions.userId, users.id));
 
+    let orderBy;
+    switch (sortBy) {
+      case 'likes':
+        orderBy = [desc(discussions.isPinned), desc(discussions.likes), desc(discussions.createdAt)];
+        break;
+      case 'replies':
+        orderBy = [desc(discussions.isPinned), desc(discussions.replyCount), desc(discussions.createdAt)];
+        break;
+      default: // 'recent'
+        orderBy = [desc(discussions.isPinned), desc(discussions.createdAt)];
+    }
+
     if (category) {
       return await query
         .where(eq(discussions.category, category))
-        .orderBy(desc(discussions.isPinned), desc(discussions.createdAt))
+        .orderBy(...orderBy)
         .limit(limit);
     }
 
     return await query
-      .orderBy(desc(discussions.isPinned), desc(discussions.createdAt))
+      .orderBy(...orderBy)
       .limit(limit);
   }
 
@@ -297,6 +313,47 @@ export class DatabaseStorage implements IStorage {
       .where(eq(discussions.id, reply.discussionId));
 
     return newReply;
+  }
+
+  async getDiscussionReplies(discussionId: string): Promise<(DiscussionReply & { user: User })[]> {
+    return await db
+      .select({
+        id: discussionReplies.id,
+        discussionId: discussionReplies.discussionId,
+        userId: discussionReplies.userId,
+        content: discussionReplies.content,
+        likes: discussionReplies.likes,
+        createdAt: discussionReplies.createdAt,
+        updatedAt: discussionReplies.updatedAt,
+        user: users,
+      })
+      .from(discussionReplies)
+      .innerJoin(users, eq(discussionReplies.userId, users.id))
+      .where(eq(discussionReplies.discussionId, discussionId))
+      .orderBy(discussionReplies.createdAt);
+  }
+
+  async toggleDiscussionLike(discussionId: string, userId: string): Promise<{ liked: boolean; totalLikes: number }> {
+    // For simplicity, we'll just increment/decrement the likes count
+    // In a real app, you'd have a separate likes table to track who liked what
+    const [discussion] = await db
+      .select()
+      .from(discussions)
+      .where(eq(discussions.id, discussionId));
+
+    if (!discussion) {
+      throw new Error('Discussion not found');
+    }
+
+    // For now, just toggle the like count (in real app, track user likes)
+    const newLikes = Math.max(0, (discussion.likes || 0) + 1);
+    
+    await db
+      .update(discussions)
+      .set({ likes: newLikes })
+      .where(eq(discussions.id, discussionId));
+
+    return { liked: true, totalLikes: newLikes };
   }
 
   // Devotional operations

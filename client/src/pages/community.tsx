@@ -15,7 +15,7 @@ import { insertDiscussionSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb } from "lucide-react";
+import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown } from "lucide-react";
 import { z } from "zod";
 
 const categories = [
@@ -33,13 +33,28 @@ const createDiscussionSchema = z.object({
 
 export default function Community() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('recent');
   const [dialogOpen, setDialogOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: discussions = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/discussions", selectedCategory || undefined],
+    queryKey: ["/api/discussions", selectedCategory || undefined, sortBy],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedCategory) params.append('category', selectedCategory);
+      if (sortBy) params.append('sortBy', sortBy);
+      
+      const url = `/api/discussions${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await fetch(url, { credentials: 'include' });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch discussions');
+      }
+      
+      return response.json();
+    },
     retry: false,
   });
 
@@ -298,7 +313,22 @@ export default function Community() {
 
       {/* Recent Discussions */}
       <div className="px-6">
-        <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Recent Discussions</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-ministry-charcoal">Recent Discussions</h2>
+          <div className="flex items-center space-x-2">
+            <ArrowUpDown className="w-4 h-4 text-ministry-slate" />
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-32" data-testid="select-sort-by">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">Recent</SelectItem>
+                <SelectItem value="likes">Most Liked</SelectItem>
+                <SelectItem value="replies">Most Replies</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         
         {isLoading ? (
           <div className="text-center py-8">
