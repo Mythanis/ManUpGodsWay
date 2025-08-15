@@ -81,6 +81,7 @@ export const studies = pgTable("studies", {
   rating: decimal("rating", { precision: 2, scale: 1 }).default("0.0"),
   ratingCount: integer("rating_count").default(0),
   isPublished: boolean("is_published").default(false),
+  isFeatured: boolean("is_featured").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

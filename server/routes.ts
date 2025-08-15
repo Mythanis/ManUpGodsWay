@@ -56,6 +56,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get featured study
+  app.get('/api/studies/featured', async (req, res) => {
+    try {
+      const featuredStudy = await storage.getFeaturedStudy();
+      res.json(featuredStudy);
+    } catch (error) {
+      console.error("Error fetching featured study:", error);
+      res.status(500).json({ message: "Failed to fetch featured study" });
+    }
+  });
+
   app.get('/api/studies/search', async (req, res) => {
     try {
       const { q } = req.query;

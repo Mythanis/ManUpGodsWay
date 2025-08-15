@@ -16,7 +16,7 @@ import UserManagement from "@/components/admin/user-management";
 import DevotionalManagement from "@/components/admin/devotional-management";
 import VideoManagement from "@/components/admin/video-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star } from "lucide-react";
 
 interface Study {
   id: string;
@@ -31,6 +31,7 @@ interface Study {
   author: string;
   isActive: boolean;
   isPublished: boolean;
+  isFeatured: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -213,6 +214,32 @@ export default function Admin() {
 
   const handleTogglePublish = (studyId: string, isPublished: boolean) => {
     togglePublishMutation.mutate({ studyId, isPublished });
+  };
+
+  // Toggle featured status mutation
+  const toggleFeaturedMutation = useMutation({
+    mutationFn: async ({ studyId, isFeatured }: { studyId: string; isFeatured: boolean }) => {
+      return await apiRequest("PUT", `/api/studies/${studyId}`, { isFeatured });
+    },
+    onSuccess: (_, { isFeatured }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+      toast({
+        title: "Success",
+        description: `Study ${isFeatured ? 'marked as featured' : 'removed from featured'} successfully`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update featured status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleToggleFeatured = (studyId: string, isFeatured: boolean) => {
+    toggleFeaturedMutation.mutate({ studyId, isFeatured });
   };
 
   const sendNotification = useMutation({
@@ -432,6 +459,16 @@ export default function Admin() {
                         <div className="flex items-center space-x-2 ml-4">
                           <Button
                             size="sm"
+                            variant={study.isFeatured ? "default" : "outline"}
+                            onClick={() => handleToggleFeatured(study.id, !study.isFeatured)}
+                            disabled={toggleFeaturedMutation.isPending}
+                            className={study.isFeatured ? "bg-yellow-600 hover:bg-yellow-700 text-white" : "border-yellow-600 text-yellow-600 hover:bg-yellow-50"}
+                            title={study.isFeatured ? "Remove from featured" : "Mark as featured"}
+                          >
+                            <Star className={`w-4 h-4 ${study.isFeatured ? 'fill-current' : ''}`} />
+                          </Button>
+                          <Button
+                            size="sm"
                             variant={study.isPublished ? "default" : "outline"}
                             onClick={() => handleTogglePublish(study.id, !study.isPublished)}
                             disabled={togglePublishMutation.isPending}
@@ -476,6 +513,11 @@ export default function Admin() {
                         }`}>
                           {study.isPublished ? 'Published' : 'Draft'}
                         </span>
+                        {study.isFeatured && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Featured
+                          </span>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

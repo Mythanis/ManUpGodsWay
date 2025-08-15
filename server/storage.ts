@@ -54,6 +54,7 @@ export interface IStorage {
   updateStudy(id: string, study: Partial<InsertStudy>): Promise<Study>;
   deleteStudy(id: string): Promise<void>;
   searchStudies(query: string): Promise<Study[]>;
+  getFeaturedStudy(): Promise<Study | null>;
   
   // Progress operations
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
@@ -195,6 +196,15 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(desc(studies.createdAt));
+  }
+
+  async getFeaturedStudy(): Promise<Study | null> {
+    const [featuredStudy] = await db
+      .select()
+      .from(studies)
+      .where(and(eq(studies.isPublished, true), eq(studies.isFeatured, true)))
+      .limit(1);
+    return featuredStudy || null;
   }
 
   // Progress operations

@@ -69,7 +69,7 @@ export default function Library() {
     return categoryMatch && difficultyMatch && hoursMatch && lessonsMatch;
   });
 
-  const featuredStudy = (studies as any[]).find((study: any) => study.category === 'character');
+  const featuredStudy = (studies as any[]).find((study: any) => study.isFeatured);
 
   return (
     <div className="pb-20">
