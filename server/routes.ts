@@ -614,7 +614,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: user.lastName,
         email: user.email,
         profileImageUrl: user.profileImageUrl,
-        subscriptionTier: user.subscriptionTier
+        subscriptionTier: user.subscriptionTier,
+        allowDirectMessages: user.allowDirectMessages,
+        allowGroupInvites: user.allowGroupInvites
       }));
       
       res.json(publicUsers);
