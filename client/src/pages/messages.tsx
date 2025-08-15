@@ -116,6 +116,8 @@ export default function Messages() {
       console.log("Message sent successfully");
       queryClient.invalidateQueries({ queryKey: ["/api/conversations", selectedConversation?.id, "messages"] });
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+      // Immediately refetch conversations to ensure real-time visibility
+      queryClient.refetchQueries({ queryKey: ["/api/conversations"] });
       setNewMessage("");
     },
     onError: (error: any) => {
@@ -144,6 +146,8 @@ export default function Messages() {
     },
     onSuccess: (conversation) => {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+      // Immediately refetch to show new conversation for both users
+      queryClient.refetchQueries({ queryKey: ["/api/conversations"] });
       setSelectedConversation(conversation);
       setShowUserListDialog(false);
       setShowProfileMenu(null);
