@@ -250,7 +250,7 @@ export default function Messages() {
   });
 
   return (
-    <div className="flex h-screen max-w-md mx-auto bg-white">
+    <div className="flex h-screen max-w-md mx-auto bg-white pb-20">
       {/* Conversations List */}
       {!selectedConversation ? (
         <div className="w-full">
@@ -506,7 +506,7 @@ export default function Messages() {
         </div>
       ) : (
         /* Chat Interface */
-        <div className="w-full h-screen flex flex-col">
+        <div className="w-full h-screen flex flex-col pb-20">
           {/* Chat Header */}
           <div className="bg-ministry-navy text-white px-6 py-4 flex items-center flex-shrink-0">
             <Button
@@ -592,10 +592,10 @@ export default function Messages() {
             </ScrollArea>
           </div>
 
-          {/* Message Input - Fixed at bottom */}
-          <div className="flex-shrink-0 border-t bg-gray-50" style={{backgroundColor: 'yellow', minHeight: '80px'}}>
+          {/* Message Input - Fixed at bottom with proper spacing */}
+          <div className="flex-shrink-0 border-t bg-gray-50 mb-20" style={{backgroundColor: 'yellow', minHeight: '80px'}}>
             <div className="px-6 py-4">
-              <p className="text-xs text-red-500 mb-2">DEBUG: Message input section</p>
+              <p className="text-xs text-red-500 mb-2">DEBUG: Message input section (now with bottom margin)</p>
               <form onSubmit={handleSendMessage}>
                 <div className="flex space-x-2">
                   <input
@@ -613,7 +613,7 @@ export default function Messages() {
                     type="submit"
                     disabled={!newMessage.trim() || sendMessageMutation.isPending}
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md flex items-center"
-                    data-testid="button-send-message"
+                    data-testid="button-send-button"
                   >
                     <Send className="w-4 h-4" />
                   </button>
