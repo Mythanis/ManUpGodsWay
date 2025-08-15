@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, Check, CheckCheck, MessageSquare, BookOpen, Heart, Users } from "lucide-react";
+import { Bell, Check, CheckCheck, MessageSquare, BookOpen, Heart, Users, Trash2, X } from "lucide-react";
 import { cn, formatLocalDateTime } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -98,6 +98,15 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
     },
   });
 
+  // Clear all notifications
+  const clearAllNotificationsMutation = useMutation({
+    mutationFn: () => apiRequest('DELETE', '/api/notifications/clear-all'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+    },
+  });
+
   // Respond to message request
   const respondToRequestMutation = useMutation({
     mutationFn: ({ requestId, action }: { requestId: string; action: 'accept' | 'decline' }) =>
@@ -161,17 +170,38 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm">Notifications</CardTitle>
-                {unreadCount > 0 && (
+                <div className="flex space-x-1">
+                  {unreadCount > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => markAllAsReadMutation.mutate()}
+                      className="text-xs"
+                    >
+                      <CheckCheck className="h-3 w-3 mr-1" />
+                      Mark all read
+                    </Button>
+                  )}
+                  {notifications.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => clearAllNotificationsMutation.mutate()}
+                      className="text-xs text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Clear all
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => markAllAsReadMutation.mutate()}
+                    onClick={() => setShowPanel(false)}
                     className="text-xs"
                   >
-                    <CheckCheck className="h-3 w-3 mr-1" />
-                    Mark all read
+                    <X className="h-3 w-3" />
                   </Button>
-                )}
+                </div>
               </div>
             </CardHeader>
             
@@ -283,17 +313,38 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm">Notifications</CardTitle>
-              {unreadCount > 0 && (
+              <div className="flex space-x-1">
+                {unreadCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => markAllAsReadMutation.mutate()}
+                    className="text-xs"
+                  >
+                    <CheckCheck className="h-3 w-3 mr-1" />
+                    Mark all read
+                  </Button>
+                )}
+                {notifications.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => clearAllNotificationsMutation.mutate()}
+                    className="text-xs text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Clear all
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => markAllAsReadMutation.mutate()}
+                  onClick={() => setShowPanel(false)}
                   className="text-xs"
                 >
-                  <CheckCheck className="h-3 w-3 mr-1" />
-                  Mark all read
+                  <X className="h-3 w-3" />
                 </Button>
-              )}
+              </div>
             </div>
           </CardHeader>
           

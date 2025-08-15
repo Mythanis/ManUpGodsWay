@@ -919,6 +919,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clear all notifications for a user
+  app.delete('/api/notifications/clear-all', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Delete all notifications for the user
+      await storage.clearAllNotifications(userId);
+      
+      res.json({ message: "All notifications cleared successfully" });
+    } catch (error) {
+      console.error("Error clearing notifications:", error);
+      res.status(500).json({ message: "Failed to clear notifications" });
+    }
+  });
+
   // Notification API Routes
   // Request direct message access
   app.post("/api/message-requests", isAuthenticated, async (req: any, res) => {

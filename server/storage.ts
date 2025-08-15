@@ -992,6 +992,10 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedVideo;
   }
+
+  async clearAllNotifications(userId: string): Promise<void> {
+    await db.delete(notifications).where(eq(notifications.userId, userId));
+  }
 }
 
 export const storage = new DatabaseStorage();
