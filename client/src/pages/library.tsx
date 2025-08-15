@@ -3,8 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import StudyCard from "@/components/study-card";
-import { Search, Star } from "lucide-react";
+import { Search, Star, Filter } from "lucide-react";
 import { Link } from "wouter";
 
 const categories = [
@@ -18,9 +19,13 @@ const categories = [
 export default function Library() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [difficultyFilter, setDifficultyFilter] = useState('all');
+  const [hoursFilter, setHoursFilter] = useState('all');
+  const [lessonsFilter, setLessonsFilter] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
 
   const { data: studies = [], isLoading } = useQuery({
-    queryKey: ["/api/studies", selectedCategory !== 'all' ? selectedCategory : undefined],
+    queryKey: ["/api/studies"],
     retry: false,
   });
 
@@ -30,8 +35,24 @@ export default function Library() {
     retry: false,
   });
 
-  const displayStudies = searchQuery.length > 2 ? searchResults : studies;
-  const featuredStudy = studies.find((study: any) => study.category === 'character');
+  // Filter studies based on all criteria
+  const allStudies = (searchQuery.length > 2 ? searchResults : studies) as any[];
+  const filteredStudies = allStudies.filter((study: any) => {
+    const categoryMatch = selectedCategory === 'all' || study.category === selectedCategory;
+    const difficultyMatch = difficultyFilter === 'all' || study.difficulty === difficultyFilter;
+    const hoursMatch = hoursFilter === 'all' || 
+      (hoursFilter === '1-2' && study.estimatedHours >= 1 && study.estimatedHours <= 2) ||
+      (hoursFilter === '3-5' && study.estimatedHours >= 3 && study.estimatedHours <= 5) ||
+      (hoursFilter === '6+' && study.estimatedHours >= 6);
+    const lessonsMatch = lessonsFilter === 'all' ||
+      (lessonsFilter === '1-5' && study.lessonCount >= 1 && study.lessonCount <= 5) ||
+      (lessonsFilter === '6-10' && study.lessonCount >= 6 && study.lessonCount <= 10) ||
+      (lessonsFilter === '11+' && study.lessonCount >= 11);
+    
+    return categoryMatch && difficultyMatch && hoursMatch && lessonsMatch;
+  });
+
+  const featuredStudy = (studies as any[]).find((study: any) => study.category === 'character');
 
   return (
     <div className="pb-20">
@@ -62,15 +83,15 @@ export default function Library() {
         </Card>
       </div>
 
-      {/* Categories Filter */}
-      <div className="px-6 mb-6">
-        <div className="flex space-x-3 overflow-x-auto scrollbar-hide">
+      {/* Categories Filter - Horizontal Scroll */}
+      <div className="px-6 mb-4">
+        <div className="flex space-x-3 overflow-x-auto scrollbar-hide pb-2">
           {categories.map((category) => (
             <Button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
               variant={selectedCategory === category.id ? "default" : "outline"}
-              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
+              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 ${
                 selectedCategory === category.id
                   ? "bg-ministry-navy text-white"
                   : "bg-gray-100 text-ministry-slate hover:bg-gray-200"
@@ -81,6 +102,77 @@ export default function Library() {
             </Button>
           ))}
         </div>
+      </div>
+
+      {/* Additional Filters */}
+      <div className="px-6 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium text-ministry-slate">Filters</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            className="text-ministry-navy"
+          >
+            <Filter className="w-4 h-4 mr-1" />
+            {showFilters ? 'Hide' : 'Show'} Filters
+          </Button>
+        </div>
+        
+        {showFilters && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-xs font-medium text-ministry-slate mb-1 block">
+                Difficulty Level
+              </label>
+              <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                <SelectTrigger className="w-full h-8 text-sm">
+                  <SelectValue placeholder="Any level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any level</SelectItem>
+                  <SelectItem value="beginner">Beginner</SelectItem>
+                  <SelectItem value="intermediate">Intermediate</SelectItem>
+                  <SelectItem value="advanced">Advanced</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-xs font-medium text-ministry-slate mb-1 block">
+                Estimated Hours
+              </label>
+              <Select value={hoursFilter} onValueChange={setHoursFilter}>
+                <SelectTrigger className="w-full h-8 text-sm">
+                  <SelectValue placeholder="Any duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any duration</SelectItem>
+                  <SelectItem value="1-2">1-2 hours</SelectItem>
+                  <SelectItem value="3-5">3-5 hours</SelectItem>
+                  <SelectItem value="6+">6+ hours</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-xs font-medium text-ministry-slate mb-1 block">
+                Number of Lessons
+              </label>
+              <Select value={lessonsFilter} onValueChange={setLessonsFilter}>
+                <SelectTrigger className="w-full h-8 text-sm">
+                  <SelectValue placeholder="Any count" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any count</SelectItem>
+                  <SelectItem value="1-5">1-5 lessons</SelectItem>
+                  <SelectItem value="6-10">6-10 lessons</SelectItem>
+                  <SelectItem value="11+">11+ lessons</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Featured Study */}
@@ -121,14 +213,16 @@ export default function Library() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-navy mx-auto mb-4"></div>
             <p className="text-ministry-slate">Loading studies...</p>
           </div>
-        ) : displayStudies.length === 0 ? (
+        ) : filteredStudies.length === 0 ? (
           <div className="text-center py-8" data-testid="empty-studies">
             <p className="text-ministry-slate">
-              {searchQuery.length > 2 ? 'No studies found for your search.' : 'No studies available.'}
+              {searchQuery.length > 2 || difficultyFilter !== 'all' || hoursFilter !== 'all' || lessonsFilter !== 'all' || selectedCategory !== 'all' 
+                ? 'No studies found for your filters.' 
+                : 'No studies available.'}
             </p>
           </div>
         ) : (
-          displayStudies.map((study: any) => (
+          filteredStudies.map((study: any) => (
             <StudyCard 
               key={study.id} 
               study={study} 

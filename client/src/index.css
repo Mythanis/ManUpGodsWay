@@ -127,14 +127,17 @@
   }
 }
 
+/* Hide scrollbars for horizontal scrolling */
 .scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;
+  display: none;  /* Chrome, Safari and Opera */
 }
+
+
 
 .tab-active {
   color: var(--ministry-navy);
