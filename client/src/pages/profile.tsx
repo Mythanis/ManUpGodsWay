@@ -156,17 +156,7 @@ export default function Profile() {
         
         <Card className="border-gray-100 overflow-hidden" data-testid="card-settings">
           <CardContent className="p-0">
-            <div className="flex items-center justify-between p-4 h-auto hover:bg-gray-50 border-b border-gray-100">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-ministry-navy/20 flex items-center justify-center">
-                  <Bell className="w-4 h-4 text-ministry-navy" />
-                </div>
-                <span className="font-medium text-ministry-charcoal">Notifications</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <NotificationPanel />
-              </div>
-            </div>
+            <NotificationPanel variant="button" />
             
             <Button 
               variant="ghost"

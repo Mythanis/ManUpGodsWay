@@ -50,7 +50,11 @@ const getNotificationIcon = (type: string) => {
   }
 };
 
-export function NotificationPanel() {
+interface NotificationPanelProps {
+  variant?: 'icon' | 'button';
+}
+
+export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) {
   const [showPanel, setShowPanel] = useState(false);
   const queryClient = useQueryClient();
 
@@ -127,6 +131,137 @@ export function NotificationPanel() {
   const handleRequestResponse = (requestId: string, action: 'accept' | 'decline') => {
     respondToRequestMutation.mutate({ requestId, action });
   };
+
+  if (variant === 'button') {
+    return (
+      <div className="relative">
+        <Button
+          variant="ghost"
+          onClick={() => setShowPanel(!showPanel)}
+          className="w-full justify-between p-4 h-auto hover:bg-gray-50 border-b border-gray-100"
+        >
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-lg bg-ministry-navy/20 flex items-center justify-center">
+              <Bell className="w-4 h-4 text-ministry-navy" />
+            </div>
+            <span className="font-medium text-ministry-charcoal">Notifications</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            {(unreadCount > 0 || pendingRequests.length > 0) && (
+              <Badge 
+                variant="destructive" 
+                className="h-5 w-5 flex items-center justify-center p-0 text-xs"
+              >
+                {unreadCount + pendingRequests.length}
+              </Badge>
+            )}
+            <svg className="w-5 h-5 text-ministry-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </div>
+        </Button>
+        {showPanel && (
+          <Card className="absolute right-0 top-16 w-80 max-h-96 z-50 shadow-lg">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm">Notifications</CardTitle>
+                {unreadCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => markAllAsReadMutation.mutate()}
+                    className="text-xs"
+                  >
+                    <CheckCheck className="h-3 w-3 mr-1" />
+                    Mark all read
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            
+            <ScrollArea className="max-h-80">
+              <CardContent className="space-y-3">
+                {/* Message Requests */}
+                {pendingRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    className="p-3 border rounded-lg bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800"
+                  >
+                    <div className="flex items-start gap-2 mb-2">
+                      <MessageSquare className="h-4 w-4 text-amber-600 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">Message Request</p>
+                        <p className="text-xs text-muted-foreground">
+                          From {request.fromUser.firstName || request.fromUser.email}
+                        </p>
+                        <p className="text-xs mt-1 break-words">{request.message}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => handleRequestResponse(request.id, 'accept')}
+                        disabled={respondToRequestMutation.isPending}
+                        className="flex-1 text-xs h-7"
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleRequestResponse(request.id, 'decline')}
+                        disabled={respondToRequestMutation.isPending}
+                        className="flex-1 text-xs h-7"
+                      >
+                        Decline
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Regular Notifications */}
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    onClick={() => handleNotificationClick(notification)}
+                    className={cn(
+                      "p-3 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50",
+                      notification.isRead ? "opacity-60" : "bg-muted/20"
+                    )}
+                  >
+                    <div className="flex items-start gap-2">
+                      {getNotificationIcon(notification.type)}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">{notification.title}</p>
+                          {!notification.isRead && (
+                            <div className="h-2 w-2 bg-blue-500 rounded-full" />
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground break-words">
+                          {notification.message}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {new Date(notification.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {notifications.length === 0 && pendingRequests.length === 0 && (
+                  <div className="text-center py-4 text-sm text-muted-foreground">
+                    No notifications yet
+                  </div>
+                )}
+              </CardContent>
+            </ScrollArea>
+          </Card>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
