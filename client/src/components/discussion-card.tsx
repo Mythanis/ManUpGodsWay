@@ -12,21 +12,29 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Heart, MessageCircle, Send, ChevronDown, ChevronUp } from "lucide-react";
+import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus } from "lucide-react";
+import ProfileMenu from "@/components/profile-menu";
 import { z } from "zod";
 
 interface DiscussionCardProps {
   discussion: any;
+  onStartDirectMessage?: (userId: string) => void;
+  onAddToGroup?: (userId: string) => void;
 }
 
 const replySchema = z.object({
   content: z.string().min(1, "Reply content is required"),
 });
 
-export default function DiscussionCard({ discussion }: DiscussionCardProps) {
+export default function DiscussionCard({ 
+  discussion, 
+  onStartDirectMessage,
+  onAddToGroup 
+}: DiscussionCardProps) {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const [userHasLiked, setUserHasLiked] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState<{userId: string, x: number, y: number} | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -154,7 +162,16 @@ export default function DiscussionCard({ discussion }: DiscussionCardProps) {
           <img 
             src={discussion.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${discussion.user?.firstName}+${discussion.user?.lastName}&background=4A90B8&color=fff`}
             alt={`${discussion.user?.firstName} ${discussion.user?.lastName}`}
-            className="w-10 h-10 rounded-full object-cover"
+            className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy"
+            onClick={(e) => {
+              e.stopPropagation();
+              const rect = e.currentTarget.getBoundingClientRect();
+              setShowProfileMenu({
+                userId: discussion.userId,
+                x: rect.right,
+                y: rect.top
+              });
+            }}
             data-testid="img-user-avatar"
           />
           <div className="flex-1">
@@ -231,7 +248,16 @@ export default function DiscussionCard({ discussion }: DiscussionCardProps) {
                   <img 
                     src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=4A90B8&color=fff&size=32`}
                     alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
-                    className="w-8 h-8 rounded-full object-cover"
+                    className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setShowProfileMenu({
+                        userId: reply.userId,
+                        x: rect.right,
+                        y: rect.top
+                      });
+                    }}
                   />
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
@@ -302,6 +328,17 @@ export default function DiscussionCard({ discussion }: DiscussionCardProps) {
           </div>
         )}
       </CardContent>
+
+      {/* Profile Menu */}
+      {showProfileMenu && onStartDirectMessage && onAddToGroup && (
+        <ProfileMenu
+          userId={showProfileMenu.userId}
+          position={{ x: showProfileMenu.x, y: showProfileMenu.y }}
+          onClose={() => setShowProfileMenu(null)}
+          onStartDirectMessage={onStartDirectMessage}
+          onAddToGroup={onAddToGroup}
+        />
+      )}
     </Card>
   );
 }

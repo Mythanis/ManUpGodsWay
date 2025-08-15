@@ -35,6 +35,10 @@ export default function Community() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('recent');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [showNewGroupDialog, setShowNewGroupDialog] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [groupName, setGroupName] = useState("");
+  const [groupDescription, setGroupDescription] = useState("");
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -120,6 +124,78 @@ export default function Community() {
     };
     
     await createDiscussion.mutateAsync(discussionData);
+  };
+
+  // Create direct conversation mutation for profile interactions
+  const createDirectConversationMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      return await apiRequest("POST", "/api/conversations/direct", { targetUserId });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Direct message started successfully! Check your Messages page.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start conversation",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Create group conversation mutation
+  const createGroupConversationMutation = useMutation({
+    mutationFn: async (data: { name: string; description: string; participantIds: string[] }) => {
+      return await apiRequest("POST", "/api/conversations/group", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Group chat created successfully! Check your Messages page.",
+      });
+      setShowNewGroupDialog(false);
+      setGroupName("");
+      setGroupDescription("");
+      setSelectedUsers([]);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create group",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleStartDirectMessage = (userId: string) => {
+    createDirectConversationMutation.mutate(userId);
+  };
+
+  const handleAddToGroup = (userId: string) => {
+    if (!selectedUsers.includes(userId)) {
+      setSelectedUsers([...selectedUsers, userId]);
+    }
+    setShowNewGroupDialog(true);
+  };
+
+  const handleCreateGroup = () => {
+    if (!groupName.trim() || selectedUsers.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please provide a group name and select at least one member",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createGroupConversationMutation.mutate({
+      name: groupName,
+      description: groupDescription,
+      participantIds: selectedUsers,
+    });
   };
 
   // Mock community stats
@@ -347,6 +423,8 @@ export default function Community() {
               <DiscussionCard 
                 key={discussion.id} 
                 discussion={discussion}
+                onStartDirectMessage={handleStartDirectMessage}
+                onAddToGroup={handleAddToGroup}
                 data-testid={`discussion-${discussion.id}`}
               />
             ))}

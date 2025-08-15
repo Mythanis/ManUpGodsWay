@@ -10,8 +10,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
-import { MessageCircle, Plus, Users, Send, ArrowLeft } from "lucide-react";
+import { MessageCircle, Plus, Users, Send, ArrowLeft, Search, X, UserPlus } from "lucide-react";
 
 interface User {
   id: string;
@@ -58,6 +59,8 @@ export default function Messages() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showProfileMenu, setShowProfileMenu] = useState<{userId: string, x: number, y: number} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch conversations
@@ -71,6 +74,14 @@ export default function Messages() {
     queryKey: ["/api/admin/users"],
     retry: false,
   });
+
+  // Filter users based on search query
+  const filteredUsers = allUsers.filter(targetUser => 
+    targetUser.id !== (user as any)?.id &&
+    (targetUser.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     targetUser.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     targetUser.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   // Fetch messages for selected conversation
   const { data: messages = [], isLoading: messagesLoading } = useQuery<Message[]>({
@@ -106,8 +117,13 @@ export default function Messages() {
     },
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
-      response.json().then((data) => setSelectedConversation(data));
+      setSelectedConversation(response);
       setShowUserListDialog(false);
+      setShowProfileMenu(null);
+      toast({
+        title: "Success",
+        description: "Direct message started successfully!",
+      });
     },
     onError: (error: any) => {
       toast({
@@ -125,11 +141,16 @@ export default function Messages() {
     },
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
-      response.json().then((data) => setSelectedConversation(data));
+      setSelectedConversation(response);
       setShowNewGroupDialog(false);
       setGroupName("");
       setGroupDescription("");
       setSelectedUsers([]);
+      setSearchQuery("");
+      toast({
+        title: "Success",
+        description: "Group chat created successfully!",
+      });
     },
     onError: (error: any) => {
       toast({
@@ -207,29 +228,60 @@ export default function Messages() {
                       <DialogTitle>Start Direct Message</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Search users..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-10"
+                          data-testid="input-search-users"
+                        />
+                      </div>
                       <ScrollArea className="h-60">
-                        {(allUsers as User[]).filter(u => u.id !== (user as any)?.id).map((targetUser) => (
-                          <div
-                            key={targetUser.id}
-                            className="flex items-center justify-between p-2 hover:bg-gray-50 rounded"
-                            data-testid={`user-item-${targetUser.id}`}
-                          >
-                            <div>
-                              <p className="font-medium">
-                                {targetUser.firstName} {targetUser.lastName}
-                              </p>
-                              <p className="text-sm text-gray-500">{targetUser.email}</p>
-                            </div>
-                            <Button
-                              size="sm"
-                              onClick={() => createDirectConversationMutation.mutate(targetUser.id)}
-                              disabled={createDirectConversationMutation.isPending}
-                              data-testid={`button-message-${targetUser.id}`}
-                            >
-                              Message
-                            </Button>
+                        {filteredUsers.length === 0 ? (
+                          <div className="text-center py-4">
+                            <p className="text-gray-500">No users found</p>
                           </div>
-                        ))}
+                        ) : (
+                          filteredUsers.map((targetUser) => (
+                            <div
+                              key={targetUser.id}
+                              className="flex items-center justify-between p-2 hover:bg-gray-50 rounded"
+                              data-testid={`user-item-${targetUser.id}`}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <img
+                                  src={targetUser.profileImageUrl || `https://ui-avatars.com/api/?name=${targetUser.firstName}+${targetUser.lastName}&background=4A90B8&color=fff`}
+                                  alt={`${targetUser.firstName} ${targetUser.lastName}`}
+                                  className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy"
+                                  onClick={(e) => {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    setShowProfileMenu({
+                                      userId: targetUser.id,
+                                      x: rect.right,
+                                      y: rect.top
+                                    });
+                                  }}
+                                />
+                                <div>
+                                  <p className="font-medium">
+                                    {targetUser.firstName} {targetUser.lastName}
+                                  </p>
+                                  <p className="text-sm text-gray-500">{targetUser.email}</p>
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={() => createDirectConversationMutation.mutate(targetUser.id)}
+                                disabled={createDirectConversationMutation.isPending}
+                                data-testid={`button-message-${targetUser.id}`}
+                              >
+                                Message
+                              </Button>
+                            </div>
+                          ))
+                        )}
                       </ScrollArea>
                     </div>
                   </DialogContent>
@@ -268,26 +320,90 @@ export default function Messages() {
                       </div>
                       <div>
                         <Label>Select Members</Label>
-                        <ScrollArea className="h-40 border rounded p-2">
-                          {(allUsers as User[]).filter(u => u.id !== (user as any)?.id).map((targetUser) => (
-                            <div key={targetUser.id} className="flex items-center space-x-2 py-1">
-                              <Checkbox
-                                id={`user-${targetUser.id}`}
-                                checked={selectedUsers.includes(targetUser.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedUsers([...selectedUsers, targetUser.id]);
-                                  } else {
-                                    setSelectedUsers(selectedUsers.filter(id => id !== targetUser.id));
-                                  }
-                                }}
-                                data-testid={`checkbox-user-${targetUser.id}`}
-                              />
-                              <Label htmlFor={`user-${targetUser.id}`} className="text-sm">
-                                {targetUser.firstName} {targetUser.lastName} ({targetUser.email})
-                              </Label>
+                        <div className="relative mb-2">
+                          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input
+                            placeholder="Search users..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10"
+                            data-testid="input-search-group-users"
+                          />
+                        </div>
+                        
+                        {/* Selected users display */}
+                        {selectedUsers.length > 0 && (
+                          <div className="mb-3">
+                            <p className="text-sm text-gray-600 mb-2">Selected Members ({selectedUsers.length}):</p>
+                            <div className="flex flex-wrap gap-1">
+                              {selectedUsers.map(userId => {
+                                const selectedUser = allUsers.find(u => u.id === userId);
+                                return selectedUser ? (
+                                  <Badge
+                                    key={userId}
+                                    variant="secondary"
+                                    className="flex items-center space-x-1"
+                                  >
+                                    <span className="text-xs">
+                                      {selectedUser.firstName} {selectedUser.lastName}
+                                    </span>
+                                    <X
+                                      className="w-3 h-3 cursor-pointer hover:text-red-500"
+                                      onClick={() => setSelectedUsers(selectedUsers.filter(id => id !== userId))}
+                                    />
+                                  </Badge>
+                                ) : null;
+                              })}
                             </div>
-                          ))}
+                          </div>
+                        )}
+                        
+                        <ScrollArea className="h-40 border rounded p-2">
+                          {filteredUsers.length === 0 ? (
+                            <div className="text-center py-4">
+                              <p className="text-gray-500 text-sm">No users found</p>
+                            </div>
+                          ) : (
+                            filteredUsers.map((targetUser) => (
+                              <div key={targetUser.id} className="flex items-center space-x-2 py-2 hover:bg-gray-50 rounded px-2">
+                                <Checkbox
+                                  id={`user-${targetUser.id}`}
+                                  checked={selectedUsers.includes(targetUser.id)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setSelectedUsers([...selectedUsers, targetUser.id]);
+                                    } else {
+                                      setSelectedUsers(selectedUsers.filter(id => id !== targetUser.id));
+                                    }
+                                  }}
+                                  data-testid={`checkbox-user-${targetUser.id}`}
+                                />
+                                <img
+                                  src={targetUser.profileImageUrl || `https://ui-avatars.com/api/?name=${targetUser.firstName}+${targetUser.lastName}&background=4A90B8&color=fff`}
+                                  alt={`${targetUser.firstName} ${targetUser.lastName}`}
+                                  className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    setShowProfileMenu({
+                                      userId: targetUser.id,
+                                      x: rect.right,
+                                      y: rect.top
+                                    });
+                                  }}
+                                />
+                                <label
+                                  htmlFor={`user-${targetUser.id}`}
+                                  className="text-sm font-medium cursor-pointer flex-1"
+                                >
+                                  <div>
+                                    <p>{targetUser.firstName} {targetUser.lastName}</p>
+                                    <p className="text-xs text-gray-500">{targetUser.email}</p>
+                                  </div>
+                                </label>
+                              </div>
+                            ))
+                          )}
                         </ScrollArea>
                       </div>
                       <Button
@@ -388,9 +504,27 @@ export default function Messages() {
                 {messages.reverse().map((message) => (
                   <div
                     key={message.id}
-                    className={`flex ${message.userId === (user as any)?.id ? 'justify-end' : 'justify-start'}`}
+                    className={`flex items-end space-x-2 ${message.userId === (user as any)?.id ? 'justify-end' : 'justify-start'}`}
                     data-testid={`message-${message.id}`}
                   >
+                    {/* Profile picture for other users */}
+                    {message.userId !== (user as any)?.id && (
+                      <img
+                        src={message.user.profileImageUrl || `https://ui-avatars.com/api/?name=${message.user.firstName}+${message.user.lastName}&background=4A90B8&color=fff`}
+                        alt={`${message.user.firstName} ${message.user.lastName}`}
+                        className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy flex-shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setShowProfileMenu({
+                            userId: message.userId,
+                            x: rect.right,
+                            y: rect.top
+                          });
+                        }}
+                      />
+                    )}
+                    
                     <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                       message.userId === (user as any)?.id
                         ? 'bg-ministry-navy text-white'
@@ -437,6 +571,56 @@ export default function Messages() {
             </div>
           </form>
         </div>
+      )}
+      {/* Profile Menu */}
+      {showProfileMenu && (
+        <div
+          className="fixed bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-50 min-w-[160px]"
+          style={{
+            left: showProfileMenu.x + 10,
+            top: showProfileMenu.y,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="space-y-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-left"
+              onClick={() => {
+                createDirectConversationMutation.mutate(showProfileMenu.userId);
+              }}
+              data-testid={`profile-menu-dm-${showProfileMenu.userId}`}
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Send Direct Message
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-left"
+              onClick={() => {
+                if (!selectedUsers.includes(showProfileMenu.userId)) {
+                  setSelectedUsers([...selectedUsers, showProfileMenu.userId]);
+                }
+                setShowProfileMenu(null);
+                setShowNewGroupDialog(true);
+              }}
+              data-testid={`profile-menu-add-group-${showProfileMenu.userId}`}
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Add to Group Chat
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Click outside to close profile menu */}
+      {showProfileMenu && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowProfileMenu(null)}
+        />
       )}
     </div>
   );
