@@ -11,7 +11,7 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-): Promise<Response> {
+): Promise<any> {
   const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
@@ -19,7 +19,20 @@ export async function apiRequest(
     credentials: "include",
   });
 
-  await throwIfResNotOk(res);
+  if (!res.ok) {
+    const errorText = await res.text();
+    if (res.status === 401) {
+      // Redirect to login on unauthorized
+      window.location.href = "/api/login";
+      throw new Error("Unauthorized - redirecting to login");
+    }
+    throw new Error(`${res.status}: ${errorText || res.statusText}`);
+  }
+
+  const contentType = res.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    return await res.json();
+  }
   return res;
 }
 

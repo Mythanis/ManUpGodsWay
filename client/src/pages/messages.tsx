@@ -94,19 +94,32 @@ export default function Messages() {
   const sendMessageMutation = useMutation({
     mutationFn: async (data: { content: string }) => {
       if (!selectedConversation) throw new Error("No conversation selected");
+      console.log("Sending message to:", `/api/conversations/${selectedConversation.id}/messages`);
+      console.log("Message data:", data);
       return await apiRequest("POST", `/api/conversations/${selectedConversation.id}/messages`, data);
     },
     onSuccess: () => {
+      console.log("Message sent successfully");
       queryClient.invalidateQueries({ queryKey: ["/api/conversations", selectedConversation?.id, "messages"] });
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
       setNewMessage("");
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send message",
-        variant: "destructive",
-      });
+      console.error("Message send error:", error);
+      if (error.message.includes("Unauthorized")) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in again to send messages",
+          variant: "destructive",
+        });
+        // Redirect will happen in apiRequest
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to send message",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -168,7 +181,14 @@ export default function Messages() {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedConversation) return;
+    if (!newMessage.trim() || !selectedConversation) {
+      console.log("Cannot send message:", { 
+        hasMessage: !!newMessage.trim(), 
+        hasConversation: !!selectedConversation 
+      });
+      return;
+    }
+    console.log("Sending message:", newMessage.trim());
     sendMessageMutation.mutate({ content: newMessage.trim() });
   };
 
