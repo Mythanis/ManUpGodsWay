@@ -47,8 +47,9 @@ export default function Community() {
     defaultValues: {
       title: '',
       content: '',
-      category: '',
+      category: 'leadership',
     },
+    mode: 'onChange',
   });
 
   const createDiscussion = useMutation({
@@ -200,7 +201,10 @@ export default function Community() {
               <DialogTitle>Start New Discussion</DialogTitle>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form 
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
                 <FormField
                   control={form.control}
                   name="title"
@@ -275,7 +279,23 @@ export default function Community() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={createDiscussion.isPending}
+                    disabled={createDiscussion.isPending || !form.formState.isValid}
+                    onClick={(e) => {
+                      console.log("=== BUTTON CLICKED ===");
+                      console.log("Event:", e.type);
+                      console.log("Form state:", form.formState);
+                      console.log("Form values:", form.getValues());
+                      console.log("Form errors:", form.formState.errors);
+                      console.log("Is form valid:", form.formState.isValid);
+                      console.log("Button disabled:", createDiscussion.isPending || !form.formState.isValid);
+                      
+                      // Manual form submission test
+                      const formData = form.getValues();
+                      if (formData.title && formData.content && formData.category) {
+                        console.log("Manually triggering form submission...");
+                        onSubmit(formData);
+                      }
+                    }}
                     className="flex-1 bg-ministry-navy hover:bg-ministry-charcoal"
                     data-testid="button-create-discussion"
                   >
