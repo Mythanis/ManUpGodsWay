@@ -39,6 +39,9 @@ export const users = pgTable("users", {
   allowDirectMessages: boolean("allow_direct_messages").default(true),
   allowGroupInvites: boolean("allow_group_invites").default(true),
   isProfileComplete: boolean("is_profile_complete").default(false),
+  isBanned: boolean("is_banned").default(false),
+  bannedAt: timestamp("banned_at"),
+  bannedReason: text("banned_reason"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

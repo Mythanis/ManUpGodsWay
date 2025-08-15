@@ -81,6 +81,9 @@ export interface IStorage {
   // Admin operations
   getAllUsers(limit?: number): Promise<User[]>;
   updateUserRole(userId: string, role: string): Promise<User>;
+  updateUserSubscription(userId: string, subscriptionTier: string): Promise<User>;
+  banUser(userId: string, reason: string): Promise<User>;
+  unbanUser(userId: string): Promise<User>;
   getSystemStats(): Promise<{
     totalUsers: number;
     totalStudies: number;
@@ -458,6 +461,43 @@ export class DatabaseStorage implements IStorage {
     const [updatedUser] = await db
       .update(users)
       .set({ role, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  async updateUserSubscription(userId: string, subscriptionTier: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ subscriptionTier, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  async banUser(userId: string, reason: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        isBanned: true, 
+        bannedAt: new Date(), 
+        bannedReason: reason,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  async unbanUser(userId: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        isBanned: false, 
+        bannedAt: null, 
+        bannedReason: null,
+        updatedAt: new Date()
+      })
       .where(eq(users.id, userId))
       .returning();
     return updatedUser;

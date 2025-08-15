@@ -8,6 +8,13 @@
       "when": 1755283289696,
       "tag": "0000_public_squadron_supreme",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1755290807300,
+      "tag": "0001_eminent_sinister_six",
+      "breakpoints": true
     }
   ]
 }

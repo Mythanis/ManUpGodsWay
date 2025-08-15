@@ -3,15 +3,41 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
-import { Card, CardContent } from "@/components/ui/card";
+import { formatLocalDateTime } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity } from "lucide-react";
+
+interface User {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  profileImageUrl?: string;
+  role: string;
+  subscriptionTier: string;
+  streakDays: number;
+  allowDirectMessages: boolean;
+  allowGroupInvites: boolean;
+  isBanned: boolean;
+  bannedAt?: string;
+  bannedReason?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showUserDialog, setShowUserDialog] = useState(false);
+  const [showBanDialog, setShowBanDialog] = useState(false);
+  const [banReason, setBanReason] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -32,20 +58,73 @@ export default function UserManagement() {
       });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
       toast({
         title: "Error",
         description: "Failed to update user role. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateUserSubscription = useMutation({
+    mutationFn: async ({ userId, subscriptionTier }: { userId: string; subscriptionTier: string }) => {
+      await apiRequest('PUT', `/api/admin/users/${userId}/subscription`, { subscriptionTier });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Success",
+        description: "User subscription updated successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update user subscription. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const banUser = useMutation({
+    mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
+      await apiRequest('PUT', `/api/admin/users/${userId}/ban`, { reason });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setShowBanDialog(false);
+      setShowUserDialog(false);
+      setBanReason('');
+      toast({
+        title: "Success",
+        description: "User banned successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to ban user. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const unbanUser = useMutation({
+    mutationFn: async (userId: string) => {
+      await apiRequest('PUT', `/api/admin/users/${userId}/unban`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setSelectedUser(prev => prev ? { ...prev, isBanned: false, bannedAt: undefined, bannedReason: undefined } : null);
+      toast({
+        title: "Success",
+        description: "User unbanned successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to unban user. Please try again.",
         variant: "destructive",
       });
     },
@@ -142,26 +221,16 @@ export default function UserManagement() {
                 </div>
                 
                 <div className="flex items-center space-x-2 ml-4">
-                  <Select
-                    value={user.role}
-                    onValueChange={(role) => updateUserRole.mutate({ userId: user.id, role })}
-                    disabled={updateUserRole.isPending}
-                  >
-                    <SelectTrigger className="w-20 h-8 text-xs" data-testid={`select-role-${user.id}`}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Button 
-                    variant="ghost"
+                  <Button
+                    variant="outline"
                     size="sm"
-                    className="text-ministry-steel text-xs hover:text-ministry-navy px-2 py-1"
-                    data-testid={`button-manage-${user.id}`}
+                    onClick={() => {
+                      setSelectedUser(user);
+                      setShowUserDialog(true);
+                    }}
+                    data-testid={`view-user-${user.id}`}
                   >
+                    <Eye className="w-4 h-4 mr-1" />
                     View
                   </Button>
                 </div>
@@ -170,6 +239,241 @@ export default function UserManagement() {
           )}
         </div>
       </CardContent>
+
+      {/* User Detail Dialog */}
+      <Dialog open={showUserDialog} onOpenChange={setShowUserDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-3">
+              <img 
+                src={selectedUser?.profileImageUrl || `https://ui-avatars.com/api/?name=${selectedUser?.firstName}+${selectedUser?.lastName}&background=4A90B8&color=fff`}
+                alt={`${selectedUser?.firstName} ${selectedUser?.lastName}`}
+                className="w-12 h-12 rounded-full object-cover"
+              />
+              <div>
+                <h2 className="text-xl font-bold text-ministry-charcoal">
+                  {selectedUser?.firstName} {selectedUser?.lastName}
+                </h2>
+                <p className="text-sm text-ministry-slate">{selectedUser?.email}</p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedUser && (
+            <div className="space-y-6">
+              {/* User Status */}
+              <div className="grid grid-cols-2 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-3">
+                      <Shield className="w-5 h-5 text-ministry-steel" />
+                      <div>
+                        <p className="text-sm font-medium text-ministry-charcoal">Role</p>
+                        <Select
+                          value={selectedUser.role}
+                          onValueChange={(role) => {
+                            updateUserRole.mutate({ userId: selectedUser.id, role });
+                            setSelectedUser(prev => prev ? { ...prev, role } : null);
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="user">User</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-3">
+                      <CreditCard className="w-5 h-5 text-ministry-gold" />
+                      <div>
+                        <p className="text-sm font-medium text-ministry-charcoal">Subscription</p>
+                        <Select
+                          value={selectedUser.subscriptionTier}
+                          onValueChange={(subscriptionTier) => {
+                            updateUserSubscription.mutate({ userId: selectedUser.id, subscriptionTier });
+                            setSelectedUser(prev => prev ? { ...prev, subscriptionTier } : null);
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="free">Free</SelectItem>
+                            <SelectItem value="premium">Premium</SelectItem>
+                            <SelectItem value="vip">VIP</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* User Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <Mail className="w-4 h-4 text-ministry-slate" />
+                    <div>
+                      <p className="text-xs text-ministry-slate">Email</p>
+                      <p className="text-sm text-ministry-charcoal">{selectedUser.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <Activity className="w-4 h-4 text-ministry-slate" />
+                    <div>
+                      <p className="text-xs text-ministry-slate">Streak Days</p>
+                      <p className="text-sm text-ministry-charcoal">{selectedUser.streakDays} days</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <Calendar className="w-4 h-4 text-ministry-slate" />
+                    <div>
+                      <p className="text-xs text-ministry-slate">Joined</p>
+                      <p className="text-sm text-ministry-charcoal">{formatLocalDateTime(selectedUser.createdAt)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <Calendar className="w-4 h-4 text-ministry-slate" />
+                    <div>
+                      <p className="text-xs text-ministry-slate">Last Active</p>
+                      <p className="text-sm text-ministry-charcoal">{formatLocalDateTime(selectedUser.updatedAt)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Privacy Settings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Privacy Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-ministry-charcoal">Allow Direct Messages</span>
+                    <Badge variant={selectedUser.allowDirectMessages ? "default" : "secondary"}>
+                      {selectedUser.allowDirectMessages ? "Enabled" : "Disabled"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-ministry-charcoal">Allow Group Invites</span>
+                    <Badge variant={selectedUser.allowGroupInvites ? "default" : "secondary"}>
+                      {selectedUser.allowGroupInvites ? "Enabled" : "Disabled"}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Ban Status */}
+              {selectedUser.isBanned ? (
+                <Card className="border-red-200">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-red-600 flex items-center space-x-2">
+                      <Ban className="w-5 h-5" />
+                      <span>User Banned</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-ministry-charcoal">Banned Date</p>
+                      <p className="text-sm text-ministry-slate">{selectedUser.bannedAt ? formatLocalDateTime(selectedUser.bannedAt) : 'Unknown'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-ministry-charcoal">Reason</p>
+                      <p className="text-sm text-ministry-slate">{selectedUser.bannedReason || 'No reason provided'}</p>
+                    </div>
+                    <Button
+                      onClick={() => unbanUser.mutate(selectedUser.id)}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      disabled={unbanUser.isPending}
+                    >
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      Unban User
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="flex justify-end">
+                  <Button
+                    variant="destructive"
+                    onClick={() => setShowBanDialog(true)}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    <Ban className="w-4 h-4 mr-2" />
+                    Ban User
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Ban User Dialog */}
+      <Dialog open={showBanDialog} onOpenChange={setShowBanDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Ban User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to ban {selectedUser?.firstName} {selectedUser?.lastName}? 
+              This will prevent them from accessing the platform.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="ban-reason" className="text-sm font-medium">
+                Reason for ban (required)
+              </Label>
+              <Textarea
+                id="ban-reason"
+                placeholder="Enter the reason for banning this user..."
+                value={banReason}
+                onChange={(e) => setBanReason(e.target.value)}
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowBanDialog(false);
+                  setBanReason('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (selectedUser && banReason.trim()) {
+                    banUser.mutate({ userId: selectedUser.id, reason: banReason.trim() });
+                  }
+                }}
+                disabled={!banReason.trim() || banUser.isPending}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {banUser.isPending ? "Banning..." : "Ban User"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

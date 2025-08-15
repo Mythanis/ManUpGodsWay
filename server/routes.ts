@@ -676,6 +676,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/admin/users/:id/subscription', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { subscriptionTier } = req.body;
+      if (!subscriptionTier || !['free', 'premium', 'vip'].includes(subscriptionTier)) {
+        return res.status(400).json({ message: "Invalid subscription tier" });
+      }
+
+      const updatedUser = await storage.updateUserSubscription(req.params.id, subscriptionTier);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user subscription:", error);
+      res.status(500).json({ message: "Failed to update user subscription" });
+    }
+  });
+
+  app.put('/api/admin/users/:id/ban', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { reason } = req.body;
+      if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+        return res.status(400).json({ message: "Ban reason is required" });
+      }
+
+      const updatedUser = await storage.banUser(req.params.id, reason.trim());
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error banning user:", error);
+      res.status(500).json({ message: "Failed to ban user" });
+    }
+  });
+
+  app.put('/api/admin/users/:id/unban', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const updatedUser = await storage.unbanUser(req.params.id);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error unbanning user:", error);
+      res.status(500).json({ message: "Failed to unban user" });
+    }
+  });
+
   app.get('/api/admin/stats', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
