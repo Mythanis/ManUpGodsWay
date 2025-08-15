@@ -15,19 +15,21 @@ import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
 import { MessageCircle, Plus, Users, Send, ArrowLeft, Search, X, UserPlus, Trash2, LogOut, MoreVertical } from "lucide-react";
 
-interface User {
+interface MessageUser {
   id: string;
   firstName?: string;
   lastName?: string;
   email: string;
   profileImageUrl?: string;
+  allowDirectMessages?: boolean;
+  allowGroupInvites?: boolean;
 }
 
 interface ConversationParticipant {
   id: string;
   userId: string;
   role: string;
-  user: User;
+  user: MessageUser;
 }
 
 interface Conversation {
@@ -46,7 +48,7 @@ interface Message {
   content: string;
   messageType: string;
   createdAt: string;
-  user: User;
+  user: MessageUser;
 }
 
 export default function Messages() {
@@ -72,7 +74,7 @@ export default function Messages() {
   });
 
   // Fetch all users for direct messaging and group creation
-  const { data: allUsers = [], isLoading: usersLoading } = useQuery<User[]>({
+  const { data: allUsers = [], isLoading: usersLoading } = useQuery<MessageUser[]>({
     queryKey: ["/api/users"],
     retry: false,
   });
