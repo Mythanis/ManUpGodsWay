@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, type User } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,9 +77,19 @@ export default function Messages() {
     retry: false,
   });
 
-  // Filter users based on search query
+  // Filter users based on search query and privacy preferences
   const filteredUsers = allUsers.filter(targetUser => 
     targetUser.id !== (user as any)?.id &&
+    targetUser.allowDirectMessages !== false && // Only show users who allow direct messages
+    (targetUser.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     targetUser.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     targetUser.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  // Filter users for group creation (must allow group invites)
+  const filteredUsersForGroup = allUsers.filter(targetUser => 
+    targetUser.id !== (user as any)?.id &&
+    targetUser.allowGroupInvites !== false && // Only show users who allow group invites
     (targetUser.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
      targetUser.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
      targetUser.email.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -358,14 +368,20 @@ export default function Messages() {
                                 <img
                                   src={targetUser.profileImageUrl || `https://ui-avatars.com/api/?name=${targetUser.firstName}+${targetUser.lastName}&background=4A90B8&color=fff`}
                                   alt={`${targetUser.firstName} ${targetUser.lastName}`}
-                                  className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy"
+                                  className={`w-10 h-10 rounded-full object-cover ${
+                                    targetUser.allowDirectMessages !== false 
+                                      ? 'cursor-pointer hover:ring-2 hover:ring-ministry-navy' 
+                                      : 'cursor-default opacity-60'
+                                  }`}
                                   onClick={(e) => {
-                                    const rect = e.currentTarget.getBoundingClientRect();
-                                    setShowProfileMenu({
-                                      userId: targetUser.id,
-                                      x: rect.right,
-                                      y: rect.top
-                                    });
+                                    if (targetUser.allowDirectMessages !== false) {
+                                      const rect = e.currentTarget.getBoundingClientRect();
+                                      setShowProfileMenu({
+                                        userId: targetUser.id,
+                                        x: rect.right,
+                                        y: rect.top
+                                      });
+                                    }
                                   }}
                                 />
                                 <div>
@@ -463,12 +479,12 @@ export default function Messages() {
                         )}
                         
                         <ScrollArea className="h-40 border rounded p-2">
-                          {filteredUsers.length === 0 ? (
+                          {filteredUsersForGroup.length === 0 ? (
                             <div className="text-center py-4">
                               <p className="text-gray-500 text-sm">No users found</p>
                             </div>
                           ) : (
-                            filteredUsers.map((targetUser) => (
+                            filteredUsersForGroup.map((targetUser) => (
                               <div key={targetUser.id} className="flex items-center space-x-2 py-2 hover:bg-gray-50 rounded px-2">
                                 <Checkbox
                                   id={`user-${targetUser.id}`}
@@ -485,15 +501,21 @@ export default function Messages() {
                                 <img
                                   src={targetUser.profileImageUrl || `https://ui-avatars.com/api/?name=${targetUser.firstName}+${targetUser.lastName}&background=4A90B8&color=fff`}
                                   alt={`${targetUser.firstName} ${targetUser.lastName}`}
-                                  className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy"
+                                  className={`w-8 h-8 rounded-full object-cover ${
+                                    (targetUser.allowDirectMessages !== false || targetUser.allowGroupInvites !== false) 
+                                      ? 'cursor-pointer hover:ring-2 hover:ring-ministry-navy' 
+                                      : 'cursor-default opacity-60'
+                                  }`}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    const rect = e.currentTarget.getBoundingClientRect();
-                                    setShowProfileMenu({
-                                      userId: targetUser.id,
-                                      x: rect.right,
-                                      y: rect.top
-                                    });
+                                    if (targetUser.allowDirectMessages !== false || targetUser.allowGroupInvites !== false) {
+                                      const rect = e.currentTarget.getBoundingClientRect();
+                                      setShowProfileMenu({
+                                        userId: targetUser.id,
+                                        x: rect.right,
+                                        y: rect.top
+                                      });
+                                    }
                                   }}
                                 />
                                 <label
@@ -672,15 +694,21 @@ export default function Messages() {
                         <img
                           src={message.user.profileImageUrl || `https://ui-avatars.com/api/?name=${message.user.firstName}+${message.user.lastName}&background=4A90B8&color=fff`}
                           alt={`${message.user.firstName} ${message.user.lastName}`}
-                          className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy flex-shrink-0"
+                          className={`w-8 h-8 rounded-full object-cover flex-shrink-0 ${
+                            (message.user.allowDirectMessages !== false || message.user.allowGroupInvites !== false) 
+                              ? 'cursor-pointer hover:ring-2 hover:ring-ministry-navy' 
+                              : 'cursor-default opacity-60'
+                          }`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            setShowProfileMenu({
-                              userId: message.userId,
-                              x: rect.right,
-                              y: rect.top
-                            });
+                            if (message.user.allowDirectMessages !== false || message.user.allowGroupInvites !== false) {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setShowProfileMenu({
+                                userId: message.userId,
+                                x: rect.right,
+                                y: rect.top
+                              });
+                            }
                           }}
                         />
                       )}
@@ -765,47 +793,59 @@ export default function Messages() {
       )}
 
       {/* Profile Menu */}
-      {showProfileMenu && (
-        <div
-          className="fixed bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-50 min-w-[160px]"
-          style={{
-            left: showProfileMenu.x + 10,
-            top: showProfileMenu.y,
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="space-y-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start text-left"
-              onClick={() => {
-                createDirectConversationMutation.mutate(showProfileMenu.userId);
-              }}
-              data-testid={`profile-menu-dm-${showProfileMenu.userId}`}
-            >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              Send Direct Message
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start text-left"
-              onClick={() => {
-                if (!selectedUsers.includes(showProfileMenu.userId)) {
-                  setSelectedUsers([...selectedUsers, showProfileMenu.userId]);
-                }
-                setShowProfileMenu(null);
-                setShowNewGroupDialog(true);
-              }}
-              data-testid={`profile-menu-add-group-${showProfileMenu.userId}`}
-            >
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add to Group Chat
-            </Button>
+      {showProfileMenu && (() => {
+        const targetUser = allUsers.find(u => u.id === showProfileMenu.userId);
+        return (
+          <div
+            className="fixed bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-50 min-w-[160px]"
+            style={{
+              left: showProfileMenu.x + 10,
+              top: showProfileMenu.y,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-1">
+              {targetUser?.allowDirectMessages !== false && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start text-left"
+                  onClick={() => {
+                    createDirectConversationMutation.mutate(showProfileMenu.userId);
+                  }}
+                  data-testid={`profile-menu-dm-${showProfileMenu.userId}`}
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Send Direct Message
+                </Button>
+              )}
+              {targetUser?.allowGroupInvites !== false && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start text-left"
+                  onClick={() => {
+                    if (!selectedUsers.includes(showProfileMenu.userId)) {
+                      setSelectedUsers([...selectedUsers, showProfileMenu.userId]);
+                    }
+                    setShowProfileMenu(null);
+                    setShowNewGroupDialog(true);
+                  }}
+                  data-testid={`profile-menu-add-group-${showProfileMenu.userId}`}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add to Group Chat
+                </Button>
+              )}
+              {targetUser?.allowDirectMessages === false && targetUser?.allowGroupInvites === false && (
+                <div className="p-2 text-xs text-gray-500 text-center">
+                  This user has disabled messaging
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Click outside to close profile menu */}
       {showProfileMenu && (
