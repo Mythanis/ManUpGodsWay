@@ -85,13 +85,13 @@ export default function Library() {
 
       {/* Categories Filter - Horizontal Scroll */}
       <div className="px-6 mb-4">
-        <div className="flex space-x-3 overflow-x-auto scrollbar-hide pb-2">
+        <div className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2">
           {categories.map((category) => (
             <Button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
               variant={selectedCategory === category.id ? "default" : "outline"}
-              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 ${
+              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start ${
                 selectedCategory === category.id
                   ? "bg-ministry-navy text-white"
                   : "bg-gray-100 text-ministry-slate hover:bg-gray-200"
