@@ -996,6 +996,12 @@ export class DatabaseStorage implements IStorage {
   async clearAllNotifications(userId: string): Promise<void> {
     await db.delete(notifications).where(eq(notifications.userId, userId));
   }
+
+  async clearNotification(userId: string, notificationId: string): Promise<void> {
+    await db.delete(notifications).where(
+      and(eq(notifications.userId, userId), eq(notifications.id, notificationId))
+    );
+  }
 }
 
 export const storage = new DatabaseStorage();

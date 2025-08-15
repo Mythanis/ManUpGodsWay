@@ -934,6 +934,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clear individual notification
+  app.delete('/api/notifications/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const notificationId = req.params.id;
+      
+      // Delete the specific notification for the user
+      await storage.clearNotification(userId, notificationId);
+      
+      res.json({ message: "Notification cleared successfully" });
+    } catch (error) {
+      console.error("Error clearing notification:", error);
+      res.status(500).json({ message: "Failed to clear notification" });
+    }
+  });
+
   // Notification API Routes
   // Request direct message access
   app.post("/api/message-requests", isAuthenticated, async (req: any, res) => {
