@@ -131,6 +131,7 @@ export const conversations = pgTable("conversations", {
   createdBy: varchar("created_by").notNull().references(() => users.id, { onDelete: 'cascade' }),
   isActive: boolean("is_active").default(true),
   lastMessageAt: timestamp("last_message_at"),
+  originalParticipantNames: text("original_participant_names"), // JSON string of original participant names for deleted DMs
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

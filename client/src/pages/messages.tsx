@@ -39,6 +39,7 @@ interface Conversation {
   description?: string;
   participants: ConversationParticipant[];
   lastMessageAt?: string;
+  originalParticipantNames?: string;
 }
 
 interface Message {
@@ -304,16 +305,31 @@ export default function Messages() {
       return conversation.name || "Group Chat";
     }
     
-    // For direct messages, show the other participant's name
-    if (!conversation.participants || conversation.participants.length === 0) {
-      return "Direct Message";
+    // For direct messages, try to get the other participant's name
+    if (conversation.participants && conversation.participants.length > 0) {
+      const otherParticipant = conversation.participants.find(p => p.userId !== (user as any)?.id);
+      if (otherParticipant?.user) {
+        return `${otherParticipant.user.firstName || ""} ${otherParticipant.user.lastName || ""}`.trim() || 
+               otherParticipant.user.email;
+      }
     }
     
-    const otherParticipant = conversation.participants.find(p => p.userId !== (user as any)?.id);
-    if (otherParticipant?.user) {
-      return `${otherParticipant.user.firstName || ""} ${otherParticipant.user.lastName || ""}`.trim() || 
-             otherParticipant.user.email;
+    // If no active participants (user deleted), try to get from original participant names
+    if (conversation.originalParticipantNames) {
+      try {
+        const participantNames = JSON.parse(conversation.originalParticipantNames);
+        const currentUserId = (user as any)?.id;
+        // Find the other participant's name (not the current user)
+        for (const userId in participantNames) {
+          if (userId !== currentUserId) {
+            return participantNames[userId];
+          }
+        }
+      } catch (e) {
+        console.error("Error parsing original participant names:", e);
+      }
     }
+    
     return "Direct Message";
   };
 

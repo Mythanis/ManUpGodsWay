@@ -504,6 +504,7 @@ export class DatabaseStorage implements IStorage {
         createdBy: conversations.createdBy,
         isActive: conversations.isActive,
         lastMessageAt: conversations.lastMessageAt,
+        originalParticipantNames: conversations.originalParticipantNames,
         createdAt: conversations.createdAt,
         updatedAt: conversations.updatedAt,
       })
@@ -547,6 +548,7 @@ export class DatabaseStorage implements IStorage {
         createdBy: conversations.createdBy,
         isActive: conversations.isActive,
         lastMessageAt: conversations.lastMessageAt,
+        originalParticipantNames: conversations.originalParticipantNames,
         createdAt: conversations.createdAt,
         updatedAt: conversations.updatedAt,
       })
@@ -575,12 +577,21 @@ export class DatabaseStorage implements IStorage {
       }
     }
 
+    // Get user names for the original participant names
+    const user1 = await this.getUser(userId1);
+    const user2 = await this.getUser(userId2);
+    const participantNames = {
+      [userId1]: `${user1?.firstName || ''} ${user1?.lastName || ''}`.trim() || user1?.email || 'Unknown User',
+      [userId2]: `${user2?.firstName || ''} ${user2?.lastName || ''}`.trim() || user2?.email || 'Unknown User'
+    };
+
     // Create new direct conversation
     const [newConversation] = await db
       .insert(conversations)
       .values({
         type: "direct",
         createdBy: userId1,
+        originalParticipantNames: JSON.stringify(participantNames),
       })
       .returning();
 
