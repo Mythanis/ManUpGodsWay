@@ -41,6 +41,12 @@ export default function Admin() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingStudy, setEditingStudy] = useState<Study | null>(null);
   const [activeTab, setActiveTab] = useState("content");
+  const [showNotificationDialog, setShowNotificationDialog] = useState(false);
+  const [notificationData, setNotificationData] = useState({
+    title: "",
+    message: "",
+    type: "general" as "general" | "devotional" | "announcement"
+  });
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -172,6 +178,39 @@ export default function Admin() {
     }
   };
 
+  const sendNotification = useMutation({
+    mutationFn: async (data: typeof notificationData) => {
+      await apiRequest('POST', '/api/admin/notifications/broadcast', data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Notification sent to all users!",
+      });
+      setShowNotificationDialog(false);
+      setNotificationData({ title: "", message: "", type: "general" });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to send notification. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSendNotification = () => {
+    if (!notificationData.title.trim() || !notificationData.message.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in both title and message.",
+        variant: "destructive",
+      });
+      return;
+    }
+    sendNotification.mutate(notificationData);
+  };
+
   const getTierIcon = (tier: string) => {
     switch (tier) {
       case "premium":
@@ -289,6 +328,7 @@ export default function Admin() {
               
               <Button 
                 variant="outline"
+                onClick={() => setShowNotificationDialog(true)}
                 className="bg-ministry-gold text-ministry-navy p-4 rounded-2xl hover:bg-ministry-gold/90 border-none flex items-center space-x-3 w-full"
                 data-testid="button-send-notification"
               >
@@ -570,6 +610,105 @@ export default function Admin() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Send Notification Dialog */}
+      <Dialog open={showNotificationDialog} onOpenChange={setShowNotificationDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Bell className="w-5 h-5" />
+              <span>Send Push Notification</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="notification-type" className="text-sm font-medium">
+                Notification Type
+              </Label>
+              <Select
+                value={notificationData.type}
+                onValueChange={(value: "general" | "devotional" | "announcement") => 
+                  setNotificationData({ ...notificationData, type: value })
+                }
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general">General</SelectItem>
+                  <SelectItem value="devotional">Devotional</SelectItem>
+                  <SelectItem value="announcement">Announcement</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="notification-title" className="text-sm font-medium">
+                Title
+              </Label>
+              <Input
+                id="notification-title"
+                value={notificationData.title}
+                onChange={(e) => setNotificationData({ ...notificationData, title: e.target.value })}
+                placeholder="Enter notification title"
+                className="mt-1"
+                maxLength={50}
+              />
+              <p className="text-xs text-ministry-slate mt-1">
+                {notificationData.title.length}/50 characters
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="notification-message" className="text-sm font-medium">
+                Message
+              </Label>
+              <Textarea
+                id="notification-message"
+                value={notificationData.message}
+                onChange={(e) => setNotificationData({ ...notificationData, message: e.target.value })}
+                placeholder="Enter notification message"
+                className="mt-1"
+                rows={4}
+                maxLength={200}
+              />
+              <p className="text-xs text-ministry-slate mt-1">
+                {notificationData.message.length}/200 characters
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowNotificationDialog(false);
+                  setNotificationData({ title: "", message: "", type: "general" });
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSendNotification}
+                disabled={sendNotification.isPending || !notificationData.title.trim() || !notificationData.message.trim()}
+                className="bg-ministry-gold text-ministry-navy hover:bg-ministry-gold/90"
+              >
+                {sendNotification.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-ministry-navy mr-2"></div>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Bell className="w-4 h-4 mr-2" />
+                    Send Notification
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

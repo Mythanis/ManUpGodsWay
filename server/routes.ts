@@ -877,6 +877,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Broadcast Notification API Route
+  app.post('/api/admin/notifications/broadcast', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { title, message, type } = req.body;
+      
+      if (!title || !message) {
+        return res.status(400).json({ message: "Title and message are required" });
+      }
+
+      // Get all users to send notification to
+      const allUsers = await storage.getAllUsers();
+      
+      // Create notifications for all users
+      const notificationPromises = allUsers.map(async (targetUser) => {
+        if (targetUser.id !== user.id) { // Don't send to admin
+          return await storage.createNotification({
+            userId: targetUser.id,
+            type: type || 'general',
+            title,
+            message,
+            relatedId: null,
+          });
+        }
+      });
+
+      await Promise.all(notificationPromises.filter(Boolean));
+
+      res.json({ 
+        message: "Notification sent to all users successfully",
+        recipients: allUsers.length - 1 // Exclude admin
+      });
+    } catch (error) {
+      console.error("Error broadcasting notification:", error);
+      res.status(500).json({ message: "Failed to send notification" });
+    }
+  });
+
   // Notification API Routes
   // Request direct message access
   app.post("/api/message-requests", isAuthenticated, async (req: any, res) => {
