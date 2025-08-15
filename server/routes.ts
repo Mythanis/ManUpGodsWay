@@ -179,13 +179,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/discussions', isAuthenticated, async (req: any, res) => {
     try {
+      console.log("Creating discussion - authenticated user:", req.user);
       const userId = req.user.claims.sub;
       const discussionData = insertDiscussionSchema.parse({
         ...req.body,
         userId,
       });
       
+      console.log("Discussion data being created:", discussionData);
       const discussion = await storage.createDiscussion(discussionData);
+      console.log("Discussion created successfully:", discussion);
       res.status(201).json(discussion);
     } catch (error) {
       console.error("Error creating discussion:", error);

@@ -73,6 +73,7 @@ export default function Community() {
       form.reset();
     },
     onError: (error) => {
+      console.error("Discussion creation error:", error);
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -86,13 +87,13 @@ export default function Community() {
       }
       toast({
         title: "Error",
-        description: "Failed to create discussion. Please try again.",
+        description: `Failed to create discussion: ${error.message || 'Please try again.'}`,
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: { title: string; content: string; category: string }) => {
+  const onSubmit = async (data: { title: string; content: string; category: string }) => {
     console.log("Form submitted with data:", data);
     console.log("Current user:", user);
     
@@ -113,7 +114,12 @@ export default function Community() {
     };
     
     console.log("Submitting discussion data:", discussionData);
-    createDiscussion.mutate(discussionData);
+    
+    try {
+      await createDiscussion.mutateAsync(discussionData);
+    } catch (error) {
+      console.error("Error in onSubmit:", error);
+    }
   };
 
   // Mock community stats
