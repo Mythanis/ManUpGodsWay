@@ -858,7 +858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const count = await storage.getUnreadNotificationCount(userId);
-      res.json({ count });
+      res.json({ count: Number(count) });
     } catch (error) {
       console.error("Error getting unread notification count:", error);
       res.status(500).json({ message: "Failed to get unread notification count" });

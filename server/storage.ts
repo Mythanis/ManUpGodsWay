@@ -796,7 +796,7 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db.select({ count: sql<number>`count(*)` })
       .from(notifications)
       .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
-    return result.count;
+    return Number(result.count);
   }
 
   // Message request methods
