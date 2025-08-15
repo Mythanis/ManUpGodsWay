@@ -49,6 +49,7 @@ export default function Admin() {
     targetAudience: "everyone" as "everyone" | "vip" | "premium" | "individual",
     selectedUserIds: [] as string[]
   });
+  const [userSearchQuery, setUserSearchQuery] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -198,6 +199,7 @@ export default function Admin() {
       });
       setShowNotificationDialog(false);
       setNotificationData({ title: "", message: "", type: "general", targetAudience: "everyone", selectedUserIds: [] });
+      setUserSearchQuery("");
     },
     onError: () => {
       toast({
@@ -703,9 +705,10 @@ export default function Admin() {
               </Label>
               <Select
                 value={notificationData.targetAudience}
-                onValueChange={(value: "everyone" | "vip" | "premium" | "individual") => 
-                  setNotificationData({ ...notificationData, targetAudience: value, selectedUserIds: [] })
-                }
+                onValueChange={(value: "everyone" | "vip" | "premium" | "individual") => {
+                  setNotificationData({ ...notificationData, targetAudience: value, selectedUserIds: [] });
+                  setUserSearchQuery("");
+                }}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue />
@@ -724,48 +727,88 @@ export default function Admin() {
                 <Label htmlFor="user-selection" className="text-sm font-medium">
                   Select Users
                 </Label>
-                <div className="mt-2 max-h-40 overflow-y-auto border rounded-md p-3 space-y-2">
-                  {allUsers.map((user) => (
-                    <div key={user.id} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={`user-${user.id}`}
-                        checked={notificationData.selectedUserIds.includes(user.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setNotificationData({
-                              ...notificationData,
-                              selectedUserIds: [...notificationData.selectedUserIds, user.id]
-                            });
-                          } else {
-                            setNotificationData({
-                              ...notificationData,
-                              selectedUserIds: notificationData.selectedUserIds.filter(id => id !== user.id)
-                            });
-                          }
-                        }}
-                        className="rounded"
-                      />
-                      <label htmlFor={`user-${user.id}`} className="text-sm cursor-pointer flex items-center space-x-2">
-                        <span>{user.firstName} {user.lastName}</span>
-                        <Badge className={`text-xs ${getTierBadgeColor(user.subscriptionTier)}`}>
-                          <span className="flex items-center gap-1">
-                            {getTierIcon(user.subscriptionTier)}
-                            {user.subscriptionTier.toUpperCase()}
-                          </span>
-                        </Badge>
-                      </label>
+                <div className="mt-2">
+                  <Input
+                    placeholder="Search users by name or email..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    className="mb-3"
+                  />
+                  <div className="max-h-40 overflow-y-auto border rounded-md p-3 space-y-2">
+                    {allUsers
+                      .filter(user => {
+                        if (!userSearchQuery) return true;
+                        const searchLower = userSearchQuery.toLowerCase();
+                        const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+                        const email = user.email.toLowerCase();
+                        return fullName.includes(searchLower) || email.includes(searchLower);
+                      })
+                      .map((user) => (
+                        <div key={user.id} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`user-${user.id}`}
+                            checked={notificationData.selectedUserIds.includes(user.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setNotificationData({
+                                  ...notificationData,
+                                  selectedUserIds: [...notificationData.selectedUserIds, user.id]
+                                });
+                              } else {
+                                setNotificationData({
+                                  ...notificationData,
+                                  selectedUserIds: notificationData.selectedUserIds.filter(id => id !== user.id)
+                                });
+                              }
+                            }}
+                            className="rounded"
+                          />
+                          <label htmlFor={`user-${user.id}`} className="text-sm cursor-pointer flex items-center space-x-2 flex-1">
+                            <div className="flex flex-col">
+                              <span>{user.firstName} {user.lastName}</span>
+                              <span className="text-xs text-ministry-slate">{user.email}</span>
+                            </div>
+                            <Badge className={`text-xs ${getTierBadgeColor(user.subscriptionTier)}`}>
+                              <span className="flex items-center gap-1">
+                                {getTierIcon(user.subscriptionTier)}
+                                {user.subscriptionTier.toUpperCase()}
+                              </span>
+                            </Badge>
+                          </label>
+                        </div>
+                      ))}
+                    {allUsers.filter(user => {
+                      if (!userSearchQuery) return true;
+                      const searchLower = userSearchQuery.toLowerCase();
+                      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+                      const email = user.email.toLowerCase();
+                      return fullName.includes(searchLower) || email.includes(searchLower);
+                    }).length === 0 && (
+                      <p className="text-sm text-ministry-slate">
+                        {userSearchQuery ? "No users found matching your search" : "No users available"}
+                      </p>
+                    )}
+                  </div>
+                  {notificationData.selectedUserIds.length > 0 && (
+                    <div className="mt-2 flex items-center justify-between">
+                      <p className="text-xs text-ministry-slate">
+                        {notificationData.selectedUserIds.length} user(s) selected
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setNotificationData({
+                          ...notificationData,
+                          selectedUserIds: []
+                        })}
+                        className="text-xs text-red-600 hover:text-red-700"
+                      >
+                        Clear All
+                      </Button>
                     </div>
-                  ))}
-                  {allUsers.length === 0 && (
-                    <p className="text-sm text-ministry-slate">No users available</p>
                   )}
                 </div>
-                {notificationData.selectedUserIds.length > 0 && (
-                  <p className="text-xs text-ministry-slate mt-1">
-                    {notificationData.selectedUserIds.length} user(s) selected
-                  </p>
-                )}
               </div>
             )}
 
@@ -775,6 +818,7 @@ export default function Admin() {
                 onClick={() => {
                   setShowNotificationDialog(false);
                   setNotificationData({ title: "", message: "", type: "general", targetAudience: "everyone", selectedUserIds: [] });
+                  setUserSearchQuery("");
                 }}
               >
                 Cancel

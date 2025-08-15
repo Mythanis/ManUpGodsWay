@@ -43,6 +43,8 @@ This is a full-stack React/Express application called "Man Up God's Way" - a fai
 ✓ **Push Notification Broadcasting**: Complete admin system for sending notifications to all users with type selection and character limits
 ✓ **Notification Management**: Users can mark all as read, clear all notifications, and scroll through notification history
 ✓ **Individual Notification Control**: Added three-dot menu to each notification with clear option for granular notification management
+✓ **Targeted Push Notifications**: Enhanced admin notification system with audience targeting (Everyone, VIP, Premium, Individual users)
+✓ **User Search Functionality**: Added search capability for finding specific users when sending individual notifications
 
 # User Preferences
 
