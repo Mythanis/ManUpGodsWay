@@ -45,7 +45,9 @@ export default function Admin() {
   const [notificationData, setNotificationData] = useState({
     title: "",
     message: "",
-    type: "general" as "general" | "devotional" | "announcement"
+    type: "general" as "general" | "devotional" | "announcement",
+    targetAudience: "everyone" as "everyone" | "vip" | "premium" | "individual",
+    selectedUserIds: [] as string[]
   });
   const [formData, setFormData] = useState({
     title: "",
@@ -90,6 +92,13 @@ export default function Admin() {
     queryKey: ["/api/studies"],
     retry: false,
     enabled: (user as any)?.role === 'admin',
+  });
+
+  // Fetch users for individual targeting
+  const { data: allUsers = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/users"],
+    retry: false,
+    enabled: (user as any)?.role === 'admin' && notificationData.targetAudience === 'individual',
   });
 
   // Update study mutation
@@ -185,10 +194,10 @@ export default function Admin() {
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Notification sent to all users!",
+        description: "Notification sent successfully!",
       });
       setShowNotificationDialog(false);
-      setNotificationData({ title: "", message: "", type: "general" });
+      setNotificationData({ title: "", message: "", type: "general", targetAudience: "everyone", selectedUserIds: [] });
     },
     onError: () => {
       toast({
@@ -208,6 +217,16 @@ export default function Admin() {
       });
       return;
     }
+    
+    if (notificationData.targetAudience === 'individual' && notificationData.selectedUserIds.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please select at least one user for individual notifications.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     sendNotification.mutate(notificationData);
   };
 
@@ -613,7 +632,7 @@ export default function Admin() {
 
       {/* Send Notification Dialog */}
       <Dialog open={showNotificationDialog} onOpenChange={setShowNotificationDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <Bell className="w-5 h-5" />
@@ -678,12 +697,84 @@ export default function Admin() {
               </p>
             </div>
 
+            <div>
+              <Label htmlFor="target-audience" className="text-sm font-medium">
+                Target Audience
+              </Label>
+              <Select
+                value={notificationData.targetAudience}
+                onValueChange={(value: "everyone" | "vip" | "premium" | "individual") => 
+                  setNotificationData({ ...notificationData, targetAudience: value, selectedUserIds: [] })
+                }
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="everyone">Everyone</SelectItem>
+                  <SelectItem value="vip">VIP Users Only</SelectItem>
+                  <SelectItem value="premium">Premium Users Only</SelectItem>
+                  <SelectItem value="individual">Individual Users</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {notificationData.targetAudience === 'individual' && (
+              <div>
+                <Label htmlFor="user-selection" className="text-sm font-medium">
+                  Select Users
+                </Label>
+                <div className="mt-2 max-h-40 overflow-y-auto border rounded-md p-3 space-y-2">
+                  {allUsers.map((user) => (
+                    <div key={user.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`user-${user.id}`}
+                        checked={notificationData.selectedUserIds.includes(user.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNotificationData({
+                              ...notificationData,
+                              selectedUserIds: [...notificationData.selectedUserIds, user.id]
+                            });
+                          } else {
+                            setNotificationData({
+                              ...notificationData,
+                              selectedUserIds: notificationData.selectedUserIds.filter(id => id !== user.id)
+                            });
+                          }
+                        }}
+                        className="rounded"
+                      />
+                      <label htmlFor={`user-${user.id}`} className="text-sm cursor-pointer flex items-center space-x-2">
+                        <span>{user.firstName} {user.lastName}</span>
+                        <Badge className={`text-xs ${getTierBadgeColor(user.subscriptionTier)}`}>
+                          <span className="flex items-center gap-1">
+                            {getTierIcon(user.subscriptionTier)}
+                            {user.subscriptionTier.toUpperCase()}
+                          </span>
+                        </Badge>
+                      </label>
+                    </div>
+                  ))}
+                  {allUsers.length === 0 && (
+                    <p className="text-sm text-ministry-slate">No users available</p>
+                  )}
+                </div>
+                {notificationData.selectedUserIds.length > 0 && (
+                  <p className="text-xs text-ministry-slate mt-1">
+                    {notificationData.selectedUserIds.length} user(s) selected
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="flex justify-end space-x-2 pt-4">
               <Button
                 variant="outline"
                 onClick={() => {
                   setShowNotificationDialog(false);
-                  setNotificationData({ title: "", message: "", type: "general" });
+                  setNotificationData({ title: "", message: "", type: "general", targetAudience: "everyone", selectedUserIds: [] });
                 }}
               >
                 Cancel

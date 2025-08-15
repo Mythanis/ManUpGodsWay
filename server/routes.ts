@@ -885,33 +885,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const { title, message, type } = req.body;
+      const { title, message, type, targetAudience, selectedUserIds } = req.body;
       
       if (!title || !message) {
         return res.status(400).json({ message: "Title and message are required" });
       }
 
-      // Get all users to send notification to
+      // Get all users
       const allUsers = await storage.getAllUsers();
+      let targetUsers: any[] = [];
+
+      // Filter users based on target audience
+      switch (targetAudience) {
+        case 'everyone':
+          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
+          break;
+        case 'vip':
+          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && targetUser.subscriptionTier === 'vip');
+          break;
+        case 'premium':
+          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && targetUser.subscriptionTier === 'premium');
+          break;
+        case 'individual':
+          if (!selectedUserIds || selectedUserIds.length === 0) {
+            return res.status(400).json({ message: "No users selected for individual notification" });
+          }
+          targetUsers = allUsers.filter(targetUser => selectedUserIds.includes(targetUser.id));
+          break;
+        default:
+          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
+      }
+
+      if (targetUsers.length === 0) {
+        return res.status(400).json({ message: "No users match the selected criteria" });
+      }
       
-      // Create notifications for all users
-      const notificationPromises = allUsers.map(async (targetUser) => {
-        if (targetUser.id !== user.id) { // Don't send to admin
-          return await storage.createNotification({
-            userId: targetUser.id,
-            type: type || 'general',
-            title,
-            message,
-            relatedId: null,
-          });
-        }
+      // Create notifications for targeted users
+      const notificationPromises = targetUsers.map(async (targetUser) => {
+        return await storage.createNotification({
+          userId: targetUser.id,
+          type: type || 'general',
+          title,
+          message,
+          relatedId: null,
+        });
       });
 
       await Promise.all(notificationPromises.filter(Boolean));
 
+      let successMessage = "";
+      switch (targetAudience) {
+        case 'vip':
+          successMessage = `Notification sent to ${targetUsers.length} VIP user(s) successfully`;
+          break;
+        case 'premium':
+          successMessage = `Notification sent to ${targetUsers.length} Premium user(s) successfully`;
+          break;
+        case 'individual':
+          successMessage = `Notification sent to ${targetUsers.length} selected user(s) successfully`;
+          break;
+        default:
+          successMessage = `Notification sent to ${targetUsers.length} user(s) successfully`;
+      }
+
       res.json({ 
-        message: "Notification sent to all users successfully",
-        recipients: allUsers.length - 1 // Exclude admin
+        message: successMessage,
+        recipients: targetUsers.length
       });
     } catch (error) {
       console.error("Error broadcasting notification:", error);
