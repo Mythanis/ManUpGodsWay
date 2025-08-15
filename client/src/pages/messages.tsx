@@ -181,15 +181,24 @@ export default function Messages() {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedConversation) {
+    if (!newMessage.trim() || !selectedConversation || sendMessageMutation.isPending) {
       console.log("Cannot send message:", { 
         hasMessage: !!newMessage.trim(), 
-        hasConversation: !!selectedConversation 
+        hasConversation: !!selectedConversation,
+        isPending: sendMessageMutation.isPending 
       });
       return;
     }
     console.log("Sending message:", newMessage.trim());
     sendMessageMutation.mutate({ content: newMessage.trim() });
+  };
+
+  // Handle Enter key press
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(e as any);
+    }
   };
 
   const handleCreateGroup = () => {
@@ -491,9 +500,9 @@ export default function Messages() {
         </div>
       ) : (
         /* Chat Interface */
-        <div className="w-full flex flex-col">
+        <div className="w-full h-screen flex flex-col">
           {/* Chat Header */}
-          <div className="bg-ministry-navy text-white px-6 py-4 flex items-center">
+          <div className="bg-ministry-navy text-white px-6 py-4 flex items-center flex-shrink-0">
             <Button
               variant="ghost"
               size="sm"
@@ -515,87 +524,93 @@ export default function Messages() {
           </div>
 
           {/* Messages */}
-          <ScrollArea className="flex-1 px-6 py-4">
-            {messagesLoading ? (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-navy"></div>
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-ministry-slate">No messages yet</p>
-                <p className="text-sm text-ministry-slate">Start the conversation!</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {messages.reverse().map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex items-end space-x-2 ${message.userId === (user as any)?.id ? 'justify-end' : 'justify-start'}`}
-                    data-testid={`message-${message.id}`}
-                  >
-                    {/* Profile picture for other users */}
-                    {message.userId !== (user as any)?.id && (
-                      <img
-                        src={message.user.profileImageUrl || `https://ui-avatars.com/api/?name=${message.user.firstName}+${message.user.lastName}&background=4A90B8&color=fff`}
-                        alt={`${message.user.firstName} ${message.user.lastName}`}
-                        className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy flex-shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          setShowProfileMenu({
-                            userId: message.userId,
-                            x: rect.right,
-                            y: rect.top
-                          });
-                        }}
-                      />
-                    )}
-                    
-                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                      message.userId === (user as any)?.id
-                        ? 'bg-ministry-navy text-white'
-                        : 'bg-gray-100 text-ministry-charcoal'
-                    }`}>
-                      {selectedConversation.type === "group" && message.userId !== (user as any)?.id && (
-                        <p className="text-xs opacity-75 mb-1">
-                          {message.user.firstName} {message.user.lastName}
-                        </p>
+          <div className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full px-6 py-4">
+              {messagesLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-navy"></div>
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-ministry-slate">No messages yet</p>
+                  <p className="text-sm text-ministry-slate">Start the conversation!</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {messages.reverse().map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex items-end space-x-2 ${message.userId === (user as any)?.id ? 'justify-end' : 'justify-start'}`}
+                      data-testid={`message-${message.id}`}
+                    >
+                      {/* Profile picture for other users */}
+                      {message.userId !== (user as any)?.id && (
+                        <img
+                          src={message.user.profileImageUrl || `https://ui-avatars.com/api/?name=${message.user.firstName}+${message.user.lastName}&background=4A90B8&color=fff`}
+                          alt={`${message.user.firstName} ${message.user.lastName}`}
+                          className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy flex-shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setShowProfileMenu({
+                              userId: message.userId,
+                              x: rect.right,
+                              y: rect.top
+                            });
+                          }}
+                        />
                       )}
-                      <p className="text-sm">{message.content}</p>
-                      <p className={`text-xs mt-1 ${
-                        message.userId === (user as any)?.id ? 'text-gray-200' : 'text-ministry-slate'
+                      
+                      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                        message.userId === (user as any)?.id
+                          ? 'bg-ministry-navy text-white'
+                          : 'bg-gray-100 text-ministry-charcoal'
                       }`}>
-                        {formatMessageTime(message.createdAt)}
-                      </p>
+                        {selectedConversation.type === "group" && message.userId !== (user as any)?.id && (
+                          <p className="text-xs opacity-75 mb-1">
+                            {message.user.firstName} {message.user.lastName}
+                          </p>
+                        )}
+                        <p className="text-sm">{message.content}</p>
+                        <p className={`text-xs mt-1 ${
+                          message.userId === (user as any)?.id ? 'text-gray-200' : 'text-ministry-slate'
+                        }`}>
+                          {formatMessageTime(message.createdAt)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            )}
-          </ScrollArea>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </ScrollArea>
+          </div>
 
-          {/* Message Input */}
-          <form onSubmit={handleSendMessage} className="px-6 py-4 border-t bg-gray-50">
-            <div className="flex space-x-2">
-              <Input
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message..."
-                className="flex-1"
-                disabled={sendMessageMutation.isPending}
-                data-testid="input-new-message"
-              />
-              <Button
-                type="submit"
-                disabled={!newMessage.trim() || sendMessageMutation.isPending}
-                className="bg-ministry-navy hover:bg-ministry-charcoal"
-                data-testid="button-send-message"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-          </form>
+          {/* Message Input - Fixed at bottom */}
+          <div className="flex-shrink-0 border-t bg-gray-50">
+            <form onSubmit={handleSendMessage} className="px-6 py-4">
+              <div className="flex space-x-2">
+                <Input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type a message..."
+                  className="flex-1"
+                  disabled={sendMessageMutation.isPending}
+                  data-testid="input-new-message"
+                  autoComplete="off"
+                />
+                <Button
+                  type="submit"
+                  disabled={!newMessage.trim() || sendMessageMutation.isPending}
+                  className="bg-ministry-navy hover:bg-ministry-charcoal"
+                  data-testid="button-send-message"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
       {/* Profile Menu */}
