@@ -271,7 +271,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const devotionalData = insertDevotionalSchema.parse(req.body);
+      // Transform string date to Date object before validation
+      const requestData = { ...req.body };
+      if (requestData.date && typeof requestData.date === 'string') {
+        requestData.date = new Date(requestData.date);
+      }
+
+      const devotionalData = insertDevotionalSchema.parse(requestData);
       const devotional = await storage.createDevotional(devotionalData);
       res.status(201).json(devotional);
     } catch (error) {
@@ -290,7 +296,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const devotionalData = insertDevotionalSchema.parse(req.body);
+      // Transform string date to Date object before validation
+      const requestData = { ...req.body };
+      if (requestData.date && typeof requestData.date === 'string') {
+        requestData.date = new Date(requestData.date);
+      }
+
+      const devotionalData = insertDevotionalSchema.parse(requestData);
       const devotional = await storage.updateDevotional(req.params.id, devotionalData);
       if (!devotional) {
         return res.status(404).json({ message: "Devotional not found" });

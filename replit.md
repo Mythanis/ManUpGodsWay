@@ -28,6 +28,8 @@ This is a full-stack React/Express application called "Man Up God's Way" - a fai
 ✓ **Fixed API Issues**: Corrected parameter order in API requests for notifications and profile setup
 ✓ **Real-time Messaging**: Implemented automatic polling for conversations and messages to ensure immediate visibility
 ✓ **Cross-user Updates**: Recipients now see new conversations and messages without manual refresh
+✓ **Conversation Name Preservation**: Direct message conversations preserve participant names even after deletion
+✓ **Devotional API Fix**: Resolved date validation error in devotional creation by properly handling string-to-Date conversion
 
 # User Preferences
 
