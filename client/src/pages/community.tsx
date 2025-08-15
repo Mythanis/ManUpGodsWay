@@ -54,14 +54,7 @@ export default function Community() {
 
   const createDiscussion = useMutation({
     mutationFn: async (data: z.infer<typeof createDiscussionSchema>) => {
-      console.log("Mutation function called with:", data);
-      const discussionData = {
-        ...data,
-        userId: (user as any)?.id,
-      };
-      console.log("Making API request with data:", discussionData);
-      const response = await apiRequest('POST', '/api/discussions', discussionData);
-      console.log("API response:", response);
+      const response = await apiRequest('POST', '/api/discussions', data);
       return response;
     },
     onSuccess: () => {
@@ -95,24 +88,7 @@ export default function Community() {
   });
 
   const onSubmit = async (data: { title: string; content: string; category: string }) => {
-    console.log("=== FORM SUBMISSION START ===");
-    console.log("Form submitted with data:", data);
-    console.log("Current user:", user);
-    console.log("Form validation errors:", form.formState.errors);
-    
-    // Check if all required fields are present
-    if (!data.title || !data.content || !data.category) {
-      console.log("Missing required fields:", { title: !data.title, content: !data.content, category: !data.category });
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     if (!(user as any)?.id) {
-      console.log("User not authenticated");
       toast({
         title: "Error",
         description: "You must be logged in to create a discussion",
@@ -128,15 +104,7 @@ export default function Community() {
       userId: (user as any).id,
     };
     
-    console.log("Submitting discussion data:", discussionData);
-    console.log("=== CALLING MUTATION ===");
-    
-    try {
-      await createDiscussion.mutateAsync(discussionData);
-      console.log("=== MUTATION SUCCESS ===");
-    } catch (error) {
-      console.error("=== MUTATION ERROR ===", error);
-    }
+    await createDiscussion.mutateAsync(discussionData);
   };
 
   // Mock community stats

@@ -1,13 +1,86 @@
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, MessageCircle } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { apiRequest } from "@/lib/queryClient";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import { Heart, MessageCircle, Send } from "lucide-react";
+import { z } from "zod";
 
 interface DiscussionCardProps {
   discussion: any;
 }
 
+const replySchema = z.object({
+  content: z.string().min(1, "Reply content is required"),
+});
+
 export default function DiscussionCard({ discussion }: DiscussionCardProps) {
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const form = useForm({
+    resolver: zodResolver(replySchema),
+    defaultValues: {
+      content: '',
+    },
+  });
+
+  const createReply = useMutation({
+    mutationFn: async (data: z.infer<typeof replySchema>) => {
+      const response = await apiRequest('POST', `/api/discussions/${discussion.id}/replies`, data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
+      toast({
+        title: "Success",
+        description: "Reply posted successfully!",
+      });
+      setShowReplyForm(false);
+      form.reset();
+    },
+    onError: (error) => {
+      console.error("Reply creation error:", error);
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: `Failed to post reply: ${error.message || 'Please try again.'}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmitReply = async (data: z.infer<typeof replySchema>) => {
+    if (!(user as any)?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to reply",
+        variant: "destructive",
+      });
+      return;
+    }
+    await createReply.mutateAsync(data);
+  };
   const getTierBadge = (subscriptionTier: string) => {
     switch (subscriptionTier) {
       case 'vip':
@@ -85,6 +158,7 @@ export default function DiscussionCard({ discussion }: DiscussionCardProps) {
               <Button 
                 variant="ghost"
                 size="sm"
+                onClick={() => setShowReplyForm(!showReplyForm)}
                 className="text-ministry-steel hover:text-ministry-navy text-xs font-medium p-1"
                 data-testid="button-reply"
               >
@@ -93,6 +167,58 @@ export default function DiscussionCard({ discussion }: DiscussionCardProps) {
             </div>
           </div>
         </div>
+        
+        {showReplyForm && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmitReply)} className="space-y-3">
+                <FormField
+                  control={form.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Write your reply..."
+                          className="min-h-[80px] resize-none"
+                          {...field}
+                          data-testid="textarea-reply-content"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowReplyForm(false);
+                      form.reset();
+                    }}
+                    className="text-xs"
+                    data-testid="button-cancel-reply"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={createReply.isPending}
+                    className="bg-ministry-navy hover:bg-ministry-charcoal text-xs"
+                    data-testid="button-submit-reply"
+                  >
+                    <Send className="w-3 h-3 mr-1" />
+                    {createReply.isPending ? "Posting..." : "Post Reply"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

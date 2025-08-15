@@ -179,31 +179,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/discussions', isAuthenticated, async (req: any, res) => {
     try {
-      console.log("=== API ENDPOINT HIT ===");
-      console.log("Request body:", req.body);
-      console.log("Request headers:", req.headers);
-      console.log("Authenticated user:", req.user);
-      
       const userId = req.user.claims.sub;
-      console.log("User ID extracted:", userId);
-      
-      const discussionPayload = {
+      const discussionData = insertDiscussionSchema.parse({
         ...req.body,
         userId,
-      };
+      });
       
-      console.log("Payload before validation:", discussionPayload);
-      
-      const discussionData = insertDiscussionSchema.parse(discussionPayload);
-      
-      console.log("Validated discussion data:", discussionData);
       const discussion = await storage.createDiscussion(discussionData);
-      console.log("Discussion created successfully:", discussion);
       res.status(201).json(discussion);
     } catch (error) {
-      console.error("=== API ERROR ===", error);
+      console.error("Error creating discussion:", error);
       if (error instanceof z.ZodError) {
-        console.log("Validation errors:", error.errors);
         return res.status(400).json({ message: "Invalid discussion data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create discussion" });
