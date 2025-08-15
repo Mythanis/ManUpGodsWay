@@ -28,12 +28,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Study routes
-  app.get('/api/studies', async (req, res) => {
+  app.get('/api/studies', async (req: any, res) => {
     try {
       const { category, tier } = req.query;
+      
+      // Check if user is admin
+      let isAdmin = false;
+      if (req.user) {
+        try {
+          const user = await storage.getUser(req.user.claims.sub);
+          isAdmin = user?.role === 'admin';
+        } catch (error) {
+          // If there's an error getting user info, continue as non-admin
+          console.log("Could not verify admin status:", error);
+        }
+      }
+      
       const studies = await storage.getStudies(
         category as string, 
-        tier as string
+        tier as string,
+        isAdmin
       );
       res.json(studies);
     } catch (error) {

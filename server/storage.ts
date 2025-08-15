@@ -48,7 +48,7 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   
   // Study operations
-  getStudies(category?: string, requiredTier?: string): Promise<Study[]>;
+  getStudies(category?: string, requiredTier?: string, isAdmin?: boolean): Promise<Study[]>;
   getStudy(id: string): Promise<Study | undefined>;
   createStudy(study: InsertStudy): Promise<Study>;
   updateStudy(id: string, study: Partial<InsertStudy>): Promise<Study>;
@@ -136,8 +136,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Study operations
-  async getStudies(category?: string, requiredTier?: string): Promise<Study[]> {
-    const conditions = [eq(studies.isPublished, true)];
+  async getStudies(category?: string, requiredTier?: string, isAdmin?: boolean): Promise<Study[]> {
+    const conditions = [];
+    
+    // Only filter by published status if not admin
+    if (!isAdmin) {
+      conditions.push(eq(studies.isPublished, true));
+    }
     
     if (category) {
       conditions.push(eq(studies.category, category));
@@ -147,11 +152,13 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(studies.requiredTier, requiredTier));
     }
     
-    return await db
-      .select()
-      .from(studies)
-      .where(and(...conditions))
-      .orderBy(desc(studies.createdAt));
+    const query = db.select().from(studies);
+    
+    if (conditions.length > 0) {
+      query.where(and(...conditions));
+    }
+    
+    return await query.orderBy(desc(studies.createdAt));
   }
 
   async getStudy(id: string): Promise<Study | undefined> {
