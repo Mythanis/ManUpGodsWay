@@ -25,9 +25,10 @@ const categories = [
   { id: 'faith', label: 'Faith', icon: Lightbulb },
 ];
 
-const createDiscussionSchema = insertDiscussionSchema.extend({
-  title: z.string().min(5, "Title must be at least 5 characters"),
-  content: z.string().min(10, "Content must be at least 10 characters"),
+const createDiscussionSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
+  category: z.string().min(1, "Category is required"),
 });
 
 export default function Community() {
@@ -49,7 +50,6 @@ export default function Community() {
       content: '',
       category: 'leadership',
     },
-    mode: 'onChange',
   });
 
   const createDiscussion = useMutation({
@@ -279,23 +279,7 @@ export default function Community() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={createDiscussion.isPending || !form.formState.isValid}
-                    onClick={(e) => {
-                      console.log("=== BUTTON CLICKED ===");
-                      console.log("Event:", e.type);
-                      console.log("Form state:", form.formState);
-                      console.log("Form values:", form.getValues());
-                      console.log("Form errors:", form.formState.errors);
-                      console.log("Is form valid:", form.formState.isValid);
-                      console.log("Button disabled:", createDiscussion.isPending || !form.formState.isValid);
-                      
-                      // Manual form submission test
-                      const formData = form.getValues();
-                      if (formData.title && formData.content && formData.category) {
-                        console.log("Manually triggering form submission...");
-                        onSubmit(formData);
-                      }
-                    }}
+                    disabled={createDiscussion.isPending}
                     className="flex-1 bg-ministry-navy hover:bg-ministry-charcoal"
                     data-testid="button-create-discussion"
                   >
