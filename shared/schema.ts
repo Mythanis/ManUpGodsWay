@@ -156,6 +156,29 @@ export const messages = pgTable("messages", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Direct message requests that need approval
+export const messageRequests = pgTable("message_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fromUserId: varchar("from_user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  toUserId: varchar("to_user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  message: text("message").notNull(), // The initial message
+  status: varchar("status").default("pending"), // 'pending', 'accepted', 'declined'
+  createdAt: timestamp("created_at").defaultNow(),
+  respondedAt: timestamp("responded_at"),
+});
+
+// Notifications for various events
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  type: varchar("type").notNull(), // 'message_request', 'new_message', 'new_study', 'new_devotional', 'group_message'
+  title: varchar("title").notNull(),
+  message: text("message").notNull(),
+  relatedId: varchar("related_id"), // ID of related entity (conversation, study, etc.)
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   progress: many(userProgress),
@@ -203,6 +226,15 @@ export const conversationParticipantsRelations = relations(conversationParticipa
 export const messagesRelations = relations(messages, ({ one }) => ({
   conversation: one(conversations, { fields: [messages.conversationId], references: [conversations.id] }),
   user: one(users, { fields: [messages.userId], references: [users.id] }),
+}));
+
+export const messageRequestsRelations = relations(messageRequests, ({ one }) => ({
+  fromUser: one(users, { fields: [messageRequests.fromUserId], references: [users.id] }),
+  toUser: one(users, { fields: [messageRequests.toUserId], references: [users.id] }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, { fields: [notifications.userId], references: [users.id] }),
 }));
 
 // Insert schemas
@@ -270,6 +302,17 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   editedAt: true,
 });
 
+export const insertMessageRequestSchema = createInsertSchema(messageRequests).omit({
+  id: true,
+  createdAt: true,
+  respondedAt: true,
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -291,3 +334,7 @@ export type ConversationParticipant = typeof conversationParticipants.$inferSele
 export type InsertConversationParticipant = z.infer<typeof insertConversationParticipantSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type MessageRequest = typeof messageRequests.$inferSelect;
+export type InsertMessageRequest = z.infer<typeof insertMessageRequestSchema>;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;

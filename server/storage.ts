@@ -9,6 +9,8 @@ import {
   conversations,
   conversationParticipants,
   messages,
+  messageRequests,
+  notifications,
   type User,
   type UpsertUser,
   type Study,
@@ -29,6 +31,10 @@ import {
   type InsertConversationParticipant,
   type Message,
   type InsertMessage,
+  type MessageRequest,
+  type InsertMessageRequest,
+  type Notification,
+  type InsertNotification,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, count } from "drizzle-orm";
@@ -748,6 +754,101 @@ export class DatabaseStorage implements IStorage {
       .where(eq(conversationParticipants.conversationId, conversationId));
   }
 
+  // Notification methods
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [newNotification] = await db.insert(notifications)
+      .values(notification)
+      .returning();
+    return newNotification;
+  }
+
+  async getUserNotifications(userId: string): Promise<Notification[]> {
+    return await db.select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async markNotificationAsRead(notificationId: string): Promise<void> {
+    await db.update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, notificationId));
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db.update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.userId, userId));
+  }
+
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    const [result] = await db.select({ count: sql<number>`count(*)` })
+      .from(notifications)
+      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+    return result.count;
+  }
+
+  // Message request methods
+  async createMessageRequest(request: InsertMessageRequest): Promise<MessageRequest> {
+    const [newRequest] = await db.insert(messageRequests)
+      .values(request)
+      .returning();
+    return newRequest;
+  }
+
+  async getUserMessageRequests(userId: string): Promise<(MessageRequest & { fromUser: User })[]> {
+    return await db.select({
+      id: messageRequests.id,
+      fromUserId: messageRequests.fromUserId,
+      toUserId: messageRequests.toUserId,
+      message: messageRequests.message,
+      status: messageRequests.status,
+      createdAt: messageRequests.createdAt,
+      respondedAt: messageRequests.respondedAt,
+      fromUser: users,
+    })
+      .from(messageRequests)
+      .innerJoin(users, eq(messageRequests.fromUserId, users.id))
+      .where(eq(messageRequests.toUserId, userId))
+      .orderBy(desc(messageRequests.createdAt));
+  }
+
+  async respondToMessageRequest(requestId: string, status: 'accepted' | 'declined'): Promise<MessageRequest> {
+    const [updatedRequest] = await db.update(messageRequests)
+      .set({ 
+        status,
+        respondedAt: new Date()
+      })
+      .where(eq(messageRequests.id, requestId))
+      .returning();
+    return updatedRequest;
+  }
+
+  async getMessageRequest(requestId: string): Promise<MessageRequest | undefined> {
+    const [request] = await db.select()
+      .from(messageRequests)
+      .where(eq(messageRequests.id, requestId))
+      .limit(1);
+    return request;
+  }
+
+  // Check if direct conversation already exists between two users
+  async findDirectConversation(userId1: string, userId2: string): Promise<Conversation | undefined> {
+    const allConversations = await db.select()
+      .from(conversations)
+      .where(eq(conversations.type, 'direct'));
+
+    for (const conversation of allConversations) {
+      const participants = await this.getConversationParticipants(conversation.id);
+      const participantIds = participants.map(p => p.userId);
+      
+      if (participantIds.includes(userId1) && participantIds.includes(userId2) && participantIds.length === 2) {
+        return conversation;
+      }
+    }
+    return undefined;
+  }
+
   async markMessagesAsRead(conversationId: string, userId: string): Promise<void> {
     await db
       .update(conversationParticipants)
@@ -758,6 +859,10 @@ export class DatabaseStorage implements IStorage {
           eq(conversationParticipants.userId, userId)
         )
       );
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
   }
 }
 

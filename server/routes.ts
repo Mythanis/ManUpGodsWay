@@ -411,6 +411,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const message = await storage.sendMessage(messageData);
+
+      // Create notifications for other participants in the conversation
+      try {
+        const conversation = await storage.getConversation(conversationId);
+        if (conversation) {
+          const otherParticipants = conversation.participants.filter((p: any) => p.userId !== userId);
+          const senderUser = await storage.getUser(userId);
+          
+          for (const participant of otherParticipants) {
+            await storage.createNotification({
+              userId: participant.userId,
+              type: conversation.type === 'direct' ? 'new_message' : 'group_message',
+              title: conversation.type === 'direct' ? 'New Message' : `New Group Message in ${conversation.name}`,
+              message: `${senderUser?.firstName || 'Someone'} sent a message`,
+              relatedId: conversationId,
+            });
+          }
+        }
+      } catch (notifError) {
+        console.error("Error creating notifications:", notifError);
+        // Don't fail the message creation if notifications fail
+      }
+
       res.status(201).json(message);
     } catch (error) {
       console.error("Error sending message:", error);
@@ -496,7 +519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ message: "Direct conversation deleted successfully" });
       } else if (conversation.type === "group") {
         // Check if user is admin trying to delete group
-        const userProfile = await storage.getUserById(userId);
+        const userProfile = await storage.getUser(userId);
         if (isAdmin && userProfile?.role === "admin") {
           // Admin can delete entire group
           await storage.deleteConversation(conversationId);
@@ -639,6 +662,170 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching stats:", error);
       res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Notification API Routes
+  // Request direct message access
+  app.post("/api/message-requests", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { toUserId, message } = req.body;
+
+      if (!toUserId || !message) {
+        return res.status(400).json({ message: "toUserId and message are required" });
+      }
+
+      if (userId === toUserId) {
+        return res.status(400).json({ message: "Cannot send message request to yourself" });
+      }
+
+      // Check if conversation already exists
+      const existingConversation = await storage.findDirectConversation(userId, toUserId);
+      if (existingConversation) {
+        return res.status(400).json({ message: "Conversation already exists" });
+      }
+
+      // Check if request already exists
+      const existingRequests = await storage.getUserMessageRequests(toUserId);
+      const pendingRequest = existingRequests.find(r => r.fromUserId === userId && r.status === 'pending');
+      if (pendingRequest) {
+        return res.status(400).json({ message: "Message request already sent" });
+      }
+
+      // Create message request
+      const request = await storage.createMessageRequest({
+        fromUserId: userId,
+        toUserId,
+        message,
+      });
+
+      // Create notification for the recipient
+      const fromUser = await storage.getUser(userId);
+      await storage.createNotification({
+        userId: toUserId,
+        type: 'message_request',
+        title: 'New Message Request',
+        message: `${fromUser?.firstName || 'Someone'} wants to send you a message`,
+        relatedId: request.id,
+      });
+
+      res.status(201).json(request);
+    } catch (error) {
+      console.error("Error creating message request:", error);
+      res.status(500).json({ message: "Failed to create message request" });
+    }
+  });
+
+  // Get user's message requests
+  app.get("/api/message-requests", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const requests = await storage.getUserMessageRequests(userId);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error getting message requests:", error);
+      res.status(500).json({ message: "Failed to get message requests" });
+    }
+  });
+
+  // Accept or decline message request
+  app.post("/api/message-requests/:id/respond", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const requestId = req.params.id;
+      const { action } = req.body; // 'accept' or 'decline'
+
+      if (!action || !['accept', 'decline'].includes(action)) {
+        return res.status(400).json({ message: "Invalid action" });
+      }
+
+      const request = await storage.getMessageRequest(requestId);
+      if (!request) {
+        return res.status(404).json({ message: "Message request not found" });
+      }
+
+      if (request.toUserId !== userId) {
+        return res.status(403).json({ message: "Not authorized to respond to this request" });
+      }
+
+      const status = action === 'accept' ? 'accepted' : 'declined';
+      const updatedRequest = await storage.respondToMessageRequest(requestId, status);
+
+      if (status === 'accepted') {
+        // Create direct conversation
+        const conversation = await storage.createDirectConversation(request.fromUserId, request.toUserId);
+
+        // Send the initial message
+        await storage.sendMessage({
+          conversationId: conversation.id,
+          userId: request.fromUserId,
+          content: request.message,
+          messageType: 'text',
+        });
+
+        // Notify the sender that their request was accepted
+        const toUser = await storage.getUser(request.toUserId);
+        await storage.createNotification({
+          userId: request.fromUserId,
+          type: 'new_message',
+          title: 'Message Request Accepted',
+          message: `${toUser?.firstName || 'Someone'} accepted your message request`,
+          relatedId: conversation.id,
+        });
+      }
+
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Error responding to message request:", error);
+      res.status(500).json({ message: "Failed to respond to message request" });
+    }
+  });
+
+  // Get user notifications
+  app.get("/api/notifications", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const notifications = await storage.getUserNotifications(userId);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error getting notifications:", error);
+      res.status(500).json({ message: "Failed to get notifications" });
+    }
+  });
+
+  // Mark notification as read
+  app.post("/api/notifications/:id/read", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.markNotificationAsRead(req.params.id);
+      res.json({ message: "Notification marked as read" });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  // Mark all notifications as read
+  app.post("/api/notifications/read-all", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.markAllNotificationsAsRead(userId);
+      res.json({ message: "All notifications marked as read" });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+
+  // Get unread notification count
+  app.get("/api/notifications/unread-count", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const count = await storage.getUnreadNotificationCount(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error("Error getting unread notification count:", error);
+      res.status(500).json({ message: "Failed to get unread notification count" });
     }
   });
 
