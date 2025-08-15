@@ -166,8 +166,8 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
           </div>
         </Button>
         {showPanel && (
-          <Card className="absolute right-0 top-16 w-80 max-h-96 z-50 shadow-lg">
-            <CardHeader className="pb-2">
+          <Card className="absolute right-0 top-16 w-80 h-96 z-50 shadow-lg flex flex-col">
+            <CardHeader className="pb-2 flex-shrink-0">
               <div className="flex items-center justify-between mb-2">
                 <CardTitle className="text-sm">Notifications</CardTitle>
                 <Button
@@ -205,7 +205,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
               </div>
             </CardHeader>
             
-            <ScrollArea className="h-80">
+            <ScrollArea className="flex-1">
               <CardContent className="space-y-3 p-3">
                 {/* Message Requests */}
                 {pendingRequests.map((request) => (
@@ -309,8 +309,8 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       </Button>
 
       {showPanel && (
-        <Card className="absolute right-0 top-10 w-80 max-h-96 z-50 shadow-lg">
-          <CardHeader className="pb-2">
+        <Card className="absolute right-0 top-10 w-80 h-96 z-50 shadow-lg flex flex-col">
+          <CardHeader className="pb-2 flex-shrink-0">
             <div className="flex items-center justify-between mb-2">
               <CardTitle className="text-sm">Notifications</CardTitle>
               <Button
@@ -348,7 +348,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
             </div>
           </CardHeader>
           
-          <ScrollArea className="h-80">
+          <ScrollArea className="flex-1">
             <CardContent className="space-y-3 p-3">
               {/* Message Requests */}
               {pendingRequests.map((request) => (
