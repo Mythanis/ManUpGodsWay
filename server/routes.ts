@@ -358,6 +358,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Name and participant IDs are required" });
       }
 
+      // Check if all participants allow group invites
+      for (const participantId of participantIds) {
+        if (participantId !== userId) {
+          const participant = await storage.getUser(participantId);
+          if (!participant?.allowGroupInvites) {
+            return res.status(403).json({ 
+              message: `One or more users have disabled group invites` 
+            });
+          }
+        }
+      }
+
       const conversationData = {
         type: "group",
         name,
@@ -680,6 +692,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Cannot send message request to yourself" });
       }
 
+      // Check if target user allows direct messages
+      const targetUser = await storage.getUser(toUserId);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (!targetUser.allowDirectMessages) {
+        return res.status(403).json({ message: "This user has disabled direct messages" });
+      }
+
       // Check if conversation already exists
       const existingConversation = await storage.findDirectConversation(userId, toUserId);
       if (existingConversation) {
@@ -826,6 +848,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting unread notification count:", error);
       res.status(500).json({ message: "Failed to get unread notification count" });
+    }
+  });
+
+  // Profile setup for new users
+  app.post("/api/profile/setup", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { firstName, lastName, allowDirectMessages, allowGroupInvites, isProfileComplete } = req.body;
+
+      const updatedUser = await storage.updateUserProfile(userId, {
+        firstName,
+        lastName,
+        allowDirectMessages,
+        allowGroupInvites,
+        isProfileComplete,
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error setting up profile:", error);
+      res.status(500).json({ message: "Failed to set up profile" });
+    }
+  });
+
+  // Update user profile
+  app.put("/api/profile/update", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { firstName, lastName, allowDirectMessages, allowGroupInvites } = req.body;
+
+      const updatedUser = await storage.updateUserProfile(userId, {
+        firstName,
+        lastName,
+        allowDirectMessages,
+        allowGroupInvites,
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
     }
   });
 

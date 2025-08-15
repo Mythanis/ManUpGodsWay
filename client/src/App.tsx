@@ -14,9 +14,10 @@ import Admin from "@/pages/admin";
 import StudyDetail from "@/pages/study-detail";
 import NotFound from "@/pages/not-found";
 import Navigation from "@/components/navigation";
+import { UserSetupWizard } from "@/components/user-setup-wizard";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -26,6 +27,15 @@ function Router() {
           <p className="text-ministry-slate">Loading...</p>
         </div>
       </div>
+    );
+  }
+
+  // Show setup wizard for new users
+  if (isAuthenticated && user && !user.isProfileComplete) {
+    return (
+      <UserSetupWizard 
+        onComplete={() => window.location.reload()} 
+      />
     );
   }
 

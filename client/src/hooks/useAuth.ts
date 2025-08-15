@@ -1,5 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 
+export type User = {
+  id: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  role?: string;
+  subscriptionTier?: string;
+  streakDays?: number;
+  allowDirectMessages?: boolean;
+  allowGroupInvites?: boolean;
+  isProfileComplete?: boolean;
+};
+
 export function useAuth() {
   const { data: user, isLoading } = useQuery({
     queryKey: ["/api/auth/user"],
@@ -7,7 +20,7 @@ export function useAuth() {
   });
 
   return {
-    user,
+    user: user as User | undefined,
     isLoading,
     isAuthenticated: !!user,
   };

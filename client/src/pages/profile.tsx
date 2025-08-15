@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { NotificationPanel } from "@/components/notification-panel";
+import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { 
   User, 
   Bell, 
@@ -130,21 +131,23 @@ export default function Profile() {
                 </Button>
               </div>
               
-              <Button 
-                variant="outline"
-                className="w-full justify-between p-4 h-auto border-gray-100 hover:bg-gray-50"
-                data-testid="button-edit-profile"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-lg bg-ministry-steel/20 flex items-center justify-center">
-                    <User className="w-4 h-4 text-ministry-steel" />
+              <EditProfileDialog>
+                <Button 
+                  variant="outline"
+                  className="w-full justify-between p-4 h-auto border-gray-100 hover:bg-gray-50"
+                  data-testid="button-edit-profile"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 rounded-lg bg-ministry-steel/20 flex items-center justify-center">
+                      <User className="w-4 h-4 text-ministry-steel" />
+                    </div>
+                    <span className="font-medium text-ministry-charcoal">Edit Profile</span>
                   </div>
-                  <span className="font-medium text-ministry-charcoal">Edit Profile</span>
-                </div>
-                <svg className="w-5 h-5 text-ministry-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </Button>
+                  <svg className="w-5 h-5 text-ministry-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </Button>
+              </EditProfileDialog>
             </div>
           </CardContent>
         </Card>

@@ -36,6 +36,9 @@ export const users = pgTable("users", {
   role: varchar("role").default("user"), // user, admin
   subscriptionTier: varchar("subscription_tier").default("free"), // free, premium, vip
   streakDays: integer("streak_days").default(0),
+  allowDirectMessages: boolean("allow_direct_messages").default(true),
+  allowGroupInvites: boolean("allow_group_invites").default(true),
+  isProfileComplete: boolean("is_profile_complete").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
