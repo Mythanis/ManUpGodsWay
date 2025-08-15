@@ -94,10 +94,24 @@ export default function Community() {
   });
 
   const onSubmit = async (data: { title: string; content: string; category: string }) => {
+    console.log("=== FORM SUBMISSION START ===");
     console.log("Form submitted with data:", data);
     console.log("Current user:", user);
+    console.log("Form validation errors:", form.formState.errors);
+    
+    // Check if all required fields are present
+    if (!data.title || !data.content || !data.category) {
+      console.log("Missing required fields:", { title: !data.title, content: !data.content, category: !data.category });
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!(user as any)?.id) {
+      console.log("User not authenticated");
       toast({
         title: "Error",
         description: "You must be logged in to create a discussion",
@@ -107,18 +121,20 @@ export default function Community() {
     }
     
     const discussionData = {
-      title: data.title,
-      content: data.content,
+      title: data.title.trim(),
+      content: data.content.trim(),
       category: data.category,
       userId: (user as any).id,
     };
     
     console.log("Submitting discussion data:", discussionData);
+    console.log("=== CALLING MUTATION ===");
     
     try {
       await createDiscussion.mutateAsync(discussionData);
+      console.log("=== MUTATION SUCCESS ===");
     } catch (error) {
-      console.error("Error in onSubmit:", error);
+      console.error("=== MUTATION ERROR ===", error);
     }
   };
 
