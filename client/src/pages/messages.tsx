@@ -182,11 +182,17 @@ export default function Messages() {
   };
 
   const getConversationTitle = (conversation: Conversation) => {
+    if (!conversation) return "Unknown Conversation";
+    
     if (conversation.type === "group") {
       return conversation.name || "Group Chat";
     }
     
     // For direct messages, show the other participant's name
+    if (!conversation.participants || conversation.participants.length === 0) {
+      return "Direct Message";
+    }
+    
     const otherParticipant = conversation.participants.find(p => p.userId !== (user as any)?.id);
     if (otherParticipant?.user) {
       return `${otherParticipant.user.firstName || ""} ${otherParticipant.user.lastName || ""}`.trim() || 
@@ -445,7 +451,7 @@ export default function Messages() {
                           </h3>
                           <p className="text-sm text-ministry-slate">
                             {conversation.type === "group" 
-                              ? `${conversation.participants.length} members`
+                              ? `${conversation.participants?.length || 0} members`
                               : "Direct message"
                             }
                           </p>
@@ -481,7 +487,7 @@ export default function Messages() {
               <h2 className="font-bold">{getConversationTitle(selectedConversation)}</h2>
               <p className="text-sm text-gray-200">
                 {selectedConversation.type === "group" 
-                  ? `${selectedConversation.participants.length} members`
+                  ? `${selectedConversation.participants?.length || 0} members`
                   : "Direct message"
                 }
               </p>
