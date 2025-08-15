@@ -26,6 +26,8 @@ This is a full-stack React/Express application called "Man Up God's Way" - a fai
 ✓ **Privacy Enforcement**: Backend validates user preferences before allowing message requests or group invites
 ✓ **Complete Privacy System**: Users with disabled messaging are filtered from search results and have non-clickable avatars
 ✓ **Fixed API Issues**: Corrected parameter order in API requests for notifications and profile setup
+✓ **Real-time Messaging**: Implemented automatic polling for conversations and messages to ensure immediate visibility
+✓ **Cross-user Updates**: Recipients now see new conversations and messages without manual refresh
 
 # User Preferences
 

@@ -67,10 +67,12 @@ export default function Messages() {
   const [showMessageMenu, setShowMessageMenu] = useState<{messageId: string, x: number, y: number} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Fetch conversations
+  // Fetch conversations with real-time polling
   const { data: conversations = [], isLoading: conversationsLoading } = useQuery<Conversation[]>({
     queryKey: ["/api/conversations"],
     retry: false,
+    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
+    refetchIntervalInBackground: true, // Continue polling when tab is not focused
   });
 
   // Fetch all users for direct messaging and group creation
@@ -97,11 +99,13 @@ export default function Messages() {
      targetUser.email.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Fetch messages for selected conversation
+  // Fetch messages for selected conversation with real-time polling
   const { data: messages = [], isLoading: messagesLoading } = useQuery<Message[]>({
     queryKey: ["/api/conversations", selectedConversation?.id, "messages"],
     enabled: !!selectedConversation,
     retry: false,
+    refetchInterval: 3000, // Poll every 3 seconds for new messages
+    refetchIntervalInBackground: true, // Continue polling when tab is not focused
   });
 
   // Send message mutation
