@@ -605,8 +605,8 @@ export class DatabaseStorage implements IStorage {
     return newConversation;
   }
 
-  async getConversationMessages(conversationId: string, limit = 50): Promise<(Message & { user: User })[]> {
-    return await db
+  async getConversationMessages(conversationId: string, requestingUserId: string, limit = 50): Promise<(Message & { user: User })[]> {
+    const results = await db
       .select({
         id: messages.id,
         conversationId: messages.conversationId,
@@ -615,6 +615,7 @@ export class DatabaseStorage implements IStorage {
         messageType: messages.messageType,
         isEdited: messages.isEdited,
         editedAt: messages.editedAt,
+        deletedBy: messages.deletedBy,
         createdAt: messages.createdAt,
         updatedAt: messages.updatedAt,
         user: users,
@@ -624,6 +625,12 @@ export class DatabaseStorage implements IStorage {
       .where(eq(messages.conversationId, conversationId))
       .orderBy(desc(messages.createdAt))
       .limit(limit);
+
+    // Filter out messages that have been deleted by the requesting user
+    return results.filter(message => {
+      const deletedBy = message.deletedBy || [];
+      return !deletedBy.includes(requestingUserId);
+    });
   }
 
   async sendMessage(message: InsertMessage): Promise<Message> {
@@ -666,7 +673,32 @@ export class DatabaseStorage implements IStorage {
     return message;
   }
 
-  async deleteMessage(messageId: string): Promise<void> {
+  async softDeleteMessage(messageId: string, userId: string): Promise<void> {
+    // Get current deletedBy array
+    const [message] = await db.select({ deletedBy: messages.deletedBy })
+      .from(messages)
+      .where(eq(messages.id, messageId))
+      .limit(1);
+
+    if (!message) {
+      throw new Error("Message not found");
+    }
+
+    // Add user to deletedBy array if not already present
+    const currentDeletedBy = message.deletedBy || [];
+    if (!currentDeletedBy.includes(userId)) {
+      const updatedDeletedBy = [...currentDeletedBy, userId];
+      
+      await db.update(messages)
+        .set({ 
+          deletedBy: updatedDeletedBy,
+          updatedAt: new Date()
+        })
+        .where(eq(messages.id, messageId));
+    }
+  }
+
+  async hardDeleteMessage(messageId: string): Promise<void> {
     await db.delete(messages)
       .where(eq(messages.id, messageId));
   }
@@ -708,6 +740,12 @@ export class DatabaseStorage implements IStorage {
         user: p.users
       }))
     };
+  }
+
+  async getConversationParticipants(conversationId: string): Promise<any[]> {
+    return await db.select()
+      .from(conversationParticipants)
+      .where(eq(conversationParticipants.conversationId, conversationId));
   }
 
   async markMessagesAsRead(conversationId: string, userId: string): Promise<void> {

@@ -383,6 +383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // TODO: Verify user is participant of conversation
       const messages = await storage.getConversationMessages(
         conversationId,
+        userId,
         limit ? parseInt(limit as string) : undefined
       );
       res.json(messages);
@@ -454,7 +455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You can only delete your own messages" });
       }
 
-      await storage.deleteMessage(messageId);
+      await storage.softDeleteMessage(messageId, userId);
       res.json({ message: "Message deleted successfully" });
     } catch (error) {
       console.error("Error deleting message:", error);
@@ -482,12 +483,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (conversation.type === "direct") {
-        // For direct messages, delete the entire conversation
-        await storage.deleteConversation(conversationId);
+        // For direct messages, use soft delete approach
+        // Mark conversation as deleted for this user only
+        await storage.removeParticipantFromConversation(conversationId, userId);
+        
+        // Check if both participants have left, if so, hard delete the conversation
+        const remainingParticipants = await storage.getConversationParticipants(conversationId);
+        if (remainingParticipants.length === 0) {
+          await storage.deleteConversation(conversationId);
+        }
+        
         res.json({ message: "Direct conversation deleted successfully" });
       } else if (conversation.type === "group") {
         // Check if user is admin trying to delete group
-        const userProfile = await storage.getUserProfile(userId);
+        const userProfile = await storage.getUserById(userId);
         if (isAdmin && userProfile?.role === "admin") {
           // Admin can delete entire group
           await storage.deleteConversation(conversationId);

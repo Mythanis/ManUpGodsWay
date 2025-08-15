@@ -151,6 +151,7 @@ export const messages = pgTable("messages", {
   messageType: varchar("message_type").default("text"), // 'text', 'image', 'file'
   isEdited: boolean("is_edited").default(false),
   editedAt: timestamp("edited_at"),
+  deletedBy: text("deleted_by").array().default([]), // Array of user IDs who deleted this message
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
