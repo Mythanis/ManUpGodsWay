@@ -598,24 +598,25 @@ export default function Messages() {
               <p className="text-xs text-red-500 mb-2">DEBUG: Message input section</p>
               <form onSubmit={handleSendMessage}>
                 <div className="flex space-x-2">
-                  <Input
+                  <input
+                    type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Type a message..."
-                    className="flex-1 border-2 border-red-500"
+                    className="flex-1 border-2 border-red-500 px-3 py-2 rounded-md"
                     disabled={sendMessageMutation.isPending}
                     data-testid="input-new-message"
                     autoComplete="off"
                   />
-                  <Button
+                  <button
                     type="submit"
                     disabled={!newMessage.trim() || sendMessageMutation.isPending}
-                    className="bg-red-500 hover:bg-red-600"
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md flex items-center"
                     data-testid="button-send-message"
                   >
                     <Send className="w-4 h-4" />
-                  </Button>
+                  </button>
                 </div>
               </form>
             </div>
