@@ -150,7 +150,7 @@ export default function DevotionalManagement() {
       verseReference: devotional.verseReference,
       content: devotional.content,
       imageUrl: devotional.imageUrl || "",
-      date: new Date(devotional.date).toISOString().split('T')[0],
+      date: new Date(devotional.date + 'T12:00:00').toISOString().split('T')[0],
     });
     setShowForm(true);
   };
@@ -372,7 +372,7 @@ export default function DevotionalManagement() {
                     {devotional.content.length > 150 ? "..." : ""}
                   </p>
                   <p className="text-xs text-ministry-slate">
-                    Date: {new Date(devotional.date).toLocaleDateString()}
+                    Date: {new Date(devotional.date + 'T12:00:00').toLocaleDateString()}
                   </p>
                 </div>
               ))}

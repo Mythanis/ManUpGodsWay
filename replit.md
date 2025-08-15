@@ -33,6 +33,7 @@ This is a full-stack React/Express application called "Man Up God's Way" - a fai
 ✓ **Enhanced Devotional Display**: Added image support, full devotional modal, heart/like functionality, and share capabilities
 ✓ **Devotional Date Display**: Updated dashboard to show current date instead of generic "Day 1" counter
 ✓ **Notification Count Fix**: Ensured notification counts return as proper numbers to prevent UI counting issues
+✓ **Devotional Date Fix**: Corrected timezone handling in admin panel to show accurate dates instead of one day behind
 
 # User Preferences
 
