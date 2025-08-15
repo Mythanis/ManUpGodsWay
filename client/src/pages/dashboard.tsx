@@ -1,17 +1,22 @@
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ProgressCard from "@/components/progress-card";
 import { NotificationPanel } from "@/components/notification-panel";
-import { Bell, Play, Users, BarChart3, Clock } from "lucide-react";
+import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Dashboard() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [showFullDevotional, setShowFullDevotional] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -99,7 +104,23 @@ export default function Dashboard() {
             
             {devotional ? (
               <>
+                {/* Devotional Image */}
+                {devotional.imageUrl && (
+                  <div className="mb-4 rounded-lg overflow-hidden">
+                    <img 
+                      src={devotional.imageUrl} 
+                      alt={devotional.title}
+                      className="w-full h-48 object-cover"
+                      onError={(e) => {
+                        // Hide image if it fails to load
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                
                 <div className="bg-ministry-steel/10 rounded-lg p-4 mb-4">
+                  <h3 className="text-ministry-navy font-bold text-base mb-2">{devotional.title}</h3>
                   <p className="text-ministry-navy font-semibold text-sm mb-2" data-testid="text-verse">
                     "{devotional.verse}" - {devotional.verseReference}
                   </p>
@@ -112,6 +133,7 @@ export default function Dashboard() {
                   <Button 
                     variant="ghost" 
                     className="text-ministry-steel font-medium text-sm hover:text-ministry-navy"
+                    onClick={() => setShowFullDevotional(true)}
                     data-testid="button-read-devotional"
                   >
                     Read Full Devotional
@@ -120,22 +142,48 @@ export default function Dashboard() {
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200"
+                      className={`p-2 rounded-lg transition-colors ${
+                        isLiked 
+                          ? 'bg-red-100 text-red-500 hover:bg-red-200' 
+                          : 'bg-gray-100 hover:bg-gray-200 text-ministry-slate'
+                      }`}
+                      onClick={() => {
+                        setIsLiked(!isLiked);
+                        toast({
+                          title: isLiked ? "Removed from favorites" : "Added to favorites",
+                          description: isLiked ? "Devotional removed from your favorites" : "Devotional saved to your favorites",
+                        });
+                      }}
                       data-testid="button-like-devotional"
                     >
-                      <svg className="w-4 h-4 text-ministry-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                      </svg>
+                      <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="icon"
                       className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200"
+                      onClick={() => {
+                        const shareText = `${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n${devotional.content}`;
+                        
+                        if (navigator.share) {
+                          navigator.share({
+                            title: devotional.title,
+                            text: shareText,
+                            url: window.location.origin,
+                          }).catch(console.error);
+                        } else {
+                          // Fallback: copy to clipboard
+                          navigator.clipboard.writeText(shareText).then(() => {
+                            toast({
+                              title: "Copied to clipboard",
+                              description: "Devotional text copied to clipboard for sharing",
+                            });
+                          });
+                        }
+                      }}
                       data-testid="button-share-devotional"
                     >
-                      <svg className="w-4 h-4 text-ministry-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
-                      </svg>
+                      <Share2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
@@ -261,6 +309,107 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Full Devotional Modal */}
+      <Dialog open={showFullDevotional} onOpenChange={setShowFullDevotional}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-ministry-navy">{devotional?.title}</DialogTitle>
+          </DialogHeader>
+          
+          {devotional && (
+            <div className="space-y-4">
+              {/* Full Image */}
+              {devotional.imageUrl && (
+                <div className="rounded-lg overflow-hidden">
+                  <img 
+                    src={devotional.imageUrl} 
+                    alt={devotional.title}
+                    className="w-full h-64 object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+              
+              {/* Verse */}
+              <div className="bg-ministry-steel/10 rounded-lg p-4">
+                <p className="text-ministry-navy font-semibold text-base mb-2">
+                  "{devotional.verse}" - {devotional.verseReference}
+                </p>
+              </div>
+              
+              {/* Full Content */}
+              <div className="prose prose-sm max-w-none">
+                <p className="text-ministry-slate leading-relaxed whitespace-pre-wrap">
+                  {devotional.content}
+                </p>
+              </div>
+              
+              {/* Actions */}
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex items-center space-x-3">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className={`flex items-center space-x-2 ${
+                      isLiked 
+                        ? 'text-red-500 hover:text-red-600' 
+                        : 'text-ministry-slate hover:text-ministry-navy'
+                    }`}
+                    onClick={() => {
+                      setIsLiked(!isLiked);
+                      toast({
+                        title: isLiked ? "Removed from favorites" : "Added to favorites",
+                        description: isLiked ? "Devotional removed from your favorites" : "Devotional saved to your favorites",
+                      });
+                    }}
+                  >
+                    <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                    <span>{isLiked ? 'Favorited' : 'Add to Favorites'}</span>
+                  </Button>
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="flex items-center space-x-2 text-ministry-slate hover:text-ministry-navy"
+                    onClick={() => {
+                      const shareText = `${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n${devotional.content}`;
+                      
+                      if (navigator.share) {
+                        navigator.share({
+                          title: devotional.title,
+                          text: shareText,
+                          url: window.location.origin,
+                        }).catch(console.error);
+                      } else {
+                        navigator.clipboard.writeText(shareText).then(() => {
+                          toast({
+                            title: "Copied to clipboard",
+                            description: "Devotional text copied to clipboard for sharing",
+                          });
+                        });
+                      }
+                    }}
+                  >
+                    <Share2 className="w-4 h-4" />
+                    <span>Share</span>
+                  </Button>
+                </div>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowFullDevotional(false)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
