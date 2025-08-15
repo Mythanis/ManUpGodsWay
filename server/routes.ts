@@ -487,6 +487,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes
+  // Users endpoint for messaging (accessible to all authenticated users)
+  app.get('/api/users', isAuthenticated, async (req: any, res) => {
+    try {
+      const { limit } = req.query;
+      const users = await storage.getAllUsers(
+        limit ? parseInt(limit as string) : undefined
+      );
+      
+      // Return only necessary fields for messaging (excluding sensitive info)
+      const publicUsers = users.map(user => ({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        profileImageUrl: user.profileImageUrl,
+        subscriptionTier: user.subscriptionTier
+      }));
+      
+      res.json(publicUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
   app.get('/api/admin/users', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);

@@ -71,7 +71,7 @@ export default function Messages() {
 
   // Fetch all users for direct messaging and group creation
   const { data: allUsers = [], isLoading: usersLoading } = useQuery<User[]>({
-    queryKey: ["/api/admin/users"],
+    queryKey: ["/api/users"],
     retry: false,
   });
 
@@ -115,9 +115,9 @@ export default function Messages() {
     mutationFn: async (targetUserId: string) => {
       return await apiRequest("POST", "/api/conversations/direct", { targetUserId });
     },
-    onSuccess: (response) => {
+    onSuccess: (conversation) => {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
-      setSelectedConversation(response);
+      setSelectedConversation(conversation);
       setShowUserListDialog(false);
       setShowProfileMenu(null);
       toast({
@@ -139,9 +139,9 @@ export default function Messages() {
     mutationFn: async (data: { name: string; description: string; participantIds: string[] }) => {
       return await apiRequest("POST", "/api/conversations/group", data);
     },
-    onSuccess: (response) => {
+    onSuccess: (conversation) => {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
-      setSelectedConversation(response);
+      setSelectedConversation(conversation);
       setShowNewGroupDialog(false);
       setGroupName("");
       setGroupDescription("");
