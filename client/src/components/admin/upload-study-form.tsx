@@ -67,7 +67,7 @@ export default function UploadStudyForm() {
       lessonCount: 1,
       thumbnailUrl: '',
       videoUrl: '',
-      videoId: '',
+      videoId: 'none',
       requiredTier: 'free',
       isPublished: false,
     },
@@ -108,7 +108,12 @@ export default function UploadStudyForm() {
   });
 
   const onSubmit = (data: z.infer<typeof createStudySchema>) => {
-    createStudy.mutate(data);
+    // Convert 'none' videoId back to null for database
+    const submitData = {
+      ...data,
+      videoId: data.videoId === 'none' ? null : data.videoId
+    };
+    createStudy.mutate(submitData);
   };
 
   return (
@@ -312,12 +317,12 @@ export default function UploadStudyForm() {
                 <FormItem>
                   <FormLabel>Associated Video</FormLabel>
                   <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                    <Select onValueChange={field.onChange} value={field.value || 'none'}>
                       <SelectTrigger data-testid="select-video">
                         <SelectValue placeholder="Select a video (optional)" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">No video</SelectItem>
+                        <SelectItem value="none">No video</SelectItem>
                         {videos.map((video: any) => (
                           <SelectItem key={video.id} value={video.id}>
                             {video.title} ({video.processingStatus === 'completed' ? 'Ready' : 'Processing'})
