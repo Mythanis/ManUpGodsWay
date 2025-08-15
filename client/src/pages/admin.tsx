@@ -16,7 +16,7 @@ import UserManagement from "@/components/admin/user-management";
 import DevotionalManagement from "@/components/admin/devotional-management";
 import VideoManagement from "@/components/admin/video-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff } from "lucide-react";
 
 interface Study {
   id: string;
@@ -30,6 +30,7 @@ interface Study {
   tags: string[];
   author: string;
   isActive: boolean;
+  isPublished: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -148,6 +149,28 @@ export default function Admin() {
     },
   });
 
+  // Toggle publish status mutation
+  const togglePublishMutation = useMutation({
+    mutationFn: async ({ studyId, isPublished }: { studyId: string; isPublished: boolean }) => {
+      return await apiRequest("PUT", `/api/studies/${studyId}`, { isPublished });
+    },
+    onSuccess: (_, { isPublished }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+      toast({
+        title: "Success",
+        description: `Study ${isPublished ? 'published' : 'unpublished'} successfully`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update study status",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleEdit = (study: Study) => {
     setEditingStudy(study);
     setFormData({
@@ -186,6 +209,10 @@ export default function Admin() {
     if (confirm("Are you sure you want to delete this study? This action cannot be undone.")) {
       deleteStudyMutation.mutate(studyId);
     }
+  };
+
+  const handleTogglePublish = (studyId: string, isPublished: boolean) => {
+    togglePublishMutation.mutate({ studyId, isPublished });
   };
 
   const sendNotification = useMutation({
@@ -405,6 +432,15 @@ export default function Admin() {
                         <div className="flex items-center space-x-2 ml-4">
                           <Button
                             size="sm"
+                            variant={study.isPublished ? "default" : "outline"}
+                            onClick={() => handleTogglePublish(study.id, !study.isPublished)}
+                            disabled={togglePublishMutation.isPending}
+                            className={study.isPublished ? "bg-green-600 hover:bg-green-700 text-white" : "border-green-600 text-green-600 hover:bg-green-50"}
+                          >
+                            {study.isPublished ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                          </Button>
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => handleEdit(study)}
                             data-testid={`button-edit-study-${study.id}`}
@@ -432,6 +468,14 @@ export default function Admin() {
                         <span>Created {new Date(study.createdAt).toLocaleDateString()}</span>
                         <span>•</span>
                         <span className="capitalize">{study.category}</span>
+                        <span>•</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          study.isPublished 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {study.isPublished ? 'Published' : 'Draft'}
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
