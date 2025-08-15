@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { NotificationPanel } from "@/components/notification-panel";
 import { 
   User, 
   Bell, 
@@ -155,11 +156,7 @@ export default function Profile() {
         
         <Card className="border-gray-100 overflow-hidden" data-testid="card-settings">
           <CardContent className="p-0">
-            <Button 
-              variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-gray-50 border-b border-gray-100"
-              data-testid="button-notifications"
-            >
+            <div className="flex items-center justify-between p-4 h-auto hover:bg-gray-50 border-b border-gray-100">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-lg bg-ministry-navy/20 flex items-center justify-center">
                   <Bell className="w-4 h-4 text-ministry-navy" />
@@ -167,12 +164,9 @@ export default function Profile() {
                 <span className="font-medium text-ministry-charcoal">Notifications</span>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="bg-ministry-success w-3 h-3 rounded-full"></span>
-                <svg className="w-5 h-5 text-ministry-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                </svg>
+                <NotificationPanel />
               </div>
-            </Button>
+            </div>
             
             <Button 
               variant="ghost"

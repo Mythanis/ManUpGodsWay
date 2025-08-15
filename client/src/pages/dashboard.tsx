@@ -6,6 +6,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ProgressCard from "@/components/progress-card";
+import { NotificationPanel } from "@/components/notification-panel";
 import { Bell, Play, Users, BarChart3, Clock } from "lucide-react";
 
 export default function Dashboard() {
@@ -62,17 +63,7 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="relative">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
-              data-testid="button-notifications"
-            >
-              <Bell className="w-6 h-6" />
-            </Button>
-            <span className="absolute -top-2 -right-2 bg-ministry-gold text-ministry-navy text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center" data-testid="badge-notification-count">
-              3
-            </span>
+            <NotificationPanel />
           </div>
         </div>
         
