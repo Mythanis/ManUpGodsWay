@@ -53,11 +53,15 @@ export default function Community() {
 
   const createDiscussion = useMutation({
     mutationFn: async (data: z.infer<typeof createDiscussionSchema>) => {
+      console.log("Mutation function called with:", data);
       const discussionData = {
         ...data,
         userId: (user as any)?.id,
       };
-      await apiRequest('POST', '/api/discussions', discussionData);
+      console.log("Making API request with data:", discussionData);
+      const response = await apiRequest('POST', '/api/discussions', discussionData);
+      console.log("API response:", response);
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
@@ -89,6 +93,9 @@ export default function Community() {
   });
 
   const onSubmit = (data: { title: string; content: string; category: string }) => {
+    console.log("Form submitted with data:", data);
+    console.log("Current user:", user);
+    
     if (!(user as any)?.id) {
       toast({
         title: "Error",
@@ -104,6 +111,8 @@ export default function Community() {
       category: data.category,
       userId: (user as any).id,
     };
+    
+    console.log("Submitting discussion data:", discussionData);
     createDiscussion.mutate(discussionData);
   };
 
