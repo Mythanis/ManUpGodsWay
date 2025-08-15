@@ -98,7 +98,11 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-ministry-charcoal">Today's Devotional</h2>
               <span className="text-xs text-ministry-slate">
-                Day {user?.streakDays || 1}
+                {new Date().toLocaleDateString('en-US', { 
+                  weekday: 'short', 
+                  month: 'short', 
+                  day: 'numeric' 
+                })}
               </span>
             </div>
             
