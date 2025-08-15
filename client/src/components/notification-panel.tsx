@@ -167,46 +167,46 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         </Button>
         {showPanel && (
           <Card className="absolute right-0 top-16 w-80 max-h-96 z-50 shadow-lg">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between mb-2">
                 <CardTitle className="text-sm">Notifications</CardTitle>
-                <div className="flex space-x-1">
-                  {unreadCount > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => markAllAsReadMutation.mutate()}
-                      className="text-xs"
-                    >
-                      <CheckCheck className="h-3 w-3 mr-1" />
-                      Mark all read
-                    </Button>
-                  )}
-                  {notifications.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => clearAllNotificationsMutation.mutate()}
-                      className="text-xs text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Clear all
-                    </Button>
-                  )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPanel(false)}
+                  className="text-xs p-1"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {unreadCount > 0 && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setShowPanel(false)}
-                    className="text-xs"
+                    onClick={() => markAllAsReadMutation.mutate()}
+                    className="text-xs h-6 px-2"
                   >
-                    <X className="h-3 w-3" />
+                    <CheckCheck className="h-3 w-3 mr-1" />
+                    Mark all read
                   </Button>
-                </div>
+                )}
+                {notifications.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => clearAllNotificationsMutation.mutate()}
+                    className="text-xs text-red-600 hover:text-red-700 h-6 px-2"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Clear all
+                  </Button>
+                )}
               </div>
             </CardHeader>
             
-            <ScrollArea className="max-h-80">
-              <CardContent className="space-y-3">
+            <ScrollArea className="h-80">
+              <CardContent className="space-y-3 p-3">
                 {/* Message Requests */}
                 {pendingRequests.map((request) => (
                   <div
@@ -310,46 +310,46 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
 
       {showPanel && (
         <Card className="absolute right-0 top-10 w-80 max-h-96 z-50 shadow-lg">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between mb-2">
               <CardTitle className="text-sm">Notifications</CardTitle>
-              <div className="flex space-x-1">
-                {unreadCount > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => markAllAsReadMutation.mutate()}
-                    className="text-xs"
-                  >
-                    <CheckCheck className="h-3 w-3 mr-1" />
-                    Mark all read
-                  </Button>
-                )}
-                {notifications.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => clearAllNotificationsMutation.mutate()}
-                    className="text-xs text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Clear all
-                  </Button>
-                )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPanel(false)}
+                className="text-xs p-1"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {unreadCount > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setShowPanel(false)}
-                  className="text-xs"
+                  onClick={() => markAllAsReadMutation.mutate()}
+                  className="text-xs h-6 px-2"
                 >
-                  <X className="h-3 w-3" />
+                  <CheckCheck className="h-3 w-3 mr-1" />
+                  Mark all read
                 </Button>
-              </div>
+              )}
+              {notifications.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => clearAllNotificationsMutation.mutate()}
+                  className="text-xs text-red-600 hover:text-red-700 h-6 px-2"
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Clear all
+                </Button>
+              )}
             </div>
           </CardHeader>
           
-          <ScrollArea className="max-h-80">
-            <CardContent className="space-y-3">
+          <ScrollArea className="h-80">
+            <CardContent className="space-y-3 p-3">
               {/* Message Requests */}
               {pendingRequests.map((request) => (
                 <div
