@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,23 @@ export default function Library() {
   const [hoursFilter, setHoursFilter] = useState('all');
   const [lessonsFilter, setLessonsFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Add mouse wheel horizontal scroll support
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Prevent default vertical scroll
+      e.preventDefault();
+      // Scroll horizontally instead
+      container.scrollLeft += e.deltaY;
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, []);
 
   const { data: studies = [], isLoading } = useQuery({
     queryKey: ["/api/studies"],
@@ -85,7 +102,10 @@ export default function Library() {
 
       {/* Categories Filter - Horizontal Scroll */}
       <div className="px-6 mb-4">
-        <div className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2">
+        <div 
+          ref={scrollContainerRef}
+          className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2"
+        >
           {categories.map((category) => (
             <Button
               key={category.id}
