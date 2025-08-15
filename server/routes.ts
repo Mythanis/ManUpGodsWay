@@ -259,6 +259,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/devotionals/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const devotionalData = insertDevotionalSchema.parse(req.body);
+      const devotional = await storage.updateDevotional(req.params.id, devotionalData);
+      if (!devotional) {
+        return res.status(404).json({ message: "Devotional not found" });
+      }
+      res.json(devotional);
+    } catch (error) {
+      console.error("Error updating devotional:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid devotional data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update devotional" });
+    }
+  });
+
+  app.delete('/api/devotionals/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      await storage.deleteDevotional(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting devotional:", error);
+      res.status(500).json({ message: "Failed to delete devotional" });
+    }
+  });
+
   // Rating routes
   app.post('/api/studies/:id/rate', isAuthenticated, async (req: any, res) => {
     try {
