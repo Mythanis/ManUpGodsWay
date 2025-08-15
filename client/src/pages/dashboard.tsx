@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ProgressCard from "@/components/progress-card";
 import { NotificationPanel } from "@/components/notification-panel";
+import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -98,7 +99,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-ministry-charcoal">Today's Devotional</h2>
               <span className="text-xs text-ministry-slate">
-                {new Date().toLocaleDateString('en-US', { 
+                {formatLocalDate(new Date(), { 
                   weekday: 'short', 
                   month: 'short', 
                   day: 'numeric' 

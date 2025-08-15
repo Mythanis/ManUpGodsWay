@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
+import { formatLocalTime } from "@/lib/utils";
 import { MessageCircle, Plus, Users, Send, ArrowLeft, Search, X, UserPlus, Trash2, LogOut, MoreVertical } from "lucide-react";
 
 interface MessageUser {
@@ -334,8 +335,7 @@ export default function Messages() {
   };
 
   const formatMessageTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return formatLocalTime(dateString, { hour: '2-digit', minute: '2-digit' });
   };
 
   if (conversationsLoading) {

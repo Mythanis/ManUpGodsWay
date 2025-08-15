@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { formatLocalDate, getCurrentLocalDate, parseDateSafely } from "@/lib/utils";
 import { CalendarDays, Plus, Edit, Trash } from "lucide-react";
 import { insertDevotionalSchema } from "@shared/schema";
 
@@ -45,7 +46,7 @@ export default function DevotionalManagement() {
       verseReference: "",
       content: "",
       imageUrl: "",
-      date: new Date().toISOString().split('T')[0], // Today's date
+      date: getCurrentLocalDate(), // Today's date in user's timezone
     },
   });
 
@@ -150,7 +151,7 @@ export default function DevotionalManagement() {
       verseReference: devotional.verseReference,
       content: devotional.content,
       imageUrl: devotional.imageUrl || "",
-      date: new Date(devotional.date + 'T12:00:00').toISOString().split('T')[0],
+      date: parseDateSafely(devotional.date).toISOString().split('T')[0],
     });
     setShowForm(true);
   };
@@ -372,7 +373,7 @@ export default function DevotionalManagement() {
                     {devotional.content.length > 150 ? "..." : ""}
                   </p>
                   <p className="text-xs text-ministry-slate">
-                    Date: {new Date(devotional.date + 'T12:00:00').toLocaleDateString()}
+                    Date: {formatLocalDate(devotional.date)}
                   </p>
                 </div>
               ))}
