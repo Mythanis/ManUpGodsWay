@@ -42,6 +42,7 @@ This is a full-stack React/Express application called "Man Up God's Way" - a fai
 ✓ **Enhanced Notification System**: Added scroll functionality and clear notifications feature for both dashboard bell and profile notifications
 ✓ **Push Notification Broadcasting**: Complete admin system for sending notifications to all users with type selection and character limits
 ✓ **Notification Management**: Users can mark all as read, clear all notifications, and scroll through notification history
+✓ **Individual Notification Control**: Added three-dot menu to each notification with clear option for granular notification management
 
 # User Preferences
 

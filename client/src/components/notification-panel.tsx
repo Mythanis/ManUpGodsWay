@@ -426,15 +426,17 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  onClick={() => handleNotificationClick(notification)}
                   className={cn(
-                    "p-3 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50",
+                    "p-3 border rounded-lg transition-colors",
                     notification.isRead ? "opacity-60" : "bg-muted/20"
                   )}
                 >
                   <div className="flex items-start gap-2">
                     {getNotificationIcon(notification.type)}
-                    <div className="flex-1 min-w-0">
+                    <div 
+                      className="flex-1 min-w-0 cursor-pointer hover:bg-muted/30 p-1 -m-1 rounded"
+                      onClick={() => handleNotificationClick(notification)}
+                    >
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium">{notification.title}</p>
                         {!notification.isRead && (
@@ -445,9 +447,29 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                         {notification.message}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(notification.createdAt).toLocaleDateString()}
+                        {formatLocalDateTime(notification.createdAt)}
                       </p>
                     </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-muted"
+                        >
+                          <MoreVertical className="h-3 w-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-32">
+                        <DropdownMenuItem
+                          onClick={() => clearNotificationMutation.mutate(notification.id)}
+                          className="text-red-600 hover:text-red-700 focus:text-red-700"
+                        >
+                          <Trash2 className="h-3 w-3 mr-2" />
+                          Clear
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               ))}
