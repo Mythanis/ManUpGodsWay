@@ -43,6 +43,7 @@ const createStudySchema = insertStudySchema.extend({
   description: z.string().min(10, "Description must be at least 10 characters"),
   content: z.string().min(50, "Content must be at least 50 characters"),
   category: z.string().min(1, "Category is required"),
+  videoId: z.string().optional(),
 });
 
 export default function UploadStudyForm() {
@@ -50,7 +51,11 @@ export default function UploadStudyForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: videos = [] } = useQuery({
+  const { data: videos = [] } = useQuery<Array<{
+    id: string;
+    title: string;
+    processingStatus: string;
+  }>>({
     queryKey: ["/api/admin/videos"],
     retry: false,
   });
@@ -108,10 +113,10 @@ export default function UploadStudyForm() {
   });
 
   const onSubmit = (data: z.infer<typeof createStudySchema>) => {
-    // Convert 'none' videoId back to null for database
+    // Convert 'none' videoId back to undefined for database
     const submitData = {
       ...data,
-      videoId: data.videoId === 'none' ? null : data.videoId
+      videoId: data.videoId === 'none' ? undefined : data.videoId
     };
     createStudy.mutate(submitData);
   };
@@ -323,7 +328,7 @@ export default function UploadStudyForm() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">No video</SelectItem>
-                        {videos.map((video: any) => (
+                        {videos.map((video) => (
                           <SelectItem key={video.id} value={video.id}>
                             {video.title} ({video.processingStatus === 'completed' ? 'Ready' : 'Processing'})
                           </SelectItem>

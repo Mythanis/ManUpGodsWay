@@ -40,6 +40,7 @@ export default function Admin() {
   const queryClient = useQueryClient();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingStudy, setEditingStudy] = useState<Study | null>(null);
+  const [activeTab, setActiveTab] = useState("content");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -247,7 +248,7 @@ export default function Admin() {
 
       {/* Admin Management Tabs */}
       <div className="px-6 mb-6">
-        <Tabs defaultValue="content" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-5 bg-gray-100">
             <TabsTrigger value="content" className="flex items-center space-x-2" data-testid="tab-content">
               <Book className="w-4 h-4" />
@@ -278,6 +279,7 @@ export default function Admin() {
               
               <Button 
                 variant="outline"
+                onClick={() => setActiveTab("videos")}
                 className="bg-ministry-steel text-white p-4 rounded-2xl hover:bg-ministry-navy border-none flex items-center space-x-3 w-full"
                 data-testid="button-manage-videos"
               >
