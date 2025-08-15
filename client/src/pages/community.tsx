@@ -37,7 +37,7 @@ export default function Community() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: discussions = [], isLoading } = useQuery({
+  const { data: discussions = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/discussions", selectedCategory || undefined],
     retry: false,
   });
@@ -53,7 +53,11 @@ export default function Community() {
 
   const createDiscussion = useMutation({
     mutationFn: async (data: z.infer<typeof createDiscussionSchema>) => {
-      await apiRequest('POST', '/api/discussions', data);
+      const discussionData = {
+        ...data,
+        userId: (user as any)?.id,
+      };
+      await apiRequest('POST', '/api/discussions', discussionData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
@@ -84,8 +88,23 @@ export default function Community() {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof createDiscussionSchema>) => {
-    createDiscussion.mutate(data);
+  const onSubmit = (data: { title: string; content: string; category: string }) => {
+    if (!(user as any)?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create a discussion",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const discussionData = {
+      title: data.title,
+      content: data.content,
+      category: data.category,
+      userId: (user as any).id,
+    };
+    createDiscussion.mutate(discussionData);
   };
 
   // Mock community stats
