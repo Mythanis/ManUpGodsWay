@@ -119,6 +119,42 @@ export const studyRatings = pgTable("study_ratings", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Chat conversations (direct messages and group chats)
+export const conversations = pgTable("conversations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: varchar("type").notNull(), // 'direct' or 'group'
+  name: varchar("name"), // null for direct messages, required for group chats
+  description: text("description"), // optional group description
+  createdBy: varchar("created_by").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  isActive: boolean("is_active").default(true),
+  lastMessageAt: timestamp("last_message_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Conversation participants (many-to-many relationship)
+export const conversationParticipants = pgTable("conversation_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  conversationId: varchar("conversation_id").notNull().references(() => conversations.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  role: varchar("role").default("member"), // 'admin', 'member'
+  joinedAt: timestamp("joined_at").defaultNow(),
+  lastReadAt: timestamp("last_read_at").defaultNow(),
+});
+
+// Messages within conversations
+export const messages = pgTable("messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  conversationId: varchar("conversation_id").notNull().references(() => conversations.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  messageType: varchar("message_type").default("text"), // 'text', 'image', 'file'
+  isEdited: boolean("is_edited").default(false),
+  editedAt: timestamp("edited_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   progress: many(userProgress),
@@ -150,6 +186,22 @@ export const userProgressRelations = relations(userProgress, ({ one }) => ({
 export const studyRatingsRelations = relations(studyRatings, ({ one }) => ({
   user: one(users, { fields: [studyRatings.userId], references: [users.id] }),
   study: one(studies, { fields: [studyRatings.studyId], references: [studies.id] }),
+}));
+
+export const conversationsRelations = relations(conversations, ({ one, many }) => ({
+  creator: one(users, { fields: [conversations.createdBy], references: [users.id] }),
+  participants: many(conversationParticipants),
+  messages: many(messages),
+}));
+
+export const conversationParticipantsRelations = relations(conversationParticipants, ({ one }) => ({
+  conversation: one(conversations, { fields: [conversationParticipants.conversationId], references: [conversations.id] }),
+  user: one(users, { fields: [conversationParticipants.userId], references: [users.id] }),
+}));
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  conversation: one(conversations, { fields: [messages.conversationId], references: [conversations.id] }),
+  user: one(users, { fields: [messages.userId], references: [users.id] }),
 }));
 
 // Insert schemas
@@ -197,6 +249,26 @@ export const insertStudyRatingSchema = createInsertSchema(studyRatings).omit({
   createdAt: true,
 });
 
+export const insertConversationSchema = createInsertSchema(conversations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastMessageAt: true,
+});
+
+export const insertConversationParticipantSchema = createInsertSchema(conversationParticipants).omit({
+  id: true,
+  joinedAt: true,
+});
+
+export const insertMessageSchema = createInsertSchema(messages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  isEdited: true,
+  editedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -212,3 +284,9 @@ export type Devotional = typeof devotionals.$inferSelect;
 export type InsertDevotional = z.infer<typeof insertDevotionalSchema>;
 export type StudyRating = typeof studyRatings.$inferSelect;
 export type InsertStudyRating = z.infer<typeof insertStudyRatingSchema>;
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = z.infer<typeof insertConversationSchema>;
+export type ConversationParticipant = typeof conversationParticipants.$inferSelect;
+export type InsertConversationParticipant = z.infer<typeof insertConversationParticipantSchema>;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;

@@ -296,6 +296,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Messaging routes
+  app.get('/api/conversations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const conversations = await storage.getUserConversations(userId);
+      res.json(conversations);
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+      res.status(500).json({ message: "Failed to fetch conversations" });
+    }
+  });
+
+  app.post('/api/conversations/direct', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { targetUserId } = req.body;
+      
+      if (!targetUserId) {
+        return res.status(400).json({ message: "Target user ID is required" });
+      }
+
+      const conversation = await storage.getOrCreateDirectConversation(userId, targetUserId);
+      res.json(conversation);
+    } catch (error) {
+      console.error("Error creating direct conversation:", error);
+      res.status(500).json({ message: "Failed to create direct conversation" });
+    }
+  });
+
+  app.post('/api/conversations/group', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name, description, participantIds } = req.body;
+      
+      if (!name || !participantIds || !Array.isArray(participantIds)) {
+        return res.status(400).json({ message: "Name and participant IDs are required" });
+      }
+
+      const conversationData = {
+        type: "group",
+        name,
+        description,
+        createdBy: userId,
+      };
+
+      const allParticipantIds = [...new Set([userId, ...participantIds])];
+      const conversation = await storage.createGroupConversation(conversationData, allParticipantIds);
+      res.status(201).json(conversation);
+    } catch (error) {
+      console.error("Error creating group conversation:", error);
+      res.status(500).json({ message: "Failed to create group conversation" });
+    }
+  });
+
+  app.get('/api/conversations/:id/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const conversationId = req.params.id;
+      const { limit } = req.query;
+
+      // TODO: Verify user is participant of conversation
+      const messages = await storage.getConversationMessages(
+        conversationId,
+        limit ? parseInt(limit as string) : undefined
+      );
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  app.post('/api/conversations/:id/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const conversationId = req.params.id;
+      const { content, messageType = "text" } = req.body;
+
+      if (!content) {
+        return res.status(400).json({ message: "Message content is required" });
+      }
+
+      const messageData = {
+        conversationId,
+        userId,
+        content,
+        messageType,
+      };
+
+      const message = await storage.sendMessage(messageData);
+      res.status(201).json(message);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  app.post('/api/conversations/:id/participants', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const conversationId = req.params.id;
+      const { targetUserId, role = "member" } = req.body;
+
+      if (!targetUserId) {
+        return res.status(400).json({ message: "Target user ID is required" });
+      }
+
+      // TODO: Verify user has permission to add participants
+      const participant = await storage.addParticipantToConversation(conversationId, targetUserId, role);
+      res.status(201).json(participant);
+    } catch (error) {
+      console.error("Error adding participant:", error);
+      res.status(500).json({ message: "Failed to add participant" });
+    }
+  });
+
+  app.delete('/api/conversations/:id/participants/:userId', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUserId = req.user.claims.sub;
+      const conversationId = req.params.id;
+      const targetUserId = req.params.userId;
+
+      // TODO: Verify user has permission to remove participants
+      await storage.removeParticipantFromConversation(conversationId, targetUserId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error removing participant:", error);
+      res.status(500).json({ message: "Failed to remove participant" });
+    }
+  });
+
+  app.post('/api/conversations/:id/read', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const conversationId = req.params.id;
+
+      await storage.markMessagesAsRead(conversationId, userId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
+      res.status(500).json({ message: "Failed to mark messages as read" });
+    }
+  });
+
   // Rating routes
   app.post('/api/studies/:id/rate', isAuthenticated, async (req: any, res) => {
     try {

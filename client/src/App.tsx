@@ -8,6 +8,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Library from "@/pages/library";
 import Community from "@/pages/community";
+import Messages from "@/pages/messages";
 import Profile from "@/pages/profile";
 import Admin from "@/pages/admin";
 import StudyDetail from "@/pages/study-detail";
@@ -37,6 +38,7 @@ function Router() {
           <Route path="/" component={Dashboard} />
           <Route path="/library" component={Library} />
           <Route path="/community" component={Community} />
+          <Route path="/messages" component={Messages} />
           <Route path="/profile" component={Profile} />
           <Route path="/admin" component={Admin} />
           <Route path="/studies/:id" component={StudyDetail} />

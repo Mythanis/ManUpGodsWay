@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Home, BookOpen, Users, User, Settings } from "lucide-react";
+import { Home, BookOpen, Users, MessageCircle, User, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 
@@ -8,6 +8,7 @@ const navItems = [
   { id: 'dashboard', path: '/', label: 'Dashboard', icon: Home },
   { id: 'library', path: '/library', label: 'Studies', icon: BookOpen },
   { id: 'community', path: '/community', label: 'Community', icon: Users },
+  { id: 'messages', path: '/messages', label: 'Messages', icon: MessageCircle },
   { id: 'profile', path: '/profile', label: 'Profile', icon: User },
 ];
 
@@ -16,7 +17,7 @@ export default function Navigation() {
   const { user } = useAuth();
 
   // Add admin tab if user is admin
-  const allNavItems = user?.role === 'admin' 
+  const allNavItems = (user as any)?.role === 'admin' 
     ? [...navItems, { id: 'admin', path: '/admin', label: 'Admin', icon: Settings }]
     : navItems;
 

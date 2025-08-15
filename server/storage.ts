@@ -6,6 +6,9 @@ import {
   userProgress,
   devotionals,
   studyRatings,
+  conversations,
+  conversationParticipants,
+  messages,
   type User,
   type UpsertUser,
   type Study,
@@ -20,6 +23,12 @@ import {
   type InsertDevotional,
   type StudyRating,
   type InsertStudyRating,
+  type Conversation,
+  type InsertConversation,
+  type ConversationParticipant,
+  type InsertConversationParticipant,
+  type Message,
+  type InsertMessage,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, count } from "drizzle-orm";
@@ -68,6 +77,16 @@ export interface IStorage {
     activeToday: number;
     newPosts: number;
   }>;
+
+  // Messaging operations
+  getUserConversations(userId: string): Promise<(Conversation & { participants: (ConversationParticipant & { user: User })[] })[]>;
+  getOrCreateDirectConversation(userId1: string, userId2: string): Promise<Conversation>;
+  createGroupConversation(conversation: InsertConversation, participantIds: string[]): Promise<Conversation>;
+  getConversationMessages(conversationId: string, limit?: number): Promise<(Message & { user: User })[]>;
+  sendMessage(message: InsertMessage): Promise<Message>;
+  addParticipantToConversation(conversationId: string, userId: string, role?: string): Promise<ConversationParticipant>;
+  removeParticipantFromConversation(conversationId: string, userId: string): Promise<void>;
+  markMessagesAsRead(conversationId: string, userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -409,6 +428,189 @@ export class DatabaseStorage implements IStorage {
       activeToday,
       newPosts,
     };
+  }
+
+  // Messaging operations
+  async getUserConversations(userId: string): Promise<(Conversation & { participants: (ConversationParticipant & { user: User })[] })[]> {
+    const userConversations = await db
+      .select({
+        id: conversations.id,
+        type: conversations.type,
+        name: conversations.name,
+        description: conversations.description,
+        createdBy: conversations.createdBy,
+        isActive: conversations.isActive,
+        lastMessageAt: conversations.lastMessageAt,
+        createdAt: conversations.createdAt,
+        updatedAt: conversations.updatedAt,
+      })
+      .from(conversations)
+      .innerJoin(conversationParticipants, eq(conversations.id, conversationParticipants.conversationId))
+      .where(eq(conversationParticipants.userId, userId))
+      .orderBy(desc(conversations.lastMessageAt));
+
+    // Get participants for each conversation
+    const conversationsWithParticipants = await Promise.all(
+      userConversations.map(async (conversation) => {
+        const participants = await db
+          .select({
+            id: conversationParticipants.id,
+            conversationId: conversationParticipants.conversationId,
+            userId: conversationParticipants.userId,
+            role: conversationParticipants.role,
+            joinedAt: conversationParticipants.joinedAt,
+            lastReadAt: conversationParticipants.lastReadAt,
+            user: users,
+          })
+          .from(conversationParticipants)
+          .innerJoin(users, eq(conversationParticipants.userId, users.id))
+          .where(eq(conversationParticipants.conversationId, conversation.id));
+
+        return { ...conversation, participants };
+      })
+    );
+
+    return conversationsWithParticipants;
+  }
+
+  async getOrCreateDirectConversation(userId1: string, userId2: string): Promise<Conversation> {
+    // Check if direct conversation already exists
+    const existingConversation = await db
+      .select({
+        id: conversations.id,
+        type: conversations.type,
+        name: conversations.name,
+        description: conversations.description,
+        createdBy: conversations.createdBy,
+        isActive: conversations.isActive,
+        lastMessageAt: conversations.lastMessageAt,
+        createdAt: conversations.createdAt,
+        updatedAt: conversations.updatedAt,
+      })
+      .from(conversations)
+      .innerJoin(conversationParticipants, eq(conversations.id, conversationParticipants.conversationId))
+      .where(
+        and(
+          eq(conversations.type, "direct"),
+          eq(conversationParticipants.userId, userId1)
+        )
+      );
+
+    for (const conv of existingConversation) {
+      const otherParticipant = await db
+        .select()
+        .from(conversationParticipants)
+        .where(
+          and(
+            eq(conversationParticipants.conversationId, conv.id),
+            eq(conversationParticipants.userId, userId2)
+          )
+        );
+
+      if (otherParticipant.length > 0) {
+        return conv;
+      }
+    }
+
+    // Create new direct conversation
+    const [newConversation] = await db
+      .insert(conversations)
+      .values({
+        type: "direct",
+        createdBy: userId1,
+      })
+      .returning();
+
+    // Add both participants
+    await db.insert(conversationParticipants).values([
+      { conversationId: newConversation.id, userId: userId1 },
+      { conversationId: newConversation.id, userId: userId2 },
+    ]);
+
+    return newConversation;
+  }
+
+  async createGroupConversation(conversation: InsertConversation, participantIds: string[]): Promise<Conversation> {
+    const [newConversation] = await db
+      .insert(conversations)
+      .values(conversation)
+      .returning();
+
+    // Add participants
+    const participantData = participantIds.map(userId => ({
+      conversationId: newConversation.id,
+      userId,
+      role: userId === conversation.createdBy ? "admin" : "member",
+    }));
+
+    await db.insert(conversationParticipants).values(participantData);
+
+    return newConversation;
+  }
+
+  async getConversationMessages(conversationId: string, limit = 50): Promise<(Message & { user: User })[]> {
+    return await db
+      .select({
+        id: messages.id,
+        conversationId: messages.conversationId,
+        userId: messages.userId,
+        content: messages.content,
+        messageType: messages.messageType,
+        isEdited: messages.isEdited,
+        editedAt: messages.editedAt,
+        createdAt: messages.createdAt,
+        updatedAt: messages.updatedAt,
+        user: users,
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.userId, users.id))
+      .where(eq(messages.conversationId, conversationId))
+      .orderBy(desc(messages.createdAt))
+      .limit(limit);
+  }
+
+  async sendMessage(message: InsertMessage): Promise<Message> {
+    const [newMessage] = await db.insert(messages).values(message).returning();
+
+    // Update conversation's last message timestamp
+    await db
+      .update(conversations)
+      .set({ lastMessageAt: new Date() })
+      .where(eq(conversations.id, message.conversationId));
+
+    return newMessage;
+  }
+
+  async addParticipantToConversation(conversationId: string, userId: string, role = "member"): Promise<ConversationParticipant> {
+    const [participant] = await db
+      .insert(conversationParticipants)
+      .values({ conversationId, userId, role })
+      .returning();
+
+    return participant;
+  }
+
+  async removeParticipantFromConversation(conversationId: string, userId: string): Promise<void> {
+    await db
+      .delete(conversationParticipants)
+      .where(
+        and(
+          eq(conversationParticipants.conversationId, conversationId),
+          eq(conversationParticipants.userId, userId)
+        )
+      );
+  }
+
+  async markMessagesAsRead(conversationId: string, userId: string): Promise<void> {
+    await db
+      .update(conversationParticipants)
+      .set({ lastReadAt: new Date() })
+      .where(
+        and(
+          eq(conversationParticipants.conversationId, conversationId),
+          eq(conversationParticipants.userId, userId)
+        )
+      );
   }
 }
 
