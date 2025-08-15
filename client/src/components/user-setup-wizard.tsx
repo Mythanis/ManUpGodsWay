@@ -32,7 +32,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
 
   const updateProfileMutation = useMutation({
     mutationFn: (data: SetupData) =>
-      apiRequest('/api/profile/setup', 'POST', {
+      apiRequest('POST', '/api/profile/setup', {
         ...data,
         isProfileComplete: true,
       }),

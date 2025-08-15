@@ -43,7 +43,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
 
   const updateProfileMutation = useMutation({
     mutationFn: (data: ProfileData) =>
-      apiRequest('/api/profile/update', 'PUT', data),
+      apiRequest('PUT', '/api/profile/update', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       toast({
