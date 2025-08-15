@@ -425,17 +425,13 @@ export default function Admin() {
                     </CardHeader>
                     <CardContent className="pt-0">
                       <div className="flex flex-wrap items-center gap-2 text-xs text-ministry-slate">
-                        <span>By {study.author}</span>
+                        <span>By Admin</span>
                         <span>•</span>
-                        <span>{study.lessons.length} lessons</span>
+                        <span>{(study as any).lessonCount || 0} lessons</span>
                         <span>•</span>
                         <span>Created {new Date(study.createdAt).toLocaleDateString()}</span>
-                        {study.tags.length > 0 && (
-                          <>
-                            <span>•</span>
-                            <span>Tags: {study.tags.join(", ")}</span>
-                          </>
-                        )}
+                        <span>•</span>
+                        <span className="capitalize">{study.category}</span>
                       </div>
                     </CardContent>
                   </Card>
