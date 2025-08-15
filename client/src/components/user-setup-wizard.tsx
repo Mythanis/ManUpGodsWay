@@ -32,13 +32,9 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
 
   const updateProfileMutation = useMutation({
     mutationFn: (data: SetupData) =>
-      apiRequest('/api/profile/setup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          isProfileComplete: true,
-        }),
+      apiRequest('/api/profile/setup', 'POST', {
+        ...data,
+        isProfileComplete: true,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
