@@ -35,6 +35,9 @@ import {
   type InsertMessageRequest,
   type Notification,
   type InsertNotification,
+  videos,
+  type Video,
+  type InsertVideo,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, count } from "drizzle-orm";
@@ -77,6 +80,14 @@ export interface IStorage {
   
   // Rating operations
   rateStudy(rating: InsertStudyRating): Promise<StudyRating>;
+  
+  // Video operations
+  getVideos(limit?: number): Promise<Video[]>;
+  getVideo(id: string): Promise<Video | undefined>;
+  createVideo(video: InsertVideo): Promise<Video>;
+  updateVideo(id: string, video: Partial<InsertVideo>): Promise<Video>;
+  deleteVideo(id: string): Promise<void>;
+  updateVideoProcessingStatus(id: string, status: string, isProcessed?: boolean): Promise<Video>;
   
   // Admin operations
   getAllUsers(limit?: number): Promise<User[]>;
@@ -925,6 +936,61 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId))
       .returning();
     return updatedUser;
+  }
+
+  // Video operations
+  async getVideos(limit?: number): Promise<Video[]> {
+    let query = db.select().from(videos).orderBy(desc(videos.createdAt));
+    
+    if (limit) {
+      query = query.limit(limit);
+    }
+    
+    return await query;
+  }
+
+  async getVideo(id: string): Promise<Video | undefined> {
+    const [video] = await db.select().from(videos).where(eq(videos.id, id));
+    return video;
+  }
+
+  async createVideo(video: InsertVideo): Promise<Video> {
+    const [newVideo] = await db.insert(videos).values(video).returning();
+    return newVideo;
+  }
+
+  async updateVideo(id: string, video: Partial<InsertVideo>): Promise<Video> {
+    const [updatedVideo] = await db
+      .update(videos)
+      .set({ ...video, updatedAt: new Date() })
+      .where(eq(videos.id, id))
+      .returning();
+    return updatedVideo;
+  }
+
+  async deleteVideo(id: string): Promise<void> {
+    // First, remove video references from studies
+    await db
+      .update(studies)
+      .set({ videoId: null })
+      .where(eq(studies.videoId, id));
+    
+    // Then delete the video
+    await db.delete(videos).where(eq(videos.id, id));
+  }
+
+  async updateVideoProcessingStatus(id: string, status: string, isProcessed?: boolean): Promise<Video> {
+    const updateData: any = { processingStatus: status, updatedAt: new Date() };
+    if (isProcessed !== undefined) {
+      updateData.isProcessed = isProcessed;
+    }
+    
+    const [updatedVideo] = await db
+      .update(videos)
+      .set(updateData)
+      .where(eq(videos.id, id))
+      .returning();
+    return updatedVideo;
   }
 }
 

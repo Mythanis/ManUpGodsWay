@@ -746,6 +746,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Video Management API Routes
+  app.get('/api/admin/videos', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { limit } = req.query;
+      const videos = await storage.getVideos(
+        limit ? parseInt(limit as string) : undefined
+      );
+      res.json(videos);
+    } catch (error) {
+      console.error("Error fetching videos:", error);
+      res.status(500).json({ message: "Failed to fetch videos" });
+    }
+  });
+
+  app.get('/api/admin/videos/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const video = await storage.getVideo(req.params.id);
+      if (!video) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      res.json(video);
+    } catch (error) {
+      console.error("Error fetching video:", error);
+      res.status(500).json({ message: "Failed to fetch video" });
+    }
+  });
+
+  app.post('/api/admin/videos/upload', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // For now, we'll simulate video upload and processing
+      // In a real app, you'd integrate with multer, AWS S3, or similar service
+      const { title, description } = req.body;
+      
+      if (!title) {
+        return res.status(400).json({ message: "Title is required" });
+      }
+
+      // Simulate file upload data
+      const videoData = {
+        title,
+        description: description || '',
+        filename: `video_${Date.now()}.mp4`,
+        originalName: `${title}.mp4`,
+        mimeType: 'video/mp4',
+        fileSize: Math.floor(Math.random() * 50000000) + 10000000, // Random size 10-60MB
+        duration: Math.floor(Math.random() * 1800) + 300, // Random duration 5-35 minutes
+        thumbnailUrl: `https://via.placeholder.com/640x360/4A90B8/ffffff?text=${encodeURIComponent(title)}`,
+        uploadedBy: user.id,
+      };
+
+      const video = await storage.createVideo(videoData);
+      
+      // Simulate processing
+      setTimeout(async () => {
+        await storage.updateVideoProcessingStatus(video.id, 'completed', true);
+      }, 2000);
+
+      res.json(video);
+    } catch (error) {
+      console.error("Error uploading video:", error);
+      res.status(500).json({ message: "Failed to upload video" });
+    }
+  });
+
+  app.put('/api/admin/videos/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const video = await storage.updateVideo(req.params.id, req.body);
+      res.json(video);
+    } catch (error) {
+      console.error("Error updating video:", error);
+      res.status(500).json({ message: "Failed to update video" });
+    }
+  });
+
+  app.delete('/api/admin/videos/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      await storage.deleteVideo(req.params.id);
+      res.json({ message: "Video deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting video:", error);
+      res.status(500).json({ message: "Failed to delete video" });
+    }
+  });
+
+  app.get('/api/videos/:id/stream', isAuthenticated, async (req: any, res) => {
+    try {
+      const video = await storage.getVideo(req.params.id);
+      if (!video) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+
+      // In a real app, this would stream the actual video file
+      // For now, we'll just return video metadata
+      res.json({
+        id: video.id,
+        title: video.title,
+        streamUrl: `/api/videos/${video.id}/file`,
+        thumbnailUrl: video.thumbnailUrl,
+        duration: video.duration,
+      });
+    } catch (error) {
+      console.error("Error streaming video:", error);
+      res.status(500).json({ message: "Failed to stream video" });
+    }
+  });
+
   // Notification API Routes
   // Request direct message access
   app.post("/api/message-requests", isAuthenticated, async (req: any, res) => {

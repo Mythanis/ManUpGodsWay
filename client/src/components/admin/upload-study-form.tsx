@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
@@ -50,6 +50,11 @@ export default function UploadStudyForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const { data: videos = [] } = useQuery({
+    queryKey: ["/api/admin/videos"],
+    retry: false,
+  });
+
   const form = useForm({
     resolver: zodResolver(createStudySchema),
     defaultValues: {
@@ -62,6 +67,7 @@ export default function UploadStudyForm() {
       lessonCount: 1,
       thumbnailUrl: '',
       videoUrl: '',
+      videoId: '',
       requiredTier: 'free',
       isPublished: false,
     },
@@ -301,10 +307,36 @@ export default function UploadStudyForm() {
 
             <FormField
               control={form.control}
+              name="videoId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Associated Video</FormLabel>
+                  <FormControl>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <SelectTrigger data-testid="select-video">
+                        <SelectValue placeholder="Select a video (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">No video</SelectItem>
+                        {videos.map((video: any) => (
+                          <SelectItem key={video.id} value={video.id}>
+                            {video.title} ({video.processingStatus === 'completed' ? 'Ready' : 'Processing'})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="videoUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Video URL (optional)</FormLabel>
+                  <FormLabel>Video URL (external, optional)</FormLabel>
                   <FormControl>
                     <Input 
                       type="url"

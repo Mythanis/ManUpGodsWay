@@ -46,6 +46,24 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Videos table for storing video content
+export const videos = pgTable("videos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  filename: varchar("filename").notNull(),
+  originalName: varchar("original_name").notNull(),
+  mimeType: varchar("mime_type").notNull(),
+  fileSize: integer("file_size").notNull(),
+  duration: integer("duration"), // in seconds
+  thumbnailUrl: varchar("thumbnail_url"),
+  uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
+  isProcessed: boolean("is_processed").default(false),
+  processingStatus: varchar("processing_status").default("pending"), // pending, processing, completed, failed
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Bible studies
 export const studies = pgTable("studies", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -57,7 +75,8 @@ export const studies = pgTable("studies", {
   estimatedHours: integer("estimated_hours").default(1),
   lessonCount: integer("lesson_count").default(1),
   thumbnailUrl: varchar("thumbnail_url"),
-  videoUrl: varchar("video_url"),
+  videoId: varchar("video_id").references(() => videos.id), // Reference to videos table
+  videoUrl: varchar("video_url"), // Keep for backward compatibility with external URLs
   requiredTier: varchar("required_tier").default("free"), // free, premium, vip
   rating: decimal("rating", { precision: 2, scale: 1 }).default("0.0"),
   ratingCount: integer("rating_count").default(0),
@@ -194,9 +213,15 @@ export const usersRelations = relations(users, ({ many }) => ({
   ratings: many(studyRatings),
 }));
 
-export const studiesRelations = relations(studies, ({ many }) => ({
+export const videosRelations = relations(videos, ({ one, many }) => ({
+  uploader: one(users, { fields: [videos.uploadedBy], references: [users.id] }),
+  studies: many(studies),
+}));
+
+export const studiesRelations = relations(studies, ({ one, many }) => ({
   progress: many(userProgress),
   ratings: many(studyRatings),
+  video: one(videos, { fields: [studies.videoId], references: [videos.id] }),
 }));
 
 export const discussionsRelations = relations(discussions, ({ one, many }) => ({
@@ -251,12 +276,41 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
-export const insertStudySchema = createInsertSchema(studies).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  rating: true,
-  ratingCount: true,
+export const insertVideoSchema = createInsertSchema(videos, {
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  filename: z.string().min(1, "Filename is required"),
+  originalName: z.string().min(1, "Original name is required"),
+  mimeType: z.string().min(1, "MIME type is required"),
+  fileSize: z.number().int().min(1, "File size must be greater than 0"),
+  duration: z.number().int().optional(),
+  thumbnailUrl: z.string().optional(),
+  uploadedBy: z.string().min(1, "Uploaded by is required"),
+}).omit({ 
+  id: true, 
+  isProcessed: true,
+  processingStatus: true,
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertStudySchema = createInsertSchema(studies, {
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  content: z.string().min(1, "Content is required"),
+  category: z.string().min(1, "Category is required"),
+  difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
+  estimatedHours: z.number().int().min(1).default(1),
+  lessonCount: z.number().int().min(1).default(1),
+  requiredTier: z.enum(["free", "premium", "vip"]).default("free"),
+  isPublished: z.boolean().default(false),
+  videoId: z.string().optional(),
+}).omit({ 
+  id: true, 
+  rating: true, 
+  ratingCount: true, 
+  createdAt: true, 
+  updatedAt: true 
 });
 
 export const insertDiscussionSchema = createInsertSchema(discussions).omit({
@@ -323,6 +377,9 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type Video = typeof videos.$inferSelect;
+export type InsertVideo = z.infer<typeof insertVideoSchema>;
+
 export type Study = typeof studies.$inferSelect;
 export type InsertStudy = z.infer<typeof insertStudySchema>;
 export type Discussion = typeof discussions.$inferSelect;

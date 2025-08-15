@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UploadStudyForm from "@/components/admin/upload-study-form";
 import UserManagement from "@/components/admin/user-management";
 import DevotionalManagement from "@/components/admin/devotional-management";
+import VideoManagement from "@/components/admin/video-management";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem } from "lucide-react";
 
@@ -247,7 +248,7 @@ export default function Admin() {
       {/* Admin Management Tabs */}
       <div className="px-6 mb-6">
         <Tabs defaultValue="content" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-gray-100">
+          <TabsList className="grid w-full grid-cols-5 bg-gray-100">
             <TabsTrigger value="content" className="flex items-center space-x-2" data-testid="tab-content">
               <Book className="w-4 h-4" />
               <span>Content</span>
@@ -255,6 +256,10 @@ export default function Admin() {
             <TabsTrigger value="studies" className="flex items-center space-x-2" data-testid="tab-studies">
               <Activity className="w-4 h-4" />
               <span>Studies</span>
+            </TabsTrigger>
+            <TabsTrigger value="videos" className="flex items-center space-x-2" data-testid="tab-videos">
+              <Video className="w-4 h-4" />
+              <span>Videos</span>
             </TabsTrigger>
             <TabsTrigger value="devotionals" className="flex items-center space-x-2" data-testid="tab-devotionals">
               <Calendar className="w-4 h-4" />
@@ -374,6 +379,11 @@ export default function Admin() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="videos" className="mt-6">
+            <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Video Management</h2>
+            <VideoManagement />
           </TabsContent>
 
           <TabsContent value="devotionals" className="mt-6">
