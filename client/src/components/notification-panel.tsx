@@ -82,7 +82,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
   // Mark notification as read
   const markAsReadMutation = useMutation({
     mutationFn: (notificationId: string) => 
-      apiRequest(`/api/notifications/${notificationId}/read`, { method: 'POST' }),
+      apiRequest('POST', `/api/notifications/${notificationId}/read`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
       queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
@@ -91,7 +91,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
 
   // Mark all as read
   const markAllAsReadMutation = useMutation({
-    mutationFn: () => apiRequest('/api/notifications/read-all', { method: 'POST' }),
+    mutationFn: () => apiRequest('POST', '/api/notifications/read-all'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
       queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
@@ -101,11 +101,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
   // Respond to message request
   const respondToRequestMutation = useMutation({
     mutationFn: ({ requestId, action }: { requestId: string; action: 'accept' | 'decline' }) =>
-      apiRequest(`/api/message-requests/${requestId}/respond`, {
-        method: 'POST',
-        body: JSON.stringify({ action }),
-        headers: { 'Content-Type': 'application/json' },
-      }),
+      apiRequest('POST', `/api/message-requests/${requestId}/respond`, { action }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/message-requests'] });
       queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
