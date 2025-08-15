@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
-import { MessageCircle, Plus, Users, Send, ArrowLeft, Search, X, UserPlus } from "lucide-react";
+import { MessageCircle, Plus, Users, Send, ArrowLeft, Search, X, UserPlus, Trash2, LogOut, MoreVertical } from "lucide-react";
 
 interface User {
   id: string;
@@ -61,6 +62,7 @@ export default function Messages() {
   const [groupDescription, setGroupDescription] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showProfileMenu, setShowProfileMenu] = useState<{userId: string, x: number, y: number} | null>(null);
+  const [showMessageMenu, setShowMessageMenu] = useState<{messageId: string, x: number, y: number} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch conversations
@@ -179,6 +181,17 @@ export default function Messages() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Close menus on click outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowProfileMenu(null);
+      setShowMessageMenu(null);
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedConversation || sendMessageMutation.isPending) {
@@ -200,6 +213,60 @@ export default function Messages() {
       handleSendMessage(e as any);
     }
   };
+
+  // Delete message mutation
+  const deleteMessageMutation = useMutation({
+    mutationFn: async (messageId: string) => {
+      return await apiRequest("DELETE", `/api/conversations/${selectedConversation?.id}/messages/${messageId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations", selectedConversation?.id, "messages"] });
+      setShowMessageMenu(null);
+      toast({
+        title: "Success",
+        description: "Message deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete message",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete/leave conversation mutation
+  const deleteConversationMutation = useMutation({
+    mutationFn: async (data: { conversationId: string; isAdmin?: boolean }) => {
+      return await apiRequest("DELETE", `/api/conversations/${data.conversationId}`, 
+        data.isAdmin ? { isAdmin: true } : undefined);
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+      setSelectedConversation(null);
+      
+      const conversation = conversations.find(c => c.id === variables.conversationId);
+      if (conversation?.type === "group" && !variables.isAdmin) {
+        toast({
+          title: "Success",
+          description: "Left group chat successfully",
+        });
+      } else {
+        toast({
+          title: "Success", 
+          description: "Conversation deleted successfully",
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete conversation",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleCreateGroup = () => {
     if (!groupName.trim() || selectedUsers.length === 0) return;
@@ -523,6 +590,51 @@ export default function Messages() {
                 }
               </p>
             </div>
+
+            {/* Conversation options menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-white hover:bg-ministry-charcoal">
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {selectedConversation.type === "direct" ? (
+                  <DropdownMenuItem 
+                    onClick={() => deleteConversationMutation.mutate({ conversationId: selectedConversation.id })}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Conversation
+                  </DropdownMenuItem>
+                ) : (
+                  <>
+                    {user && (user as any).role === "admin" && (
+                      <>
+                        <DropdownMenuItem 
+                          onClick={() => deleteConversationMutation.mutate({ 
+                            conversationId: selectedConversation.id, 
+                            isAdmin: true 
+                          })}
+                          className="text-red-600 focus:text-red-600"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete Group Chat
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    <DropdownMenuItem 
+                      onClick={() => deleteConversationMutation.mutate({ conversationId: selectedConversation.id })}
+                      className="text-orange-600 focus:text-orange-600"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Leave Group
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Messages */}
@@ -544,6 +656,16 @@ export default function Messages() {
                       key={message.id}
                       className={`flex items-end space-x-2 ${message.userId === (user as any)?.id ? 'justify-end' : 'justify-start'}`}
                       data-testid={`message-${message.id}`}
+                      onContextMenu={(e) => {
+                        if (message.userId === (user as any)?.id) {
+                          e.preventDefault();
+                          setShowMessageMenu({
+                            messageId: message.id,
+                            x: e.clientX,
+                            y: e.clientY
+                          });
+                        }
+                      }}
                     >
                       {/* Profile picture for other users */}
                       {message.userId !== (user as any)?.id && (
@@ -617,6 +739,31 @@ export default function Messages() {
           </div>
         </div>
       )}
+
+      {/* Message Context Menu */}
+      {showMessageMenu && (
+        <div
+          className="fixed bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-50 min-w-[140px]"
+          style={{
+            left: showMessageMenu.x,
+            top: showMessageMenu.y,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-left text-red-600 hover:text-red-600 hover:bg-red-50"
+            onClick={() => {
+              deleteMessageMutation.mutate(showMessageMenu.messageId);
+            }}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete Message
+          </Button>
+        </div>
+      )}
+
       {/* Profile Menu */}
       {showProfileMenu && (
         <div

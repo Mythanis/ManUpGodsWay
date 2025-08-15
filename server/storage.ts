@@ -658,6 +658,58 @@ export class DatabaseStorage implements IStorage {
       );
   }
 
+  async getMessage(messageId: string): Promise<any> {
+    const [message] = await db.select()
+      .from(messages)
+      .where(eq(messages.id, messageId))
+      .limit(1);
+    return message;
+  }
+
+  async deleteMessage(messageId: string): Promise<void> {
+    await db.delete(messages)
+      .where(eq(messages.id, messageId));
+  }
+
+  async deleteConversation(conversationId: string): Promise<void> {
+    // Delete all messages in the conversation
+    await db.delete(messages)
+      .where(eq(messages.conversationId, conversationId));
+    
+    // Delete all participants
+    await db.delete(conversationParticipants)
+      .where(eq(conversationParticipants.conversationId, conversationId));
+    
+    // Delete the conversation itself
+    await db.delete(conversations)
+      .where(eq(conversations.id, conversationId));
+  }
+
+  async getConversation(conversationId: string): Promise<any> {
+    const [conversation] = await db.select()
+      .from(conversations)
+      .where(eq(conversations.id, conversationId))
+      .limit(1);
+    
+    if (!conversation) return null;
+
+    // Get all participants for this conversation
+    const participants = await db.select()
+      .from(conversationParticipants)
+      .leftJoin(users, eq(conversationParticipants.userId, users.id))
+      .where(eq(conversationParticipants.conversationId, conversationId));
+
+    return {
+      ...conversation,
+      participants: participants.map(p => ({
+        id: p.conversation_participants?.id,
+        userId: p.conversation_participants?.userId,
+        role: p.conversation_participants?.role,
+        user: p.users
+      }))
+    };
+  }
+
   async markMessagesAsRead(conversationId: string, userId: string): Promise<void> {
     await db
       .update(conversationParticipants)

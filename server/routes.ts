@@ -436,6 +436,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete a message (user can delete their own messages)
+  app.delete('/api/conversations/:id/messages/:messageId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const conversationId = req.params.id;
+      const messageId = req.params.messageId;
+
+      // Get the message to verify ownership
+      const message = await storage.getMessage(messageId);
+      if (!message) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+
+      // Only message sender can delete their own message
+      if (message.userId !== userId) {
+        return res.status(403).json({ message: "You can only delete your own messages" });
+      }
+
+      await storage.deleteMessage(messageId);
+      res.json({ message: "Message deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      res.status(500).json({ message: "Failed to delete message" });
+    }
+  });
+
+  // Delete/leave a conversation
+  app.delete('/api/conversations/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const conversationId = req.params.id;
+      const { isAdmin } = req.body;
+
+      // Get conversation details
+      const conversation = await storage.getConversation(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+
+      // Check if user is participant
+      const isParticipant = conversation.participants.some((p: any) => p.userId === userId);
+      if (!isParticipant) {
+        return res.status(403).json({ message: "You are not a participant in this conversation" });
+      }
+
+      if (conversation.type === "direct") {
+        // For direct messages, delete the entire conversation
+        await storage.deleteConversation(conversationId);
+        res.json({ message: "Direct conversation deleted successfully" });
+      } else if (conversation.type === "group") {
+        // Check if user is admin trying to delete group
+        const userProfile = await storage.getUserProfile(userId);
+        if (isAdmin && userProfile?.role === "admin") {
+          // Admin can delete entire group
+          await storage.deleteConversation(conversationId);
+          res.json({ message: "Group chat deleted successfully" });
+        } else {
+          // Regular user leaves the group
+          await storage.removeParticipantFromConversation(conversationId, userId);
+          res.json({ message: "Left group chat successfully" });
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting/leaving conversation:", error);
+      res.status(500).json({ message: "Failed to delete/leave conversation" });
+    }
+  });
+
   app.delete('/api/conversations/:id/participants/:userId', isAuthenticated, async (req: any, res) => {
     try {
       const currentUserId = req.user.claims.sub;

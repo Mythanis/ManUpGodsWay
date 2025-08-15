@@ -18,6 +18,8 @@ This is a full-stack React/Express application called "Man Up God's Way" - a fai
 ✓ **Profile Interactions**: Clickable avatars across all components for direct messaging and group creation
 ✓ **User Management**: New `/api/users` endpoint for secure user access in messaging features
 ✓ **Application Status**: Fully functional with comprehensive social interaction features
+✓ **Message Deletion**: Users can delete their own messages with right-click context menu
+✓ **Conversation Management**: Delete direct messages, leave group chats, admin delete groups
 
 # User Preferences
 
