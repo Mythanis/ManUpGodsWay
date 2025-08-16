@@ -11,12 +11,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Search, Upload, Play, Trash2, Eye, Edit, Video as VideoIcon, FileText, Clock, HardDrive, Crown, Gem, Zap, Star } from "lucide-react";
 
 interface Video {
   id: string;
   title: string;
   description?: string;
+  category?: string;
   filename: string;
   originalName: string;
   mimeType: string;
@@ -510,7 +512,7 @@ export default function VideoManagement() {
 
       {/* Video Detail Dialog */}
       <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-3">
               <VideoIcon className="w-5 h-5" />
@@ -519,7 +521,7 @@ export default function VideoManagement() {
           </DialogHeader>
 
           {selectedVideo && (
-            <div className="space-y-6">
+            <div className="flex-1 overflow-y-auto space-y-6 pr-2">
               {/* Video Preview */}
               <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden">
                 {selectedVideo.thumbnailUrl ? (
@@ -594,97 +596,90 @@ export default function VideoManagement() {
                     {getStatusBadge(selectedVideo.processingStatus)}
                   </div>
                 </div>
-                
-                <div>
-                  <Label className="text-sm font-medium">Featured Video</Label>
-                  <Select 
-                    value={selectedVideo.isFeatured ? "true" : "false"} 
-                    onValueChange={(value) => {
-                      setSelectedVideo(prev => prev ? { ...prev, isFeatured: value === "true" } : null);
-                    }}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="false">No - Regular video</SelectItem>
-                      <SelectItem value="true">Yes - Featured at top of videos page</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
 
+              {/* Description Field */}
               <div>
                 <Label className="text-sm font-medium">Description</Label>
                 <Textarea
-                  value={selectedVideo.description || ""}
+                  value={selectedVideo.description || ''}
                   onChange={(e) => {
                     setSelectedVideo(prev => prev ? { ...prev, description: e.target.value } : null);
                   }}
+                  placeholder="Enter video description..."
                   className="mt-1"
                   rows={3}
                 />
               </div>
 
-              {/* Video Metadata */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              {/* Featured Toggle */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-ministry-charcoal">File Details</p>
-                  <div className="space-y-1 text-ministry-slate">
-                    <p>Original Name: {selectedVideo.originalName}</p>
-                    <p>File Size: {formatFileSize(selectedVideo.fileSize)}</p>
-                    <p>Type: {selectedVideo.mimeType}</p>
-                    {selectedVideo.duration && <p>Duration: {formatDuration(selectedVideo.duration)}</p>}
-                  </div>
+                  <Label className="text-sm font-medium">Featured Video</Label>
+                  <p className="text-xs text-ministry-slate">Mark this video as featured to show it at the top of the list</p>
                 </div>
-                
-                <div>
-                  <p className="font-medium text-ministry-charcoal">Upload Info</p>
-                  <div className="space-y-1 text-ministry-slate">
-                    <p>Uploaded: {formatLocalDateTime(selectedVideo.createdAt)}</p>
-                    <p>Modified: {formatLocalDateTime(selectedVideo.updatedAt)}</p>
-                    <p>Processed: {selectedVideo.isProcessed ? 'Yes' : 'No'}</p>
-                  </div>
-                </div>
+                <Switch
+                  checked={selectedVideo.isFeatured}
+                  onCheckedChange={(checked) => {
+                    setSelectedVideo(prev => prev ? { ...prev, isFeatured: checked } : null);
+                  }}
+                />
               </div>
 
-              {/* Actions */}
-              <div className="flex justify-between items-center pt-4 border-t">
+              {/* File Information */}
+              <div className="grid grid-cols-2 gap-4 text-sm text-ministry-slate">
+                <div>
+                  <p className="font-medium text-ministry-charcoal">File Information</p>
+                  <p>Size: {formatFileSize(selectedVideo.fileSize)}</p>
+                  <p>Format: {selectedVideo.mimeType}</p>
+                  {selectedVideo.duration && <p>Duration: {formatDuration(selectedVideo.duration)}</p>}
+                </div>
+                <div>
+                  <p className="font-medium text-ministry-charcoal">Upload Details</p>
+                  <p>Original: {selectedVideo.originalName}</p>
+                  <p>Uploaded: {formatLocalDateTime(selectedVideo.createdAt)}</p>
+                  <p>Modified: {formatLocalDateTime(selectedVideo.updatedAt)}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Fixed Actions Bar */}
+            <div className="flex-shrink-0 mt-6 pt-4 border-t bg-white">
+              <div className="flex justify-between items-center">
                 <Button
                   variant="destructive"
-                  onClick={() => deleteVideo.mutate(selectedVideo.id)}
+                  onClick={() => {
+                    if (selectedVideo && confirm('Are you sure you want to delete this video? This action cannot be undone.')) {
+                      deleteVideo.mutate(selectedVideo.id);
+                    }
+                  }}
                   disabled={deleteVideo.isPending}
+                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Video
+                  {deleteVideo.isPending ? 'Deleting...' : 'Delete Video'}
                 </Button>
-                
-                <div className="space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowVideoDialog(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={() => {
+
+                <Button
+                  onClick={() => {
+                    if (selectedVideo) {
                       updateVideo.mutate({ 
                         id: selectedVideo.id, 
                         video: {
                           title: selectedVideo.title,
-                          category: selectedVideo.category,
                           description: selectedVideo.description,
+                          category: selectedVideo.category,
                           requiredTier: selectedVideo.requiredTier,
                           isFeatured: selectedVideo.isFeatured
                         }
                       });
-                    }}
-                    disabled={updateVideo.isPending}
-                    className="bg-ministry-navy hover:bg-ministry-charcoal text-white px-6 py-2 font-medium"
-                  >
-                    {updateVideo.isPending ? "Saving..." : "Save Changes"}
-                  </Button>
-                </div>
+                    }
+                  }}
+                  disabled={updateVideo.isPending}
+                  className="bg-ministry-navy hover:bg-ministry-charcoal text-white px-8 py-2 font-bold text-sm"
+                >
+                  {updateVideo.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
               </div>
             </div>
           )}
