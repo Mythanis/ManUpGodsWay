@@ -613,16 +613,20 @@ export default function VideoManagement() {
               </div>
 
               {/* Featured Toggle */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <Label className="text-sm font-medium">Featured Video</Label>
-                  <p className="text-xs text-ministry-slate">Mark this video as featured to show it at the top of the list</p>
+              <div className="flex items-center justify-between p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-lg shadow-sm">
+                <div className="flex items-center space-x-3">
+                  <Star className="w-6 h-6 text-yellow-500" />
+                  <div>
+                    <Label className="text-lg font-bold text-gray-900">Featured Video</Label>
+                    <p className="text-sm text-gray-700 mt-1">Mark this video as featured to show it at the top of the list</p>
+                  </div>
                 </div>
                 <Switch
                   checked={selectedVideo.isFeatured}
                   onCheckedChange={(checked) => {
                     setSelectedVideo(prev => prev ? { ...prev, isFeatured: checked } : null);
                   }}
+                  className="scale-125"
                 />
               </div>
 
