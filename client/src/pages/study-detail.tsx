@@ -77,18 +77,24 @@ export default function StudyDetail() {
     queryKey: ["/api/videos", study?.videoUrl, "stream"],
     queryFn: async () => {
       if (!study?.videoUrl) {
-        throw new Error('No video URL provided');
+        return null;
       }
-      const response = await fetch(`/api/videos/${study.videoUrl}/stream?fromStudy=true`, {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch video stream');
+      try {
+        const response = await fetch(`/api/videos/${study.videoUrl}/stream?fromStudy=true`, {
+          credentials: 'include'
+        });
+        if (!response.ok) {
+          console.warn('Video stream not available:', response.status);
+          return null;
+        }
+        return response.json();
+      } catch (error) {
+        console.warn('Video stream fetch failed:', error);
+        return null;
       }
-      return response.json();
     },
     retry: false,
-    enabled: !!isUploadedVideo && !!study?.videoUrl,
+    enabled: !!isUploadedVideo && !!study?.videoUrl && !!study,
   });
 
   const form = useForm({
