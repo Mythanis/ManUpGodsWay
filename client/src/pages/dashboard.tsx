@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ProgressCard from "@/components/progress-card";
 import { NotificationPanel } from "@/components/notification-panel";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
-import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle } from "lucide-react";
+import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function Dashboard() {
@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [prayerDuration, setPrayerDuration] = useState("5");
   const [isPraying, setIsPraying] = useState(false);
   const [prayerTimeLeft, setPrayerTimeLeft] = useState(0);
+  const [showProgressDialog, setShowProgressDialog] = useState(false);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -417,6 +418,7 @@ export default function Dashboard() {
             variant="outline"
             className="h-20 flex flex-col items-center justify-center space-y-2 border-gray-100 hover:shadow-md"
             data-testid="button-track-progress"
+            onClick={() => setShowProgressDialog(true)}
           >
             <BarChart3 className="w-8 h-8 text-ministry-steel" />
             <span className="font-medium text-sm text-ministry-charcoal">Track Progress</span>
@@ -487,6 +489,101 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Progress Tracking Dialog */}
+      <Dialog open={showProgressDialog} onOpenChange={setShowProgressDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <BarChart3 className="w-5 h-5 text-ministry-steel" />
+              <span>Your Progress</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* Completed Studies */}
+            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <Target className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-green-800">Studies Completed</p>
+                  <p className="text-sm text-green-600">Total finished studies</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-green-800">{completedCount}</p>
+                <p className="text-xs text-green-600">studies</p>
+              </div>
+            </div>
+
+            {/* Current Streak */}
+            <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-orange-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-orange-800">Current Streak</p>
+                  <p className="text-sm text-orange-600">Consecutive study days</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-orange-800">{user?.streakDays || 0}</p>
+                <p className="text-xs text-orange-600">days</p>
+              </div>
+            </div>
+
+            {/* Total Active Days */}
+            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-blue-800">Total Active Days</p>
+                  <p className="text-sm text-blue-600">Days with study activity</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-blue-800">{progress.length}</p>
+                <p className="text-xs text-blue-600">days</p>
+              </div>
+            </div>
+
+            {/* Progress Insights */}
+            <div className="bg-ministry-navy/5 p-4 rounded-lg border border-ministry-navy/20">
+              <h4 className="font-medium text-ministry-charcoal mb-2">Your Journey</h4>
+              <div className="space-y-2 text-sm text-ministry-slate">
+                {completedCount === 0 && (
+                  <p>🌱 Ready to start your first study? Check out the featured study above!</p>
+                )}
+                {completedCount > 0 && completedCount < 3 && (
+                  <p>🚀 Great start! You've completed {completedCount} {completedCount === 1 ? 'study' : 'studies'}. Keep building momentum!</p>
+                )}
+                {completedCount >= 3 && completedCount < 10 && (
+                  <p>💪 You're building a strong foundation with {completedCount} completed studies!</p>
+                )}
+                {completedCount >= 10 && (
+                  <p>🏆 Incredible dedication! {completedCount} studies completed - you're truly growing in faith!</p>
+                )}
+                
+                {(user?.streakDays || 0) >= 7 && (
+                  <p>🔥 Amazing streak! {user?.streakDays} consecutive days of spiritual growth!</p>
+                )}
+              </div>
+            </div>
+
+            <Button 
+              onClick={() => setShowProgressDialog(false)}
+              className="w-full bg-ministry-navy text-white hover:bg-ministry-charcoal"
+            >
+              Continue Growing
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Prayer Time Dialog */}
       <Dialog open={showPrayerDialog} onOpenChange={setShowPrayerDialog}>
