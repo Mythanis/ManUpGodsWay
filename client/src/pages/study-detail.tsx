@@ -75,9 +75,14 @@ export default function StudyDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/progress"] });
+      const newCompletedLessons = Math.min(currentLesson, study?.lessonCount || 1);
+      const isCompleted = newCompletedLessons === study?.lessonCount;
+      
       toast({
         title: "Progress Updated",
-        description: "Your study progress has been saved!",
+        description: isCompleted 
+          ? "Study completed! Your streak has been updated." 
+          : "Your study progress and daily streak have been saved!",
       });
     },
     onError: (error) => {
@@ -356,7 +361,21 @@ export default function StudyDetail() {
                     </label>
                     <Select
                       value={currentLesson.toString()}
-                      onValueChange={(value) => setCurrentLesson(parseInt(value))}
+                      onValueChange={(value) => {
+                        setCurrentLesson(parseInt(value));
+                        // Auto-update progress when lesson changes
+                        setTimeout(() => {
+                          const newLesson = parseInt(value);
+                          const newCompletedLessons = Math.min(newLesson, study.lessonCount || 1);
+                          const isCompleted = newCompletedLessons === study.lessonCount;
+                          
+                          updateProgress.mutate({
+                            currentLesson: newLesson,
+                            completedLessons: newCompletedLessons,
+                            isCompleted,
+                          });
+                        }, 100);
+                      }}
                     >
                       <SelectTrigger data-testid="select-current-lesson">
                         <SelectValue />
