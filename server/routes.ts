@@ -609,6 +609,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Message content is required" });
       }
 
+      // Get conversation details to check if it's a direct conversation
+      const conversation = await storage.getConversation(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+
+      // For direct conversations, check if we need to restore removed participants
+      if (conversation.type === 'direct') {
+        const currentParticipants = conversation.participants;
+        
+        // If there's only 1 participant, check if we need to re-add the other
+        if (currentParticipants.length === 1) {
+          // Get all users who have sent messages in this conversation
+          const messageSenders = await storage.getConversationMessageSenders(conversationId);
+          
+          // Find the missing participant (someone who sent messages but isn't currently a participant)
+          const missingParticipants = messageSenders.filter(senderId => 
+            !currentParticipants.some(p => p.userId === senderId)
+          );
+          
+          // Re-add missing participants
+          for (const missingUserId of missingParticipants) {
+            try {
+              await storage.addParticipantToConversation(conversationId, missingUserId, "member");
+            } catch (error) {
+              console.error(`Error re-adding participant ${missingUserId}:`, error);
+            }
+          }
+        }
+      }
+
       const messageData = {
         conversationId,
         userId,
@@ -620,16 +651,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create notifications for other participants in the conversation
       try {
-        const conversation = await storage.getConversation(conversationId);
-        if (conversation) {
-          const otherParticipants = conversation.participants.filter((p: any) => p.userId !== userId);
+        // Get updated conversation with all current participants
+        const updatedConversation = await storage.getConversation(conversationId);
+        if (updatedConversation) {
+          const otherParticipants = updatedConversation.participants.filter((p: any) => p.userId !== userId);
           const senderUser = await storage.getUser(userId);
           
           for (const participant of otherParticipants) {
             await storage.createNotification({
               userId: participant.userId,
-              type: conversation.type === 'direct' ? 'new_message' : 'group_message',
-              title: conversation.type === 'direct' ? 'New Message' : `New Group Message in ${conversation.name}`,
+              type: updatedConversation.type === 'direct' ? 'new_message' : 'group_message',
+              title: updatedConversation.type === 'direct' ? 'New Message' : `New Group Message in ${updatedConversation.name}`,
               message: `${senderUser?.firstName || 'Someone'} sent a message`,
               relatedId: conversationId,
             });

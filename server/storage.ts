@@ -128,6 +128,7 @@ export interface IStorage {
   sendMessage(message: InsertMessage): Promise<Message>;
   addParticipantToConversation(conversationId: string, userId: string, role?: string): Promise<ConversationParticipant>;
   removeParticipantFromConversation(conversationId: string, userId: string): Promise<void>;
+  getConversationMessageSenders(conversationId: string): Promise<string[]>;
   markMessagesAsRead(conversationId: string, userId: string): Promise<void>;
 
   // Feedback operations
@@ -1229,6 +1230,15 @@ export class DatabaseStorage implements IStorage {
           eq(conversationParticipants.userId, userId)
         )
       );
+  }
+
+  async getConversationMessageSenders(conversationId: string): Promise<string[]> {
+    const senders = await db
+      .selectDistinct({ userId: messages.userId })
+      .from(messages)
+      .where(eq(messages.conversationId, conversationId));
+    
+    return senders.map(sender => sender.userId);
   }
 
   async getMessage(messageId: string): Promise<any> {
