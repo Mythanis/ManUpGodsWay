@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, Star, MessageSquare } from "lucide-react";
 import { Link } from "wouter";
-import { StudyReviewsDialog } from "./study-reviews-dialog";
+import { StudyReviewsDialog } from "@/components/study-reviews-dialog";
 
 interface StudyCardProps {
   study: any;

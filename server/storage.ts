@@ -40,7 +40,7 @@ import {
   type InsertVideo,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, or, sql, ilike, count, isNotNull } from "drizzle-orm";
+import { eq, desc, and, or, sql, ilike, count } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -85,6 +85,7 @@ export interface IStorage {
   
   // Rating operations
   rateStudy(rating: InsertStudyRating): Promise<StudyRating>;
+  getStudyReviews(studyId: string): Promise<(StudyRating & { user: { firstName: string | null; lastName: string | null; profileImageUrl?: string | null } })[]>;
   
   // Video operations
   getVideos(limit?: number): Promise<Video[]>;
@@ -541,7 +542,7 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(studyRatings.userId, users.id))
       .where(and(
         eq(studyRatings.studyId, studyId),
-        isNotNull(studyRatings.review)
+        sql`${studyRatings.review} IS NOT NULL AND ${studyRatings.review} != ''`
       ))
       .orderBy(desc(studyRatings.createdAt));
   }
