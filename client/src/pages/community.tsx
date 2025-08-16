@@ -93,6 +93,8 @@ export default function Community() {
       return response.json();
     },
     retry: false,
+    refetchInterval: 5000, // Real-time updates every 5 seconds
+    refetchIntervalInBackground: true,
   });
 
   const form = useForm({
