@@ -354,7 +354,26 @@ export default function Messages() {
   };
 
   const formatMessageTime = (dateString: string) => {
-    return formatLocalTime(dateString, { hour: '2-digit', minute: '2-digit' });
+    const messageDate = new Date(dateString);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+    
+    const isToday = messageDay.getTime() === today.getTime();
+    const isYesterday = messageDay.getTime() === today.getTime() - 24 * 60 * 60 * 1000;
+    
+    if (isToday) {
+      return formatLocalTime(dateString, { hour: '2-digit', minute: '2-digit' });
+    } else if (isYesterday) {
+      return `Yesterday ${formatLocalTime(dateString, { hour: '2-digit', minute: '2-digit' })}`;
+    } else {
+      return formatLocalTime(dateString, { 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    }
   };
 
   if (conversationsLoading) {
@@ -718,7 +737,7 @@ export default function Messages() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {messages.reverse().map((message) => (
+                  {[...messages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()).map((message) => (
                     <div
                       key={message.id}
                       className={`flex items-end space-x-2 ${message.userId === (user as any)?.id ? 'justify-end' : 'justify-start'}`}
