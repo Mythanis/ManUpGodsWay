@@ -61,7 +61,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid theme preference' });
       }
       
-      const updatedUser = await storage.updateUser(userId, { themePreference });
+      // Get current user data first, then update with new theme preference
+      const currentUser = await storage.getUser(userId);
+      if (!currentUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const updatedUser = await storage.upsertUser({
+        ...currentUser,
+        themePreference
+      });
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating user theme:", error);
