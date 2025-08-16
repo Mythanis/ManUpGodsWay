@@ -1772,9 +1772,9 @@ export class DatabaseStorage implements IStorage {
     today.setHours(0, 0, 0, 0);
     
     const [{ activeToday }] = await db
-      .select({ activeToday: count(userProgress.id) })
-      .from(userProgress)
-      .where(sql`${userProgress.lastAccessedAt} >= ${today}`);
+      .select({ activeToday: count(users.id) })
+      .from(users)
+      .where(sql`DATE(${users.lastActiveDate}) = DATE(${today})`);
 
     const [{ newPosts }] = await db
       .select({ newPosts: count(discussions.id) })
