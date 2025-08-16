@@ -6,10 +6,11 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProgressCard from "@/components/progress-card";
 import { NotificationPanel } from "@/components/notification-panel";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
-import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X } from "lucide-react";
+import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function Dashboard() {
@@ -18,6 +19,10 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const [showFullDevotional, setShowFullDevotional] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [showPrayerDialog, setShowPrayerDialog] = useState(false);
+  const [prayerDuration, setPrayerDuration] = useState("5");
+  const [isPraying, setIsPraying] = useState(false);
+  const [prayerTimeLeft, setPrayerTimeLeft] = useState(0);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -59,6 +64,87 @@ export default function Dashboard() {
 
   const currentStudy = progress.find((p: any) => !p.isCompleted);
   const completedCount = progress.filter((p: any) => p.isCompleted).length;
+
+  // Prayer timer functionality
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isPraying && prayerTimeLeft > 0) {
+      interval = setInterval(() => {
+        setPrayerTimeLeft((prev) => {
+          if (prev <= 1) {
+            endPrayerTime();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isPraying, prayerTimeLeft]);
+
+  const startPrayerTime = async () => {
+    const duration = parseInt(prayerDuration) * 60; // Convert minutes to seconds
+    setPrayerTimeLeft(duration);
+    setIsPraying(true);
+    setShowPrayerDialog(false);
+
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      await Notification.requestPermission();
+    }
+
+    // Try to enable focus mode (requires user gesture)
+    try {
+      if ('wakeLock' in navigator) {
+        await (navigator as any).wakeLock.request('screen');
+      }
+    } catch (error) {
+      console.log('Wake lock not supported');
+    }
+
+    // Show fullscreen prayer mode
+    if (document.documentElement.requestFullscreen) {
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch (error) {
+        console.log('Fullscreen not available');
+      }
+    }
+
+    toast({
+      title: "Prayer Time Started",
+      description: `${prayerDuration} minutes of focused prayer time`,
+    });
+  };
+
+  const endPrayerTime = () => {
+    setIsPraying(false);
+    setPrayerTimeLeft(0);
+
+    // Exit fullscreen
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    }
+
+    // Show completion notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('Prayer Time Complete', {
+        body: 'Your prayer time has ended. May you feel refreshed and blessed.',
+        icon: '/favicon.ico'
+      });
+    }
+
+    toast({
+      title: "Prayer Time Complete",
+      description: "Your prayer time has ended. May you feel refreshed and blessed.",
+    });
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
     <div className="pb-20">
@@ -305,9 +391,19 @@ export default function Dashboard() {
             variant="outline"
             className="h-20 flex flex-col items-center justify-center space-y-2 border-gray-100 hover:shadow-md"
             data-testid="button-prayer-time"
+            onClick={() => isPraying ? endPrayerTime() : setShowPrayerDialog(true)}
           >
-            <Clock className="w-8 h-8 text-ministry-steel" />
-            <span className="font-medium text-sm text-ministry-charcoal">Prayer Time</span>
+            {isPraying ? (
+              <>
+                <PauseCircle className="w-8 h-8 text-ministry-steel" />
+                <span className="font-medium text-sm text-ministry-charcoal">{formatTime(prayerTimeLeft)}</span>
+              </>
+            ) : (
+              <>
+                <Clock className="w-8 h-8 text-ministry-steel" />
+                <span className="font-medium text-sm text-ministry-charcoal">Prayer Time</span>
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -356,6 +452,94 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Prayer Time Dialog */}
+      <Dialog open={showPrayerDialog} onOpenChange={setShowPrayerDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Clock className="w-5 h-5 text-ministry-steel" />
+              <span>Set Prayer Time</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="text-center">
+              <p className="text-ministry-slate text-sm mb-4">
+                Choose how long you'd like to spend in prayer. Your device will enter focus mode to minimize distractions.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-ministry-charcoal">Duration</label>
+              <Select value={prayerDuration} onValueChange={setPrayerDuration}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 minute</SelectItem>
+                  <SelectItem value="3">3 minutes</SelectItem>
+                  <SelectItem value="5">5 minutes</SelectItem>
+                  <SelectItem value="10">10 minutes</SelectItem>
+                  <SelectItem value="15">15 minutes</SelectItem>
+                  <SelectItem value="20">20 minutes</SelectItem>
+                  <SelectItem value="30">30 minutes</SelectItem>
+                  <SelectItem value="60">1 hour</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <p className="text-xs text-ministry-slate">
+                During prayer time, your screen will enter focus mode and you'll receive a notification when time is complete.
+              </p>
+            </div>
+
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setShowPrayerDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="flex-1 bg-ministry-navy text-white hover:bg-ministry-charcoal"
+                onClick={startPrayerTime}
+              >
+                Start Prayer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Prayer Time Overlay */}
+      {isPraying && (
+        <div className="fixed inset-0 bg-ministry-navy bg-opacity-95 z-50 flex items-center justify-center">
+          <div className="text-center text-white space-y-6">
+            <div className="space-y-2">
+              <Clock className="w-16 h-16 mx-auto text-ministry-gold" />
+              <h2 className="text-2xl font-bold">Prayer Time</h2>
+              <p className="text-blue-200">Take this time to connect with God</p>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="text-6xl font-mono font-light">
+                {formatTime(prayerTimeLeft)}
+              </div>
+              <p className="text-blue-200 text-sm">minutes remaining</p>
+            </div>
+
+            <Button 
+              variant="outline"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              onClick={endPrayerTime}
+            >
+              End Prayer Time
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Full Devotional Modal */}
       <Dialog open={showFullDevotional} onOpenChange={setShowFullDevotional}>
