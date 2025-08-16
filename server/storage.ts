@@ -363,10 +363,24 @@ export class DatabaseStorage implements IStorage {
       .from(userProgress)
       .where(and(eq(userProgress.userId, userId), eq(userProgress.studyId, studyId)));
 
+    // Prepare update data
+    const updateData = { ...progress, lastAccessedAt: new Date() };
+    
+    // Set completedAt timestamp when marking study as completed for the first time
+    if (progress.isCompleted === true) {
+      if (existing.length > 0 && !existing[0].completedAt) {
+        // Only set completedAt if it's not already set (preserve original completion date)
+        updateData.completedAt = new Date();
+      } else if (existing.length === 0) {
+        // New progress record being created as completed
+        updateData.completedAt = new Date();
+      }
+    }
+
     if (existing.length > 0) {
       const [updated] = await db
         .update(userProgress)
-        .set({ ...progress, lastAccessedAt: new Date() })
+        .set(updateData)
         .where(and(eq(userProgress.userId, userId), eq(userProgress.studyId, studyId)))
         .returning();
       return updated;
@@ -376,7 +390,7 @@ export class DatabaseStorage implements IStorage {
         .values({
           userId,
           studyId,
-          ...progress,
+          ...updateData,
         })
         .returning();
       return newProgress;

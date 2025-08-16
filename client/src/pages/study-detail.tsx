@@ -425,16 +425,26 @@ export default function StudyDetail() {
                 </div>
 
                 {progressPercent === 100 && (
-                  <div className="bg-ministry-success/10 border border-ministry-success/20 rounded-lg p-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 rounded-full bg-ministry-success/20 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-ministry-success" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="bg-gradient-to-r from-ministry-success/10 to-ministry-gold/10 border border-ministry-success/20 rounded-lg p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-full bg-ministry-success/20 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-ministry-success" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
                         </svg>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-ministry-success">Study Completed!</h3>
-                        <p className="text-sm text-ministry-slate">Congratulations on finishing this study.</p>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-ministry-success text-lg">🎉 Study Completed!</h3>
+                        <p className="text-sm text-ministry-slate">Congratulations on finishing this study and growing in your faith journey.</p>
+                        {userProgress?.completedAt && (
+                          <p className="text-xs text-ministry-steel mt-1 font-medium">
+                            Completed on {new Date(userProgress.completedAt).toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
