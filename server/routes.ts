@@ -291,7 +291,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { studyId } = req.params;
       const progressData = req.body;
       
-      const progress = await storage.updateProgress(userId, studyId, progressData);
+      // Extract user's local date if provided
+      const userLocalDate = progressData.userLocalDate ? new Date(progressData.userLocalDate) : undefined;
+      // Remove userLocalDate from progressData before passing to storage
+      const { userLocalDate: _, ...cleanProgressData } = progressData;
+      
+      const progress = await storage.updateProgress(userId, studyId, cleanProgressData, userLocalDate);
       res.json(progress);
     } catch (error) {
       console.error("Error updating progress:", error);

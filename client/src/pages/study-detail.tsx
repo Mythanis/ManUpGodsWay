@@ -87,7 +87,12 @@ export default function StudyDetail() {
 
   const updateProgress = useMutation({
     mutationFn: async (data: { currentLesson: number; completedLessons: number; isCompleted?: boolean }) => {
-      await apiRequest('POST', `/api/progress/${id}`, data);
+      // Add user's local date for accurate streak calculation
+      const progressData = {
+        ...data,
+        userLocalDate: new Date().toISOString()
+      };
+      await apiRequest('POST', `/api/progress/${id}`, progressData);
     },
     onSuccess: () => {
       // Invalidate all progress-related queries

@@ -67,6 +67,7 @@ This is a full-stack React/Express application called "Man Up God's Way" - a fai
 ✓ **Featured Video Admin Interface**: Admin video management now includes toggle for featured status with visual indicators in video grid
 ✓ **Featured Video Prioritization**: Videos API automatically orders featured videos first regardless of sort criteria (recent/rating/reviews)
 ✓ **Featured Video Visual Design**: Featured videos display with golden ring border, star badges, and prominent featured indicators throughout the interface
+✓ **Local Time Streak System**: Updated streak calculation to use user's local computer/phone time instead of UTC for accurate daily streak tracking
 
 # User Preferences
 

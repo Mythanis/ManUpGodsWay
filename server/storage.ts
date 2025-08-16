@@ -63,7 +63,7 @@ export interface IStorage {
   // Progress operations
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
   updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
-  updateUserStreak(userId: string): Promise<void>;
+  updateUserStreak(userId: string, userLocalDate?: Date): Promise<void>;
   
   // Study-specific methods
   getStudyDiscussion(studyId: string): Promise<(Discussion & { user: User }) | null>;
@@ -425,9 +425,9 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(userProgress.lastAccessedAt));
   }
 
-  async updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress> {
+  async updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>, userLocalDate?: Date): Promise<UserProgress> {
     // Update user streak when they make progress
-    await this.updateUserStreak(userId);
+    await this.updateUserStreak(userId, userLocalDate);
     
     const existing = await db
       .select()
@@ -799,10 +799,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Streak operations
-  async updateUserStreak(userId: string): Promise<void> {
-    // Use UTC date to avoid timezone issues
-    const today = new Date();
-    const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+  async updateUserStreak(userId: string, userLocalDate?: Date): Promise<void> {
+    // Use user's local date for streak calculation
+    const localToday = userLocalDate || new Date();
+    const todayLocal = new Date(localToday.getFullYear(), localToday.getMonth(), localToday.getDate());
     
     const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!user) return;
@@ -810,25 +810,25 @@ export class DatabaseStorage implements IStorage {
     const lastActive = user.lastActiveDate ? new Date(user.lastActiveDate) : null;
     
     if (lastActive) {
-      // Convert to UTC date for consistent comparison
-      const lastActiveUTC = new Date(Date.UTC(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate()));
+      // Convert to local date for comparison
+      const lastActiveLocal = new Date(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate());
       
-      // Check if last active was today
-      if (lastActiveUTC.getTime() === todayUTC.getTime()) {
+      // Check if last active was today (local time)
+      if (lastActiveLocal.getTime() === todayLocal.getTime()) {
         // Already counted today, no update needed
         return;
       }
       
-      const yesterdayUTC = new Date(todayUTC);
-      yesterdayUTC.setUTCDate(yesterdayUTC.getUTCDate() - 1);
+      const yesterdayLocal = new Date(todayLocal);
+      yesterdayLocal.setDate(yesterdayLocal.getDate() - 1);
       
-      if (lastActiveUTC.getTime() === yesterdayUTC.getTime()) {
+      if (lastActiveLocal.getTime() === yesterdayLocal.getTime()) {
         // Consecutive day - increment streak
         await db
           .update(users)
           .set({ 
             streakDays: (user.streakDays || 0) + 1,
-            lastActiveDate: todayUTC 
+            lastActiveDate: todayLocal 
           })
           .where(eq(users.id, userId));
       } else {
@@ -837,7 +837,7 @@ export class DatabaseStorage implements IStorage {
           .update(users)
           .set({ 
             streakDays: 1,
-            lastActiveDate: todayUTC 
+            lastActiveDate: todayLocal 
           })
           .where(eq(users.id, userId));
       }
@@ -847,7 +847,7 @@ export class DatabaseStorage implements IStorage {
         .update(users)
         .set({ 
           streakDays: 1,
-          lastActiveDate: todayUTC 
+          lastActiveDate: todayLocal 
         })
         .where(eq(users.id, userId));
     }
