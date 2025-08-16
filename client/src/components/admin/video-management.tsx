@@ -622,6 +622,11 @@ export default function VideoManagement() {
                   checked={selectedVideo.isFeatured}
                   onCheckedChange={(checked) => {
                     setSelectedVideo(prev => prev ? { ...prev, isFeatured: checked } : null);
+                    // Immediately save the featured status change
+                    updateVideo.mutate({ 
+                      id: selectedVideo.id, 
+                      video: { isFeatured: checked }
+                    });
                   }}
                 />
               </div>
