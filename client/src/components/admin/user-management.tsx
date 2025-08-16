@@ -38,6 +38,8 @@ export default function UserManagement() {
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [showBanDialog, setShowBanDialog] = useState(false);
   const [banReason, setBanReason] = useState('');
+  const [editedUser, setEditedUser] = useState<Partial<User>>({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -135,6 +137,49 @@ export default function UserManagement() {
     user.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleSaveChanges = async () => {
+    if (!selectedUser || !hasUnsavedChanges) return;
+
+    try {
+      const promises = [];
+      
+      // Save role change if it was modified
+      if (editedUser.role && editedUser.role !== selectedUser.role) {
+        promises.push(updateUserRole.mutateAsync({ userId: selectedUser.id, role: editedUser.role }));
+      }
+      
+      // Save subscription change if it was modified
+      if (editedUser.subscriptionTier && editedUser.subscriptionTier !== selectedUser.subscriptionTier) {
+        promises.push(updateUserSubscription.mutateAsync({ userId: selectedUser.id, subscriptionTier: editedUser.subscriptionTier }));
+      }
+      
+      // Wait for all changes to be saved
+      await Promise.all(promises);
+      
+      // Update the selected user with the new values
+      setSelectedUser(prev => prev ? { 
+        ...prev, 
+        role: editedUser.role || prev.role,
+        subscriptionTier: editedUser.subscriptionTier || prev.subscriptionTier
+      } : null);
+      
+      // Clear edited state
+      setEditedUser({});
+      setHasUnsavedChanges(false);
+      
+      toast({
+        title: "Success",
+        description: "User changes saved successfully!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error", 
+        description: "Failed to save changes. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getTierBadge = (tier: string) => {
     switch (tier) {
       case 'vip':
@@ -226,6 +271,8 @@ export default function UserManagement() {
                     size="sm"
                     onClick={() => {
                       setSelectedUser(user);
+                      setEditedUser({});
+                      setHasUnsavedChanges(false);
                       setShowUserDialog(true);
                     }}
                     data-testid={`view-user-${user.id}`}
@@ -270,10 +317,10 @@ export default function UserManagement() {
                       <div>
                         <p className="text-sm font-medium text-ministry-charcoal">Role</p>
                         <Select
-                          value={selectedUser.role}
+                          value={editedUser.role || selectedUser.role}
                           onValueChange={(role) => {
-                            updateUserRole.mutate({ userId: selectedUser.id, role });
-                            setSelectedUser(prev => prev ? { ...prev, role } : null);
+                            setEditedUser(prev => ({ ...prev, role }));
+                            setHasUnsavedChanges(true);
                           }}
                         >
                           <SelectTrigger className="w-full">
@@ -296,10 +343,10 @@ export default function UserManagement() {
                       <div>
                         <p className="text-sm font-medium text-ministry-charcoal">Subscription</p>
                         <Select
-                          value={selectedUser.subscriptionTier}
+                          value={editedUser.subscriptionTier || selectedUser.subscriptionTier}
                           onValueChange={(subscriptionTier) => {
-                            updateUserSubscription.mutate({ userId: selectedUser.id, subscriptionTier });
-                            setSelectedUser(prev => prev ? { ...prev, subscriptionTier } : null);
+                            setEditedUser(prev => ({ ...prev, subscriptionTier }));
+                            setHasUnsavedChanges(true);
                           }}
                         >
                           <SelectTrigger className="w-full">
@@ -378,7 +425,7 @@ export default function UserManagement() {
               </Card>
 
               {/* Ban Status */}
-              {selectedUser.isBanned ? (
+              {selectedUser.isBanned && (
                 <Card className="border-red-200">
                   <CardHeader>
                     <CardTitle className="text-lg text-red-600 flex items-center space-x-2">
@@ -395,6 +442,15 @@ export default function UserManagement() {
                       <p className="text-sm font-medium text-ministry-charcoal">Reason</p>
                       <p className="text-sm text-ministry-slate">{selectedUser.bannedReason || 'No reason provided'}</p>
                     </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Bottom Button Layout */}
+              <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+                {/* Ban/Unban Button - Bottom Left */}
+                <div>
+                  {selectedUser.isBanned ? (
                     <Button
                       onClick={() => unbanUser.mutate(selectedUser.id)}
                       className="bg-green-600 hover:bg-green-700 text-white"
@@ -403,20 +459,29 @@ export default function UserManagement() {
                       <UserCheck className="w-4 h-4 mr-2" />
                       Unban User
                     </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="flex justify-end">
+                  ) : (
+                    <Button
+                      variant="destructive"
+                      onClick={() => setShowBanDialog(true)}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      <Ban className="w-4 h-4 mr-2" />
+                      Ban User
+                    </Button>
+                  )}
+                </div>
+
+                {/* Save Button - Bottom Right */}
+                <div>
                   <Button
-                    variant="destructive"
-                    onClick={() => setShowBanDialog(true)}
-                    className="bg-red-600 hover:bg-red-700"
+                    onClick={() => handleSaveChanges()}
+                    disabled={!hasUnsavedChanges || updateUserRole.isPending || updateUserSubscription.isPending}
+                    className="bg-ministry-navy hover:bg-ministry-charcoal text-white"
                   >
-                    <Ban className="w-4 h-4 mr-2" />
-                    Ban User
+                    {(updateUserRole.isPending || updateUserSubscription.isPending) ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
-              )}
+              </div>
             </div>
           )}
         </DialogContent>
