@@ -175,16 +175,19 @@ export class DatabaseStorage implements IStorage {
   async createStudy(study: InsertStudy): Promise<Study> {
     const [newStudy] = await db.insert(studies).values(study).returning();
     
-    // Create a discussion for this study
-    const discussionData: InsertDiscussion = {
-      title: newStudy.title,
-      content: `Welcome to the discussion for "${newStudy.title}". Share your thoughts, questions, and insights about this study here.`,
-      category: newStudy.category || 'leadership',
-      userId: 'system', // Use system as the creator
-      studyId: newStudy.id, // Link the discussion to the study
-    };
-    
-    await this.createDiscussion(discussionData);
+    // Create a discussion for this study using an admin user
+    const [adminUser] = await db.select().from(users).where(eq(users.role, 'admin')).limit(1);
+    if (adminUser) {
+      const discussionData: InsertDiscussion = {
+        title: newStudy.title,
+        content: `Welcome to the discussion for "${newStudy.title}". Share your thoughts, questions, and insights about this study here.`,
+        category: newStudy.category || 'leadership',
+        userId: adminUser.id,
+        studyId: newStudy.id, // Link the discussion to the study
+      };
+      
+      await this.createDiscussion(discussionData);
+    }
     
     return newStudy;
   }
@@ -300,7 +303,11 @@ export class DatabaseStorage implements IStorage {
 
     // Get the first admin user to create the discussion
     const [adminUser] = await db.select().from(users).where(eq(users.role, 'admin')).limit(1);
-    const discussionUserId = adminUser?.id || 'system';
+    if (!adminUser) {
+      // If no admin found, skip creating discussion for now
+      return null;
+    }
+    const discussionUserId = adminUser.id;
 
     const discussionData: InsertDiscussion = {
       title: `${study.title} - Study Discussion`,
@@ -344,6 +351,12 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(discussions, eq(studies.id, discussions.studyId))
       .where(sql`${discussions.id} IS NULL`);
 
+    // Get an admin user to create discussions
+    const [adminUser] = await db.select().from(users).where(eq(users.role, 'admin')).limit(1);
+    if (!adminUser) {
+      return; // Skip if no admin user found
+    }
+
     for (const { studies: study } of studiesWithoutDiscussions) {
       if (!study) continue;
       
@@ -351,7 +364,7 @@ export class DatabaseStorage implements IStorage {
         title: study.title,
         content: `Welcome to the discussion for "${study.title}". Share your thoughts, questions, and insights about this study here.`,
         category: study.category || 'leadership',
-        userId: 'system',
+        userId: adminUser.id,
         studyId: study.id,
       };
       
