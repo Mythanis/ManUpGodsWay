@@ -55,6 +55,16 @@ export default function Dashboard() {
     retry: false,
   });
 
+  const { data: recommendedStudies = [] } = useQuery({
+    queryKey: ["/api/studies", { limit: 3 }],
+    queryFn: async () => {
+      const response = await fetch('/api/studies?limit=3', { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch recommended studies');
+      return response.json();
+    },
+    retry: false,
+  });
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -377,17 +387,54 @@ export default function Dashboard() {
             data-testid="progress-current-study"
           />
         ) : (
-          <Card className="border border-gray-100 p-6" data-testid="card-no-current-study">
-            <div className="text-center">
-              <p className="text-ministry-slate mb-4">You haven't started any studies yet</p>
-              <Button 
-                className="bg-ministry-navy text-white hover:bg-ministry-charcoal"
-                data-testid="button-browse-studies"
-              >
-                Browse Studies
-              </Button>
-            </div>
-          </Card>
+          <>
+            {/* No Current Study - Show Recommendations */}
+            <Card className="border border-gray-100 p-6 mb-4" data-testid="card-no-current-study">
+              <div className="text-center">
+                <p className="text-ministry-slate mb-4">You haven't started any studies yet</p>
+                <Button 
+                  className="bg-ministry-navy text-white hover:bg-ministry-charcoal"
+                  data-testid="button-browse-studies"
+                  onClick={() => window.location.href = '/library'}
+                >
+                  Browse Studies
+                </Button>
+              </div>
+            </Card>
+            
+            {/* Recommended Studies */}
+            {recommendedStudies.length > 0 && (
+              <>
+                <h3 className="text-md font-semibold text-ministry-charcoal mb-3">Recommended for You</h3>
+                <div className="space-y-3">
+                  {recommendedStudies.slice(0, 3).map((study: any) => (
+                    <Card key={study.id} className="border border-gray-100 hover:shadow-sm transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-ministry-charcoal text-sm mb-1">{study.title}</h4>
+                            <p className="text-xs text-ministry-slate mb-2 line-clamp-2">{study.description}</p>
+                            <div className="flex items-center space-x-3 text-xs text-ministry-slate">
+                              <span>{study.lessonCount} lessons</span>
+                              <span>{study.estimatedHours}h</span>
+                              <span className="capitalize">{study.difficulty}</span>
+                            </div>
+                          </div>
+                          <Button 
+                            size="sm"
+                            className="bg-ministry-steel text-white hover:bg-ministry-navy ml-3"
+                            onClick={() => window.location.href = `/studies/${study.id}`}
+                          >
+                            Start
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         )}
       </div>
 
