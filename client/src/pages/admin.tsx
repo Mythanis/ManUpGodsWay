@@ -63,6 +63,7 @@ export default function Admin() {
     tags: "",
     lessons: "",
   });
+  const [videoInputType, setVideoInputType] = useState<'manual' | 'uploaded'>('manual');
 
   // Check admin access
   useEffect(() => {
@@ -102,6 +103,13 @@ export default function Admin() {
     queryKey: ["/api/admin/users"],
     retry: false,
     enabled: (user as any)?.role === 'admin' && notificationData.targetAudience === 'individual',
+  });
+
+  // Fetch uploaded videos for study assignment
+  const { data: uploadedVideos = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/videos"],
+    retry: false,
+    enabled: (user as any)?.role === 'admin' && showEditDialog,
   });
 
   // Update study mutation
@@ -174,6 +182,11 @@ export default function Admin() {
 
   const handleEdit = (study: Study) => {
     setEditingStudy(study);
+    const videoUrl = study.videoUrl || "";
+    // Determine if the video URL is an uploaded video ID or external URL
+    const isUploadedVideo = !videoUrl.startsWith('http') && videoUrl.length > 10;
+    setVideoInputType(isUploadedVideo ? 'uploaded' : 'manual');
+    
     setFormData({
       title: study.title,
       description: study.description,
@@ -645,14 +658,78 @@ export default function Admin() {
             </div>
 
             <div>
-              <Label htmlFor="edit-video-url">Video URL (Optional)</Label>
-              <Input
-                id="edit-video-url"
-                value={formData.videoUrl}
-                onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                placeholder="https://..."
-                data-testid="input-edit-video-url"
-              />
+              <Label>Video Assignment (Optional)</Label>
+              <div className="space-y-3">
+                <div className="flex space-x-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="videoInputType"
+                      checked={videoInputType === 'manual'}
+                      onChange={() => {
+                        setVideoInputType('manual');
+                        setFormData({ ...formData, videoUrl: '' });
+                      }}
+                      className="text-ministry-navy"
+                    />
+                    <span className="text-sm">Manual URL</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="videoInputType"
+                      checked={videoInputType === 'uploaded'}
+                      onChange={() => {
+                        setVideoInputType('uploaded');
+                        setFormData({ ...formData, videoUrl: '' });
+                      }}
+                      className="text-ministry-navy"
+                    />
+                    <span className="text-sm">Select Uploaded Video</span>
+                  </label>
+                </div>
+                
+                {videoInputType === 'manual' ? (
+                  <Input
+                    id="edit-video-url"
+                    value={formData.videoUrl}
+                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                    placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
+                    data-testid="input-edit-video-url"
+                  />
+                ) : (
+                  <Select
+                    value={formData.videoUrl}
+                    onValueChange={(value) => setFormData({ ...formData, videoUrl: value })}
+                  >
+                    <SelectTrigger data-testid="select-uploaded-video">
+                      <SelectValue placeholder="Select an uploaded video" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No video</SelectItem>
+                      {uploadedVideos.map((video: any) => (
+                        <SelectItem key={video.id} value={video.id}>
+                          <div className="flex items-center space-x-2">
+                            <span>{video.title}</span>
+                            <span className="text-xs text-gray-500">({video.requiredTier})</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                
+                {videoInputType === 'manual' && (
+                  <p className="text-xs text-ministry-slate">
+                    Enter a YouTube, Vimeo, or direct video URL
+                  </p>
+                )}
+                {videoInputType === 'uploaded' && (
+                  <p className="text-xs text-ministry-slate">
+                    Select from videos uploaded through the Video Management tab
+                  </p>
+                )}
+              </div>
             </div>
 
             <div>

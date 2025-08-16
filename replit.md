@@ -52,6 +52,7 @@ This is a full-stack React/Express application called "Man Up God's Way" - a fai
 ✓ **User Video Filtering**: API endpoints filter videos based on user subscription tier (free users see free videos, premium users see free+premium, VIP users see all)
 ✓ **Video Upload Flow Enhancement**: Improved video upload process with proper file selection, tier assignment, and manual upload trigger
 ✓ **Study Video Player Fix**: Enhanced video playback in studies with support for YouTube embeds, Vimeo embeds, direct video URLs, and uploaded video handling
+✓ **Study-Video Integration**: Admins can now assign uploaded videos to studies through the edit dialog with radio button selection between manual URLs and uploaded videos
 
 # User Preferences
 
