@@ -104,6 +104,9 @@ export interface IStorage {
   rateVideo(rating: InsertVideoRating): Promise<VideoRating>;
   getVideoReviews(videoId: string): Promise<(VideoRating & { user: { firstName: string | null; lastName: string | null; profileImageUrl?: string | null } })[]>;
   
+  // Title validation
+  checkTitleExists(title: string, excludeStudyId?: string, excludeVideoId?: string): Promise<boolean>;
+  
   // Admin operations
   getAllUsers(limit?: number): Promise<User[]>;
   updateUserRole(userId: string, role: string): Promise<User>;
@@ -181,6 +184,11 @@ export class DatabaseStorage implements IStorage {
     return study;
   }
 
+  // Public method to check if title exists
+  async checkTitleExists(title: string, excludeStudyId?: string, excludeVideoId?: string): Promise<boolean> {
+    return this.checkTitleConflict(title, excludeStudyId, excludeVideoId);
+  }
+  
   // Helper method to check for title conflicts across studies and videos
   private async checkTitleConflict(title: string, excludeStudyId?: string, excludeVideoId?: string): Promise<boolean> {
     // Check if title exists in studies (excluding current study if updating)
@@ -1379,8 +1387,6 @@ export class DatabaseStorage implements IStorage {
 
   // Video operations
   async getVideos(category?: string, requiredTier?: string, userTier?: string, sortBy?: string, limit?: number): Promise<Video[]> {
-    let query = db.select().from(videos);
-    
     const conditions = [];
     
     // Filter by category
@@ -1399,28 +1405,32 @@ export class DatabaseStorage implements IStorage {
       conditions.push(inArray(videos.requiredTier, allowedTiers));
     }
     
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-    
-    // Sort by option - always prioritize featured videos first
+    // Build order by clauses - always prioritize featured videos first
+    let orderClauses;
     switch (sortBy) {
       case 'rating':
-        query = query.orderBy(desc(videos.isFeatured), desc(videos.rating), desc(videos.ratingCount));
+        orderClauses = [desc(videos.isFeatured), desc(videos.rating), desc(videos.ratingCount)];
         break;
       case 'reviews':
-        query = query.orderBy(desc(videos.isFeatured), desc(videos.ratingCount));
+        orderClauses = [desc(videos.isFeatured), desc(videos.ratingCount)];
         break;
       default: // 'recent'
-        query = query.orderBy(desc(videos.isFeatured), desc(videos.createdAt));
+        orderClauses = [desc(videos.isFeatured), desc(videos.createdAt)];
         break;
     }
     
-    if (limit) {
-      query = query.limit(limit);
-    }
+    // Build final query
+    const baseQuery = db.select().from(videos);
     
-    return await query;
+    if (conditions.length > 0 && limit) {
+      return await baseQuery.where(and(...conditions)).orderBy(...orderClauses).limit(limit);
+    } else if (conditions.length > 0) {
+      return await baseQuery.where(and(...conditions)).orderBy(...orderClauses);
+    } else if (limit) {
+      return await baseQuery.orderBy(...orderClauses).limit(limit);
+    } else {
+      return await baseQuery.orderBy(...orderClauses);
+    }
   }
 
   async getVideosByUserTier(userTier: string, limit?: number): Promise<Video[]> {

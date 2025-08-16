@@ -74,6 +74,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if title exists across studies and videos
+  app.get('/api/check-title/:title', async (req, res) => {
+    try {
+      const title = decodeURIComponent(req.params.title);
+      const excludeStudyId = req.query.excludeStudyId as string;
+      const excludeVideoId = req.query.excludeVideoId as string;
+      
+      const titleExists = await storage.checkTitleExists(title, excludeStudyId, excludeVideoId);
+      res.json({ exists: titleExists });
+    } catch (error) {
+      console.error("Error checking title:", error);
+      res.status(500).json({ message: "Failed to check title" });
+    }
+  });
+
   // Get featured study
   app.get('/api/studies/featured', async (req, res) => {
     try {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -47,6 +47,8 @@ export default function VideoManagement() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
+  const [titleExists, setTitleExists] = useState(false);
+  const [checkingTitle, setCheckingTitle] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -54,6 +56,55 @@ export default function VideoManagement() {
     queryKey: ["/api/admin/videos"],
     retry: false,
   });
+
+  // Debounced title validation
+  const checkTitleExists = useCallback(async (title: string, excludeVideoId?: string) => {
+    if (!title || title.trim().length < 3) {
+      setTitleExists(false);
+      return;
+    }
+
+    setCheckingTitle(true);
+    try {
+      const url = excludeVideoId 
+        ? `/api/check-title/${encodeURIComponent(title.trim())}?excludeVideoId=${excludeVideoId}`
+        : `/api/check-title/${encodeURIComponent(title.trim())}`;
+        
+      const response = await fetch(url, { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        setTitleExists(data.exists);
+      }
+    } catch (error) {
+      console.error('Error checking title:', error);
+    } finally {
+      setCheckingTitle(false);
+    }
+  }, []);
+
+  // Watch upload title for changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      checkTitleExists(uploadTitle, selectedVideo?.id);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [uploadTitle, selectedVideo?.id, checkTitleExists]);
+
+  // Watch selected video title for changes (when editing)
+  useEffect(() => {
+    if (selectedVideo) {
+      const timeoutId = setTimeout(() => {
+        checkTitleExists(selectedVideo.title, selectedVideo.id);
+      }, 500); // 500ms debounce
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      // Reset validation when no video is selected
+      setTitleExists(false);
+      setCheckingTitle(false);
+    }
+  }, [selectedVideo?.title, selectedVideo?.id, checkTitleExists]);
 
   const uploadVideo = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -78,6 +129,8 @@ export default function VideoManagement() {
       setUploadDescription('');
       setUploadTier('free');
       setUploadCategory('general');
+      setTitleExists(false);
+      setCheckingTitle(false);
       toast({
         title: "Success",
         description: "Video uploaded successfully!",
@@ -460,6 +513,12 @@ export default function VideoManagement() {
                         placeholder="Enter video title"
                         className="mt-1"
                       />
+                      {titleExists && (
+                        <p className="text-red-500 text-sm mt-1">Title exists</p>
+                      )}
+                      {checkingTitle && (
+                        <p className="text-gray-500 text-sm mt-1">Checking title...</p>
+                      )}
                     </div>
                     
                     <div>
@@ -512,8 +571,8 @@ export default function VideoManagement() {
                     
                     <Button 
                       onClick={handleUpload}
-                      disabled={!uploadTitle.trim()}
-                      className="w-full bg-ministry-navy hover:bg-ministry-charcoal"
+                      disabled={!uploadTitle.trim() || titleExists || checkingTitle}
+                      className="w-full bg-ministry-navy hover:bg-ministry-charcoal disabled:opacity-50"
                     >
                       <Upload className="w-4 h-4 mr-2" />
                       Upload Video
@@ -599,8 +658,13 @@ export default function VideoManagement() {
                     onChange={(e) => {
                       setSelectedVideo(prev => prev ? { ...prev, title: e.target.value } : null);
                     }}
-                    className="mt-1"
                   />
+                  {titleExists && (
+                    <p className="text-red-500 text-sm mt-1">Title exists</p>
+                  )}
+                  {checkingTitle && (
+                    <p className="text-gray-500 text-sm mt-1">Checking title...</p>
+                  )}
                 </div>
                 
                 <div>
@@ -738,8 +802,8 @@ export default function VideoManagement() {
                       });
                     }
                   }}
-                  disabled={updateVideo.isPending}
-                  className="bg-ministry-navy hover:bg-ministry-charcoal text-white px-8 py-2 font-bold text-sm"
+                  disabled={updateVideo.isPending || titleExists || checkingTitle}
+                  className="bg-ministry-navy hover:bg-ministry-charcoal text-white px-8 py-2 font-bold text-sm disabled:opacity-50"
                 >
                   {updateVideo.isPending ? 'Saving...' : 'Save Changes'}
                 </Button>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -48,6 +48,8 @@ const createStudySchema = insertStudySchema.extend({
 
 export default function UploadStudyForm() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [titleExists, setTitleExists] = useState(false);
+  const [checkingTitle, setCheckingTitle] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -77,6 +79,39 @@ export default function UploadStudyForm() {
       isPublished: false,
     },
   });
+
+  // Debounced title validation
+  const checkTitleExists = useCallback(async (title: string) => {
+    if (!title || title.trim().length < 3) {
+      setTitleExists(false);
+      return;
+    }
+
+    setCheckingTitle(true);
+    try {
+      const response = await fetch(`/api/check-title/${encodeURIComponent(title.trim())}`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTitleExists(data.exists);
+      }
+    } catch (error) {
+      console.error('Error checking title:', error);
+    } finally {
+      setCheckingTitle(false);
+    }
+  }, []);
+
+  // Watch title field for changes
+  const watchedTitle = form.watch('title');
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      checkTitleExists(watchedTitle);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [watchedTitle, checkTitleExists]);
 
   const createStudy = useMutation({
     mutationFn: async (data: z.infer<typeof createStudySchema>) => {
@@ -163,6 +198,12 @@ export default function UploadStudyForm() {
                     />
                   </FormControl>
                   <FormMessage />
+                  {titleExists && (
+                    <p className="text-red-500 text-sm mt-1">Title exists</p>
+                  )}
+                  {checkingTitle && (
+                    <p className="text-gray-500 text-sm mt-1">Checking title...</p>
+                  )}
                 </FormItem>
               )}
             />
@@ -424,8 +465,8 @@ export default function UploadStudyForm() {
               </Button>
               <Button
                 type="submit"
-                disabled={createStudy.isPending}
-                className="flex-1 bg-ministry-navy hover:bg-ministry-charcoal"
+                disabled={createStudy.isPending || titleExists || checkingTitle}
+                className="flex-1 bg-ministry-navy hover:bg-ministry-charcoal disabled:opacity-50"
                 data-testid="button-create-study"
               >
                 {createStudy.isPending ? "Creating..." : "Create Study"}
