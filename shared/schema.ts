@@ -142,6 +142,7 @@ export const devotionals = pgTable("devotionals", {
   content: text("content").notNull(),
   imageUrl: varchar("image_url"),
   date: timestamp("date").notNull(),
+  notificationsSent: boolean("notifications_sent").default(false), // Track if notifications have been sent for this devotional
   createdAt: timestamp("created_at").defaultNow(),
 });
 

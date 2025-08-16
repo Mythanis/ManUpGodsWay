@@ -807,6 +807,26 @@ export class DatabaseStorage implements IStorage {
     await db.delete(devotionals).where(eq(devotionals.id, id));
   }
 
+  async getAvailableDevotionalsWithoutNotifications(): Promise<Devotional[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return await db
+      .select()
+      .from(devotionals)
+      .where(and(
+        sql`${devotionals.date} <= ${today}`,
+        eq(devotionals.notificationsSent, false)
+      ));
+  }
+
+  async markDevotionalNotificationsSent(id: string): Promise<void> {
+    await db
+      .update(devotionals)
+      .set({ notificationsSent: true })
+      .where(eq(devotionals.id, id));
+  }
+
   // Streak operations
   async updateUserStreak(userId: string, userLocalDate?: Date): Promise<void> {
     // Use user's local date for streak calculation

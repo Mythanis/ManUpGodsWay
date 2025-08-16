@@ -5,6 +5,7 @@
 - **Real-time Content Publishing**: Studies and videos now automatically appear across all pages when admins publish new content (8-10 second polling)
 - **Enhanced Discussion Categories**: Added "Miscellaneous" topic and streamlined study discussion creation
 - **Tier-Based Content Notifications**: Automatic real-time notifications sent to users when new studies/videos are published, filtered by subscription tier access (free users get free content notifications, premium users get free+premium, VIP users get all content)
+- **Daily Devotional Notifications**: Implemented automatic background service that sends notifications to all users when new daily devotionals become available (checks every 15 minutes), with manual admin controls and immediate notifications when devotionals are created
 
 # User Preferences
 Preferred communication style: Simple, everyday language.
@@ -35,7 +36,7 @@ The application features a mobile-first responsive design with a bottom navigati
 - **Studies & Devotionals**: Comprehensive management for Bible studies and devotionals, including rich content display and admin CRUD operations.
 - **Community**: Interactive discussion pop-outs, real-time statistics, and integration within study pages.
 - **Video Management**: Full video upload, storage, processing, and management system with tiered access, topic classification, and ratings/reviews.
-- **Notifications**: Enhanced notification system with push notification broadcasting (admin-controlled with targeting), user management, and individual/bulk clearing.
+- **Notifications**: Enhanced notification system with push notification broadcasting (admin-controlled with targeting), user management, individual/bulk clearing, and automated daily devotional notifications with background service monitoring.
 - **User Engagement**: Streak tracking based on user's local time, prayer time system with focus mode, and featured content display.
 
 # External Dependencies

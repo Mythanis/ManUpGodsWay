@@ -13,6 +13,7 @@ import {
   insertVideoRatingSchema 
 } from "@shared/schema";
 import { z } from "zod";
+import { devotionalNotificationService } from "./devotionalNotificationService";
 
 // Feedback schema
 const feedbackSchema = z.object({
@@ -621,6 +622,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const devotionalData = insertDevotionalSchema.parse(requestData);
       const devotional = await storage.createDevotional(devotionalData);
+
+      // Send real-time notifications to all users about the new devotional
+      try {
+        const allUsers = await storage.getAllUsers();
+        // Filter out the admin who created it
+        const targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
+        
+        if (targetUsers.length > 0) {
+          const notificationPromises = targetUsers.map(async (targetUser) => {
+            return await storage.createNotification({
+              userId: targetUser.id,
+              type: 'devotional',
+              title: '📖 New Daily Devotional Available',
+              message: `"${devotional.title}" is ready for your daily spiritual growth.`,
+              relatedId: devotional.id,
+            });
+          });
+          
+          await Promise.all(notificationPromises.filter(Boolean));
+          console.log(`Sent new devotional notifications to ${targetUsers.length} users`);
+          
+          // Mark notifications as sent for this devotional
+          await storage.markDevotionalNotificationsSent(devotional.id);
+        }
+      } catch (notificationError) {
+        console.error('Error sending devotional notifications:', notificationError);
+        // Don't fail the devotional creation if notification fails
+      }
+
       res.status(201).json(devotional);
     } catch (error) {
       console.error("Error creating devotional:", error);
@@ -671,6 +701,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting devotional:", error);
       res.status(500).json({ message: "Failed to delete devotional" });
+    }
+  });
+
+  // Devotional notification service management routes (admin only)
+  app.get('/api/admin/devotional-notifications/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const status = devotionalNotificationService.getStatus();
+      res.json(status);
+    } catch (error) {
+      console.error("Error getting devotional notification service status:", error);
+      res.status(500).json({ message: "Failed to get service status" });
+    }
+  });
+
+  app.post('/api/admin/devotional-notifications/trigger', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      await devotionalNotificationService.triggerCheck();
+      res.json({ message: "Devotional notification check triggered successfully" });
+    } catch (error) {
+      console.error("Error triggering devotional notification check:", error);
+      res.status(500).json({ message: "Failed to trigger notification check" });
     }
   });
 
