@@ -49,7 +49,7 @@ export default function VideoManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: videos = [], isLoading } = useQuery({
+  const { data: videos = [], isLoading } = useQuery<Video[]>({
     queryKey: ["/api/admin/videos"],
     retry: false,
   });
@@ -641,10 +641,9 @@ export default function VideoManagement() {
                   <p>Modified: {formatLocalDateTime(selectedVideo.updatedAt)}</p>
                 </div>
               </div>
-            </div>
 
-            {/* Fixed Actions Bar */}
-            <div className="flex-shrink-0 mt-6 pt-4 border-t bg-white">
+              {/* Fixed Actions Bar */}
+              <div className="flex-shrink-0 mt-6 pt-4 border-t bg-white">
               <div className="flex justify-between items-center">
                 <Button
                   variant="destructive"
@@ -682,6 +681,7 @@ export default function VideoManagement() {
                 </Button>
               </div>
             </div>
+          </div>
           )}
         </DialogContent>
       </Dialog>
