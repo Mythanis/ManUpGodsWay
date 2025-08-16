@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ProgressCard from "@/components/progress-card";
 import { NotificationPanel } from "@/components/notification-panel";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
-import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target } from "lucide-react";
+import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function Dashboard() {
@@ -190,6 +190,19 @@ export default function Dashboard() {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={`w-3 h-3 ${
+          i < Math.floor(rating)
+            ? "text-ministry-gold fill-current"
+            : "text-gray-300"
+        }`}
+      />
+    ));
   };
 
   return (
@@ -415,10 +428,14 @@ export default function Dashboard() {
                           <div className="flex-1">
                             <h4 className="font-medium text-ministry-charcoal text-sm mb-1">{study.title}</h4>
                             <p className="text-xs text-ministry-slate mb-2 line-clamp-2">{study.description}</p>
-                            <div className="flex items-center space-x-3 text-xs text-ministry-slate">
+                            <div className="flex items-center space-x-3 text-xs text-ministry-slate mb-2">
                               <span>{study.lessonCount} lessons</span>
                               <span>{study.estimatedHours}h</span>
                               <span className="capitalize">{study.difficulty}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              {renderStars(study.rating || 0)}
+                              <span className="text-xs text-ministry-slate ml-1">({study.rating || 0})</span>
                             </div>
                           </div>
                           <Button 
