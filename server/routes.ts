@@ -957,8 +957,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Since we're storing files in memory/temporary storage for demo,
-      // we'll serve a sample video URL. In production, you'd stream the actual file.
-      const streamUrl = `https://sample-videos.com/zip/10/mp4/SampleVideo_640x360_1mb.mp4`;
+      // we'll serve a working sample video URL. In production, you'd stream the actual file.
+      const streamUrl = `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`;
       
       res.json({
         ...video,
