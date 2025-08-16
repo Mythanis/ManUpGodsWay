@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,7 @@ import { insertDiscussionSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X } from "lucide-react";
+import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X, Send } from "lucide-react";
 import { z } from "zod";
 
 const categories = [
@@ -32,6 +33,186 @@ const createDiscussionSchema = z.object({
   category: z.string().min(1, "Category is required"),
 });
 
+const replySchema = z.object({
+  content: z.string().min(1, "Reply content is required"),
+});
+
+// Component for displaying discussion replies
+function DiscussionReplies({ discussionId }: { discussionId: string }) {
+  const { data: replies = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/discussions", discussionId, "replies"],
+    retry: false,
+    refetchInterval: 3000,
+    refetchIntervalInBackground: true,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-4">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-ministry-navy mx-auto mb-2"></div>
+        <p className="text-sm text-ministry-slate">Loading replies...</p>
+      </div>
+    );
+  }
+
+  if (replies.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <MessageCircle className="w-8 h-8 text-ministry-slate mx-auto mb-2" />
+        <p className="text-ministry-slate">No replies yet</p>
+        <p className="text-sm text-ministry-slate">Be the first to reply!</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {replies.map((reply: any) => (
+        <div key={reply.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+          <img 
+            src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=4A90B8&color=fff&size=32`}
+            alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
+            className="w-8 h-8 rounded-full object-cover"
+          />
+          <div className="flex-1">
+            <div className="flex items-center space-x-2 mb-1">
+              <span className="font-medium text-sm text-ministry-charcoal">
+                {reply.user?.firstName} {reply.user?.lastName?.charAt(0)}.
+              </span>
+              <span className="text-xs text-ministry-slate">
+                • {getTimeAgo(reply.createdAt)}
+              </span>
+            </div>
+            <p className="text-sm text-ministry-slate">{reply.content}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Component for adding new replies
+function DiscussionReplyForm({ discussionId, currentUserTier, discussion }: { 
+  discussionId: string; 
+  currentUserTier: string; 
+  discussion: any;
+}) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const form = useForm({
+    resolver: zodResolver(replySchema),
+    defaultValues: {
+      content: '',
+    },
+  });
+
+  const createReply = useMutation({
+    mutationFn: async (data: z.infer<typeof replySchema>) => {
+      const response = await apiRequest('POST', `/api/discussions/${discussionId}/replies`, data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/discussions", discussionId, "replies"] });
+      toast({
+        title: "Success",
+        description: "Reply posted successfully!",
+      });
+      form.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: `Failed to post reply: ${error.message || 'Please try again.'}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmitReply = async (data: z.infer<typeof replySchema>) => {
+    if (!(user as any)?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to reply",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check tier access for study discussions
+    if (discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free') {
+      const hasAccess = (discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
+                       (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip');
+      
+      if (!hasAccess) {
+        toast({
+          title: "Access Restricted",
+          description: `This study discussion requires ${discussion.study.requiredTier} subscription to participate.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
+    await createReply.mutateAsync(data);
+  };
+
+  // Check if user has access to reply
+  const hasReplyAccess = discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' ?
+    ((discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
+     (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip')) : true;
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmitReply)} className="space-y-3">
+        <FormField
+          control={form.control}
+          name="content"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Textarea
+                  placeholder={hasReplyAccess ? "Write your reply..." : `${discussion.study?.requiredTier || 'Premium'} subscription required to reply`}
+                  className="min-h-[80px] resize-none"
+                  disabled={!hasReplyAccess || createReply.isPending}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div className="flex justify-end">
+          <Button
+            type="submit"
+            size="sm"
+            disabled={createReply.isPending || !hasReplyAccess}
+            className="bg-ministry-navy hover:bg-ministry-charcoal"
+          >
+            <Send className="w-3 h-3 mr-1" />
+            {createReply.isPending ? "Posting..." : "Post Reply"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
+
+// Helper function for time formatting (moved to top level)
+function getTimeAgo(date: string) {
+  const now = new Date();
+  const posted = new Date(date);
+  const diffInHours = Math.floor((now.getTime() - posted.getTime()) / (1000 * 60 * 60));
+  
+  if (diffInHours < 1) return 'Just now';
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays}d ago`;
+}
+
 export default function Community() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('recent');
@@ -42,6 +223,8 @@ export default function Community() {
   const [groupDescription, setGroupDescription] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightedDiscussion, setHighlightedDiscussion] = useState<string | null>(null);
+  const [selectedDiscussionForDialog, setSelectedDiscussionForDialog] = useState<any | null>(null);
+  const [discussionDialogOpen, setDiscussionDialogOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -483,7 +666,11 @@ export default function Community() {
               <div 
                 key={discussion.id}
                 data-discussion-id={discussion.id}
-                className={highlightedDiscussion === discussion.id ? 'ring-2 ring-ministry-gold ring-opacity-50 rounded-lg' : ''}
+                className={`${highlightedDiscussion === discussion.id ? 'ring-2 ring-ministry-gold ring-opacity-50 rounded-lg' : ''} cursor-pointer hover:shadow-lg transition-shadow`}
+                onClick={() => {
+                  setSelectedDiscussionForDialog(discussion);
+                  setDiscussionDialogOpen(true);
+                }}
               >
                 <DiscussionCard 
                   discussion={discussion}
@@ -497,6 +684,68 @@ export default function Community() {
           </div>
         )}
       </div>
+
+      {/* Discussion Dialog Pop-out */}
+      <Dialog open={discussionDialogOpen} onOpenChange={setDiscussionDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <MessageCircle className="w-5 h-5 text-ministry-navy" />
+              <span>Discussion</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedDiscussionForDialog && (
+            <div className="flex flex-col h-full">
+              {/* Discussion Header */}
+              <div className="border-b pb-4 mb-4">
+                <div className="flex items-start space-x-3 mb-3">
+                  <img 
+                    src={selectedDiscussionForDialog.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${selectedDiscussionForDialog.user?.firstName}+${selectedDiscussionForDialog.user?.lastName}&background=4A90B8&color=fff`}
+                    alt={`${selectedDiscussionForDialog.user?.firstName} ${selectedDiscussionForDialog.user?.lastName}`}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <h3 className="font-bold text-lg text-ministry-charcoal">
+                        {selectedDiscussionForDialog.title}
+                      </h3>
+                      {selectedDiscussionForDialog.studyId && (
+                        <Badge variant="default" className="text-xs bg-ministry-navy text-white">
+                          📚 Study
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-sm text-ministry-charcoal font-medium">
+                        {selectedDiscussionForDialog.user?.firstName} {selectedDiscussionForDialog.user?.lastName?.charAt(0)}.
+                      </span>
+                      <span className="text-xs text-ministry-slate">
+                        • {getTimeAgo(selectedDiscussionForDialog.createdAt)}
+                      </span>
+                    </div>
+                    <p className="text-ministry-slate">{selectedDiscussionForDialog.content}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Replies Section */}
+              <div className="flex-1 overflow-y-auto mb-4">
+                <DiscussionReplies discussionId={selectedDiscussionForDialog.id} />
+              </div>
+
+              {/* Reply Form */}
+              <div className="border-t pt-4">
+                <DiscussionReplyForm 
+                  discussionId={selectedDiscussionForDialog.id}
+                  currentUserTier={(user as any)?.subscriptionTier || 'free'}
+                  discussion={selectedDiscussionForDialog}
+                />
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
