@@ -76,7 +76,10 @@ export default function StudyDetail() {
   const { data: videoStream } = useQuery({
     queryKey: ["/api/videos", study?.videoUrl, "stream"],
     queryFn: async () => {
-      const response = await fetch(`/api/videos/${study?.videoUrl}/stream?fromStudy=true`, {
+      if (!study?.videoUrl) {
+        throw new Error('No video URL provided');
+      }
+      const response = await fetch(`/api/videos/${study.videoUrl}/stream?fromStudy=true`, {
         credentials: 'include'
       });
       if (!response.ok) {
@@ -85,7 +88,7 @@ export default function StudyDetail() {
       return response.json();
     },
     retry: false,
-    enabled: !!isUploadedVideo,
+    enabled: !!isUploadedVideo && !!study?.videoUrl,
   });
 
   const form = useForm({
