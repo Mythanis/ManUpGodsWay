@@ -69,6 +69,22 @@ export default function Messages() {
   const [showMessageMenu, setShowMessageMenu] = useState<{messageId: string, x: number, y: number} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Handle URL parameters to select conversation automatically
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const conversationId = urlParams.get('conversation');
+    
+    if (conversationId && conversations.length > 0) {
+      const targetConversation = conversations.find(c => c.id === conversationId);
+      if (targetConversation) {
+        setSelectedConversation(targetConversation);
+        // Clean up URL without refreshing page
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, [conversations]);
+
   // Fetch conversations with real-time polling
   const { data: conversations = [], isLoading: conversationsLoading } = useQuery<Conversation[]>({
     queryKey: ["/api/conversations"],

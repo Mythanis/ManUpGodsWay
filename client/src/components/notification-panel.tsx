@@ -12,7 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 interface Notification {
   id: string;
   userId: string;
-  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'group_message';
+  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'group_message' | 'message';
   title: string;
   message: string;
   relatedId?: string;
@@ -134,13 +134,45 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       markAsReadMutation.mutate(notification.id);
     }
     
-    // Navigate based on notification type
-    if (notification.type === 'new_message' || notification.type === 'group_message') {
-      window.location.href = '/messages';
-    } else if (notification.type === 'new_study') {
-      window.location.href = '/library';
-    } else if (notification.type === 'new_devotional') {
-      window.location.href = '/dashboard';
+    // Close the notification panel
+    setShowPanel(false);
+    
+    // Navigate based on notification type and relatedId
+    switch (notification.type) {
+      case 'message':
+      case 'new_message':
+      case 'group_message':
+        if (notification.relatedId) {
+          // Navigate to specific conversation
+          window.location.href = `/messages?conversation=${notification.relatedId}`;
+        } else {
+          // Navigate to messages page
+          window.location.href = '/messages';
+        }
+        break;
+        
+      case 'new_study':
+        if (notification.relatedId) {
+          // Navigate to specific study
+          window.location.href = `/studies/${notification.relatedId}`;
+        } else {
+          // Navigate to library
+          window.location.href = '/library';
+        }
+        break;
+        
+      case 'new_devotional':
+        // Navigate to dashboard where today's devotional is shown
+        window.location.href = '/dashboard';
+        break;
+        
+      default:
+        // For unknown notification types, try to navigate to related content if available
+        if (notification.relatedId) {
+          // Check if it looks like a conversation ID (for feedback notifications)
+          window.location.href = `/messages?conversation=${notification.relatedId}`;
+        }
+        break;
     }
   };
 
