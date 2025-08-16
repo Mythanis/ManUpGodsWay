@@ -97,6 +97,7 @@ export default function VideoManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/videos"] });
+      setShowVideoDialog(false);
       toast({
         title: "Success",
         description: "Video updated successfully!",
@@ -673,13 +674,15 @@ export default function VideoManagement() {
                           title: selectedVideo.title,
                           category: selectedVideo.category,
                           description: selectedVideo.description,
-                          requiredTier: selectedVideo.requiredTier
+                          requiredTier: selectedVideo.requiredTier,
+                          isFeatured: selectedVideo.isFeatured
                         }
                       });
                     }}
                     disabled={updateVideo.isPending}
+                    className="bg-ministry-navy hover:bg-ministry-charcoal"
                   >
-                    Save Changes
+                    {updateVideo.isPending ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
               </div>
