@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import StudyCard from "@/components/study-card";
 import { Search, Star, Filter } from "lucide-react";
 import { Link } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 
 const categories = [
   { id: 'all', label: 'All Studies' },
@@ -42,6 +43,8 @@ export default function Library() {
     return () => container.removeEventListener('wheel', handleWheel);
   }, []);
 
+  const { isAuthenticated } = useAuth();
+
   const { data: studies = [], isLoading } = useQuery({
     queryKey: ["/api/studies"],
     retry: false,
@@ -50,6 +53,13 @@ export default function Library() {
   const { data: searchResults = [] } = useQuery({
     queryKey: ["/api/studies/search", searchQuery],
     enabled: searchQuery.length > 2,
+    retry: false,
+  });
+
+  // Fetch user progress data
+  const { data: userProgress = [] } = useQuery({
+    queryKey: ["/api/progress"],
+    enabled: isAuthenticated,
     retry: false,
   });
 
@@ -262,13 +272,22 @@ export default function Library() {
             </p>
           </div>
         ) : (
-          filteredStudies.map((study: any) => (
-            <StudyCard 
-              key={study.id} 
-              study={study} 
-              data-testid={`study-card-${study.id}`}
-            />
-          ))
+          filteredStudies.map((study: any) => {
+            // Find completion status for this study
+            const progress = (userProgress as any[]).find((p: any) => p.studyId === study.id);
+            const isCompleted = progress?.isCompleted || false;
+            const completedAt = progress?.completedAt;
+            
+            return (
+              <StudyCard 
+                key={study.id} 
+                study={study} 
+                isCompleted={isCompleted}
+                completedAt={completedAt}
+                data-testid={`study-card-${study.id}`}
+              />
+            );
+          })
         )}
       </div>
     </div>
