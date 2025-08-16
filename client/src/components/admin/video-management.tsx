@@ -343,15 +343,15 @@ export default function VideoManagement() {
                     )}
                   </div>
                   
-                  <CardContent className="p-3">
-                    <h3 className="font-medium text-sm text-ministry-charcoal truncate mb-1">
+                  <CardContent className="p-4">
+                    <h3 className="font-medium text-sm text-ministry-charcoal truncate mb-2">
                       {video.title}
                     </h3>
-                    <p className="text-xs text-ministry-slate mb-3 line-clamp-2">
+                    <p className="text-xs text-ministry-slate mb-4 line-clamp-2">
                       {video.description || "No description"}
                     </p>
                     
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col space-y-3">
                       <div className="flex items-center space-x-3 text-xs text-ministry-slate">
                         <div className="flex items-center space-x-1">
                           <HardDrive className="w-3 h-3" />
@@ -364,16 +364,16 @@ export default function VideoManagement() {
                       </div>
                       
                       <Button
-                        variant="outline"
+                        variant="default"
                         size="sm"
                         onClick={() => {
                           setSelectedVideo(video);
                           setShowVideoDialog(true);
                         }}
-                        className="h-8 text-xs bg-white border-ministry-steel text-ministry-steel hover:bg-ministry-steel hover:text-white"
+                        className="w-full h-9 bg-ministry-navy hover:bg-ministry-charcoal text-white font-medium"
                       >
-                        <Eye className="w-3 h-3 mr-1" />
-                        Edit
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit Video
                       </Button>
                     </div>
                   </CardContent>
