@@ -802,12 +802,14 @@ export class DatabaseStorage implements IStorage {
   async updateUserStreak(userId: string, userLocalDate?: Date): Promise<void> {
     // Use user's local date for streak calculation
     const localToday = userLocalDate || new Date();
+    // Create a proper local date (in user's timezone, not UTC midnight)
     const todayLocal = new Date(localToday.getFullYear(), localToday.getMonth(), localToday.getDate());
     
     console.log('=== STREAK UPDATE ===');
     console.log('User:', userId);
     console.log('User provided date:', userLocalDate?.toISOString());
-    console.log('Today (local):', todayLocal.toDateString());
+    console.log('User local time:', localToday.toString());
+    console.log('Today (local date):', todayLocal.toString());
     
     const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!user) {
@@ -816,16 +818,17 @@ export class DatabaseStorage implements IStorage {
     }
     
     console.log('Current streak:', user.streakDays);
-    console.log('Last active (raw):', user.lastActiveDate);
+    console.log('Last active (database):', user.lastActiveDate);
     
     const lastActive = user.lastActiveDate ? new Date(user.lastActiveDate) : null;
     
     if (lastActive) {
-      // Convert to local date for comparison
-      const lastActiveLocal = new Date(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate());
+      // IMPORTANT: Convert stored UTC date back to local date equivalent
+      // The stored date might be UTC midnight, but we need to compare local dates
+      const lastActiveLocal = new Date(lastActive.getUTCFullYear(), lastActive.getUTCMonth(), lastActive.getUTCDate());
       
-      console.log('Last active (local):', lastActiveLocal.toDateString());
-      console.log('Comparing dates:');
+      console.log('Last active (converted to local):', lastActiveLocal.toString());
+      console.log('Comparing local dates:');
       console.log('  Today:', todayLocal.getTime(), '(' + todayLocal.toDateString() + ')');
       console.log('  Last Active:', lastActiveLocal.getTime(), '(' + lastActiveLocal.toDateString() + ')');
       console.log('  Same day?', lastActiveLocal.getTime() === todayLocal.getTime());
@@ -840,7 +843,7 @@ export class DatabaseStorage implements IStorage {
       const yesterdayLocal = new Date(todayLocal);
       yesterdayLocal.setDate(yesterdayLocal.getDate() - 1);
       
-      console.log('Yesterday (local):', yesterdayLocal.toDateString());
+      console.log('Yesterday (local):', yesterdayLocal.toString());
       console.log('Was active yesterday?', lastActiveLocal.getTime() === yesterdayLocal.getTime());
       
       if (lastActiveLocal.getTime() === yesterdayLocal.getTime()) {
@@ -854,6 +857,7 @@ export class DatabaseStorage implements IStorage {
             lastActiveDate: todayLocal 
           })
           .where(eq(users.id, userId));
+        console.log('✓ Streak updated in database');
       } else {
         // Gap in activity - reset streak to 1
         console.log('✓ Gap in activity - resetting streak to 1');
@@ -864,6 +868,7 @@ export class DatabaseStorage implements IStorage {
             lastActiveDate: todayLocal 
           })
           .where(eq(users.id, userId));
+        console.log('✓ Streak reset in database');
       }
     } else {
       // First time active - start streak
@@ -875,6 +880,7 @@ export class DatabaseStorage implements IStorage {
           lastActiveDate: todayLocal 
         })
         .where(eq(users.id, userId));
+      console.log('✓ First streak set in database');
     }
     console.log('=== END STREAK UPDATE ===');
   }
