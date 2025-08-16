@@ -16,7 +16,7 @@ import { insertDiscussionSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X, Send } from "lucide-react";
+import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X, Send, Hash } from "lucide-react";
 import { z } from "zod";
 
 const categories = [
@@ -25,6 +25,7 @@ const categories = [
   { id: 'parenting', label: 'Parenting', icon: Users },
   { id: 'faith', label: 'Faith', icon: Lightbulb },
   { id: 'studies', label: 'Study Discussions', icon: MessageCircle },
+  { id: 'miscellaneous', label: 'Miscellaneous', icon: Hash },
 ];
 
 const createDiscussionSchema = z.object({
