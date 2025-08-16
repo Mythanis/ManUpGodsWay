@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { NotificationPanel } from "@/components/notification-panel";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
+import { FeedbackDialog } from "@/components/feedback-dialog";
 import { 
   User, 
   Bell, 
@@ -19,6 +21,7 @@ import {
 } from "lucide-react";
 
 export default function Profile() {
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const { user } = useAuth();
 
   const { data: progress = [] } = useQuery<any[]>({
@@ -196,6 +199,7 @@ export default function Profile() {
             
             <Button 
               variant="ghost"
+              onClick={() => setShowFeedbackDialog(true)}
               className="w-full justify-between p-4 h-auto hover:bg-gray-50 border-b border-gray-100"
               data-testid="button-feedback"
             >
@@ -297,6 +301,11 @@ export default function Profile() {
           </CardContent>
         </Card>
       </div>
+      
+      <FeedbackDialog 
+        isOpen={showFeedbackDialog} 
+        onClose={() => setShowFeedbackDialog(false)} 
+      />
     </div>
   );
 }

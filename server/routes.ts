@@ -14,6 +14,12 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 
+// Feedback schema
+const feedbackSchema = z.object({
+  feedback: z.string().min(1, "Feedback is required").max(1000, "Feedback must be 1000 characters or less"),
+  category: z.enum(["improvement", "feature-request", "bug-report", "compliment", "complaint", "general"])
+});
+
 // Configure multer for video uploads
 const upload = multer({ 
   storage: multer.memoryStorage(), // Store in memory for now
@@ -1373,6 +1379,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting unread notification count:", error);
       res.status(500).json({ message: "Failed to get unread notification count" });
+    }
+  });
+
+  // Feedback route
+  app.post('/api/feedback', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request body
+      const validatedData = feedbackSchema.parse(req.body);
+      
+      // Send feedback to admins
+      await storage.sendFeedbackToAdmins(userId, validatedData.feedback, validatedData.category);
+      
+      res.json({ message: "Feedback sent successfully" });
+    } catch (error) {
+      console.error("Error sending feedback:", error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid feedback data", 
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ message: "Failed to send feedback" });
     }
   });
 

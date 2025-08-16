@@ -129,6 +129,9 @@ export interface IStorage {
   addParticipantToConversation(conversationId: string, userId: string, role?: string): Promise<ConversationParticipant>;
   removeParticipantFromConversation(conversationId: string, userId: string): Promise<void>;
   markMessagesAsRead(conversationId: string, userId: string): Promise<void>;
+
+  // Feedback operations
+  sendFeedbackToAdmins(userId: string, feedback: string, category: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1611,6 +1614,75 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(videoRatings.userId, users.id))
       .where(eq(videoRatings.videoId, videoId))
       .orderBy(desc(videoRatings.createdAt));
+  }
+
+  async sendFeedbackToAdmins(userId: string, feedback: string, category: string): Promise<void> {
+    // Get the user who is sending feedback
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Get all admin and VIP users
+    const adminsAndVips = await db
+      .select()
+      .from(users)
+      .where(or(eq(users.role, 'admin'), eq(users.subscriptionTier, 'vip')));
+
+    if (adminsAndVips.length === 0) {
+      throw new Error("No admin users found to send feedback to");
+    }
+
+    // Look for existing feedback conversation
+    let feedbackConversation = await db
+      .select()
+      .from(conversations)
+      .where(and(eq(conversations.name, 'Feedback & Suggestions'), eq(conversations.type, 'group')))
+      .limit(1);
+
+    // Create feedback conversation if it doesn't exist
+    if (feedbackConversation.length === 0) {
+      const [createdConversation] = await db
+        .insert(conversations)
+        .values({
+          name: 'Feedback & Suggestions',
+          type: 'group',
+          createdBy: adminsAndVips[0].id, // First admin creates the conversation
+        })
+        .returning();
+
+      // Add all admins and VIP users as participants
+      for (const adminUser of adminsAndVips) {
+        await db.insert(conversationParticipants).values({
+          conversationId: createdConversation.id,
+          userId: adminUser.id,
+          role: adminUser.role === 'admin' ? 'admin' : 'member',
+        });
+      }
+
+      feedbackConversation = [createdConversation];
+    }
+
+    // Format the feedback message
+    const categoryEmojis: Record<string, string> = {
+      'improvement': '💡',
+      'feature-request': '✨',
+      'bug-report': '🐛',
+      'compliment': '👏',
+      'complaint': '⚠️',
+      'general': '💬'
+    };
+
+    const emoji = categoryEmojis[category] || '💬';
+    const messageContent = `${emoji} **${category.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} Feedback**\n\n**From:** ${user.firstName} ${user.lastName} (${user.email})\n\n**Message:**\n${feedback}`;
+
+    // Send the feedback message to the group
+    await db.insert(messages).values({
+      conversationId: feedbackConversation[0].id,
+      userId: userId, // Message appears as sent by the user
+      content: messageContent,
+      messageType: 'text',
+    });
   }
 }
 
