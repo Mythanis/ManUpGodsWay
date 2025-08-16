@@ -340,7 +340,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Progress operations
-  async getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]> {
+  async getUserProgress(userId: string, studyId?: string): Promise<(UserProgress & { study: Study | null })[]> {
     const conditions = [eq(userProgress.userId, userId)];
     
     if (studyId) {
@@ -348,8 +348,20 @@ export class DatabaseStorage implements IStorage {
     }
     
     return await db
-      .select()
+      .select({
+        id: userProgress.id,
+        userId: userProgress.userId,
+        studyId: userProgress.studyId,
+        currentLesson: userProgress.currentLesson,
+        completedLessons: userProgress.completedLessons,
+        isCompleted: userProgress.isCompleted,
+        lastAccessedAt: userProgress.lastAccessedAt,
+        completedAt: userProgress.completedAt,
+        createdAt: userProgress.createdAt,
+        study: studies,
+      })
       .from(userProgress)
+      .leftJoin(studies, eq(userProgress.studyId, studies.id))
       .where(and(...conditions))
       .orderBy(desc(userProgress.lastAccessedAt));
   }

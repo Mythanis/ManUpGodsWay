@@ -20,7 +20,7 @@ import {
 export default function Profile() {
   const { user } = useAuth();
 
-  const { data: progress = [] } = useQuery({
+  const { data: progress = [] } = useQuery<any[]>({
     queryKey: ["/api/progress"],
     retry: false,
   });
@@ -52,7 +52,7 @@ export default function Profile() {
       <div className="bg-gradient-to-br from-ministry-navy to-ministry-charcoal text-white px-6 pt-12 pb-8">
         <div className="text-center">
           <img 
-            src={user?.profileImageUrl || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=4A90B8&color=fff`}
+            src={(user as any)?.profileImageUrl || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=4A90B8&color=fff`}
             alt="Profile"
             className="w-20 h-20 rounded-full mx-auto mb-4 border-4 border-white/20 object-cover"
             data-testid="img-profile"
@@ -61,7 +61,7 @@ export default function Profile() {
             {user?.firstName} {user?.lastName}
           </h1>
           <p className="text-blue-200 text-sm mb-4" data-testid="text-member-since">
-            Member since {new Date(user?.createdAt || '').toLocaleDateString('en-US', { 
+            Member since {new Date((user as any)?.createdAt || '').toLocaleDateString('en-US', { 
               month: 'long', 
               year: 'numeric' 
             })}
