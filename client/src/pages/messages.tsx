@@ -73,7 +73,7 @@ export default function Messages() {
   const { data: conversations = [], isLoading: conversationsLoading } = useQuery<Conversation[]>({
     queryKey: ["/api/conversations"],
     retry: false,
-    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
+    refetchInterval: 2000, // Poll every 2 seconds for real-time updates
     refetchIntervalInBackground: true, // Continue polling when tab is not focused
   });
 
@@ -122,7 +122,7 @@ export default function Messages() {
     queryKey: ["/api/conversations", selectedConversation?.id, "messages"],
     enabled: !!selectedConversation,
     retry: false,
-    refetchInterval: 3000, // Poll every 3 seconds for new messages
+    refetchInterval: 1500, // Poll every 1.5 seconds for real-time messages
     refetchIntervalInBackground: true, // Continue polling when tab is not focused
   });
 
@@ -136,9 +136,8 @@ export default function Messages() {
     },
     onSuccess: () => {
       console.log("Message sent successfully");
-      queryClient.invalidateQueries({ queryKey: ["/api/conversations", selectedConversation?.id, "messages"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
-      // Immediately refetch conversations to ensure real-time visibility
+      // Immediately refetch both messages and conversations for instant updates
+      queryClient.refetchQueries({ queryKey: ["/api/conversations", selectedConversation?.id, "messages"] });
       queryClient.refetchQueries({ queryKey: ["/api/conversations"] });
       setNewMessage("");
     },
