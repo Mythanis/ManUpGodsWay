@@ -190,6 +190,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid study data", errors: error.errors });
       }
+      // Check for title conflict errors
+      if (error instanceof Error && error.message.includes("already exists")) {
+        return res.status(400).json({ message: error.message });
+      }
       res.status(500).json({ message: "Failed to create study" });
     }
   });
@@ -208,6 +212,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error updating study:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid study data", errors: error.errors });
+      }
+      // Check for title conflict errors
+      if (error instanceof Error && error.message.includes("already exists")) {
+        return res.status(400).json({ message: error.message });
       }
       res.status(500).json({ message: "Failed to update study" });
     }
@@ -901,6 +909,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { limit } = req.query;
       const videos = await storage.getVideos(
+        undefined, // category
+        undefined, // requiredTier  
+        undefined, // userTier
+        undefined, // sortBy
         limit ? parseInt(limit as string) : undefined
       );
       res.json(videos);
@@ -1020,6 +1032,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         return res.status(400).json({ message: error.message });
       }
+      // Check for title conflict errors
+      if (error instanceof Error && error.message.includes("already exists")) {
+        return res.status(400).json({ message: error.message });
+      }
       res.status(500).json({ message: "Failed to upload video" });
     }
   });
@@ -1035,6 +1051,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(video);
     } catch (error) {
       console.error("Error updating video:", error);
+      // Check for title conflict errors
+      if (error instanceof Error && error.message.includes("already exists")) {
+        return res.status(400).json({ message: error.message });
+      }
       res.status(500).json({ message: "Failed to update video" });
     }
   });
