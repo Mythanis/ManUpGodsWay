@@ -205,12 +205,15 @@ export default function StudyDetail() {
   }
 
   const userProgress = Array.isArray(progress) ? progress[0] : progress;
-  // Use the current lesson state for immediate UI updates
-  const effectiveCompletedLessons = Math.max(
-    userProgress?.completedLessons || 0, 
+  // Only use actual progress data for completion calculation, not UI state
+  const actualCompletedLessons = userProgress?.completedLessons || 0;
+  const progressPercent = Math.round((actualCompletedLessons / (study?.lessonCount || 1)) * 100);
+  
+  // Use current lesson state for display purposes only
+  const displayCompletedLessons = Math.max(
+    actualCompletedLessons, 
     Math.min(currentLesson, study?.lessonCount || 1)
   );
-  const progressPercent = Math.round((effectiveCompletedLessons / (study?.lessonCount || 1)) * 100);
 
   const getTierColor = (tier: string) => {
     switch (tier) {
@@ -373,7 +376,7 @@ export default function StudyDetail() {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-ministry-charcoal">Your Progress</h2>
                   <span className="text-sm text-ministry-steel font-bold" data-testid="text-progress-fraction">
-                    {effectiveCompletedLessons}/{study.lessonCount}
+                    {displayCompletedLessons}/{study.lessonCount}
                   </span>
                 </div>
                 

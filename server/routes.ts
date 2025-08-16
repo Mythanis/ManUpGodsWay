@@ -270,6 +270,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get progress for specific study
+  app.get('/api/progress/:studyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { studyId } = req.params;
+      const progress = await storage.getUserProgress(userId, studyId);
+      // Return the first item if it's an array, since we're looking for a specific study
+      const studyProgress = Array.isArray(progress) && progress.length > 0 ? progress[0] : null;
+      res.json(studyProgress);
+    } catch (error) {
+      console.error("Error fetching study progress:", error);
+      res.status(500).json({ message: "Failed to fetch study progress" });
+    }
+  });
+
   app.post('/api/progress/:studyId', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
