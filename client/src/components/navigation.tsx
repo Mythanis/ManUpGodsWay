@@ -24,7 +24,7 @@ export default function Navigation() {
 
   return (
     <nav 
-      className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white border-t border-gray-200 px-4 py-2 z-50"
+      className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-card border-t border-border px-4 py-2 z-50"
       data-testid="navigation-bottom"
     >
       <div className={`flex justify-around items-center ${allNavItems.length >= 6 ? 'space-x-1' : ''}`}>

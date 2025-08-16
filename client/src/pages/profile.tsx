@@ -143,7 +143,7 @@ export default function Profile() {
               <EditProfileDialog>
                 <Button 
                   variant="outline"
-                  className="w-full justify-between p-4 h-auto border-gray-100 hover:bg-gray-50"
+                  className="w-full justify-between p-4 h-auto border-border hover:bg-muted"
                   data-testid="button-edit-profile"
                 >
                   <div className="flex items-center space-x-3">
@@ -198,7 +198,7 @@ export default function Profile() {
             
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-gray-50 border-b border-gray-100"
+              className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-border"
               data-testid="button-privacy"
             >
               <div className="flex items-center space-x-3">
@@ -214,7 +214,7 @@ export default function Profile() {
             
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-gray-50 border-b border-gray-100"
+              className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-border"
               data-testid="button-help"
             >
               <div className="flex items-center space-x-3">
@@ -231,7 +231,7 @@ export default function Profile() {
             <Button 
               variant="ghost"
               onClick={() => setShowFeedbackDialog(true)}
-              className="w-full justify-between p-4 h-auto hover:bg-gray-50 border-b border-gray-100"
+              className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-border"
               data-testid="button-feedback"
             >
               <div className="flex items-center space-x-3">
@@ -248,7 +248,7 @@ export default function Profile() {
             <Button 
               variant="ghost"
               onClick={() => window.location.href = '/api/logout'}
-              className="w-full justify-between p-4 h-auto hover:bg-gray-50"
+              className="w-full justify-between p-4 h-auto hover:bg-muted"
               data-testid="button-logout"
             >
               <div className="flex items-center space-x-3">

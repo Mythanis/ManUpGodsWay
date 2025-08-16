@@ -23,7 +23,7 @@ function Router() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ministry-navy mx-auto mb-4"></div>
           <p className="text-ministry-slate">Loading...</p>
@@ -66,7 +66,7 @@ function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
-    <div className="max-w-md mx-auto bg-white shadow-2xl min-h-screen relative">
+    <div className="max-w-md mx-auto bg-background text-foreground shadow-2xl min-h-screen relative">
       <Router />
       {isAuthenticated && !isLoading && <Navigation />}
     </div>
