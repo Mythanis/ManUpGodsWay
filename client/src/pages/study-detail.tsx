@@ -50,7 +50,7 @@ export default function StudyDetail() {
   });
 
   const { data: progress } = useQuery<UserProgress>({
-    queryKey: ["/api/progress", { studyId: id }],
+    queryKey: ["/api/progress", id],
     retry: false,
     enabled: !!id && isAuthenticated,
   });
@@ -60,6 +60,16 @@ export default function StudyDetail() {
     retry: false,
     enabled: !!id,
   });
+
+  // Update current lesson when progress data loads
+  useEffect(() => {
+    if (progress) {
+      const userProgress = Array.isArray(progress) ? progress[0] : progress;
+      if (userProgress?.currentLesson) {
+        setCurrentLesson(userProgress.currentLesson);
+      }
+    }
+  }, [progress]);
 
   // Fetch video stream URL for uploaded videos
   const isUploadedVideo = study?.videoUrl && !study.videoUrl.startsWith('http') && study.videoUrl.length > 10;
@@ -91,8 +101,12 @@ export default function StudyDetail() {
       await apiRequest('POST', `/api/progress/${id}`, data);
     },
     onSuccess: () => {
+      // Invalidate all progress-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/progress"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/progress", id] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      // Force refetch of current progress
+      queryClient.refetchQueries({ queryKey: ["/api/progress", id] });
       const newCompletedLessons = Math.min(currentLesson, study?.lessonCount || 1);
       const isCompleted = newCompletedLessons === study?.lessonCount;
       
@@ -202,8 +216,12 @@ export default function StudyDetail() {
   }
 
   const userProgress = Array.isArray(progress) ? progress[0] : progress;
-  const completedLessons = userProgress?.completedLessons || 0;
-  const progressPercent = Math.round((completedLessons / (study.lessonCount || 1)) * 100);
+  // Use the current lesson state for immediate UI updates
+  const effectiveCompletedLessons = Math.max(
+    userProgress?.completedLessons || 0, 
+    Math.min(currentLesson, study?.lessonCount || 1)
+  );
+  const progressPercent = Math.round((effectiveCompletedLessons / (study?.lessonCount || 1)) * 100);
 
   const getTierColor = (tier: string) => {
     switch (tier) {
@@ -366,7 +384,7 @@ export default function StudyDetail() {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-ministry-charcoal">Your Progress</h2>
                   <span className="text-sm text-ministry-steel font-bold" data-testid="text-progress-fraction">
-                    {completedLessons}/{study.lessonCount}
+                    {effectiveCompletedLessons}/{study.lessonCount}
                   </span>
                 </div>
                 
