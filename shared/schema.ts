@@ -61,6 +61,9 @@ export const videos = pgTable("videos", {
   thumbnailUrl: varchar("thumbnail_url"),
   uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
   requiredTier: varchar("required_tier").notNull().default("free"), // free, premium, vip
+  category: varchar("category").notNull().default("general"), // leadership, marriage, fatherhood, character, general
+  rating: decimal("rating", { precision: 2, scale: 1 }).default("0.0"),
+  ratingCount: integer("rating_count").default(0),
   isProcessed: boolean("is_processed").default(false),
   processingStatus: varchar("processing_status").default("pending"), // pending, processing, completed, failed
   createdAt: timestamp("created_at").defaultNow(),
@@ -150,6 +153,16 @@ export const studyRatings = pgTable("study_ratings", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// User ratings for videos
+export const videoRatings = pgTable("video_ratings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  videoId: varchar("video_id").notNull().references(() => videos.id, { onDelete: 'cascade' }),
+  rating: integer("rating").notNull(), // 1-5 stars
+  review: text("review"), // Optional text review
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Chat conversations (direct messages and group chats)
 export const conversations = pgTable("conversations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -217,11 +230,13 @@ export const usersRelations = relations(users, ({ many }) => ({
   discussions: many(discussions),
   replies: many(discussionReplies),
   ratings: many(studyRatings),
+  videoRatings: many(videoRatings),
 }));
 
 export const videosRelations = relations(videos, ({ one, many }) => ({
   uploader: one(users, { fields: [videos.uploadedBy], references: [users.id] }),
   studies: many(studies),
+  ratings: many(videoRatings),
 }));
 
 export const studiesRelations = relations(studies, ({ one, many }) => ({
@@ -250,6 +265,11 @@ export const userProgressRelations = relations(userProgress, ({ one }) => ({
 export const studyRatingsRelations = relations(studyRatings, ({ one }) => ({
   user: one(users, { fields: [studyRatings.userId], references: [users.id] }),
   study: one(studies, { fields: [studyRatings.studyId], references: [studies.id] }),
+}));
+
+export const videoRatingsRelations = relations(videoRatings, ({ one }) => ({
+  user: one(users, { fields: [videoRatings.userId], references: [users.id] }),
+  video: one(videos, { fields: [videoRatings.videoId], references: [videos.id] }),
 }));
 
 export const conversationsRelations = relations(conversations, ({ one, many }) => ({
@@ -291,12 +311,15 @@ export const insertVideoSchema = createInsertSchema(videos, {
   originalName: z.string().min(1, "Original name is required"),
   mimeType: z.string().min(1, "MIME type is required"),
   requiredTier: z.enum(["free", "premium", "vip"]).default("free"),
+  category: z.string().min(1, "Category is required").default("general"),
   fileSize: z.number().int().min(1, "File size must be greater than 0"),
   duration: z.number().int().optional(),
   thumbnailUrl: z.string().optional(),
   uploadedBy: z.string().min(1, "Uploaded by is required"),
 }).omit({ 
   id: true, 
+  rating: true,
+  ratingCount: true,
   isProcessed: true,
   processingStatus: true,
   createdAt: true, 
@@ -355,6 +378,14 @@ export const insertStudyRatingSchema = createInsertSchema(studyRatings, {
   createdAt: true,
 });
 
+export const insertVideoRatingSchema = createInsertSchema(videoRatings, {
+  rating: z.number().int().min(1).max(5),
+  review: z.string().optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertConversationSchema = createInsertSchema(conversations).omit({
   id: true,
   createdAt: true,
@@ -404,6 +435,8 @@ export type Devotional = typeof devotionals.$inferSelect;
 export type InsertDevotional = z.infer<typeof insertDevotionalSchema>;
 export type StudyRating = typeof studyRatings.$inferSelect;
 export type InsertStudyRating = z.infer<typeof insertStudyRatingSchema>;
+export type VideoRating = typeof videoRatings.$inferSelect;
+export type InsertVideoRating = z.infer<typeof insertVideoRatingSchema>;
 export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type ConversationParticipant = typeof conversationParticipants.$inferSelect;

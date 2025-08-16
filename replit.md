@@ -55,6 +55,13 @@ This is a full-stack React/Express application called "Man Up God's Way" - a fai
 ✓ **Study-Video Integration**: Admins can now assign uploaded videos to studies through the edit dialog with radio button selection between manual URLs and uploaded videos
 ✓ **Video Streaming Fix**: Uploaded videos now properly stream and play in studies with working video player functionality using reliable sample video URLs
 ✓ **Study Tier Override**: Videos in studies bypass individual tier restrictions - study access determines video access regardless of video tier
+✓ **Video Topics System**: Videos now include category/topic classification (leadership, marriage, fatherhood, character, general) with admin category selection
+✓ **Video Rating & Review System**: Complete video rating functionality similar to studies - users can rate 1-5 stars and leave text reviews
+✓ **Videos Page**: New dedicated videos page (/videos) with filtering, sorting, and rating capabilities 
+✓ **Video Filtering**: Users can filter videos by category/topic, sort by recent/rating/reviews, and search by title/description
+✓ **Enhanced Video Admin**: Admin upload form includes category selection and database stores video categories and ratings
+✓ **Dashboard Video Link**: "Watch Videos" button on dashboard now links to the dedicated videos page
+✓ **Video API Endpoints**: Complete API for video ratings, reviews, filtering, and public video access with tier-based filtering
 
 # User Preferences
 

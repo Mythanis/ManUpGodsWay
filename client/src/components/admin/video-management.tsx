@@ -39,6 +39,7 @@ export default function VideoManagement() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [uploadTier, setUploadTier] = useState('free');
+  const [uploadCategory, setUploadCategory] = useState('general');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
@@ -72,6 +73,7 @@ export default function VideoManagement() {
       setUploadTitle('');
       setUploadDescription('');
       setUploadTier('free');
+      setUploadCategory('general');
       toast({
         title: "Success",
         description: "Video uploaded successfully!",
@@ -236,6 +238,7 @@ export default function VideoManagement() {
     formData.append('title', uploadTitle);
     formData.append('description', uploadDescription);
     formData.append('requiredTier', uploadTier);
+    formData.append('category', uploadCategory);
 
     setUploading(true);
     setUploadProgress(0);
@@ -435,6 +438,24 @@ export default function VideoManagement() {
                     </div>
                     
                     <div>
+                      <Label htmlFor="video-category" className="text-sm font-medium">
+                        Category
+                      </Label>
+                      <Select value={uploadCategory} onValueChange={setUploadCategory}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="general">General</SelectItem>
+                          <SelectItem value="leadership">Leadership</SelectItem>
+                          <SelectItem value="marriage">Marriage</SelectItem>
+                          <SelectItem value="fatherhood">Fatherhood</SelectItem>
+                          <SelectItem value="character">Character</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
                       <Label htmlFor="video-tier" className="text-sm font-medium">
                         Access Tier
                       </Label>
@@ -517,6 +538,27 @@ export default function VideoManagement() {
                     }}
                     className="mt-1"
                   />
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">Category</Label>
+                  <Select 
+                    value={selectedVideo.category || 'general'} 
+                    onValueChange={(value) => {
+                      setSelectedVideo(prev => prev ? { ...prev, category: value } : null);
+                    }}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="general">General</SelectItem>
+                      <SelectItem value="leadership">Leadership</SelectItem>
+                      <SelectItem value="marriage">Marriage</SelectItem>
+                      <SelectItem value="fatherhood">Fatherhood</SelectItem>
+                      <SelectItem value="character">Character</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div>
@@ -604,6 +646,7 @@ export default function VideoManagement() {
                         id: selectedVideo.id, 
                         video: {
                           title: selectedVideo.title,
+                          category: selectedVideo.category,
                           description: selectedVideo.description,
                           requiredTier: selectedVideo.requiredTier
                         }

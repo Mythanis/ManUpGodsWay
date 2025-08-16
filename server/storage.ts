@@ -6,6 +6,7 @@ import {
   userProgress,
   devotionals,
   studyRatings,
+  videoRatings,
   conversations,
   conversationParticipants,
   messages,
@@ -25,6 +26,8 @@ import {
   type InsertDevotional,
   type StudyRating,
   type InsertStudyRating,
+  type VideoRating,
+  type InsertVideoRating,
   type Conversation,
   type InsertConversation,
   type ConversationParticipant,
@@ -90,12 +93,16 @@ export interface IStorage {
   getStudyReviews(studyId: string): Promise<(StudyRating & { user: { firstName: string | null; lastName: string | null; profileImageUrl?: string | null } })[]>;
   
   // Video operations
-  getVideos(limit?: number): Promise<Video[]>;
+  getVideos(category?: string, requiredTier?: string, userTier?: string, sortBy?: string, limit?: number): Promise<Video[]>;
   getVideo(id: string): Promise<Video | undefined>;
   createVideo(video: InsertVideo): Promise<Video>;
   updateVideo(id: string, video: Partial<InsertVideo>): Promise<Video>;
   deleteVideo(id: string): Promise<void>;
   updateVideoProcessingStatus(id: string, status: string, isProcessed?: boolean): Promise<Video>;
+  
+  // Video rating operations
+  rateVideo(rating: InsertVideoRating): Promise<VideoRating>;
+  getVideoReviews(videoId: string): Promise<(VideoRating & { user: { firstName: string | null; lastName: string | null; profileImageUrl?: string | null } })[]>;
   
   // Admin operations
   getAllUsers(limit?: number): Promise<User[]>;
@@ -1297,11 +1304,46 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Video operations
-  async getVideos(limit?: number): Promise<Video[]> {
-    const query = db.select().from(videos).orderBy(desc(videos.createdAt));
+  async getVideos(category?: string, requiredTier?: string, userTier?: string, sortBy?: string, limit?: number): Promise<Video[]> {
+    let query = db.select().from(videos);
+    
+    const conditions = [];
+    
+    // Filter by category
+    if (category && category !== 'all') {
+      conditions.push(eq(videos.category, category));
+    }
+    
+    // Filter by user tier access
+    if (userTier) {
+      const tierHierarchy: { [key: string]: string[] } = {
+        'free': ['free'],
+        'premium': ['free', 'premium'], 
+        'vip': ['free', 'premium', 'vip']
+      };
+      const allowedTiers = tierHierarchy[userTier] || ['free'];
+      conditions.push(inArray(videos.requiredTier, allowedTiers));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    // Sort by option
+    switch (sortBy) {
+      case 'rating':
+        query = query.orderBy(desc(videos.rating), desc(videos.ratingCount));
+        break;
+      case 'reviews':
+        query = query.orderBy(desc(videos.ratingCount));
+        break;
+      default: // 'recent'
+        query = query.orderBy(desc(videos.createdAt));
+        break;
+    }
     
     if (limit) {
-      return await query.limit(limit);
+      query = query.limit(limit);
     }
     
     return await query;
@@ -1382,6 +1424,78 @@ export class DatabaseStorage implements IStorage {
     await db.delete(notifications).where(
       and(eq(notifications.userId, userId), eq(notifications.id, notificationId))
     );
+  }
+
+  // Video rating operations
+  async rateVideo(rating: InsertVideoRating): Promise<VideoRating> {
+    // Check if user has already rated this video
+    const existingRating = await db
+      .select()
+      .from(videoRatings)
+      .where(and(eq(videoRatings.userId, rating.userId), eq(videoRatings.videoId, rating.videoId)))
+      .limit(1);
+
+    let videoRating: VideoRating;
+    
+    if (existingRating.length > 0) {
+      // Update existing rating
+      [videoRating] = await db
+        .update(videoRatings)
+        .set({ rating: rating.rating, review: rating.review })
+        .where(eq(videoRatings.id, existingRating[0].id))
+        .returning();
+    } else {
+      // Create new rating
+      [videoRating] = await db
+        .insert(videoRatings)
+        .values(rating)
+        .returning();
+    }
+
+    // Update video's average rating and count
+    const ratingStats = await db
+      .select({
+        avgRating: sql<number>`AVG(${videoRatings.rating})::numeric`,
+        count: count(videoRatings.id)
+      })
+      .from(videoRatings)
+      .where(eq(videoRatings.videoId, rating.videoId))
+      .groupBy(videoRatings.videoId);
+
+    if (ratingStats.length > 0) {
+      const avgRating = parseFloat(ratingStats[0].avgRating.toString());
+      await db
+        .update(videos)
+        .set({
+          rating: avgRating.toFixed(1),
+          ratingCount: ratingStats[0].count,
+          updatedAt: new Date()
+        })
+        .where(eq(videos.id, rating.videoId));
+    }
+
+    return videoRating;
+  }
+
+  async getVideoReviews(videoId: string): Promise<(VideoRating & { user: { firstName: string | null; lastName: string | null; profileImageUrl?: string | null } })[]> {
+    return await db
+      .select({
+        id: videoRatings.id,
+        userId: videoRatings.userId,
+        videoId: videoRatings.videoId,
+        rating: videoRatings.rating,
+        review: videoRatings.review,
+        createdAt: videoRatings.createdAt,
+        user: {
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(videoRatings)
+      .innerJoin(users, eq(videoRatings.userId, users.id))
+      .where(eq(videoRatings.videoId, videoId))
+      .orderBy(desc(videoRatings.createdAt));
   }
 }
 

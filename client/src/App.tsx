@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Library from "@/pages/library";
+import Videos from "@/pages/videos";
 import Community from "@/pages/community";
 import Messages from "@/pages/messages";
 import Profile from "@/pages/profile";
@@ -47,6 +48,7 @@ function Router() {
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/library" component={Library} />
+          <Route path="/videos" component={Videos} />
           <Route path="/community" component={Community} />
           <Route path="/messages" component={Messages} />
           <Route path="/profile" component={Profile} />

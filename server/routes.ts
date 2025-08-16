@@ -9,7 +9,8 @@ import {
   insertDiscussionSchema, 
   insertDiscussionReplySchema,
   insertDevotionalSchema,
-  insertStudyRatingSchema 
+  insertStudyRatingSchema,
+  insertVideoRatingSchema 
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -977,7 +978,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const { title, description, requiredTier = 'free' } = req.body;
+      const { title, description, requiredTier = 'free', category = 'general' } = req.body;
       const file = req.file;
       
       console.log('Upload request body:', req.body);
@@ -1003,6 +1004,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         thumbnailUrl: `https://via.placeholder.com/640x360/4A90B8/ffffff?text=${encodeURIComponent(title)}`,
         uploadedBy: user.id,
         requiredTier: requiredTier,
+        category: category,
       };
 
       const video = await storage.createVideo(videoData);
@@ -1396,6 +1398,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting unread notification count:", error);
       res.status(500).json({ message: "Failed to get unread notification count" });
+    }
+  });
+
+  // Public video routes (for users)
+  app.get('/api/videos', async (req: any, res) => {
+    try {
+      const { category, sortBy, limit } = req.query;
+      
+      // Get user tier for filtering
+      let userTier = 'free';
+      if (req.user) {
+        try {
+          const user = await storage.getUser(req.user.claims.sub);
+          userTier = user?.subscriptionTier || 'free';
+        } catch (error) {
+          console.log("Could not get user tier, defaulting to free:", error);
+        }
+      }
+      
+      const videos = await storage.getVideos(
+        category as string,
+        undefined, // requiredTier filter
+        userTier,
+        sortBy as string,
+        limit ? parseInt(limit as string) : undefined
+      );
+      res.json(videos);
+    } catch (error) {
+      console.error("Error fetching videos:", error);
+      res.status(500).json({ message: "Failed to fetch videos" });
+    }
+  });
+
+  // Get video reviews
+  app.get('/api/videos/:id/reviews', async (req, res) => {
+    try {
+      const reviews = await storage.getVideoReviews(req.params.id);
+      res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching video reviews:", error);
+      res.status(500).json({ message: "Failed to fetch video reviews" });
+    }
+  });
+
+  // Rate a video
+  app.post('/api/videos/:id/rate', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const videoId = req.params.id;
+      const ratingData = insertVideoRatingSchema.parse({
+        ...req.body,
+        userId,
+        videoId,
+      });
+
+      const rating = await storage.rateVideo(ratingData);
+      res.json(rating);
+    } catch (error) {
+      console.error("Error rating video:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid rating data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to rate video" });
     }
   });
 

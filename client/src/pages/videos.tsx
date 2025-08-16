@@ -1,0 +1,486 @@
+import { useState, useRef, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Search, Star, Filter, Play, Clock, Eye, Crown, Gem, Zap } from "lucide-react";
+
+const categories = [
+  { id: 'all', label: 'All Videos' },
+  { id: 'general', label: 'General' },
+  { id: 'leadership', label: 'Leadership' },
+  { id: 'marriage', label: 'Marriage' },
+  { id: 'fatherhood', label: 'Fatherhood' },
+  { id: 'character', label: 'Character' },
+];
+
+interface Video {
+  id: string;
+  title: string;
+  description?: string;
+  category: string;
+  requiredTier: string;
+  rating: number;
+  ratingCount: number;
+  duration?: number;
+  thumbnailUrl?: string;
+  createdAt: string;
+}
+
+export default function Videos() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('recent');
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const [showVideoDialog, setShowVideoDialog] = useState(false);
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [review, setReview] = useState('');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Add mouse wheel horizontal scroll support
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      container.scrollLeft += e.deltaY;
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, []);
+
+  const { data: videos = [], isLoading } = useQuery({
+    queryKey: ["/api/videos", selectedCategory, sortBy],
+    retry: false,
+  });
+
+  const { data: videoReviews = [] } = useQuery({
+    queryKey: ["/api/videos", selectedVideo?.id, "reviews"],
+    enabled: !!selectedVideo?.id && showVideoDialog,
+    retry: false,
+  });
+
+  // Filter videos based on search
+  const filteredVideos = videos.filter((video: Video) =>
+    searchQuery.length < 2 || 
+    video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (video.description && video.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const rateVideoMutation = useMutation({
+    mutationFn: async (data: { videoId: string; rating: number; review?: string }) => {
+      return await apiRequest("POST", `/api/videos/${data.videoId}/rate`, {
+        rating: data.rating,
+        review: data.review
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/videos"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/videos", selectedVideo?.id, "reviews"] });
+      setShowRatingDialog(false);
+      setRating(0);
+      setReview('');
+      toast({
+        title: "Success",
+        description: "Thank you for your rating!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit rating",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const getTierBadge = (tier: string) => {
+    switch (tier) {
+      case 'vip':
+        return (
+          <Badge className="bg-purple-100 text-purple-800 flex items-center space-x-1">
+            <Crown className="w-3 h-3" />
+            <span>VIP</span>
+          </Badge>
+        );
+      case 'premium':
+        return (
+          <Badge className="bg-blue-100 text-blue-800 flex items-center space-x-1">
+            <Gem className="w-3 h-3" />
+            <span>Premium</span>
+          </Badge>
+        );
+      default:
+        return (
+          <Badge className="bg-gray-100 text-gray-800 flex items-center space-x-1">
+            <Zap className="w-3 h-3" />
+            <span>Free</span>
+          </Badge>
+        );
+    }
+  };
+
+  const formatDuration = (seconds?: number) => {
+    if (!seconds) return 'Unknown';
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleRateVideo = () => {
+    if (!selectedVideo || rating === 0) return;
+    
+    rateVideoMutation.mutate({
+      videoId: selectedVideo.id,
+      rating,
+      review: review.trim() || undefined
+    });
+  };
+
+  return (
+    <div className="pb-20">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal text-white px-6 pt-12 pb-6">
+        <h1 className="text-2xl font-bold mb-2">Video Library</h1>
+        <p className="text-blue-200 text-sm">
+          Watch inspiring content and grow in faith
+        </p>
+      </div>
+
+      {/* Search Bar */}
+      <div className="px-6 -mt-3 relative z-10 mb-6">
+        <Card className="shadow-lg">
+          <CardContent className="p-4">
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="Search videos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-gray-50 rounded-xl pl-10 pr-4 py-3 text-sm border-0 focus:ring-2 focus:ring-ministry-steel focus:bg-white"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ministry-slate" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Categories Filter */}
+      <div className="px-6 mb-4">
+        <div 
+          ref={scrollContainerRef}
+          className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2"
+        >
+          {categories.map((category) => (
+            <Button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              variant={selectedCategory === category.id ? "default" : "outline"}
+              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start ${
+                selectedCategory === category.id
+                  ? "bg-ministry-navy text-white"
+                  : "bg-gray-100 text-ministry-slate hover:bg-gray-200"
+              }`}
+            >
+              {category.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Sort and Filter */}
+      <div className="px-6 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium text-ministry-slate">Sort & Filter</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            className="text-ministry-navy"
+          >
+            <Filter className="w-4 h-4 mr-1" />
+            {showFilters ? 'Hide' : 'Show'} Filters
+          </Button>
+        </div>
+        
+        {showFilters && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-ministry-slate mb-1 block">
+                Sort By
+              </label>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full h-8 text-sm">
+                  <SelectValue placeholder="Sort by..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Most Recent</SelectItem>
+                  <SelectItem value="rating">Highest Rated</SelectItem>
+                  <SelectItem value="reviews">Most Reviews</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Video Grid */}
+      <div className="px-6 space-y-4">
+        {isLoading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-navy mx-auto mb-4"></div>
+            <p className="text-ministry-slate">Loading videos...</p>
+          </div>
+        ) : filteredVideos.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-ministry-slate">
+              {searchQuery.length >= 2 || selectedCategory !== 'all'
+                ? 'No videos found for your filters.'
+                : 'No videos available.'}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredVideos.map((video: Video) => (
+              <Card key={video.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="aspect-video bg-gray-900 relative cursor-pointer"
+                     onClick={() => {
+                       setSelectedVideo(video);
+                       setShowVideoDialog(true);
+                     }}>
+                  {video.thumbnailUrl ? (
+                    <img 
+                      src={video.thumbnailUrl} 
+                      alt={video.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Play className="w-12 h-12 text-gray-400" />
+                    </div>
+                  )}
+                  <div className="absolute top-2 left-2">
+                    {getTierBadge(video.requiredTier)}
+                  </div>
+                  {video.duration && (
+                    <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                      {formatDuration(video.duration)}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                    <Play className="w-16 h-16 text-white" />
+                  </div>
+                </div>
+                
+                <CardContent className="p-4">
+                  <h3 className="font-semibold text-ministry-charcoal mb-2 line-clamp-2">
+                    {video.title}
+                  </h3>
+                  {video.description && (
+                    <p className="text-sm text-ministry-slate mb-3 line-clamp-2">
+                      {video.description}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      {video.rating > 0 && (
+                        <div className="flex items-center">
+                          <Star className="w-4 h-4 text-ministry-gold fill-current mr-1" />
+                          <span className="text-sm text-ministry-slate">{video.rating}</span>
+                          <span className="text-xs text-ministry-slate ml-1">({video.ratingCount})</span>
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedVideo(video);
+                        setShowVideoDialog(true);
+                      }}
+                      className="text-ministry-steel hover:text-ministry-navy"
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      Watch
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Video Detail Dialog */}
+      <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-3">
+              <Play className="w-5 h-5" />
+              <span>{selectedVideo?.title}</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedVideo && (
+            <div className="space-y-6">
+              {/* Video Player */}
+              <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden">
+                <div className="w-full h-full flex items-center justify-center">
+                  <Play className="w-16 h-16 text-gray-400" />
+                  <span className="ml-4 text-white">Video player would be here</span>
+                </div>
+              </div>
+
+              {/* Video Info */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    {getTierBadge(selectedVideo.requiredTier)}
+                    <Badge variant="outline">{selectedVideo.category}</Badge>
+                  </div>
+                  <Button
+                    onClick={() => setShowRatingDialog(true)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Star className="w-4 h-4 mr-1" />
+                    Rate Video
+                  </Button>
+                </div>
+
+                {selectedVideo.description && (
+                  <div>
+                    <h4 className="font-medium text-ministry-charcoal mb-2">Description</h4>
+                    <p className="text-ministry-slate">{selectedVideo.description}</p>
+                  </div>
+                )}
+
+                {/* Video Stats */}
+                <div className="flex items-center space-x-4 text-sm text-ministry-slate">
+                  {selectedVideo.duration && (
+                    <div className="flex items-center space-x-1">
+                      <Clock className="w-4 h-4" />
+                      <span>{formatDuration(selectedVideo.duration)}</span>
+                    </div>
+                  )}
+                  {selectedVideo.rating > 0 && (
+                    <div className="flex items-center space-x-1">
+                      <Star className="w-4 h-4 text-ministry-gold fill-current" />
+                      <span>{selectedVideo.rating} ({selectedVideo.ratingCount} reviews)</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Reviews */}
+                {videoReviews.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-ministry-charcoal mb-3">Reviews</h4>
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {videoReviews.map((review: any) => (
+                        <div key={review.id} className="border-b border-gray-100 pb-3 last:border-b-0">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <div className="flex items-center">
+                              {[...Array(5)].map((_, i) => (
+                                <Star 
+                                  key={i} 
+                                  className={`w-3 h-3 ${i < review.rating ? 'text-ministry-gold fill-current' : 'text-gray-300'}`} 
+                                />
+                              ))}
+                            </div>
+                            <span className="text-sm font-medium text-ministry-charcoal">
+                              {review.user.firstName} {review.user.lastName}
+                            </span>
+                          </div>
+                          {review.review && (
+                            <p className="text-sm text-ministry-slate">{review.review}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Rating Dialog */}
+      <Dialog open={showRatingDialog} onOpenChange={setShowRatingDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rate this Video</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-ministry-charcoal mb-2 block">
+                Your Rating
+              </label>
+              <div className="flex items-center space-x-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setRating(star)}
+                    className="focus:outline-none"
+                  >
+                    <Star 
+                      className={`w-6 h-6 ${star <= rating ? 'text-ministry-gold fill-current' : 'text-gray-300'} hover:text-ministry-gold transition-colors`} 
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-ministry-charcoal mb-2 block">
+                Review (Optional)
+              </label>
+              <Textarea
+                value={review}
+                onChange={(e) => setReview(e.target.value)}
+                placeholder="Share your thoughts about this video..."
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowRatingDialog(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleRateVideo}
+                disabled={rating === 0 || rateVideoMutation.isPending}
+                className="bg-ministry-navy hover:bg-ministry-charcoal"
+              >
+                Submit Rating
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

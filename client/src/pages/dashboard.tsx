@@ -12,6 +12,7 @@ import { NotificationPanel } from "@/components/notification-panel";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { Link } from "wouter";
 
 export default function Dashboard() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
@@ -461,14 +462,16 @@ export default function Dashboard() {
         <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Quick Access</h2>
         
         <div className="grid grid-cols-2 gap-4">
-          <Button 
-            variant="outline"
-            className="h-20 flex flex-col items-center justify-center space-y-2 border-gray-100 hover:shadow-md"
-            data-testid="button-watch-videos"
-          >
-            <Play className="w-8 h-8 text-ministry-steel" />
-            <span className="font-medium text-sm text-ministry-charcoal">Watch Videos</span>
-          </Button>
+          <Link href="/videos">
+            <Button 
+              variant="outline"
+              className="h-20 flex flex-col items-center justify-center space-y-2 border-gray-100 hover:shadow-md w-full"
+              data-testid="button-watch-videos"
+            >
+              <Play className="w-8 h-8 text-ministry-steel" />
+              <span className="font-medium text-sm text-ministry-charcoal">Watch Videos</span>
+            </Button>
+          </Link>
           
           <Button 
             variant="outline"
