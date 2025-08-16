@@ -62,7 +62,7 @@ export default function Community() {
     }
   }, []);
 
-  // Fetch real community stats
+  // Fetch real community stats with live updates
   const { data: communityStats } = useQuery<{
     totalMembers: number;
     activeToday: number;
@@ -71,6 +71,8 @@ export default function Community() {
   }>({
     queryKey: ["/api/community/stats"],
     retry: false,
+    refetchInterval: 10000, // Refetch every 10 seconds for live updates
+    refetchIntervalInBackground: true, // Continue refetching when tab is not focused
   });
 
   const { data: discussions = [], isLoading } = useQuery<any[]>({
