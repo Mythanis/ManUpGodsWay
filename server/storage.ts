@@ -181,7 +181,42 @@ export class DatabaseStorage implements IStorage {
     return study;
   }
 
+  // Helper method to check for title conflicts across studies and videos
+  private async checkTitleConflict(title: string, excludeStudyId?: string, excludeVideoId?: string): Promise<boolean> {
+    // Check if title exists in studies (excluding current study if updating)
+    const studyConditions = [eq(studies.title, title)];
+    if (excludeStudyId) {
+      studyConditions.push(not(eq(studies.id, excludeStudyId)));
+    }
+    
+    const studyConflict = await db
+      .select({ id: studies.id })
+      .from(studies)
+      .where(and(...studyConditions))
+      .limit(1);
+    
+    if (studyConflict.length > 0) return true;
+    
+    // Check if title exists in videos (excluding current video if updating)
+    const videoConditions = [eq(videos.title, title)];
+    if (excludeVideoId) {
+      videoConditions.push(not(eq(videos.id, excludeVideoId)));
+    }
+    
+    const videoConflict = await db
+      .select({ id: videos.id })
+      .from(videos)
+      .where(and(...videoConditions))
+      .limit(1);
+    
+    return videoConflict.length > 0;
+  }
+
   async createStudy(study: InsertStudy, createdByUserId?: string): Promise<Study> {
+    // Check for title conflicts
+    if (await this.checkTitleConflict(study.title)) {
+      throw new Error(`Title "${study.title}" already exists. Please choose a different title.`);
+    }
     const [newStudy] = await db.insert(studies).values(study).returning();
     
     // Create a discussion for this study using the admin who created it
@@ -201,6 +236,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateStudy(id: string, study: Partial<InsertStudy>): Promise<Study> {
+    // Check for title conflicts if title is being updated
+    if (study.title && await this.checkTitleConflict(study.title, id)) {
+      throw new Error(`Title "${study.title}" already exists. Please choose a different title.`);
+    }
+    
     // If marking this study as featured, unfeature all other studies first
     if (study.isFeatured === true) {
       await db
@@ -1412,11 +1452,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createVideo(video: InsertVideo): Promise<Video> {
+    // Check for title conflicts
+    if (await this.checkTitleConflict(video.title)) {
+      throw new Error(`Title "${video.title}" already exists. Please choose a different title.`);
+    }
     const [newVideo] = await db.insert(videos).values(video).returning();
     return newVideo;
   }
 
   async updateVideo(id: string, video: Partial<Video>): Promise<Video> {
+    // Check for title conflicts if title is being updated
+    if (video.title && await this.checkTitleConflict(video.title, undefined, id)) {
+      throw new Error(`Title "${video.title}" already exists. Please choose a different title.`);
+    }
+    
     // If marking this video as featured, unfeature all other videos first
     if (video.isFeatured === true) {
       await db
