@@ -473,6 +473,7 @@ export default function Community() {
                   discussion={discussion}
                   onStartDirectMessage={handleStartDirectMessage}
                   onAddToGroup={handleAddToGroup}
+                  currentUserTier={(user as any)?.subscriptionTier || 'free'}
                   data-testid={`discussion-${discussion.id}`}
                 />
               </div>

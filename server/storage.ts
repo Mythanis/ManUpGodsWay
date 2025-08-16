@@ -360,7 +360,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Discussion operations
-  async getDiscussions(category?: string, limit = 20, sortBy = 'recent', searchTerm?: string): Promise<(Discussion & { user: User })[]> {
+  async getDiscussions(category?: string, limit = 20, sortBy = 'recent', searchTerm?: string): Promise<(Discussion & { user: User; study?: { id: string; title: string; requiredTier: string | null } | null })[]> {
     const query = db
       .select({
         id: discussions.id,
@@ -375,9 +375,15 @@ export class DatabaseStorage implements IStorage {
         createdAt: discussions.createdAt,
         updatedAt: discussions.updatedAt,
         user: users,
+        study: {
+          id: studies.id,
+          title: studies.title,
+          requiredTier: studies.requiredTier,
+        },
       })
       .from(discussions)
-      .innerJoin(users, eq(discussions.userId, users.id));
+      .innerJoin(users, eq(discussions.userId, users.id))
+      .leftJoin(studies, eq(discussions.studyId, studies.id));
 
     let orderBy;
     switch (sortBy) {
@@ -420,7 +426,7 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
-  async getDiscussion(id: string): Promise<(Discussion & { user: User; replies: (DiscussionReply & { user: User })[] }) | undefined> {
+  async getDiscussion(id: string): Promise<(Discussion & { user: User; replies: (DiscussionReply & { user: User })[]; study?: { id: string; title: string; requiredTier: string | null } | null }) | undefined> {
     const [discussion] = await db
       .select({
         id: discussions.id,
@@ -435,9 +441,15 @@ export class DatabaseStorage implements IStorage {
         createdAt: discussions.createdAt,
         updatedAt: discussions.updatedAt,
         user: users,
+        study: {
+          id: studies.id,
+          title: studies.title,
+          requiredTier: studies.requiredTier,
+        },
       })
       .from(discussions)
       .innerJoin(users, eq(discussions.userId, users.id))
+      .leftJoin(studies, eq(discussions.studyId, studies.id))
       .where(eq(discussions.id, id));
 
     if (!discussion) return undefined;

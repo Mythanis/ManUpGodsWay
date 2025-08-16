@@ -238,10 +238,10 @@ export default function StudyDetail() {
             
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <Badge className={getTierColor(study.requiredTier)} data-testid="badge-study-tier">
-                  {study.requiredTier}
+                <Badge className={getTierColor(study.requiredTier || 'free')} data-testid="badge-study-tier">
+                  {study.requiredTier || 'free'}
                 </Badge>
-                {study.rating > 0 && (
+                {(study.rating && parseFloat(study.rating.toString()) > 0) && (
                   <div className="flex items-center space-x-1" data-testid="rating-display">
                     <Star className="w-4 h-4 text-ministry-gold fill-current" />
                     <span className="text-sm font-medium">{study.rating}</span>
@@ -280,8 +280,8 @@ export default function StudyDetail() {
               </div>
             )}
 
-            {/* Join Discussion Section */}
-            {studyDiscussion && (
+            {/* Join Discussion Section - Only for users with tier access */}
+            {studyDiscussion && canAccess && (
               <div className="flex items-center justify-between p-4 bg-ministry-navy/5 rounded-lg border border-ministry-navy/20">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-full bg-ministry-navy/10 flex items-center justify-center">
@@ -302,6 +302,31 @@ export default function StudyDetail() {
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Join Discussion
+                </Button>
+              </div>
+            )}
+            
+            {/* Tier Access Required for Discussion */}
+            {studyDiscussion && !canAccess && (
+              <div className="flex items-center justify-between p-4 bg-ministry-gold/10 rounded-lg border border-ministry-gold/20">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-full bg-ministry-gold/10 flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 text-ministry-gold" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-ministry-charcoal">Study Discussion Available</h3>
+                    <p className="text-sm text-ministry-slate">
+                      Upgrade to {study.requiredTier} to join the study discussion
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  disabled
+                  variant="outline"
+                  className="border-ministry-gold text-ministry-gold opacity-50"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  {study.requiredTier} Required
                 </Button>
               </div>
             )}
@@ -337,7 +362,7 @@ export default function StudyDetail() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {Array.from({ length: study.lessonCount }, (_, i) => i + 1).map((lesson) => (
+                        {Array.from({ length: study.lessonCount || 1 }, (_, i) => i + 1).map((lesson: number) => (
                           <SelectItem key={lesson} value={lesson.toString()}>
                             Lesson {lesson}
                           </SelectItem>
@@ -384,8 +409,8 @@ export default function StudyDetail() {
                     <video 
                       controls
                       className="w-full h-48 object-cover"
-                      src={study.videoUrl}
-                      poster={study.thumbnailUrl}
+                      src={study.videoUrl || ''}
+                      poster={study.thumbnailUrl || ''}
                       data-testid="video-player"
                     >
                       Your browser does not support the video tag.

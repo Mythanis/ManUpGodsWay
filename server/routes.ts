@@ -95,9 +95,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get study discussion
-  app.get('/api/studies/:id/discussion', async (req, res) => {
+  app.get('/api/studies/:id/discussion', isAuthenticated, async (req: any, res) => {
     try {
-      const discussion = await storage.getStudyDiscussion(req.params.id);
+      const userId = req.user.claims.sub;
+      const studyId = req.params.id;
+      
+      // Check if user has access to this study
+      const study = await storage.getStudy(studyId);
+      if (!study) {
+        return res.status(404).json({ message: "Study not found" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(403).json({ message: "User not found" });
+      }
+      
+      // Check tier access
+      const userTier = user.subscriptionTier || 'free';
+      const hasAccess = study.requiredTier === 'free' ||
+                       (study.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
+                       (study.requiredTier === 'vip' && userTier === 'vip');
+      
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Insufficient subscription tier to access this study discussion" });
+      }
+      
+      const discussion = await storage.getStudyDiscussion(studyId);
       res.json(discussion);
     } catch (error) {
       console.error("Error fetching study discussion:", error);
@@ -263,10 +287,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/discussions/:id/replies', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const discussionId = req.params.id;
+      
+      // Check if this is a study discussion and verify tier access
+      const discussion = await storage.getDiscussion(discussionId);
+      if (!discussion) {
+        return res.status(404).json({ message: "Discussion not found" });
+      }
+      
+      if (discussion.studyId) {
+        // This is a study discussion, check tier access
+        const study = await storage.getStudy(discussion.studyId);
+        const user = await storage.getUser(userId);
+        
+        if (!study || !user) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
+        const userTier = user.subscriptionTier || 'free';
+        const hasAccess = study.requiredTier === 'free' ||
+                         (study.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
+                         (study.requiredTier === 'vip' && userTier === 'vip');
+        
+        if (!hasAccess) {
+          return res.status(403).json({ message: "Insufficient subscription tier to participate in this study discussion" });
+        }
+      }
+      
       const replyData = insertDiscussionReplySchema.parse({
         ...req.body,
         userId,
-        discussionId: req.params.id,
+        discussionId,
       });
       
       const reply = await storage.createReply(replyData);

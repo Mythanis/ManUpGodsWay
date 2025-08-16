@@ -20,6 +20,7 @@ interface DiscussionCardProps {
   discussion: any;
   onStartDirectMessage?: (userId: string) => void;
   onAddToGroup?: (userId: string) => void;
+  currentUserTier?: string;
 }
 
 const replySchema = z.object({
@@ -29,7 +30,8 @@ const replySchema = z.object({
 export default function DiscussionCard({ 
   discussion, 
   onStartDirectMessage,
-  onAddToGroup 
+  onAddToGroup,
+  currentUserTier = 'free'
 }: DiscussionCardProps) {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
@@ -131,6 +133,22 @@ export default function DiscussionCard({
       });
       return;
     }
+    
+    // Check tier access for study discussions
+    if (discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free') {
+      const hasAccess = (discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
+                       (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip');
+      
+      if (!hasAccess) {
+        toast({
+          title: "Access Restricted",
+          description: `This study discussion requires ${discussion.study.requiredTier} subscription to participate.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     await createReply.mutateAsync(data);
   };
   const getTierBadge = (subscriptionTier: string) => {
@@ -200,6 +218,11 @@ export default function DiscussionCard({
                   📚 Study
                 </Badge>
               )}
+              {discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' && (
+                <Badge variant="outline" className="text-xs border-ministry-gold text-ministry-gold">
+                  {discussion.study.requiredTier.charAt(0).toUpperCase() + discussion.study.requiredTier.slice(1)} Only
+                </Badge>
+              )}
             </div>
             
             <p className="text-sm text-ministry-slate mb-3 line-clamp-3" data-testid="text-discussion-content">
@@ -242,11 +265,38 @@ export default function DiscussionCard({
               <Button 
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowReplyForm(!showReplyForm)}
-                className="text-ministry-steel hover:text-ministry-navy text-xs font-medium p-1"
+                onClick={() => {
+                  // Check tier access for study discussions
+                  if (discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free') {
+                    const hasAccess = (discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
+                                     (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip');
+                    
+                    if (!hasAccess) {
+                      toast({
+                        title: "Access Restricted",
+                        description: `This study discussion requires ${discussion.study.requiredTier} subscription to participate.`,
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                  }
+                  setShowReplyForm(!showReplyForm);
+                }}
+                className={`text-xs font-medium p-1 ${
+                  discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' &&
+                  !((discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
+                    (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip'))
+                    ? 'text-ministry-slate/50 cursor-not-allowed'
+                    : 'text-ministry-steel hover:text-ministry-navy'
+                }`}
                 data-testid="button-reply"
               >
-                Reply
+                {discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' &&
+                 !((discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
+                   (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip'))
+                  ? `${discussion.study.requiredTier.charAt(0).toUpperCase() + discussion.study.requiredTier.slice(1)} Required` 
+                  : 'Reply'
+                }
               </Button>
             </div>
           </div>
