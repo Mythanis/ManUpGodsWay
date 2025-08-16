@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Upload, Play, Trash2, Eye, Edit, Video as VideoIcon, FileText, Clock, HardDrive, Crown, Gem, Zap } from "lucide-react";
+import { Search, Upload, Play, Trash2, Eye, Edit, Video as VideoIcon, FileText, Clock, HardDrive, Crown, Gem, Zap, Star } from "lucide-react";
 
 interface Video {
   id: string;
@@ -25,6 +25,7 @@ interface Video {
   thumbnailUrl?: string;
   uploadedBy: string;
   requiredTier: string;
+  isFeatured: boolean;
   isProcessed: boolean;
   processingStatus: string;
   createdAt: string;
@@ -325,8 +326,14 @@ export default function VideoManagement() {
                     <div className="absolute top-2 right-2 space-y-1">
                       {getStatusBadge(video.processingStatus)}
                     </div>
-                    <div className="absolute top-2 left-2">
+                    <div className="absolute top-2 left-2 space-y-1">
                       {getTierBadge(video.requiredTier)}
+                      {video.isFeatured && (
+                        <Badge className="bg-yellow-100 text-yellow-800 flex items-center space-x-1">
+                          <Star className="w-3 h-3" />
+                          <span>Featured</span>
+                        </Badge>
+                      )}
                     </div>
                     {video.duration && (
                       <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
@@ -585,6 +592,24 @@ export default function VideoManagement() {
                   <div className="mt-1">
                     {getStatusBadge(selectedVideo.processingStatus)}
                   </div>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">Featured Video</Label>
+                  <Select 
+                    value={selectedVideo.isFeatured ? "true" : "false"} 
+                    onValueChange={(value) => {
+                      setSelectedVideo(prev => prev ? { ...prev, isFeatured: value === "true" } : null);
+                    }}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="false">No - Regular video</SelectItem>
+                      <SelectItem value="true">Yes - Featured at top of videos page</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

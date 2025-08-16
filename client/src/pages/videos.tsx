@@ -28,6 +28,7 @@ interface Video {
   description?: string;
   category: string;
   requiredTier: string;
+  isFeatured: boolean;
   rating: number;
   ratingCount: number;
   duration?: number;
@@ -305,7 +306,9 @@ export default function Videos() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVideos.map((video: Video) => (
-              <Card key={video.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <Card key={video.id} className={`overflow-hidden hover:shadow-lg transition-shadow ${
+                video.isFeatured ? 'ring-2 ring-yellow-400 shadow-xl' : ''
+              }`}>
                 <div className="aspect-video bg-gray-900 relative cursor-pointer"
                      onClick={() => {
                        setSelectedVideo(video);
@@ -322,8 +325,14 @@ export default function Videos() {
                       <Play className="w-12 h-12 text-gray-400" />
                     </div>
                   )}
-                  <div className="absolute top-2 left-2">
+                  <div className="absolute top-2 left-2 space-y-1">
                     {getTierBadge(video.requiredTier)}
+                    {video.isFeatured && (
+                      <Badge className="bg-yellow-100 text-yellow-800 flex items-center space-x-1">
+                        <Star className="w-3 h-3" />
+                        <span>Featured</span>
+                      </Badge>
+                    )}
                   </div>
                   {video.duration && (
                     <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
@@ -336,9 +345,14 @@ export default function Videos() {
                 </div>
                 
                 <CardContent className="p-4">
-                  <h3 className="font-semibold text-ministry-charcoal mb-2 line-clamp-2">
-                    {video.title}
-                  </h3>
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold text-ministry-charcoal line-clamp-2 flex-1">
+                      {video.title}
+                    </h3>
+                    {video.isFeatured && (
+                      <Star className="w-4 h-4 text-yellow-500 fill-current ml-2 flex-shrink-0" />
+                    )}
+                  </div>
                   {video.description && (
                     <p className="text-sm text-ministry-slate mb-3 line-clamp-2">
                       {video.description}

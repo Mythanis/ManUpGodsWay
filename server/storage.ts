@@ -1329,16 +1329,16 @@ export class DatabaseStorage implements IStorage {
       query = query.where(and(...conditions));
     }
     
-    // Sort by option
+    // Sort by option - always prioritize featured videos first
     switch (sortBy) {
       case 'rating':
-        query = query.orderBy(desc(videos.rating), desc(videos.ratingCount));
+        query = query.orderBy(desc(videos.isFeatured), desc(videos.rating), desc(videos.ratingCount));
         break;
       case 'reviews':
-        query = query.orderBy(desc(videos.ratingCount));
+        query = query.orderBy(desc(videos.isFeatured), desc(videos.ratingCount));
         break;
       default: // 'recent'
-        query = query.orderBy(desc(videos.createdAt));
+        query = query.orderBy(desc(videos.isFeatured), desc(videos.createdAt));
         break;
     }
     

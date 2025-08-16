@@ -64,6 +64,7 @@ export const videos = pgTable("videos", {
   category: varchar("category").notNull().default("general"), // leadership, marriage, fatherhood, character, general
   rating: decimal("rating", { precision: 2, scale: 1 }).default("0.0"),
   ratingCount: integer("rating_count").default(0),
+  isFeatured: boolean("is_featured").default(false),
   isProcessed: boolean("is_processed").default(false),
   processingStatus: varchar("processing_status").default("pending"), // pending, processing, completed, failed
   createdAt: timestamp("created_at").defaultNow(),
