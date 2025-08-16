@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users, Star, MessageSquare } from "lucide-react";
+import { Clock, Users, Star, MessageSquare, Video } from "lucide-react";
 import { Link } from "wouter";
 import { StudyReviewsDialog } from "@/components/study-reviews-dialog";
 
@@ -40,9 +40,14 @@ export default function StudyCard({ study }: StudyCardProps) {
           <div className="flex-1 p-4">
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
-                <h3 className="font-semibold text-ministry-charcoal text-sm mb-1" data-testid="text-study-title">
-                  {study.title}
-                </h3>
+                <div className="flex items-center space-x-2 mb-1">
+                  <h3 className="font-semibold text-ministry-charcoal text-sm" data-testid="text-study-title">
+                    {study.title}
+                  </h3>
+                  {study.videoUrl && (
+                    <Video className="w-3 h-3 text-ministry-steel flex-shrink-0" title="Includes video content" />
+                  )}
+                </div>
                 <p className="text-xs text-ministry-slate" data-testid="text-study-lessons">
                   {study.lessonCount} lessons • {study.estimatedHours}h
                 </p>
