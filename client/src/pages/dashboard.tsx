@@ -49,11 +49,15 @@ export default function Dashboard() {
   const { data: progress = [] } = useQuery({
     queryKey: ["/api/progress"],
     retry: false,
+    refetchInterval: 10000, // Real-time updates for user progress
+    refetchIntervalInBackground: true,
   });
 
   const { data: featuredStudy } = useQuery({
     queryKey: ["/api/studies/featured"],
     retry: false,
+    refetchInterval: 8000, // Real-time updates for featured study
+    refetchIntervalInBackground: true,
   });
 
   const { data: recommendedStudies = [] } = useQuery({
@@ -64,6 +68,8 @@ export default function Dashboard() {
       return response.json();
     },
     retry: false,
+    refetchInterval: 10000, // Real-time updates for study recommendations
+    refetchIntervalInBackground: true,
   });
 
   if (authLoading) {

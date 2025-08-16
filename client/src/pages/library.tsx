@@ -48,12 +48,16 @@ export default function Library() {
   const { data: studies = [], isLoading } = useQuery({
     queryKey: ["/api/studies"],
     retry: false,
+    refetchInterval: 8000, // Real-time updates every 8 seconds for new studies
+    refetchIntervalInBackground: true,
   });
 
   const { data: searchResults = [] } = useQuery({
     queryKey: ["/api/studies/search", searchQuery],
     enabled: searchQuery.length > 2,
     retry: false,
+    refetchInterval: 8000, // Real-time updates for search results
+    refetchIntervalInBackground: true,
   });
 
   // Fetch user progress data
@@ -61,6 +65,8 @@ export default function Library() {
     queryKey: ["/api/progress"],
     enabled: isAuthenticated,
     retry: false,
+    refetchInterval: 10000, // Update user progress every 10 seconds
+    refetchIntervalInBackground: true,
   });
 
   // Filter studies based on all criteria

@@ -1,6 +1,10 @@
 # Overview
 "Man Up God's Way" is a full-stack React/Express application providing a faith-based platform for biblical masculinity, leadership development, and spiritual growth. It offers structured learning programs including Bible studies, devotionals, community discussions, and progress tracking to empower men in their faith and character. The platform features robust authentication, real-time messaging, video content management with tiered access, and an admin system for content and user management.
 
+## Recent Updates
+- **Real-time Content Publishing**: Studies and videos now automatically appear across all pages when admins publish new content (8-10 second polling)
+- **Enhanced Discussion Categories**: Added "Miscellaneous" topic and streamlined study discussion creation
+
 # User Preferences
 Preferred communication style: Simple, everyday language.
 
