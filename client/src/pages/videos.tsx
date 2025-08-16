@@ -378,10 +378,16 @@ export default function Videos() {
             <div className="space-y-6">
               {/* Video Player */}
               <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden">
-                <div className="w-full h-full flex items-center justify-center">
-                  <Play className="w-16 h-16 text-gray-400" />
-                  <span className="ml-4 text-white">Video player would be here</span>
-                </div>
+                <video 
+                  className="w-full h-full"
+                  controls
+                  preload="metadata"
+                  src={`/api/videos/${selectedVideo.id}/stream`}
+                  poster={selectedVideo.thumbnailUrl}
+                >
+                  <source src={`/api/videos/${selectedVideo.id}/stream`} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               </div>
 
               {/* Video Info */}
