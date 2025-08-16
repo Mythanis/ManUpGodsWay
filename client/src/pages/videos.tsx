@@ -65,12 +65,43 @@ export default function Videos() {
   }, []);
 
   const { data: videos = [], isLoading } = useQuery({
-    queryKey: ["/api/videos", selectedCategory, sortBy],
+    queryKey: ["/api/videos", { category: selectedCategory, sortBy }],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedCategory !== 'all') {
+        params.append('category', selectedCategory);
+      }
+      if (sortBy) {
+        params.append('sortBy', sortBy);
+      }
+      
+      const url = `/api/videos${params.toString() ? `?${params.toString()}` : ''}`;
+      const response = await fetch(url, { credentials: 'include' });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch videos');
+      }
+      
+      return await response.json();
+    },
     retry: false,
   });
 
   const { data: videoReviews = [] } = useQuery({
     queryKey: ["/api/videos", selectedVideo?.id, "reviews"],
+    queryFn: async () => {
+      if (!selectedVideo?.id) return [];
+      
+      const response = await fetch(`/api/videos/${selectedVideo.id}/reviews`, { 
+        credentials: 'include' 
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch video reviews');
+      }
+      
+      return await response.json();
+    },
     enabled: !!selectedVideo?.id && showVideoDialog,
     retry: false,
   });
