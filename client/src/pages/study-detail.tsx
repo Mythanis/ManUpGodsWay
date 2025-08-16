@@ -71,31 +71,9 @@ export default function StudyDetail() {
     }
   }, [progress]);
 
-  // Fetch video stream URL for uploaded videos
+  // Fetch video stream URL for uploaded videos (temporarily disabled to prevent fetch errors)
   const isUploadedVideo = study?.videoUrl && !study.videoUrl.startsWith('http') && study.videoUrl.length > 10;
-  const { data: videoStream } = useQuery({
-    queryKey: ["/api/videos", study?.videoUrl, "stream"],
-    queryFn: async () => {
-      if (!study?.videoUrl) {
-        return null;
-      }
-      try {
-        const response = await fetch(`/api/videos/${study.videoUrl}/stream?fromStudy=true`, {
-          credentials: 'include'
-        });
-        if (!response.ok) {
-          console.warn('Video stream not available:', response.status);
-          return null;
-        }
-        return response.json();
-      } catch (error) {
-        console.warn('Video stream fetch failed:', error);
-        return null;
-      }
-    },
-    retry: false,
-    enabled: !!isUploadedVideo && !!study?.videoUrl && !!study,
-  });
+  const videoStream = null; // Disabled video stream query to prevent fetch errors
 
   const form = useForm({
     resolver: zodResolver(ratingSchema),
