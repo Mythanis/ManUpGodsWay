@@ -699,14 +699,14 @@ export default function Admin() {
                   />
                 ) : (
                   <Select
-                    value={formData.videoUrl}
-                    onValueChange={(value) => setFormData({ ...formData, videoUrl: value })}
+                    value={formData.videoUrl || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, videoUrl: value === "none" ? "" : value })}
                   >
                     <SelectTrigger data-testid="select-uploaded-video">
                       <SelectValue placeholder="Select an uploaded video" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No video</SelectItem>
+                      <SelectItem value="none">No video</SelectItem>
                       {uploadedVideos.map((video: any) => (
                         <SelectItem key={video.id} value={video.id}>
                           <div className="flex items-center space-x-2">
