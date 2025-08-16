@@ -547,7 +547,11 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-blue-800">{progress.length}</p>
+                <p className="text-2xl font-bold text-blue-800">
+                  {progress.length > 0 
+                    ? new Set(progress.map((p: any) => new Date(p.lastAccessedAt || p.createdAt).toDateString())).size 
+                    : 0}
+                </p>
                 <p className="text-xs text-blue-600">days</p>
               </div>
             </div>

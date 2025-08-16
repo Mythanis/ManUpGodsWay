@@ -75,6 +75,7 @@ export default function StudyDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/progress"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       const newCompletedLessons = Math.min(currentLesson, study?.lessonCount || 1);
       const isCompleted = newCompletedLessons === study?.lessonCount;
       
