@@ -69,6 +69,14 @@ export default function Messages() {
   const [showMessageMenu, setShowMessageMenu] = useState<{messageId: string, x: number, y: number} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Fetch conversations with real-time polling
+  const { data: conversations = [], isLoading: conversationsLoading } = useQuery<Conversation[]>({
+    queryKey: ["/api/conversations"],
+    retry: false,
+    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
+    refetchIntervalInBackground: true, // Continue polling when tab is not focused
+  });
+
   // Handle URL parameters to select conversation automatically
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -84,14 +92,6 @@ export default function Messages() {
       }
     }
   }, [conversations]);
-
-  // Fetch conversations with real-time polling
-  const { data: conversations = [], isLoading: conversationsLoading } = useQuery<Conversation[]>({
-    queryKey: ["/api/conversations"],
-    retry: false,
-    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
-    refetchIntervalInBackground: true, // Continue polling when tab is not focused
-  });
 
   // Fetch all users for direct messaging and group creation
   const { data: allUsers = [], isLoading: usersLoading } = useQuery<MessageUser[]>({
