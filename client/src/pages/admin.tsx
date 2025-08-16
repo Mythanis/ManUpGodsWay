@@ -437,7 +437,10 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="studies" className="mt-6">
-            <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Study Management</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-ministry-charcoal">Study Management</h2>
+              <UploadStudyForm />
+            </div>
             
             {studiesLoading ? (
               <div className="flex justify-center py-8">
@@ -448,7 +451,7 @@ export default function Admin() {
                 <CardContent className="p-8 text-center">
                   <Book className="w-12 h-12 text-ministry-slate mx-auto mb-4" />
                   <p className="text-ministry-slate">No studies created yet</p>
-                  <p className="text-sm text-ministry-slate">Use the Content tab to add your first study</p>
+                  <p className="text-sm text-ministry-slate">Click "Upload New Study" above to create your first study</p>
                 </CardContent>
               </Card>
             ) : (
