@@ -473,14 +473,16 @@ export default function Dashboard() {
             </Button>
           </Link>
           
-          <Button 
-            variant="outline"
-            className="h-20 flex flex-col items-center justify-center space-y-2 border-gray-100 hover:shadow-md"
-            data-testid="button-join-discussion"
-          >
-            <Users className="w-8 h-8 text-ministry-steel" />
-            <span className="font-medium text-sm text-ministry-charcoal">Join Discussion</span>
-          </Button>
+          <Link href="/community">
+            <Button 
+              variant="outline"
+              className="h-20 flex flex-col items-center justify-center space-y-2 border-gray-100 hover:shadow-md w-full"
+              data-testid="button-join-discussion"
+            >
+              <Users className="w-8 h-8 text-ministry-steel" />
+              <span className="font-medium text-sm text-ministry-charcoal">Join Discussion</span>
+            </Button>
+          </Link>
           
           <Button 
             variant="outline"
