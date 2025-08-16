@@ -342,9 +342,9 @@ export default function Admin() {
   return (
     <div className="pb-20">
       {/* Admin Header */}
-      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 pt-12 pb-6">
+      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal text-white px-6 pt-12 pb-6">
         <h1 className="text-2xl font-bold mb-2" data-testid="text-admin-title">Admin Panel</h1>
-        <p className="text-red-100 text-sm" data-testid="text-admin-subtitle">
+        <p className="text-blue-100 text-sm" data-testid="text-admin-subtitle">
           Content & User Management
         </p>
       </div>
