@@ -12,17 +12,23 @@ import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertStudyRatingSchema, type Study, type UserProgress, type Discussion } from "@shared/schema";
-import { ArrowLeft, Play, Clock, Users, Star, MessageCircle } from "lucide-react";
+import { ArrowLeft, Play, Clock, Users, Star, MessageCircle, Send } from "lucide-react";
 import { Link } from "wouter";
 import { z } from "zod";
 
 const ratingSchema = insertStudyRatingSchema.pick({ rating: true, review: true });
 
+const replySchema = z.object({
+  content: z.string().min(1, "Reply content is required"),
+});
+
 export default function StudyDetail() {
   const { id } = useParams<{ id: string }>();
+  const [discussionDialogOpen, setDiscussionDialogOpen] = useState(false);
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -330,7 +336,7 @@ export default function StudyDetail() {
                   </div>
                 </div>
                 <Button
-                  onClick={() => window.location.href = `/community?discussion=${studyDiscussion.id}`}
+                  onClick={() => setDiscussionDialogOpen(true)}
                   variant="outline"
                   className="border-ministry-navy text-ministry-navy hover:bg-ministry-navy hover:text-white"
                   data-testid="button-join-discussion"
@@ -629,6 +635,246 @@ export default function StudyDetail() {
           </div>
         </>
       )}
+
+      {/* Study Discussion Dialog Pop-out */}
+      <Dialog open={discussionDialogOpen} onOpenChange={setDiscussionDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <MessageCircle className="w-5 h-5 text-ministry-navy" />
+              <span>Study Discussion: {study?.title}</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {studyDiscussion && (
+            <div className="flex flex-col h-full">
+              {/* Discussion Header */}
+              <div className="border-b pb-4 mb-4">
+                <div className="flex items-start space-x-3 mb-3">
+                  <div className="w-12 h-12 rounded-full bg-ministry-navy/10 flex items-center justify-center">
+                    <MessageCircle className="w-6 h-6 text-ministry-navy" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <h3 className="font-bold text-lg text-ministry-charcoal">
+                        {studyDiscussion.title}
+                      </h3>
+                      <Badge variant="default" className="text-xs bg-ministry-navy text-white">
+                        📚 Study
+                      </Badge>
+                    </div>
+                    <p className="text-ministry-slate mb-2">Discussion for "{study?.title}" study</p>
+                    <p className="text-ministry-slate">{studyDiscussion.content}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Replies Section */}
+              <div className="flex-1 overflow-y-auto mb-4">
+                <StudyDiscussionReplies discussionId={studyDiscussion.id} />
+              </div>
+
+              {/* Reply Form */}
+              {canAccess && (
+                <div className="border-t pt-4">
+                  <StudyDiscussionReplyForm 
+                    discussionId={studyDiscussion.id}
+                    currentUserTier={(user as any)?.subscriptionTier || 'free'}
+                    study={study}
+                  />
+                </div>
+              )}
+              
+              {!canAccess && (
+                <div className="border-t pt-4 text-center py-4">
+                  <p className="text-ministry-slate mb-2">
+                    {study?.requiredTier && study.requiredTier !== 'free' 
+                      ? `${study.requiredTier.charAt(0).toUpperCase() + study.requiredTier.slice(1)} subscription required to participate in this discussion.`
+                      : 'You need access to this study to participate in the discussion.'
+                    }
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
+}
+
+// Component for displaying study discussion replies
+function StudyDiscussionReplies({ discussionId }: { discussionId: string }) {
+  const { data: replies = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/discussions", discussionId, "replies"],
+    retry: false,
+    refetchInterval: 3000,
+    refetchIntervalInBackground: true,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-4">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-ministry-navy mx-auto mb-2"></div>
+        <p className="text-sm text-ministry-slate">Loading replies...</p>
+      </div>
+    );
+  }
+
+  if (replies.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <MessageCircle className="w-8 h-8 text-ministry-slate mx-auto mb-2" />
+        <p className="text-ministry-slate">No replies yet</p>
+        <p className="text-sm text-ministry-slate">Be the first to reply!</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {replies.map((reply: any) => (
+        <div key={reply.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+          <img 
+            src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=4A90B8&color=fff&size=32`}
+            alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
+            className="w-8 h-8 rounded-full object-cover"
+          />
+          <div className="flex-1">
+            <div className="flex items-center space-x-2 mb-1">
+              <span className="font-medium text-sm text-ministry-charcoal">
+                {reply.user?.firstName} {reply.user?.lastName?.charAt(0)}.
+              </span>
+              <span className="text-xs text-ministry-slate">
+                • {getTimeAgo(reply.createdAt)}
+              </span>
+            </div>
+            <p className="text-sm text-ministry-slate">{reply.content}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Component for adding new replies
+function StudyDiscussionReplyForm({ discussionId, currentUserTier, study }: { 
+  discussionId: string; 
+  currentUserTier: string; 
+  study: any;
+}) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const form = useForm({
+    resolver: zodResolver(replySchema),
+    defaultValues: {
+      content: '',
+    },
+  });
+
+  const createReply = useMutation({
+    mutationFn: async (data: z.infer<typeof replySchema>) => {
+      const response = await apiRequest('POST', `/api/discussions/${discussionId}/replies`, data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/discussions", discussionId, "replies"] });
+      toast({
+        title: "Success",
+        description: "Reply posted successfully!",
+      });
+      form.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: `Failed to post reply: ${error.message || 'Please try again.'}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmitReply = async (data: z.infer<typeof replySchema>) => {
+    if (!(user as any)?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to reply",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check tier access for study discussions
+    if (study?.requiredTier && study.requiredTier !== 'free') {
+      const hasAccess = (study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
+                       (study.requiredTier === 'vip' && currentUserTier === 'vip');
+      
+      if (!hasAccess) {
+        toast({
+          title: "Access Restricted",
+          description: `This study discussion requires ${study.requiredTier} subscription to participate.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
+    await createReply.mutateAsync(data);
+  };
+
+  // Check if user has access to reply
+  const hasReplyAccess = study?.requiredTier && study.requiredTier !== 'free' ?
+    ((study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
+     (study.requiredTier === 'vip' && currentUserTier === 'vip')) : true;
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmitReply)} className="space-y-3">
+        <FormField
+          control={form.control}
+          name="content"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Textarea
+                  placeholder={hasReplyAccess ? "Write your reply..." : `${study?.requiredTier || 'Premium'} subscription required to reply`}
+                  className="min-h-[80px] resize-none"
+                  disabled={!hasReplyAccess || createReply.isPending}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div className="flex justify-end">
+          <Button
+            type="submit"
+            size="sm"
+            disabled={createReply.isPending || !hasReplyAccess}
+            className="bg-ministry-navy hover:bg-ministry-charcoal"
+          >
+            <Send className="w-3 h-3 mr-1" />
+            {createReply.isPending ? "Posting..." : "Post Reply"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
+
+// Helper function for time formatting
+function getTimeAgo(date: string) {
+  const now = new Date();
+  const posted = new Date(date);
+  const diffInHours = Math.floor((now.getTime() - posted.getTime()) / (1000 * 60 * 60));
+  
+  if (diffInHours < 1) return 'Just now';
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays}d ago`;
 }
