@@ -96,7 +96,7 @@ export interface IStorage {
   getVideos(category?: string, requiredTier?: string, userTier?: string, sortBy?: string, limit?: number): Promise<Video[]>;
   getVideo(id: string): Promise<Video | undefined>;
   createVideo(video: InsertVideo): Promise<Video>;
-  updateVideo(id: string, video: Partial<InsertVideo>): Promise<Video>;
+  updateVideo(id: string, video: Partial<Video>): Promise<Video>;
   deleteVideo(id: string): Promise<void>;
   updateVideoProcessingStatus(id: string, status: string, isProcessed?: boolean): Promise<Video>;
   
@@ -1382,10 +1382,24 @@ export class DatabaseStorage implements IStorage {
     return newVideo;
   }
 
-  async updateVideo(id: string, video: Partial<InsertVideo>): Promise<Video> {
+  async updateVideo(id: string, video: Partial<Video>): Promise<Video> {
+    const updateData = {
+      ...video,
+      updatedAt: new Date()
+    };
+    
+    // Remove fields that shouldn't be updated
+    delete (updateData as any).id;
+    delete (updateData as any).createdAt;
+    delete (updateData as any).uploadedBy;
+    delete (updateData as any).filename;
+    delete (updateData as any).originalName;
+    delete (updateData as any).mimeType;
+    delete (updateData as any).fileSize;
+    
     const [updatedVideo] = await db
       .update(videos)
-      .set({ ...video, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(videos.id, id))
       .returning();
     return updatedVideo;
