@@ -370,10 +370,10 @@ export default function VideoManagement() {
                           setSelectedVideo(video);
                           setShowVideoDialog(true);
                         }}
-                        className="w-full h-9 bg-ministry-navy hover:bg-ministry-charcoal text-white font-medium"
+                        className="w-full h-9 bg-ministry-navy hover:bg-ministry-charcoal text-white text-xs"
                       >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit Video
+                        <Edit className="w-3 h-3 mr-1" />
+                        Edit
                       </Button>
                     </div>
                   </CardContent>
