@@ -82,16 +82,51 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [isPraying, prayerTimeLeft]);
 
+  const requestPrayerPermissions = async () => {
+    let permissionsGranted = true;
+    
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        permissionsGranted = false;
+      }
+    }
+
+    // Check for Do Not Disturb / Focus API (experimental)
+    if ('permissions' in navigator) {
+      try {
+        // Check for experimental Focus API permission
+        const focusPermission = await (navigator.permissions as any).query({ name: 'focus' });
+        console.log('Focus permission status:', focusPermission.state);
+      } catch (error) {
+        console.log('Focus API not available');
+      }
+    }
+
+    if (!permissionsGranted) {
+      toast({
+        title: "Permissions Needed",
+        description: "Please allow notifications for prayer time alerts in your browser settings.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const startPrayerTime = async () => {
+    // Request permissions first in dev mode
+    const hasPermissions = await requestPrayerPermissions();
+    if (!hasPermissions) {
+      return;
+    }
+
     const duration = parseInt(prayerDuration) * 60; // Convert minutes to seconds
     setPrayerTimeLeft(duration);
     setIsPraying(true);
     setShowPrayerDialog(false);
-
-    // Request notification permission
-    if ('Notification' in window && Notification.permission === 'default') {
-      await Notification.requestPermission();
-    }
 
     // Try to enable focus mode (requires user gesture)
     try {
@@ -490,7 +525,7 @@ export default function Dashboard() {
 
             <div className="bg-blue-50 p-3 rounded-lg">
               <p className="text-xs text-ministry-slate">
-                During prayer time, your screen will enter focus mode and you'll receive a notification when time is complete.
+                During prayer time, your screen will enter focus mode and you'll receive a notification when time is complete. The app will request permissions for notifications and focus mode.
               </p>
             </div>
 

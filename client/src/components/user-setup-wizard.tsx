@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { MessageSquare, Users, User, CheckCircle } from "lucide-react";
+import { MessageSquare, Users, User, CheckCircle, Clock, Bell } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface SetupData {
@@ -16,6 +16,7 @@ interface SetupData {
   lastName: string;
   allowDirectMessages: boolean;
   allowGroupInvites: boolean;
+  prayerPermissionsGranted: boolean;
 }
 
 export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
@@ -28,6 +29,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
     lastName: user?.lastName || '',
     allowDirectMessages: true,
     allowGroupInvites: true,
+    prayerPermissionsGranted: false,
   });
 
   const updateProfileMutation = useMutation({
@@ -53,7 +55,21 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
     },
   });
 
-  const handleNext = () => {
+  const requestPrayerPermissions = async () => {
+    let permissionsGranted = true;
+    
+    // Request notification permission for prayer completion alerts
+    if ('Notification' in window && Notification.permission === 'default') {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        permissionsGranted = false;
+      }
+    }
+
+    return permissionsGranted;
+  };
+
+  const handleNext = async () => {
     if (step === 1) {
       if (!setupData.firstName.trim()) {
         toast({
@@ -64,13 +80,31 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
         return;
       }
       setStep(2);
+    } else if (step === 2) {
+      setStep(3);
     } else {
+      // Step 3 - request permissions if user enabled prayer features
+      if (setupData.prayerPermissionsGranted) {
+        const hasPermissions = await requestPrayerPermissions();
+        if (!hasPermissions) {
+          toast({
+            title: "Permissions Needed",
+            description: "Prayer notifications require permission to alert you when prayer time is complete.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
       updateProfileMutation.mutate(setupData);
     }
   };
 
   const handleBack = () => {
-    setStep(1);
+    if (step === 2) {
+      setStep(1);
+    } else if (step === 3) {
+      setStep(2);
+    }
   };
 
   return (
@@ -87,6 +121,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
             <div className="flex space-x-2">
               <div className={`w-3 h-3 rounded-full ${step >= 1 ? 'bg-ministry-gold' : 'bg-gray-200'}`} />
               <div className={`w-3 h-3 rounded-full ${step >= 2 ? 'bg-ministry-gold' : 'bg-gray-200'}`} />
+              <div className={`w-3 h-3 rounded-full ${step >= 3 ? 'bg-ministry-gold' : 'bg-gray-200'}`} />
             </div>
           </div>
         </CardHeader>
@@ -191,6 +226,70 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                       <p className="text-xs text-blue-700 mt-1">
                         You can change these preferences anytime in your profile settings. 
                         These settings help maintain a respectful community environment.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={handleBack}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={handleNext}
+                  className="flex-1 bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                >
+                  Continue
+                </Button>
+              </div>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <div className="text-center">
+                <Clock className="w-12 h-12 mx-auto mb-4 text-ministry-gold" />
+                <h3 className="text-lg font-semibold text-ministry-charcoal mb-2">
+                  Prayer Time Features
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Enable focus mode and notifications for your prayer time
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <Bell className="w-5 h-5 text-ministry-navy mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-ministry-charcoal">Prayer Notifications</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Get notified when your prayer time is complete and enable focus mode during prayer
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={setupData.prayerPermissionsGranted}
+                    onCheckedChange={(checked) => 
+                      setSetupData({ ...setupData, prayerPermissionsGranted: checked })
+                    }
+                  />
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <Clock className="w-5 h-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <p className="text-sm text-blue-800 font-medium">Prayer Time Benefits</p>
+                      <p className="text-xs text-blue-700 mt-1">
+                        When enabled, prayer time will enter fullscreen focus mode, keep your screen awake, 
+                        and notify you when your dedicated prayer time is complete. This helps create a 
+                        distraction-free environment for connecting with God.
                       </p>
                     </div>
                   </div>

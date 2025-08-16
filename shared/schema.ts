@@ -38,6 +38,7 @@ export const users = pgTable("users", {
   streakDays: integer("streak_days").default(0),
   allowDirectMessages: boolean("allow_direct_messages").default(true),
   allowGroupInvites: boolean("allow_group_invites").default(true),
+  prayerPermissionsGranted: boolean("prayer_permissions_granted").default(false),
   isProfileComplete: boolean("is_profile_complete").default(false),
   isBanned: boolean("is_banned").default(false),
   bannedAt: timestamp("banned_at"),
