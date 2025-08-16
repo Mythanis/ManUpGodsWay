@@ -98,10 +98,12 @@ export default function StudyDetail() {
       // Invalidate all progress-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/progress"] });
       queryClient.invalidateQueries({ queryKey: ["/api/progress", id] });
+      // Force invalidate and refetch user data to update streak display
+      queryClient.removeQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      // Force refetch of current progress and user data immediately
-      queryClient.refetchQueries({ queryKey: ["/api/progress", id] });
       queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
+      // Force refetch of current progress
+      queryClient.refetchQueries({ queryKey: ["/api/progress", id] });
       const newCompletedLessons = Math.min(currentLesson, study?.lessonCount || 1);
       const isCompleted = newCompletedLessons === study?.lessonCount;
       
