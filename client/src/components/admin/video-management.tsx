@@ -39,6 +39,9 @@ export default function VideoManagement() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [uploadTier, setUploadTier] = useState('free');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadDescription, setUploadDescription] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -65,6 +68,10 @@ export default function VideoManagement() {
       setShowUploadDialog(false);
       setUploadProgress(0);
       setUploading(false);
+      setSelectedFile(null);
+      setUploadTitle('');
+      setUploadDescription('');
+      setUploadTier('free');
       toast({
         title: "Success",
         description: "Video uploaded successfully!",
@@ -186,7 +193,7 @@ export default function VideoManagement() {
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -210,10 +217,24 @@ export default function VideoManagement() {
       return;
     }
 
+    setSelectedFile(file);
+    setUploadTitle(file.name.replace(/\.[^/.]+$/, "")); // Remove extension
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile || !uploadTitle.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a file and provide a title.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const formData = new FormData();
-    formData.append('video', file);
-    formData.append('title', file.name.replace(/\.[^/.]+$/, "")); // Remove extension
-    formData.append('description', '');
+    formData.append('video', selectedFile);
+    formData.append('title', uploadTitle);
+    formData.append('description', uploadDescription);
     formData.append('requiredTier', uploadTier);
 
     setUploading(true);
@@ -370,7 +391,7 @@ export default function VideoManagement() {
                     id="video-file"
                     type="file"
                     accept="video/*"
-                    onChange={handleFileUpload}
+                    onChange={handleFileSelect}
                     className="mt-1"
                   />
                   <p className="text-xs text-ministry-slate mt-1">
@@ -378,21 +399,67 @@ export default function VideoManagement() {
                   </p>
                 </div>
                 
-                <div>
-                  <Label htmlFor="video-tier" className="text-sm font-medium">
-                    Access Tier
-                  </Label>
-                  <Select value={uploadTier} onValueChange={setUploadTier}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="free">Free - All users can access</SelectItem>
-                      <SelectItem value="premium">Premium - Premium and VIP users only</SelectItem>
-                      <SelectItem value="vip">VIP - VIP users only</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {selectedFile && (
+                  <>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm font-medium text-ministry-charcoal mb-1">Selected File:</p>
+                      <p className="text-sm text-ministry-slate">{selectedFile.name}</p>
+                      <p className="text-xs text-ministry-slate">{formatFileSize(selectedFile.size)}</p>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="video-title" className="text-sm font-medium">
+                        Video Title *
+                      </Label>
+                      <Input
+                        id="video-title"
+                        value={uploadTitle}
+                        onChange={(e) => setUploadTitle(e.target.value)}
+                        placeholder="Enter video title"
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="video-description" className="text-sm font-medium">
+                        Description
+                      </Label>
+                      <Textarea
+                        id="video-description"
+                        value={uploadDescription}
+                        onChange={(e) => setUploadDescription(e.target.value)}
+                        placeholder="Enter video description (optional)"
+                        className="mt-1"
+                        rows={3}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="video-tier" className="text-sm font-medium">
+                        Access Tier
+                      </Label>
+                      <Select value={uploadTier} onValueChange={setUploadTier}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="free">Free - All users can access</SelectItem>
+                          <SelectItem value="premium">Premium - Premium and VIP users only</SelectItem>
+                          <SelectItem value="vip">VIP - VIP users only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <Button 
+                      onClick={handleUpload}
+                      disabled={!uploadTitle.trim()}
+                      className="w-full bg-ministry-navy hover:bg-ministry-charcoal"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Video
+                    </Button>
+                  </>
+                )}
               </>
             ) : (
               <div className="space-y-4">
