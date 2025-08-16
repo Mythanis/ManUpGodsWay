@@ -40,7 +40,7 @@ import {
   type InsertVideo,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, or, sql, ilike, count } from "drizzle-orm";
+import { eq, desc, and, or, sql, ilike, count, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -521,6 +521,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Rating operations
+  // Get study reviews
+  async getStudyReviews(studyId: string): Promise<(StudyRating & { user: { firstName: string | null; lastName: string | null; profileImageUrl?: string | null } })[]> {
+    return await db
+      .select({
+        id: studyRatings.id,
+        userId: studyRatings.userId,
+        studyId: studyRatings.studyId,
+        rating: studyRatings.rating,
+        review: studyRatings.review,
+        createdAt: studyRatings.createdAt,
+        user: {
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(studyRatings)
+      .innerJoin(users, eq(studyRatings.userId, users.id))
+      .where(and(
+        eq(studyRatings.studyId, studyId),
+        isNotNull(studyRatings.review)
+      ))
+      .orderBy(desc(studyRatings.createdAt));
+  }
+
   async rateStudy(rating: InsertStudyRating): Promise<StudyRating> {
     // Check if user already rated this study
     const existing = await db

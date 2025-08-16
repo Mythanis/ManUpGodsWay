@@ -662,6 +662,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get study reviews
+  app.get('/api/studies/:id/reviews', async (req, res) => {
+    try {
+      const studyId = req.params.id;
+      const reviews = await storage.getStudyReviews(studyId);
+      res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching study reviews:", error);
+      res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
   // Admin routes
   // Users endpoint for messaging (accessible to all authenticated users)
   app.get('/api/users', isAuthenticated, async (req: any, res) => {

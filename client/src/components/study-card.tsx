@@ -1,14 +1,17 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users, Star } from "lucide-react";
+import { Clock, Users, Star, MessageSquare } from "lucide-react";
 import { Link } from "wouter";
+import { StudyReviewsDialog } from "./study-reviews-dialog";
 
 interface StudyCardProps {
   study: any;
 }
 
 export default function StudyCard({ study }: StudyCardProps) {
+  const [showReviews, setShowReviews] = useState(false);
   const getTierColor = (tier: string) => {
     switch (tier) {
       case 'premium':
@@ -45,9 +48,25 @@ export default function StudyCard({ study }: StudyCardProps) {
                 </p>
               </div>
               {study.rating > 0 && (
-                <div className="flex items-center ml-2" data-testid="rating-display">
-                  <Star className="w-3 h-3 text-ministry-gold fill-current mr-1" />
-                  <span className="text-xs text-ministry-slate">{study.rating}</span>
+                <div className="flex items-center ml-2 space-x-2" data-testid="rating-display">
+                  <div className="flex items-center">
+                    <Star className="w-3 h-3 text-ministry-gold fill-current mr-1" />
+                    <span className="text-xs text-ministry-slate">{study.rating}</span>
+                  </div>
+                  {study.ratingCount > 0 && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowReviews(true);
+                      }}
+                      className="flex items-center text-xs text-ministry-steel hover:text-ministry-navy transition-colors"
+                      data-testid="button-view-reviews"
+                    >
+                      <MessageSquare className="w-3 h-3 mr-1" />
+                      <span>({study.ratingCount})</span>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -79,6 +98,12 @@ export default function StudyCard({ study }: StudyCardProps) {
           </div>
         </div>
       </CardContent>
+      <StudyReviewsDialog 
+        studyId={study.id}
+        studyTitle={study.title}
+        isOpen={showReviews}
+        onClose={() => setShowReviews(false)}
+      />
     </Card>
   );
 }
