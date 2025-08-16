@@ -613,21 +613,28 @@ export default function VideoManagement() {
               </div>
 
               {/* Featured Toggle */}
-              <div className="flex items-center justify-between p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-lg shadow-sm">
+              <div 
+                className="flex items-center justify-between p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-lg shadow-sm cursor-pointer hover:from-yellow-100 hover:to-orange-100 transition-all duration-200"
+                onClick={() => {
+                  setSelectedVideo(prev => prev ? { ...prev, isFeatured: !prev.isFeatured } : null);
+                }}
+              >
                 <div className="flex items-center space-x-3">
-                  <Star className="w-6 h-6 text-yellow-500" />
-                  <div>
-                    <Label className="text-lg font-bold text-gray-900">Featured Video</Label>
-                    <p className="text-sm text-gray-700 mt-1">Mark this video as featured to show it at the top of the list</p>
+                  <div className="flex items-center space-x-2">
+                    {selectedVideo.isFeatured ? (
+                      <Star className="w-8 h-8 text-yellow-500 fill-current" />
+                    ) : (
+                      <Star className="w-8 h-8 text-yellow-500" />
+                    )}
+                    <div>
+                      <Label className="text-lg font-bold text-gray-900 cursor-pointer">Featured Video</Label>
+                      <p className="text-sm text-gray-700 mt-1">Click the star to mark this video as featured</p>
+                    </div>
                   </div>
                 </div>
-                <Switch
-                  checked={selectedVideo.isFeatured}
-                  onCheckedChange={(checked) => {
-                    setSelectedVideo(prev => prev ? { ...prev, isFeatured: checked } : null);
-                  }}
-                  className="scale-125"
-                />
+                <div className="text-sm font-medium text-gray-600">
+                  {selectedVideo.isFeatured ? 'Featured' : 'Not Featured'}
+                </div>
               </div>
 
               {/* File Information */}
