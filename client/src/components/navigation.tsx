@@ -1,12 +1,13 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Home, BookOpen, Users, MessageCircle, User, Settings } from "lucide-react";
+import { Home, BookOpen, Video, Users, MessageCircle, User, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 
 const navItems = [
   { id: 'dashboard', path: '/', label: 'Dashboard', icon: Home },
   { id: 'library', path: '/library', label: 'Studies', icon: BookOpen },
+  { id: 'videos', path: '/videos', label: 'Videos', icon: Video },
   { id: 'community', path: '/community', label: 'Community', icon: Users },
   { id: 'messages', path: '/messages', label: 'Messages', icon: MessageCircle },
   { id: 'profile', path: '/profile', label: 'Profile', icon: User },
@@ -26,7 +27,7 @@ export default function Navigation() {
       className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white border-t border-gray-200 px-4 py-2 z-50"
       data-testid="navigation-bottom"
     >
-      <div className={`flex justify-around items-center ${allNavItems.length === 5 ? 'space-x-1' : ''}`}>
+      <div className={`flex justify-around items-center ${allNavItems.length >= 6 ? 'space-x-1' : ''}`}>
         {allNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.path || 
@@ -41,11 +42,11 @@ export default function Navigation() {
                   isActive 
                     ? 'text-ministry-navy' 
                     : 'text-ministry-slate hover:text-ministry-navy'
-                } ${allNavItems.length === 5 ? 'px-1' : 'px-2'}`}
+                } ${allNavItems.length >= 6 ? 'px-1' : 'px-2'}`}
                 data-testid={`nav-${item.id}`}
               >
-                <Icon className={`w-6 h-6 mb-1 ${allNavItems.length === 5 ? 'w-5 h-5' : ''}`} />
-                <span className={`font-medium ${allNavItems.length === 5 ? 'text-xs' : 'text-xs'}`}>
+                <Icon className={`w-6 h-6 mb-1 ${allNavItems.length >= 6 ? 'w-5 h-5' : ''}`} />
+                <span className={`font-medium ${allNavItems.length >= 6 ? 'text-xs' : 'text-xs'}`}>
                   {item.label}
                 </span>
               </Button>
