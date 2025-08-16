@@ -447,6 +447,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const discussion = await storage.createDiscussion(discussionData);
+      
+      // Send notification to all users about the new discussion
+      try {
+        const allUsers = await storage.getAllUsers();
+        const creator = await storage.getUser(userId);
+        const creatorName = creator ? `${creator.firstName} ${creator.lastName}` : 'Someone';
+        
+        // Filter out the creator from notification recipients
+        const otherUsers = allUsers.filter(user => user.id !== userId);
+        
+        if (otherUsers.length > 0) {
+          const notificationPromises = otherUsers.map(async (targetUser) => {
+            return await storage.createNotification({
+              userId: targetUser.id,
+              type: 'new_discussion',
+              title: '💬 New Community Discussion',
+              message: `${creatorName} started a new discussion: "${discussion.title}"`,
+              relatedId: discussion.id,
+            });
+          });
+          
+          await Promise.allSettled(notificationPromises);
+          console.log(`Sent discussion notifications to ${otherUsers.length} users`);
+        }
+      } catch (notificationError) {
+        console.error("Error sending discussion notifications:", notificationError);
+        // Don't fail the discussion creation if notifications fail
+      }
+      
       res.status(201).json(discussion);
     } catch (error) {
       console.error("Error creating discussion:", error);

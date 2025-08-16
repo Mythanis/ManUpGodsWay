@@ -12,7 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 interface Notification {
   id: string;
   userId: string;
-  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'group_message' | 'message';
+  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion';
   title: string;
   message: string;
   relatedId?: string;
@@ -46,6 +46,9 @@ const getNotificationIcon = (type: string) => {
       return <BookOpen className="h-4 w-4" />;
     case 'new_devotional':
       return <Heart className="h-4 w-4" />;
+    case 'new_discussion':
+    case 'discussion':
+      return <MessageSquare className="h-4 w-4" />;
     default:
       return <Bell className="h-4 w-4" />;
   }
@@ -176,6 +179,12 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       case 'new_devotional':
         // Navigate to dashboard where today's devotional is shown
         window.location.href = '/dashboard';
+        break;
+        
+      case 'discussion':
+      case 'new_discussion':
+        // Navigate to community page where discussions are shown
+        window.location.href = '/community';
         break;
         
       default:
