@@ -107,7 +107,7 @@ export default function Admin() {
   // Update study mutation
   const updateStudyMutation = useMutation({
     mutationFn: async (data: { id: string; updates: Partial<Study> }) => {
-      return await apiRequest("PATCH", `/api/studies/${data.id}`, data.updates);
+      return await apiRequest("PUT", `/api/studies/${data.id}`, data.updates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
@@ -191,19 +191,29 @@ export default function Admin() {
   const handleUpdate = () => {
     if (!editingStudy) return;
 
-    const updates = {
-      title: formData.title,
-      description: formData.description,
-      category: formData.category,
-      requiredTier: formData.requiredTier,
-      videoUrl: formData.videoUrl || undefined,
-      duration: formData.duration,
-      author: formData.author,
-      tags: formData.tags.split(",").map(tag => tag.trim()).filter(Boolean),
-      lessons: formData.lessons ? JSON.parse(formData.lessons) : [],
-    };
+    try {
+      const updates = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        requiredTier: formData.requiredTier,
+        videoUrl: formData.videoUrl || undefined,
+        duration: formData.duration,
+        author: formData.author,
+        tags: formData.tags.split(",").map(tag => tag.trim()).filter(Boolean),
+        lessons: formData.lessons ? JSON.parse(formData.lessons) : [],
+      };
 
-    updateStudyMutation.mutate({ id: editingStudy.id, updates });
+      console.log("Updating study with data:", updates);
+      updateStudyMutation.mutate({ id: editingStudy.id, updates });
+    } catch (error) {
+      console.error("Error preparing update data:", error);
+      toast({
+        title: "Error",
+        description: "Invalid lessons format. Please check your JSON syntax.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDelete = (studyId: string) => {
