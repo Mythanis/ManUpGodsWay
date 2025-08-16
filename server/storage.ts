@@ -1705,7 +1705,7 @@ export class DatabaseStorage implements IStorage {
         await db.insert(notifications).values({
           userId: adminUser.id,
           title: notificationTitle,
-          content: notificationContent,
+          message: notificationContent,
           type: 'message',
           relatedId: feedbackConversation[0].id, // Link to the feedback conversation
           isRead: false,
