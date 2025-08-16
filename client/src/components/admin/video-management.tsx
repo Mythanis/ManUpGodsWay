@@ -86,9 +86,18 @@ export default function VideoManagement() {
     onError: (error: any) => {
       setUploading(false);
       setUploadProgress(0);
+      
+      // Extract error message from API response
+      let errorMessage = "Failed to upload video. Please try again.";
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Upload Failed",
-        description: error.message || "Failed to upload video. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -107,10 +116,18 @@ export default function VideoManagement() {
         description: "Video updated successfully!",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      // Extract error message from API response
+      let errorMessage = "Failed to update video. Please try again.";
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to update video. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -129,10 +146,18 @@ export default function VideoManagement() {
         description: "Video deleted successfully!",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      // Extract error message from API response
+      let errorMessage = "Failed to delete video. Please try again.";
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to delete video. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     },

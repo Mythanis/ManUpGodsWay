@@ -92,7 +92,7 @@ export default function UploadStudyForm() {
       setDialogOpen(false);
       form.reset();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -104,15 +104,24 @@ export default function UploadStudyForm() {
         }, 500);
         return;
       }
+      
+      // Extract error message from API response
+      let errorMessage = "Failed to create study. Please try again.";
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to create study. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: z.infer<typeof createStudySchema>) => {
+  const onSubmit = (data: any) => {
     // Convert 'none' videoId back to undefined for database
     const submitData = {
       ...data,
