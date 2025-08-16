@@ -62,6 +62,17 @@ export default function Community() {
     }
   }, []);
 
+  // Fetch real community stats
+  const { data: communityStats } = useQuery<{
+    totalMembers: number;
+    activeToday: number;
+    newPosts: number;
+    categoryStats: { [key: string]: number };
+  }>({
+    queryKey: ["/api/community/stats"],
+    retry: false,
+  });
+
   const { data: discussions = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/discussions", selectedCategory || undefined, sortBy, searchQuery || undefined],
     queryFn: async () => {
@@ -218,11 +229,11 @@ export default function Community() {
     });
   };
 
-  // Mock community stats
+  // Use real community stats
   const stats = {
-    totalMembers: 1247,
-    activeToday: 456,
-    newPosts: 23,
+    totalMembers: communityStats?.totalMembers || 0,
+    activeToday: communityStats?.activeToday || 0,
+    newPosts: communityStats?.newPosts || 0,
   };
 
   return (
@@ -397,7 +408,7 @@ export default function Community() {
                   <div className="text-left">
                     <h3 className="font-semibold text-sm text-ministry-charcoal">{category.label}</h3>
                     <p className="text-xs text-ministry-slate">
-                      {Math.floor(Math.random() * 200) + 50} posts
+                      {communityStats?.categoryStats[category.id] || 0} posts
                     </p>
                   </div>
                 </div>

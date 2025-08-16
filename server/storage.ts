@@ -132,6 +132,14 @@ export interface IStorage {
 
   // Feedback operations
   sendFeedbackToAdmins(userId: string, feedback: string, category: string): Promise<void>;
+  
+  // Community stats
+  getCommunityStats(): Promise<{
+    totalMembers: number;
+    activeToday: number;
+    newPosts: number;
+    categoryStats: { [key: string]: number };
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1749,6 +1757,55 @@ export class DatabaseStorage implements IStorage {
         });
       }
     }
+  }
+
+  // Community stats for public use
+  async getCommunityStats(): Promise<{
+    totalMembers: number;
+    activeToday: number;
+    newPosts: number;
+    categoryStats: { [key: string]: number };
+  }> {
+    const [{ totalMembers }] = await db.select({ totalMembers: count(users.id) }).from(users);
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const [{ activeToday }] = await db
+      .select({ activeToday: count(userProgress.id) })
+      .from(userProgress)
+      .where(sql`${userProgress.lastAccessedAt} >= ${today}`);
+
+    const [{ newPosts }] = await db
+      .select({ newPosts: count(discussions.id) })
+      .from(discussions)
+      .where(sql`${discussions.createdAt} >= ${today}`);
+
+    // Get category counts
+    const categories = ['leadership', 'marriage', 'parenting', 'faith'];
+    const categoryStats: { [key: string]: number } = {};
+    
+    for (const category of categories) {
+      const [{ count: categoryCount }] = await db
+        .select({ count: count(discussions.id) })
+        .from(discussions)
+        .where(eq(discussions.category, category));
+      categoryStats[category] = categoryCount;
+    }
+    
+    // Get study discussions count
+    const [{ count: studyDiscussionsCount }] = await db
+      .select({ count: count(discussions.id) })
+      .from(discussions)
+      .where(sql`${discussions.studyId} IS NOT NULL`);
+    categoryStats['studies'] = studyDiscussionsCount;
+
+    return {
+      totalMembers,
+      activeToday,
+      newPosts,
+      categoryStats,
+    };
   }
 }
 
