@@ -40,8 +40,8 @@ export default function Navigation() {
                 variant="ghost"
                 className={`flex flex-col items-center p-2 min-w-0 ${
                   isActive 
-                    ? 'text-ministry-navy' 
-                    : 'text-ministry-slate hover:text-ministry-navy'
+                    ? 'text-foreground font-semibold' 
+                    : 'text-muted-foreground hover:text-foreground'
                 } ${allNavItems.length >= 6 ? 'px-1' : 'px-2'}`}
                 data-testid={`nav-${item.id}`}
               >

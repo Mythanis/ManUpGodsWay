@@ -202,7 +202,7 @@ export default function StudyDetail() {
         <Card className="w-full max-w-md mx-4">
           <CardContent className="pt-6">
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Study Not Found</h1>
+              <h1 className="text-2xl font-bold text-foreground mb-4">Study Not Found</h1>
               <p className="text-sm text-gray-600 mb-4">
                 The study you're looking for doesn't exist or has been removed.
               </p>

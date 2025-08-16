@@ -107,11 +107,11 @@
   --shadow-xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 8px 10px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
   --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
 
-  /* Ministry-specific colors for dark mode */
-  --ministry-navy: hsl(0 0% 20%);
-  --ministry-charcoal: hsl(0 0% 25%);
-  --ministry-steel: hsl(0 0% 50%);
-  --ministry-slate: hsl(0 0% 60%);
+  /* Ministry-specific colors for dark mode - updated for proper dark theme contrast */
+  --ministry-navy: hsl(0 0% 90%);
+  --ministry-charcoal: hsl(0 0% 95%);
+  --ministry-steel: hsl(0 0% 80%);
+  --ministry-slate: hsl(0 0% 70%);
   --ministry-gold: hsl(49 100% 59%);
   --ministry-success: hsl(158 64% 62%);
 }

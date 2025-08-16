@@ -108,7 +108,7 @@ export default function Profile() {
       <div className="px-6 -mt-6 relative z-10 mb-6">
         <Card className="shadow-lg" data-testid="card-account">
           <CardContent className="p-6">
-            <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Account & Subscription</h2>
+            <h2 className="text-lg font-bold text-foreground mb-4">Account & Subscription</h2>
             
             <div className="space-y-4">
               <div className={`flex items-center justify-between p-4 rounded-xl border ${
@@ -119,11 +119,11 @@ export default function Profile() {
                 <div className="flex items-center space-x-3">
                   <Crown className="w-5 h-5 text-ministry-gold" />
                   <div>
-                    <h3 className="font-semibold text-ministry-charcoal">
+                    <h3 className="font-semibold text-foreground">
                       {user?.subscriptionTier === 'free' ? 'Free Plan' : 
                        user?.subscriptionTier === 'premium' ? 'Premium Plan' : 'VIP Plan'}
                     </h3>
-                    <p className="text-sm text-ministry-slate">
+                    <p className="text-sm text-muted-foreground">
                       {user?.subscriptionTier === 'free' 
                         ? 'Limited access to studies and features'
                         : 'Full access to all studies and community features'
@@ -150,9 +150,9 @@ export default function Profile() {
                     <div className="w-8 h-8 rounded-lg bg-ministry-steel/20 flex items-center justify-center">
                       <User className="w-4 h-4 text-ministry-steel" />
                     </div>
-                    <span className="font-medium text-ministry-charcoal">Edit Profile</span>
+                    <span className="font-medium text-foreground">Edit Profile</span>
                   </div>
-                  <svg className="w-5 h-5 text-ministry-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                   </svg>
                 </Button>
@@ -164,7 +164,7 @@ export default function Profile() {
 
       {/* Settings Menu */}
       <div className="px-6 mb-6">
-        <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Settings</h2>
+        <h2 className="text-lg font-bold text-foreground mb-4">Settings</h2>
         
         <Card className="border-gray-100 overflow-hidden" data-testid="card-settings">
           <CardContent className="p-0">
@@ -181,8 +181,8 @@ export default function Profile() {
                   )}
                 </div>
                 <div>
-                  <span className="font-medium text-ministry-charcoal">Dark Mode</span>
-                  <p className="text-xs text-ministry-slate">
+                  <span className="font-medium text-foreground">Dark Mode</span>
+                  <p className="text-xs text-muted-foreground">
                     {theme === 'system' ? 'Follow system settings' : `${theme.charAt(0).toUpperCase() + theme.slice(1)} theme`}
                   </p>
                 </div>
@@ -205,9 +205,9 @@ export default function Profile() {
                 <div className="w-8 h-8 rounded-lg bg-ministry-steel/20 flex items-center justify-center">
                   <Shield className="w-4 h-4 text-ministry-steel" />
                 </div>
-                <span className="font-medium text-ministry-charcoal">Privacy & Security</span>
+                <span className="font-medium text-foreground">Privacy & Security</span>
               </div>
-              <svg className="w-5 h-5 text-ministry-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </Button>
@@ -221,9 +221,9 @@ export default function Profile() {
                 <div className="w-8 h-8 rounded-lg bg-ministry-gold/20 flex items-center justify-center">
                   <HelpCircle className="w-4 h-4 text-ministry-gold" />
                 </div>
-                <span className="font-medium text-ministry-charcoal">Help & Support</span>
+                <span className="font-medium text-foreground">Help & Support</span>
               </div>
-              <svg className="w-5 h-5 text-ministry-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </Button>
@@ -238,9 +238,9 @@ export default function Profile() {
                 <div className="w-8 h-8 rounded-lg bg-ministry-navy/20 flex items-center justify-center">
                   <MessageCircle className="w-4 h-4 text-ministry-navy" />
                 </div>
-                <span className="font-medium text-ministry-charcoal">Send Feedback</span>
+                <span className="font-medium text-foreground">Send Feedback</span>
               </div>
-              <svg className="w-5 h-5 text-ministry-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </Button>
@@ -257,7 +257,7 @@ export default function Profile() {
                 </div>
                 <span className="font-medium text-red-600">Sign Out</span>
               </div>
-              <svg className="w-5 h-5 text-ministry-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </Button>
@@ -267,13 +267,13 @@ export default function Profile() {
 
       {/* Progress Summary */}
       <div className="px-6">
-        <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Your Journey</h2>
+        <h2 className="text-lg font-bold text-foreground mb-4">Your Journey</h2>
         
         <Card className="border-gray-100" data-testid="card-progress">
           <CardContent className="p-6">
             {currentStudies.length === 0 && completedStudies.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-ministry-slate mb-4">You haven't started any studies yet</p>
+                <p className="text-muted-foreground mb-4">You haven't started any studies yet</p>
                 <Button 
                   className="bg-ministry-navy text-white hover:bg-ministry-charcoal"
                   data-testid="button-start-journey"
@@ -288,7 +288,7 @@ export default function Profile() {
                   return (
                     <div key={item.id} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-ministry-charcoal">
+                        <span className="text-sm font-medium text-foreground">
                           {item.study?.title || 'Study'}
                         </span>
                         <span className="text-sm text-ministry-steel font-bold">
@@ -304,11 +304,11 @@ export default function Profile() {
                   <div key={item.id} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <span className="text-sm font-medium text-ministry-charcoal">
+                        <span className="text-sm font-medium text-foreground">
                           {item.study?.title || 'Study'}
                         </span>
                         {item.completedAt && (
-                          <p className="text-xs text-ministry-slate">
+                          <p className="text-xs text-muted-foreground">
                             Completed {new Date(item.completedAt).toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric',
