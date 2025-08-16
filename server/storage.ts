@@ -59,6 +59,7 @@ export interface IStorage {
   // Progress operations
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
   updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
+  updateUserStreak(userId: string): Promise<void>;
   
   // Study-specific methods
   getStudyDiscussion(studyId: string): Promise<(Discussion & { user: User }) | null>;
@@ -242,6 +243,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress> {
+    // Update user streak when they make progress
+    await this.updateUserStreak(userId);
+    
     const existing = await db
       .select()
       .from(userProgress)
@@ -595,6 +599,59 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDevotional(id: string): Promise<void> {
     await db.delete(devotionals).where(eq(devotionals.id, id));
+  }
+
+  // Streak operations
+  async updateUserStreak(userId: string): Promise<void> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (!user) return;
+    
+    const lastActive = user.lastActiveDate ? new Date(user.lastActiveDate) : null;
+    
+    if (lastActive) {
+      lastActive.setHours(0, 0, 0, 0);
+      
+      // Check if last active was today
+      if (lastActive.getTime() === today.getTime()) {
+        // Already counted today, no update needed
+        return;
+      }
+      
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      if (lastActive.getTime() === yesterday.getTime()) {
+        // Consecutive day - increment streak
+        await db
+          .update(users)
+          .set({ 
+            streakDays: (user.streakDays || 0) + 1,
+            lastActiveDate: today 
+          })
+          .where(eq(users.id, userId));
+      } else {
+        // Gap in activity - reset streak to 1
+        await db
+          .update(users)
+          .set({ 
+            streakDays: 1,
+            lastActiveDate: today 
+          })
+          .where(eq(users.id, userId));
+      }
+    } else {
+      // First time active - start streak
+      await db
+        .update(users)
+        .set({ 
+          streakDays: 1,
+          lastActiveDate: today 
+        })
+        .where(eq(users.id, userId));
+    }
   }
 
   // Rating operations
