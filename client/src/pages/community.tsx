@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,9 +40,26 @@ export default function Community() {
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [highlightedDiscussion, setHighlightedDiscussion] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Handle discussion query parameter from URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const discussionId = urlParams.get('discussion');
+    if (discussionId) {
+      setHighlightedDiscussion(discussionId);
+      // Scroll to the highlighted discussion after discussions load
+      setTimeout(() => {
+        const element = document.querySelector(`[data-discussion-id="${discussionId}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 1000);
+    }
+  }, []);
 
   const { data: discussions = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/discussions", selectedCategory || undefined, sortBy, searchQuery || undefined],
@@ -447,13 +464,18 @@ export default function Community() {
         ) : (
           <div className="space-y-4">
             {discussions.map((discussion: any) => (
-              <DiscussionCard 
-                key={discussion.id} 
-                discussion={discussion}
-                onStartDirectMessage={handleStartDirectMessage}
-                onAddToGroup={handleAddToGroup}
-                data-testid={`discussion-${discussion.id}`}
-              />
+              <div 
+                key={discussion.id}
+                data-discussion-id={discussion.id}
+                className={highlightedDiscussion === discussion.id ? 'ring-2 ring-ministry-gold ring-opacity-50 rounded-lg' : ''}
+              >
+                <DiscussionCard 
+                  discussion={discussion}
+                  onStartDirectMessage={handleStartDirectMessage}
+                  onAddToGroup={handleAddToGroup}
+                  data-testid={`discussion-${discussion.id}`}
+                />
+              </div>
             ))}
           </div>
         )}

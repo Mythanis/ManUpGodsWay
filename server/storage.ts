@@ -267,6 +267,7 @@ export class DatabaseStorage implements IStorage {
 
   // Study-specific methods
   async getStudyDiscussion(studyId: string): Promise<(Discussion & { user: User }) | null> {
+    // First try to get existing discussion
     const [discussion] = await db
       .select({
         id: discussions.id,
@@ -287,7 +288,52 @@ export class DatabaseStorage implements IStorage {
       .where(eq(discussions.studyId, studyId))
       .limit(1);
     
-    return discussion || null;
+    if (discussion) {
+      return discussion;
+    }
+
+    // If no discussion exists, create one automatically
+    const [study] = await db.select().from(studies).where(eq(studies.id, studyId)).limit(1);
+    if (!study) {
+      return null;
+    }
+
+    // Get the first admin user to create the discussion
+    const [adminUser] = await db.select().from(users).where(eq(users.role, 'admin')).limit(1);
+    const discussionUserId = adminUser?.id || 'system';
+
+    const discussionData: InsertDiscussion = {
+      title: `${study.title} - Study Discussion`,
+      content: `Welcome to the discussion for "${study.title}". Share your thoughts, questions, and insights about this study here.`,
+      category: study.category || 'leadership',
+      userId: discussionUserId,
+      studyId: study.id,
+    };
+    
+    const newDiscussion = await this.createDiscussion(discussionData);
+    
+    // Return the new discussion with user data
+    const [createdDiscussion] = await db
+      .select({
+        id: discussions.id,
+        userId: discussions.userId,
+        title: discussions.title,
+        content: discussions.content,
+        category: discussions.category,
+        studyId: discussions.studyId,
+        likes: discussions.likes,
+        replyCount: discussions.replyCount,
+        isPinned: discussions.isPinned,
+        createdAt: discussions.createdAt,
+        updatedAt: discussions.updatedAt,
+        user: users,
+      })
+      .from(discussions)
+      .innerJoin(users, eq(discussions.userId, users.id))
+      .where(eq(discussions.id, newDiscussion.id))
+      .limit(1);
+    
+    return createdDiscussion || null;
   }
 
   async createDiscussionsForExistingStudies(): Promise<void> {
