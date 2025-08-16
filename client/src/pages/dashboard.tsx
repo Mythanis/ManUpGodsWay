@@ -56,9 +56,9 @@ export default function Dashboard() {
   });
 
   const { data: recommendedStudies = [] } = useQuery({
-    queryKey: ["/api/studies", { limit: 3 }],
+    queryKey: ["/api/studies/recommendations", { limit: 3 }],
     queryFn: async () => {
-      const response = await fetch('/api/studies?limit=3', { credentials: 'include' });
+      const response = await fetch('/api/studies/recommendations?limit=3', { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch recommended studies');
       return response.json();
     },
@@ -406,6 +406,7 @@ export default function Dashboard() {
             {recommendedStudies.length > 0 && (
               <>
                 <h3 className="text-md font-semibold text-ministry-charcoal mb-3">Recommended for You</h3>
+                <p className="text-xs text-ministry-slate mb-4">Based on your interests and subscription tier</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
                     <Card key={study.id} className="border border-gray-100 hover:shadow-sm transition-shadow">

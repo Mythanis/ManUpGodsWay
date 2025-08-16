@@ -55,6 +55,7 @@ export interface IStorage {
   deleteStudy(id: string): Promise<void>;
   searchStudies(query: string): Promise<Study[]>;
   getFeaturedStudy(): Promise<Study | null>;
+  getRecommendedStudies(userId: string, limit?: number): Promise<Study[]>;
   
   // Progress operations
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
@@ -225,6 +226,110 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(studies.isPublished, true), eq(studies.isFeatured, true)))
       .limit(1);
     return featuredStudy || null;
+  }
+
+  async getRecommendedStudies(userId: string, limit: number = 3): Promise<Study[]> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (!user) return [];
+    
+    const userTier = user.subscriptionTier || 'free';
+    
+    // Get user's completed studies to understand their interests
+    const completedProgress = await db
+      .select({ category: studies.category })
+      .from(userProgress)
+      .innerJoin(studies, eq(userProgress.studyId, studies.id))
+      .where(and(
+        eq(userProgress.userId, userId),
+        eq(userProgress.isCompleted, true)
+      ));
+    
+    const studiedCategories = Array.from(new Set(completedProgress.map(p => p.category)));
+    
+    // Determine tier progression for recommendations
+    const getTierRecommendations = async () => {
+      const tierOrder = ['free', 'premium', 'vip'];
+      const currentTierIndex = tierOrder.indexOf(userTier);
+      const nextTier = currentTierIndex < tierOrder.length - 1 ? tierOrder[currentTierIndex + 1] : null;
+      
+      let recommendations: Study[] = [];
+      
+      // Get studies from current tier (2 studies)
+      const currentTierStudies = await db
+        .select()
+        .from(studies)
+        .where(and(
+          eq(studies.isPublished, true),
+          eq(studies.requiredTier, userTier),
+          studiedCategories.length > 0 ? sql`category = ANY(${studiedCategories})` : sql`1=1`
+        ))
+        .orderBy(desc(studies.rating), desc(studies.createdAt))
+        .limit(2);
+      
+      recommendations.push(...currentTierStudies);
+      
+      // Get 1 study from next tier if available
+      if (nextTier && recommendations.length < limit) {
+        const nextTierStudies = await db
+          .select()
+          .from(studies)
+          .where(and(
+            eq(studies.isPublished, true),
+            eq(studies.requiredTier, nextTier),
+            studiedCategories.length > 0 ? sql`category = ANY(ARRAY[${studiedCategories.map(c => `'${c}'`).join(',')}])` : sql`1=1`
+          ))
+          .orderBy(desc(studies.rating), desc(studies.createdAt))
+          .limit(1);
+        
+        recommendations.push(...nextTierStudies);
+      }
+      
+      // If we still need more recommendations and no next tier, fill from highest available tier
+      if (recommendations.length < limit) {
+        const highestTier = userTier === 'vip' ? 'vip' : (userTier === 'premium' ? 'premium' : 'free');
+        const additionalStudies = await db
+          .select()
+          .from(studies)
+          .where(and(
+            eq(studies.isPublished, true),
+            eq(studies.requiredTier, highestTier),
+            studiedCategories.length > 0 ? sql`category = ANY(ARRAY[${studiedCategories.map(c => `'${c}'`).join(',')}])` : sql`1=1`,
+            recommendations.length > 0 ? sql`id NOT IN (${recommendations.map(s => `'${s.id}'`).join(',')})` : sql`1=1` // Exclude already selected
+          ))
+          .orderBy(desc(studies.rating), desc(studies.createdAt))
+          .limit(limit - recommendations.length);
+        
+        recommendations.push(...additionalStudies);
+      }
+      
+      return recommendations;
+    };
+    
+    // If user has no completed studies, get top-rated studies across all categories
+    if (studiedCategories.length === 0) {
+      const topRatedStudies = await getTierRecommendations();
+      if (topRatedStudies.length > 0) {
+        return topRatedStudies.slice(0, limit);
+      }
+      
+      // Fallback: get any published studies with tier logic
+      return await db
+        .select()
+        .from(studies)
+        .where(and(
+          eq(studies.isPublished, true),
+          or(
+            eq(studies.requiredTier, userTier),
+            eq(studies.requiredTier, 'free')
+          )
+        ))
+        .orderBy(desc(studies.rating), desc(studies.createdAt))
+        .limit(limit);
+    }
+    
+    // Get recommendations based on studied categories + tier logic
+    const categoryBasedRecs = await getTierRecommendations();
+    return categoryBasedRecs.slice(0, limit);
   }
 
   // Progress operations
