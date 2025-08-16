@@ -418,8 +418,8 @@ export default function Dashboard() {
             {/* Recommended Studies */}
             {recommendedStudies.length > 0 && (
               <>
-                <h3 className="text-md font-semibold text-ministry-charcoal mb-3">Based on your interests</h3>
-                <p className="text-xs text-ministry-slate mb-4">Based on your interests and subscription tier</p>
+                <h3 className="text-md font-semibold text-ministry-charcoal mb-3">Recommended for You</h3>
+                <p className="text-xs text-ministry-slate mb-4">Based on your interests</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
                     <Card key={study.id} className="border border-gray-100 hover:shadow-sm transition-shadow">
