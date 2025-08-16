@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import multer from 'multer';
+import path from 'path';
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
@@ -10,6 +12,21 @@ import {
   insertStudyRatingSchema 
 } from "@shared/schema";
 import { z } from "zod";
+
+// Configure multer for video uploads
+const upload = multer({ 
+  storage: multer.memoryStorage(), // Store in memory for now
+  limits: {
+    fileSize: 100 * 1024 * 1024 // 100MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only video files are allowed!'));
+    }
+  }
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -910,30 +927,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/videos/upload', isAuthenticated, async (req: any, res) => {
+  app.post('/api/admin/videos/upload', isAuthenticated, upload.single('video'), async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
       if (!user || user.role !== 'admin') {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      // For now, we'll simulate video upload and processing
-      // In a real app, you'd integrate with multer, AWS S3, or similar service
       const { title, description, requiredTier = 'free' } = req.body;
+      const file = req.file;
       
-      if (!title) {
+      console.log('Upload request body:', req.body);
+      console.log('Upload file:', file ? { name: file.originalname, size: file.size, type: file.mimetype } : 'No file');
+      
+      if (!title || title.trim() === '') {
         return res.status(400).json({ message: "Title is required" });
       }
 
-      // Simulate file upload data
+      if (!file) {
+        return res.status(400).json({ message: "Video file is required" });
+      }
+
+      // Create video data with actual file information
       const videoData = {
-        title,
+        title: title.trim(),
         description: description || '',
-        filename: `video_${Date.now()}.mp4`,
-        originalName: `${title}.mp4`,
-        mimeType: 'video/mp4',
-        fileSize: Math.floor(Math.random() * 50000000) + 10000000, // Random size 10-60MB
-        duration: Math.floor(Math.random() * 1800) + 300, // Random duration 5-35 minutes
+        filename: `video_${Date.now()}_${file.originalname}`,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+        duration: Math.floor(Math.random() * 1800) + 300, // This would be extracted from video metadata in a real app
         thumbnailUrl: `https://via.placeholder.com/640x360/4A90B8/ffffff?text=${encodeURIComponent(title)}`,
         uploadedBy: user.id,
         requiredTier: requiredTier,
@@ -949,6 +972,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(video);
     } catch (error) {
       console.error("Error uploading video:", error);
+      if (error instanceof multer.MulterError) {
+        if (error.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ message: "File too large. Maximum size is 100MB." });
+        }
+        return res.status(400).json({ message: error.message });
+      }
       res.status(500).json({ message: "Failed to upload video" });
     }
   });
