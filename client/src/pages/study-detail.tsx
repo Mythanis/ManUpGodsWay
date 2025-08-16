@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertStudyRatingSchema } from "@shared/schema";
+import { insertStudyRatingSchema, type Study, type UserProgress, type Discussion } from "@shared/schema";
 import { ArrowLeft, Play, Clock, Users, Star, MessageCircle } from "lucide-react";
 import { Link } from "wouter";
 import { z } from "zod";
@@ -42,19 +42,19 @@ export default function StudyDetail() {
     }
   }, [isAuthenticated, authLoading, toast]);
 
-  const { data: study, isLoading: studyLoading } = useQuery({
+  const { data: study, isLoading: studyLoading } = useQuery<Study>({
     queryKey: ["/api/studies", id],
     retry: false,
     enabled: !!id,
   });
 
-  const { data: progress } = useQuery({
+  const { data: progress } = useQuery<UserProgress>({
     queryKey: ["/api/progress", { studyId: id }],
     retry: false,
     enabled: !!id && isAuthenticated,
   });
 
-  const { data: studyDiscussion } = useQuery({
+  const { data: studyDiscussion } = useQuery<Discussion & { user: { firstName: string; lastName: string } }>({
     queryKey: ["/api/studies", id, "discussion"],
     retry: false,
     enabled: !!id,
@@ -132,7 +132,7 @@ export default function StudyDetail() {
   const handleProgressUpdate = () => {
     if (!study) return;
     
-    const newCompletedLessons = Math.min(currentLesson, study.lessonCount);
+    const newCompletedLessons = Math.min(currentLesson, study.lessonCount || 1);
     const isCompleted = newCompletedLessons === study.lessonCount;
     
     updateProgress.mutate({
@@ -178,7 +178,7 @@ export default function StudyDetail() {
 
   const userProgress = Array.isArray(progress) ? progress[0] : progress;
   const completedLessons = userProgress?.completedLessons || 0;
-  const progressPercent = Math.round((completedLessons / study.lessonCount) * 100);
+  const progressPercent = Math.round((completedLessons / (study.lessonCount || 1)) * 100);
 
   const getTierColor = (tier: string) => {
     switch (tier) {

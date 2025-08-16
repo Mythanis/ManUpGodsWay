@@ -256,7 +256,7 @@ export default function DiscussionCard({
         {showReplies && discussion.replyCount > 0 && (
           <div className="mt-4 pt-4 border-t border-gray-100">
             <div className="space-y-3">
-              {replies.map((reply: any) => (
+              {(replies as any[])?.map((reply: any) => (
                 <div key={reply.id} className="flex items-start space-x-3 ml-4 p-3 bg-gray-50 rounded-lg">
                   <img 
                     src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=4A90B8&color=fff&size=32`}

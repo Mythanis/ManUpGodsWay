@@ -460,7 +460,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // TODO: Verify user is participant of conversation
       const messages = await storage.getConversationMessages(
         conversationId,
-        userId,
         limit ? parseInt(limit as string) : undefined
       );
       res.json(messages);
@@ -1141,7 +1140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (status === 'accepted') {
         // Create direct conversation
-        const conversation = await storage.createDirectConversation(request.fromUserId, request.toUserId);
+        const conversation = await storage.getOrCreateDirectConversation(request.fromUserId, request.toUserId);
 
         // Send the initial message
         await storage.sendMessage({

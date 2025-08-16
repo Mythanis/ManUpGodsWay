@@ -321,6 +321,7 @@ export class DatabaseStorage implements IStorage {
         title: discussions.title,
         content: discussions.content,
         category: discussions.category,
+        studyId: discussions.studyId,
         likes: discussions.likes,
         replyCount: discussions.replyCount,
         isPinned: discussions.isPinned,
@@ -380,6 +381,7 @@ export class DatabaseStorage implements IStorage {
         title: discussions.title,
         content: discussions.content,
         category: discussions.category,
+        studyId: discussions.studyId,
         likes: discussions.likes,
         replyCount: discussions.replyCount,
         isPinned: discussions.isPinned,
@@ -771,7 +773,7 @@ export class DatabaseStorage implements IStorage {
     return newConversation;
   }
 
-  async getConversationMessages(conversationId: string, requestingUserId: string, limit = 50): Promise<(Message & { user: User })[]> {
+  async getConversationMessages(conversationId: string, limit = 50): Promise<(Message & { user: User })[]> {
     const results = await db
       .select({
         id: messages.id,
@@ -792,11 +794,8 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(messages.createdAt))
       .limit(limit);
 
-    // Filter out messages that have been deleted by the requesting user
-    return results.filter(message => {
-      const deletedBy = message.deletedBy || [];
-      return !deletedBy.includes(requestingUserId);
-    });
+    // Return all messages since we removed the requesting user filtering
+    return results;
   }
 
   async sendMessage(message: InsertMessage): Promise<Message> {
@@ -1021,9 +1020,6 @@ export class DatabaseStorage implements IStorage {
       );
   }
 
-  async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users);
-  }
 
   async updateUserProfile(userId: string, updates: Partial<User>): Promise<User> {
     const [updatedUser] = await db.update(users)
@@ -1038,10 +1034,10 @@ export class DatabaseStorage implements IStorage {
 
   // Video operations
   async getVideos(limit?: number): Promise<Video[]> {
-    let query = db.select().from(videos).orderBy(desc(videos.createdAt));
+    const query = db.select().from(videos).orderBy(desc(videos.createdAt));
     
     if (limit) {
-      query = query.limit(limit);
+      return await query.limit(limit);
     }
     
     return await query;
