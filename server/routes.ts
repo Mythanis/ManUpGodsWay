@@ -94,6 +94,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get study discussion
+  app.get('/api/studies/:id/discussion', async (req, res) => {
+    try {
+      const discussion = await storage.getStudyDiscussion(req.params.id);
+      res.json(discussion);
+    } catch (error) {
+      console.error("Error fetching study discussion:", error);
+      res.status(500).json({ message: "Failed to fetch study discussion" });
+    }
+  });
+
+  // Create discussions for existing studies (one-time migration)
+  app.post('/api/admin/create-study-discussions', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      await storage.createDiscussionsForExistingStudies();
+      res.json({ message: "Study discussions created successfully" });
+    } catch (error) {
+      console.error("Error creating study discussions:", error);
+      res.status(500).json({ message: "Failed to create study discussions" });
+    }
+  });
+
   app.post('/api/studies', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);

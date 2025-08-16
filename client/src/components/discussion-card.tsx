@@ -191,9 +191,16 @@ export default function DiscussionCard({
               </span>
             </div>
             
-            <h4 className="font-medium text-ministry-charcoal mb-2" data-testid="text-discussion-title">
-              {discussion.title}
-            </h4>
+            <div className="flex items-center space-x-2 mb-2">
+              <h4 className="font-medium text-ministry-charcoal" data-testid="text-discussion-title">
+                {discussion.title}
+              </h4>
+              {discussion.studyId && (
+                <Badge variant="default" className="text-xs bg-ministry-navy text-white">
+                  📚 Study
+                </Badge>
+              )}
+            </div>
             
             <p className="text-sm text-ministry-slate mb-3 line-clamp-3" data-testid="text-discussion-content">
               {discussion.content}

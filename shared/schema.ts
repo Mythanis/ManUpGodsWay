@@ -107,6 +107,7 @@ export const discussions = pgTable("discussions", {
   title: varchar("title").notNull(),
   content: text("content").notNull(),
   category: varchar("category").notNull(),
+  studyId: varchar("study_id").references(() => studies.id, { onDelete: 'cascade' }), // Optional link to study
   likes: integer("likes").default(0),
   replyCount: integer("reply_count").default(0),
   isPinned: boolean("is_pinned").default(false),
@@ -223,11 +224,13 @@ export const videosRelations = relations(videos, ({ one, many }) => ({
 export const studiesRelations = relations(studies, ({ one, many }) => ({
   progress: many(userProgress),
   ratings: many(studyRatings),
+  discussions: many(discussions),
   video: one(videos, { fields: [studies.videoId], references: [videos.id] }),
 }));
 
 export const discussionsRelations = relations(discussions, ({ one, many }) => ({
   user: one(users, { fields: [discussions.userId], references: [users.id] }),
+  study: one(studies, { fields: [discussions.studyId], references: [studies.id] }),
   replies: many(discussionReplies),
 }));
 

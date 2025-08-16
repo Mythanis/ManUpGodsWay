@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertStudyRatingSchema } from "@shared/schema";
-import { ArrowLeft, Play, Clock, Users, Star } from "lucide-react";
+import { ArrowLeft, Play, Clock, Users, Star, MessageCircle } from "lucide-react";
 import { Link } from "wouter";
 import { z } from "zod";
 
@@ -52,6 +52,12 @@ export default function StudyDetail() {
     queryKey: ["/api/progress", { studyId: id }],
     retry: false,
     enabled: !!id && isAuthenticated,
+  });
+
+  const { data: studyDiscussion } = useQuery({
+    queryKey: ["/api/studies", id, "discussion"],
+    retry: false,
+    enabled: !!id,
   });
 
   const form = useForm({
@@ -268,6 +274,32 @@ export default function StudyDetail() {
                   data-testid="button-upgrade-access"
                 >
                   Upgrade to {study.requiredTier}
+                </Button>
+              </div>
+            )}
+
+            {/* Join Discussion Section */}
+            {studyDiscussion && (
+              <div className="flex items-center justify-between p-4 bg-ministry-navy/5 rounded-lg border border-ministry-navy/20">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-full bg-ministry-navy/10 flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 text-ministry-navy" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-ministry-charcoal">Join Study Discussion</h3>
+                    <p className="text-sm text-ministry-slate">
+                      Connect with other members studying "{study.title}"
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => window.location.href = `/community?discussion=${studyDiscussion.id}`}
+                  variant="outline"
+                  className="border-ministry-navy text-ministry-navy hover:bg-ministry-navy hover:text-white"
+                  data-testid="button-join-discussion"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Join Discussion
                 </Button>
               </div>
             )}

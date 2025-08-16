@@ -60,6 +60,10 @@ export interface IStorage {
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
   updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
   
+  // Study-specific methods
+  getStudyDiscussion(studyId: string): Promise<(Discussion & { user: User }) | null>;
+  createDiscussionsForExistingStudies(): Promise<void>;
+
   // Discussion operations
   getDiscussions(category?: string, limit?: number, sortBy?: string, searchTerm?: string): Promise<(Discussion & { user: User })[]>;
   getDiscussion(id: string): Promise<(Discussion & { user: User; replies: (DiscussionReply & { user: User })[] }) | undefined>;
@@ -169,6 +173,18 @@ export class DatabaseStorage implements IStorage {
 
   async createStudy(study: InsertStudy): Promise<Study> {
     const [newStudy] = await db.insert(studies).values(study).returning();
+    
+    // Create a discussion for this study
+    const discussionData: InsertDiscussion = {
+      title: newStudy.title,
+      content: `Welcome to the discussion for "${newStudy.title}". Share your thoughts, questions, and insights about this study here.`,
+      category: newStudy.category || 'leadership',
+      userId: 'system', // Use system as the creator
+      studyId: newStudy.id, // Link the discussion to the study
+    };
+    
+    await this.createDiscussion(discussionData);
+    
     return newStudy;
   }
 
@@ -245,6 +261,54 @@ export class DatabaseStorage implements IStorage {
         })
         .returning();
       return newProgress;
+    }
+  }
+
+  // Study-specific methods
+  async getStudyDiscussion(studyId: string): Promise<(Discussion & { user: User }) | null> {
+    const [discussion] = await db
+      .select({
+        id: discussions.id,
+        userId: discussions.userId,
+        title: discussions.title,
+        content: discussions.content,
+        category: discussions.category,
+        studyId: discussions.studyId,
+        likes: discussions.likes,
+        replyCount: discussions.replyCount,
+        isPinned: discussions.isPinned,
+        createdAt: discussions.createdAt,
+        updatedAt: discussions.updatedAt,
+        user: users,
+      })
+      .from(discussions)
+      .innerJoin(users, eq(discussions.userId, users.id))
+      .where(eq(discussions.studyId, studyId))
+      .limit(1);
+    
+    return discussion || null;
+  }
+
+  async createDiscussionsForExistingStudies(): Promise<void> {
+    // Get all studies that don't have discussions
+    const studiesWithoutDiscussions = await db
+      .select()
+      .from(studies)
+      .leftJoin(discussions, eq(studies.id, discussions.studyId))
+      .where(sql`${discussions.id} IS NULL`);
+
+    for (const { studies: study } of studiesWithoutDiscussions) {
+      if (!study) continue;
+      
+      const discussionData: InsertDiscussion = {
+        title: study.title,
+        content: `Welcome to the discussion for "${study.title}". Share your thoughts, questions, and insights about this study here.`,
+        category: study.category || 'leadership',
+        userId: 'system',
+        studyId: study.id,
+      };
+      
+      await this.createDiscussion(discussionData);
     }
   }
 
