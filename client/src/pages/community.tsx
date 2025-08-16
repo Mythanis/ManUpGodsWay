@@ -15,7 +15,7 @@ import { insertDiscussionSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown } from "lucide-react";
+import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X } from "lucide-react";
 import { z } from "zod";
 
 const categories = [
@@ -39,16 +39,18 @@ export default function Community() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: discussions = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/discussions", selectedCategory || undefined, sortBy],
+    queryKey: ["/api/discussions", selectedCategory || undefined, sortBy, searchQuery || undefined],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedCategory) params.append('category', selectedCategory);
       if (sortBy) params.append('sortBy', sortBy);
+      if (searchQuery) params.append('search', searchQuery);
       
       const url = `/api/discussions${params.toString() ? '?' + params.toString() : ''}`;
       const response = await fetch(url, { credentials: 'include' });
@@ -387,10 +389,35 @@ export default function Community() {
         </div>
       </div>
 
+      {/* Search Bar */}
+      <div className="px-6 mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-ministry-slate w-4 h-4" />
+          <Input
+            placeholder="Search discussions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-10"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+
       {/* Recent Discussions */}
       <div className="px-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-ministry-charcoal">Recent Discussions</h2>
+          <h2 className="text-lg font-bold text-ministry-charcoal">
+            {searchQuery ? `Search Results for "${searchQuery}"` : 'Recent Discussions'}
+          </h2>
           <div className="flex items-center space-x-2">
             <ArrowUpDown className="w-4 h-4 text-ministry-slate" />
             <Select value={sortBy} onValueChange={setSortBy}>

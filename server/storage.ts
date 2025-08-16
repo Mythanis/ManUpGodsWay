@@ -40,7 +40,7 @@ import {
   type InsertVideo,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql, ilike, count } from "drizzle-orm";
+import { eq, desc, and, or, sql, ilike, count } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -61,7 +61,7 @@ export interface IStorage {
   updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
   
   // Discussion operations
-  getDiscussions(category?: string, limit?: number, sortBy?: string): Promise<(Discussion & { user: User })[]>;
+  getDiscussions(category?: string, limit?: number, sortBy?: string, searchTerm?: string): Promise<(Discussion & { user: User })[]>;
   getDiscussion(id: string): Promise<(Discussion & { user: User; replies: (DiscussionReply & { user: User })[] }) | undefined>;
   createDiscussion(discussion: InsertDiscussion): Promise<Discussion>;
   
@@ -249,7 +249,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Discussion operations
-  async getDiscussions(category?: string, limit = 20, sortBy = 'recent'): Promise<(Discussion & { user: User })[]> {
+  async getDiscussions(category?: string, limit = 20, sortBy = 'recent', searchTerm?: string): Promise<(Discussion & { user: User })[]> {
     const query = db
       .select({
         id: discussions.id,
@@ -279,9 +279,26 @@ export class DatabaseStorage implements IStorage {
         orderBy = [desc(discussions.isPinned), desc(discussions.createdAt)];
     }
 
+    // Build where conditions
+    const conditions = [];
+    
     if (category) {
+      conditions.push(eq(discussions.category, category));
+    }
+    
+    if (searchTerm) {
+      const searchPattern = `%${searchTerm.toLowerCase()}%`;
+      conditions.push(
+        or(
+          sql`LOWER(${discussions.title}) LIKE ${searchPattern}`,
+          sql`LOWER(${discussions.content}) LIKE ${searchPattern}`
+        )
+      );
+    }
+    
+    if (conditions.length > 0) {
       return await query
-        .where(eq(discussions.category, category))
+        .where(and(...conditions))
         .orderBy(...orderBy)
         .limit(limit);
     }

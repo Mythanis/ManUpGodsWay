@@ -177,11 +177,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Discussion routes
   app.get('/api/discussions', async (req, res) => {
     try {
-      const { category, limit, sortBy } = req.query;
+      const { category, limit, sortBy, search } = req.query;
       const discussions = await storage.getDiscussions(
         category as string,
         limit ? parseInt(limit as string) : undefined,
-        sortBy as string
+        sortBy as string,
+        search as string
       );
       res.json(discussions);
     } catch (error) {
