@@ -9,8 +9,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertStudyRatingSchema, type Study, type UserProgress, type Discussion } from "@shared/schema";
@@ -18,7 +19,7 @@ import { ArrowLeft, Play, Clock, Users, Star, MessageCircle } from "lucide-react
 import { Link } from "wouter";
 import { z } from "zod";
 
-const ratingSchema = insertStudyRatingSchema.pick({ rating: true });
+const ratingSchema = insertStudyRatingSchema.pick({ rating: true, review: true });
 
 export default function StudyDetail() {
   const { id } = useParams<{ id: string }>();
@@ -64,6 +65,7 @@ export default function StudyDetail() {
     resolver: zodResolver(ratingSchema),
     defaultValues: {
       rating: 5,
+      review: "",
     },
   });
 
@@ -422,6 +424,7 @@ export default function StudyDetail() {
                       name="rating"
                       render={({ field }) => (
                         <FormItem>
+                          <FormLabel>Rating</FormLabel>
                           <FormControl>
                             <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
                               <SelectTrigger data-testid="select-rating">
@@ -435,6 +438,24 @@ export default function StudyDetail() {
                                 <SelectItem value="1">⭐ (1 star)</SelectItem>
                               </SelectContent>
                             </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="review"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Review (Optional)</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              placeholder="Share your thoughts about this study..."
+                              className="min-h-[100px]"
+                              data-testid="textarea-review"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

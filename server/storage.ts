@@ -551,7 +551,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(studies)
       .set({
-        rating: avgRating.toFixed(1),
+        rating: avgRating ? parseFloat(avgRating.toString()).toFixed(1) : "0.0",
         ratingCount: ratingCount,
       })
       .where(eq(studies.id, rating.studyId));

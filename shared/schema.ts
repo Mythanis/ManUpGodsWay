@@ -144,6 +144,7 @@ export const studyRatings = pgTable("study_ratings", {
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   studyId: varchar("study_id").notNull().references(() => studies.id, { onDelete: 'cascade' }),
   rating: integer("rating").notNull(), // 1-5 stars
+  review: text("review"), // Optional text review
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -343,7 +344,10 @@ export const insertDevotionalSchema = createInsertSchema(devotionals).omit({
   createdAt: true,
 });
 
-export const insertStudyRatingSchema = createInsertSchema(studyRatings).omit({
+export const insertStudyRatingSchema = createInsertSchema(studyRatings, {
+  rating: z.number().int().min(1).max(5),
+  review: z.string().optional(),
+}).omit({
   id: true,
   createdAt: true,
 });
