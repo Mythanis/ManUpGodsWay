@@ -182,7 +182,7 @@ export default function Admin() {
       videoUrl: study.videoUrl || "",
       duration: study.duration,
       author: study.author,
-      tags: study.tags.join(", "),
+      tags: study.tags?.join(", ") || "",
       lessons: JSON.stringify(study.lessons, null, 2),
     });
     setShowEditDialog(true);
