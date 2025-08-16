@@ -680,7 +680,7 @@ export default function VideoManagement() {
                       });
                     }}
                     disabled={updateVideo.isPending}
-                    className="bg-ministry-navy hover:bg-ministry-charcoal"
+                    className="bg-ministry-navy hover:bg-ministry-charcoal text-white px-6 py-2 font-medium"
                   >
                     {updateVideo.isPending ? "Saving..." : "Save Changes"}
                   </Button>
