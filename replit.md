@@ -53,6 +53,8 @@ This is a full-stack React/Express application called "Man Up God's Way" - a fai
 ✓ **Video Upload Flow Enhancement**: Improved video upload process with proper file selection, tier assignment, and manual upload trigger
 ✓ **Study Video Player Fix**: Enhanced video playback in studies with support for YouTube embeds, Vimeo embeds, direct video URLs, and uploaded video handling
 ✓ **Study-Video Integration**: Admins can now assign uploaded videos to studies through the edit dialog with radio button selection between manual URLs and uploaded videos
+✓ **Video Streaming Fix**: Uploaded videos now properly stream and play in studies with working video player functionality
+✓ **Study Tier Override**: Videos in studies bypass individual tier restrictions - study access determines video access regardless of video tier
 
 # User Preferences
 

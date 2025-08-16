@@ -65,6 +65,15 @@ export default function StudyDetail() {
   const isUploadedVideo = study?.videoUrl && !study.videoUrl.startsWith('http') && study.videoUrl.length > 10;
   const { data: videoStream } = useQuery({
     queryKey: ["/api/videos", study?.videoUrl, "stream"],
+    queryFn: async () => {
+      const response = await fetch(`/api/videos/${study?.videoUrl}/stream?fromStudy=true`, {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch video stream');
+      }
+      return response.json();
+    },
     retry: false,
     enabled: !!isUploadedVideo,
   });

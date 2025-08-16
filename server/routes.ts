@@ -940,14 +940,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Video not found" });
       }
 
-      // Check tier access
-      const userTier = user.subscriptionTier || 'free';
-      const hasAccess = video.requiredTier === 'free' ||
-                       (video.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
-                       (video.requiredTier === 'vip' && userTier === 'vip');
+      // When accessed through a study context, skip tier checking
+      // The study itself controls access, not the individual video
+      const fromStudy = req.query.fromStudy === 'true';
+      
+      if (!fromStudy) {
+        // Only check tier access for standalone video viewing
+        const userTier = user.subscriptionTier || 'free';
+        const hasAccess = video.requiredTier === 'free' ||
+                         (video.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
+                         (video.requiredTier === 'vip' && userTier === 'vip');
 
-      if (!hasAccess) {
-        return res.status(403).json({ message: "Insufficient subscription tier" });
+        if (!hasAccess) {
+          return res.status(403).json({ message: "Insufficient subscription tier" });
+        }
       }
 
       // Since we're storing files in memory/temporary storage for demo,
