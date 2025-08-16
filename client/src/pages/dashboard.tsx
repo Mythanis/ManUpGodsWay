@@ -550,7 +550,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-ministry-charcoal">
-                    {user?.streakDays || 1}-day streak
+                    {user?.streakDays || 0}-day streak
                   </p>
                   <p className="text-xs text-ministry-slate">Stay consistent in your journey</p>
                 </div>

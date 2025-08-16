@@ -800,8 +800,9 @@ export class DatabaseStorage implements IStorage {
 
   // Streak operations
   async updateUserStreak(userId: string): Promise<void> {
+    // Use UTC date to avoid timezone issues
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
     
     const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!user) return;
@@ -809,24 +810,25 @@ export class DatabaseStorage implements IStorage {
     const lastActive = user.lastActiveDate ? new Date(user.lastActiveDate) : null;
     
     if (lastActive) {
-      lastActive.setHours(0, 0, 0, 0);
+      // Convert to UTC date for consistent comparison
+      const lastActiveUTC = new Date(Date.UTC(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate()));
       
       // Check if last active was today
-      if (lastActive.getTime() === today.getTime()) {
+      if (lastActiveUTC.getTime() === todayUTC.getTime()) {
         // Already counted today, no update needed
         return;
       }
       
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayUTC = new Date(todayUTC);
+      yesterdayUTC.setUTCDate(yesterdayUTC.getUTCDate() - 1);
       
-      if (lastActive.getTime() === yesterday.getTime()) {
+      if (lastActiveUTC.getTime() === yesterdayUTC.getTime()) {
         // Consecutive day - increment streak
         await db
           .update(users)
           .set({ 
             streakDays: (user.streakDays || 0) + 1,
-            lastActiveDate: today 
+            lastActiveDate: todayUTC 
           })
           .where(eq(users.id, userId));
       } else {
@@ -835,7 +837,7 @@ export class DatabaseStorage implements IStorage {
           .update(users)
           .set({ 
             streakDays: 1,
-            lastActiveDate: today 
+            lastActiveDate: todayUTC 
           })
           .where(eq(users.id, userId));
       }
@@ -845,7 +847,7 @@ export class DatabaseStorage implements IStorage {
         .update(users)
         .set({ 
           streakDays: 1,
-          lastActiveDate: today 
+          lastActiveDate: todayUTC 
         })
         .where(eq(users.id, userId));
     }
