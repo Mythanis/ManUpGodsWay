@@ -454,14 +454,14 @@ export default function StudyDetail() {
                       const videoUrl = study.videoUrl;
                       
                       // Check if it's a YouTube URL
-                      if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+                      if (videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'))) {
                         let embedUrl = '';
                         if (videoUrl.includes('youtube.com/watch?v=')) {
                           const videoId = videoUrl.split('v=')[1]?.split('&')[0];
-                          embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                          if (videoId) embedUrl = `https://www.youtube.com/embed/${videoId}`;
                         } else if (videoUrl.includes('youtu.be/')) {
                           const videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0];
-                          embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                          if (videoId) embedUrl = `https://www.youtube.com/embed/${videoId}`;
                         } else if (videoUrl.includes('youtube.com/embed/')) {
                           embedUrl = videoUrl;
                         }
@@ -482,7 +482,7 @@ export default function StudyDetail() {
                       }
                       
                       // Check if it's a Vimeo URL
-                      if (videoUrl.includes('vimeo.com')) {
+                      if (videoUrl && videoUrl.includes('vimeo.com')) {
                         const videoId = videoUrl.split('vimeo.com/')[1]?.split('?')[0];
                         if (videoId) {
                           return (
@@ -500,29 +500,19 @@ export default function StudyDetail() {
                       }
                       
                       // Check if it's an uploaded video ID (not a full URL)
-                      if (!videoUrl.startsWith('http') && videoUrl.length > 10) {
+                      if (videoUrl && !videoUrl.startsWith('http') && videoUrl.length > 10) {
                         // This is an uploaded video ID, use direct streaming endpoint
                         return (
                           <video 
                             controls
                             className="w-full h-48 object-cover"
-                            src={videoStreamUrl}
+                            src={videoStreamUrl || ''}
                             poster={study.thumbnailUrl || ''}
                             data-testid="uploaded-video-player"
-                            >
-                              Your browser does not support the video tag.
-                            </video>
-                          );
-                        } else {
-                          return (
-                            <div className="w-full h-48 sm:h-64 flex items-center justify-center bg-gray-800 text-white">
-                              <div className="text-center">
-                                <Play className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                                <p className="text-sm">Loading uploaded video...</p>
-                              </div>
-                            </div>
-                          );
-                        }
+                          >
+                            Your browser does not support the video tag.
+                          </video>
+                        );
                       }
                       
                       // Default: try to play as direct video URL
@@ -530,7 +520,7 @@ export default function StudyDetail() {
                         <video 
                           controls
                           className="w-full h-48 object-cover"
-                          src={videoUrl}
+                          src={videoUrl || ''}
                           poster={study.thumbnailUrl || ''}
                           data-testid="video-player"
                         >
