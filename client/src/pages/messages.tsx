@@ -75,6 +75,8 @@ export default function Messages() {
     retry: false,
     refetchInterval: 2000, // Poll every 2 seconds for real-time updates
     refetchIntervalInBackground: true, // Continue polling when tab is not focused
+    staleTime: 0, // Always consider data stale to ensure fresh fetches for new senders
+    cacheTime: 1000, // Keep cache for only 1 second
   });
 
   // Handle URL parameters to select conversation automatically
@@ -124,6 +126,8 @@ export default function Messages() {
     retry: false,
     refetchInterval: 1500, // Poll every 1.5 seconds for real-time messages
     refetchIntervalInBackground: true, // Continue polling when tab is not focused
+    staleTime: 0, // Always fetch fresh messages
+    cacheTime: 500, // Keep cache briefly
   });
 
   // Send message mutation
