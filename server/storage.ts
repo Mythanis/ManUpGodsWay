@@ -1683,6 +1683,35 @@ export class DatabaseStorage implements IStorage {
       content: messageContent,
       messageType: 'text',
     });
+
+    // Send notifications to all admins and VIP users about the new feedback
+    const categoryLabels: Record<string, string> = {
+      'improvement': 'Improvement Suggestion',
+      'feature-request': 'Feature Request',
+      'bug-report': 'Bug Report',
+      'compliment': 'Compliment',
+      'complaint': 'Issue/Complaint',
+      'general': 'General Feedback'
+    };
+
+    const categoryLabel = categoryLabels[category] || 'Feedback';
+    const notificationTitle = `New ${categoryLabel}`;
+    const notificationContent = `${user.firstName} ${user.lastName} submitted: ${categoryLabel.toLowerCase()}`;
+
+    // Create notifications for all admins and VIP users
+    for (const adminUser of adminsAndVips) {
+      // Don't send notification to the user who sent the feedback
+      if (adminUser.id !== userId) {
+        await db.insert(notifications).values({
+          userId: adminUser.id,
+          title: notificationTitle,
+          content: notificationContent,
+          type: 'message',
+          relatedId: feedbackConversation[0].id, // Link to the feedback conversation
+          isRead: false,
+        });
+      }
+    }
   }
 }
 
