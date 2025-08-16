@@ -40,7 +40,7 @@ import {
   type InsertVideo,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, or, sql, ilike, count } from "drizzle-orm";
+import { eq, desc, and, or, sql, ilike, count, inArray, not } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -261,7 +261,7 @@ export class DatabaseStorage implements IStorage {
         .where(and(
           eq(studies.isPublished, true),
           eq(studies.requiredTier, userTier),
-          studiedCategories.length > 0 ? sql`category = ANY(${studiedCategories})` : sql`1=1`
+          studiedCategories.length > 0 ? inArray(studies.category, studiedCategories) : sql`1=1`
         ))
         .orderBy(desc(studies.rating), desc(studies.createdAt))
         .limit(2);
@@ -276,7 +276,7 @@ export class DatabaseStorage implements IStorage {
           .where(and(
             eq(studies.isPublished, true),
             eq(studies.requiredTier, nextTier),
-            studiedCategories.length > 0 ? sql`category = ANY(ARRAY[${studiedCategories.map(c => `'${c}'`).join(',')}])` : sql`1=1`
+            studiedCategories.length > 0 ? inArray(studies.category, studiedCategories) : sql`1=1`
           ))
           .orderBy(desc(studies.rating), desc(studies.createdAt))
           .limit(1);
@@ -293,8 +293,8 @@ export class DatabaseStorage implements IStorage {
           .where(and(
             eq(studies.isPublished, true),
             eq(studies.requiredTier, highestTier),
-            studiedCategories.length > 0 ? sql`category = ANY(ARRAY[${studiedCategories.map(c => `'${c}'`).join(',')}])` : sql`1=1`,
-            recommendations.length > 0 ? sql`id NOT IN (${recommendations.map(s => `'${s.id}'`).join(',')})` : sql`1=1` // Exclude already selected
+            studiedCategories.length > 0 ? inArray(studies.category, studiedCategories) : sql`1=1`,
+            recommendations.length > 0 ? not(inArray(studies.id, recommendations.map(s => s.id))) : sql`1=1` // Exclude already selected
           ))
           .orderBy(desc(studies.rating), desc(studies.createdAt))
           .limit(limit - recommendations.length);
