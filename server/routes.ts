@@ -928,7 +928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve video files for streaming (for studies that reference uploaded videos)
+  // Serve video files for streaming
   app.get('/api/videos/:id/stream', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
@@ -957,14 +957,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Since we're storing files in memory/temporary storage for demo,
-      // we'll serve a working sample video URL. In production, you'd stream the actual file.
+      // Redirect to a working sample video URL for demo purposes
+      // In production, you'd stream the actual uploaded file
       const streamUrl = `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`;
       
-      res.json({
-        ...video,
-        streamUrl: streamUrl
-      });
+      res.redirect(streamUrl);
     } catch (error) {
       console.error("Error streaming video:", error);
       res.status(500).json({ message: "Failed to stream video" });
@@ -1057,43 +1054,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-
-  app.get('/api/videos/:id/stream', isAuthenticated, async (req: any, res) => {
-    try {
-      const video = await storage.getVideo(req.params.id);
-      if (!video) {
-        return res.status(404).json({ message: "Video not found" });
-      }
-
-      // Check tier access
-      const user = await storage.getUser(req.user.claims.sub);
-      if (!user) {
-        return res.status(403).json({ message: "User not found" });
-      }
-      
-      const userTier = user.subscriptionTier || 'free';
-      const hasAccess = video.requiredTier === 'free' ||
-                       (video.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
-                       (video.requiredTier === 'vip' && userTier === 'vip');
-      
-      if (!hasAccess) {
-        return res.status(403).json({ message: "Insufficient subscription tier to access this video" });
-      }
-
-      // In a real app, this would stream the actual video file
-      // For now, we'll just return video metadata
-      res.json({
-        id: video.id,
-        title: video.title,
-        streamUrl: `/api/videos/${video.id}/file`,
-        thumbnailUrl: video.thumbnailUrl,
-        duration: video.duration,
-      });
-    } catch (error) {
-      console.error("Error streaming video:", error);
-      res.status(500).json({ message: "Failed to stream video" });
-    }
-  });
 
   // Broadcast Notification API Route
   app.post('/api/admin/notifications/broadcast', isAuthenticated, async (req: any, res) => {
