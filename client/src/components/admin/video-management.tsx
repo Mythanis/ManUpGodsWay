@@ -364,16 +364,16 @@ export default function VideoManagement() {
                       </div>
                       
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           setSelectedVideo(video);
                           setShowVideoDialog(true);
                         }}
-                        className="h-7 text-xs"
+                        className="h-8 text-xs bg-white border-ministry-steel text-ministry-steel hover:bg-ministry-steel hover:text-white"
                       >
                         <Eye className="w-3 h-3 mr-1" />
-                        View
+                        Edit
                       </Button>
                     </div>
                   </CardContent>
