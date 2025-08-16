@@ -136,6 +136,32 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   const now = Math.floor(Date.now() / 1000);
   if (now <= user.expires_at) {
+    // Update user's lastActiveDate if it's a new day
+    try {
+      const userId = user.claims?.sub;
+      if (userId) {
+        const currentUser = await storage.getUser(userId);
+        if (currentUser) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          const lastActiveDate = currentUser.lastActiveDate ? new Date(currentUser.lastActiveDate) : null;
+          const lastActiveDateOnly = lastActiveDate ? new Date(lastActiveDate.getFullYear(), lastActiveDate.getMonth(), lastActiveDate.getDate()) : null;
+          
+          // Update if user has no lastActiveDate or if it's from a previous day
+          if (!lastActiveDateOnly || lastActiveDateOnly.getTime() < today.getTime()) {
+            await storage.upsertUser({
+              ...currentUser,
+              lastActiveDate: new Date(),
+            });
+          }
+        }
+      }
+    } catch (error) {
+      // Don't fail the request if this update fails, just log it
+      console.error("Error updating user lastActiveDate:", error);
+    }
+    
     return next();
   }
 
@@ -149,6 +175,32 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     const config = await getOidcConfig();
     const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
     updateUserSession(user, tokenResponse);
+    
+    // Also update lastActiveDate after token refresh
+    try {
+      const userId = user.claims?.sub;
+      if (userId) {
+        const currentUser = await storage.getUser(userId);
+        if (currentUser) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          const lastActiveDate = currentUser.lastActiveDate ? new Date(currentUser.lastActiveDate) : null;
+          const lastActiveDateOnly = lastActiveDate ? new Date(lastActiveDate.getFullYear(), lastActiveDate.getMonth(), lastActiveDate.getDate()) : null;
+          
+          // Update if user has no lastActiveDate or if it's from a previous day
+          if (!lastActiveDateOnly || lastActiveDateOnly.getTime() < today.getTime()) {
+            await storage.upsertUser({
+              ...currentUser,
+              lastActiveDate: new Date(),
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error updating user lastActiveDate:", error);
+    }
+    
     return next();
   } catch (error) {
     res.status(401).json({ message: "Unauthorized" });
