@@ -153,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const studyData = insertStudySchema.parse(req.body);
-      const study = await storage.createStudy(studyData);
+      const study = await storage.createStudy(studyData, user.id);
       res.status(201).json(study);
     } catch (error) {
       console.error("Error creating study:", error);

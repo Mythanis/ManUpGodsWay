@@ -50,7 +50,7 @@ export interface IStorage {
   // Study operations
   getStudies(category?: string, requiredTier?: string, isAdmin?: boolean): Promise<Study[]>;
   getStudy(id: string): Promise<Study | undefined>;
-  createStudy(study: InsertStudy): Promise<Study>;
+  createStudy(study: InsertStudy, createdByUserId?: string): Promise<Study>;
   updateStudy(id: string, study: Partial<InsertStudy>): Promise<Study>;
   deleteStudy(id: string): Promise<void>;
   searchStudies(query: string): Promise<Study[]>;
@@ -172,10 +172,21 @@ export class DatabaseStorage implements IStorage {
     return study;
   }
 
-  async createStudy(study: InsertStudy): Promise<Study> {
+  async createStudy(study: InsertStudy, createdByUserId?: string): Promise<Study> {
     const [newStudy] = await db.insert(studies).values(study).returning();
     
-    // Note: Discussion will be created automatically when first accessed via getStudyDiscussion
+    // Create a discussion for this study using the admin who created it
+    if (createdByUserId) {
+      const discussionData: InsertDiscussion = {
+        title: newStudy.title,
+        content: `Welcome to the discussion for "${newStudy.title}". Share your thoughts, questions, and insights about this study here.`,
+        category: newStudy.category || 'leadership',
+        userId: createdByUserId,
+        studyId: newStudy.id, // Link the discussion to the study
+      };
+      
+      await this.createDiscussion(discussionData);
+    }
     
     return newStudy;
   }
