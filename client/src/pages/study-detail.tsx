@@ -71,9 +71,46 @@ export default function StudyDetail() {
     }
   }, [progress]);
 
-  // Fetch video stream URL for uploaded videos (temporarily disabled to prevent fetch errors)
+  // Fetch video stream URL for uploaded videos
   const isUploadedVideo = study?.videoUrl && !study.videoUrl.startsWith('http') && study.videoUrl.length > 10;
-  const videoStream = null; // Disabled video stream query to prevent fetch errors
+  const { data: videoStream } = useQuery({
+    queryKey: ["/api/videos", study?.videoUrl, "stream"],
+    queryFn: async () => {
+      if (!study?.videoUrl) {
+        return null;
+      }
+      try {
+        const response = await fetch(`/api/videos/${study.videoUrl}/stream?fromStudy=true`, {
+          credentials: 'include',
+          redirect: 'follow'
+        });
+        
+        // Handle redirect response (302) - return the URL directly
+        if (response.redirected || response.status === 302) {
+          return { url: response.url };
+        }
+        
+        if (!response.ok) {
+          console.warn('Video stream not available:', response.status);
+          return null;
+        }
+        
+        // For non-redirect responses, try to parse JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          return response.json();
+        }
+        
+        // For other responses, return the URL
+        return { url: response.url };
+      } catch (error) {
+        console.warn('Video stream fetch failed:', error);
+        return null;
+      }
+    },
+    retry: false,
+    enabled: !!isUploadedVideo && !!study?.videoUrl && !!study,
+  });
 
   const form = useForm({
     resolver: zodResolver(ratingSchema),
