@@ -221,14 +221,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Premium and VIP users can access premium studies
             targetUsers = allUsers.filter(targetUser => 
               targetUser.id !== user.id && 
-              ['premium', 'vip'].includes(targetUser.subscriptionTier)
+              ['premium', 'vip'].includes(targetUser.subscriptionTier || 'free')
             );
             break;
           case 'vip':
             // Only VIP users can access VIP studies
             targetUsers = allUsers.filter(targetUser => 
               targetUser.id !== user.id && 
-              targetUser.subscriptionTier === 'vip'
+              (targetUser.subscriptionTier || 'free') === 'vip'
             );
             break;
         }
@@ -274,8 +274,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
+      // Get the current study to check if it's being published
+      const currentStudy = await storage.getStudy(req.params.id);
       const studyData = insertStudySchema.partial().parse(req.body);
       const study = await storage.updateStudy(req.params.id, studyData);
+      
+      // Check if study is being published (was unpublished, now published)
+      const wasUnpublished = !currentStudy?.isPublished;
+      const isBeingPublished = studyData.isPublished === true;
+      
+      if (wasUnpublished && isBeingPublished) {
+        // Send real-time notifications to users based on tier access
+        try {
+          const allUsers = await storage.getAllUsers();
+          let targetUsers: any[] = [];
+          
+          // Determine target users based on study's required tier
+          switch (study.requiredTier || 'free') {
+            case 'free':
+              // Everyone can access free studies
+              targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
+              break;
+            case 'premium':
+              // Premium and VIP users can access premium studies
+              targetUsers = allUsers.filter(targetUser => 
+                targetUser.id !== user.id && 
+                ['premium', 'vip'].includes(targetUser.subscriptionTier || 'free')
+              );
+              break;
+            case 'vip':
+              // Only VIP users can access VIP studies
+              targetUsers = allUsers.filter(targetUser => 
+                targetUser.id !== user.id && 
+                (targetUser.subscriptionTier || 'free') === 'vip'
+              );
+              break;
+          }
+          
+          // Send notifications to eligible users
+          if (targetUsers.length > 0) {
+            const notificationPromises = targetUsers.map(async (targetUser) => {
+              return await storage.createNotification({
+                userId: targetUser.id,
+                type: 'study',
+                title: '📚 New Study Available',
+                message: `"${study.title}" has been published and is now available in the Library.`,
+                relatedId: study.id,
+              });
+            });
+            
+            await Promise.all(notificationPromises.filter(Boolean));
+            console.log(`Sent study publication notifications to ${targetUsers.length} users`);
+          }
+        } catch (notificationError) {
+          console.error('Error sending study publication notifications:', notificationError);
+          // Don't fail the study update if notification fails
+        }
+      }
+      
       res.json(study);
     } catch (error) {
       console.error("Error updating study:", error);
@@ -1165,14 +1221,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Premium and VIP users can access premium videos
             targetUsers = allUsers.filter(targetUser => 
               targetUser.id !== user.id && 
-              ['premium', 'vip'].includes(targetUser.subscriptionTier)
+              ['premium', 'vip'].includes(targetUser.subscriptionTier || 'free')
             );
             break;
           case 'vip':
             // Only VIP users can access VIP videos
             targetUsers = allUsers.filter(targetUser => 
               targetUser.id !== user.id && 
-              targetUser.subscriptionTier === 'vip'
+              (targetUser.subscriptionTier || 'free') === 'vip'
             );
             break;
         }
@@ -1226,7 +1282,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
+      // Get the current video to check if it's being processed
+      const currentVideo = await storage.getVideo(req.params.id);
       const video = await storage.updateVideo(req.params.id, req.body);
+      
+      // Check if video is being processed/published (was unprocessed, now processed)
+      const wasUnprocessed = !currentVideo?.isProcessed;
+      const isBeingProcessed = req.body.isProcessed === true;
+      
+      if (wasUnprocessed && isBeingProcessed) {
+        // Send real-time notifications to users based on tier access
+        try {
+          const allUsers = await storage.getAllUsers();
+          let targetUsers: any[] = [];
+          
+          // Determine target users based on video's required tier
+          switch (video.requiredTier || 'free') {
+            case 'free':
+              // Everyone can access free videos
+              targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
+              break;
+            case 'premium':
+              // Premium and VIP users can access premium videos
+              targetUsers = allUsers.filter(targetUser => 
+                targetUser.id !== user.id && 
+                ['premium', 'vip'].includes(targetUser.subscriptionTier || 'free')
+              );
+              break;
+            case 'vip':
+              // Only VIP users can access VIP videos
+              targetUsers = allUsers.filter(targetUser => 
+                targetUser.id !== user.id && 
+                (targetUser.subscriptionTier || 'free') === 'vip'
+              );
+              break;
+          }
+          
+          // Send notifications to eligible users
+          if (targetUsers.length > 0) {
+            const notificationPromises = targetUsers.map(async (targetUser) => {
+              return await storage.createNotification({
+                userId: targetUser.id,
+                type: 'video',
+                title: '🎥 New Video Available',
+                message: `"${video.title}" has been published and is now available in the Videos section.`,
+                relatedId: video.id,
+              });
+            });
+            
+            await Promise.all(notificationPromises.filter(Boolean));
+            console.log(`Sent video processing notifications to ${targetUsers.length} users`);
+          }
+        } catch (notificationError) {
+          console.error('Error sending video processing notifications:', notificationError);
+          // Don't fail the video update if notification fails
+        }
+      }
+      
       res.json(video);
     } catch (error) {
       console.error("Error updating video:", error);
