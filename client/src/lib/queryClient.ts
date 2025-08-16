@@ -42,7 +42,28 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    // Handle queryKey construction properly
+    // First element should always be the base URL path
+    // Subsequent string elements get joined with "/"
+    // Objects are ignored for URL construction (they're cache parameters)
+    const urlParts = [];
+    for (const part of queryKey) {
+      if (typeof part === "string") {
+        urlParts.push(part);
+      }
+    }
+    
+    // Join with "/" but avoid double slashes
+    let url = urlParts[0] || "";
+    for (let i = 1; i < urlParts.length; i++) {
+      const part = urlParts[i];
+      if (!url.endsWith("/") && !part.startsWith("/")) {
+        url += "/";
+      }
+      url += part;
+    }
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
 
