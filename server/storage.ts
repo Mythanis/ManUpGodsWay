@@ -804,8 +804,19 @@ export class DatabaseStorage implements IStorage {
     const localToday = userLocalDate || new Date();
     const todayLocal = new Date(localToday.getFullYear(), localToday.getMonth(), localToday.getDate());
     
+    console.log('=== STREAK UPDATE ===');
+    console.log('User:', userId);
+    console.log('User provided date:', userLocalDate?.toISOString());
+    console.log('Today (local):', todayLocal.toDateString());
+    
     const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-    if (!user) return;
+    if (!user) {
+      console.log('User not found');
+      return;
+    }
+    
+    console.log('Current streak:', user.streakDays);
+    console.log('Last active (raw):', user.lastActiveDate);
     
     const lastActive = user.lastActiveDate ? new Date(user.lastActiveDate) : null;
     
@@ -813,26 +824,39 @@ export class DatabaseStorage implements IStorage {
       // Convert to local date for comparison
       const lastActiveLocal = new Date(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate());
       
+      console.log('Last active (local):', lastActiveLocal.toDateString());
+      console.log('Comparing dates:');
+      console.log('  Today:', todayLocal.getTime(), '(' + todayLocal.toDateString() + ')');
+      console.log('  Last Active:', lastActiveLocal.getTime(), '(' + lastActiveLocal.toDateString() + ')');
+      console.log('  Same day?', lastActiveLocal.getTime() === todayLocal.getTime());
+      
       // Check if last active was today (local time)
       if (lastActiveLocal.getTime() === todayLocal.getTime()) {
         // Already counted today, no update needed
+        console.log('✓ Already counted today - no update');
         return;
       }
       
       const yesterdayLocal = new Date(todayLocal);
       yesterdayLocal.setDate(yesterdayLocal.getDate() - 1);
       
+      console.log('Yesterday (local):', yesterdayLocal.toDateString());
+      console.log('Was active yesterday?', lastActiveLocal.getTime() === yesterdayLocal.getTime());
+      
       if (lastActiveLocal.getTime() === yesterdayLocal.getTime()) {
         // Consecutive day - increment streak
+        const newStreak = (user.streakDays || 0) + 1;
+        console.log('✓ Consecutive day - incrementing streak:', user.streakDays, '->', newStreak);
         await db
           .update(users)
           .set({ 
-            streakDays: (user.streakDays || 0) + 1,
+            streakDays: newStreak,
             lastActiveDate: todayLocal 
           })
           .where(eq(users.id, userId));
       } else {
         // Gap in activity - reset streak to 1
+        console.log('✓ Gap in activity - resetting streak to 1');
         await db
           .update(users)
           .set({ 
@@ -843,6 +867,7 @@ export class DatabaseStorage implements IStorage {
       }
     } else {
       // First time active - start streak
+      console.log('✓ First time active - starting streak at 1');
       await db
         .update(users)
         .set({ 
@@ -851,6 +876,7 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(users.id, userId));
     }
+    console.log('=== END STREAK UPDATE ===');
   }
 
   // Rating operations
