@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import { NotificationPanel } from "@/components/notification-panel";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { FeedbackDialog } from "@/components/feedback-dialog";
@@ -17,12 +19,15 @@ import {
   Settings,
   Crown,
   Flame,
-  MessageCircle
+  MessageCircle,
+  Moon,
+  Sun
 } from "lucide-react";
 
 export default function Profile() {
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const { user } = useAuth();
+  const { theme, setTheme, effectiveTheme } = useTheme();
 
   const { data: progress = [] } = useQuery<any[]>({
     queryKey: ["/api/progress"],
@@ -164,6 +169,32 @@ export default function Profile() {
         <Card className="border-gray-100 overflow-hidden" data-testid="card-settings">
           <CardContent className="p-0">
             <NotificationPanel variant="button" />
+            
+            {/* Theme Switch */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-lg bg-ministry-navy/20 flex items-center justify-center">
+                  {effectiveTheme === 'dark' ? (
+                    <Moon className="w-4 h-4 text-ministry-navy" />
+                  ) : (
+                    <Sun className="w-4 h-4 text-ministry-navy" />
+                  )}
+                </div>
+                <div>
+                  <span className="font-medium text-ministry-charcoal">Dark Mode</span>
+                  <p className="text-xs text-ministry-slate">
+                    {theme === 'system' ? 'Follow system settings' : `${theme.charAt(0).toUpperCase() + theme.slice(1)} theme`}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={effectiveTheme === 'dark'}
+                onCheckedChange={(checked) => {
+                  setTheme(checked ? 'dark' : 'light');
+                }}
+                data-testid="switch-theme"
+              />
+            </div>
             
             <Button 
               variant="ghost"

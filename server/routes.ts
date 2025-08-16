@@ -51,6 +51,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user theme preference
+  app.put('/api/user/theme', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { themePreference } = req.body;
+      
+      if (!['light', 'dark', 'system'].includes(themePreference)) {
+        return res.status(400).json({ message: 'Invalid theme preference' });
+      }
+      
+      const updatedUser = await storage.updateUser(userId, { themePreference });
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user theme:", error);
+      res.status(500).json({ message: "Failed to update theme preference" });
+    }
+  });
+
   // Study routes
   app.get('/api/studies', async (req: any, res) => {
     try {
