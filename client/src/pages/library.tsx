@@ -22,6 +22,7 @@ export default function Library() {
   const [difficultyFilter, setDifficultyFilter] = useState('all');
   const [hoursFilter, setHoursFilter] = useState('all');
   const [lessonsFilter, setLessonsFilter] = useState('all');
+  const [videoFilter, setVideoFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -65,8 +66,11 @@ export default function Library() {
       (lessonsFilter === '1-5' && study.lessonCount >= 1 && study.lessonCount <= 5) ||
       (lessonsFilter === '6-10' && study.lessonCount >= 6 && study.lessonCount <= 10) ||
       (lessonsFilter === '11+' && study.lessonCount >= 11);
+    const videoMatch = videoFilter === 'all' ||
+      (videoFilter === 'with-video' && study.videoUrl && study.videoUrl.trim() !== '') ||
+      (videoFilter === 'without-video' && (!study.videoUrl || study.videoUrl.trim() === ''));
     
-    return categoryMatch && difficultyMatch && hoursMatch && lessonsMatch;
+    return categoryMatch && difficultyMatch && hoursMatch && lessonsMatch && videoMatch;
   });
 
   const featuredStudy = (studies as any[]).find((study: any) => study.isFeatured);
@@ -140,7 +144,7 @@ export default function Library() {
         </div>
         
         {showFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="text-xs font-medium text-ministry-slate mb-1 block">
                 Difficulty Level
@@ -191,6 +195,22 @@ export default function Library() {
                 </SelectContent>
               </Select>
             </div>
+            
+            <div>
+              <label className="text-xs font-medium text-ministry-slate mb-1 block">
+                Video Content
+              </label>
+              <Select value={videoFilter} onValueChange={setVideoFilter}>
+                <SelectTrigger className="w-full h-8 text-sm">
+                  <SelectValue placeholder="Any type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any type</SelectItem>
+                  <SelectItem value="with-video">With video</SelectItem>
+                  <SelectItem value="without-video">Without video</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         )}
       </div>
@@ -236,7 +256,7 @@ export default function Library() {
         ) : filteredStudies.length === 0 ? (
           <div className="text-center py-8" data-testid="empty-studies">
             <p className="text-ministry-slate">
-              {searchQuery.length > 2 || difficultyFilter !== 'all' || hoursFilter !== 'all' || lessonsFilter !== 'all' || selectedCategory !== 'all' 
+              {searchQuery.length > 2 || difficultyFilter !== 'all' || hoursFilter !== 'all' || lessonsFilter !== 'all' || videoFilter !== 'all' || selectedCategory !== 'all' 
                 ? 'No studies found for your filters.' 
                 : 'No studies available.'}
             </p>
