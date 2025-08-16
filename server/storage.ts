@@ -175,19 +175,7 @@ export class DatabaseStorage implements IStorage {
   async createStudy(study: InsertStudy): Promise<Study> {
     const [newStudy] = await db.insert(studies).values(study).returning();
     
-    // Create a discussion for this study using an admin user
-    const [adminUser] = await db.select().from(users).where(eq(users.role, 'admin')).limit(1);
-    if (adminUser) {
-      const discussionData: InsertDiscussion = {
-        title: newStudy.title,
-        content: `Welcome to the discussion for "${newStudy.title}". Share your thoughts, questions, and insights about this study here.`,
-        category: newStudy.category || 'leadership',
-        userId: adminUser.id,
-        studyId: newStudy.id, // Link the discussion to the study
-      };
-      
-      await this.createDiscussion(discussionData);
-    }
+    // Note: Discussion will be created automatically when first accessed via getStudyDiscussion
     
     return newStudy;
   }
