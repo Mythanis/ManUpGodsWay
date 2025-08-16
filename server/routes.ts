@@ -1057,26 +1057,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get videos for regular users (filtered by tier)
-  app.get('/api/videos', isAuthenticated, async (req: any, res) => {
-    try {
-      const user = await storage.getUser(req.user.claims.sub);
-      if (!user) {
-        return res.status(403).json({ message: "User not found" });
-      }
-      
-      const userTier = user.subscriptionTier || 'free';
-      const { limit } = req.query;
-      const videos = await storage.getVideosByUserTier(
-        userTier,
-        limit ? parseInt(limit as string) : undefined
-      );
-      res.json(videos);
-    } catch (error) {
-      console.error("Error fetching videos:", error);
-      res.status(500).json({ message: "Failed to fetch videos" });
-    }
-  });
 
   app.get('/api/videos/:id/stream', isAuthenticated, async (req: any, res) => {
     try {

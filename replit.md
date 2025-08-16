@@ -62,6 +62,7 @@ This is a full-stack React/Express application called "Man Up God's Way" - a fai
 ✓ **Enhanced Video Admin**: Admin upload form includes category selection and database stores video categories and ratings
 ✓ **Dashboard Video Link**: "Watch Videos" button on dashboard now links to the dedicated videos page
 ✓ **Video API Endpoints**: Complete API for video ratings, reviews, filtering, and public video access with tier-based filtering
+✓ **Video Display Fix**: Fixed API endpoint conflict that prevented uploaded videos from appearing in videos tab - removed duplicate authenticated endpoint
 
 # User Preferences
 
