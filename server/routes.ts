@@ -450,15 +450,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send notification to all users about the new discussion
       try {
+        console.log('Starting notification process for new discussion...');
         const allUsers = await storage.getAllUsers();
+        console.log(`Found ${allUsers.length} total users`);
+        
         const creator = await storage.getUser(userId);
         const creatorName = creator ? `${creator.firstName} ${creator.lastName}` : 'Someone';
+        console.log(`Creator: ${creatorName} (${userId})`);
         
         // Filter out the creator from notification recipients
         const otherUsers = allUsers.filter(user => user.id !== userId);
+        console.log(`Sending notifications to ${otherUsers.length} other users`);
         
         if (otherUsers.length > 0) {
           const notificationPromises = otherUsers.map(async (targetUser) => {
+            console.log(`Creating notification for user ${targetUser.id}`);
             return await storage.createNotification({
               userId: targetUser.id,
               type: 'new_discussion',
@@ -468,11 +474,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           });
           
-          await Promise.allSettled(notificationPromises);
-          console.log(`Sent discussion notifications to ${otherUsers.length} users`);
+          const results = await Promise.allSettled(notificationPromises);
+          const successful = results.filter(r => r.status === 'fulfilled').length;
+          const failed = results.filter(r => r.status === 'rejected').length;
+          console.log(`Notification results: ${successful} successful, ${failed} failed`);
+          
+          if (failed > 0) {
+            const failures = results.filter(r => r.status === 'rejected');
+            failures.forEach((failure, index) => {
+              console.error(`Notification ${index} failed:`, failure.reason);
+            });
+          }
+        } else {
+          console.log('No other users to notify');
         }
       } catch (notificationError) {
-        console.error("Error sending discussion notifications:", notificationError);
+        console.error('Error in notification process:', notificationError);
         // Don't fail the discussion creation if notifications fail
       }
       
