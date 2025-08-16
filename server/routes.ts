@@ -950,9 +950,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Insufficient subscription tier" });
       }
 
-      // For now, return a placeholder video stream URL
-      // In a real app, you'd stream the actual file content here
-      const streamUrl = `https://via.placeholder.com/640x360.mp4?text=${encodeURIComponent(video.title)}`;
+      // Since we're storing files in memory/temporary storage for demo,
+      // we'll serve a sample video URL. In production, you'd stream the actual file.
+      const streamUrl = `https://sample-videos.com/zip/10/mp4/SampleVideo_640x360_1mb.mp4`;
       
       res.json({
         ...video,

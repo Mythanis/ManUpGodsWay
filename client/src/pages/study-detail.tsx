@@ -61,6 +61,14 @@ export default function StudyDetail() {
     enabled: !!id,
   });
 
+  // Fetch video stream URL for uploaded videos
+  const isUploadedVideo = study?.videoUrl && !study.videoUrl.startsWith('http') && study.videoUrl.length > 10;
+  const { data: videoStream } = useQuery({
+    queryKey: ["/api/videos", study?.videoUrl, "stream"],
+    retry: false,
+    enabled: !!isUploadedVideo,
+  });
+
   const form = useForm({
     resolver: zodResolver(ratingSchema),
     defaultValues: {
@@ -477,16 +485,29 @@ export default function StudyDetail() {
                       
                       // Check if it's an uploaded video ID (not a full URL)
                       if (!videoUrl.startsWith('http') && videoUrl.length > 10) {
-                        // This is likely an uploaded video ID, use streaming endpoint
-                        return (
-                          <div className="w-full h-48 sm:h-64 flex items-center justify-center bg-gray-800 text-white">
-                            <div className="text-center">
-                              <Play className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                              <p className="text-sm">Video streaming coming soon</p>
-                              <p className="text-xs text-gray-400 mt-2">Video ID: {videoUrl}</p>
+                        // This is an uploaded video ID, use streaming endpoint
+                        if (videoStream && (videoStream as any).streamUrl) {
+                          return (
+                            <video 
+                              controls
+                              className="w-full h-48 object-cover"
+                              src={(videoStream as any).streamUrl}
+                              poster={study.thumbnailUrl || ''}
+                              data-testid="uploaded-video-player"
+                            >
+                              Your browser does not support the video tag.
+                            </video>
+                          );
+                        } else {
+                          return (
+                            <div className="w-full h-48 sm:h-64 flex items-center justify-center bg-gray-800 text-white">
+                              <div className="text-center">
+                                <Play className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                                <p className="text-sm">Loading uploaded video...</p>
+                              </div>
                             </div>
-                          </div>
-                        );
+                          );
+                        }
                       }
                       
                       // Default: try to play as direct video URL
