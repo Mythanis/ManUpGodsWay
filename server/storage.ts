@@ -802,14 +802,16 @@ export class DatabaseStorage implements IStorage {
   async updateUserStreak(userId: string, userLocalDate?: Date): Promise<void> {
     // Use user's local date for streak calculation
     const localToday = userLocalDate || new Date();
-    // Create a proper local date (in user's timezone, not UTC midnight)
-    const todayLocal = new Date(localToday.getFullYear(), localToday.getMonth(), localToday.getDate());
+    
+    // Create date strings in YYYY-MM-DD format for reliable comparison
+    // This avoids timezone conversion issues by only comparing date parts
+    const todayDateString = `${localToday.getFullYear()}-${String(localToday.getMonth() + 1).padStart(2, '0')}-${String(localToday.getDate()).padStart(2, '0')}`;
     
     console.log('=== STREAK UPDATE ===');
     console.log('User:', userId);
     console.log('User provided date:', userLocalDate?.toISOString());
     console.log('User local time:', localToday.toString());
-    console.log('Today (local date):', todayLocal.toString());
+    console.log('Today date string:', todayDateString);
     
     const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!user) {
@@ -820,33 +822,34 @@ export class DatabaseStorage implements IStorage {
     console.log('Current streak:', user.streakDays);
     console.log('Last active (database):', user.lastActiveDate);
     
-    const lastActive = user.lastActiveDate ? new Date(user.lastActiveDate) : null;
-    
-    if (lastActive) {
-      // IMPORTANT: Convert stored UTC date back to local date equivalent
-      // The stored date might be UTC midnight, but we need to compare local dates
-      const lastActiveLocal = new Date(lastActive.getUTCFullYear(), lastActive.getUTCMonth(), lastActive.getUTCDate());
+    if (user.lastActiveDate) {
+      // Convert stored date to local date string for comparison
+      const lastActiveDate = new Date(user.lastActiveDate);
+      // Use the local timezone to get the correct date components
+      const lastActiveDateString = `${lastActiveDate.getFullYear()}-${String(lastActiveDate.getMonth() + 1).padStart(2, '0')}-${String(lastActiveDate.getDate()).padStart(2, '0')}`;
       
-      console.log('Last active (converted to local):', lastActiveLocal.toString());
-      console.log('Comparing local dates:');
-      console.log('  Today:', todayLocal.getTime(), '(' + todayLocal.toDateString() + ')');
-      console.log('  Last Active:', lastActiveLocal.getTime(), '(' + lastActiveLocal.toDateString() + ')');
-      console.log('  Same day?', lastActiveLocal.getTime() === todayLocal.getTime());
+      console.log('Last active date string:', lastActiveDateString);
+      console.log('Comparing dates:');
+      console.log('  Today:', todayDateString);
+      console.log('  Last Active:', lastActiveDateString);
+      console.log('  Same day?', lastActiveDateString === todayDateString);
       
       // Check if last active was today (local time)
-      if (lastActiveLocal.getTime() === todayLocal.getTime()) {
+      if (lastActiveDateString === todayDateString) {
         // Already counted today, no update needed
         console.log('✓ Already counted today - no update');
         return;
       }
       
-      const yesterdayLocal = new Date(todayLocal);
-      yesterdayLocal.setDate(yesterdayLocal.getDate() - 1);
+      // Calculate yesterday's date string
+      const yesterdayDate = new Date(localToday);
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      const yesterdayDateString = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
       
-      console.log('Yesterday (local):', yesterdayLocal.toString());
-      console.log('Was active yesterday?', lastActiveLocal.getTime() === yesterdayLocal.getTime());
+      console.log('Yesterday date string:', yesterdayDateString);
+      console.log('Was active yesterday?', lastActiveDateString === yesterdayDateString);
       
-      if (lastActiveLocal.getTime() === yesterdayLocal.getTime()) {
+      if (lastActiveDateString === yesterdayDateString) {
         // Consecutive day - increment streak
         const newStreak = (user.streakDays || 0) + 1;
         console.log('✓ Consecutive day - incrementing streak:', user.streakDays, '->', newStreak);
@@ -854,7 +857,7 @@ export class DatabaseStorage implements IStorage {
           .update(users)
           .set({ 
             streakDays: newStreak,
-            lastActiveDate: todayLocal 
+            lastActiveDate: localToday 
           })
           .where(eq(users.id, userId));
         console.log('✓ Streak updated in database');
@@ -865,7 +868,7 @@ export class DatabaseStorage implements IStorage {
           .update(users)
           .set({ 
             streakDays: 1,
-            lastActiveDate: todayLocal 
+            lastActiveDate: localToday 
           })
           .where(eq(users.id, userId));
         console.log('✓ Streak reset in database');
@@ -877,7 +880,7 @@ export class DatabaseStorage implements IStorage {
         .update(users)
         .set({ 
           streakDays: 1,
-          lastActiveDate: todayLocal 
+          lastActiveDate: localToday 
         })
         .where(eq(users.id, userId));
       console.log('✓ First streak set in database');
