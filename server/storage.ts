@@ -201,6 +201,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateStudy(id: string, study: Partial<InsertStudy>): Promise<Study> {
+    // If marking this study as featured, unfeature all other studies first
+    if (study.isFeatured === true) {
+      await db
+        .update(studies)
+        .set({ isFeatured: false, updatedAt: new Date() })
+        .where(and(eq(studies.isFeatured, true), not(eq(studies.id, id))));
+    }
+    
     const [updatedStudy] = await db
       .update(studies)
       .set({ ...study, updatedAt: new Date() })
@@ -1409,6 +1417,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateVideo(id: string, video: Partial<Video>): Promise<Video> {
+    // If marking this video as featured, unfeature all other videos first
+    if (video.isFeatured === true) {
+      await db
+        .update(videos)
+        .set({ isFeatured: false, updatedAt: new Date() })
+        .where(and(eq(videos.isFeatured, true), not(eq(videos.id, id))));
+    }
+    
     const updateData = {
       ...video,
       updatedAt: new Date()
