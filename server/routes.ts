@@ -927,6 +927,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Serve video files for streaming (for studies that reference uploaded videos)
+  app.get('/api/videos/:id/stream', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(403).json({ message: "Authentication required" });
+      }
+
+      const video = await storage.getVideo(req.params.id);
+      if (!video) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+
+      // Check tier access
+      const userTier = user.subscriptionTier || 'free';
+      const hasAccess = video.requiredTier === 'free' ||
+                       (video.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
+                       (video.requiredTier === 'vip' && userTier === 'vip');
+
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Insufficient subscription tier" });
+      }
+
+      // For now, return a placeholder video stream URL
+      // In a real app, you'd stream the actual file content here
+      const streamUrl = `https://via.placeholder.com/640x360.mp4?text=${encodeURIComponent(video.title)}`;
+      
+      res.json({
+        ...video,
+        streamUrl: streamUrl
+      });
+    } catch (error) {
+      console.error("Error streaming video:", error);
+      res.status(500).json({ message: "Failed to stream video" });
+    }
+  });
+
   app.post('/api/admin/videos/upload', isAuthenticated, upload.single('video'), async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);

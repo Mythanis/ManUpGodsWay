@@ -426,15 +426,82 @@ export default function StudyDetail() {
                 <CardContent className="p-6">
                   <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Study Video</h2>
                   <div className="relative bg-gray-900 rounded-lg overflow-hidden">
-                    <video 
-                      controls
-                      className="w-full h-48 object-cover"
-                      src={study.videoUrl || ''}
-                      poster={study.thumbnailUrl || ''}
-                      data-testid="video-player"
-                    >
-                      Your browser does not support the video tag.
-                    </video>
+                    {(() => {
+                      const videoUrl = study.videoUrl;
+                      
+                      // Check if it's a YouTube URL
+                      if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+                        let embedUrl = '';
+                        if (videoUrl.includes('youtube.com/watch?v=')) {
+                          const videoId = videoUrl.split('v=')[1]?.split('&')[0];
+                          embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                        } else if (videoUrl.includes('youtu.be/')) {
+                          const videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0];
+                          embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                        } else if (videoUrl.includes('youtube.com/embed/')) {
+                          embedUrl = videoUrl;
+                        }
+                        
+                        if (embedUrl) {
+                          return (
+                            <iframe
+                              className="w-full h-48 sm:h-64"
+                              src={embedUrl}
+                              title={study.title}
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              data-testid="youtube-player"
+                            />
+                          );
+                        }
+                      }
+                      
+                      // Check if it's a Vimeo URL
+                      if (videoUrl.includes('vimeo.com')) {
+                        const videoId = videoUrl.split('vimeo.com/')[1]?.split('?')[0];
+                        if (videoId) {
+                          return (
+                            <iframe
+                              className="w-full h-48 sm:h-64"
+                              src={`https://player.vimeo.com/video/${videoId}`}
+                              title={study.title}
+                              frameBorder="0"
+                              allow="autoplay; fullscreen; picture-in-picture"
+                              allowFullScreen
+                              data-testid="vimeo-player"
+                            />
+                          );
+                        }
+                      }
+                      
+                      // Check if it's an uploaded video ID (not a full URL)
+                      if (!videoUrl.startsWith('http') && videoUrl.length > 10) {
+                        // This is likely an uploaded video ID, use streaming endpoint
+                        return (
+                          <div className="w-full h-48 sm:h-64 flex items-center justify-center bg-gray-800 text-white">
+                            <div className="text-center">
+                              <Play className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                              <p className="text-sm">Video streaming coming soon</p>
+                              <p className="text-xs text-gray-400 mt-2">Video ID: {videoUrl}</p>
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      // Default: try to play as direct video URL
+                      return (
+                        <video 
+                          controls
+                          className="w-full h-48 object-cover"
+                          src={videoUrl}
+                          poster={study.thumbnailUrl || ''}
+                          data-testid="video-player"
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      );
+                    })()}
                   </div>
                 </CardContent>
               </Card>

@@ -50,6 +50,8 @@ This is a full-stack React/Express application called "Man Up God's Way" - a fai
 ✓ **Tier-Based Video Access**: Videos now support free/premium/vip access tiers with admin controls and user filtering
 ✓ **Video Management Enhancement**: Admin can set access tiers during upload/edit, tier badges display on video cards
 ✓ **User Video Filtering**: API endpoints filter videos based on user subscription tier (free users see free videos, premium users see free+premium, VIP users see all)
+✓ **Video Upload Flow Enhancement**: Improved video upload process with proper file selection, tier assignment, and manual upload trigger
+✓ **Study Video Player Fix**: Enhanced video playback in studies with support for YouTube embeds, Vimeo embeds, direct video URLs, and uploaded video handling
 
 # User Preferences
 
