@@ -277,25 +277,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get the current study to check if it's being published
       const currentStudy = await storage.getStudy(req.params.id);
       const studyData = insertStudySchema.partial().parse(req.body);
-      
-      console.log('Study update debug:', {
-        studyId: req.params.id,
-        currentlyPublished: currentStudy?.isPublished,
-        requestBody: req.body,
-        parsedData: studyData
-      });
-      
       const study = await storage.updateStudy(req.params.id, studyData);
       
       // Check if study is being published (was unpublished, now published)
       const wasUnpublished = !currentStudy?.isPublished;
       const isBeingPublished = studyData.isPublished === true;
-      
-      console.log('Study publication check:', {
-        wasUnpublished,
-        isBeingPublished,
-        willSendNotifications: wasUnpublished && isBeingPublished
-      });
       
       if (wasUnpublished && isBeingPublished) {
         // Send real-time notifications to users based on tier access
@@ -1298,25 +1284,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get the current video to check if it's being processed
       const currentVideo = await storage.getVideo(req.params.id);
-      
-      console.log('Video update debug:', {
-        videoId: req.params.id,
-        currentlyProcessed: currentVideo?.isProcessed,
-        currentlyPublished: (currentVideo as any)?.isPublished,
-        requestBody: req.body
-      });
-      
       const video = await storage.updateVideo(req.params.id, req.body);
       
       // Check if video is being processed/published (was unprocessed, now processed)
       const wasUnprocessed = !currentVideo?.isProcessed;
       const isBeingProcessed = req.body.isProcessed === true;
-      
-      console.log('Video processing check:', {
-        wasUnprocessed,
-        isBeingProcessed,
-        willSendNotifications: wasUnprocessed && isBeingProcessed
-      });
       
       if (wasUnprocessed && isBeingProcessed) {
         // Send real-time notifications to users based on tier access

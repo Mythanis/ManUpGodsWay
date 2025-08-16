@@ -151,6 +151,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         }
         break;
         
+      case 'study':
       case 'new_study':
         if (notification.relatedId) {
           // Navigate to specific study
@@ -158,6 +159,17 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         } else {
           // Navigate to library
           window.location.href = '/library';
+        }
+        break;
+        
+      case 'video':
+      case 'new_video':
+        if (notification.relatedId) {
+          // Navigate to specific video - for now redirect to videos page as we don't have individual video pages
+          window.location.href = `/videos`;
+        } else {
+          // Navigate to videos page
+          window.location.href = '/videos';
         }
         break;
         
