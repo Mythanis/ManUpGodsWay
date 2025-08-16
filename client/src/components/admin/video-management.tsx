@@ -38,6 +38,7 @@ export default function VideoManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [showVideoDialog, setShowVideoDialog] = useState(false);
+  const [isWatchingVideo, setIsWatchingVideo] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
@@ -100,6 +101,7 @@ export default function VideoManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/videos"] });
       setShowVideoDialog(false);
+      setIsWatchingVideo(false);
       toast({
         title: "Success",
         description: "Video updated successfully!",
@@ -121,6 +123,7 @@ export default function VideoManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/videos"] });
       setShowVideoDialog(false);
+      setIsWatchingVideo(false);
       toast({
         title: "Success",
         description: "Video deleted successfully!",
@@ -370,6 +373,7 @@ export default function VideoManagement() {
                         size="sm"
                         onClick={() => {
                           setSelectedVideo(video);
+                          setIsWatchingVideo(false);
                           setShowVideoDialog(true);
                         }}
                         className="w-full h-9 bg-ministry-navy hover:bg-ministry-charcoal text-white text-xs"
@@ -511,7 +515,10 @@ export default function VideoManagement() {
       </Dialog>
 
       {/* Video Detail Dialog */}
-      <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
+      <Dialog open={showVideoDialog} onOpenChange={(open) => {
+        setShowVideoDialog(open);
+        if (!open) setIsWatchingVideo(false);
+      }}>
         <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-3">
@@ -523,16 +530,37 @@ export default function VideoManagement() {
           {selectedVideo && (
             <div className="flex-1 overflow-y-auto space-y-6 pr-2">
               {/* Video Preview */}
-              <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden">
-                {selectedVideo.thumbnailUrl ? (
-                  <img 
-                    src={selectedVideo.thumbnailUrl} 
-                    alt={selectedVideo.title}
-                    className="w-full h-full object-cover"
-                  />
+              <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden relative">
+                {isWatchingVideo ? (
+                  <video 
+                    src={`/api/videos/${selectedVideo.id}/stream`}
+                    controls
+                    className="w-full h-full object-contain"
+                    onEnded={() => setIsWatchingVideo(false)}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Play className="w-16 h-16 text-gray-400" />
+                  <div className="relative w-full h-full">
+                    {selectedVideo.thumbnailUrl ? (
+                      <img 
+                        src={selectedVideo.thumbnailUrl} 
+                        alt={selectedVideo.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                        <VideoIcon className="w-16 h-16 text-gray-400" />
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setIsWatchingVideo(true)}
+                      className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 hover:bg-opacity-50 transition-all duration-200 group"
+                    >
+                      <div className="bg-white bg-opacity-90 rounded-full p-4 group-hover:bg-opacity-100 transition-all duration-200">
+                        <Play className="w-8 h-8 text-gray-900 ml-1" />
+                      </div>
+                    </button>
                   </div>
                 )}
               </div>
