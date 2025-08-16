@@ -23,6 +23,7 @@ const categories = [
   { id: 'marriage', label: 'Marriage', icon: Heart },
   { id: 'parenting', label: 'Parenting', icon: Users },
   { id: 'faith', label: 'Faith', icon: Lightbulb },
+  { id: 'studies', label: 'Study Discussions', icon: MessageCircle },
 ];
 
 const createDiscussionSchema = z.object({

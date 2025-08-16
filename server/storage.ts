@@ -413,7 +413,13 @@ export class DatabaseStorage implements IStorage {
     const conditions = [];
     
     if (category) {
-      conditions.push(eq(discussions.category, category));
+      if (category === 'studies') {
+        // Special filter for study discussions
+        conditions.push(sql`${discussions.studyId} IS NOT NULL`);
+      } else {
+        // Regular category filter
+        conditions.push(eq(discussions.category, category));
+      }
     }
     
     if (searchTerm) {
