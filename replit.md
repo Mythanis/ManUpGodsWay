@@ -4,6 +4,7 @@
 ## Recent Updates
 - **Real-time Content Publishing**: Studies and videos now automatically appear across all pages when admins publish new content (8-10 second polling)
 - **Enhanced Discussion Categories**: Added "Miscellaneous" topic and streamlined study discussion creation
+- **Tier-Based Content Notifications**: Automatic real-time notifications sent to users when new studies/videos are published, filtered by subscription tier access (free users get free content notifications, premium users get free+premium, VIP users get all content)
 
 # User Preferences
 Preferred communication style: Simple, everyday language.

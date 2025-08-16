@@ -205,6 +205,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const studyData = insertStudySchema.parse(req.body);
       const study = await storage.createStudy(studyData, user.id);
+      
+      // Send real-time notifications to users based on tier access
+      try {
+        const allUsers = await storage.getAllUsers();
+        let targetUsers: any[] = [];
+        
+        // Determine target users based on study's required tier
+        switch (study.requiredTier) {
+          case 'free':
+            // Everyone can access free studies
+            targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
+            break;
+          case 'premium':
+            // Premium and VIP users can access premium studies
+            targetUsers = allUsers.filter(targetUser => 
+              targetUser.id !== user.id && 
+              ['premium', 'vip'].includes(targetUser.subscriptionTier)
+            );
+            break;
+          case 'vip':
+            // Only VIP users can access VIP studies
+            targetUsers = allUsers.filter(targetUser => 
+              targetUser.id !== user.id && 
+              targetUser.subscriptionTier === 'vip'
+            );
+            break;
+        }
+        
+        // Send notifications to eligible users
+        if (targetUsers.length > 0) {
+          const notificationPromises = targetUsers.map(async (targetUser) => {
+            return await storage.createNotification({
+              userId: targetUser.id,
+              type: 'study',
+              title: '📚 New Study Available',
+              message: `"${study.title}" has been published and is now available in the Library.`,
+              relatedId: study.id,
+            });
+          });
+          
+          await Promise.all(notificationPromises.filter(Boolean));
+          console.log(`Sent new study notifications to ${targetUsers.length} users`);
+        }
+      } catch (notificationError) {
+        console.error('Error sending study notifications:', notificationError);
+        // Don't fail the study creation if notification fails
+      }
+      
       res.status(201).json(study);
     } catch (error) {
       console.error("Error creating study:", error);
@@ -1101,6 +1149,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const video = await storage.createVideo(videoData);
+      
+      // Send real-time notifications to users based on tier access
+      try {
+        const allUsers = await storage.getAllUsers();
+        let targetUsers: any[] = [];
+        
+        // Determine target users based on video's required tier
+        switch (video.requiredTier) {
+          case 'free':
+            // Everyone can access free videos
+            targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
+            break;
+          case 'premium':
+            // Premium and VIP users can access premium videos
+            targetUsers = allUsers.filter(targetUser => 
+              targetUser.id !== user.id && 
+              ['premium', 'vip'].includes(targetUser.subscriptionTier)
+            );
+            break;
+          case 'vip':
+            // Only VIP users can access VIP videos
+            targetUsers = allUsers.filter(targetUser => 
+              targetUser.id !== user.id && 
+              targetUser.subscriptionTier === 'vip'
+            );
+            break;
+        }
+        
+        // Send notifications to eligible users
+        if (targetUsers.length > 0) {
+          const notificationPromises = targetUsers.map(async (targetUser) => {
+            return await storage.createNotification({
+              userId: targetUser.id,
+              type: 'video',
+              title: '🎥 New Video Available',
+              message: `\"${video.title}\" has been published and is now available in the Videos section.`,
+              relatedId: video.id,
+            });
+          });
+          
+          await Promise.all(notificationPromises.filter(Boolean));
+          console.log(`Sent new video notifications to ${targetUsers.length} users`);
+        }
+      } catch (notificationError) {
+        console.error('Error sending video notifications:', notificationError);
+        // Don't fail the video creation if notification fails
+      }
       
       // Simulate processing
       setTimeout(async () => {
