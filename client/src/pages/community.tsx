@@ -19,12 +19,22 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X, Send, Hash } from "lucide-react";
 import { z } from "zod";
 
-const categories = [
+// Categories for display/filtering (includes all categories)
+const allCategories = [
   { id: 'leadership', label: 'Leadership', icon: BookOpen },
   { id: 'marriage', label: 'Marriage', icon: Heart },
   { id: 'parenting', label: 'Parenting', icon: Users },
   { id: 'faith', label: 'Faith', icon: Lightbulb },
   { id: 'studies', label: 'Study Discussions', icon: MessageCircle },
+  { id: 'miscellaneous', label: 'Miscellaneous', icon: Hash },
+];
+
+// Categories for discussion creation (excludes study discussions)
+const creationCategories = [
+  { id: 'leadership', label: 'Leadership', icon: BookOpen },
+  { id: 'marriage', label: 'Marriage', icon: Heart },
+  { id: 'parenting', label: 'Parenting', icon: Users },
+  { id: 'faith', label: 'Faith', icon: Lightbulb },
   { id: 'miscellaneous', label: 'Miscellaneous', icon: Hash },
 ];
 
@@ -514,7 +524,7 @@ export default function Community() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {categories.map((category) => (
+                          {creationCategories.map((category) => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.label}
                             </SelectItem>
@@ -575,7 +585,7 @@ export default function Community() {
         <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Popular Topics</h2>
         
         <div className="grid grid-cols-2 gap-3">
-          {categories.map((category) => {
+          {allCategories.map((category) => {
             const Icon = category.icon;
             return (
               <Button
