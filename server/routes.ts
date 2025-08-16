@@ -919,7 +919,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // For now, we'll simulate video upload and processing
       // In a real app, you'd integrate with multer, AWS S3, or similar service
-      const { title, description } = req.body;
+      const { title, description, requiredTier = 'free' } = req.body;
       
       if (!title) {
         return res.status(400).json({ message: "Title is required" });
@@ -936,6 +936,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duration: Math.floor(Math.random() * 1800) + 300, // Random duration 5-35 minutes
         thumbnailUrl: `https://via.placeholder.com/640x360/4A90B8/ffffff?text=${encodeURIComponent(title)}`,
         uploadedBy: user.id,
+        requiredTier: requiredTier,
       };
 
       const video = await storage.createVideo(videoData);
@@ -982,11 +983,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get videos for regular users (filtered by tier)
+  app.get('/api/videos', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(403).json({ message: "User not found" });
+      }
+      
+      const userTier = user.subscriptionTier || 'free';
+      const { limit } = req.query;
+      const videos = await storage.getVideosByUserTier(
+        userTier,
+        limit ? parseInt(limit as string) : undefined
+      );
+      res.json(videos);
+    } catch (error) {
+      console.error("Error fetching videos:", error);
+      res.status(500).json({ message: "Failed to fetch videos" });
+    }
+  });
+
   app.get('/api/videos/:id/stream', isAuthenticated, async (req: any, res) => {
     try {
       const video = await storage.getVideo(req.params.id);
       if (!video) {
         return res.status(404).json({ message: "Video not found" });
+      }
+
+      // Check tier access
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(403).json({ message: "User not found" });
+      }
+      
+      const userTier = user.subscriptionTier || 'free';
+      const hasAccess = video.requiredTier === 'free' ||
+                       (video.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
+                       (video.requiredTier === 'vip' && userTier === 'vip');
+      
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Insufficient subscription tier to access this video" });
       }
 
       // In a real app, this would stream the actual video file

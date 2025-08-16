@@ -60,6 +60,7 @@ export const videos = pgTable("videos", {
   duration: integer("duration"), // in seconds
   thumbnailUrl: varchar("thumbnail_url"),
   uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
+  requiredTier: varchar("required_tier").notNull().default("free"), // free, premium, vip
   isProcessed: boolean("is_processed").default(false),
   processingStatus: varchar("processing_status").default("pending"), // pending, processing, completed, failed
   createdAt: timestamp("created_at").defaultNow(),
@@ -289,6 +290,7 @@ export const insertVideoSchema = createInsertSchema(videos, {
   filename: z.string().min(1, "Filename is required"),
   originalName: z.string().min(1, "Original name is required"),
   mimeType: z.string().min(1, "MIME type is required"),
+  requiredTier: z.enum(["free", "premium", "vip"]).default("free"),
   fileSize: z.number().int().min(1, "File size must be greater than 0"),
   duration: z.number().int().optional(),
   thumbnailUrl: z.string().optional(),

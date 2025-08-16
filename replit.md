@@ -47,6 +47,9 @@ This is a full-stack React/Express application called "Man Up God's Way" - a fai
 ✓ **User Search Functionality**: Added search capability for finding specific users when sending individual notifications
 ✓ **Featured Study System**: Complete featured study functionality with dashboard display, admin controls, and database migration
 ✓ **Prayer Time System**: Complete prayer feature with duration selection, fullscreen focus mode, wake lock, and completion notifications
+✓ **Tier-Based Video Access**: Videos now support free/premium/vip access tiers with admin controls and user filtering
+✓ **Video Management Enhancement**: Admin can set access tiers during upload/edit, tier badges display on video cards
+✓ **User Video Filtering**: API endpoints filter videos based on user subscription tier (free users see free videos, premium users see free+premium, VIP users see all)
 
 # User Preferences
 

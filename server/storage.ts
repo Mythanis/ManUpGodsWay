@@ -1307,6 +1307,29 @@ export class DatabaseStorage implements IStorage {
     return await query;
   }
 
+  async getVideosByUserTier(userTier: string, limit?: number): Promise<Video[]> {
+    // Define tier hierarchy: free < premium < vip
+    const tierHierarchy: { [key: string]: string[] } = {
+      'free': ['free'],
+      'premium': ['free', 'premium'], 
+      'vip': ['free', 'premium', 'vip']
+    };
+    
+    const allowedTiers = tierHierarchy[userTier] || ['free'];
+    
+    const query = db
+      .select()
+      .from(videos)
+      .where(inArray(videos.requiredTier, allowedTiers))
+      .orderBy(desc(videos.createdAt));
+    
+    if (limit) {
+      return await query.limit(limit);
+    }
+    
+    return await query;
+  }
+
   async getVideo(id: string): Promise<Video | undefined> {
     const [video] = await db.select().from(videos).where(eq(videos.id, id));
     return video;

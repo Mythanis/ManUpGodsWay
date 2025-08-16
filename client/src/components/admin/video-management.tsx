@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Upload, Play, Trash2, Eye, Edit, Video as VideoIcon, FileText, Clock, HardDrive } from "lucide-react";
+import { Search, Upload, Play, Trash2, Eye, Edit, Video as VideoIcon, FileText, Clock, HardDrive, Crown, Gem, Zap } from "lucide-react";
 
 interface Video {
   id: string;
@@ -24,6 +24,7 @@ interface Video {
   duration?: number;
   thumbnailUrl?: string;
   uploadedBy: string;
+  requiredTier: string;
   isProcessed: boolean;
   processingStatus: string;
   createdAt: string;
@@ -37,6 +38,7 @@ export default function VideoManagement() {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [uploadTier, setUploadTier] = useState('free');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -158,6 +160,32 @@ export default function VideoManagement() {
     }
   };
 
+  const getTierBadge = (tier: string) => {
+    switch (tier) {
+      case 'vip':
+        return (
+          <Badge className="bg-purple-100 text-purple-800 flex items-center space-x-1">
+            <Crown className="w-3 h-3" />
+            <span>VIP</span>
+          </Badge>
+        );
+      case 'premium':
+        return (
+          <Badge className="bg-blue-100 text-blue-800 flex items-center space-x-1">
+            <Gem className="w-3 h-3" />
+            <span>Premium</span>
+          </Badge>
+        );
+      default:
+        return (
+          <Badge className="bg-gray-100 text-gray-800 flex items-center space-x-1">
+            <Zap className="w-3 h-3" />
+            <span>Free</span>
+          </Badge>
+        );
+    }
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -186,6 +214,7 @@ export default function VideoManagement() {
     formData.append('video', file);
     formData.append('title', file.name.replace(/\.[^/.]+$/, "")); // Remove extension
     formData.append('description', '');
+    formData.append('requiredTier', uploadTier);
 
     setUploading(true);
     setUploadProgress(0);
@@ -269,8 +298,11 @@ export default function VideoManagement() {
                         <Play className="w-12 h-12 text-gray-400" />
                       </div>
                     )}
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute top-2 right-2 space-y-1">
                       {getStatusBadge(video.processingStatus)}
+                    </div>
+                    <div className="absolute top-2 left-2">
+                      {getTierBadge(video.requiredTier)}
                     </div>
                     {video.duration && (
                       <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
@@ -345,6 +377,22 @@ export default function VideoManagement() {
                     Supported formats: MP4, MOV, AVI, etc. Max size: 100MB
                   </p>
                 </div>
+                
+                <div>
+                  <Label htmlFor="video-tier" className="text-sm font-medium">
+                    Access Tier
+                  </Label>
+                  <Select value={uploadTier} onValueChange={setUploadTier}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="free">Free - All users can access</SelectItem>
+                      <SelectItem value="premium">Premium - Premium and VIP users only</SelectItem>
+                      <SelectItem value="vip">VIP - VIP users only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </>
             ) : (
               <div className="space-y-4">
@@ -402,6 +450,25 @@ export default function VideoManagement() {
                     }}
                     className="mt-1"
                   />
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">Access Tier</Label>
+                  <Select 
+                    value={selectedVideo.requiredTier} 
+                    onValueChange={(value) => {
+                      setSelectedVideo(prev => prev ? { ...prev, requiredTier: value } : null);
+                    }}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="free">Free - All users can access</SelectItem>
+                      <SelectItem value="premium">Premium - Premium and VIP users only</SelectItem>
+                      <SelectItem value="vip">VIP - VIP users only</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div>
@@ -470,7 +537,8 @@ export default function VideoManagement() {
                         id: selectedVideo.id, 
                         video: {
                           title: selectedVideo.title,
-                          description: selectedVideo.description
+                          description: selectedVideo.description,
+                          requiredTier: selectedVideo.requiredTier
                         }
                       });
                     }}
