@@ -592,7 +592,7 @@ export default function Community() {
                 key={category.id}
                 variant="outline"
                 onClick={() => setSelectedCategory(selectedCategory === category.id ? '' : category.id)}
-                className={`h-auto p-4 border-gray-100 hover:shadow-sm ${
+                className={`h-auto p-4 border-border hover:shadow-sm ${
                   selectedCategory === category.id ? 'bg-ministry-steel/10 border-ministry-steel' : ''
                 }`}
                 data-testid={`button-category-${category.id}`}

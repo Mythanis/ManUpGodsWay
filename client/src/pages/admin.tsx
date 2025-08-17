@@ -457,7 +457,7 @@ export default function Admin() {
             ) : (
               <div className="space-y-4">
                 {studies.map((study) => (
-                  <Card key={study.id} className="border-gray-200">
+                  <Card key={study.id} className="border-border">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -488,7 +488,7 @@ export default function Admin() {
                             variant={study.isFeatured ? "default" : "outline"}
                             onClick={() => handleToggleFeatured(study.id, !study.isFeatured)}
                             disabled={toggleFeaturedMutation.isPending}
-                            className={study.isFeatured ? "bg-yellow-600 hover:bg-yellow-700 text-white" : "border-yellow-600 text-yellow-600 hover:bg-yellow-50"}
+                            className={study.isFeatured ? "bg-yellow-600 hover:bg-yellow-700 text-white" : "bg-card border-border text-foreground hover:bg-muted"}
                             title={study.isFeatured ? "Remove from featured" : "Mark as featured"}
                           >
                             <Star className={`w-4 h-4 ${study.isFeatured ? 'fill-current' : ''}`} />
@@ -498,7 +498,7 @@ export default function Admin() {
                             variant={study.isPublished ? "default" : "outline"}
                             onClick={() => handleTogglePublish(study.id, !study.isPublished)}
                             disabled={togglePublishMutation.isPending}
-                            className={study.isPublished ? "bg-green-600 hover:bg-green-700 text-white" : "border-green-600 text-green-600 hover:bg-green-50"}
+                            className={study.isPublished ? "bg-green-600 hover:bg-green-700 text-white" : "bg-card border-border text-foreground hover:bg-muted"}
                           >
                             {study.isPublished ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                           </Button>
@@ -506,6 +506,7 @@ export default function Admin() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleEdit(study)}
+                            className="bg-card border-border text-foreground hover:bg-muted"
                             data-testid={`button-edit-study-${study.id}`}
                           >
                             <Edit className="w-4 h-4" />
@@ -763,6 +764,7 @@ export default function Admin() {
               <Button
                 variant="outline"
                 onClick={() => setShowEditDialog(false)}
+                className="bg-card border-border text-foreground hover:bg-muted"
                 data-testid="button-cancel-edit"
               >
                 Cancel
@@ -784,7 +786,7 @@ export default function Admin() {
       <div className="px-6">
         <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Recent Admin Activity</h2>
         
-        <Card className="border-gray-100" data-testid="card-recent-activity">
+        <Card className="border-border" data-testid="card-recent-activity">
           <CardContent className="p-4">
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between py-2">

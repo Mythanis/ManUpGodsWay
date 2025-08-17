@@ -546,7 +546,7 @@ export default function Dashboard() {
             </Card>
           )}
           
-          <Card className="border-gray-100" data-testid="activity-streak">
+          <Card className="border-border" data-testid="activity-streak">
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-full bg-ministry-gold/20 flex items-center justify-center">

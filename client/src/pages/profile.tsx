@@ -166,12 +166,12 @@ export default function Profile() {
       <div className="px-6 mb-6">
         <h2 className="text-lg font-bold text-foreground mb-4">Settings</h2>
         
-        <Card className="border-gray-100 overflow-hidden" data-testid="card-settings">
+        <Card className="border-border overflow-hidden" data-testid="card-settings">
           <CardContent className="p-0">
             <NotificationPanel variant="button" />
             
             {/* Theme Switch */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+            <div className="flex items-center justify-between p-4 border-b border-border">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-lg bg-ministry-navy/20 flex items-center justify-center">
                   {effectiveTheme === 'dark' ? (
@@ -269,7 +269,7 @@ export default function Profile() {
       <div className="px-6">
         <h2 className="text-lg font-bold text-foreground mb-4">Your Journey</h2>
         
-        <Card className="border-gray-100" data-testid="card-progress">
+        <Card className="border-border" data-testid="card-progress">
           <CardContent className="p-6">
             {currentStudies.length === 0 && completedStudies.length === 0 ? (
               <div className="text-center py-8">
