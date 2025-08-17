@@ -477,13 +477,24 @@ export default function Community() {
       <div className="px-6 mb-6">
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button 
-              className="w-full bg-ministry-gold text-ministry-navy py-4 rounded-2xl font-bold shadow-lg hover:bg-ministry-gold/90 flex items-center justify-center space-x-2"
+            <button 
+              className="w-full py-4 rounded-2xl font-bold shadow-lg flex items-center justify-center space-x-2"
               data-testid="button-new-discussion"
+              style={{
+                backgroundColor: 'hsl(49 100% 49%)', // ministry-gold
+                color: 'black',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'hsl(49 100% 44%)'; // hover effect
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'hsl(49 100% 49%)'; // back to normal
+              }}
             >
               <Plus className="w-5 h-5" />
               <span>Start New Discussion</span>
-            </Button>
+            </button>
           </DialogTrigger>
           <DialogContent className="max-w-md mx-auto" data-testid="dialog-new-discussion">
             <DialogHeader>
