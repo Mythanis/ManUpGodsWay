@@ -272,7 +272,7 @@ export default function VideoManagement() {
         );
       default:
         return (
-          <Badge className="bg-gray-100 text-gray-800 flex items-center space-x-1">
+          <Badge className="bg-muted text-foreground flex items-center space-x-1">
             <Zap className="w-3 h-3" />
             <span>Free</span>
           </Badge>
@@ -427,7 +427,7 @@ export default function VideoManagement() {
                   </div>
                   
                   <CardContent className="p-4">
-                    <h3 className="font-medium text-sm text-ministry-charcoal truncate mb-2">
+                    <h3 className="font-medium text-sm text-foreground truncate mb-2">
                       {video.title}
                     </h3>
                     <p className="text-xs text-ministry-slate mb-4 line-clamp-2">
@@ -497,7 +497,7 @@ export default function VideoManagement() {
                 {selectedFile && (
                   <>
                     <div className="p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-medium text-ministry-charcoal mb-1">Selected File:</p>
+                      <p className="text-sm font-medium text-foreground mb-1">Selected File:</p>
                       <p className="text-sm text-ministry-slate">{selectedFile.name}</p>
                       <p className="text-xs text-ministry-slate">{formatFileSize(selectedFile.size)}</p>
                     </div>
@@ -517,7 +517,7 @@ export default function VideoManagement() {
                         <p className="text-red-500 text-sm mt-1">Title exists</p>
                       )}
                       {checkingTitle && (
-                        <p className="text-gray-500 text-sm mt-1">Checking title...</p>
+                        <p className="text-muted-foreground text-sm mt-1">Checking title...</p>
                       )}
                     </div>
                     

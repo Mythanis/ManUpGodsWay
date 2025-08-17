@@ -27,10 +27,10 @@ export default function Landing() {
       {/* Features Section */}
       <div className="px-6 py-12">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-ministry-charcoal mb-4" data-testid="features-title">
+          <h2 className="text-3xl font-bold text-foreground mb-4" data-testid="features-title">
             Everything You Need to Grow
           </h2>
-          <p className="text-ministry-slate text-lg" data-testid="features-description">
+          <p className="text-muted-foreground text-lg" data-testid="features-description">
             Comprehensive tools for spiritual growth and biblical masculinity
           </p>
         </div>

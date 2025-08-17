@@ -70,6 +70,9 @@ export default {
         "header-dark": "var(--header-dark)",
         "featured-dark": "var(--featured-dark)",
         "featured-dark-secondary": "var(--featured-dark-secondary)",
+        "dark-navy-bg": "var(--dark-navy-bg)",
+        "dark-charcoal-bg": "var(--dark-charcoal-bg)",
+        "dark-steel-bg": "var(--dark-steel-bg)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],

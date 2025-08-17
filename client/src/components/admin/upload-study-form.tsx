@@ -202,7 +202,7 @@ export default function UploadStudyForm() {
                     <p className="text-red-500 text-sm mt-1">Title exists</p>
                   )}
                   {checkingTitle && (
-                    <p className="text-gray-500 text-sm mt-1">Checking title...</p>
+                    <p className="text-muted-foreground text-sm mt-1">Checking title...</p>
                   )}
                 </FormItem>
               )}

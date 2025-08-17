@@ -186,8 +186,8 @@ export default function StudyManagement() {
         <Card>
           <CardContent className="p-8 text-center">
             <Book className="w-12 h-12 text-ministry-slate mx-auto mb-4" />
-            <p className="text-ministry-slate">No studies created yet</p>
-            <p className="text-sm text-ministry-slate">Use the Content tab to add your first study</p>
+            <p className="text-muted-foreground">No studies created yet</p>
+            <p className="text-sm text-muted-foreground">Use the Content tab to add your first study</p>
           </CardContent>
         </Card>
       ) : (
@@ -197,7 +197,7 @@ export default function StudyManagement() {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-lg text-ministry-navy mb-2">
+                    <CardTitle className="text-lg text-foreground mb-2">
                       {study.title}
                     </CardTitle>
                     <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -210,11 +210,11 @@ export default function StudyManagement() {
                           {study.requiredTier.toUpperCase()}
                         </span>
                       </Badge>
-                      <span className="text-xs text-ministry-slate">
+                      <span className="text-xs text-muted-foreground">
                         {study.duration} min
                       </span>
                     </div>
-                    <p className="text-sm text-ministry-slate line-clamp-2">
+                    <p className="text-sm text-muted-foreground line-clamp-2">
                       {study.description}
                     </p>
                   </div>
@@ -240,7 +240,7 @@ export default function StudyManagement() {
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="flex flex-wrap items-center gap-2 text-xs text-ministry-slate">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <span>By {study.author}</span>
                   <span>•</span>
                   <span>{study.lessons.length} lessons</span>

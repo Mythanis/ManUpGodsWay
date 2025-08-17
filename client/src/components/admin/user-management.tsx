@@ -253,7 +253,7 @@ export default function UserManagement() {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
-                      <p className="font-medium text-sm text-ministry-charcoal truncate" data-testid="text-user-name">
+                      <p className="font-medium text-sm text-foreground truncate" data-testid="text-user-name">
                         {user.firstName} {user.lastName}
                       </p>
                       {getRoleBadge(user.role)}
@@ -298,7 +298,7 @@ export default function UserManagement() {
                 className="w-12 h-12 rounded-full object-cover"
               />
               <div>
-                <h2 className="text-xl font-bold text-ministry-charcoal">
+                <h2 className="text-xl font-bold text-foreground">
                   {selectedUser?.firstName} {selectedUser?.lastName}
                 </h2>
                 <p className="text-sm text-ministry-slate">{selectedUser?.email}</p>
@@ -315,7 +315,7 @@ export default function UserManagement() {
                     <div className="flex items-center space-x-3">
                       <Shield className="w-5 h-5 text-ministry-steel" />
                       <div>
-                        <p className="text-sm font-medium text-ministry-charcoal">Role</p>
+                        <p className="text-sm font-medium text-foreground">Role</p>
                         <Select
                           value={editedUser.role || selectedUser.role}
                           onValueChange={(role) => {
@@ -341,7 +341,7 @@ export default function UserManagement() {
                     <div className="flex items-center space-x-3">
                       <CreditCard className="w-5 h-5 text-ministry-gold" />
                       <div>
-                        <p className="text-sm font-medium text-ministry-charcoal">Subscription</p>
+                        <p className="text-sm font-medium text-foreground">Subscription</p>
                         <Select
                           value={editedUser.subscriptionTier || selectedUser.subscriptionTier}
                           onValueChange={(subscriptionTier) => {
@@ -371,7 +371,7 @@ export default function UserManagement() {
                     <Mail className="w-4 h-4 text-ministry-slate" />
                     <div>
                       <p className="text-xs text-ministry-slate">Email</p>
-                      <p className="text-sm text-ministry-charcoal">{selectedUser.email}</p>
+                      <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
                     </div>
                   </div>
 
@@ -379,7 +379,7 @@ export default function UserManagement() {
                     <Activity className="w-4 h-4 text-ministry-slate" />
                     <div>
                       <p className="text-xs text-ministry-slate">Streak Days</p>
-                      <p className="text-sm text-ministry-charcoal">{selectedUser.streakDays} days</p>
+                      <p className="text-sm text-muted-foreground">{selectedUser.streakDays} days</p>
                     </div>
                   </div>
                 </div>
@@ -389,7 +389,7 @@ export default function UserManagement() {
                     <Calendar className="w-4 h-4 text-ministry-slate" />
                     <div>
                       <p className="text-xs text-ministry-slate">Joined</p>
-                      <p className="text-sm text-ministry-charcoal">{formatLocalDateTime(selectedUser.createdAt)}</p>
+                      <p className="text-sm text-muted-foreground">{formatLocalDateTime(selectedUser.createdAt)}</p>
                     </div>
                   </div>
 
@@ -397,7 +397,7 @@ export default function UserManagement() {
                     <Calendar className="w-4 h-4 text-ministry-slate" />
                     <div>
                       <p className="text-xs text-ministry-slate">Last Active</p>
-                      <p className="text-sm text-ministry-charcoal">{formatLocalDateTime(selectedUser.updatedAt)}</p>
+                      <p className="text-sm text-muted-foreground">{formatLocalDateTime(selectedUser.updatedAt)}</p>
                     </div>
                   </div>
                 </div>
@@ -410,13 +410,13 @@ export default function UserManagement() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-ministry-charcoal">Allow Direct Messages</span>
+                    <span className="text-sm text-foreground">Allow Direct Messages</span>
                     <Badge variant={selectedUser.allowDirectMessages ? "default" : "secondary"}>
                       {selectedUser.allowDirectMessages ? "Enabled" : "Disabled"}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-ministry-charcoal">Allow Group Invites</span>
+                    <span className="text-sm text-foreground">Allow Group Invites</span>
                     <Badge variant={selectedUser.allowGroupInvites ? "default" : "secondary"}>
                       {selectedUser.allowGroupInvites ? "Enabled" : "Disabled"}
                     </Badge>
@@ -435,11 +435,11 @@ export default function UserManagement() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div>
-                      <p className="text-sm font-medium text-ministry-charcoal">Banned Date</p>
+                      <p className="text-sm font-medium text-foreground">Banned Date</p>
                       <p className="text-sm text-ministry-slate">{selectedUser.bannedAt ? formatLocalDateTime(selectedUser.bannedAt) : 'Unknown'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-ministry-charcoal">Reason</p>
+                      <p className="text-sm font-medium text-foreground">Reason</p>
                       <p className="text-sm text-ministry-slate">{selectedUser.bannedReason || 'No reason provided'}</p>
                     </div>
                   </CardContent>

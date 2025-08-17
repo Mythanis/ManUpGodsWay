@@ -330,7 +330,7 @@ export default function DevotionalManagement() {
         </CardHeader>
         <CardContent>
           {devotionals.length === 0 ? (
-            <p className="text-center text-ministry-slate py-8">
+            <p className="text-center text-muted-foreground py-8">
               No devotionals created yet. Create your first devotional above.
             </p>
           ) : (
@@ -342,7 +342,7 @@ export default function DevotionalManagement() {
                   data-testid={`devotional-item-${devotional.id}`}
                 >
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-ministry-navy">
+                    <h3 className="font-semibold text-foreground">
                       {devotional.title}
                     </h3>
                     <div className="flex space-x-2">
@@ -365,14 +365,14 @@ export default function DevotionalManagement() {
                       </Button>
                     </div>
                   </div>
-                  <p className="text-sm text-ministry-slate">
+                  <p className="text-sm text-muted-foreground">
                     <strong>{devotional.verseReference}:</strong> {devotional.verse}
                   </p>
-                  <p className="text-sm text-ministry-charcoal">
+                  <p className="text-sm text-muted-foreground">
                     {devotional.content.substring(0, 150)}
                     {devotional.content.length > 150 ? "..." : ""}
                   </p>
-                  <p className="text-xs text-ministry-slate">
+                  <p className="text-xs text-muted-foreground">
                     Date: {formatLocalDate(devotional.date)}
                   </p>
                 </div>

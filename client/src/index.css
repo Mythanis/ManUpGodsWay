@@ -108,9 +108,9 @@
   --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
 
   /* Ministry-specific colors for dark mode - updated for proper dark theme contrast */
-  --ministry-navy: hsl(220 15% 12%);
-  --ministry-charcoal: hsl(220 12% 8%);
-  --ministry-steel: hsl(220 10% 15%);
+  --ministry-navy: hsl(0 0% 95%);
+  --ministry-charcoal: hsl(0 0% 90%);
+  --ministry-steel: hsl(0 0% 85%);
   --ministry-slate: hsl(0 0% 70%);
   --ministry-gold: hsl(49 100% 59%);
   --ministry-success: hsl(158 64% 62%);
@@ -119,6 +119,11 @@
   --header-dark: hsl(220 15% 8%);
   --featured-dark: hsl(220 12% 10%);
   --featured-dark-secondary: hsl(220 10% 12%);
+  
+  /* Dark mode background colors for components */
+  --dark-navy-bg: hsl(220 15% 12%);
+  --dark-charcoal-bg: hsl(220 12% 8%);
+  --dark-steel-bg: hsl(220 10% 15%);
 }
 
 @layer base {

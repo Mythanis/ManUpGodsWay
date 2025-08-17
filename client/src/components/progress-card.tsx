@@ -16,10 +16,10 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-semibold text-ministry-charcoal" data-testid="text-study-title">
+            <h3 className="font-semibold text-foreground" data-testid="text-study-title">
               {study.title}
             </h3>
-            <p className="text-sm text-ministry-slate" data-testid="text-study-info">
+            <p className="text-sm text-muted-foreground" data-testid="text-study-info">
               {study.lessonCount}-lesson study series
             </p>
           </div>
