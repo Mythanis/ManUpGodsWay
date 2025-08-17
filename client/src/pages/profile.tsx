@@ -228,22 +228,32 @@ export default function Profile() {
               </svg>
             </Button>
             
-            <Button 
-              variant="ghost"
+            <button
               onClick={() => setShowFeedbackDialog(true)}
-              className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-border"
+              style={{
+                backgroundColor: effectiveTheme === 'dark' 
+                  ? 'hsl(220 8% 26%)' 
+                  : 'hsl(240 1.9608% 90%)',
+                color: effectiveTheme === 'dark' 
+                  ? 'hsl(0 0% 95%)' 
+                  : 'hsl(210 25% 7.8431%)',
+                borderColor: effectiveTheme === 'dark' 
+                  ? 'hsl(210 5.2632% 14.9020%)' 
+                  : 'hsl(201.4286 30.4348% 90.9804%)'
+              }}
+              className="w-full justify-between p-4 h-auto hover:opacity-90 border-b border cursor-pointer transition-colors flex"
               data-testid="button-feedback"
             >
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-lg bg-ministry-navy/20 flex items-center justify-center">
                   <MessageCircle className="w-4 h-4 text-ministry-navy" />
                 </div>
-                <span className="font-medium text-foreground">Send Feedback</span>
+                <span className="font-medium">Send Feedback</span>
               </div>
-              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
-            </Button>
+            </button>
             
             <Button 
               variant="ghost"
