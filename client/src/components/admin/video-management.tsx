@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/useTheme";
 import { apiRequest } from "@/lib/queryClient";
 import { formatLocalDateTime } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,6 +51,7 @@ export default function VideoManagement() {
   const [titleExists, setTitleExists] = useState(false);
   const [checkingTitle, setCheckingTitle] = useState(false);
   const { toast } = useToast();
+  const { effectiveTheme } = useTheme();
   const queryClient = useQueryClient();
 
   const { data: videos = [], isLoading } = useQuery<Video[]>({
@@ -359,10 +361,18 @@ export default function VideoManagement() {
             <VideoIcon className="w-5 h-5" />
             <span>Video Management</span>
           </CardTitle>
-          <Button onClick={() => setShowUploadDialog(true)} className="bg-ministry-navy hover:bg-ministry-navy/90">
+          <button 
+            onClick={() => setShowUploadDialog(true)} 
+            style={{
+              backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(221.2 83.2% 53.3%)',
+              color: 'white',
+              border: 'none'
+            }}
+            className="px-4 py-2 rounded-lg transition-colors flex items-center cursor-pointer"
+          >
             <Upload className="w-4 h-4 mr-2" />
             Upload Video
-          </Button>
+          </button>
         </div>
       </CardHeader>
       
@@ -387,9 +397,17 @@ export default function VideoManagement() {
             <div className="text-center py-12">
               <VideoIcon className="w-12 h-12 text-ministry-slate mx-auto mb-4" />
               <p className="text-ministry-slate mb-2">No videos found</p>
-              <Button onClick={() => setShowUploadDialog(true)} variant="outline">
+              <button 
+                onClick={() => setShowUploadDialog(true)} 
+                style={{
+                  backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(240 1.9608% 90%)',
+                  color: effectiveTheme === 'dark' ? 'hsl(0 0% 95%)' : 'hsl(210 25% 7.8431%)',
+                  borderColor: effectiveTheme === 'dark' ? 'hsl(210 5.2632% 14.9020%)' : 'hsl(201.4286 30.4348% 90.9804%)'
+                }}
+                className="px-4 py-2 border rounded-lg transition-colors cursor-pointer"
+              >
                 Upload your first video
-              </Button>
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -446,19 +464,22 @@ export default function VideoManagement() {
                         </div>
                       </div>
                       
-                      <Button
-                        variant="default"
-                        size="sm"
+                      <button
                         onClick={() => {
                           setSelectedVideo(video);
                           setIsWatchingVideo(false);
                           setShowVideoDialog(true);
                         }}
-                        className="w-full h-9 bg-ministry-navy hover:bg-ministry-charcoal text-white text-xs"
+                        style={{
+                          backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(221.2 83.2% 53.3%)',
+                          color: 'white',
+                          border: 'none'
+                        }}
+                        className="w-full h-9 rounded-lg transition-colors text-xs cursor-pointer flex items-center justify-center"
                       >
                         <Edit className="w-3 h-3 mr-1" />
                         Edit
-                      </Button>
+                      </button>
                     </div>
                   </CardContent>
                 </Card>
@@ -569,14 +590,20 @@ export default function VideoManagement() {
                       </Select>
                     </div>
                     
-                    <Button 
+                    <button 
                       onClick={handleUpload}
                       disabled={!uploadTitle.trim() || titleExists || checkingTitle}
-                      className="w-full bg-ministry-navy hover:bg-ministry-charcoal disabled:opacity-50"
+                      style={{
+                        backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(221.2 83.2% 53.3%)',
+                        color: 'white',
+                        border: 'none',
+                        opacity: (!uploadTitle.trim() || titleExists || checkingTitle) ? 0.5 : 1
+                      }}
+                      className="w-full px-4 py-2 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
                     >
                       <Upload className="w-4 h-4 mr-2" />
                       Upload Video
-                    </Button>
+                    </button>
                   </>
                 )}
               </>
