@@ -75,13 +75,10 @@ export default function UserProfile() {
 
   const createReport = useMutation({
     mutationFn: async (data: ReportFormValues) => {
-      return apiRequest('/api/users/report', {
-        method: 'POST',
-        body: JSON.stringify({
-          reportedUserId: userId,
-          reason: data.reason,
-          location: data.location,
-        }),
+      return apiRequest('/api/users/report', 'POST', {
+        reportedUserId: userId,
+        reason: data.reason,
+        location: data.location,
       });
     },
     onSuccess: () => {
@@ -103,9 +100,7 @@ export default function UserProfile() {
 
   const silenceUser = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/users/${userId}/silence`, {
-        method: 'POST',
-      });
+      return apiRequest(`/api/users/${userId}/silence`, 'POST');
     },
     onSuccess: () => {
       toast({
@@ -125,9 +120,7 @@ export default function UserProfile() {
 
   const unsilenceUser = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/users/${userId}/silence`, {
-        method: 'DELETE',
-      });
+      return apiRequest(`/api/users/${userId}/silence`, 'DELETE');
     },
     onSuccess: () => {
       toast({
