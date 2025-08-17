@@ -383,7 +383,7 @@ export default function Dashboard() {
                     <span className="capitalize">{featuredStudy.difficulty}</span>
                   </div>
                   <Button 
-                    className="bg-card text-foreground hover:bg-muted"
+                    className="bg-white/20 text-white hover:bg-white/30 border border-white/30"
                     data-testid="button-start-featured-study"
                     onClick={() => window.location.href = `/studies/${featuredStudy.id}`}
                   >
@@ -447,7 +447,7 @@ export default function Dashboard() {
                           </div>
                           <Button 
                             size="sm"
-                            className="bg-ministry-steel text-white hover:bg-ministry-navy ml-3"
+                            className="bg-card text-foreground hover:bg-muted border border-border ml-3"
                             onClick={() => window.location.href = `/studies/${study.id}`}
                           >
                             Start
