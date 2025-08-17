@@ -275,6 +275,7 @@ export default function UserManagement() {
                       setHasUnsavedChanges(false);
                       setShowUserDialog(true);
                     }}
+                    className="border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10"
                     data-testid={`view-user-${user.id}`}
                   >
                     <Eye className="w-4 h-4 mr-1" />
@@ -520,6 +521,7 @@ export default function UserManagement() {
                   setShowBanDialog(false);
                   setBanReason('');
                 }}
+                className="border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10"
               >
                 Cancel
               </Button>

@@ -363,12 +363,7 @@ export default function VideoManagement() {
           </CardTitle>
           <button 
             onClick={() => setShowUploadDialog(true)} 
-            style={{
-              backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(221.2 83.2% 53.3%)',
-              color: 'white',
-              border: 'none'
-            }}
-            className="px-4 py-2 rounded-lg transition-colors flex items-center cursor-pointer"
+            className="px-4 py-2 rounded-lg transition-colors flex items-center cursor-pointer bg-ministry-navy hover:bg-ministry-charcoal text-white border-none"
           >
             <Upload className="w-4 h-4 mr-2" />
             Upload Video
@@ -593,13 +588,7 @@ export default function VideoManagement() {
                     <button 
                       onClick={handleUpload}
                       disabled={!uploadTitle.trim() || titleExists || checkingTitle}
-                      style={{
-                        backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(221.2 83.2% 53.3%)',
-                        color: 'white',
-                        border: 'none',
-                        opacity: (!uploadTitle.trim() || titleExists || checkingTitle) ? 0.5 : 1
-                      }}
-                      className="w-full px-4 py-2 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                      className="w-full px-4 py-2 rounded-lg transition-colors cursor-pointer flex items-center justify-center bg-ministry-navy hover:bg-ministry-charcoal text-white border-none disabled:opacity-50"
                     >
                       <Upload className="w-4 h-4 mr-2" />
                       Upload Video

@@ -193,11 +193,7 @@ export default function DevotionalManagement() {
             </CardTitle>
             <button
               onClick={() => setShowForm(!showForm)}
-              style={{
-                backgroundColor: 'hsl(49 100% 49%)', // original ministry-gold from CSS
-                color: 'black'
-              }}
-              className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 flex items-center cursor-pointer"
+              className="px-4 py-2 rounded-lg transition-colors flex items-center cursor-pointer bg-ministry-gold hover:bg-ministry-gold/80 text-ministry-charcoal"
               data-testid="button-add-devotional"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -319,6 +315,7 @@ export default function DevotionalManagement() {
                   type="button"
                   variant="outline"
                   onClick={handleCancel}
+                  className="border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10"
                   data-testid="button-cancel-devotional"
                 >
                   Cancel
@@ -356,6 +353,7 @@ export default function DevotionalManagement() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleEdit(devotional)}
+                        className="border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10"
                         data-testid={`button-edit-${devotional.id}`}
                       >
                         <Edit className="w-4 h-4" />
@@ -364,7 +362,7 @@ export default function DevotionalManagement() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleDelete(devotional.id)}
-                        className="text-red-600 hover:text-red-700"
+                        className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700"
                         data-testid={`button-delete-${devotional.id}`}
                       >
                         <Trash className="w-4 h-4" />

@@ -171,12 +171,7 @@ export default function UploadStudyForm() {
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <button 
-          style={{
-            backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(221.2 83.2% 53.3%)',
-            color: 'white',
-            border: 'none'
-          }}
-          className="p-4 rounded-2xl transition-colors flex items-center space-x-3 w-full justify-center cursor-pointer"
+          className="p-4 rounded-2xl transition-colors flex items-center space-x-3 w-full justify-center cursor-pointer bg-ministry-navy hover:bg-ministry-charcoal text-white border-none"
           data-testid="button-upload-study"
         >
           <Plus className="w-6 h-6" />
@@ -465,7 +460,7 @@ export default function UploadStudyForm() {
                 type="button"
                 variant="outline"
                 onClick={() => setDialogOpen(false)}
-                className="flex-1"
+                className="flex-1 border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10"
                 data-testid="button-cancel-study"
               >
                 Cancel
