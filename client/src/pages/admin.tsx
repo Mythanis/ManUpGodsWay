@@ -16,8 +16,9 @@ import UploadStudyForm from "@/components/admin/upload-study-form";
 import UserManagement from "@/components/admin/user-management";
 import DevotionalManagement from "@/components/admin/devotional-management";
 import VideoManagement from "@/components/admin/video-management";
+import LogoManagement from "@/components/admin/logo-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image } from "lucide-react";
 
 interface Study {
   id: string;
@@ -388,7 +389,7 @@ export default function Admin() {
       {/* Admin Management Tabs */}
       <div className="px-6 mb-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-muted">
+          <TabsList className="grid w-full grid-cols-6 bg-muted">
             <TabsTrigger value="content" className="flex items-center space-x-2" data-testid="tab-content">
               <Book className="w-4 h-4" />
               <span>Content</span>
@@ -404,6 +405,10 @@ export default function Admin() {
             <TabsTrigger value="devotionals" className="flex items-center space-x-2" data-testid="tab-devotionals">
               <Calendar className="w-4 h-4" />
               <span>Devotionals</span>
+            </TabsTrigger>
+            <TabsTrigger value="logo" className="flex items-center space-x-2" data-testid="tab-logo">
+              <Image className="w-4 h-4" />
+              <span>Logo</span>
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center space-x-2" data-testid="tab-users">
               <Users className="w-4 h-4" />
@@ -593,6 +598,11 @@ export default function Admin() {
           <TabsContent value="devotionals" className="mt-6">
             <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Daily Devotional Management</h2>
             <DevotionalManagement />
+          </TabsContent>
+
+          <TabsContent value="logo" className="mt-6">
+            <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Logo Management</h2>
+            <LogoManagement />
           </TabsContent>
 
           <TabsContent value="users" className="mt-6">

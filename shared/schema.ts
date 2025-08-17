@@ -556,3 +556,23 @@ export const insertUserSilenceSchema = createInsertSchema(userSilences).omit({
 
 export type UserSilence = typeof userSilences.$inferSelect;
 export type InsertUserSilence = z.infer<typeof insertUserSilenceSchema>;
+
+// Logo settings table for app branding
+export const logoSettings = pgTable("logo_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  logoUrl: varchar("logo_url"),
+  splashDurationMs: integer("splash_duration_ms").default(3000),
+  isEnabled: boolean("is_enabled").default(true),
+  uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertLogoSettingsSchema = createInsertSchema(logoSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type LogoSettings = typeof logoSettings.$inferSelect;
+export type InsertLogoSettings = z.infer<typeof insertLogoSettingsSchema>;

@@ -11,7 +11,8 @@ import {
   insertDiscussionSubscriptionSchema,
   insertDevotionalSchema,
   insertStudyRatingSchema,
-  insertVideoRatingSchema 
+  insertVideoRatingSchema,
+  insertLogoSettingsSchema 
 } from "@shared/schema";
 import { z } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -33,6 +34,21 @@ const upload = multer({
       cb(null, true);
     } else {
       cb(new Error('Only video files are allowed!'));
+    }
+  }
+});
+
+// Configure multer for image uploads (logos)
+const imageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit for images
+  },
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'));
     }
   }
 });
@@ -2226,6 +2242,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Logo settings routes
+  // Get current logo settings
+  app.get('/api/logo', async (req, res) => {
+    try {
+      const logoSettings = await storage.getLogoSettings();
+      res.json(logoSettings);
+    } catch (error) {
+      console.error("Error fetching logo settings:", error);
+      res.status(500).json({ message: "Failed to fetch logo settings" });
+    }
+  });
+
+  // Upload/update logo (admin only)
+  app.post('/api/admin/logo', isAuthenticated, imageUpload.single('logo'), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'Logo file is required' });
+      }
+
+      // Convert uploaded file to base64 data URL
+      const base64Data = req.file.buffer.toString('base64');
+      const dataUrl = `data:${req.file.mimetype};base64,${base64Data}`;
+
+      const { splashDurationMs } = req.body;
+      
+      const logoSettingsData = insertLogoSettingsSchema.parse({
+        logoUrl: dataUrl,
+        splashDurationMs: splashDurationMs ? parseInt(splashDurationMs) : 3000,
+        isEnabled: true,
+        uploadedBy: userId
+      });
+
+      const logoSettings = await storage.updateLogoSettings(logoSettingsData);
+      res.json(logoSettings);
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid logo data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to upload logo" });
     }
   });
 

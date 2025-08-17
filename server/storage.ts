@@ -16,6 +16,7 @@ import {
   notificationPreferences,
   userReports,
   userSilences,
+  logoSettings,
   type User,
   type UpsertUser,
   type Study,
@@ -50,6 +51,8 @@ import {
   type InsertUserReport,
   type UserSilence,
   type InsertUserSilence,
+  type LogoSettings,
+  type InsertLogoSettings,
   videos,
   type Video,
   type InsertVideo,
@@ -179,6 +182,10 @@ export interface IStorage {
   unsilenceUser(silencerId: string, silencedId: string): Promise<void>;
   getUserSilences(userId: string): Promise<string[]>;
   isUserSilenced(silencerId: string, silencedId: string): Promise<boolean>;
+  
+  // Logo settings operations
+  getLogoSettings(): Promise<LogoSettings | undefined>;
+  updateLogoSettings(logoSettings: InsertLogoSettings): Promise<LogoSettings>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2262,6 +2269,32 @@ export class DatabaseStorage implements IStorage {
       ))
       .limit(1);
     return !!silence;
+  }
+
+  // Logo settings operations
+  async getLogoSettings(): Promise<LogoSettings | undefined> {
+    const [settings] = await db
+      .select()
+      .from(logoSettings)
+      .where(eq(logoSettings.isEnabled, true))
+      .orderBy(desc(logoSettings.createdAt))
+      .limit(1);
+    return settings;
+  }
+
+  async updateLogoSettings(logoSettingsData: InsertLogoSettings): Promise<LogoSettings> {
+    // Disable all existing logo settings first
+    await db
+      .update(logoSettings)
+      .set({ isEnabled: false, updatedAt: new Date() })
+      .where(eq(logoSettings.isEnabled, true));
+
+    // Insert new logo settings
+    const [newSettings] = await db
+      .insert(logoSettings)
+      .values(logoSettingsData)
+      .returning();
+    return newSettings;
   }
 }
 
