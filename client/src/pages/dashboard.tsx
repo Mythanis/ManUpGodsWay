@@ -307,7 +307,7 @@ export default function Dashboard() {
                       className={`p-2 rounded-lg transition-colors ${
                         isLiked 
                           ? 'bg-red-100 text-red-500 hover:bg-red-200' 
-                          : 'bg-gray-100 hover:bg-gray-200 text-ministry-slate'
+                          : 'bg-muted hover:bg-muted/80 text-muted-foreground'
                       }`}
                       onClick={() => {
                         setIsLiked(!isLiked);
@@ -323,7 +323,7 @@ export default function Dashboard() {
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200"
+                      className="p-2 rounded-lg bg-muted hover:bg-muted/80"
                       onClick={() => {
                         const shareText = `${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n${devotional.content}`;
                         
@@ -383,7 +383,7 @@ export default function Dashboard() {
                     <span className="capitalize">{featuredStudy.difficulty}</span>
                   </div>
                   <Button 
-                    className="bg-white text-ministry-navy hover:bg-gray-100"
+                    className="bg-card text-foreground hover:bg-muted"
                     data-testid="button-start-featured-study"
                     onClick={() => window.location.href = `/studies/${featuredStudy.id}`}
                   >

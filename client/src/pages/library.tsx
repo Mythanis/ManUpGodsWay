@@ -94,7 +94,7 @@ export default function Library() {
   return (
     <div className="pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal text-white px-6 pt-12 pb-6">
+      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
         <h1 className="text-2xl font-bold mb-2" data-testid="text-library-title">Study Library</h1>
         <p className="text-blue-200 text-sm" data-testid="text-library-subtitle">
           Grow stronger in faith and character
@@ -111,7 +111,7 @@ export default function Library() {
                 placeholder="Search studies, topics, or verses..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-50 rounded-xl pl-10 pr-4 py-3 text-sm border-0 focus:ring-2 focus:ring-ministry-steel focus:bg-white"
+                className="w-full bg-muted rounded-xl pl-10 pr-4 py-3 text-sm border-0 focus:ring-2 focus:ring-ministry-steel focus:bg-background"
                 data-testid="input-search"
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ministry-slate" />
@@ -134,7 +134,7 @@ export default function Library() {
               className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start ${
                 selectedCategory === category.id
                   ? "bg-ministry-navy text-white"
-                  : "bg-gray-100 text-ministry-slate hover:bg-gray-200"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
               data-testid={`button-category-${category.id}`}
             >
@@ -250,7 +250,7 @@ export default function Library() {
                 </p>
                 <Link href={`/studies/${featuredStudy.id}`}>
                   <Button 
-                    className="bg-white text-ministry-navy hover:bg-gray-100"
+                    className="bg-card text-foreground hover:bg-muted"
                     data-testid="button-start-featured"
                   >
                     Start Study

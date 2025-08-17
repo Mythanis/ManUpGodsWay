@@ -342,7 +342,7 @@ export default function Admin() {
   return (
     <div className="pb-20">
       {/* Admin Header */}
-      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal text-white px-6 pt-12 pb-6">
+      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
         <h1 className="text-2xl font-bold mb-2" data-testid="text-admin-title">Admin Panel</h1>
         <p className="text-blue-100 text-sm" data-testid="text-admin-subtitle">
           Content & User Management
@@ -355,28 +355,28 @@ export default function Admin() {
           <CardContent className="p-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-ministry-navy" data-testid="text-total-users">
+                <p className="text-2xl font-bold text-foreground" data-testid="text-total-users">
                   {(stats as any)?.totalUsers || 0}
                 </p>
-                <p className="text-xs text-ministry-slate">Total Users</p>
+                <p className="text-xs text-muted-foreground">Total Users</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-ministry-steel" data-testid="text-total-studies">
                   {(stats as any)?.totalStudies || 0}
                 </p>
-                <p className="text-xs text-ministry-slate">Studies</p>
+                <p className="text-xs text-muted-foreground">Studies</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-ministry-success" data-testid="text-active-today">
                   {(stats as any)?.activeToday || 0}
                 </p>
-                <p className="text-xs text-ministry-slate">Active Today</p>
+                <p className="text-xs text-muted-foreground">Active Today</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-ministry-gold" data-testid="text-new-posts">
                   {(stats as any)?.newPosts || 0}
                 </p>
-                <p className="text-xs text-ministry-slate">New Posts</p>
+                <p className="text-xs text-muted-foreground">New Posts</p>
               </div>
             </div>
           </CardContent>
@@ -386,7 +386,7 @@ export default function Admin() {
       {/* Admin Management Tabs */}
       <div className="px-6 mb-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-gray-100">
+          <TabsList className="grid w-full grid-cols-5 bg-muted">
             <TabsTrigger value="content" className="flex items-center space-x-2" data-testid="tab-content">
               <Book className="w-4 h-4" />
               <span>Content</span>
