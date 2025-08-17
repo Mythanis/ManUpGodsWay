@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth, type User } from "@/hooks/useAuth";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
 import { formatLocalTime } from "@/lib/utils";
-import { MessageCircle, Plus, Users, Send, ArrowLeft, Search, X, UserPlus, Trash2, LogOut, MoreVertical } from "lucide-react";
+import { MessageCircle, Plus, Users, Send, ArrowLeft, Search, X, UserPlus, Trash2, LogOut, MoreVertical, User as UserIcon } from "lucide-react";
 
 interface MessageUser {
   id: string;
@@ -57,6 +58,7 @@ export default function Messages() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [showNewGroupDialog, setShowNewGroupDialog] = useState(false);
@@ -442,20 +444,14 @@ export default function Messages() {
                                 <img
                                   src={targetUser.profileImageUrl || `https://ui-avatars.com/api/?name=${targetUser.firstName}+${targetUser.lastName}&background=4A90B8&color=fff`}
                                   alt={`${targetUser.firstName} ${targetUser.lastName}`}
-                                  className={`w-10 h-10 rounded-full object-cover ${
-                                    targetUser.allowDirectMessages !== false 
-                                      ? 'cursor-pointer hover:ring-2 hover:ring-ministry-navy' 
-                                      : 'cursor-default opacity-60'
-                                  }`}
+                                  className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy"
                                   onClick={(e) => {
-                                    if (targetUser.allowDirectMessages !== false) {
-                                      const rect = e.currentTarget.getBoundingClientRect();
-                                      setShowProfileMenu({
-                                        userId: targetUser.id,
-                                        x: rect.right,
-                                        y: rect.top
-                                      });
-                                    }
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    setShowProfileMenu({
+                                      userId: targetUser.id,
+                                      x: rect.right,
+                                      y: rect.top
+                                    });
                                   }}
                                 />
                                 <div>
@@ -575,21 +571,15 @@ export default function Messages() {
                                 <img
                                   src={targetUser.profileImageUrl || `https://ui-avatars.com/api/?name=${targetUser.firstName}+${targetUser.lastName}&background=4A90B8&color=fff`}
                                   alt={`${targetUser.firstName} ${targetUser.lastName}`}
-                                  className={`w-8 h-8 rounded-full object-cover ${
-                                    (targetUser.allowDirectMessages !== false || targetUser.allowGroupInvites !== false) 
-                                      ? 'cursor-pointer hover:ring-2 hover:ring-ministry-navy' 
-                                      : 'cursor-default opacity-60'
-                                  }`}
+                                  className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (targetUser.allowDirectMessages !== false || targetUser.allowGroupInvites !== false) {
-                                      const rect = e.currentTarget.getBoundingClientRect();
-                                      setShowProfileMenu({
-                                        userId: targetUser.id,
-                                        x: rect.right,
-                                        y: rect.top
-                                      });
-                                    }
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    setShowProfileMenu({
+                                      userId: targetUser.id,
+                                      x: rect.right,
+                                      y: rect.top
+                                    });
                                   }}
                                 />
                                 <label
@@ -768,21 +758,15 @@ export default function Messages() {
                         <img
                           src={message.user.profileImageUrl || `https://ui-avatars.com/api/?name=${message.user.firstName}+${message.user.lastName}&background=4A90B8&color=fff`}
                           alt={`${message.user.firstName} ${message.user.lastName}`}
-                          className={`w-8 h-8 rounded-full object-cover flex-shrink-0 ${
-                            (message.user.allowDirectMessages !== false || message.user.allowGroupInvites !== false) 
-                              ? 'cursor-pointer hover:ring-2 hover:ring-ministry-navy' 
-                              : 'cursor-default opacity-60'
-                          }`}
+                          className="w-8 h-8 rounded-full object-cover flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-ministry-navy"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (message.user.allowDirectMessages !== false || message.user.allowGroupInvites !== false) {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setShowProfileMenu({
-                                userId: message.userId,
-                                x: rect.right,
-                                y: rect.top
-                              });
-                            }
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setShowProfileMenu({
+                              userId: message.userId,
+                              x: rect.right,
+                              y: rect.top
+                            });
                           }}
                         />
                       )}
@@ -879,6 +863,19 @@ export default function Messages() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="space-y-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-left"
+                onClick={() => {
+                  setLocation(`/users/${showProfileMenu.userId}`);
+                  setShowProfileMenu(null);
+                }}
+                data-testid={`profile-menu-view-profile-${showProfileMenu.userId}`}
+              >
+                <UserIcon className="w-4 h-4 mr-2" />
+                View Profile
+              </Button>
               {targetUser?.allowDirectMessages !== false && (
                 <Button
                   variant="ghost"
@@ -910,11 +907,6 @@ export default function Messages() {
                   <UserPlus className="w-4 h-4 mr-2" />
                   Add to Group Chat
                 </Button>
-              )}
-              {targetUser?.allowDirectMessages === false && targetUser?.allowGroupInvites === false && (
-                <div className="p-2 text-xs text-muted-foreground text-center">
-                  This user has disabled messaging
-                </div>
               )}
             </div>
           </div>

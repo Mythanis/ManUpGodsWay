@@ -182,11 +182,7 @@ export default function DiscussionCard({
           <img 
             src={discussion.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${discussion.user?.firstName}+${discussion.user?.lastName}&background=4A90B8&color=fff`}
             alt={`${discussion.user?.firstName} ${discussion.user?.lastName}`}
-            className={`w-10 h-10 rounded-full object-cover ${
-              (discussion.user?.allowDirectMessages !== false || discussion.user?.allowGroupInvites !== false) 
-                ? 'cursor-pointer hover:ring-2 hover:ring-ministry-navy' 
-                : 'cursor-default opacity-60'
-            }`}
+            className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy"
             onClick={(e) => {
               e.stopPropagation();
               setLocation(`/users/${discussion.userId}`);
@@ -306,11 +302,7 @@ export default function DiscussionCard({
                   <img 
                     src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=4A90B8&color=fff&size=32`}
                     alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
-                    className={`w-8 h-8 rounded-full object-cover ${
-                      (reply.user?.allowDirectMessages !== false || reply.user?.allowGroupInvites !== false) 
-                        ? 'cursor-pointer hover:ring-2 hover:ring-ministry-navy' 
-                        : 'cursor-default opacity-60'
-                    }`}
+                    className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy"
                     onClick={(e) => {
                       e.stopPropagation();
                       setLocation(`/users/${reply.userId}`);
