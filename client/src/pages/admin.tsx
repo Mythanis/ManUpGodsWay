@@ -430,15 +430,18 @@ export default function Admin() {
                 <span className="font-medium">Manage Videos</span>
               </button>
               
-              <Button 
-                variant="outline"
+              <button
                 onClick={() => setShowNotificationDialog(true)}
-                className="bg-ministry-gold text-ministry-navy p-4 rounded-2xl hover:bg-ministry-gold/90 border-none flex items-center space-x-3 w-full"
+                style={{
+                  backgroundColor: 'hsl(49 100% 49%)', // original ministry-gold from CSS
+                  color: 'black'
+                }}
+                className="p-4 rounded-2xl hover:opacity-90 border-none flex items-center space-x-3 w-full cursor-pointer transition-colors"
                 data-testid="button-send-notification"
               >
                 <Bell className="w-6 h-6" />
                 <span className="font-medium">Send Push Notification</span>
-              </Button>
+              </button>
             </div>
           </TabsContent>
 
