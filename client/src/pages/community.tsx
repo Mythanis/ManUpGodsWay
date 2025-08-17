@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X, Send, Hash } from "lucide-react";
 import { z } from "zod";
+import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
 
 // Categories for display/filtering (includes all categories)
 const allCategories = [
@@ -735,7 +736,10 @@ export default function Community() {
                         • {getTimeAgo(selectedDiscussionForDialog.createdAt)}
                       </span>
                     </div>
-                    <p className="text-ministry-slate">{selectedDiscussionForDialog.content}</p>
+                    <p className="text-ministry-slate mb-3">{selectedDiscussionForDialog.content}</p>
+                    <div className="flex items-center justify-end">
+                      <DiscussionSubscriptionButton discussionId={selectedDiscussionForDialog.id} />
+                    </div>
                   </div>
                 </div>
               </div>

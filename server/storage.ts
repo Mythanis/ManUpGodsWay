@@ -3,6 +3,7 @@ import {
   studies,
   discussions,
   discussionReplies,
+  discussionSubscriptions,
   userProgress,
   devotionals,
   studyRatings,
@@ -20,6 +21,8 @@ import {
   type InsertDiscussion,
   type DiscussionReply,
   type InsertDiscussionReply,
+  type DiscussionSubscription,
+  type InsertDiscussionSubscription,
   type UserProgress,
   type InsertUserProgress,
   type Devotional,
@@ -80,6 +83,12 @@ export interface IStorage {
   
   // Like operations
   toggleDiscussionLike(discussionId: string, userId: string): Promise<{ liked: boolean; totalLikes: number }>;
+  
+  // Discussion subscription operations
+  subscribeToDiscussion(subscription: InsertDiscussionSubscription): Promise<DiscussionSubscription>;
+  unsubscribeFromDiscussion(discussionId: string, userId: string): Promise<void>;
+  isSubscribedToDiscussion(discussionId: string, userId: string): Promise<boolean>;
+  getDiscussionSubscribers(discussionId: string): Promise<DiscussionSubscription[]>;
   
   // Devotional operations
   getTodaysDevotional(): Promise<Devotional | undefined>;
@@ -761,6 +770,68 @@ export class DatabaseStorage implements IStorage {
       .where(eq(discussions.id, discussionId));
 
     return { liked: true, totalLikes: newLikes };
+  }
+
+  // Discussion subscription operations
+  async subscribeToDiscussion(subscription: InsertDiscussionSubscription): Promise<DiscussionSubscription> {
+    // Check if subscription already exists
+    const [existingSubscription] = await db
+      .select()
+      .from(discussionSubscriptions)
+      .where(and(
+        eq(discussionSubscriptions.userId, subscription.userId),
+        eq(discussionSubscriptions.discussionId, subscription.discussionId)
+      ));
+
+    if (existingSubscription) {
+      // Update existing subscription to be active
+      const [updated] = await db
+        .update(discussionSubscriptions)
+        .set({ isActive: true, updatedAt: new Date() })
+        .where(eq(discussionSubscriptions.id, existingSubscription.id))
+        .returning();
+      return updated;
+    }
+
+    // Create new subscription
+    const [newSubscription] = await db
+      .insert(discussionSubscriptions)
+      .values(subscription)
+      .returning();
+    return newSubscription;
+  }
+
+  async unsubscribeFromDiscussion(discussionId: string, userId: string): Promise<void> {
+    await db
+      .update(discussionSubscriptions)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(and(
+        eq(discussionSubscriptions.userId, userId),
+        eq(discussionSubscriptions.discussionId, discussionId)
+      ));
+  }
+
+  async isSubscribedToDiscussion(discussionId: string, userId: string): Promise<boolean> {
+    const [subscription] = await db
+      .select()
+      .from(discussionSubscriptions)
+      .where(and(
+        eq(discussionSubscriptions.userId, userId),
+        eq(discussionSubscriptions.discussionId, discussionId),
+        eq(discussionSubscriptions.isActive, true)
+      ));
+    
+    return !!subscription;
+  }
+
+  async getDiscussionSubscribers(discussionId: string): Promise<DiscussionSubscription[]> {
+    return await db
+      .select()
+      .from(discussionSubscriptions)
+      .where(and(
+        eq(discussionSubscriptions.discussionId, discussionId),
+        eq(discussionSubscriptions.isActive, true)
+      ));
   }
 
   // Devotional operations

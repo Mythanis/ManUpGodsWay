@@ -19,6 +19,7 @@ import { insertStudyRatingSchema, type Study, type UserProgress, type Discussion
 import { ArrowLeft, Play, Clock, Users, Star, MessageCircle, Send } from "lucide-react";
 import { Link } from "wouter";
 import { z } from "zod";
+import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
 
 const ratingSchema = insertStudyRatingSchema.pick({ rating: true, review: true });
 
@@ -664,7 +665,10 @@ export default function StudyDetail() {
                       </Badge>
                     </div>
                     <p className="text-ministry-slate mb-2">Discussion for "{study?.title}" study</p>
-                    <p className="text-ministry-slate">{studyDiscussion.content}</p>
+                    <p className="text-ministry-slate mb-3">{studyDiscussion.content}</p>
+                    <div className="flex items-center justify-end">
+                      <DiscussionSubscriptionButton discussionId={studyDiscussion.id} />
+                    </div>
                   </div>
                 </div>
               </div>

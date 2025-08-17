@@ -8,6 +8,7 @@ import {
   insertStudySchema, 
   insertDiscussionSchema, 
   insertDiscussionReplySchema,
+  insertDiscussionSubscriptionSchema,
   insertDevotionalSchema,
   insertStudyRatingSchema,
   insertVideoRatingSchema 
@@ -466,6 +467,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check subscription status for a discussion
+  app.get("/api/discussions/:id/subscription-status", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.claims.sub;
+      
+      const isSubscribed = await storage.isSubscribedToDiscussion(id, userId);
+      
+      res.json({ isSubscribed });
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
+      res.status(500).json({ error: "Failed to check subscription status" });
+    }
+  });
+
+  // Subscribe to discussion notifications
+  app.post("/api/discussions/:id/subscribe", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.claims.sub;
+      
+      const subscription = await storage.subscribeToDiscussion({
+        userId,
+        discussionId: id,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      
+      res.json({ success: true, subscription });
+    } catch (error) {
+      console.error('Error subscribing to discussion:', error);
+      res.status(500).json({ error: "Failed to subscribe to discussion" });
+    }
+  });
+
+  // Unsubscribe from discussion notifications
+  app.delete("/api/discussions/:id/subscribe", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.claims.sub;
+      
+      await storage.unsubscribeFromDiscussion(id, userId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error unsubscribing from discussion:', error);
+      res.status(500).json({ error: "Failed to unsubscribe from discussion" });
+    }
+  });
+
   app.post('/api/discussions', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -560,6 +612,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const reply = await storage.createReply(replyData);
+      
+      // Send notifications to discussion subscribers (but not the person who posted the reply)
+      try {
+        const subscribers = await storage.getDiscussionSubscribers(discussionId);
+        const replier = await storage.getUser(userId);
+        const replierName = replier ? `${replier.firstName} ${replier.lastName}` : 'Someone';
+        
+        // Filter out the replier from notification recipients
+        const otherSubscribers = subscribers.filter(sub => sub.userId !== userId);
+        
+        if (otherSubscribers.length > 0) {
+          const notificationPromises = otherSubscribers.map(async (subscriber) => {
+            return await storage.createNotification({
+              userId: subscriber.userId,
+              type: 'discussion_reply',
+              title: '💬 New Reply in Subscribed Discussion',
+              message: `${replierName} replied to "${discussion.title}"`,
+              relatedId: discussion.id,
+            });
+          });
+          
+          await Promise.allSettled(notificationPromises);
+        }
+      } catch (notificationError) {
+        console.error("Error sending reply notifications:", notificationError);
+        // Don't fail the reply creation if notifications fail
+      }
+      
       res.status(201).json(reply);
     } catch (error) {
       console.error("Error creating reply:", error);
@@ -580,6 +660,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error toggling like:", error);
       res.status(500).json({ message: "Failed to update like" });
+    }
+  });
+
+  // Discussion subscription routes
+  app.post('/api/discussions/:id/subscribe', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const discussionId = req.params.id;
+      
+      // Verify discussion exists
+      const discussion = await storage.getDiscussion(discussionId);
+      if (!discussion) {
+        return res.status(404).json({ message: "Discussion not found" });
+      }
+      
+      const subscriptionData = insertDiscussionSubscriptionSchema.parse({
+        userId,
+        discussionId,
+        isActive: true,
+      });
+      
+      const subscription = await storage.subscribeToDiscussion(subscriptionData);
+      res.status(201).json(subscription);
+    } catch (error) {
+      console.error("Error subscribing to discussion:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid subscription data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to subscribe to discussion" });
+    }
+  });
+
+  app.delete('/api/discussions/:id/subscribe', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const discussionId = req.params.id;
+      
+      await storage.unsubscribeFromDiscussion(discussionId, userId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error unsubscribing from discussion:", error);
+      res.status(500).json({ message: "Failed to unsubscribe from discussion" });
+    }
+  });
+
+  app.get('/api/discussions/:id/subscription-status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const discussionId = req.params.id;
+      
+      const isSubscribed = await storage.isSubscribedToDiscussion(discussionId, userId);
+      res.json({ isSubscribed });
+    } catch (error) {
+      console.error("Error checking subscription status:", error);
+      res.status(500).json({ message: "Failed to check subscription status" });
     }
   });
 

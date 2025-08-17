@@ -133,6 +133,16 @@ export const discussionReplies = pgTable("discussion_replies", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Discussion subscriptions for notifications
+export const discussionSubscriptions = pgTable("discussion_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  discussionId: varchar("discussion_id").notNull().references(() => discussions.id, { onDelete: 'cascade' }),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Daily devotionals
 export const devotionals = pgTable("devotionals", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -234,6 +244,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   replies: many(discussionReplies),
   ratings: many(studyRatings),
   videoRatings: many(videoRatings),
+  discussionSubscriptions: many(discussionSubscriptions),
 }));
 
 export const videosRelations = relations(videos, ({ one, many }) => ({
@@ -253,11 +264,23 @@ export const discussionsRelations = relations(discussions, ({ one, many }) => ({
   user: one(users, { fields: [discussions.userId], references: [users.id] }),
   study: one(studies, { fields: [discussions.studyId], references: [studies.id] }),
   replies: many(discussionReplies),
+  subscriptions: many(discussionSubscriptions),
 }));
 
 export const discussionRepliesRelations = relations(discussionReplies, ({ one }) => ({
   discussion: one(discussions, { fields: [discussionReplies.discussionId], references: [discussions.id] }),
   user: one(users, { fields: [discussionReplies.userId], references: [users.id] }),
+}));
+
+export const discussionSubscriptionsRelations = relations(discussionSubscriptions, ({ one }) => ({
+  discussion: one(discussions, {
+    fields: [discussionSubscriptions.discussionId],
+    references: [discussions.id],
+  }),
+  user: one(users, {
+    fields: [discussionSubscriptions.userId],
+    references: [users.id],
+  }),
 }));
 
 export const userProgressRelations = relations(userProgress, ({ one }) => ({
@@ -363,6 +386,12 @@ export const insertDiscussionReplySchema = createInsertSchema(discussionReplies)
   likes: true,
 });
 
+export const insertDiscussionSubscriptionSchema = createInsertSchema(discussionSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
   id: true,
   createdAt: true,
@@ -450,3 +479,5 @@ export type MessageRequest = typeof messageRequests.$inferSelect;
 export type InsertMessageRequest = z.infer<typeof insertMessageRequestSchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type DiscussionSubscription = typeof discussionSubscriptions.$inferSelect;
+export type InsertDiscussionSubscription = z.infer<typeof insertDiscussionSubscriptionSchema>;
