@@ -651,22 +651,22 @@ export default function StudyDetail() {
           {studyDiscussion && (
             <div className="flex flex-col h-full min-h-0">
               {/* Discussion Header */}
-              <div className="border-b pb-4 mb-4 flex-shrink-0">
-                <div className="flex items-start space-x-3 mb-3">
-                  <div className="w-12 h-12 rounded-full bg-ministry-navy/10 flex items-center justify-center">
-                    <MessageCircle className="w-6 h-6 text-ministry-navy" />
+              <div className="border-b pb-2 mb-2 flex-shrink-0">
+                <div className="flex items-start space-x-3 mb-2">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-ministry-navy/10 flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-ministry-navy" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
-                      <h3 className="font-bold text-lg text-ministry-charcoal">
+                      <h3 className="font-bold text-base sm:text-lg text-ministry-charcoal truncate">
                         {studyDiscussion.title}
                       </h3>
-                      <Badge variant="default" className="text-xs bg-ministry-navy text-white">
+                      <Badge variant="default" className="text-xs bg-ministry-navy text-white flex-shrink-0">
                         📚 Study
                       </Badge>
                     </div>
-                    <p className="text-ministry-slate mb-2">Discussion for "{study?.title}" study</p>
-                    <p className="text-ministry-slate mb-3">{studyDiscussion.content}</p>
+                    <p className="text-sm text-ministry-slate mb-1 truncate">Discussion for "{study?.title}" study</p>
+                    <p className="text-sm text-ministry-slate mb-2 line-clamp-2">{studyDiscussion.content}</p>
                     <div className="flex items-center justify-end">
                       <DiscussionSubscriptionButton discussionId={studyDiscussion.id} />
                     </div>
@@ -675,15 +675,17 @@ export default function StudyDetail() {
               </div>
 
               {/* Replies Section */}
-              <ScrollArea className="flex-1 min-h-0 mb-4 h-full">
-                <div className="pr-4">
-                  <StudyDiscussionReplies discussionId={studyDiscussion.id} />
-                </div>
-              </ScrollArea>
+              <div className="flex-1 min-h-0 mb-2 overflow-hidden">
+                <ScrollArea className="h-full">
+                  <div className="pr-4">
+                    <StudyDiscussionReplies discussionId={studyDiscussion.id} />
+                  </div>
+                </ScrollArea>
+              </div>
 
               {/* Reply Form */}
               {canAccess && (
-                <div className="border-t pt-4 flex-shrink-0 bg-white dark:bg-gray-900 relative z-10">
+                <div className="border-t pt-2 flex-shrink-0 bg-white dark:bg-gray-900">
                   <StudyDiscussionReplyForm 
                     discussionId={studyDiscussion.id}
                     currentUserTier={(user as any)?.subscriptionTier || 'free'}
@@ -693,8 +695,8 @@ export default function StudyDetail() {
               )}
               
               {!canAccess && (
-                <div className="border-t pt-4 text-center py-4 flex-shrink-0 bg-white dark:bg-gray-900">
-                  <p className="text-ministry-slate mb-2">
+                <div className="border-t pt-2 text-center py-2 flex-shrink-0 bg-white dark:bg-gray-900">
+                  <p className="text-sm text-ministry-slate">
                     {study?.requiredTier && study.requiredTier !== 'free' 
                       ? `${study.requiredTier.charAt(0).toUpperCase() + study.requiredTier.slice(1)} subscription required to participate in this discussion.`
                       : 'You need access to this study to participate in the discussion.'

@@ -735,33 +735,33 @@ export default function Community() {
           {selectedDiscussionForDialog && (
             <div className="flex flex-col h-full min-h-0">
               {/* Discussion Header */}
-              <div className="border-b pb-4 mb-4 flex-shrink-0">
-                <div className="flex items-start space-x-3 mb-3">
+              <div className="border-b pb-2 mb-2 flex-shrink-0">
+                <div className="flex items-start space-x-3 mb-2">
                   <img 
                     src={selectedDiscussionForDialog.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${selectedDiscussionForDialog.user?.firstName}+${selectedDiscussionForDialog.user?.lastName}&background=4A90B8&color=fff`}
                     alt={`${selectedDiscussionForDialog.user?.firstName} ${selectedDiscussionForDialog.user?.lastName}`}
-                    className="w-12 h-12 rounded-full object-cover"
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
                   />
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
-                      <h3 className="font-bold text-lg text-ministry-charcoal">
+                      <h3 className="font-bold text-base sm:text-lg text-ministry-charcoal truncate">
                         {selectedDiscussionForDialog.title}
                       </h3>
                       {selectedDiscussionForDialog.studyId && (
-                        <Badge variant="default" className="text-xs bg-ministry-navy text-white">
+                        <Badge variant="default" className="text-xs bg-ministry-navy text-white flex-shrink-0">
                           📚 Study
                         </Badge>
                       )}
                     </div>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <span className="text-sm text-ministry-charcoal font-medium">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="text-sm text-ministry-charcoal font-medium truncate">
                         {selectedDiscussionForDialog.user?.firstName} {selectedDiscussionForDialog.user?.lastName?.charAt(0)}.
                       </span>
-                      <span className="text-xs text-ministry-slate">
+                      <span className="text-xs text-ministry-slate flex-shrink-0">
                         • {getTimeAgo(selectedDiscussionForDialog.createdAt)}
                       </span>
                     </div>
-                    <p className="text-ministry-slate mb-3">{selectedDiscussionForDialog.content}</p>
+                    <p className="text-sm text-ministry-slate mb-2 line-clamp-2">{selectedDiscussionForDialog.content}</p>
                     <div className="flex items-center justify-end">
                       <DiscussionSubscriptionButton discussionId={selectedDiscussionForDialog.id} />
                     </div>
@@ -770,14 +770,16 @@ export default function Community() {
               </div>
 
               {/* Replies Section */}
-              <ScrollArea className="flex-1 min-h-0 mb-4 h-full">
-                <div className="pr-4">
-                  <DiscussionReplies discussionId={selectedDiscussionForDialog.id} />
-                </div>
-              </ScrollArea>
+              <div className="flex-1 min-h-0 mb-2 overflow-hidden">
+                <ScrollArea className="h-full">
+                  <div className="pr-4">
+                    <DiscussionReplies discussionId={selectedDiscussionForDialog.id} />
+                  </div>
+                </ScrollArea>
+              </div>
 
               {/* Reply Form */}
-              <div className="border-t pt-4 flex-shrink-0 bg-white dark:bg-gray-900 relative z-10">
+              <div className="border-t pt-2 flex-shrink-0 bg-white dark:bg-gray-900">
                 <DiscussionReplyForm 
                   discussionId={selectedDiscussionForDialog.id}
                   currentUserTier={(user as any)?.subscriptionTier || 'free'}
