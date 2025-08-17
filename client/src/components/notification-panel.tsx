@@ -14,7 +14,7 @@ import { NotificationPreferences } from "./notification-preferences";
 interface Notification {
   id: string;
   userId: string;
-  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'discussion_reply' | 'study' | 'video' | 'new_video';
+  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'discussion_reply' | 'study' | 'video' | 'new_video' | 'admin';
   title: string;
   message: string;
   relatedId?: string;
@@ -206,6 +206,17 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
           // Navigate to community page where discussions are shown
           console.log('Navigating to community page (no discussion ID)');
           window.location.href = '/community';
+        }
+        break;
+        
+      case 'admin':
+        // For admin notifications with report conversation links
+        if (notification.relatedId) {
+          // Navigate to the conversation related to the admin notification (likely a report)
+          window.location.href = `/messages?conversation=${notification.relatedId}`;
+        } else {
+          // Navigate to admin dashboard for general admin notifications
+          window.location.href = '/admin';
         }
         break;
         

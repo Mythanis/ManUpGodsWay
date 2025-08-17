@@ -1002,8 +1002,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const messageSenders = await storage.getConversationMessageSenders(conversationId);
           
           // Find the missing participant (someone who sent messages but isn't currently a participant)
-          const missingParticipants = messageSenders.filter(senderId => 
-            !currentParticipants.some(p => p.userId === senderId)
+          const missingParticipants = messageSenders.filter((senderId: string) => 
+            !currentParticipants.some((p: any) => p.userId === senderId)
           );
           
           // Re-add missing participants
@@ -1031,7 +1031,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Get updated conversation with all current participants
         const updatedConversation = await storage.getConversation(conversationId);
         if (updatedConversation) {
-          const otherParticipants = updatedConversation.participants.filter((p) => p.userId !== userId);
+          const otherParticipants = updatedConversation.participants.filter((p: any) => p.userId !== userId);
           const senderUser = await storage.getUser(userId);
           
           for (const participant of otherParticipants) {
@@ -1393,6 +1393,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const report = await storage.createUserReport(reportData);
+      
+      // Create direct message conversation with admins about the report
+      try {
+        const reporter = await storage.getUser(req.user.claims.sub);
+        const reportedUser = await storage.getUser(reportedUserId);
+        const allUsers = await storage.getAllUsers(500); // Get more users to find all admins
+        const admins = allUsers.filter(user => user.role === 'admin');
+        
+        if (admins.length > 0) {
+          const reporterName = reporter ? `${reporter.firstName} ${reporter.lastName}` : 'Someone';
+          const reportedName = reportedUser ? `${reportedUser.firstName} ${reportedUser.lastName}` : 'Unknown User';
+          
+          // Create group conversation with all admins for this report
+          const conversationData = {
+            type: "group",
+            name: `Report: ${reportedName} (${location})`,
+            description: `User report created by ${reporterName}`,
+            createdBy: req.user.claims.sub,
+          };
+          
+          const adminIds = admins.map(admin => admin.id);
+          const allParticipantIds = Array.from(new Set([req.user.claims.sub, ...adminIds]));
+          const conversation = await storage.createGroupConversation(conversationData, allParticipantIds);
+          
+          // Send initial message with report details
+          const reportMessage = `🚨 **User Report Submitted**\n\n` +
+            `**Reporter:** ${reporterName}\n` +
+            `**Reported User:** ${reportedName}\n` +
+            `**Location:** ${location}\n` +
+            `**Reason:** ${reason}\n\n` +
+            `Please review this report and take appropriate action.`;
+            
+          await storage.sendMessage({
+            conversationId: conversation.id,
+            userId: req.user.claims.sub,
+            content: reportMessage,
+          });
+          
+          // Send notification to all admins with link to the conversation
+          const notificationPromises = admins.map(async (admin) => {
+            return await storage.createNotification({
+              userId: admin.id,
+              type: 'admin',
+              title: '🚨 New User Report',
+              message: `${reporterName} reported ${reportedName} for ${location}. Click to review the report details.`,
+              relatedId: conversation.id, // This will link to the conversation
+            });
+          });
+          
+          await Promise.all(notificationPromises.filter(Boolean));
+          console.log(`Sent report notifications to ${admins.length} admin(s)`);
+        }
+      } catch (notificationError) {
+        console.error('Error sending report notifications to admins:', notificationError);
+        // Don't fail the report creation if notification fails
+      }
+      
       res.status(201).json(report);
     } catch (error) {
       console.error("Error creating user report:", error);
@@ -1408,16 +1465,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create default preferences if none exist
       if (!preferences) {
-        preferences = await storage.updateNotificationPreferences(userId, {
-          userId,
-          newStudies: true,
-          newVideos: true,
-          newDevotionals: true,
-          discussionReplies: true,
-          directMessages: true,
-          groupMessages: true,
-          weeklyDigest: true,
-        });
+        await storage.createDefaultNotificationPreferences(userId);
+        preferences = await storage.getNotificationPreferences(userId);
       }
 
       res.json(preferences);
