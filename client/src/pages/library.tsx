@@ -130,11 +130,11 @@ export default function Library() {
             <Button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              variant={selectedCategory === category.id ? "default" : "outline"}
-              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start ${
+              variant="ghost"
+              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start border ${
                 selectedCategory === category.id
-                  ? "bg-ministry-navy text-white"
-                  : "!bg-white dark:!bg-gray-800 !text-gray-900 dark:!text-gray-100 !border !border-gray-200 dark:!border-gray-700 hover:!bg-gray-50 dark:hover:!bg-gray-700"
+                  ? "!bg-ministry-navy !text-white !border-ministry-navy"
+                  : "!bg-gray-100 dark:!bg-gray-700 !text-gray-800 dark:!text-gray-200 !border-gray-300 dark:!border-gray-600 hover:!bg-gray-200 dark:hover:!bg-gray-600"
               }`}
               data-testid={`button-category-${category.id}`}
             >
