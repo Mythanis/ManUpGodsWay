@@ -1135,15 +1135,26 @@ export class DatabaseStorage implements IStorage {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
+    // Count active users today (same as community stats)
     const [{ activeToday }] = await db
-      .select({ activeToday: count(userProgress.id) })
-      .from(userProgress)
-      .where(sql`${userProgress.lastAccessedAt} >= ${today}`);
+      .select({ activeToday: count(users.id) })
+      .from(users)
+      .where(sql`DATE(${users.lastActiveDate}) = DATE(${today})`);
 
-    const [{ newPosts }] = await db
-      .select({ newPosts: count(discussions.id) })
+    // Count new discussions created today
+    const [{ newDiscussions }] = await db
+      .select({ newDiscussions: count(discussions.id) })
       .from(discussions)
       .where(sql`${discussions.createdAt} >= ${today}`);
+
+    // Count new discussion replies created today
+    const [{ newReplies }] = await db
+      .select({ newReplies: count(discussionReplies.id) })
+      .from(discussionReplies)
+      .where(sql`${discussionReplies.createdAt} >= ${today}`);
+
+    // Total new posts = new discussions + new replies (same as community stats)
+    const newPosts = newDiscussions + newReplies;
 
     return {
       totalUsers,
