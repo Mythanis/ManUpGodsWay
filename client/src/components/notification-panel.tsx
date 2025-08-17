@@ -135,6 +135,13 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
   });
 
   const handleNotificationClick = (notification: Notification) => {
+    console.log('Notification clicked:', {
+      type: notification.type,
+      relatedId: notification.relatedId,
+      title: notification.title,
+      message: notification.message
+    });
+    
     if (!notification.isRead) {
       markAsReadMutation.mutate(notification.id);
     }
@@ -181,6 +188,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       case 'new_devotional':
       case 'devotional':
         // Navigate to dashboard where today's devotional is shown
+        console.log('Navigating to dashboard for devotional');
         window.location.href = '/dashboard';
         break;
         
@@ -189,9 +197,12 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       case 'discussion_reply':
         if (notification.relatedId) {
           // Navigate to community page with specific discussion highlighted
-          window.location.href = `/community?discussion=${notification.relatedId}`;
+          const discussionUrl = `/community?discussion=${notification.relatedId}`;
+          console.log('Navigating to discussion URL:', discussionUrl);
+          window.location.href = discussionUrl;
         } else {
           // Navigate to community page where discussions are shown
+          console.log('Navigating to community page (no discussion ID)');
           window.location.href = '/community';
         }
         break;
@@ -199,12 +210,16 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       default:
         // For unknown notification types, try to navigate to related content if available
         console.log('Unknown notification type:', notification.type, 'with relatedId:', notification.relatedId);
+        console.log('Full notification object:', notification);
         
         // If it's likely a conversation/message type, go to messages
         if (notification.relatedId && (notification.type.includes('message') || notification.type === 'message_request')) {
-          window.location.href = `/messages?conversation=${notification.relatedId}`;
+          const messageUrl = `/messages?conversation=${notification.relatedId}`;
+          console.log('Navigating to message URL:', messageUrl);
+          window.location.href = messageUrl;
         } else {
           // Default fallback for truly unknown types
+          console.log('Navigating to dashboard as fallback');
           window.location.href = '/dashboard';
         }
         break;
