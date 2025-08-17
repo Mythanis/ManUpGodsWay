@@ -77,6 +77,22 @@ export default function Admin() {
   });
   const [videoInputType, setVideoInputType] = useState<'manual' | 'uploaded'>('manual');
 
+  // Mouse wheel horizontal scrolling for admin tabs
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Prevent default vertical scroll
+      e.preventDefault();
+      // Scroll horizontally instead
+      container.scrollLeft += e.deltaY;
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, []);
+
   // Check admin access
   useEffect(() => {
     if (!authLoading && (!isAuthenticated || (user as any)?.role !== 'admin')) {
