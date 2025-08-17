@@ -724,10 +724,10 @@ export default function Community() {
 
       {/* Discussion Dialog Pop-out */}
       <Dialog open={discussionDialogOpen} onOpenChange={setDiscussionDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[85vh] sm:max-h-[80vh] flex flex-col p-4 sm:p-6 w-full mx-2 sm:mx-auto overflow-hidden" style={{ bottom: 'auto', top: '2vh', position: 'fixed' }}>
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <MessageCircle className="w-5 h-5 text-ministry-navy" />
+        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col p-4 sm:p-6 w-full sm:mx-auto overflow-hidden">
+          <DialogHeader className="flex-shrink-0 pb-2 sm:pb-4">
+            <DialogTitle className="flex items-center space-x-2 text-lg sm:text-xl">
+              <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-ministry-navy" />
               <span>Discussion</span>
             </DialogTitle>
           </DialogHeader>
@@ -770,8 +770,10 @@ export default function Community() {
               </div>
 
               {/* Replies Section */}
-              <ScrollArea className="flex-1 min-h-0 mb-4">
-                <DiscussionReplies discussionId={selectedDiscussionForDialog.id} />
+              <ScrollArea className="flex-1 min-h-0 mb-4 h-full">
+                <div className="pr-4">
+                  <DiscussionReplies discussionId={selectedDiscussionForDialog.id} />
+                </div>
               </ScrollArea>
 
               {/* Reply Form */}

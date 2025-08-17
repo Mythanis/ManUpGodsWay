@@ -76,22 +76,36 @@
 @media (max-width: 768px) {
   [data-radix-dialog-content] {
     position: fixed !important;
-    top: 2vh !important;
-    left: 1rem !important;
-    right: 1rem !important;
-    bottom: auto !important;
-    max-height: 85vh !important;
-    width: calc(100vw - 2rem) !important;
+    top: 5vh !important;
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    bottom: 5vh !important;
+    max-height: 90vh !important;
+    height: auto !important;
+    width: calc(100vw - 1rem) !important;
     max-width: none !important;
     transform: none !important;
     margin: 0 !important;
+    overflow: visible !important;
   }
 
-  /* Ensure dialog content doesn't get cut off by keyboard */
+  /* Ensure dialog content is properly sized and scrollable */
   [data-radix-dialog-content] > div {
     display: flex !important;
     flex-direction: column !important;
+    height: 100% !important;
     min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Fix scroll area on mobile */
+  [data-radix-scroll-area-root] {
+    height: 100% !important;
+  }
+
+  [data-radix-scroll-area-viewport] {
+    height: 100% !important;
+    max-height: none !important;
   }
 }
 
