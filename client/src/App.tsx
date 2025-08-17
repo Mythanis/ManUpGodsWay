@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -24,11 +24,11 @@ import { UserSetupWizard } from "@/components/user-setup-wizard";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
-  const [showSplash, setShowSplash] = useState(true);
+  const [splashCompleted, setSplashCompleted] = useState(false);
 
-  // Show splash screen first (only on initial load)
-  if (showSplash) {
-    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+  // Show splash screen first (on every app load)
+  if (!splashCompleted) {
+    return <SplashScreen onComplete={() => setSplashCompleted(true)} />;
   }
 
   if (isLoading) {
