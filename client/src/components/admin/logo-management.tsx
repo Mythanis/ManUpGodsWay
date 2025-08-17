@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Upload, Image, Settings } from "lucide-react";
+import { Upload, Image, Settings, Eye } from "lucide-react";
 
 interface LogoSettings {
   id: string;
@@ -24,6 +25,7 @@ export default function LogoManagement() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [splashDuration, setSplashDuration] = useState(3000);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showSplashPreview, setShowSplashPreview] = useState(false);
 
   // Fetch current logo settings
   const { data: logoSettings, isLoading } = useQuery<LogoSettings>({
@@ -113,6 +115,18 @@ export default function LogoManagement() {
     uploadLogoMutation.mutate(formData);
   };
 
+  const handlePreviewSplash = () => {
+    if (!logoSettings?.logoUrl && !previewUrl) {
+      toast({
+        title: "No Logo Available",
+        description: "Please upload a logo first or select a file to preview.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowSplashPreview(true);
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -142,9 +156,18 @@ export default function LogoManagement() {
                   className="max-w-xs max-h-32 object-contain rounded-lg border"
                 />
               </div>
-              <div className="text-sm text-ministry-slate text-center">
+              <div className="text-sm text-ministry-slate text-center space-y-2">
                 <p>Splash Duration: {logoSettings.splashDurationMs / 1000} seconds</p>
                 <p>Uploaded: {new Date(logoSettings.createdAt).toLocaleDateString()}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviewSplash}
+                  className="flex items-center space-x-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>Preview Splash Screen</span>
+                </Button>
               </div>
             </div>
           ) : (
@@ -207,13 +230,24 @@ export default function LogoManagement() {
             </p>
           </div>
 
-          <Button
-            onClick={handleUpload}
-            disabled={!selectedFile || uploadLogoMutation.isPending}
-            className="w-full bg-ministry-charcoal hover:bg-ministry-charcoal/90"
-          >
-            {uploadLogoMutation.isPending ? "Uploading..." : "Upload Logo"}
-          </Button>
+          <div className="flex space-x-3">
+            <Button
+              variant="outline"
+              onClick={handlePreviewSplash}
+              disabled={!selectedFile && !logoSettings?.logoUrl}
+              className="flex-1 flex items-center space-x-2"
+            >
+              <Eye className="w-4 h-4" />
+              <span>Preview</span>
+            </Button>
+            <Button
+              onClick={handleUpload}
+              disabled={!selectedFile || uploadLogoMutation.isPending}
+              className="flex-1 bg-ministry-charcoal hover:bg-ministry-charcoal/90"
+            >
+              {uploadLogoMutation.isPending ? "Uploading..." : "Upload Logo"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -234,6 +268,47 @@ export default function LogoManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Splash Screen Preview Dialog */}
+      <Dialog open={showSplashPreview} onOpenChange={setShowSplashPreview}>
+        <DialogContent className="max-w-full max-h-full p-0 border-none bg-transparent">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-ministry-charcoal">
+            <div className="flex flex-col items-center space-y-4">
+              <img
+                src={previewUrl || logoSettings?.logoUrl}
+                alt="Logo Preview"
+                className="max-w-xs max-h-64 object-contain animate-fade-in"
+                style={{
+                  animation: 'fadeIn 0.6s ease-in-out'
+                }}
+              />
+              <div className="w-12 h-12 border-4 border-ministry-gold border-t-transparent rounded-full animate-spin"></div>
+              <div className="mt-8 text-center space-y-2">
+                <p className="text-ministry-slate text-sm">
+                  Preview: This is how your logo will appear to users
+                </p>
+                <p className="text-ministry-slate text-xs">
+                  Duration: {splashDuration / 1000} seconds
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowSplashPreview(false)}
+                  className="mt-4"
+                >
+                  Close Preview
+                </Button>
+              </div>
+            </div>
+            
+            <style>{`
+              @keyframes fadeIn {
+                from { opacity: 0; transform: scale(0.8); }
+                to { opacity: 1; transform: scale(1); }
+              }
+            `}</style>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
