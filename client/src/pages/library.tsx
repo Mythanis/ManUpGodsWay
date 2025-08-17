@@ -8,6 +8,7 @@ import StudyCard from "@/components/study-card";
 import { Search, Star, Filter } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 
 const categories = [
   { id: 'all', label: 'All Studies' },
@@ -18,6 +19,7 @@ const categories = [
 ];
 
 export default function Library() {
+  const { effectiveTheme } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
@@ -130,11 +132,24 @@ export default function Library() {
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start border cursor-pointer transition-colors ${
-                selectedCategory === category.id
-                  ? "bg-ministry-navy text-white border-ministry-navy"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600"
-              }`}
+              style={{
+                backgroundColor: selectedCategory === category.id 
+                  ? 'hsl(0 0% 0%)' 
+                  : effectiveTheme === 'dark' 
+                    ? 'hsl(220 8% 26%)' 
+                    : 'hsl(240 1.9608% 90%)',
+                color: selectedCategory === category.id 
+                  ? 'white' 
+                  : effectiveTheme === 'dark' 
+                    ? 'hsl(0 0% 95%)' 
+                    : 'hsl(210 25% 7.8431%)',
+                borderColor: selectedCategory === category.id 
+                  ? 'hsl(0 0% 0%)' 
+                  : effectiveTheme === 'dark' 
+                    ? 'hsl(210 5.2632% 14.9020%)' 
+                    : 'hsl(201.4286 30.4348% 90.9804%)'
+              }}
+              className="px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start border cursor-pointer transition-colors"
               data-testid={`button-category-${category.id}`}
             >
               {category.label}
