@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UploadStudyForm from "@/components/admin/upload-study-form";
 import UserManagement from "@/components/admin/user-management";
 import DevotionalManagement from "@/components/admin/devotional-management";
@@ -38,11 +37,21 @@ interface Study {
   updatedAt: string;
 }
 
+const adminTabs = [
+  { id: "content", label: "Content", icon: Book },
+  { id: "studies", label: "Studies", icon: Activity },
+  { id: "videos", label: "Videos", icon: Video },
+  { id: "devotionals", label: "Devotionals", icon: Calendar },
+  { id: "logo", label: "Logo", icon: Image },
+  { id: "users", label: "Users", icon: Users },
+];
+
 export default function Admin() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { effectiveTheme } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingStudy, setEditingStudy] = useState<Study | null>(null);
   const [activeTab, setActiveTab] = useState("content");
@@ -388,35 +397,46 @@ export default function Admin() {
 
       {/* Admin Management Tabs */}
       <div className="px-6 mb-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 bg-muted">
-            <TabsTrigger value="content" className="flex items-center space-x-2" data-testid="tab-content">
-              <Book className="w-4 h-4" />
-              <span>Content</span>
-            </TabsTrigger>
-            <TabsTrigger value="studies" className="flex items-center space-x-2" data-testid="tab-studies">
-              <Activity className="w-4 h-4" />
-              <span>Studies</span>
-            </TabsTrigger>
-            <TabsTrigger value="videos" className="flex items-center space-x-2" data-testid="tab-videos">
-              <Video className="w-4 h-4" />
-              <span>Videos</span>
-            </TabsTrigger>
-            <TabsTrigger value="devotionals" className="flex items-center space-x-2" data-testid="tab-devotionals">
-              <Calendar className="w-4 h-4" />
-              <span>Devotionals</span>
-            </TabsTrigger>
-            <TabsTrigger value="logo" className="flex items-center space-x-2" data-testid="tab-logo">
-              <Image className="w-4 h-4" />
-              <span>Logo</span>
-            </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center space-x-2" data-testid="tab-users">
-              <Users className="w-4 h-4" />
-              <span>Users</span>
-            </TabsTrigger>
-          </TabsList>
+        <div 
+          ref={scrollContainerRef}
+          className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2"
+        >
+          {adminTabs.map((tab) => {
+            const IconComponent = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  backgroundColor: activeTab === tab.id 
+                    ? 'hsl(0 0% 0%)' 
+                    : effectiveTheme === 'dark' 
+                      ? 'hsl(220 8% 26%)' 
+                      : 'hsl(240 1.9608% 90%)',
+                  color: activeTab === tab.id 
+                    ? 'white' 
+                    : effectiveTheme === 'dark' 
+                      ? 'hsl(0 0% 95%)' 
+                      : 'hsl(210 25% 7.8431%)',
+                  borderColor: activeTab === tab.id 
+                    ? 'hsl(0 0% 0%)' 
+                    : effectiveTheme === 'dark' 
+                      ? 'hsl(210 5.2632% 14.9020%)' 
+                      : 'hsl(201.4286 30.4348% 90.9804%)'
+                }}
+                className="px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start border cursor-pointer transition-colors flex items-center space-x-2"
+                data-testid={`tab-${tab.id}`}
+              >
+                <IconComponent className="w-4 h-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-          <TabsContent value="content" className="space-y-4 mt-6">
+        <div className="mt-6">
+          {activeTab === "content" && (
+            <div className="space-y-4">
             <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Content Management</h2>
             <div className="space-y-4">
               <UploadStudyForm />
@@ -451,9 +471,11 @@ export default function Admin() {
                 <span className="font-medium">Send Push Notification</span>
               </button>
             </div>
-          </TabsContent>
+            </div>
+          )}
 
-          <TabsContent value="studies" className="mt-6">
+          {activeTab === "studies" && (
+            <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-ministry-charcoal">Study Management</h2>
               <UploadStudyForm />
@@ -588,28 +610,37 @@ export default function Admin() {
                 ))}
               </div>
             )}
-          </TabsContent>
+            </div>
+          )}
 
-          <TabsContent value="videos" className="mt-6">
-            <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Video Management</h2>
-            <VideoManagement />
-          </TabsContent>
+          {activeTab === "videos" && (
+            <div>
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Video Management</h2>
+              <VideoManagement />
+            </div>
+          )}
 
-          <TabsContent value="devotionals" className="mt-6">
-            <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Daily Devotional Management</h2>
-            <DevotionalManagement />
-          </TabsContent>
+          {activeTab === "devotionals" && (
+            <div>
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Daily Devotional Management</h2>
+              <DevotionalManagement />
+            </div>
+          )}
 
-          <TabsContent value="logo" className="mt-6">
-            <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Logo Management</h2>
-            <LogoManagement />
-          </TabsContent>
+          {activeTab === "logo" && (
+            <div>
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Logo Management</h2>
+              <LogoManagement />
+            </div>
+          )}
 
-          <TabsContent value="users" className="mt-6">
-            <h2 className="text-lg font-bold text-ministry-charcoal mb-4">User Management</h2>
-            <UserManagement />
-          </TabsContent>
-        </Tabs>
+          {activeTab === "users" && (
+            <div>
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">User Management</h2>
+              <UserManagement />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Edit Study Dialog */}
