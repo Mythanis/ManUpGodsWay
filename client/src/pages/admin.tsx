@@ -418,8 +418,14 @@ export default function Admin() {
               
               <button 
                 onClick={() => setActiveTab("videos")}
-                className="p-4 rounded-2xl transition-colors flex items-center space-x-3 w-full cursor-pointer bg-ministry-navy hover:bg-ministry-charcoal text-white border-none"
+                className="p-4 rounded-2xl transition-colors flex items-center space-x-3 w-full cursor-pointer border-none"
+                style={{
+                  backgroundColor: 'hsl(220, 71%, 26%)',
+                  color: 'white'
+                }}
                 data-testid="button-manage-videos"
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(215, 25%, 27%)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(220, 71%, 26%)'}
               >
                 <Video className="w-6 h-6" />
                 <span className="font-medium">Manage Videos</span>
@@ -427,8 +433,14 @@ export default function Admin() {
               
               <button
                 onClick={() => setShowNotificationDialog(true)}
-                className="p-4 rounded-2xl border-none flex items-center space-x-3 w-full cursor-pointer transition-colors bg-ministry-gold hover:bg-ministry-gold/80 text-ministry-charcoal"
+                className="p-4 rounded-2xl border-none flex items-center space-x-3 w-full cursor-pointer transition-colors"
+                style={{
+                  backgroundColor: 'hsl(49, 100%, 49%)',
+                  color: 'hsl(215, 25%, 27%)'
+                }}
                 data-testid="button-send-notification"
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(49, 100%, 44%)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(49, 100%, 49%)'}
               >
                 <Bell className="w-6 h-6" />
                 <span className="font-medium">Send Push Notification</span>
@@ -488,7 +500,15 @@ export default function Admin() {
                             variant={study.isFeatured ? "default" : "outline"}
                             onClick={() => handleToggleFeatured(study.id, !study.isFeatured)}
                             disabled={toggleFeaturedMutation.isPending}
-                            className={study.isFeatured ? "bg-ministry-gold hover:bg-ministry-gold/80 text-ministry-charcoal" : "border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10"}
+                            style={study.isFeatured ? {
+                              backgroundColor: 'hsl(49, 100%, 49%)',
+                              color: 'hsl(215, 25%, 27%)',
+                              border: 'none'
+                            } : {
+                              backgroundColor: 'transparent',
+                              color: 'hsl(215, 25%, 27%)',
+                              border: '1px solid hsl(213, 12%, 47%)'
+                            }}
                             title={study.isFeatured ? "Remove from featured" : "Mark as featured"}
                           >
                             <Star className={`w-4 h-4 ${study.isFeatured ? 'fill-current' : ''}`} />
@@ -498,7 +518,15 @@ export default function Admin() {
                             variant={study.isPublished ? "default" : "outline"}
                             onClick={() => handleTogglePublish(study.id, !study.isPublished)}
                             disabled={togglePublishMutation.isPending}
-                            className={study.isPublished ? "bg-ministry-navy hover:bg-ministry-charcoal text-white" : "border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10"}
+                            style={study.isPublished ? {
+                              backgroundColor: 'hsl(220, 71%, 26%)',
+                              color: 'white',
+                              border: 'none'
+                            } : {
+                              backgroundColor: 'transparent',
+                              color: 'hsl(215, 25%, 27%)',
+                              border: '1px solid hsl(213, 12%, 47%)'
+                            }}
                           >
                             {study.isPublished ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                           </Button>
@@ -506,7 +534,11 @@ export default function Admin() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleEdit(study)}
-                            className="border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10"
+                            style={{
+                              backgroundColor: 'transparent',
+                              color: 'hsl(215, 25%, 27%)',
+                              border: '1px solid hsl(213, 12%, 47%)'
+                            }}
                             data-testid={`button-edit-study-${study.id}`}
                           >
                             <Edit className="w-4 h-4" />
