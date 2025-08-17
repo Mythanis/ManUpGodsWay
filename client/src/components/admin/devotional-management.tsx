@@ -194,8 +194,8 @@ export default function DevotionalManagement() {
             <button
               onClick={() => setShowForm(!showForm)}
               style={{
-                backgroundColor: 'hsl(45 93% 71%)', // ministry-gold
-                color: effectiveTheme === 'dark' ? 'white' : 'black'
+                backgroundColor: 'hsl(49 100% 49%)', // original ministry-gold from CSS
+                color: 'black'
               }}
               className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 flex items-center cursor-pointer"
               data-testid="button-add-devotional"
