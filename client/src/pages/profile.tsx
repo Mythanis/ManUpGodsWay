@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { NotificationPanel } from "@/components/notification-panel";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { FeedbackDialog } from "@/components/feedback-dialog";
+import { SilencedUsersButton } from "@/components/silenced-users-button";
 import { 
   User, 
   Bell, 
@@ -189,6 +190,9 @@ export default function Profile() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </Button>
+
+            {/* Silenced Users */}
+            <SilencedUsersButton />
             
             {/* Theme Switch */}
             <div className="flex items-center justify-between p-4 border-b border-border">
