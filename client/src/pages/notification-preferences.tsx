@@ -2,12 +2,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormDescription } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Bell, 
   BookOpen, 
@@ -16,7 +18,9 @@ import {
   MessageCircle, 
   Users, 
   Mail,
-  Shield
+  Shield,
+  UserX,
+  X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -35,6 +39,14 @@ interface NotificationPreferences {
   updatedAt: string;
 }
 
+interface SilencedUser {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  avatar: string | null;
+}
+
 const preferencesSchema = z.object({
   newStudies: z.boolean(),
   newVideos: z.boolean(),
@@ -50,10 +62,28 @@ type PreferencesFormValues = z.infer<typeof preferencesSchema>;
 export default function NotificationPreferences() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [silencedDialogOpen, setSilencedDialogOpen] = useState(false);
+  const [silencedToRemove, setSilencedToRemove] = useState<Set<string>>(new Set());
 
   const { data: preferences, isLoading } = useQuery<NotificationPreferences>({
     queryKey: ['/api/notification-preferences'],
   });
+
+  // Fetch silenced users
+  const { data: silencedData } = useQuery<{ silencedUserIds: string[] }>({
+    queryKey: ["/api/users/silenced"],
+    retry: false,
+  });
+
+  // Fetch user details for silenced users
+  const { data: allUsers = [] } = useQuery<SilencedUser[]>({
+    queryKey: ["/api/users"],
+    retry: false,
+  });
+
+  const silencedUsers = silencedData?.silencedUserIds 
+    ? allUsers.filter(user => silencedData.silencedUserIds.includes(user.id))
+    : [];
 
   const form = useForm<PreferencesFormValues>({
     resolver: zodResolver(preferencesSchema),
@@ -102,6 +132,50 @@ export default function NotificationPreferences() {
       });
     },
   });
+
+  // Unsilence users mutation
+  const unsilenceUsersMutation = useMutation({
+    mutationFn: async (userIds: string[]) => {
+      await Promise.all(
+        userIds.map(userId => apiRequest("DELETE", `/api/users/${userId}/silence`))
+      );
+    },
+    onSuccess: () => {
+      toast({
+        title: "Users Unsilenced",
+        description: "Selected users have been unsilenced successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/silenced"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+      setSilencedToRemove(new Set());
+      setSilencedDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to unsilence users. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleToggleSilencedUser = (userId: string) => {
+    const newSet = new Set(silencedToRemove);
+    if (newSet.has(userId)) {
+      newSet.delete(userId);
+    } else {
+      newSet.add(userId);
+    }
+    setSilencedToRemove(newSet);
+  };
+
+  const handleSaveSilencedChanges = () => {
+    if (silencedToRemove.size > 0) {
+      unsilenceUsersMutation.mutate(Array.from(silencedToRemove));
+    } else {
+      setSilencedDialogOpen(false);
+    }
+  };
 
   const onSubmit = (data: PreferencesFormValues) => {
     updatePreferences.mutate(data);
@@ -324,6 +398,108 @@ export default function NotificationPreferences() {
                   </FormItem>
                 )}
               />
+            </CardContent>
+          </Card>
+
+          {/* User Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <UserX className="w-5 h-5 text-ministry-gold" />
+                <span>User Management</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-row items-center justify-between rounded-lg border border-ministry-steel p-4">
+                <div className="space-y-0.5">
+                  <div className="text-base font-medium text-ministry-charcoal">
+                    Silenced Users
+                  </div>
+                  <div className="text-sm text-ministry-slate">
+                    Manage users you have silenced ({silencedUsers.length} users)
+                  </div>
+                </div>
+                <Dialog open={silencedDialogOpen} onOpenChange={setSilencedDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10"
+                      onClick={() => {
+                        setSilencedToRemove(new Set());
+                        setSilencedDialogOpen(true);
+                      }}
+                    >
+                      Manage
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Silenced Users</DialogTitle>
+                    </DialogHeader>
+                    <div className="max-h-96 overflow-y-auto">
+                      {silencedUsers.length === 0 ? (
+                        <p className="text-center text-ministry-slate py-8">
+                          No silenced users
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {silencedUsers.map((user) => (
+                            <div 
+                              key={user.id}
+                              className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                                silencedToRemove.has(user.id) 
+                                  ? 'border-red-300 bg-red-50' 
+                                  : 'border-ministry-steel hover:bg-ministry-steel/5'
+                              }`}
+                              onClick={() => handleToggleSilencedUser(user.id)}
+                            >
+                              <Avatar className="w-10 h-10">
+                                <AvatarImage src={user.avatar || ''} alt={user.firstName || ''} />
+                                <AvatarFallback className="bg-ministry-gold/20 text-ministry-gold">
+                                  {user.firstName?.[0] || user.email[0].toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-ministry-charcoal truncate">
+                                  {user.firstName ? `${user.firstName} ${user.lastName || ''}` : user.email}
+                                </p>
+                                <p className="text-xs text-ministry-slate truncate">
+                                  {user.email}
+                                </p>
+                              </div>
+                              {silencedToRemove.has(user.id) && (
+                                <X className="w-4 h-4 text-red-500" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {silencedUsers.length > 0 && (
+                      <div className="flex justify-between pt-4">
+                        <p className="text-xs text-ministry-slate self-center">
+                          {silencedToRemove.size > 0 ? `${silencedToRemove.size} selected to unsilence` : 'Click users to unsilence them'}
+                        </p>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => setSilencedDialogOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={handleSaveSilencedChanges}
+                            disabled={unsilenceUsersMutation.isPending}
+                            className="bg-ministry-charcoal hover:bg-ministry-charcoal/90 text-white"
+                          >
+                            {unsilenceUsersMutation.isPending ? "Saving..." : "Save"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardContent>
           </Card>
 
