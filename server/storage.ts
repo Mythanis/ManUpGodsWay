@@ -1978,10 +1978,20 @@ export class DatabaseStorage implements IStorage {
       .from(users)
       .where(sql`DATE(${users.lastActiveDate}) = DATE(${today})`);
 
-    const [{ newPosts }] = await db
-      .select({ newPosts: count(discussions.id) })
+    // Count new discussions created today
+    const [{ newDiscussions }] = await db
+      .select({ newDiscussions: count(discussions.id) })
       .from(discussions)
       .where(sql`${discussions.createdAt} >= ${today}`);
+
+    // Count new discussion replies created today
+    const [{ newReplies }] = await db
+      .select({ newReplies: count(discussionReplies.id) })
+      .from(discussionReplies)
+      .where(sql`${discussionReplies.createdAt} >= ${today}`);
+
+    // Total new posts = new discussions + new replies
+    const newPosts = newDiscussions + newReplies;
 
     // Get category counts
     const categories = ['leadership', 'marriage', 'parenting', 'faith'];
