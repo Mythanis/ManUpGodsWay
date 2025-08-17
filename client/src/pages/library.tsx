@@ -127,19 +127,18 @@ export default function Library() {
           className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2"
         >
           {categories.map((category) => (
-            <Button
+            <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              variant="ghost"
-              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start border ${
+              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start border cursor-pointer transition-colors ${
                 selectedCategory === category.id
-                  ? "!bg-ministry-navy !text-white !border-ministry-navy"
-                  : "!bg-gray-100 dark:!bg-gray-700 !text-gray-800 dark:!text-gray-200 !border-gray-300 dark:!border-gray-600 hover:!bg-gray-200 dark:hover:!bg-gray-600"
+                  ? "bg-ministry-navy text-white border-ministry-navy"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
               data-testid={`button-category-${category.id}`}
             >
               {category.label}
-            </Button>
+            </button>
           ))}
         </div>
       </div>
