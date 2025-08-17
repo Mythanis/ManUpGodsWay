@@ -2296,6 +2296,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update logo settings without uploading new file (admin only)
+  app.patch('/api/admin/logo', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const { splashDurationMs, backgroundColor, isEnabled } = req.body;
+      
+      // Validate input
+      if (splashDurationMs && (splashDurationMs < 1000 || splashDurationMs > 10000)) {
+        return res.status(400).json({ message: "Duration must be between 1 and 10 seconds" });
+      }
+
+      const validColors = ['white', 'light-gray', 'charcoal', 'gold', 'steel', 'slate'];
+      if (backgroundColor && !validColors.includes(backgroundColor)) {
+        return res.status(400).json({ message: "Invalid background color" });
+      }
+
+      // Get current settings
+      const currentSettings = await storage.getLogoSettings();
+      if (!currentSettings) {
+        return res.status(404).json({ message: "No logo settings found to update" });
+      }
+
+      // Update only the provided fields
+      const updateData: any = {};
+      if (splashDurationMs !== undefined) updateData.splashDurationMs = parseInt(splashDurationMs);
+      if (backgroundColor !== undefined) updateData.backgroundColor = backgroundColor;
+      if (isEnabled !== undefined) updateData.isEnabled = isEnabled;
+
+      const updatedSettings = await storage.updateLogoSettingsPartial(updateData);
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error("Error updating logo settings:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update logo settings" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

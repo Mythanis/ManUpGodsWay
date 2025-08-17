@@ -2296,6 +2296,31 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return newSettings;
   }
+
+  async updateLogoSettingsPartial(updateData: Partial<LogoSettings>): Promise<LogoSettings> {
+    // Get current enabled settings
+    const [currentSettings] = await db
+      .select()
+      .from(logoSettings)
+      .where(eq(logoSettings.isEnabled, true))
+      .limit(1);
+
+    if (!currentSettings) {
+      throw new Error("No logo settings found to update");
+    }
+
+    // Update the existing record
+    const [updatedSettings] = await db
+      .update(logoSettings)
+      .set({ 
+        ...updateData, 
+        updatedAt: new Date() 
+      })
+      .where(eq(logoSettings.id, currentSettings.id))
+      .returning();
+    
+    return updatedSettings;
+  }
 }
 
 export const storage = new DatabaseStorage();

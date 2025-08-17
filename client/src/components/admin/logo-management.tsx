@@ -96,6 +96,38 @@ export default function LogoManagement() {
     },
   });
 
+  // Update settings mutation
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (data: { splashDurationMs: number; backgroundColor: string }) => {
+      const response = await fetch("/api/admin/logo", {
+        method: "PATCH",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update settings");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Settings Updated",
+        description: "Splash screen settings have been updated successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/logo"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -146,6 +178,22 @@ export default function LogoManagement() {
     formData.append('backgroundColor', backgroundColor);
 
     uploadLogoMutation.mutate(formData);
+  };
+
+  const handleSaveSettings = () => {
+    if (!logoSettings?.logoUrl) {
+      toast({
+        title: "No Logo Found",
+        description: "Please upload a logo first before updating settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateSettingsMutation.mutate({
+      splashDurationMs: splashDuration,
+      backgroundColor: backgroundColor,
+    });
   };
 
   const handlePreviewSplash = () => {
@@ -313,6 +361,84 @@ export default function LogoManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {logoSettings?.logoUrl && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Settings className="w-5 h-5" />
+              <span>Update Settings</span>
+            </CardTitle>
+            <p className="text-sm text-ministry-slate">
+              Update splash screen settings without uploading a new logo
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <Label htmlFor="update-splash-duration">Splash Screen Duration (seconds)</Label>
+              <Input
+                id="update-splash-duration"
+                type="number"
+                min="1"
+                max="10"
+                value={splashDuration / 1000}
+                onChange={(e) => setSplashDuration(Math.max(1000, Math.min(10000, parseInt(e.target.value) * 1000)))}
+                className="mt-1"
+              />
+              <p className="text-sm text-ministry-slate mt-1">
+                How long the logo appears when users open the app (1-10 seconds).
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="update-background-color">Background Color</Label>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {colorOptions.map((color) => (
+                  <button
+                    key={color.value}
+                    type="button"
+                    onClick={() => setBackgroundColor(color.value)}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      backgroundColor === color.value
+                        ? 'border-ministry-gold ring-2 ring-ministry-gold/20'
+                        : 'border-gray-200 hover:border-ministry-steel'
+                    }`}
+                  >
+                    <div 
+                      className={`w-full h-8 rounded ${color.class} mb-2`}
+                      style={color.value === 'charcoal' ? { backgroundColor: color.preview } : {}}
+                    ></div>
+                    <span className="text-xs font-medium text-ministry-charcoal">
+                      {color.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm text-ministry-slate mt-1">
+                Choose a background color that complements your logo.
+              </p>
+            </div>
+
+            <div className="flex space-x-3">
+              <Button
+                variant="outline"
+                onClick={handlePreviewSplash}
+                className="flex-1 flex items-center space-x-2"
+              >
+                <Eye className="w-4 h-4" />
+                <span>Preview Changes</span>
+              </Button>
+              <Button
+                onClick={handleSaveSettings}
+                disabled={updateSettingsMutation.isPending}
+                className="flex-1 bg-ministry-charcoal hover:bg-ministry-charcoal/90"
+              >
+                {updateSettingsMutation.isPending ? "Saving..." : "Save Settings"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
