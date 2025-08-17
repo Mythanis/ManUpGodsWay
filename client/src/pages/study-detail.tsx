@@ -770,7 +770,7 @@ export default function StudyDetail() {
 
               {/* Reply Form */}
               {canAccess && (
-                <div className="border-t pt-2 flex-shrink-0 bg-white dark:bg-gray-900">
+                <div className="border-t pt-2 flex-shrink-0 bg-white dark:bg-gray-900 discussion-reply-form">
                   <StudyDiscussionReplyForm 
                     discussionId={studyDiscussion.id}
                     currentUserTier={(user as any)?.subscriptionTier || 'free'}

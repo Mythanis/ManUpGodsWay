@@ -100,38 +100,78 @@
   
   /* When virtual keyboard is detected (smaller viewport) */
   .keyboard-visible[data-radix-dialog-content] {
-    max-height: 50vh !important;
+    max-height: 60vh !important;
+    height: 60vh !important;
     top: 0.5rem !important;
   }
   
   .keyboard-visible .replies-section {
-    max-height: 20vh !important;
-    min-height: 20vh !important;
+    max-height: 25vh !important;
+    flex: 1 !important;
+    overflow-y: auto !important;
   }
   
   /* Global keyboard state for body */
   body.keyboard-visible [data-radix-dialog-content] {
-    max-height: 50vh !important;
+    max-height: 60vh !important;
+    height: 60vh !important;
     top: 0.5rem !important;
+    bottom: auto !important;
   }
   
   body.keyboard-visible .replies-section {
-    max-height: 20vh !important;
-    min-height: 20vh !important;
+    max-height: 25vh !important;
+    flex: 1 !important;
+    overflow-y: auto !important;
   }
   
-  /* Ensure textarea stays visible when keyboard appears */
+  /* Ensure form area stays visible and positioned at bottom */
+  body.keyboard-visible .discussion-reply-form {
+    flex-shrink: 0 !important;
+    margin-top: auto !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    background: var(--background) !important;
+    z-index: 10 !important;
+    padding: 0.75rem !important;
+    border-top: 1px solid var(--border) !important;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.1) !important;
+  }
+  
+  /* Alternative selector for form area */
+  .keyboard-visible .discussion-reply-form {
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    background: var(--background) !important;
+    z-index: 10 !important;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.1) !important;
+  }
+  
+  /* Ensure dialog content has proper spacing when keyboard is visible */
+  body.keyboard-visible [data-radix-dialog-content] {
+    padding-bottom: 0 !important;
+  }
+  
+  /* Ensure textarea and buttons stay visible when keyboard appears */
   .keyboard-visible textarea,
   body.keyboard-visible textarea {
     font-size: 16px !important; /* Prevents zoom on iOS */
+    min-height: 60px !important;
+  }
+  
+  .keyboard-visible button,
+  body.keyboard-visible button {
+    min-height: 40px !important;
   }
   
   /* Alternative detection for iOS Safari */
   @supports (-webkit-touch-callout: none) {
     body.keyboard-visible [data-radix-dialog-content] {
-      height: 50vh !important;
-      max-height: 50vh !important;
-      top: 0 !important;
+      height: 60vh !important;
+      max-height: 60vh !important;
+      top: 0.5rem !important;
+      position: fixed !important;
     }
   }
 }

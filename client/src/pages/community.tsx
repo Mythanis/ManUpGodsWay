@@ -864,7 +864,7 @@ export default function Community() {
               </div>
 
               {/* Reply Form */}
-              <div className="border-t pt-2 flex-shrink-0 bg-white dark:bg-gray-900">
+              <div className="border-t pt-2 flex-shrink-0 bg-white dark:bg-gray-900 discussion-reply-form">
                 <DiscussionReplyForm 
                   discussionId={selectedDiscussionForDialog.id}
                   currentUserTier={(user as any)?.subscriptionTier || 'free'}
