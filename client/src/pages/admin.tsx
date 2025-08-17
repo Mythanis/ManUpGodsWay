@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +39,7 @@ interface Study {
 
 export default function Admin() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { effectiveTheme } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -488,7 +490,12 @@ export default function Admin() {
                             variant={study.isFeatured ? "default" : "outline"}
                             onClick={() => handleToggleFeatured(study.id, !study.isFeatured)}
                             disabled={toggleFeaturedMutation.isPending}
-                            className={study.isFeatured ? "bg-yellow-600 hover:bg-yellow-700 text-white" : "bg-card border-border text-foreground hover:bg-muted"}
+                            style={study.isFeatured ? {} : {
+                              backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(240 1.9608% 90%)',
+                              color: effectiveTheme === 'dark' ? 'hsl(0 0% 95%)' : 'hsl(210 25% 7.8431%)',
+                              borderColor: effectiveTheme === 'dark' ? 'hsl(210 5.2632% 14.9020%)' : 'hsl(201.4286 30.4348% 90.9804%)'
+                            }}
+                            className={study.isFeatured ? "bg-yellow-600 hover:bg-yellow-700 text-white" : ""}
                             title={study.isFeatured ? "Remove from featured" : "Mark as featured"}
                           >
                             <Star className={`w-4 h-4 ${study.isFeatured ? 'fill-current' : ''}`} />
@@ -498,7 +505,12 @@ export default function Admin() {
                             variant={study.isPublished ? "default" : "outline"}
                             onClick={() => handleTogglePublish(study.id, !study.isPublished)}
                             disabled={togglePublishMutation.isPending}
-                            className={study.isPublished ? "bg-green-600 hover:bg-green-700 text-white" : "bg-card border-border text-foreground hover:bg-muted"}
+                            style={study.isPublished ? {} : {
+                              backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(240 1.9608% 90%)',
+                              color: effectiveTheme === 'dark' ? 'hsl(0 0% 95%)' : 'hsl(210 25% 7.8431%)',
+                              borderColor: effectiveTheme === 'dark' ? 'hsl(210 5.2632% 14.9020%)' : 'hsl(201.4286 30.4348% 90.9804%)'
+                            }}
+                            className={study.isPublished ? "bg-green-600 hover:bg-green-700 text-white" : ""}
                           >
                             {study.isPublished ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                           </Button>
@@ -506,7 +518,12 @@ export default function Admin() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleEdit(study)}
-                            className="bg-card border-border text-foreground hover:bg-muted"
+                            style={{
+                              backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(240 1.9608% 90%)',
+                              color: effectiveTheme === 'dark' ? 'hsl(0 0% 95%)' : 'hsl(210 25% 7.8431%)',
+                              borderColor: effectiveTheme === 'dark' ? 'hsl(210 5.2632% 14.9020%)' : 'hsl(201.4286 30.4348% 90.9804%)'
+                            }}
+                            className=""
                             data-testid={`button-edit-study-${study.id}`}
                           >
                             <Edit className="w-4 h-4" />
@@ -764,7 +781,12 @@ export default function Admin() {
               <Button
                 variant="outline"
                 onClick={() => setShowEditDialog(false)}
-                className="bg-card border-border text-foreground hover:bg-muted"
+                style={{
+                  backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(240 1.9608% 90%)',
+                  color: effectiveTheme === 'dark' ? 'hsl(0 0% 95%)' : 'hsl(210 25% 7.8431%)',
+                  borderColor: effectiveTheme === 'dark' ? 'hsl(210 5.2632% 14.9020%)' : 'hsl(201.4286 30.4348% 90.9804%)'
+                }}
+                className=""
                 data-testid="button-cancel-edit"
               >
                 Cancel
