@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormDescription } from "@/components/ui/form";
@@ -68,17 +69,19 @@ export default function NotificationPreferences() {
   });
 
   // Update form when preferences data loads
-  if (preferences && form.formState.defaultValues !== preferences) {
-    form.reset({
-      newStudies: preferences.newStudies,
-      newVideos: preferences.newVideos,
-      newDevotionals: preferences.newDevotionals,
-      discussionReplies: preferences.discussionReplies,
-      directMessages: preferences.directMessages,
-      groupMessages: preferences.groupMessages,
-      weeklyDigest: preferences.weeklyDigest,
-    });
-  }
+  useEffect(() => {
+    if (preferences) {
+      form.reset({
+        newStudies: preferences.newStudies,
+        newVideos: preferences.newVideos,
+        newDevotionals: preferences.newDevotionals,
+        discussionReplies: preferences.discussionReplies,
+        directMessages: preferences.directMessages,
+        groupMessages: preferences.groupMessages,
+        weeklyDigest: preferences.weeklyDigest,
+      });
+    }
+  }, [preferences]);
 
   const updatePreferences = useMutation({
     mutationFn: async (data: PreferencesFormValues) => {
