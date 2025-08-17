@@ -1429,6 +1429,19 @@ export class DatabaseStorage implements IStorage {
     return newMessage;
   }
 
+  async createMessageWithoutNotifications(message: InsertMessage): Promise<Message> {
+    // Same as sendMessage but specifically for cases where we don't want notifications
+    const [newMessage] = await db.insert(messages).values(message).returning();
+
+    // Update conversation's last message timestamp
+    await db
+      .update(conversations)
+      .set({ lastMessageAt: new Date() })
+      .where(eq(conversations.id, message.conversationId));
+
+    return newMessage;
+  }
+
   async addParticipantToConversation(conversationId: string, userId: string, role = "member"): Promise<ConversationParticipant> {
     const [participant] = await db
       .insert(conversationParticipants)
@@ -1623,25 +1636,25 @@ export class DatabaseStorage implements IStorage {
     switch (notificationType) {
       case 'study':
       case 'new_study':
-        return preferences.studyNotifications;
+        return preferences.studyNotifications ?? true;
       case 'devotional':
       case 'new_devotional':
-        return preferences.devotionalNotifications;
+        return preferences.devotionalNotifications ?? true;
       case 'discussion':
       case 'new_discussion':
-        return preferences.discussionNotifications;
+        return preferences.discussionNotifications ?? true;
       case 'discussion_reply':
-        return preferences.discussionReplyNotifications;
+        return preferences.discussionReplyNotifications ?? true;
       case 'message':
       case 'new_message':
       case 'message_request':
       case 'group_message':
-        return preferences.messageNotifications;
+        return preferences.messageNotifications ?? true;
       case 'video':
       case 'new_video':
-        return preferences.videoNotifications;
+        return preferences.videoNotifications ?? true;
       case 'community':
-        return preferences.communityNotifications;
+        return preferences.communityNotifications ?? true;
       default:
         // For unknown types, default to true (send notification)
         return true;
@@ -2221,15 +2234,6 @@ export class DatabaseStorage implements IStorage {
       .from(notificationPreferences)
       .where(eq(notificationPreferences.userId, userId));
     return preferences;
-  }
-
-  async updateNotificationPreferences(userId: string, preferences: Partial<InsertNotificationPreferences>): Promise<NotificationPreferences> {
-    const [updated] = await db
-      .update(notificationPreferences)
-      .set({ ...preferences, updatedAt: new Date() })
-      .where(eq(notificationPreferences.userId, userId))
-      .returning();
-    return updated;
   }
 
   // User silence operations

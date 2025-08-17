@@ -1417,7 +1417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const allParticipantIds = Array.from(new Set([req.user.claims.sub, ...adminIds]));
           const conversation = await storage.createGroupConversation(conversationData, allParticipantIds);
           
-          // Send initial message with report details
+          // Send initial message with report details (without triggering message notifications)
           const reportMessage = `🚨 **User Report Submitted**\n\n` +
             `**Reporter:** ${reporterName}\n` +
             `**Reported User:** ${reportedName}\n` +
@@ -1425,7 +1425,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             `**Reason:** ${reason}\n\n` +
             `Please review this report and take appropriate action.`;
             
-          await storage.sendMessage({
+          // Use direct database insertion to avoid triggering message notifications
+          await storage.createMessageWithoutNotifications({
             conversationId: conversation.id,
             userId: req.user.claims.sub,
             content: reportMessage,
