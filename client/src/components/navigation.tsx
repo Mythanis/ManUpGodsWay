@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Home, BookOpen, Video, Users, MessageCircle, User, Settings } from "lucide-react";
+import { Home, BookOpen, Video, Users, MessageCircle, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 
@@ -10,7 +10,6 @@ const navItems = [
   { id: 'videos', path: '/videos', label: 'Videos', icon: Video },
   { id: 'community', path: '/community', label: 'Community', icon: Users },
   { id: 'messages', path: '/messages', label: 'Messages', icon: MessageCircle },
-  { id: 'profile', path: '/profile', label: 'Profile', icon: User },
 ];
 
 export default function Navigation() {

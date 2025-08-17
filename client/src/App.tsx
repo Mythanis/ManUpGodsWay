@@ -21,6 +21,7 @@ import NotificationPreferences from "@/pages/notification-preferences";
 import NotFound from "@/pages/not-found";
 import Navigation from "@/components/navigation";
 import { UserSetupWizard } from "@/components/user-setup-wizard";
+import { AccountSettingsButton } from "@/components/account-settings-button";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -52,25 +53,30 @@ function Router() {
   }
 
   return (
-    <Switch>
-      {!isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
-        <>
-          <Route path="/" component={Dashboard} />
-          <Route path="/library" component={Library} />
-          <Route path="/videos" component={Videos} />
-          <Route path="/community" component={Community} />
-          <Route path="/messages" component={Messages} />
-          <Route path="/profile" component={Profile} />
-          <Route path="/admin" component={Admin} />
-          <Route path="/studies/:id" component={StudyDetail} />
-          <Route path="/users/:userId" component={UserProfile} />
-          <Route path="/notification-preferences" component={NotificationPreferences} />
-        </>
-      )}
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <Switch>
+        {!isAuthenticated ? (
+          <Route path="/" component={Landing} />
+        ) : (
+          <>
+            <Route path="/" component={Dashboard} />
+            <Route path="/library" component={Library} />
+            <Route path="/videos" component={Videos} />
+            <Route path="/community" component={Community} />
+            <Route path="/messages" component={Messages} />
+            <Route path="/profile" component={Profile} />
+            <Route path="/admin" component={Admin} />
+            <Route path="/studies/:id" component={StudyDetail} />
+            <Route path="/users/:userId" component={UserProfile} />
+            <Route path="/notification-preferences" component={NotificationPreferences} />
+          </>
+        )}
+        <Route component={NotFound} />
+      </Switch>
+      
+      {/* Persistent Account Settings Button for authenticated users */}
+      {isAuthenticated && <AccountSettingsButton />}
+    </>
   );
 }
 
