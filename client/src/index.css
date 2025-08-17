@@ -60,6 +60,41 @@
   --ministry-success: 158 64% 52%;
 }
 
+/* Mobile viewport fixes for keyboards */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari */
+  html {
+    height: -webkit-fill-available;
+  }
+  
+  body {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Mobile dialog positioning fixes */
+@media (max-width: 768px) {
+  [data-radix-dialog-content] {
+    position: fixed !important;
+    top: 2vh !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    bottom: auto !important;
+    max-height: 85vh !important;
+    width: calc(100vw - 2rem) !important;
+    max-width: none !important;
+    transform: none !important;
+    margin: 0 !important;
+  }
+
+  /* Ensure dialog content doesn't get cut off by keyboard */
+  [data-radix-dialog-content] > div {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+  }
+}
+
 .dark {
   --background: hsl(220 8% 18%);
   --foreground: hsl(0 0% 95%);

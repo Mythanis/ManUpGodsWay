@@ -640,7 +640,7 @@ export default function StudyDetail() {
 
       {/* Study Discussion Dialog Pop-out */}
       <Dialog open={discussionDialogOpen} onOpenChange={setDiscussionDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+        <DialogContent className="max-w-4xl max-h-[85vh] sm:max-h-[80vh] flex flex-col p-4 sm:p-6 w-full mx-2 sm:mx-auto overflow-hidden" style={{ bottom: 'auto', top: '2vh', position: 'fixed' }}>
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <MessageCircle className="w-5 h-5 text-ministry-navy" />
@@ -649,9 +649,9 @@ export default function StudyDetail() {
           </DialogHeader>
           
           {studyDiscussion && (
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full min-h-0">
               {/* Discussion Header */}
-              <div className="border-b pb-4 mb-4">
+              <div className="border-b pb-4 mb-4 flex-shrink-0">
                 <div className="flex items-start space-x-3 mb-3">
                   <div className="w-12 h-12 rounded-full bg-ministry-navy/10 flex items-center justify-center">
                     <MessageCircle className="w-6 h-6 text-ministry-navy" />
@@ -675,13 +675,13 @@ export default function StudyDetail() {
               </div>
 
               {/* Replies Section */}
-              <ScrollArea className="flex-1 mb-4">
+              <ScrollArea className="flex-1 min-h-0 mb-4">
                 <StudyDiscussionReplies discussionId={studyDiscussion.id} />
               </ScrollArea>
 
               {/* Reply Form */}
               {canAccess && (
-                <div className="border-t pt-4">
+                <div className="border-t pt-4 flex-shrink-0 bg-white dark:bg-gray-900 relative z-10">
                   <StudyDiscussionReplyForm 
                     discussionId={studyDiscussion.id}
                     currentUserTier={(user as any)?.subscriptionTier || 'free'}
@@ -691,7 +691,7 @@ export default function StudyDetail() {
               )}
               
               {!canAccess && (
-                <div className="border-t pt-4 text-center py-4">
+                <div className="border-t pt-4 text-center py-4 flex-shrink-0 bg-white dark:bg-gray-900">
                   <p className="text-ministry-slate mb-2">
                     {study?.requiredTier && study.requiredTier !== 'free' 
                       ? `${study.requiredTier.charAt(0).toUpperCase() + study.requiredTier.slice(1)} subscription required to participate in this discussion.`

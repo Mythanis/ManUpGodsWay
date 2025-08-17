@@ -724,7 +724,7 @@ export default function Community() {
 
       {/* Discussion Dialog Pop-out */}
       <Dialog open={discussionDialogOpen} onOpenChange={setDiscussionDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+        <DialogContent className="max-w-4xl max-h-[85vh] sm:max-h-[80vh] flex flex-col p-4 sm:p-6 w-full mx-2 sm:mx-auto overflow-hidden" style={{ bottom: 'auto', top: '2vh', position: 'fixed' }}>
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <MessageCircle className="w-5 h-5 text-ministry-navy" />
@@ -733,9 +733,9 @@ export default function Community() {
           </DialogHeader>
           
           {selectedDiscussionForDialog && (
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full min-h-0">
               {/* Discussion Header */}
-              <div className="border-b pb-4 mb-4">
+              <div className="border-b pb-4 mb-4 flex-shrink-0">
                 <div className="flex items-start space-x-3 mb-3">
                   <img 
                     src={selectedDiscussionForDialog.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${selectedDiscussionForDialog.user?.firstName}+${selectedDiscussionForDialog.user?.lastName}&background=4A90B8&color=fff`}
@@ -770,12 +770,12 @@ export default function Community() {
               </div>
 
               {/* Replies Section */}
-              <ScrollArea className="flex-1 mb-4">
+              <ScrollArea className="flex-1 min-h-0 mb-4">
                 <DiscussionReplies discussionId={selectedDiscussionForDialog.id} />
               </ScrollArea>
 
               {/* Reply Form */}
-              <div className="border-t pt-4">
+              <div className="border-t pt-4 flex-shrink-0 bg-white dark:bg-gray-900 relative z-10">
                 <DiscussionReplyForm 
                   discussionId={selectedDiscussionForDialog.id}
                   currentUserTier={(user as any)?.subscriptionTier || 'free'}
