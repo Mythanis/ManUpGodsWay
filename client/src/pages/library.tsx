@@ -134,7 +134,7 @@ export default function Library() {
               className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start ${
                 selectedCategory === category.id
                   ? "bg-ministry-navy text-white"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  : "bg-card text-foreground border border-border hover:bg-muted"
               }`}
               data-testid={`button-category-${category.id}`}
             >
