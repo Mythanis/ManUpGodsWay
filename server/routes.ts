@@ -1432,18 +1432,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           
           // Send notification to all admins with link to the conversation
+          // Use Promise.allSettled to handle any individual notification failures gracefully
           const notificationPromises = admins.map(async (admin) => {
-            return await storage.createNotification({
-              userId: admin.id,
-              type: 'admin',
-              title: '🚨 New User Report',
-              message: `${reporterName} reported ${reportedName} for ${location}. Click to review the report details.`,
-              relatedId: conversation.id, // This will link to the conversation
-            });
+            try {
+              return await storage.createNotification({
+                userId: admin.id,
+                type: 'admin',
+                title: '🚨 New User Report',
+                message: `${reporterName} reported ${reportedName} for ${location}. Click to review the report details.`,
+                relatedId: conversation.id, // This will link to the conversation
+              });
+            } catch (error) {
+              console.error(`Failed to send notification to admin ${admin.id}:`, error);
+              return null;
+            }
           });
           
-          await Promise.all(notificationPromises.filter(Boolean));
-          console.log(`Sent report notifications to ${admins.length} admin(s)`);
+          const notificationResults = await Promise.allSettled(notificationPromises);
+          const successfulNotifications = notificationResults.filter(result => result.status === 'fulfilled' && result.value).length;
+          console.log(`Sent report notifications to ${successfulNotifications} admin(s)`);
         }
       } catch (notificationError) {
         console.error('Error sending report notifications to admins:', notificationError);
