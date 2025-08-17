@@ -569,9 +569,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/discussions/:id/replies', async (req, res) => {
+  app.get('/api/discussions/:id/replies', isAuthenticated, async (req: any, res) => {
     try {
-      const replies = await storage.getDiscussionReplies(req.params.id);
+      const userId = req.user.claims.sub;
+      const replies = await storage.getDiscussionReplies(req.params.id, userId);
       res.json(replies);
     } catch (error) {
       console.error("Error fetching replies:", error);

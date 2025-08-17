@@ -781,7 +781,17 @@ export class DatabaseStorage implements IStorage {
     return newReply;
   }
 
-  async getDiscussionReplies(discussionId: string): Promise<(DiscussionReply & { user: User })[]> {
+  async getDiscussionReplies(discussionId: string, currentUserId?: string): Promise<(DiscussionReply & { user: User })[]> {
+    const replyConditions = [eq(discussionReplies.discussionId, discussionId)];
+    
+    // Filter out silenced users from replies if currentUserId is provided
+    if (currentUserId) {
+      const silencedUserIds = await this.getUserSilences(currentUserId);
+      if (silencedUserIds.length > 0) {
+        replyConditions.push(not(inArray(discussionReplies.userId, silencedUserIds)));
+      }
+    }
+
     return await db
       .select({
         id: discussionReplies.id,
@@ -795,7 +805,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(discussionReplies)
       .innerJoin(users, eq(discussionReplies.userId, users.id))
-      .where(eq(discussionReplies.discussionId, discussionId))
+      .where(and(...replyConditions))
       .orderBy(discussionReplies.createdAt);
   }
 
