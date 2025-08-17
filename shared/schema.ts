@@ -10,6 +10,7 @@ import {
   boolean,
   decimal,
   pgEnum,
+  unique,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -537,3 +538,21 @@ export type DiscussionSubscription = typeof discussionSubscriptions.$inferSelect
 export type InsertDiscussionSubscription = z.infer<typeof insertDiscussionSubscriptionSchema>;
 export type UserReport = typeof userReports.$inferSelect;
 export type InsertUserReport = z.infer<typeof insertUserReportSchema>;
+
+// User silences table for allowing users to silence/hide other users
+export const userSilences = pgTable("user_silences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  silencerId: varchar("silencer_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  silencedId: varchar("silenced_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  unique: unique().on(table.silencerId, table.silencedId),
+}));
+
+export const insertUserSilenceSchema = createInsertSchema(userSilences).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type UserSilence = typeof userSilences.$inferSelect;
+export type InsertUserSilence = z.infer<typeof insertUserSilenceSchema>;

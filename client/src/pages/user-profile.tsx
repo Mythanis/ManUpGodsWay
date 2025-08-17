@@ -59,6 +59,12 @@ export default function UserProfile() {
     enabled: !!userId,
   });
 
+  // Check if user is silenced
+  const { data: silenceStatus } = useQuery<{ isSilenced: boolean }>({
+    queryKey: ['/api/users', userId, 'silence', 'status'],
+    enabled: !!userId,
+  });
+
   const reportForm = useForm<ReportFormValues>({
     resolver: zodResolver(reportSchema),
     defaultValues: {
@@ -95,6 +101,50 @@ export default function UserProfile() {
     },
   });
 
+  const silenceUser = useMutation({
+    mutationFn: async () => {
+      return apiRequest(`/api/users/${userId}/silence`, {
+        method: 'POST',
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "User Silenced",
+        description: "You will no longer see posts or messages from this user.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'silence', 'status'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to silence user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const unsilenceUser = useMutation({
+    mutationFn: async () => {
+      return apiRequest(`/api/users/${userId}/silence`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "User Unsilenced",
+        description: "You will now see posts and messages from this user again.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'silence', 'status'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to unsilence user",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleDirectMessage = () => {
     // TODO: Implement direct message functionality
     toast({
@@ -104,11 +154,11 @@ export default function UserProfile() {
   };
 
   const handleSilenceUser = () => {
-    // TODO: Implement silence functionality
-    toast({
-      title: "Silence User",
-      description: "User silence functionality will be available soon.",
-    });
+    if (silenceStatus?.isSilenced) {
+      unsilenceUser.mutate();
+    } else {
+      silenceUser.mutate();
+    }
   };
 
   const formatMemberSince = (date: Date | string) => {
@@ -227,10 +277,14 @@ export default function UserProfile() {
                   onClick={handleSilenceUser}
                   variant="outline"
                   size="sm"
-                  className="border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10"
+                  className={silenceStatus?.isSilenced 
+                    ? "border-green-300 text-green-600 hover:bg-green-50" 
+                    : "border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10"
+                  }
+                  disabled={silenceUser.isPending || unsilenceUser.isPending}
                 >
                   <VolumeX className="w-4 h-4 mr-2" />
-                  Silence
+                  {silenceStatus?.isSilenced ? 'Unsilence' : 'Silence'}
                 </Button>
                 <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
                   <DialogTrigger asChild>

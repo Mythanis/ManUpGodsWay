@@ -438,14 +438,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Discussion routes
-  app.get('/api/discussions', async (req, res) => {
+  app.get('/api/discussions', async (req: any, res) => {
     try {
       const { category, limit, sortBy, search } = req.query;
+      // Get current user ID if authenticated (optional for this endpoint)
+      const currentUserId = req.user?.claims?.sub;
+      
       const discussions = await storage.getDiscussions(
         category as string,
         limit ? parseInt(limit as string) : undefined,
         sortBy as string,
-        search as string
+        search as string,
+        currentUserId
       );
       res.json(discussions);
     } catch (error) {
@@ -454,9 +458,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/discussions/:id', async (req, res) => {
+  app.get('/api/discussions/:id', async (req: any, res) => {
     try {
-      const discussion = await storage.getDiscussion(req.params.id);
+      // Get current user ID if authenticated (optional for this endpoint)
+      const currentUserId = req.user?.claims?.sub;
+      const discussion = await storage.getDiscussion(req.params.id, currentUserId);
       if (!discussion) {
         return res.status(404).json({ message: "Discussion not found" });
       }
@@ -1416,6 +1422,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating notification preferences:", error);
       res.status(500).json({ message: "Failed to update notification preferences" });
+    }
+  });
+
+  // User silence endpoints
+  app.post('/api/users/:userId/silence', isAuthenticated, async (req: any, res) => {
+    try {
+      const silencerId = req.user.claims.sub;
+      const silencedId = req.params.userId;
+      
+      if (silencerId === silencedId) {
+        return res.status(400).json({ message: "Cannot silence yourself" });
+      }
+      
+      const silence = await storage.silenceUser(silencerId, silencedId);
+      res.status(201).json(silence);
+    } catch (error) {
+      console.error("Error silencing user:", error);
+      res.status(500).json({ message: "Failed to silence user" });
+    }
+  });
+
+  app.delete('/api/users/:userId/silence', isAuthenticated, async (req: any, res) => {
+    try {
+      const silencerId = req.user.claims.sub;
+      const silencedId = req.params.userId;
+      
+      await storage.unsilenceUser(silencerId, silencedId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error unsilencing user:", error);
+      res.status(500).json({ message: "Failed to unsilence user" });
+    }
+  });
+
+  app.get('/api/users/:userId/silence/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const silencerId = req.user.claims.sub;
+      const silencedId = req.params.userId;
+      
+      const isSilenced = await storage.isUserSilenced(silencerId, silencedId);
+      res.json({ isSilenced });
+    } catch (error) {
+      console.error("Error checking silence status:", error);
+      res.status(500).json({ message: "Failed to check silence status" });
     }
   });
 

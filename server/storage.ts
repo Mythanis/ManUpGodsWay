@@ -15,6 +15,7 @@ import {
   notifications,
   notificationPreferences,
   userReports,
+  userSilences,
   type User,
   type UpsertUser,
   type Study,
@@ -47,6 +48,8 @@ import {
   type InsertNotificationPreferences,
   type UserReport,
   type InsertUserReport,
+  type UserSilence,
+  type InsertUserSilence,
   videos,
   type Video,
   type InsertVideo,
@@ -170,6 +173,12 @@ export interface IStorage {
   // Notification preferences operations
   getNotificationPreferences(userId: string): Promise<NotificationPreferences | undefined>;
   updateNotificationPreferences(userId: string, preferences: Partial<InsertNotificationPreferences>): Promise<NotificationPreferences>;
+  
+  // User silence operations
+  silenceUser(silencerId: string, silencedId: string): Promise<UserSilence>;
+  unsilenceUser(silencerId: string, silencedId: string): Promise<void>;
+  getUserSilences(userId: string): Promise<string[]>;
+  isUserSilenced(silencerId: string, silencedId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -611,7 +620,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Discussion operations
-  async getDiscussions(category?: string, limit = 20, sortBy = 'recent', searchTerm?: string): Promise<(Discussion & { user: User; study?: { id: string; title: string; requiredTier: string | null } | null })[]> {
+  async getDiscussions(category?: string, limit = 20, sortBy = 'recent', searchTerm?: string, currentUserId?: string): Promise<(Discussion & { user: User; study?: { id: string; title: string; requiredTier: string | null } | null })[]> {
     const query = db
       .select({
         id: discussions.id,
@@ -671,6 +680,14 @@ export class DatabaseStorage implements IStorage {
       );
     }
     
+    // Filter out silenced users if currentUserId is provided
+    if (currentUserId) {
+      const silencedUserIds = await this.getUserSilences(currentUserId);
+      if (silencedUserIds.length > 0) {
+        conditions.push(not(inArray(discussions.userId, silencedUserIds)));
+      }
+    }
+    
     if (conditions.length > 0) {
       return await query
         .where(and(...conditions))
@@ -683,7 +700,7 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
-  async getDiscussion(id: string): Promise<(Discussion & { user: User; replies: (DiscussionReply & { user: User })[]; study?: { id: string; title: string; requiredTier: string | null } | null }) | undefined> {
+  async getDiscussion(id: string, currentUserId?: string): Promise<(Discussion & { user: User; replies: (DiscussionReply & { user: User })[]; study?: { id: string; title: string; requiredTier: string | null } | null }) | undefined> {
     const [discussion] = await db
       .select({
         id: discussions.id,
@@ -711,7 +728,8 @@ export class DatabaseStorage implements IStorage {
 
     if (!discussion) return undefined;
 
-    const replies = await db
+    // Get replies, filtering out silenced users if currentUserId is provided
+    let repliesQuery = db
       .select({
         id: discussionReplies.id,
         discussionId: discussionReplies.discussionId,
@@ -723,8 +741,20 @@ export class DatabaseStorage implements IStorage {
         user: users,
       })
       .from(discussionReplies)
-      .innerJoin(users, eq(discussionReplies.userId, users.id))
-      .where(eq(discussionReplies.discussionId, id))
+      .innerJoin(users, eq(discussionReplies.userId, users.id));
+
+    const replyConditions = [eq(discussionReplies.discussionId, id)];
+    
+    // Filter out silenced users from replies if currentUserId is provided
+    if (currentUserId) {
+      const silencedUserIds = await this.getUserSilences(currentUserId);
+      if (silencedUserIds.length > 0) {
+        replyConditions.push(not(inArray(discussionReplies.userId, silencedUserIds)));
+      }
+    }
+
+    const replies = await repliesQuery
+      .where(and(...replyConditions))
       .orderBy(discussionReplies.createdAt);
 
     return { ...discussion, replies };
@@ -2148,6 +2178,45 @@ export class DatabaseStorage implements IStorage {
       .where(eq(notificationPreferences.userId, userId))
       .returning();
     return updated;
+  }
+
+  // User silence operations
+  async silenceUser(silencerId: string, silencedId: string): Promise<UserSilence> {
+    const [silence] = await db
+      .insert(userSilences)
+      .values({ silencerId, silencedId })
+      .onConflictDoNothing()
+      .returning();
+    return silence;
+  }
+
+  async unsilenceUser(silencerId: string, silencedId: string): Promise<void> {
+    await db
+      .delete(userSilences)
+      .where(and(
+        eq(userSilences.silencerId, silencerId),
+        eq(userSilences.silencedId, silencedId)
+      ));
+  }
+
+  async getUserSilences(userId: string): Promise<string[]> {
+    const silences = await db
+      .select({ silencedId: userSilences.silencedId })
+      .from(userSilences)
+      .where(eq(userSilences.silencerId, userId));
+    return silences.map(s => s.silencedId);
+  }
+
+  async isUserSilenced(silencerId: string, silencedId: string): Promise<boolean> {
+    const [silence] = await db
+      .select()
+      .from(userSilences)
+      .where(and(
+        eq(userSilences.silencerId, silencerId),
+        eq(userSilences.silencedId, silencedId)
+      ))
+      .limit(1);
+    return !!silence;
   }
 }
 
