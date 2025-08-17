@@ -475,6 +475,32 @@ export const insertNotificationPreferencesSchema = createInsertSchema(notificati
   updatedAt: true,
 });
 
+// User reports table for reporting inappropriate behavior
+export const userReports = pgTable("user_reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportedUserId: varchar("reported_user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  reporterUserId: varchar("reporter_user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  reason: text("reason").notNull(), // User's explanation of the report
+  location: varchar("location").notNull(), // Where the issue took place (e.g., "Discussion: Study Name", "Direct Message", etc.)
+  status: varchar("status").default("pending"), // pending, reviewed, resolved
+  adminNotes: text("admin_notes"), // Notes from admin review
+  reviewedBy: varchar("reviewed_by").references(() => users.id), // Admin who reviewed
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertUserReportSchema = createInsertSchema(userReports, {
+  reason: z.string().min(10, "Please provide a detailed explanation (at least 10 characters)"),
+  location: z.string().min(1, "Location is required"),
+}).omit({
+  id: true,
+  createdAt: true,
+  status: true,
+  adminNotes: true,
+  reviewedBy: true,
+  reviewedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -509,3 +535,5 @@ export type NotificationPreferences = typeof notificationPreferences.$inferSelec
 export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
 export type DiscussionSubscription = typeof discussionSubscriptions.$inferSelect;
 export type InsertDiscussionSubscription = z.infer<typeof insertDiscussionSubscriptionSchema>;
+export type UserReport = typeof userReports.$inferSelect;
+export type InsertUserReport = z.infer<typeof insertUserReportSchema>;

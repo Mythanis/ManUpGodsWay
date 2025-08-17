@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useQuery } from "@tanstack/react-query";
@@ -28,6 +29,7 @@ export default function Profile() {
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const { user } = useAuth();
   const { theme, setTheme, effectiveTheme } = useTheme();
+  const [, setLocation] = useLocation();
 
   const { data: progress = [] } = useQuery<any[]>({
     queryKey: ["/api/progress"],
@@ -169,6 +171,24 @@ export default function Profile() {
         <Card className="border-border overflow-hidden" data-testid="card-settings">
           <CardContent className="p-0">
             <NotificationPanel variant="button" />
+            
+            {/* Notification Preferences */}
+            <Button 
+              variant="ghost"
+              className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-border"
+              onClick={() => setLocation('/notification-preferences')}
+              data-testid="button-notification-preferences"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-lg bg-ministry-gold/20 flex items-center justify-center">
+                  <Settings className="w-4 h-4 text-ministry-gold" />
+                </div>
+                <span className="font-medium text-foreground">Notification Preferences</span>
+              </div>
+              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </Button>
             
             {/* Theme Switch */}
             <div className="flex items-center justify-between p-4 border-b border-border">

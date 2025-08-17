@@ -14,6 +14,7 @@ import {
   messageRequests,
   notifications,
   notificationPreferences,
+  userReports,
   type User,
   type UpsertUser,
   type Study,
@@ -44,6 +45,8 @@ import {
   type InsertNotification,
   type NotificationPreferences,
   type InsertNotificationPreferences,
+  type UserReport,
+  type InsertUserReport,
   videos,
   type Video,
   type InsertVideo,
@@ -153,6 +156,20 @@ export interface IStorage {
     newPosts: number;
     categoryStats: { [key: string]: number };
   }>;
+  
+  // User profile operations
+  getUserProfile(userId: string): Promise<{
+    user: User;
+    studiesCompleted: number;
+    daysActive: number;
+    forumPosts: number;
+    memberSince: Date;
+  } | undefined>;
+  createUserReport(report: InsertUserReport): Promise<UserReport>;
+  
+  // Notification preferences operations
+  getNotificationPreferences(userId: string): Promise<NotificationPreferences | undefined>;
+  updateNotificationPreferences(userId: string, preferences: Partial<InsertNotificationPreferences>): Promise<NotificationPreferences>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2029,6 +2046,108 @@ export class DatabaseStorage implements IStorage {
       newPosts,
       categoryStats,
     };
+  }
+
+  // User profile operations
+  async getUserProfile(userId: string): Promise<{
+    user: User;
+    studiesCompleted: number;
+    daysActive: number;
+    forumPosts: number;
+    memberSince: Date;
+  } | undefined> {
+    // Get user data
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+
+    // Calculate studies completed
+    const [{ studiesCompleted }] = await db
+      .select({ studiesCompleted: count(userProgress.id) })
+      .from(userProgress)
+      .where(and(
+        eq(userProgress.userId, userId),
+        eq(userProgress.isCompleted, true)
+      ));
+
+    // Calculate days active (unique days with any activity)
+    // This counts distinct dates when user accessed studies
+    const userActivityDates = await db
+      .selectDistinct({
+        date: sql<string>`DATE(${userProgress.lastAccessedAt})`
+      })
+      .from(userProgress)
+      .where(eq(userProgress.userId, userId));
+    
+    const daysActive = userActivityDates.length;
+
+    // Calculate forum posts (discussions + replies)
+    const [{ discussionCount }] = await db
+      .select({ discussionCount: count(discussions.id) })
+      .from(discussions)
+      .where(eq(discussions.userId, userId));
+
+    const [{ replyCount }] = await db
+      .select({ replyCount: count(discussionReplies.id) })
+      .from(discussionReplies)
+      .where(eq(discussionReplies.userId, userId));
+
+    const forumPosts = discussionCount + replyCount;
+
+    return {
+      user,
+      studiesCompleted,
+      daysActive,
+      forumPosts,
+      memberSince: user.createdAt!,
+    };
+  }
+
+  async createUserReport(report: InsertUserReport): Promise<UserReport> {
+    const [newReport] = await db
+      .insert(userReports)
+      .values(report)
+      .returning();
+
+    // Create notification for admins about the new report
+    const admins = await db
+      .select()
+      .from(users)
+      .where(eq(users.role, 'admin'));
+
+    const reporterUser = await this.getUser(report.reporterUserId);
+    const reportedUser = await this.getUser(report.reportedUserId);
+
+    if (reporterUser && reportedUser) {
+      for (const admin of admins) {
+        await db.insert(notifications).values({
+          userId: admin.id,
+          title: 'New User Report',
+          message: `${reporterUser.firstName} ${reporterUser.lastName} reported ${reportedUser.firstName} ${reportedUser.lastName}`,
+          type: 'admin',
+          relatedId: newReport.id,
+          isRead: false,
+        });
+      }
+    }
+
+    return newReport;
+  }
+
+  async getNotificationPreferences(userId: string): Promise<NotificationPreferences | undefined> {
+    const [preferences] = await db
+      .select()
+      .from(notificationPreferences)
+      .where(eq(notificationPreferences.userId, userId));
+    return preferences;
+  }
+
+  async updateNotificationPreferences(userId: string, preferences: Partial<InsertNotificationPreferences>): Promise<NotificationPreferences> {
+    const [updated] = await db
+      .update(notificationPreferences)
+      .set({ ...preferences, updatedAt: new Date() })
+      .where(eq(notificationPreferences.userId, userId))
+      .returning();
+    return updated;
   }
 }
 

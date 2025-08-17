@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -13,7 +14,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus } from "lucide-react";
-import ProfileMenu from "@/components/profile-menu";
 import { z } from "zod";
 
 interface DiscussionCardProps {
@@ -36,8 +36,8 @@ export default function DiscussionCard({
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const [userHasLiked, setUserHasLiked] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState<{userId: string, x: number, y: number} | null>(null);
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -189,14 +189,7 @@ export default function DiscussionCard({
             }`}
             onClick={(e) => {
               e.stopPropagation();
-              if (discussion.user?.allowDirectMessages !== false || discussion.user?.allowGroupInvites !== false) {
-                const rect = e.currentTarget.getBoundingClientRect();
-                setShowProfileMenu({
-                  userId: discussion.userId,
-                  x: rect.right,
-                  y: rect.top
-                });
-              }
+              setLocation(`/users/${discussion.userId}`);
             }}
             data-testid="img-user-avatar"
           />
@@ -320,14 +313,7 @@ export default function DiscussionCard({
                     }`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (reply.user?.allowDirectMessages !== false || reply.user?.allowGroupInvites !== false) {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setShowProfileMenu({
-                          userId: reply.userId,
-                          x: rect.right,
-                          y: rect.top
-                        });
-                      }
+                      setLocation(`/users/${reply.userId}`);
                     }}
                   />
                   <div className="flex-1">
@@ -414,15 +400,7 @@ export default function DiscussionCard({
       </CardContent>
 
       {/* Profile Menu */}
-      {showProfileMenu && onStartDirectMessage && onAddToGroup && (
-        <ProfileMenu
-          userId={showProfileMenu.userId}
-          position={{ x: showProfileMenu.x, y: showProfileMenu.y }}
-          onClose={() => setShowProfileMenu(null)}
-          onStartDirectMessage={onStartDirectMessage}
-          onAddToGroup={onAddToGroup}
-        />
-      )}
+
     </Card>
   );
 }

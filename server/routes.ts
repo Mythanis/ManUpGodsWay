@@ -1336,6 +1336,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User profile endpoints
+  app.get('/api/users/:userId/profile', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const profile = await storage.getUserProfile(userId);
+      
+      if (!profile) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(profile);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
+
+  app.post('/api/users/report', isAuthenticated, async (req: any, res) => {
+    try {
+      const reportData = {
+        ...req.body,
+        reporterUserId: req.user.claims.sub,
+      };
+
+      const { reportedUserId, reason, location } = reportData;
+      
+      if (!reportedUserId || !reason || !location) {
+        return res.status(400).json({ 
+          message: "Missing required fields: reportedUserId, reason, and location" 
+        });
+      }
+
+      const report = await storage.createUserReport(reportData);
+      res.status(201).json(report);
+    } catch (error) {
+      console.error("Error creating user report:", error);
+      res.status(500).json({ message: "Failed to create user report" });
+    }
+  });
+
+  // Notification preferences endpoints
+  app.get('/api/notification-preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      let preferences = await storage.getNotificationPreferences(userId);
+      
+      // Create default preferences if none exist
+      if (!preferences) {
+        preferences = await storage.updateNotificationPreferences(userId, {
+          userId,
+          newStudies: true,
+          newVideos: true,
+          newDevotionals: true,
+          discussionReplies: true,
+          directMessages: true,
+          groupMessages: true,
+          weeklyDigest: true,
+        });
+      }
+
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error fetching notification preferences:", error);
+      res.status(500).json({ message: "Failed to fetch notification preferences" });
+    }
+  });
+
+  app.patch('/api/notification-preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const updates = req.body;
+      
+      // Remove userId from updates to prevent modification
+      delete updates.userId;
+      
+      const preferences = await storage.updateNotificationPreferences(userId, updates);
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      res.status(500).json({ message: "Failed to update notification preferences" });
+    }
+  });
+
   // Video Management API Routes
   app.get('/api/admin/videos', isAuthenticated, async (req: any, res) => {
     try {

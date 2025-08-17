@@ -10,6 +10,8 @@
 - **Consistent Dark Mode Theming**: Fixed "Post Reply" buttons in discussions to match "All Studies" button styling with proper black background and white text for optimal visibility in both light and dark modes
 - **Ministry Color Scheme Correction**: Removed incorrect "navy" color from ministry palette and standardized admin page buttons to use proper ministry colors: charcoal (primary), gold (accent), steel (borders), and slate (subtle text)
 - **Unified Community Statistics**: Updated admin dashboard stats to match community page calculations - "Active Today" now uses user activity tracking and "New Posts" includes both discussion threads and replies for consistent metrics across both interfaces
+- **Complete User Profile System**: Implemented comprehensive user profile pages replacing popup menus with full profile views showing detailed statistics (studies completed, days active, forum posts, member tier), direct message capability, user reporting functionality with admin notifications, and profile navigation from discussion avatars
+- **Notification Preferences Management**: Added complete notification preferences system allowing users to control all notification types (content updates, community activity, weekly digest) except admin notifications, with dedicated preferences page accessible through user profile settings
 
 # User Preferences
 Preferred communication style: Simple, everyday language.
