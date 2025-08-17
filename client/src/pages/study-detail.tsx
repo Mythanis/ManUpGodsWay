@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertStudyRatingSchema, type Study, type UserProgress, type Discussion } from "@shared/schema";
@@ -639,7 +640,7 @@ export default function StudyDetail() {
 
       {/* Study Discussion Dialog Pop-out */}
       <Dialog open={discussionDialogOpen} onOpenChange={setDiscussionDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <MessageCircle className="w-5 h-5 text-ministry-navy" />
@@ -674,9 +675,9 @@ export default function StudyDetail() {
               </div>
 
               {/* Replies Section */}
-              <div className="flex-1 overflow-y-auto mb-4">
+              <ScrollArea className="flex-1 mb-4">
                 <StudyDiscussionReplies discussionId={studyDiscussion.id} />
-              </div>
+              </ScrollArea>
 
               {/* Reply Form */}
               {canAccess && (

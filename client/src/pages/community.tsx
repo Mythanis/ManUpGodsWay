@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -723,7 +724,7 @@ export default function Community() {
 
       {/* Discussion Dialog Pop-out */}
       <Dialog open={discussionDialogOpen} onOpenChange={setDiscussionDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <MessageCircle className="w-5 h-5 text-ministry-navy" />
@@ -769,9 +770,9 @@ export default function Community() {
               </div>
 
               {/* Replies Section */}
-              <div className="flex-1 overflow-y-auto mb-4">
+              <ScrollArea className="flex-1 mb-4">
                 <DiscussionReplies discussionId={selectedDiscussionForDialog.id} />
-              </div>
+              </ScrollArea>
 
               {/* Reply Form */}
               <div className="border-t pt-4">
