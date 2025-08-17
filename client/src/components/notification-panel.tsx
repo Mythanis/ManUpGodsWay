@@ -12,7 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 interface Notification {
   id: string;
   userId: string;
-  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'study' | 'video' | 'new_video';
+  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'discussion_reply' | 'study' | 'video' | 'new_video';
   title: string;
   message: string;
   relatedId?: string;
@@ -48,6 +48,7 @@ const getNotificationIcon = (type: string) => {
       return <Heart className="h-4 w-4" />;
     case 'new_discussion':
     case 'discussion':
+    case 'discussion_reply':
       return <MessageSquare className="h-4 w-4" />;
     default:
       return <Bell className="h-4 w-4" />;
@@ -183,6 +184,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         
       case 'discussion':
       case 'new_discussion':
+      case 'discussion_reply':
         if (notification.relatedId) {
           // Navigate to community page with specific discussion highlighted
           window.location.href = `/community?discussion=${notification.relatedId}`;
