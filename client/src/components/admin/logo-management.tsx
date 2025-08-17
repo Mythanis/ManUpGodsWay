@@ -476,7 +476,6 @@ export default function LogoManagement() {
                   animation: 'fadeIn 0.6s ease-in-out'
                 }}
               />
-              <div className="w-12 h-12 border-4 border-ministry-gold border-t-transparent rounded-full animate-spin"></div>
               <div className="mt-8 text-center space-y-2">
                 <p className="text-ministry-slate text-sm">
                   Preview: This is how your logo will appear to users

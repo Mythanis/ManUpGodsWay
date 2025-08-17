@@ -83,7 +83,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         backgroundColor: getBackgroundStyle(logoSettings.backgroundColor || 'white')
       }}
     >
-      <div className="flex flex-col items-center space-y-4">
+      <div className="flex flex-col items-center">
         <img
           src={logoSettings.logoUrl}
           alt="Logo"
@@ -92,7 +92,6 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
             animation: 'fadeIn 0.6s ease-in-out'
           }}
         />
-        <div className="w-12 h-12 border-4 border-ministry-gold border-t-transparent rounded-full animate-spin"></div>
       </div>
       
       <style>{`
