@@ -387,7 +387,7 @@ export default function Messages() {
 
 
   return (
-    <div className="flex h-screen max-w-md mx-auto bg-white pb-16">
+    <div className="flex h-screen max-w-md mx-auto bg-background pb-16">
       {/* Conversations List */}
       {!selectedConversation ? (
         <div className="w-full">
@@ -407,7 +407,7 @@ export default function Messages() {
                     </DialogHeader>
                     <div className="space-y-4">
                       <div className="relative">
-                        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                           placeholder="Search users..."
                           value={searchQuery}
@@ -419,13 +419,13 @@ export default function Messages() {
                       <ScrollArea className="h-60">
                         {filteredUsers.length === 0 ? (
                           <div className="text-center py-4">
-                            <p className="text-gray-500">No users found</p>
+                            <p className="text-muted-foreground">No users found</p>
                           </div>
                         ) : (
                           filteredUsers.map((targetUser) => (
                             <div
                               key={targetUser.id}
-                              className="flex items-center justify-between p-2 hover:bg-gray-50 rounded"
+                              className="flex items-center justify-between p-2 hover:bg-muted/50 rounded"
                               data-testid={`user-item-${targetUser.id}`}
                             >
                               <div className="flex items-center space-x-3">
@@ -452,7 +452,7 @@ export default function Messages() {
                                   <p className="font-medium">
                                     {targetUser.firstName} {targetUser.lastName}
                                   </p>
-                                  <p className="text-sm text-gray-500">{targetUser.email}</p>
+                                  <p className="text-sm text-muted-foreground">{targetUser.email}</p>
                                 </div>
                               </div>
                               <Button
@@ -505,7 +505,7 @@ export default function Messages() {
                       <div>
                         <Label>Select Members</Label>
                         <div className="relative mb-2">
-                          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                           <Input
                             placeholder="Search users..."
                             value={searchQuery}
@@ -518,7 +518,7 @@ export default function Messages() {
                         {/* Selected users display */}
                         {selectedUsers.length > 0 && (
                           <div className="mb-3">
-                            <p className="text-sm text-gray-600 mb-2">Selected Members ({selectedUsers.length}):</p>
+                            <p className="text-sm text-muted-foreground mb-2">Selected Members ({selectedUsers.length}):</p>
                             <div className="flex flex-wrap gap-1">
                               {selectedUsers.map(userId => {
                                 const selectedUser = allUsers.find(u => u.id === userId);
@@ -545,11 +545,11 @@ export default function Messages() {
                         <ScrollArea className="h-40 border rounded p-2">
                           {filteredUsersForGroup.length === 0 ? (
                             <div className="text-center py-4">
-                              <p className="text-gray-500 text-sm">No users found</p>
+                              <p className="text-muted-foreground text-sm">No users found</p>
                             </div>
                           ) : (
                             filteredUsersForGroup.map((targetUser) => (
-                              <div key={targetUser.id} className="flex items-center space-x-2 py-2 hover:bg-gray-50 rounded px-2">
+                              <div key={targetUser.id} className="flex items-center space-x-2 py-2 hover:bg-muted/50 rounded px-2">
                                 <Checkbox
                                   id={`user-${targetUser.id}`}
                                   checked={selectedUsers.includes(targetUser.id)}
@@ -588,7 +588,7 @@ export default function Messages() {
                                 >
                                   <div>
                                     <p>{targetUser.firstName} {targetUser.lastName}</p>
-                                    <p className="text-xs text-gray-500">{targetUser.email}</p>
+                                    <p className="text-xs text-muted-foreground">{targetUser.email}</p>
                                   </div>
                                 </label>
                               </div>
@@ -614,26 +614,26 @@ export default function Messages() {
           <div className="px-6 py-4">
             {conversations.length === 0 ? (
               <div className="text-center py-8">
-                <MessageCircle className="w-12 h-12 text-ministry-slate mx-auto mb-4" />
-                <p className="text-ministry-slate">No conversations yet</p>
-                <p className="text-sm text-ministry-slate">Start a new conversation above</p>
+                <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No conversations yet</p>
+                <p className="text-sm text-muted-foreground">Start a new conversation above</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {conversations.map((conversation) => (
                   <Card
                     key={conversation.id}
-                    className="cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => setSelectedConversation(conversation)}
                     data-testid={`conversation-item-${conversation.id}`}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-ministry-navy truncate">
+                          <h3 className="font-medium text-foreground truncate">
                             {getConversationTitle(conversation)}
                           </h3>
-                          <p className="text-sm text-ministry-slate">
+                          <p className="text-sm text-muted-foreground">
                             {conversation.type === "group" 
                               ? `${conversation.participants?.length || 0} members`
                               : "Direct message"
@@ -641,7 +641,7 @@ export default function Messages() {
                           </p>
                         </div>
                         {conversation.lastMessageAt && (
-                          <p className="text-xs text-ministry-slate">
+                          <p className="text-xs text-muted-foreground">
                             {formatMessageTime(conversation.lastMessageAt)}
                           </p>
                         )}
@@ -669,7 +669,7 @@ export default function Messages() {
             </Button>
             <div className="flex-1">
               <h2 className="font-bold">{getConversationTitle(selectedConversation)}</h2>
-              <p className="text-sm text-gray-200">
+              <p className="text-sm text-white/70">
                 {selectedConversation.type === "group" 
                   ? `${selectedConversation.participants?.length || 0} members`
                   : "Direct message"
@@ -728,12 +728,12 @@ export default function Messages() {
             <ScrollArea className="h-full px-6 py-4">
               {messagesLoading ? (
                 <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-navy"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
               ) : messages.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-ministry-slate">No messages yet</p>
-                  <p className="text-sm text-ministry-slate">Start the conversation!</p>
+                  <p className="text-muted-foreground">No messages yet</p>
+                  <p className="text-sm text-muted-foreground">Start the conversation!</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -779,8 +779,8 @@ export default function Messages() {
                       
                       <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                         message.userId === (user as any)?.id
-                          ? 'bg-ministry-navy text-white'
-                          : 'bg-gray-100 text-ministry-charcoal'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-foreground'
                       }`}>
                         {selectedConversation.type === "group" && message.userId !== (user as any)?.id && (
                           <p className="text-xs opacity-75 mb-1">
@@ -789,7 +789,7 @@ export default function Messages() {
                         )}
                         <p className="text-sm">{message.content}</p>
                         <p className={`text-xs mt-1 ${
-                          message.userId === (user as any)?.id ? 'text-gray-200' : 'text-ministry-slate'
+                          message.userId === (user as any)?.id ? 'text-primary-foreground/70' : 'text-muted-foreground/70'
                         }`}>
                           {formatMessageTime(message.createdAt)}
                         </p>
@@ -803,7 +803,7 @@ export default function Messages() {
           </div>
 
           {/* Message Input - Fixed at bottom with proper spacing */}
-          <div className="flex-shrink-0 border-t bg-white mb-16">
+          <div className="flex-shrink-0 border-t bg-background mb-16">
             <div className="px-6 py-4">
               <form onSubmit={handleSendMessage}>
                 <div className="flex space-x-2">
@@ -820,7 +820,7 @@ export default function Messages() {
                   <Button
                     type="submit"
                     disabled={!newMessage.trim() || sendMessageMutation.isPending}
-                    className="bg-ministry-navy hover:bg-ministry-charcoal"
+                    className="bg-primary hover:bg-primary/90"
                     data-testid="button-send-message"
                   >
                     <Send className="w-4 h-4" />
@@ -835,7 +835,7 @@ export default function Messages() {
       {/* Message Context Menu */}
       {showMessageMenu && (
         <div
-          className="fixed bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-50 min-w-[140px]"
+          className="fixed bg-background border border-border rounded-lg shadow-lg p-2 z-50 min-w-[140px]"
           style={{
             left: showMessageMenu.x,
             top: showMessageMenu.y,
@@ -861,7 +861,7 @@ export default function Messages() {
         const targetUser = allUsers.find(u => u.id === showProfileMenu.userId);
         return (
           <div
-            className="fixed bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-50 min-w-[160px]"
+            className="fixed bg-background border border-border rounded-lg shadow-lg p-2 z-50 min-w-[160px]"
             style={{
               left: showProfileMenu.x + 10,
               top: showProfileMenu.y,
@@ -902,7 +902,7 @@ export default function Messages() {
                 </Button>
               )}
               {targetUser?.allowDirectMessages === false && targetUser?.allowGroupInvites === false && (
-                <div className="p-2 text-xs text-gray-500 text-center">
+                <div className="p-2 text-xs text-muted-foreground text-center">
                   This user has disabled messaging
                 </div>
               )}
