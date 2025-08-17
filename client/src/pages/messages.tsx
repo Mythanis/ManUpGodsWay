@@ -101,10 +101,19 @@ export default function Messages() {
     retry: false,
   });
 
-  // Filter users based on search query and privacy preferences
+  // Fetch silenced users list
+  const { data: silencedData } = useQuery<{ silencedUserIds: string[] }>({
+    queryKey: ["/api/users/silenced"],
+    retry: false,
+  });
+
+  const silencedUserIds = silencedData?.silencedUserIds || [];
+
+  // Filter users based on search query, privacy preferences, and silenced status
   const filteredUsers = allUsers.filter(targetUser => 
     targetUser.id !== (user as any)?.id &&
     targetUser.allowDirectMessages !== false && // Only show users who allow direct messages
+    !silencedUserIds.includes(targetUser.id) && // Hide silenced users
     (targetUser.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
      targetUser.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
      targetUser.email.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -114,6 +123,7 @@ export default function Messages() {
   const filteredUsersForGroup = allUsers.filter(targetUser => 
     targetUser.id !== (user as any)?.id &&
     targetUser.allowGroupInvites !== false && // Only show users who allow group invites
+    !silencedUserIds.includes(targetUser.id) && // Hide silenced users
     (targetUser.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
      targetUser.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
      targetUser.email.toLowerCase().includes(searchQuery.toLowerCase()))

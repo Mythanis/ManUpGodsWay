@@ -1471,6 +1471,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/users/silenced', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const silencedUserIds = await storage.getUserSilences(userId);
+      res.json({ silencedUserIds });
+    } catch (error) {
+      console.error("Error fetching silenced users:", error);
+      res.status(500).json({ message: "Failed to fetch silenced users" });
+    }
+  });
+
   // Video Management API Routes
   app.get('/api/admin/videos', isAuthenticated, async (req: any, res) => {
     try {
