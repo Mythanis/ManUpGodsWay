@@ -409,11 +409,11 @@ export default function Dashboard() {
         ) : (
           <>
             {/* No Current Study - Show Recommendations */}
-            <Card className="border border-gray-100 p-6 mb-4" data-testid="card-no-current-study">
+            <Card className="border border-border p-6 mb-4" data-testid="card-no-current-study">
               <div className="text-center">
                 <p className="text-ministry-slate mb-4">You haven't started any studies yet</p>
                 <Button 
-                  className="bg-ministry-navy text-white hover:bg-ministry-charcoal"
+                  className="bg-card text-foreground hover:bg-muted border border-border"
                   data-testid="button-browse-studies"
                   onClick={() => window.location.href = '/library'}
                 >
@@ -429,7 +429,7 @@ export default function Dashboard() {
                 <p className="text-xs text-ministry-slate mb-4">Based on your interests</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
-                    <Card key={study.id} className="border border-gray-100 hover:shadow-sm transition-shadow">
+                    <Card key={study.id} className="border border-border hover:shadow-sm transition-shadow">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
@@ -471,7 +471,7 @@ export default function Dashboard() {
           <Link href="/videos">
             <Button 
               variant="outline"
-              className="h-20 flex flex-col items-center justify-center space-y-2 border-gray-100 hover:shadow-md w-full"
+              className="h-20 flex flex-col items-center justify-center space-y-2 bg-card text-foreground border-border hover:bg-muted w-full"
               data-testid="button-watch-videos"
             >
               <Play className="w-8 h-8 text-ministry-steel" />
@@ -482,7 +482,7 @@ export default function Dashboard() {
           <Link href="/community">
             <Button 
               variant="outline"
-              className="h-20 flex flex-col items-center justify-center space-y-2 border-gray-100 hover:shadow-md w-full"
+              className="h-20 flex flex-col items-center justify-center space-y-2 bg-card text-foreground border-border hover:bg-muted w-full"
               data-testid="button-join-discussion"
             >
               <Users className="w-8 h-8 text-ministry-steel" />
@@ -492,7 +492,7 @@ export default function Dashboard() {
           
           <Button 
             variant="outline"
-            className="h-20 flex flex-col items-center justify-center space-y-2 border-gray-100 hover:shadow-md"
+            className="h-20 flex flex-col items-center justify-center space-y-2 bg-card text-foreground border-border hover:bg-muted"
             data-testid="button-track-progress"
             onClick={() => setShowProgressDialog(true)}
           >
@@ -502,7 +502,7 @@ export default function Dashboard() {
           
           <Button 
             variant="outline"
-            className="h-20 flex flex-col items-center justify-center space-y-2 border-gray-100 hover:shadow-md"
+            className="h-20 flex flex-col items-center justify-center space-y-2 bg-card text-foreground border-border hover:bg-muted"
             data-testid="button-prayer-time"
             onClick={() => isPraying ? endPrayerTime() : setShowPrayerDialog(true)}
           >
@@ -527,7 +527,7 @@ export default function Dashboard() {
         
         <div className="space-y-3">
           {completedCount > 0 && (
-            <Card className="border-gray-100" data-testid="activity-completed-study">
+            <Card className="border-border" data-testid="activity-completed-study">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-full bg-ministry-steel/20 flex items-center justify-center">
