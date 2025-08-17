@@ -123,7 +123,7 @@ export default function NotificationPreferences() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
+    <div className="container mx-auto px-4 py-8 pb-24 max-w-2xl">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-ministry-charcoal mb-2">Notification Preferences</h1>
         <p className="text-ministry-slate">
@@ -345,7 +345,7 @@ export default function NotificationPreferences() {
             </CardContent>
           </Card>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-4 pb-8">
             <Button
               type="submit"
               disabled={updatePreferences.isPending}
