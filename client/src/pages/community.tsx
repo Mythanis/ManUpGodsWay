@@ -198,15 +198,28 @@ function DiscussionReplyForm({ discussionId, currentUserTier, discussion }: {
         />
         
         <div className="flex justify-end">
-          <Button
+          <button
             type="submit"
-            size="sm"
             disabled={createReply.isPending || !hasReplyAccess}
-            className="bg-ministry-navy hover:bg-ministry-charcoal"
+            style={{
+              backgroundColor: 'hsl(0 0% 0%)',
+              color: 'white',
+              border: '1px solid hsl(0 0% 0%)',
+              borderRadius: '0.375rem',
+              padding: '0.375rem 0.75rem',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+              cursor: (createReply.isPending || !hasReplyAccess) ? 'default' : 'pointer',
+              opacity: (createReply.isPending || !hasReplyAccess) ? 0.6 : 1,
+              transition: 'opacity 0.2s'
+            }}
           >
-            <Send className="w-3 h-3 mr-1" />
+            <Send className="w-3 h-3" />
             {createReply.isPending ? "Posting..." : "Post Reply"}
-          </Button>
+          </button>
         </div>
       </form>
     </Form>
