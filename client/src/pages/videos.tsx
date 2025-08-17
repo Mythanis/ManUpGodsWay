@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,6 +39,7 @@ interface Video {
 
 export default function Videos() {
   const { user } = useAuth();
+  const { effectiveTheme } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -238,18 +240,30 @@ export default function Videos() {
           className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2"
         >
           {categories.map((category) => (
-            <Button
+            <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              variant={selectedCategory === category.id ? "default" : "outline"}
-              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start ${
-                selectedCategory === category.id
-                  ? "bg-ministry-navy text-white"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
+              style={{
+                backgroundColor: selectedCategory === category.id 
+                  ? 'hsl(0 0% 0%)' 
+                  : effectiveTheme === 'dark' 
+                    ? 'hsl(220 8% 26%)' 
+                    : 'hsl(240 1.9608% 90%)',
+                color: selectedCategory === category.id 
+                  ? 'white' 
+                  : effectiveTheme === 'dark' 
+                    ? 'hsl(0 0% 95%)' 
+                    : 'hsl(210 25% 7.8431%)',
+                borderColor: selectedCategory === category.id 
+                  ? 'hsl(0 0% 0%)' 
+                  : effectiveTheme === 'dark' 
+                    ? 'hsl(210 5.2632% 14.9020%)' 
+                    : 'hsl(201.4286 30.4348% 90.9804%)'
+              }}
+              className="px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start border cursor-pointer transition-colors"
             >
               {category.label}
-            </Button>
+            </button>
           ))}
         </div>
       </div>
