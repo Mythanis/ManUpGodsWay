@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Bell, Check, CheckCheck, MessageSquare, BookOpen, Heart, Users, Trash2, X, MoreVertical } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Bell, Check, CheckCheck, MessageSquare, BookOpen, Heart, Users, Trash2, X, MoreVertical, Settings } from "lucide-react";
 import { cn, formatLocalDateTime } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
+import { NotificationPreferences } from "./notification-preferences";
 
 interface Notification {
   id: string;
@@ -263,14 +265,34 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
             <CardHeader className="pb-2 flex-shrink-0">
               <div className="flex items-center justify-between mb-2">
                 <CardTitle className="text-sm">Notifications</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowPanel(false)}
-                  className="text-xs p-1"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs p-1"
+                        title="Notification preferences"
+                      >
+                        <Settings className="h-3 w-3" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Notification Settings</DialogTitle>
+                      </DialogHeader>
+                      <NotificationPreferences />
+                    </DialogContent>
+                  </Dialog>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowPanel(false)}
+                    className="text-xs p-1"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
               <div className="flex flex-wrap gap-1">
                 {unreadCount > 0 && (

@@ -265,7 +265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Send notifications to eligible users
         if (targetUsers.length > 0) {
           const notificationPromises = targetUsers.map(async (targetUser) => {
-            return await storage.createNotification({
+            return await storage.createNotificationWithPreferences({
               userId: targetUser.id,
               type: 'study',
               title: '📚 New Study Available',
@@ -492,8 +492,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         discussionId: id,
         isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
       
       res.json({ success: true, subscription });
@@ -539,7 +537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (otherUsers.length > 0) {
           const notificationPromises = otherUsers.map(async (targetUser) => {
-            return await storage.createNotification({
+            return await storage.createNotificationWithPreferences({
               userId: targetUser.id,
               type: 'new_discussion',
               title: '💬 New Community Discussion',
@@ -624,7 +622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (otherSubscribers.length > 0) {
           const notificationPromises = otherSubscribers.map(async (subscriber) => {
-            return await storage.createNotification({
+            return await storage.createNotificationWithPreferences({
               userId: subscriber.userId,
               type: 'discussion_reply',
               title: '💬 New Reply in Subscribed Discussion',
@@ -766,7 +764,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (targetUsers.length > 0) {
           const notificationPromises = targetUsers.map(async (targetUser) => {
-            return await storage.createNotification({
+            return await storage.createNotificationWithPreferences({
               userId: targetUser.id,
               type: 'devotional',
               title: '📖 New Daily Devotional Available',
@@ -1009,11 +1007,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Get updated conversation with all current participants
         const updatedConversation = await storage.getConversation(conversationId);
         if (updatedConversation) {
-          const otherParticipants = updatedConversation.participants.filter((p: any) => p.userId !== userId);
+          const otherParticipants = updatedConversation.participants.filter((p) => p.userId !== userId);
           const senderUser = await storage.getUser(userId);
           
           for (const participant of otherParticipants) {
-            await storage.createNotification({
+            await storage.createNotificationWithPreferences({
               userId: participant.userId,
               type: updatedConversation.type === 'direct' ? 'new_message' : 'group_message',
               title: updatedConversation.type === 'direct' ? 'New Message' : `New Group Message in ${updatedConversation.name}`,
@@ -1487,7 +1485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Send notifications to eligible users
         if (targetUsers.length > 0) {
           const notificationPromises = targetUsers.map(async (targetUser) => {
-            return await storage.createNotification({
+            return await storage.createNotificationWithPreferences({
               userId: targetUser.id,
               type: 'video',
               title: '🎥 New Video Available',
@@ -1572,7 +1570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Send notifications to eligible users
           if (targetUsers.length > 0) {
             const notificationPromises = targetUsers.map(async (targetUser) => {
-              return await storage.createNotification({
+              return await storage.createNotificationWithPreferences({
                 userId: targetUser.id,
                 type: 'video',
                 title: '🎥 New Video Available',
@@ -1660,11 +1658,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No users match the selected criteria" });
       }
       
-      // Create notifications for targeted users
+      // Create notifications for targeted users (Note: Admin notifications bypass preferences)
       const notificationPromises = targetUsers.map(async (targetUser) => {
+        // Admin notifications are always sent (cannot be disabled)
         return await storage.createNotification({
           userId: targetUser.id,
-          type: type || 'general',
+          type: 'admin',
           title,
           message,
           relatedId: null,
@@ -1726,6 +1725,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error clearing notification:", error);
       res.status(500).json({ message: "Failed to clear notification" });
+    }
+  });
+
+  // Get user notification preferences
+  app.get('/api/notification-preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const preferences = await storage.getOrCreateNotificationPreferences(userId);
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error fetching notification preferences:", error);
+      res.status(500).json({ message: "Failed to fetch notification preferences" });
+    }
+  });
+
+  // Update user notification preferences
+  app.put('/api/notification-preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const updates = req.body;
+      
+      // Validate the updates
+      const validKeys = [
+        'studyNotifications',
+        'devotionalNotifications', 
+        'discussionNotifications',
+        'discussionReplyNotifications',
+        'messageNotifications',
+        'videoNotifications',
+        'communityNotifications'
+      ];
+      
+      const filteredUpdates: any = {};
+      for (const key of validKeys) {
+        if (key in updates && typeof updates[key] === 'boolean') {
+          filteredUpdates[key] = updates[key];
+        }
+      }
+      
+      const preferences = await storage.updateNotificationPreferences(userId, filteredUpdates);
+      if (!preferences) {
+        // Create if doesn't exist
+        await storage.createDefaultNotificationPreferences(userId);
+        const newPreferences = await storage.updateNotificationPreferences(userId, filteredUpdates);
+        res.json(newPreferences);
+      } else {
+        res.json(preferences);
+      }
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      res.status(500).json({ message: "Failed to update notification preferences" });
     }
   });
 
@@ -1840,7 +1890,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Notify the sender that their request was accepted
         const toUser = await storage.getUser(request.toUserId);
-        await storage.createNotification({
+        await storage.createNotificationWithPreferences({
           userId: request.fromUserId,
           type: 'new_message',
           title: 'Message Request Accepted',

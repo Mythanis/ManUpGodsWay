@@ -57,10 +57,10 @@ class DevotionalNotificationService {
       for (const devotional of availableDevotionals) {
         console.log(`Sending notifications for devotional: "${devotional.title}"`);
         
-        // Create notifications for all users
+        // Create notifications for all users (respecting preferences)
         const notificationPromises = allUsers.map(async (user) => {
           try {
-            return await storage.createNotification({
+            return await storage.createNotificationWithPreferences({
               userId: user.id,
               type: 'devotional',
               title: '🌅 Daily Devotional Available',

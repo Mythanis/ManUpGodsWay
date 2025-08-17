@@ -13,6 +13,7 @@ import {
   messages,
   messageRequests,
   notifications,
+  notificationPreferences,
   type User,
   type UpsertUser,
   type Study,
@@ -41,6 +42,8 @@ import {
   type InsertMessageRequest,
   type Notification,
   type InsertNotification,
+  type NotificationPreferences,
+  type InsertNotificationPreferences,
   videos,
   type Video,
   type InsertVideo,
@@ -841,15 +844,28 @@ export class DatabaseStorage implements IStorage {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const [devotional] = await db
+    // First try to get exact today's devotional
+    const [todayDevotional] = await db
       .select()
       .from(devotionals)
       .where(and(
         sql`${devotionals.date} >= ${today}`,
         sql`${devotionals.date} < ${tomorrow}`
-      ));
+      ))
+      .limit(1);
 
-    return devotional;
+    if (todayDevotional) {
+      return todayDevotional;
+    }
+
+    // If no devotional for today, get the most recent one
+    const [recentDevotional] = await db
+      .select()
+      .from(devotionals)
+      .orderBy(desc(devotionals.date))
+      .limit(1);
+
+    return recentDevotional;
   }
 
   async getDevotionals(limit = 10): Promise<Devotional[]> {
@@ -1447,6 +1463,91 @@ export class DatabaseStorage implements IStorage {
       .from(notifications)
       .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
     return Number(result.count);
+  }
+
+  // Notification preferences operations
+  async getUserNotificationPreferences(userId: string): Promise<NotificationPreferences | null> {
+    const [preferences] = await db
+      .select()
+      .from(notificationPreferences)
+      .where(eq(notificationPreferences.userId, userId))
+      .limit(1);
+    return preferences || null;
+  }
+
+  async createDefaultNotificationPreferences(userId: string): Promise<NotificationPreferences> {
+    const [newPreferences] = await db
+      .insert(notificationPreferences)
+      .values({ userId })
+      .returning();
+    return newPreferences;
+  }
+
+  async updateNotificationPreferences(userId: string, preferences: Partial<InsertNotificationPreferences>): Promise<NotificationPreferences | null> {
+    const [updatedPreferences] = await db
+      .update(notificationPreferences)
+      .set({ ...preferences, updatedAt: new Date() })
+      .where(eq(notificationPreferences.userId, userId))
+      .returning();
+    return updatedPreferences || null;
+  }
+
+  async getOrCreateNotificationPreferences(userId: string): Promise<NotificationPreferences> {
+    let preferences = await this.getUserNotificationPreferences(userId);
+    if (!preferences) {
+      preferences = await this.createDefaultNotificationPreferences(userId);
+    }
+    return preferences;
+  }
+
+  // Helper function to check if user wants to receive a specific type of notification
+  async shouldReceiveNotification(userId: string, notificationType: string): Promise<boolean> {
+    // Admin notifications cannot be disabled
+    if (notificationType === 'admin') {
+      return true;
+    }
+
+    const preferences = await this.getOrCreateNotificationPreferences(userId);
+    
+    // Map notification types to preference fields
+    switch (notificationType) {
+      case 'study':
+      case 'new_study':
+        return preferences.studyNotifications;
+      case 'devotional':
+      case 'new_devotional':
+        return preferences.devotionalNotifications;
+      case 'discussion':
+      case 'new_discussion':
+        return preferences.discussionNotifications;
+      case 'discussion_reply':
+        return preferences.discussionReplyNotifications;
+      case 'message':
+      case 'new_message':
+      case 'message_request':
+      case 'group_message':
+        return preferences.messageNotifications;
+      case 'video':
+      case 'new_video':
+        return preferences.videoNotifications;
+      case 'community':
+        return preferences.communityNotifications;
+      default:
+        // For unknown types, default to true (send notification)
+        return true;
+    }
+  }
+
+  // Enhanced createNotification that checks preferences
+  async createNotificationWithPreferences(notification: InsertNotification): Promise<Notification | null> {
+    const shouldSend = await this.shouldReceiveNotification(notification.userId, notification.type);
+    
+    if (!shouldSend) {
+      console.log(`Skipping notification for user ${notification.userId} - type ${notification.type} disabled in preferences`);
+      return null;
+    }
+    
+    return this.createNotification(notification);
   }
 
   // Message request methods

@@ -143,6 +143,21 @@ export const discussionSubscriptions = pgTable("discussion_subscriptions", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// User notification preferences
+export const notificationPreferences = pgTable("notification_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }).unique(),
+  studyNotifications: boolean("study_notifications").default(true),
+  devotionalNotifications: boolean("devotional_notifications").default(true),
+  discussionNotifications: boolean("discussion_notifications").default(true),
+  discussionReplyNotifications: boolean("discussion_reply_notifications").default(true),
+  messageNotifications: boolean("message_notifications").default(true),
+  videoNotifications: boolean("video_notifications").default(true),
+  communityNotifications: boolean("community_notifications").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Daily devotionals
 export const devotionals = pgTable("devotionals", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -238,13 +253,14 @@ export const notifications = pgTable("notifications", {
 });
 
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   progress: many(userProgress),
   discussions: many(discussions),
   replies: many(discussionReplies),
   ratings: many(studyRatings),
   videoRatings: many(videoRatings),
   discussionSubscriptions: many(discussionSubscriptions),
+  notificationPreferences: one(notificationPreferences),
 }));
 
 export const videosRelations = relations(videos, ({ one, many }) => ({
@@ -321,6 +337,10 @@ export const messageRequestsRelations = relations(messageRequests, ({ one }) => 
 
 export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(users, { fields: [notifications.userId], references: [users.id] }),
+}));
+
+export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
+  user: one(users, { fields: [notificationPreferences.userId], references: [users.id] }),
 }));
 
 // Insert schemas
@@ -449,6 +469,12 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
   createdAt: true,
 });
 
+export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -479,5 +505,7 @@ export type MessageRequest = typeof messageRequests.$inferSelect;
 export type InsertMessageRequest = z.infer<typeof insertMessageRequestSchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
 export type DiscussionSubscription = typeof discussionSubscriptions.$inferSelect;
 export type InsertDiscussionSubscription = z.infer<typeof insertDiscussionSubscriptionSchema>;
