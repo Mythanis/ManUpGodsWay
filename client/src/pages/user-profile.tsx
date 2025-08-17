@@ -319,48 +319,44 @@ export default function UserProfile() {
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-ministry-slate break-words">Studies Completed</CardTitle>
-            <BookOpen className="h-4 w-4 text-ministry-gold flex-shrink-0" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-ministry-slate">Studies Completed</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-ministry-charcoal">{profile.studiesCompleted}</div>
-            <p className="text-xs text-ministry-slate break-words">Biblical studies finished</p>
+            <p className="text-xs text-ministry-slate">Biblical studies finished</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-ministry-slate break-words">Days Active</CardTitle>
-            <Activity className="h-4 w-4 text-ministry-gold flex-shrink-0" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-ministry-slate">Days Active</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-ministry-charcoal">{profile.daysActive}</div>
-            <p className="text-xs text-ministry-slate break-words">Days with activity</p>
+            <p className="text-xs text-ministry-slate">Days with activity</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-ministry-slate break-words">Forum Posts</CardTitle>
-            <MessageSquare className="h-4 w-4 text-ministry-gold flex-shrink-0" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-ministry-slate">Forum Posts</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-ministry-charcoal">{profile.forumPosts}</div>
-            <p className="text-xs text-ministry-slate break-words">Discussions & replies</p>
+            <p className="text-xs text-ministry-slate">Discussions and replies</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-ministry-slate break-words">Member Tier</CardTitle>
-            {tierInfo.icon && <div className={`${tierInfo.color} flex-shrink-0`}>{tierInfo.icon}</div>}
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-ministry-slate">Member Tier</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-lg font-bold ${tierInfo.color} break-words leading-tight`}>
+            <div className={`text-lg font-bold ${tierInfo.color} leading-tight`}>
               {tierInfo.label}
             </div>
-            <p className="text-xs text-ministry-slate break-words">Subscription level</p>
+            <p className="text-xs text-ministry-slate">Subscription level</p>
           </CardContent>
         </Card>
       </div>
