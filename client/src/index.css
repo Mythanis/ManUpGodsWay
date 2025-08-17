@@ -99,13 +99,40 @@
   }
   
   /* When virtual keyboard is detected (smaller viewport) */
-  [data-radix-dialog-content].keyboard-visible {
-    max-height: 60vh !important;
+  .keyboard-visible[data-radix-dialog-content] {
+    max-height: 50vh !important;
     top: 0.5rem !important;
   }
   
-  [data-radix-dialog-content].keyboard-visible .replies-section {
-    max-height: 25vh !important;
+  .keyboard-visible .replies-section {
+    max-height: 20vh !important;
+    min-height: 20vh !important;
+  }
+  
+  /* Global keyboard state for body */
+  body.keyboard-visible [data-radix-dialog-content] {
+    max-height: 50vh !important;
+    top: 0.5rem !important;
+  }
+  
+  body.keyboard-visible .replies-section {
+    max-height: 20vh !important;
+    min-height: 20vh !important;
+  }
+  
+  /* Ensure textarea stays visible when keyboard appears */
+  .keyboard-visible textarea,
+  body.keyboard-visible textarea {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
+  
+  /* Alternative detection for iOS Safari */
+  @supports (-webkit-touch-callout: none) {
+    body.keyboard-visible [data-radix-dialog-content] {
+      height: 50vh !important;
+      max-height: 50vh !important;
+      top: 0 !important;
+    }
   }
 }
 

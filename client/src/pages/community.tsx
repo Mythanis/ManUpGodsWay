@@ -274,30 +274,87 @@ export default function Community() {
 
   // Detect virtual keyboard visibility on mobile
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !discussionDialogOpen) return;
     
-    const initialViewportHeight = window.visualViewport?.height || window.innerHeight;
+    let initialViewportHeight = window.visualViewport?.height || window.innerHeight;
     
     const handleViewportChange = () => {
       const currentHeight = window.visualViewport?.height || window.innerHeight;
       const heightDifference = initialViewportHeight - currentHeight;
       
-      // If viewport height decreased by more than 150px, keyboard is likely visible
-      setIsKeyboardVisible(heightDifference > 150);
+      console.log('Viewport change:', { initialViewportHeight, currentHeight, heightDifference });
+      
+      // If viewport height decreased by more than 100px, keyboard is likely visible
+      const keyboardVisible = heightDifference > 100;
+      setIsKeyboardVisible(keyboardVisible);
+      
+      // Also add CSS class directly to body for global styling
+      if (keyboardVisible) {
+        document.body.classList.add('keyboard-visible');
+      } else {
+        document.body.classList.remove('keyboard-visible');
+      }
     };
+    
+    // Reset initial height when dialog opens
+    initialViewportHeight = window.visualViewport?.height || window.innerHeight;
     
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleViewportChange);
       return () => {
         window.visualViewport?.removeEventListener('resize', handleViewportChange);
+        document.body.classList.remove('keyboard-visible');
       };
     } else {
       window.addEventListener('resize', handleViewportChange);
       return () => {
         window.removeEventListener('resize', handleViewportChange);
+        document.body.classList.remove('keyboard-visible');
       };
     }
-  }, []);
+  }, [discussionDialogOpen]);
+
+  // Additional keyboard detection using input focus (fallback method)
+  useEffect(() => {
+    if (!discussionDialogOpen) return;
+
+    const handleInputFocus = () => {
+      // Small delay to allow keyboard to appear
+      setTimeout(() => {
+        const currentHeight = window.visualViewport?.height || window.innerHeight;
+        const windowHeight = window.innerHeight;
+        
+        console.log('Input focus - heights:', { currentHeight, windowHeight });
+        
+        if (currentHeight < windowHeight * 0.8) {
+          setIsKeyboardVisible(true);
+          document.body.classList.add('keyboard-visible');
+        }
+      }, 300);
+    };
+
+    const handleInputBlur = () => {
+      setTimeout(() => {
+        setIsKeyboardVisible(false);
+        document.body.classList.remove('keyboard-visible');
+      }, 300);
+    };
+
+    // Add listeners to all text inputs and textareas in the dialog
+    const textInputs = document.querySelectorAll('textarea, input[type="text"]');
+    
+    textInputs.forEach(input => {
+      input.addEventListener('focus', handleInputFocus);
+      input.addEventListener('blur', handleInputBlur);
+    });
+
+    return () => {
+      textInputs.forEach(input => {
+        input.removeEventListener('focus', handleInputFocus);
+        input.removeEventListener('blur', handleInputBlur);
+      });
+    };
+  }, [discussionDialogOpen]);
 
   // Fetch real community stats with live updates
   const { data: communityStats } = useQuery<{
