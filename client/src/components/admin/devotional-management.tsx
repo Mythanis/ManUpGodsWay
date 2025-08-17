@@ -191,10 +191,10 @@ export default function DevotionalManagement() {
             </CardTitle>
             <Button
               onClick={() => setShowForm(!showForm)}
-              className="bg-ministry-gold text-ministry-navy hover:bg-ministry-gold/90"
+              className="bg-ministry-gold hover:bg-ministry-gold/90"
               data-testid="button-add-devotional"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-2 text-black dark:text-white" />
               <span className="text-black dark:text-white">Add Devotional</span>
             </Button>
           </div>
