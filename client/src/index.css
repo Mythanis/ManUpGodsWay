@@ -84,12 +84,11 @@
 @media (max-width: 768px) {
   [data-radix-dialog-content] {
     position: fixed !important;
-    top: 2rem !important;
+    top: 1rem !important;
     left: 0.5rem !important;
     right: 0.5rem !important;
-    bottom: 2rem !important;
-    max-height: calc(100vh - 4rem) !important;
-    height: calc(100vh - 4rem) !important;
+    height: auto !important;
+    max-height: calc(100vh - 2rem) !important;
     width: calc(100vw - 1rem) !important;
     max-width: none !important;
     transform: none !important;
@@ -97,6 +96,16 @@
     overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
+  }
+  
+  /* When virtual keyboard is detected (smaller viewport) */
+  [data-radix-dialog-content].keyboard-visible {
+    max-height: 60vh !important;
+    top: 0.5rem !important;
+  }
+  
+  [data-radix-dialog-content].keyboard-visible .replies-section {
+    max-height: 25vh !important;
   }
 }
 

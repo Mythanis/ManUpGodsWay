@@ -31,9 +31,37 @@ const replySchema = z.object({
 export default function StudyDetail() {
   const { id } = useParams<{ id: string }>();
   const [discussionDialogOpen, setDiscussionDialogOpen] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Detect virtual keyboard visibility on mobile
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const initialViewportHeight = window.visualViewport?.height || window.innerHeight;
+    
+    const handleViewportChange = () => {
+      const currentHeight = window.visualViewport?.height || window.innerHeight;
+      const heightDifference = initialViewportHeight - currentHeight;
+      
+      // If viewport height decreased by more than 150px, keyboard is likely visible
+      setIsKeyboardVisible(heightDifference > 150);
+    };
+    
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      return () => {
+        window.visualViewport?.removeEventListener('resize', handleViewportChange);
+      };
+    } else {
+      window.addEventListener('resize', handleViewportChange);
+      return () => {
+        window.removeEventListener('resize', handleViewportChange);
+      };
+    }
+  }, []);
   const [currentLesson, setCurrentLesson] = useState(1);
 
   // Redirect to login if not authenticated
@@ -640,7 +668,7 @@ export default function StudyDetail() {
 
       {/* Study Discussion Dialog Pop-out */}
       <Dialog open={discussionDialogOpen} onOpenChange={setDiscussionDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col p-4 sm:p-6 w-full sm:mx-auto overflow-hidden">
+        <DialogContent className={`max-w-4xl max-h-[80vh] flex flex-col p-4 sm:p-6 w-full sm:mx-auto overflow-hidden ${isKeyboardVisible ? 'keyboard-visible' : ''}`}>
           <DialogHeader className="flex-shrink-0 pb-2 sm:pb-4">
             <DialogTitle className="flex items-center space-x-2 text-lg sm:text-xl">
               <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-ministry-navy" />
@@ -675,7 +703,7 @@ export default function StudyDetail() {
               </div>
 
               {/* Replies Section */}
-              <div className="flex-1 min-h-0 mb-2 overflow-hidden">
+              <div className={`flex-1 min-h-0 mb-2 overflow-hidden replies-section ${isKeyboardVisible ? 'max-h-[25vh]' : ''}`}>
                 <ScrollArea className="h-full">
                   <div className="pr-4">
                     <StudyDiscussionReplies discussionId={studyDiscussion.id} />
