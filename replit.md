@@ -6,6 +6,8 @@
 - **Enhanced Discussion Categories**: Added "Miscellaneous" topic and streamlined study discussion creation
 - **Tier-Based Content Notifications**: Automatic real-time notifications sent to users when new studies/videos are published, filtered by subscription tier access (free users get free content notifications, premium users get free+premium, VIP users get all content)
 - **Daily Devotional Notifications**: Implemented automatic background service that sends notifications to all users when new daily devotionals become available (checks every 15 minutes), with manual admin controls and immediate notifications when devotionals are created
+- **Discussion Subscription System**: Complete implementation allowing users to subscribe/unsubscribe from discussions with bell button UI, automatic notifications when new replies are posted, and full database schema for tracking subscriptions
+- **Consistent Dark Mode Theming**: Fixed "Post Reply" buttons in discussions to match "All Studies" button styling with proper black background and white text for optimal visibility in both light and dark modes
 
 # User Preferences
 Preferred communication style: Simple, everyday language.

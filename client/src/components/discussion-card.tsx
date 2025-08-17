@@ -383,16 +383,29 @@ export default function DiscussionCard({
                   >
                     Cancel
                   </Button>
-                  <Button
+                  <button
                     type="submit"
-                    size="sm"
                     disabled={createReply.isPending}
-                    className="bg-ministry-navy hover:bg-ministry-charcoal text-xs"
                     data-testid="button-submit-reply"
+                    style={{
+                      backgroundColor: 'hsl(0 0% 0%)',
+                      color: 'white',
+                      border: '1px solid hsl(0 0% 0%)',
+                      borderRadius: '0.375rem',
+                      padding: '0.375rem 0.75rem',
+                      fontSize: '0.75rem',
+                      fontWeight: '500',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      cursor: createReply.isPending ? 'default' : 'pointer',
+                      opacity: createReply.isPending ? 0.6 : 1,
+                      transition: 'opacity 0.2s'
+                    }}
                   >
-                    <Send className="w-3 h-3 mr-1" />
+                    <Send className="w-3 h-3" />
                     {createReply.isPending ? "Posting..." : "Post Reply"}
-                  </Button>
+                  </button>
                 </div>
               </form>
             </Form>
