@@ -39,7 +39,7 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
         
         <Link href={`/studies/${study.id}`}>
           <Button 
-            className="w-full bg-ministry-navy text-white py-3 rounded-xl font-medium hover:bg-ministry-charcoal"
+            className="w-full bg-ministry-charcoal text-white py-3 rounded-xl font-medium hover:bg-ministry-steel"
             data-testid="button-continue-study"
           >
             Continue Study

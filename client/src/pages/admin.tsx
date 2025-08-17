@@ -420,12 +420,12 @@ export default function Admin() {
                 onClick={() => setActiveTab("videos")}
                 className="p-4 rounded-2xl transition-colors flex items-center space-x-3 w-full cursor-pointer border-none"
                 style={{
-                  backgroundColor: 'hsl(220, 71%, 26%)',
+                  backgroundColor: 'hsl(215, 25%, 27%)',
                   color: 'white'
                 }}
                 data-testid="button-manage-videos"
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(215, 25%, 27%)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(220, 71%, 26%)'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(213, 12%, 47%)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(215, 25%, 27%)'}
               >
                 <Video className="w-6 h-6" />
                 <span className="font-medium">Manage Videos</span>
@@ -519,7 +519,7 @@ export default function Admin() {
                             onClick={() => handleTogglePublish(study.id, !study.isPublished)}
                             disabled={togglePublishMutation.isPending}
                             style={study.isPublished ? {
-                              backgroundColor: 'hsl(220, 71%, 26%)',
+                              backgroundColor: 'hsl(215, 25%, 27%)',
                               color: 'white',
                               border: 'none'
                             } : {

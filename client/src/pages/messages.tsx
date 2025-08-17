@@ -391,7 +391,7 @@ export default function Messages() {
       {/* Conversations List */}
       {!selectedConversation ? (
         <div className="w-full">
-          <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+          <div className="bg-gradient-to-r from-ministry-charcoal to-ministry-steel dark:from-header-dark dark:to-ministry-charcoal text-white px-6 pt-12 pb-6">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl font-bold" data-testid="text-messages-title">Messages</h1>
               <div className="flex space-x-2">
@@ -657,7 +657,7 @@ export default function Messages() {
         /* Chat Interface */
         <div className="w-full h-screen flex flex-col pb-16">
           {/* Chat Header */}
-          <div className="bg-ministry-navy text-white px-6 py-4 flex items-center flex-shrink-0">
+          <div className="bg-ministry-charcoal text-white px-6 py-4 flex items-center flex-shrink-0">
             <Button
               variant="ghost"
               size="sm"

@@ -8,6 +8,7 @@
 - **Daily Devotional Notifications**: Implemented automatic background service that sends notifications to all users when new daily devotionals become available (checks every 15 minutes), with manual admin controls and immediate notifications when devotionals are created
 - **Discussion Subscription System**: Complete implementation allowing users to subscribe/unsubscribe from discussions with bell button UI, automatic notifications when new replies are posted, and full database schema for tracking subscriptions
 - **Consistent Dark Mode Theming**: Fixed "Post Reply" buttons in discussions to match "All Studies" button styling with proper black background and white text for optimal visibility in both light and dark modes
+- **Ministry Color Scheme Correction**: Removed incorrect "navy" color from ministry palette and standardized admin page buttons to use proper ministry colors: charcoal (primary), gold (accent), steel (borders), and slate (subtle text)
 
 # User Preferences
 Preferred communication style: Simple, everyday language.

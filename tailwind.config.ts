@@ -61,7 +61,6 @@ export default {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
         },
-        "ministry-navy": "hsl(var(--ministry-navy) / <alpha-value>)",
         "ministry-charcoal": "hsl(var(--ministry-charcoal) / <alpha-value>)",
         "ministry-steel": "hsl(var(--ministry-steel) / <alpha-value>)",
         "ministry-slate": "hsl(var(--ministry-slate) / <alpha-value>)",

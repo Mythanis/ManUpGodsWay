@@ -53,7 +53,6 @@
   --spacing: 0.25rem;
   
   /* Ministry-specific colors */
-  --ministry-navy: 220 71% 26%;
   --ministry-charcoal: 215 25% 27%;
   --ministry-steel: 213 12% 47%;
   --ministry-slate: 215 14% 34%;
@@ -108,7 +107,6 @@
   --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
 
   /* Ministry-specific colors for dark mode - updated for proper dark theme contrast */
-  --ministry-navy: 220 71% 26%;
   --ministry-charcoal: 215 25% 27%;
   --ministry-steel: 213 12% 47%;
   --ministry-slate: 215 14% 34%;
