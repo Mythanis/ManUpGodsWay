@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,6 +66,7 @@ interface NotificationPanelProps {
 export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) {
   const [showPanel, setShowPanel] = useState(false);
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   // Get notifications
   const { data: notifications = [] } = useQuery<Notification[]>({
@@ -158,10 +160,10 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       case 'group_message':
         if (notification.relatedId) {
           // Navigate to specific conversation
-          window.location.href = `/messages?conversation=${notification.relatedId}`;
+          setLocation(`/messages?conversation=${notification.relatedId}`);
         } else {
           // Navigate to messages page
-          window.location.href = '/messages';
+          setLocation('/messages');
         }
         break;
         
@@ -169,10 +171,10 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       case 'new_study':
         if (notification.relatedId) {
           // Navigate to specific study detail page
-          window.location.href = `/study/${notification.relatedId}`;
+          setLocation(`/study/${notification.relatedId}`);
         } else {
           // Navigate to library
-          window.location.href = '/library';
+          setLocation('/library');
         }
         break;
         
@@ -180,10 +182,10 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       case 'new_video':
         if (notification.relatedId) {
           // Navigate to specific video - for now redirect to videos page as we don't have individual video pages
-          window.location.href = `/videos`;
+          setLocation('/videos');
         } else {
           // Navigate to videos page
-          window.location.href = '/videos';
+          setLocation('/videos');
         }
         break;
         
@@ -191,7 +193,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       case 'devotional':
         // Navigate to dashboard where today's devotional is shown (dashboard is at root path)
         console.log('Navigating to dashboard for devotional');
-        window.location.href = '/';
+        setLocation('/');
         break;
         
       case 'discussion':
@@ -201,11 +203,11 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
           // Navigate to community page with specific discussion highlighted
           const discussionUrl = `/community?discussion=${notification.relatedId}`;
           console.log('Navigating to discussion URL:', discussionUrl);
-          window.location.href = discussionUrl;
+          setLocation(discussionUrl);
         } else {
           // Navigate to community page where discussions are shown
           console.log('Navigating to community page (no discussion ID)');
-          window.location.href = '/community';
+          setLocation('/community');
         }
         break;
         
@@ -213,10 +215,10 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         // For admin notifications with report conversation links
         if (notification.relatedId) {
           // Navigate to the conversation related to the admin notification (likely a report)
-          window.location.href = `/messages?conversation=${notification.relatedId}`;
+          setLocation(`/messages?conversation=${notification.relatedId}`);
         } else {
           // Navigate to admin dashboard for general admin notifications
-          window.location.href = '/admin';
+          setLocation('/admin');
         }
         break;
         
@@ -229,11 +231,11 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         if (notification.relatedId && (notification.type.includes('message') || notification.type === 'message_request')) {
           const messageUrl = `/messages?conversation=${notification.relatedId}`;
           console.log('Navigating to message URL:', messageUrl);
-          window.location.href = messageUrl;
+          setLocation(messageUrl);
         } else {
           // Default fallback for truly unknown types (dashboard is at root path)
           console.log('Navigating to dashboard as fallback');
-          window.location.href = '/';
+          setLocation('/');
         }
         break;
     }
