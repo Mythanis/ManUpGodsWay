@@ -187,9 +187,9 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         
       case 'new_devotional':
       case 'devotional':
-        // Navigate to dashboard where today's devotional is shown
+        // Navigate to dashboard where today's devotional is shown (dashboard is at root path)
         console.log('Navigating to dashboard for devotional');
-        window.location.href = '/dashboard';
+        window.location.href = '/';
         break;
         
       case 'discussion':
@@ -218,9 +218,9 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
           console.log('Navigating to message URL:', messageUrl);
           window.location.href = messageUrl;
         } else {
-          // Default fallback for truly unknown types
+          // Default fallback for truly unknown types (dashboard is at root path)
           console.log('Navigating to dashboard as fallback');
-          window.location.href = '/dashboard';
+          window.location.href = '/';
         }
         break;
     }
