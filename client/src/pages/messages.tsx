@@ -391,7 +391,7 @@ export default function Messages() {
       {/* Conversations List */}
       {!selectedConversation ? (
         <div className="w-full">
-          <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal text-white px-6 pt-12 pb-6">
+          <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl font-bold" data-testid="text-messages-title">Messages</h1>
               <div className="flex space-x-2">

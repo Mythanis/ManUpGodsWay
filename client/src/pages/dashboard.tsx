@@ -215,7 +215,7 @@ export default function Dashboard() {
   return (
     <div className="pb-20">
       {/* Header Section */}
-      <div className="bg-gradient-to-br from-ministry-navy to-ministry-charcoal text-white px-6 pt-12 pb-8">
+      <div className="bg-gradient-to-br from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold" data-testid="text-greeting">
@@ -362,7 +362,7 @@ export default function Dashboard() {
       {/* Featured Study Section */}
       {featuredStudy && (
         <div className="px-6 mb-6">
-          <Card className="bg-gradient-to-br from-ministry-steel to-ministry-navy text-white relative overflow-hidden" data-testid="card-featured-study">
+          <Card className="bg-gradient-to-br from-ministry-steel to-ministry-navy dark:from-featured-dark dark:to-featured-dark-secondary text-white relative overflow-hidden" data-testid="card-featured-study">
             <CardContent className="p-6">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
               <div className="relative z-10">

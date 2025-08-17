@@ -67,6 +67,9 @@ export default {
         "ministry-slate": "var(--ministry-slate)",
         "ministry-gold": "var(--ministry-gold)",
         "ministry-success": "var(--ministry-success)",
+        "header-dark": "var(--header-dark)",
+        "featured-dark": "var(--featured-dark)",
+        "featured-dark-secondary": "var(--featured-dark-secondary)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],

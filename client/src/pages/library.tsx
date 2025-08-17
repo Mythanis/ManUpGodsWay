@@ -234,7 +234,7 @@ export default function Library() {
       {/* Featured Study */}
       {featuredStudy && selectedCategory === 'all' && (
         <div className="px-6 mb-6">
-          <Card className="bg-gradient-to-br from-ministry-steel to-ministry-navy text-white relative overflow-hidden" data-testid="card-featured">
+          <Card className="bg-gradient-to-br from-ministry-steel to-ministry-navy dark:from-featured-dark dark:to-featured-dark-secondary text-white relative overflow-hidden" data-testid="card-featured">
             <CardContent className="p-6">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
               <div className="relative z-10">

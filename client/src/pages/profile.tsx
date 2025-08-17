@@ -58,7 +58,7 @@ export default function Profile() {
   return (
     <div className="pb-20">
       {/* Profile Header */}
-      <div className="bg-gradient-to-br from-ministry-navy to-ministry-charcoal text-white px-6 pt-12 pb-8">
+      <div className="bg-gradient-to-br from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-8">
         <div className="text-center">
           <img 
             src={(user as any)?.profileImageUrl || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=4A90B8&color=fff`}

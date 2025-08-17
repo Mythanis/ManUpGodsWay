@@ -6,7 +6,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-ministry-navy to-ministry-charcoal text-white px-6 pt-16 pb-12">
+      <div className="bg-gradient-to-br from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-16 pb-12">
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4" data-testid="hero-title">
             Man Up God's Way
