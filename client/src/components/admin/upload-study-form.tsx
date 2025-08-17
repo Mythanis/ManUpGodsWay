@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/useTheme";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ export default function UploadStudyForm() {
   const [titleExists, setTitleExists] = useState(false);
   const [checkingTitle, setCheckingTitle] = useState(false);
   const { toast } = useToast();
+  const { effectiveTheme } = useTheme();
   const queryClient = useQueryClient();
 
   const { data: videos = [] } = useQuery<Array<{
@@ -168,13 +170,18 @@ export default function UploadStudyForm() {
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Button 
-          className="bg-ministry-navy text-white p-4 rounded-2xl hover:bg-ministry-charcoal border-none flex items-center space-x-3 w-full justify-center"
+        <button 
+          style={{
+            backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(221.2 83.2% 53.3%)',
+            color: 'white',
+            border: 'none'
+          }}
+          className="p-4 rounded-2xl transition-colors flex items-center space-x-3 w-full justify-center cursor-pointer"
           data-testid="button-upload-study"
         >
           <Plus className="w-6 h-6" />
           <span className="font-medium">Upload New Study</span>
-        </Button>
+        </button>
       </DialogTrigger>
       
       <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto" data-testid="dialog-upload-study">

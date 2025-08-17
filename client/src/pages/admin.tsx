@@ -416,15 +416,19 @@ export default function Admin() {
             <div className="space-y-4">
               <UploadStudyForm />
               
-              <Button 
-                variant="outline"
+              <button 
                 onClick={() => setActiveTab("videos")}
-                className="bg-ministry-steel text-white p-4 rounded-2xl hover:bg-ministry-navy border-none flex items-center space-x-3 w-full"
+                style={{
+                  backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(203 23% 42%)',
+                  color: 'white',
+                  border: 'none'
+                }}
+                className="p-4 rounded-2xl transition-colors flex items-center space-x-3 w-full cursor-pointer"
                 data-testid="button-manage-videos"
               >
                 <Video className="w-6 h-6" />
                 <span className="font-medium">Manage Videos</span>
-              </Button>
+              </button>
               
               <Button 
                 variant="outline"
