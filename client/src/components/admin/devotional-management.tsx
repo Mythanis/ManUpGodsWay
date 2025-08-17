@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { useTheme } from "@/hooks/useTheme";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +37,7 @@ export default function DevotionalManagement() {
   const [showForm, setShowForm] = useState(false);
   const [editingDevotional, setEditingDevotional] = useState<Devotional | null>(null);
   const { toast } = useToast();
+  const { effectiveTheme } = useTheme();
   const queryClient = useQueryClient();
 
   const form = useForm<DevotionalFormData>({
@@ -189,14 +191,18 @@ export default function DevotionalManagement() {
               <CalendarDays className="w-5 h-5" />
               <span>Daily Devotional Management</span>
             </CardTitle>
-            <Button
+            <button
               onClick={() => setShowForm(!showForm)}
-              className="bg-ministry-gold hover:bg-ministry-gold/90"
+              style={{
+                backgroundColor: 'hsl(45 93% 71%)', // ministry-gold
+                color: effectiveTheme === 'dark' ? 'white' : 'black'
+              }}
+              className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 flex items-center cursor-pointer"
               data-testid="button-add-devotional"
             >
-              <Plus className="w-4 h-4 mr-2 text-black dark:text-white" />
-              <span className="text-black dark:text-white">Add Devotional</span>
-            </Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Devotional
+            </button>
           </div>
         </CardHeader>
 
