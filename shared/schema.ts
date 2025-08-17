@@ -43,6 +43,7 @@ export const users = pgTable("users", {
   prayerPermissionsGranted: boolean("prayer_permissions_granted").default(false),
   isProfileComplete: boolean("is_profile_complete").default(false),
   themePreference: varchar("theme_preference").default("light"), // light, dark, system
+  isProfilePrivate: boolean("is_profile_private").default(false),
   isBanned: boolean("is_banned").default(false),
   bannedAt: timestamp("banned_at"),
   bannedReason: text("banned_reason"),

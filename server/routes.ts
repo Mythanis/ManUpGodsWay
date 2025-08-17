@@ -2229,13 +2229,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/profile/update", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { firstName, lastName, allowDirectMessages, allowGroupInvites } = req.body;
+      const { firstName, lastName, allowDirectMessages, allowGroupInvites, isProfilePrivate } = req.body;
 
       const updatedUser = await storage.updateUserProfile(userId, {
         firstName,
         lastName,
         allowDirectMessages,
         allowGroupInvites,
+        isProfilePrivate,
       });
 
       res.json(updatedUser);

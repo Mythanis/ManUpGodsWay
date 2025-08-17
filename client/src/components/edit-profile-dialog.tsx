@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { User, MessageSquare, Users, Save } from "lucide-react";
+import { User, MessageSquare, Users, Save, Eye, EyeOff } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface ProfileData {
@@ -16,6 +16,7 @@ interface ProfileData {
   lastName: string;
   allowDirectMessages: boolean;
   allowGroupInvites: boolean;
+  isProfilePrivate: boolean;
 }
 
 export function EditProfileDialog({ children }: { children: React.ReactNode }) {
@@ -28,6 +29,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
     lastName: '',
     allowDirectMessages: true,
     allowGroupInvites: true,
+    isProfilePrivate: false,
   });
 
   useEffect(() => {
@@ -37,6 +39,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
         lastName: user.lastName || '',
         allowDirectMessages: user.allowDirectMessages ?? true,
         allowGroupInvites: user.allowGroupInvites ?? true,
+        isProfilePrivate: (user as any).isProfilePrivate ?? false,
       });
     }
   }, [user, open]);
@@ -155,11 +158,35 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
                 }
               />
             </div>
+          </div>
+
+          <Separator />
+
+          {/* Profile Privacy */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-ministry-charcoal">Profile Privacy</h3>
+            
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-start space-x-3">
+                <EyeOff className="w-4 h-4 text-ministry-navy mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-medium text-ministry-charcoal">Hide Profile Information</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Hide your detailed profile information from other members
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={profileData.isProfilePrivate}
+                onCheckedChange={(checked) => 
+                  setProfileData({ ...profileData, isProfilePrivate: checked })
+                }
+              />
+            </div>
 
             <div className="bg-blue-50 p-3 rounded-lg">
               <p className="text-xs text-blue-700">
-                <strong>Privacy Note:</strong> When disabled, other members won't be able to 
-                send you message requests or invite you to new groups. Existing conversations remain active.
+                <strong>Privacy Note:</strong> When enabled, other members will only see your profile picture and action buttons (message, silence, report). Your statistics and detailed information will be hidden. Communication preferences above control messaging functionality.
               </p>
             </div>
           </div>

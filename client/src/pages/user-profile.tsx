@@ -20,7 +20,8 @@ import {
   MessageSquare,
   Crown,
   Shield,
-  Star
+  Star,
+  EyeOff
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -34,6 +35,7 @@ interface UserProfile {
     subscriptionTier: string | null;
     role: string | null;
     createdAt: string;
+    isProfilePrivate?: boolean;
   };
   studiesCompleted: number;
   daysActive: number;
@@ -382,50 +384,64 @@ export default function UserProfile() {
         </CardContent>
       </Card>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 gap-4 mb-6">
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-ministry-slate truncate">Studies Completed</CardTitle>
-          </CardHeader>
-          <CardContent className="overflow-hidden">
-            <div className="text-2xl font-bold text-ministry-charcoal">{profile.studiesCompleted}</div>
-            <p className="text-xs text-ministry-slate overflow-wrap-anywhere">Biblical studies finished</p>
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-ministry-slate truncate">Days Active</CardTitle>
-          </CardHeader>
-          <CardContent className="overflow-hidden">
-            <div className="text-2xl font-bold text-ministry-charcoal">{profile.daysActive}</div>
-            <p className="text-xs text-ministry-slate overflow-wrap-anywhere">Days with activity</p>
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-ministry-slate truncate">Forum Posts</CardTitle>
-          </CardHeader>
-          <CardContent className="overflow-hidden">
-            <div className="text-2xl font-bold text-ministry-charcoal">{profile.forumPosts}</div>
-            <p className="text-xs text-ministry-slate overflow-wrap-anywhere">Discussions and replies</p>
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-ministry-slate truncate">Member Tier</CardTitle>
-          </CardHeader>
-          <CardContent className="overflow-hidden">
-            <div className={`text-lg font-bold ${tierInfo.color} leading-tight overflow-wrap-anywhere`}>
-              {tierInfo.label}
+      {/* Profile Content - Show statistics only if profile is not private */}
+      {profile.user.isProfilePrivate ? (
+        <Card className="mb-6">
+          <CardContent className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 bg-ministry-steel/20 rounded-full flex items-center justify-center">
+              <EyeOff className="w-8 h-8 text-ministry-steel" />
             </div>
-            <p className="text-xs text-ministry-slate overflow-wrap-anywhere">Subscription level</p>
+            <h3 className="text-lg font-semibold text-ministry-charcoal mb-2">Private Profile</h3>
+            <p className="text-ministry-slate">
+              This user has chosen to keep their profile information private.
+            </p>
           </CardContent>
         </Card>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 mb-6">
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-ministry-slate truncate">Studies Completed</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-hidden">
+              <div className="text-2xl font-bold text-ministry-charcoal">{profile.studiesCompleted}</div>
+              <p className="text-xs text-ministry-slate overflow-wrap-anywhere">Biblical studies finished</p>
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-ministry-slate truncate">Days Active</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-hidden">
+              <div className="text-2xl font-bold text-ministry-charcoal">{profile.daysActive}</div>
+              <p className="text-xs text-ministry-slate overflow-wrap-anywhere">Days with activity</p>
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-ministry-slate truncate">Forum Posts</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-hidden">
+              <div className="text-2xl font-bold text-ministry-charcoal">{profile.forumPosts}</div>
+              <p className="text-xs text-ministry-slate overflow-wrap-anywhere">Discussions and replies</p>
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-ministry-slate truncate">Member Tier</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-hidden">
+              <div className={`text-lg font-bold ${tierInfo.color} leading-tight overflow-wrap-anywhere`}>
+                {tierInfo.label}
+              </div>
+              <p className="text-xs text-ministry-slate overflow-wrap-anywhere">Subscription level</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
