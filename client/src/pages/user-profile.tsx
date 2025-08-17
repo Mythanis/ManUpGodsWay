@@ -1,4 +1,4 @@
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,6 +50,7 @@ type ReportFormValues = z.infer<typeof reportSchema>;
 
 export default function UserProfile() {
   const { userId } = useParams();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showReportDialog, setShowReportDialog] = useState(false);
@@ -138,12 +139,29 @@ export default function UserProfile() {
     },
   });
 
+  const createDirectConversation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/conversations/direct", { targetUserId: userId });
+    },
+    onSuccess: (conversation) => {
+      // Navigate to messages page with the conversation selected
+      setLocation(`/messages?conversation=${conversation.id}`);
+      toast({
+        title: "Success",
+        description: "Opening direct message conversation.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start conversation",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleDirectMessage = () => {
-    // TODO: Implement direct message functionality
-    toast({
-      title: "Direct Message",
-      description: "Direct messaging will be available soon.",
-    });
+    createDirectConversation.mutate();
   };
 
   const handleSilenceUser = () => {
@@ -262,9 +280,10 @@ export default function UserProfile() {
                   onClick={handleDirectMessage}
                   size="sm"
                   className="bg-ministry-charcoal hover:bg-ministry-charcoal/90 text-white"
+                  disabled={createDirectConversation.isPending}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
-                  Direct Message
+                  {createDirectConversation.isPending ? 'Opening...' : 'Direct Message'}
                 </Button>
                 <Button
                   onClick={handleSilenceUser}
