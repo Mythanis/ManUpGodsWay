@@ -5,6 +5,7 @@ interface LogoSettings {
   id: string;
   logoUrl: string;
   splashDurationMs: number;
+  backgroundColor: string;
   isEnabled: boolean;
   uploadedBy: string;
   createdAt: string;
@@ -23,6 +24,19 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     queryKey: ["/api/logo"],
     retry: false,
   });
+
+  // Ministry theme color options for background
+  const getBackgroundStyle = (backgroundColor: string) => {
+    const colorMap: Record<string, string> = {
+      'white': '#ffffff',
+      'light-gray': '#f3f4f6',
+      'charcoal': 'hsl(215, 25%, 27%)',
+      'gold': 'hsl(49, 100%, 49%)',
+      'steel': 'hsl(213, 12%, 47%)',
+      'slate': 'hsl(215, 16%, 47%)',
+    };
+    return colorMap[backgroundColor] || '#ffffff';
+  };
 
   useEffect(() => {
     // If no logo settings or logo is not enabled, skip splash screen
@@ -48,9 +62,12 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-ministry-charcoal transition-opacity duration-300 ${
+      className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
+      style={{
+        backgroundColor: getBackgroundStyle(logoSettings.backgroundColor || 'white')
+      }}
     >
       <div className="flex flex-col items-center space-y-4">
         <img

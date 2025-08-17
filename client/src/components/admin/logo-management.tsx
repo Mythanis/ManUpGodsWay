@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ interface LogoSettings {
   id: string;
   logoUrl?: string;
   splashDurationMs: number;
+  backgroundColor: string;
   isEnabled: boolean;
   uploadedBy: string;
   createdAt: string;
@@ -24,14 +25,45 @@ export default function LogoManagement() {
   const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [splashDuration, setSplashDuration] = useState(3000);
+  const [backgroundColor, setBackgroundColor] = useState("white");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showSplashPreview, setShowSplashPreview] = useState(false);
+
+  // Ministry theme color options
+  const colorOptions = [
+    { name: "White", value: "white", class: "bg-white", preview: "#ffffff" },
+    { name: "Light Gray", value: "light-gray", class: "bg-gray-100", preview: "#f3f4f6" },
+    { name: "Charcoal", value: "charcoal", class: "bg-ministry-charcoal", preview: "hsl(215, 25%, 27%)" },
+    { name: "Gold", value: "gold", class: "bg-ministry-gold", preview: "hsl(49, 100%, 49%)" },
+    { name: "Steel", value: "steel", class: "bg-ministry-steel", preview: "hsl(213, 12%, 47%)" },
+    { name: "Slate", value: "slate", class: "bg-ministry-slate", preview: "hsl(215, 16%, 47%)" },
+  ];
+
+  // Get CSS background class for selected color
+  const getBackgroundClass = (color: string) => {
+    const option = colorOptions.find(opt => opt.value === color);
+    return option?.class || "bg-white";
+  };
+
+  // Get CSS color value for preview
+  const getBackgroundColor = (color: string) => {
+    const option = colorOptions.find(opt => opt.value === color);
+    return option?.preview || "#ffffff";
+  };
 
   // Fetch current logo settings
   const { data: logoSettings, isLoading } = useQuery<LogoSettings>({
     queryKey: ["/api/logo"],
     retry: false,
   });
+
+  // Update form states when logo settings change
+  useEffect(() => {
+    if (logoSettings) {
+      setSplashDuration(logoSettings.splashDurationMs);
+      setBackgroundColor(logoSettings.backgroundColor || 'white');
+    }
+  }, [logoSettings]);
 
   // Upload logo mutation
   const uploadLogoMutation = useMutation({
@@ -111,6 +143,7 @@ export default function LogoManagement() {
     const formData = new FormData();
     formData.append('logo', selectedFile);
     formData.append('splashDurationMs', splashDuration.toString());
+    formData.append('backgroundColor', backgroundColor);
 
     uploadLogoMutation.mutate(formData);
   };
@@ -158,6 +191,7 @@ export default function LogoManagement() {
               </div>
               <div className="text-sm text-ministry-slate text-center space-y-2">
                 <p>Splash Duration: {logoSettings.splashDurationMs / 1000} seconds</p>
+                <p>Background: {colorOptions.find(opt => opt.value === logoSettings.backgroundColor)?.name || 'White'}</p>
                 <p>Uploaded: {new Date(logoSettings.createdAt).toLocaleDateString()}</p>
                 <Button
                   variant="outline"
@@ -230,6 +264,35 @@ export default function LogoManagement() {
             </p>
           </div>
 
+          <div>
+            <Label htmlFor="background-color">Background Color</Label>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {colorOptions.map((color) => (
+                <button
+                  key={color.value}
+                  type="button"
+                  onClick={() => setBackgroundColor(color.value)}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    backgroundColor === color.value
+                      ? 'border-ministry-gold ring-2 ring-ministry-gold/20'
+                      : 'border-gray-200 hover:border-ministry-steel'
+                  }`}
+                >
+                  <div 
+                    className={`w-full h-8 rounded ${color.class} mb-2`}
+                    style={color.value === 'charcoal' ? { backgroundColor: color.preview } : {}}
+                  ></div>
+                  <span className="text-xs font-medium text-ministry-charcoal">
+                    {color.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <p className="text-sm text-ministry-slate mt-1">
+              Choose a background color that complements your logo.
+            </p>
+          </div>
+
           <div className="flex space-x-3">
             <Button
               variant="outline"
@@ -272,7 +335,12 @@ export default function LogoManagement() {
       {/* Splash Screen Preview Dialog */}
       <Dialog open={showSplashPreview} onOpenChange={setShowSplashPreview}>
         <DialogContent className="max-w-full max-h-full p-0 border-none bg-transparent">
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-ministry-charcoal">
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            style={{ 
+              backgroundColor: getBackgroundColor(logoSettings?.backgroundColor || backgroundColor),
+            }}
+          >
             <div className="flex flex-col items-center space-y-4">
               <img
                 src={previewUrl || logoSettings?.logoUrl}
@@ -288,7 +356,7 @@ export default function LogoManagement() {
                   Preview: This is how your logo will appear to users
                 </p>
                 <p className="text-ministry-slate text-xs">
-                  Duration: {splashDuration / 1000} seconds
+                  Duration: {splashDuration / 1000} seconds • Background: {colorOptions.find(opt => opt.value === backgroundColor)?.name}
                 </p>
                 <Button
                   variant="outline"

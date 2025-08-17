@@ -562,6 +562,7 @@ export const logoSettings = pgTable("logo_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   logoUrl: varchar("logo_url"),
   splashDurationMs: integer("splash_duration_ms").default(3000),
+  backgroundColor: varchar("background_color").default("white"),
   isEnabled: boolean("is_enabled").default(true),
   uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),

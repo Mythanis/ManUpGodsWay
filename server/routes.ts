@@ -2275,11 +2275,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const base64Data = req.file.buffer.toString('base64');
       const dataUrl = `data:${req.file.mimetype};base64,${base64Data}`;
 
-      const { splashDurationMs } = req.body;
+      const { splashDurationMs, backgroundColor } = req.body;
       
       const logoSettingsData = insertLogoSettingsSchema.parse({
         logoUrl: dataUrl,
         splashDurationMs: splashDurationMs ? parseInt(splashDurationMs) : 3000,
+        backgroundColor: backgroundColor || 'white',
         isEnabled: true,
         uploadedBy: userId
       });
