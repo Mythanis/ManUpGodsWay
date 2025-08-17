@@ -818,60 +818,59 @@ export default function Community() {
           </DialogHeader>
           
           {selectedDiscussionForDialog && (
-            <div className="flex flex-col h-full min-h-0">
-              {/* Discussion Header */}
-              <div className="border-b pb-2 mb-2 flex-shrink-0">
-                <div className="flex items-start space-x-3 mb-2">
-                  <img 
-                    src={selectedDiscussionForDialog.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${selectedDiscussionForDialog.user?.firstName}+${selectedDiscussionForDialog.user?.lastName}&background=4A90B8&color=fff`}
-                    alt={`${selectedDiscussionForDialog.user?.firstName} ${selectedDiscussionForDialog.user?.lastName}`}
-                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <h3 className="font-bold text-base sm:text-lg text-ministry-charcoal truncate">
-                        {selectedDiscussionForDialog.title}
-                      </h3>
-                      {selectedDiscussionForDialog.studyId && (
-                        <Badge variant="default" className="text-xs bg-ministry-navy text-white flex-shrink-0">
-                          📚 Study
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className="text-sm text-ministry-charcoal font-medium truncate">
-                        {selectedDiscussionForDialog.user?.firstName} {selectedDiscussionForDialog.user?.lastName?.charAt(0)}.
-                      </span>
-                      <span className="text-xs text-ministry-slate flex-shrink-0">
-                        • {getTimeAgo(selectedDiscussionForDialog.createdAt)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-ministry-slate mb-2 line-clamp-2">{selectedDiscussionForDialog.content}</p>
-                    <div className="flex items-center justify-end">
-                      <DiscussionSubscriptionButton discussionId={selectedDiscussionForDialog.id} />
+            <>
+              {/* Discussion Content Area - Scrollable */}
+              <div className="discussion-content-area">
+                {/* Discussion Header */}
+                <div className="border-b pb-4 mb-4">
+                  <div className="flex items-start space-x-3 mb-2">
+                    <img 
+                      src={selectedDiscussionForDialog.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${selectedDiscussionForDialog.user?.firstName}+${selectedDiscussionForDialog.user?.lastName}&background=4A90B8&color=fff`}
+                      alt={`${selectedDiscussionForDialog.user?.firstName} ${selectedDiscussionForDialog.user?.lastName}`}
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h3 className="font-bold text-base sm:text-lg text-ministry-charcoal truncate">
+                          {selectedDiscussionForDialog.title}
+                        </h3>
+                        {selectedDiscussionForDialog.studyId && (
+                          <Badge variant="default" className="text-xs bg-ministry-navy text-white flex-shrink-0">
+                            📚 Study
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="text-sm text-ministry-charcoal font-medium truncate">
+                          {selectedDiscussionForDialog.user?.firstName} {selectedDiscussionForDialog.user?.lastName?.charAt(0)}.
+                        </span>
+                        <span className="text-xs text-ministry-slate flex-shrink-0">
+                          • {getTimeAgo(selectedDiscussionForDialog.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-ministry-slate mb-2">{selectedDiscussionForDialog.content}</p>
+                      <div className="flex items-center justify-end">
+                        <DiscussionSubscriptionButton discussionId={selectedDiscussionForDialog.id} />
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Replies Section */}
+                <div className="space-y-4">
+                  <DiscussionReplies discussionId={selectedDiscussionForDialog.id} />
+                </div>
               </div>
 
-              {/* Replies Section */}
-              <div className={`flex-1 min-h-0 mb-2 overflow-hidden replies-section ${isKeyboardVisible ? 'max-h-[25vh]' : ''}`}>
-                <ScrollArea className="h-full">
-                  <div className="pr-4">
-                    <DiscussionReplies discussionId={selectedDiscussionForDialog.id} />
-                  </div>
-                </ScrollArea>
-              </div>
-
-              {/* Reply Form */}
-              <div className="border-t pt-2 flex-shrink-0 bg-white dark:bg-gray-900 discussion-reply-form">
+              {/* Reply Form - Fixed at Bottom */}
+              <div className="discussion-reply-form">
                 <DiscussionReplyForm 
                   discussionId={selectedDiscussionForDialog.id}
                   currentUserTier={(user as any)?.subscriptionTier || 'free'}
                   discussion={selectedDiscussionForDialog}
                 />
               </div>
-            </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
