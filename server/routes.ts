@@ -1431,26 +1431,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
             content: reportMessage,
           });
           
-          // Send notification to all admins with link to the conversation
-          // Use Promise.allSettled to handle any individual notification failures gracefully
-          const notificationPromises = admins.map(async (admin) => {
+          // Send notification to only the first admin to avoid duplicate notifications
+          // Since all admins are already participants in the group conversation, 
+          // they will be notified through the conversation system
+          if (admins.length > 0) {
             try {
-              return await storage.createNotification({
-                userId: admin.id,
+              await storage.createNotification({
+                userId: admins[0].id, // Only send to first admin
                 type: 'admin',
                 title: '🚨 New User Report',
                 message: `${reporterName} reported ${reportedName} for ${location}. Click to review the report details.`,
                 relatedId: conversation.id, // This will link to the conversation
               });
+              console.log(`Sent report notification to 1 admin (${admins[0].firstName || 'Unknown'})`);
             } catch (error) {
-              console.error(`Failed to send notification to admin ${admin.id}:`, error);
-              return null;
+              console.error(`Failed to send notification to admin:`, error);
             }
-          });
-          
-          const notificationResults = await Promise.allSettled(notificationPromises);
-          const successfulNotifications = notificationResults.filter(result => result.status === 'fulfilled' && result.value).length;
-          console.log(`Sent report notifications to ${successfulNotifications} admin(s)`);
+          }
         }
       } catch (notificationError) {
         console.error('Error sending report notifications to admins:', notificationError);
