@@ -12,6 +12,7 @@
 - **Unified Community Statistics**: Updated admin dashboard stats to match community page calculations - "Active Today" now uses user activity tracking and "New Posts" includes both discussion threads and replies for consistent metrics across both interfaces
 - **Complete User Profile System**: Implemented comprehensive user profile pages replacing popup menus with full profile views showing detailed statistics (studies completed, days active, forum posts, member tier), direct message capability, user reporting functionality with admin notifications, and profile navigation from discussion avatars
 - **Notification Preferences Management**: Added complete notification preferences system allowing users to control all notification types (content updates, community activity, weekly digest) except admin notifications, with dedicated preferences page accessible through user profile settings
+- **Complete Logo Management System**: Implemented comprehensive admin logo upload functionality with ministry theme background color selection (white, light gray, charcoal, gold, steel, slate), real-time splash screen preview, database storage, and automatic splash screen display on every app load/reload with configurable duration and background styling
 
 # User Preferences
 Preferred communication style: Simple, everyday language.

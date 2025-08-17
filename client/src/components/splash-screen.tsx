@@ -20,7 +20,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   const [isVisible, setIsVisible] = useState(true);
   
   // Fetch logo settings
-  const { data: logoSettings } = useQuery<LogoSettings>({
+  const { data: logoSettings, isLoading } = useQuery<LogoSettings>({
     queryKey: ["/api/logo"],
     retry: false,
   });
@@ -39,6 +39,11 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   };
 
   useEffect(() => {
+    // Wait for data to load
+    if (isLoading) {
+      return;
+    }
+
     // If no logo settings or logo is not enabled, skip splash screen
     if (!logoSettings?.logoUrl || !logoSettings.isEnabled) {
       onComplete();
@@ -53,7 +58,16 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     }, logoSettings.splashDurationMs);
 
     return () => clearTimeout(timer);
-  }, [logoSettings, onComplete]);
+  }, [logoSettings, isLoading, onComplete]);
+
+  // Show loading state while fetching logo settings
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-ministry-charcoal">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ministry-gold"></div>
+      </div>
+    );
+  }
 
   // Don't render if no logo or not enabled
   if (!logoSettings?.logoUrl || !logoSettings.isEnabled) {
