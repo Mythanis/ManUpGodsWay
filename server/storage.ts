@@ -139,10 +139,10 @@ export interface IStorage {
   }>;
 
   // Messaging operations
-  getUserConversations(userId: string): Promise<(Conversation & { participants: (ConversationParticipant & { user: User })[] })[]>;
+  getUserConversations(userId: string, currentUserId?: string): Promise<(Conversation & { participants: (ConversationParticipant & { user: User })[] })[]>;
   getOrCreateDirectConversation(userId1: string, userId2: string): Promise<Conversation>;
   createGroupConversation(conversation: InsertConversation, participantIds: string[]): Promise<Conversation>;
-  getConversationMessages(conversationId: string, limit?: number): Promise<(Message & { user: User })[]>;
+  getConversationMessages(conversationId: string, limit?: number, currentUserId?: string): Promise<(Message & { user: User })[]>;
   sendMessage(message: InsertMessage): Promise<Message>;
   addParticipantToConversation(conversationId: string, userId: string, role?: string): Promise<ConversationParticipant>;
   removeParticipantFromConversation(conversationId: string, userId: string): Promise<void>;
@@ -1222,7 +1222,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Messaging operations
-  async getUserConversations(userId: string): Promise<(Conversation & { participants: (ConversationParticipant & { user: User })[] })[]> {
+  async getUserConversations(userId: string, currentUserId?: string): Promise<(Conversation & { participants: (ConversationParticipant & { user: User })[] })[]> {
     const userConversations = await db
       .select({
         id: conversations.id,
@@ -1241,10 +1241,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(conversationParticipants.userId, userId))
       .orderBy(desc(conversations.lastMessageAt));
 
-    // Get participants for each conversation
+    // Get participants for each conversation and filter silenced users
     const conversationsWithParticipants = await Promise.all(
       userConversations.map(async (conversation) => {
-        const participants = await db
+        let participants = await db
           .select({
             id: conversationParticipants.id,
             conversationId: conversationParticipants.conversationId,
@@ -1258,11 +1258,37 @@ export class DatabaseStorage implements IStorage {
           .innerJoin(users, eq(conversationParticipants.userId, users.id))
           .where(eq(conversationParticipants.conversationId, conversation.id));
 
+        // Filter out silenced participants from view if currentUserId is provided
+        if (currentUserId) {
+          const silencedUserIds = await this.getUserSilences(currentUserId);
+          if (silencedUserIds.length > 0) {
+            participants = participants.filter(participant => 
+              !silencedUserIds.includes(participant.userId)
+            );
+          }
+        }
+
         return { ...conversation, participants };
       })
     );
 
-    return conversationsWithParticipants;
+    // Filter out direct conversations where the other participant is silenced
+    const filteredConversations = await Promise.all(
+      conversationsWithParticipants.map(async (conversation) => {
+        if (conversation.type === 'direct' && currentUserId) {
+          const silencedUserIds = await this.getUserSilences(currentUserId);
+          const otherParticipant = conversation.participants.find(p => p.userId !== currentUserId);
+          
+          // Hide conversation if other participant is silenced
+          if (otherParticipant && silencedUserIds.includes(otherParticipant.userId)) {
+            return null;
+          }
+        }
+        return conversation;
+      })
+    );
+
+    return filteredConversations.filter(conv => conv !== null) as (Conversation & { participants: (ConversationParticipant & { user: User })[] })[];
   }
 
   async getOrCreateDirectConversation(userId1: string, userId2: string): Promise<Conversation> {
@@ -1350,7 +1376,17 @@ export class DatabaseStorage implements IStorage {
     return newConversation;
   }
 
-  async getConversationMessages(conversationId: string, limit = 50): Promise<(Message & { user: User })[]> {
+  async getConversationMessages(conversationId: string, limit = 50, currentUserId?: string): Promise<(Message & { user: User })[]> {
+    const messageConditions = [eq(messages.conversationId, conversationId)];
+    
+    // Filter out messages from silenced users if currentUserId is provided
+    if (currentUserId) {
+      const silencedUserIds = await this.getUserSilences(currentUserId);
+      if (silencedUserIds.length > 0) {
+        messageConditions.push(not(inArray(messages.userId, silencedUserIds)));
+      }
+    }
+
     const results = await db
       .select({
         id: messages.id,
@@ -1367,11 +1403,10 @@ export class DatabaseStorage implements IStorage {
       })
       .from(messages)
       .innerJoin(users, eq(messages.userId, users.id))
-      .where(eq(messages.conversationId, conversationId))
+      .where(and(...messageConditions))
       .orderBy(desc(messages.createdAt))
       .limit(limit);
 
-    // Return all messages since we removed the requesting user filtering
     return results;
   }
 

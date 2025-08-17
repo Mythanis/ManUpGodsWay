@@ -879,7 +879,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/conversations', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const conversations = await storage.getUserConversations(userId);
+      const conversations = await storage.getUserConversations(userId, userId);
       res.json(conversations);
     } catch (error) {
       console.error("Error fetching conversations:", error);
@@ -950,7 +950,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // TODO: Verify user is participant of conversation
       const messages = await storage.getConversationMessages(
         conversationId,
-        limit ? parseInt(limit as string) : undefined
+        limit ? parseInt(limit as string) : undefined,
+        userId
       );
       res.json(messages);
     } catch (error) {
