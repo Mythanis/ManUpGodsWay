@@ -12,7 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 interface Notification {
   id: string;
   userId: string;
-  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion';
+  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'study' | 'video' | 'new_video';
   title: string;
   message: string;
   relatedId?: string;
@@ -157,8 +157,8 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       case 'study':
       case 'new_study':
         if (notification.relatedId) {
-          // Navigate to specific study
-          window.location.href = `/studies/${notification.relatedId}`;
+          // Navigate to specific study detail page
+          window.location.href = `/study/${notification.relatedId}`;
         } else {
           // Navigate to library
           window.location.href = '/library';
@@ -183,15 +183,25 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         
       case 'discussion':
       case 'new_discussion':
-        // Navigate to community page where discussions are shown
-        window.location.href = '/community';
+        if (notification.relatedId) {
+          // Navigate to community page with specific discussion highlighted
+          window.location.href = `/community?discussion=${notification.relatedId}`;
+        } else {
+          // Navigate to community page where discussions are shown
+          window.location.href = '/community';
+        }
         break;
         
       default:
         // For unknown notification types, try to navigate to related content if available
-        if (notification.relatedId) {
-          // Check if it looks like a conversation ID (for feedback notifications)
+        console.log('Unknown notification type:', notification.type, 'with relatedId:', notification.relatedId);
+        
+        // If it's likely a conversation/message type, go to messages
+        if (notification.relatedId && (notification.type.includes('message') || notification.type === 'message_request')) {
           window.location.href = `/messages?conversation=${notification.relatedId}`;
+        } else {
+          // Default fallback for truly unknown types
+          window.location.href = '/dashboard';
         }
         break;
     }
