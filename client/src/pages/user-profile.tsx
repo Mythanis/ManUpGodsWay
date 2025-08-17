@@ -318,45 +318,45 @@ export default function UserProfile() {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-ministry-slate">Studies Completed</CardTitle>
+            <CardTitle className="text-sm font-medium text-ministry-slate truncate">Studies Completed</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-hidden">
             <div className="text-2xl font-bold text-ministry-charcoal">{profile.studiesCompleted}</div>
-            <p className="text-xs text-ministry-slate">Biblical studies finished</p>
+            <p className="text-xs text-ministry-slate overflow-wrap-anywhere">Biblical studies finished</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-ministry-slate">Days Active</CardTitle>
+            <CardTitle className="text-sm font-medium text-ministry-slate truncate">Days Active</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-hidden">
             <div className="text-2xl font-bold text-ministry-charcoal">{profile.daysActive}</div>
-            <p className="text-xs text-ministry-slate">Days with activity</p>
+            <p className="text-xs text-ministry-slate overflow-wrap-anywhere">Days with activity</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-ministry-slate">Forum Posts</CardTitle>
+            <CardTitle className="text-sm font-medium text-ministry-slate truncate">Forum Posts</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-hidden">
             <div className="text-2xl font-bold text-ministry-charcoal">{profile.forumPosts}</div>
-            <p className="text-xs text-ministry-slate">Discussions and replies</p>
+            <p className="text-xs text-ministry-slate overflow-wrap-anywhere">Discussions and replies</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-ministry-slate">Member Tier</CardTitle>
+            <CardTitle className="text-sm font-medium text-ministry-slate truncate">Member Tier</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className={`text-lg font-bold ${tierInfo.color} leading-tight`}>
+          <CardContent className="overflow-hidden">
+            <div className={`text-lg font-bold ${tierInfo.color} leading-tight overflow-wrap-anywhere`}>
               {tierInfo.label}
             </div>
-            <p className="text-xs text-ministry-slate">Subscription level</p>
+            <p className="text-xs text-ministry-slate overflow-wrap-anywhere">Subscription level</p>
           </CardContent>
         </Card>
       </div>
