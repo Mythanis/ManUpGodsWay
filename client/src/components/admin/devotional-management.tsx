@@ -195,7 +195,7 @@ export default function DevotionalManagement() {
               data-testid="button-add-devotional"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Devotional
+              <span className="text-black dark:text-white">Add Devotional</span>
             </Button>
           </div>
         </CardHeader>
