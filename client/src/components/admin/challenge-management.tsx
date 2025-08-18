@@ -1,13 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import ChallengeForm from "./challenge-form";
 import { 
   Plus, 
   Edit2, 
@@ -34,12 +32,7 @@ export default function ChallengeManagement() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    topic: 'leadership',
-    releaseDate: ''
-  });
+
 
   // Fetch all challenges
   const { data: challenges = [], isLoading } = useQuery({
@@ -61,17 +54,13 @@ export default function ChallengeManagement() {
         credentials: 'include'
       }).then(res => res.json()),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
+      setShowCreateDialog(false);
       toast({
         title: "Success",
         description: "Challenge created successfully"
       });
-      setShowCreateDialog(false);
-      resetForm();
-      // Delay the query invalidation slightly to prevent form reset during submission
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['admin', 'challenges'] });
-        queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
-      }, 100);
     },
     onError: () => {
       toast({
@@ -92,18 +81,14 @@ export default function ChallengeManagement() {
         credentials: 'include'
       }).then(res => res.json()),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
+      setShowEditDialog(false);
+      setEditingChallenge(null);
       toast({
         title: "Success",
         description: "Challenge updated successfully"
       });
-      setShowEditDialog(false);
-      setEditingChallenge(null);
-      resetForm();
-      // Delay the query invalidation slightly to prevent form reset during submission
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['admin', 'challenges'] });
-        queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
-      }, 100);
     },
     onError: () => {
       toast({
@@ -138,28 +123,13 @@ export default function ChallengeManagement() {
     }
   });
 
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      topic: 'leadership',
-      releaseDate: ''
-    });
-  };
-
-  const handleEdit = (challenge: Challenge) => {
+  const handleEdit = useCallback((challenge: Challenge) => {
     setEditingChallenge(challenge);
-    setFormData({
-      title: challenge.title,
-      description: challenge.description || '',
-      topic: challenge.topic,
-      releaseDate: format(new Date(challenge.releaseDate), 'yyyy-MM-dd')
-    });
     setShowEditDialog(true);
-  };
+  }, []);
 
-  const handleSubmit = () => {
-    if (!formData.title || !formData.releaseDate) {
+  const handleCreateSubmit = useCallback((challengeData: any) => {
+    if (!challengeData.title || !challengeData.releaseDate) {
       toast({
         title: "Error",
         description: "Please fill in required fields (title and release date)",
@@ -167,22 +137,22 @@ export default function ChallengeManagement() {
       });
       return;
     }
+    createChallengeMutation.mutate(challengeData);
+  }, [createChallengeMutation, toast]);
 
-    // Convert the date to the Monday of that week
-    const selectedDate = new Date(formData.releaseDate);
-    const mondayOfWeek = startOfWeek(selectedDate, { weekStartsOn: 1 }); // Monday = 1
-    
-    const challengeData = {
-      ...formData,
-      releaseDate: mondayOfWeek.toISOString()
-    };
-
+  const handleEditSubmit = useCallback((challengeData: any) => {
+    if (!challengeData.title || !challengeData.releaseDate) {
+      toast({
+        title: "Error",
+        description: "Please fill in required fields (title and release date)",
+        variant: "destructive"
+      });
+      return;
+    }
     if (editingChallenge) {
       updateChallengeMutation.mutate({ id: editingChallenge.id, data: challengeData });
-    } else {
-      createChallengeMutation.mutate(challengeData);
     }
-  };
+  }, [editingChallenge, updateChallengeMutation, toast]);
 
   const handleDelete = (challengeId: string) => {
     if (confirm('Are you sure you want to delete this challenge? This action cannot be undone.')) {
@@ -191,103 +161,12 @@ export default function ChallengeManagement() {
   };
 
   // Get the Monday date for display
-  const getMondayDisplay = (releaseDate: string) => {
+  const getMondayDisplay = useCallback((releaseDate: string) => {
     const date = new Date(releaseDate);
     return format(date, 'MMM d, yyyy');
-  };
+  }, []);
 
-  const ChallengeDialog = ({ isEdit = false }: { isEdit?: boolean }) => (
-    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle>{isEdit ? 'Edit Challenge' : 'Create New Challenge'}</DialogTitle>
-      </DialogHeader>
-      <div className="space-y-4">
-        <div>
-          <label className="text-sm font-medium">Title *</label>
-          <Input
-            value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            placeholder="Enter challenge title"
-            className="mt-2"
-          />
-        </div>
 
-        <div>
-          <label className="text-sm font-medium">Description</label>
-          <Textarea
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            placeholder="Enter challenge description"
-            className="mt-2"
-            rows={3}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium">Topic</label>
-            <Select 
-              value={formData.topic} 
-              onValueChange={(value) => setFormData(prev => ({ ...prev, topic: value }))}
-            >
-              <SelectTrigger className="mt-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="leadership">Leadership</SelectItem>
-                <SelectItem value="marriage">Marriage</SelectItem>
-                <SelectItem value="fatherhood">Fatherhood</SelectItem>
-                <SelectItem value="character">Character</SelectItem>
-                <SelectItem value="faith">Faith</SelectItem>
-                <SelectItem value="discipline">Discipline</SelectItem>
-                <SelectItem value="service">Service</SelectItem>
-                <SelectItem value="growth">Growth</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Release Date * (Will adjust to Monday)</label>
-            <Input
-              type="date"
-              value={formData.releaseDate}
-              onChange={(e) => setFormData(prev => ({ ...prev, releaseDate: e.target.value }))}
-              className="mt-2"
-            />
-            {formData.releaseDate && (
-              <p className="text-xs text-ministry-slate mt-1">
-                Will be released on Monday: {getMondayDisplay(new Date(formData.releaseDate).toISOString())}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              if (isEdit) {
-                setShowEditDialog(false);
-                setEditingChallenge(null);
-              } else {
-                setShowCreateDialog(false);
-              }
-              resetForm();
-            }}
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSubmit}
-            disabled={createChallengeMutation.isPending || updateChallengeMutation.isPending}
-            className="bg-ministry-gold hover:bg-ministry-gold/90"
-          >
-            {isEdit ? 'Update' : 'Create'} Challenge
-          </Button>
-        </div>
-      </div>
-    </DialogContent>
-  );
 
   return (
     <div>
@@ -297,29 +176,46 @@ export default function ChallengeManagement() {
           <p className="text-ministry-slate">Create and manage weekly challenges for the community</p>
         </div>
         
-        <Dialog open={showCreateDialog} onOpenChange={(open) => {
-          setShowCreateDialog(open);
-          if (!open) {
-            resetForm();
-          }
-        }}>
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
             <Button className="bg-ministry-gold hover:bg-ministry-gold/90 text-white">
               <Plus className="w-4 h-4 mr-2" />
               New Challenge
             </Button>
           </DialogTrigger>
-          <ChallengeDialog />
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create New Challenge</DialogTitle>
+            </DialogHeader>
+            <ChallengeForm
+              challenge={null}
+              onSubmit={handleCreateSubmit}
+              onCancel={() => setShowCreateDialog(false)}
+              isSubmitting={createChallengeMutation.isPending}
+            />
+          </DialogContent>
         </Dialog>
 
         <Dialog open={showEditDialog} onOpenChange={(open) => {
           setShowEditDialog(open);
           if (!open) {
             setEditingChallenge(null);
-            resetForm();
           }
         }}>
-          <ChallengeDialog isEdit />
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Challenge</DialogTitle>
+            </DialogHeader>
+            <ChallengeForm
+              challenge={editingChallenge}
+              onSubmit={handleEditSubmit}
+              onCancel={() => {
+                setShowEditDialog(false);
+                setEditingChallenge(null);
+              }}
+              isSubmitting={updateChallengeMutation.isPending}
+            />
+          </DialogContent>
         </Dialog>
       </div>
 
