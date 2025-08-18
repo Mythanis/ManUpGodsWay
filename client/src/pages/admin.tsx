@@ -18,8 +18,9 @@ import VideoManagement from "@/components/admin/video-management";
 import LogoManagement from "@/components/admin/logo-management";
 import SystemSettings from "@/components/admin/system-settings";
 import PodcastManagement from "@/components/admin/podcast-management";
+import ChallengeManagement from "@/components/admin/challenge-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy } from "lucide-react";
 
 interface Study {
   id: string;
@@ -44,6 +45,7 @@ const adminTabs = [
   { id: "studies", label: "Studies", icon: Activity },
   { id: "videos", label: "Videos", icon: Video },
   { id: "podcasts", label: "Podcasts", icon: Headphones },
+  { id: "challenges", label: "Challenges", icon: Trophy },
   { id: "devotionals", label: "Devotionals", icon: Calendar },
   { id: "logo", label: "Logo", icon: Image },
   { id: "settings", label: "Settings", icon: Settings },
@@ -657,6 +659,12 @@ export default function Admin() {
           {activeTab === "podcasts" && (
             <div>
               <PodcastManagement />
+            </div>
+          )}
+          
+          {activeTab === "challenges" && (
+            <div>
+              <ChallengeManagement />
             </div>
           )}
 

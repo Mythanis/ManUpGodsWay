@@ -666,3 +666,23 @@ export type PodcastRating = typeof podcastRatings.$inferSelect;
 export type InsertPodcastRating = z.infer<typeof insertPodcastRatingSchema>;
 export type PodcastView = typeof podcastViews.$inferSelect;
 export type InsertPodcastView = z.infer<typeof insertPodcastViewSchema>;
+
+// Challenges
+export const challenges = pgTable("challenges", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  topic: varchar("topic", { length: 100 }).notNull(),
+  releaseDate: timestamp("releaseDate").notNull(), // The Monday this challenge should be released
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+});
+
+export const insertChallengeSchema = createInsertSchema(challenges).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Challenge = typeof challenges.$inferSelect;
+export type InsertChallenge = z.infer<typeof insertChallengeSchema>;

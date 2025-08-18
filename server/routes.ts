@@ -2596,6 +2596,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Challenge routes
+  app.get('/api/challenges', async (req, res) => {
+    try {
+      const challenges = await storage.getChallenges();
+      res.json(challenges);
+    } catch (error) {
+      console.error('Error fetching challenges:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/challenges/current', async (req, res) => {
+    try {
+      const challenge = await storage.getCurrentWeekChallenge();
+      res.json(challenge);
+    } catch (error) {
+      console.error('Error fetching current challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/admin/challenges', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const challenges = await storage.getChallenges();
+      res.json(challenges);
+    } catch (error) {
+      console.error('Error fetching admin challenges:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/challenges', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const challenge = await storage.createChallenge(req.body);
+      res.json(challenge);
+    } catch (error) {
+      console.error('Error creating challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/challenges/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const challenge = await storage.updateChallenge(req.params.id, req.body);
+      res.json(challenge);
+    } catch (error) {
+      console.error('Error updating challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/challenges/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      await storage.deleteChallenge(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

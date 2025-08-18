@@ -68,6 +68,9 @@ import {
   videos,
   type Video,
   type InsertVideo,
+  challenges,
+  type Challenge,
+  type InsertChallenge,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not } from "drizzle-orm";
@@ -215,6 +218,14 @@ export interface IStorage {
   getPodcastRatings(podcastId: string): Promise<PodcastRating[]>;
   getUserPodcastRating(userId: string, podcastId: string): Promise<PodcastRating | undefined>;
   incrementPodcastViews(podcastId: string, userId?: string, ipAddress?: string): Promise<void>;
+
+  // Challenge operations
+  getChallenges(): Promise<Challenge[]>;
+  getChallengeById(id: string): Promise<Challenge | undefined>;
+  createChallenge(challenge: InsertChallenge): Promise<Challenge>;
+  updateChallenge(id: string, challenge: Partial<Challenge>): Promise<Challenge>;
+  deleteChallenge(id: string): Promise<void>;
+  getCurrentWeekChallenge(): Promise<Challenge | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2581,6 +2592,63 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(podcasts.id, podcastId));
+  }
+
+  // Challenge operations
+  async getChallenges(): Promise<Challenge[]> {
+    return await db
+      .select()
+      .from(challenges)
+      .orderBy(desc(challenges.releaseDate));
+  }
+
+  async getChallengeById(id: string): Promise<Challenge | undefined> {
+    const [challenge] = await db
+      .select()
+      .from(challenges)
+      .where(eq(challenges.id, id));
+    return challenge;
+  }
+
+  async createChallenge(challengeData: InsertChallenge): Promise<Challenge> {
+    const [challenge] = await db
+      .insert(challenges)
+      .values(challengeData)
+      .returning();
+    return challenge;
+  }
+
+  async updateChallenge(id: string, updates: Partial<Challenge>): Promise<Challenge> {
+    const [challenge] = await db
+      .update(challenges)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(challenges.id, id))
+      .returning();
+    return challenge;
+  }
+
+  async deleteChallenge(id: string): Promise<void> {
+    await db.delete(challenges).where(eq(challenges.id, id));
+  }
+
+  async getCurrentWeekChallenge(): Promise<Challenge | undefined> {
+    // Calculate the Monday of the current week
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // Sunday = 0, Monday = 1, etc.
+    const daysUntilMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const mondayOfThisWeek = new Date(today);
+    mondayOfThisWeek.setDate(today.getDate() + daysUntilMonday);
+    mondayOfThisWeek.setHours(0, 0, 0, 0);
+
+    // Find the most recent challenge released on or before this Monday
+    const [challenge] = await db
+      .select()
+      .from(challenges)
+      .where(sql`${challenges.releaseDate} <= ${mondayOfThisWeek.toISOString()}`)
+      .orderBy(desc(challenges.releaseDate))
+      .limit(1);
+    
+    return challenge;
   }
 }
 
