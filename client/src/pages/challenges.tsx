@@ -41,11 +41,21 @@ export default function Challenges() {
     },
   });
 
-  // Filter and sort challenges (excluding current week)
+  // Filter and sort challenges (current and previous only, excluding current week display)
   const processedChallenges = challenges
     .filter((challenge: Challenge) => {
-      // Exclude current week's challenge from the list
+      // Exclude current week's challenge from the list (it's shown separately)
       if (currentWeekChallenge && challenge.id === currentWeekChallenge.id) {
+        return false;
+      }
+      
+      // Only show current and previous challenges (not future ones)
+      const now = new Date();
+      const challengeDate = new Date(challenge.releaseDate);
+      const startOfThisWeek = startOfWeek(now, { weekStartsOn: 1 }); // Monday
+      
+      // If challenge is in the future (after this week), don't show it
+      if (challengeDate > startOfThisWeek) {
         return false;
       }
       

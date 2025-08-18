@@ -34,8 +34,8 @@ export default function ChallengeManagement() {
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
 
 
-  // Fetch all challenges
-  const { data: challenges = [], isLoading } = useQuery({
+  // Fetch all challenges (admin sees all: past, current, future)
+  const { data: allChallenges = [], isLoading } = useQuery({
     queryKey: ['admin', 'challenges'],
     queryFn: async () => {
       const response = await fetch('/api/admin/challenges', { credentials: 'include' });
@@ -127,6 +127,31 @@ export default function ChallengeManagement() {
     setEditingChallenge(challenge);
     setShowEditDialog(true);
   }, []);
+
+  // Sort challenges: Future first, then Current, then Past (most recent first within each group)
+  const challenges = [...allChallenges].sort((a: Challenge, b: Challenge) => {
+    const now = new Date();
+    const startOfThisWeek = startOfWeek(now, { weekStartsOn: 1 });
+    const endOfThisWeek = addDays(startOfThisWeek, 6);
+    
+    const aDate = new Date(a.releaseDate);
+    const bDate = new Date(b.releaseDate);
+    
+    const getTimeCategory = (date: Date) => {
+      if (date >= startOfThisWeek && date <= endOfThisWeek) return 1; // Current
+      if (date > endOfThisWeek) return 0; // Future
+      return 2; // Past
+    };
+    
+    const aCat = getTimeCategory(aDate);
+    const bCat = getTimeCategory(bDate);
+    
+    if (aCat !== bCat) return aCat - bCat;
+    
+    // Within same category, sort by date
+    if (aCat === 0 || aCat === 1) return aDate.getTime() - bDate.getTime(); // Future/Current: earliest first
+    return bDate.getTime() - aDate.getTime(); // Past: most recent first
+  });
 
   const handleCreateSubmit = useCallback((challengeData: any) => {
     if (!challengeData.title || !challengeData.releaseDate) {
@@ -254,9 +279,25 @@ export default function ChallengeManagement() {
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h3 className="font-semibold text-lg text-ministry-charcoal mb-1">
-                            {challenge.title}
-                          </h3>
+                          <div className="flex items-center space-x-2 mb-1">
+                            <h3 className="font-semibold text-lg text-ministry-charcoal">
+                              {challenge.title}
+                            </h3>
+                            {(() => {
+                              const now = new Date();
+                              const challengeDate = new Date(challenge.releaseDate);
+                              const startOfThisWeek = startOfWeek(now, { weekStartsOn: 1 });
+                              const endOfThisWeek = addDays(startOfThisWeek, 6);
+                              
+                              if (challengeDate >= startOfThisWeek && challengeDate <= endOfThisWeek) {
+                                return <Badge className="bg-ministry-gold text-white">Current</Badge>;
+                              } else if (challengeDate > endOfThisWeek) {
+                                return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Future</Badge>;
+                              } else {
+                                return <Badge variant="outline" className="text-ministry-slate">Past</Badge>;
+                              }
+                            })()}
+                          </div>
                           <div className="flex items-center space-x-4 text-sm text-ministry-slate mb-2">
                             <Badge variant="outline" className="text-xs capitalize">
                               {challenge.topic}
