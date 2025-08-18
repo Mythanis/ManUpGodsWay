@@ -56,12 +56,21 @@ import {
   type SystemSettings,
   type InsertSystemSettings,
   systemSettings,
+  type Podcast,
+  type InsertPodcast,
+  podcasts,
+  type PodcastRating,
+  type InsertPodcastRating,
+  podcastRatings,
+  type PodcastView,
+  type InsertPodcastView,
+  podcastViews,
   videos,
   type Video,
   type InsertVideo,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, or, sql, ilike, count, inArray, not } from "drizzle-orm";
+import { eq, desc, asc, and, or, sql, ilike, count, inArray, not } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -194,6 +203,17 @@ export interface IStorage {
   // System settings operations
   getSystemSettings(): Promise<SystemSettings | undefined>;
   updateSystemSettings(systemSettings: InsertSystemSettings): Promise<SystemSettings>;
+  
+  // Podcast operations
+  getPodcasts(options?: { search?: string; category?: string; sort?: string }): Promise<Podcast[]>;
+  getPodcastById(id: string): Promise<Podcast | undefined>;
+  createPodcast(podcast: InsertPodcast): Promise<Podcast>;
+  updatePodcast(id: string, podcast: Partial<Podcast>): Promise<Podcast>;
+  deletePodcast(id: string): Promise<void>;
+  ratePodcast(userId: string, podcastId: string, rating: InsertPodcastRating): Promise<PodcastRating>;
+  getPodcastRatings(podcastId: string): Promise<PodcastRating[]>;
+  getUserPodcastRating(userId: string, podcastId: string): Promise<PodcastRating | undefined>;
+  incrementPodcastViews(podcastId: string, userId?: string, ipAddress?: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2396,6 +2416,163 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return newSettings;
     }
+  }
+
+  // Podcast operations
+  async getPodcasts(options: { search?: string; category?: string; sort?: string } = {}): Promise<Podcast[]> {
+    let query = db.select().from(podcasts).where(eq(podcasts.isPublished, true));
+    
+    // Apply filters
+    if (options.category) {
+      query = query.where(eq(podcasts.category, options.category)) as any;
+    }
+    
+    if (options.search) {
+      query = query.where(
+        or(
+          ilike(podcasts.title, `%${options.search}%`),
+          ilike(podcasts.description, `%${options.search}%`)
+        )
+      ) as any;
+    }
+    
+    // Apply sorting
+    switch (options.sort) {
+      case 'rating':
+        query = query.orderBy(desc(podcasts.rating)) as any;
+        break;
+      case 'views':
+        query = query.orderBy(desc(podcasts.viewCount)) as any;
+        break;
+      case 'title':
+        query = query.orderBy(asc(podcasts.title)) as any;
+        break;
+      case 'date':
+      default:
+        query = query.orderBy(desc(podcasts.createdAt)) as any;
+        break;
+    }
+    
+    return await query;
+  }
+
+  async getPodcastById(id: string): Promise<Podcast | undefined> {
+    const [podcast] = await db
+      .select()
+      .from(podcasts)
+      .where(eq(podcasts.id, id));
+    return podcast;
+  }
+
+  async createPodcast(podcastData: InsertPodcast): Promise<Podcast> {
+    const [podcast] = await db
+      .insert(podcasts)
+      .values(podcastData)
+      .returning();
+    return podcast;
+  }
+
+  async updatePodcast(id: string, updates: Partial<Podcast>): Promise<Podcast> {
+    const [podcast] = await db
+      .update(podcasts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(podcasts.id, id))
+      .returning();
+    return podcast;
+  }
+
+  async deletePodcast(id: string): Promise<void> {
+    await db.delete(podcasts).where(eq(podcasts.id, id));
+  }
+
+  async ratePodcast(userId: string, podcastId: string, ratingData: InsertPodcastRating): Promise<PodcastRating> {
+    // Insert or update rating
+    const [rating] = await db
+      .insert(podcastRatings)
+      .values({ ...ratingData, userId, podcastId })
+      .onConflictDoUpdate({
+        target: [podcastRatings.userId, podcastRatings.podcastId],
+        set: {
+          rating: ratingData.rating,
+          review: ratingData.review,
+          updatedAt: new Date()
+        }
+      })
+      .returning();
+
+    // Recalculate podcast rating
+    const [stats] = await db
+      .select({
+        avgRating: sql`AVG(${podcastRatings.rating})`.as('avgRating'),
+        count: sql`COUNT(*)`.as('count')
+      })
+      .from(podcastRatings)
+      .where(eq(podcastRatings.podcastId, podcastId));
+
+    // Update podcast with new rating stats
+    await db
+      .update(podcasts)
+      .set({
+        rating: stats.avgRating ? parseFloat(stats.avgRating as string).toFixed(1) : '0.0',
+        ratingCount: parseInt(stats.count as string),
+        updatedAt: new Date()
+      })
+      .where(eq(podcasts.id, podcastId));
+
+    return rating;
+  }
+
+  async getPodcastRatings(podcastId: string): Promise<PodcastRating[]> {
+    return await db
+      .select({
+        id: podcastRatings.id,
+        userId: podcastRatings.userId,
+        podcastId: podcastRatings.podcastId,
+        rating: podcastRatings.rating,
+        review: podcastRatings.review,
+        createdAt: podcastRatings.createdAt,
+        updatedAt: podcastRatings.updatedAt,
+        user: {
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl
+        }
+      })
+      .from(podcastRatings)
+      .leftJoin(users, eq(podcastRatings.userId, users.id))
+      .where(eq(podcastRatings.podcastId, podcastId))
+      .orderBy(desc(podcastRatings.createdAt)) as any;
+  }
+
+  async getUserPodcastRating(userId: string, podcastId: string): Promise<PodcastRating | undefined> {
+    const [rating] = await db
+      .select()
+      .from(podcastRatings)
+      .where(
+        and(
+          eq(podcastRatings.userId, userId),
+          eq(podcastRatings.podcastId, podcastId)
+        )
+      );
+    return rating;
+  }
+
+  async incrementPodcastViews(podcastId: string, userId?: string, ipAddress?: string): Promise<void> {
+    // Insert view record
+    await db.insert(podcastViews).values({
+      podcastId,
+      userId,
+      ipAddress
+    });
+
+    // Increment view count on podcast
+    await db
+      .update(podcasts)
+      .set({
+        viewCount: sql`${podcasts.viewCount} + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(podcasts.id, podcastId));
   }
 }
 

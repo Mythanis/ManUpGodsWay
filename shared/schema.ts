@@ -596,3 +596,73 @@ export const insertSystemSettingsSchema = createInsertSchema(systemSettings).omi
 
 export type SystemSettings = typeof systemSettings.$inferSelect;
 export type InsertSystemSettings = z.infer<typeof insertSystemSettingsSchema>;
+
+// Podcasts table for storing podcast content
+export const podcasts = pgTable("podcasts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  type: varchar("type").notNull(), // "audio" or "video"
+  fileUrl: varchar("file_url").notNull(),
+  thumbnailUrl: varchar("thumbnail_url"),
+  duration: integer("duration"), // in seconds
+  fileSize: integer("file_size"),
+  uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
+  category: varchar("category").notNull().default("general"), // leadership, marriage, fatherhood, character, general
+  tags: text("tags").array().default(sql`'{}'::text[]`),
+  rating: decimal("rating", { precision: 2, scale: 1 }).default("0.0"),
+  ratingCount: integer("rating_count").default(0),
+  viewCount: integer("view_count").default(0),
+  isPublished: boolean("is_published").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPodcastSchema = createInsertSchema(podcasts).omit({
+  id: true,
+  rating: true,
+  ratingCount: true,
+  viewCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Podcast ratings table
+export const podcastRatings = pgTable("podcast_ratings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  podcastId: varchar("podcast_id").notNull().references(() => podcasts.id, { onDelete: 'cascade' }),
+  rating: integer("rating").notNull(), // 1-5 stars
+  review: text("review"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  unique: unique().on(table.userId, table.podcastId),
+}));
+
+export const insertPodcastRatingSchema = createInsertSchema(podcastRatings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Podcast views table for tracking views
+export const podcastViews = pgTable("podcast_views", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  podcastId: varchar("podcast_id").notNull().references(() => podcasts.id, { onDelete: 'cascade' }),
+  viewedAt: timestamp("viewed_at").defaultNow(),
+  ipAddress: varchar("ip_address"), // For anonymous tracking
+});
+
+export const insertPodcastViewSchema = createInsertSchema(podcastViews).omit({
+  id: true,
+  viewedAt: true,
+});
+
+export type Podcast = typeof podcasts.$inferSelect;
+export type InsertPodcast = z.infer<typeof insertPodcastSchema>;
+export type PodcastRating = typeof podcastRatings.$inferSelect;
+export type InsertPodcastRating = z.infer<typeof insertPodcastRatingSchema>;
+export type PodcastView = typeof podcastViews.$inferSelect;
+export type InsertPodcastView = z.infer<typeof insertPodcastViewSchema>;

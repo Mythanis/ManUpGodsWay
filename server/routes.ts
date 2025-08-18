@@ -13,7 +13,9 @@ import {
   insertStudyRatingSchema,
   insertVideoRatingSchema,
   insertLogoSettingsSchema,
-  insertSystemSettingsSchema 
+  insertSystemSettingsSchema,
+  insertPodcastSchema,
+  insertPodcastRatingSchema 
 } from "@shared/schema";
 import { z } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -2440,6 +2442,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid system settings data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to update system settings" });
+    }
+  });
+
+  // Podcast Routes
+  // Get all podcasts with filtering and sorting
+  app.get('/api/podcasts', async (req, res) => {
+    try {
+      const { search, category, sort } = req.query;
+      const podcasts = await storage.getPodcasts({
+        search: search as string,
+        category: category as string,
+        sort: sort as string
+      });
+      res.json(podcasts);
+    } catch (error) {
+      console.error('Error fetching podcasts:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get podcast by ID
+  app.get('/api/podcasts/:id', async (req, res) => {
+    try {
+      const podcast = await storage.getPodcastById(req.params.id);
+      if (!podcast) {
+        return res.status(404).json({ message: 'Podcast not found' });
+      }
+      res.json(podcast);
+    } catch (error) {
+      console.error('Error fetching podcast:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Create new podcast (admin only)
+  app.post('/api/podcasts', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const podcastData = insertPodcastSchema.parse({
+        ...req.body,
+        uploadedBy: user.id
+      });
+      
+      const podcast = await storage.createPodcast(podcastData);
+      res.status(201).json(podcast);
+    } catch (error) {
+      console.error('Error creating podcast:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid podcast data", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Update podcast (admin only)
+  app.put('/api/podcasts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const updates = req.body;
+      const podcast = await storage.updatePodcast(req.params.id, updates);
+      res.json(podcast);
+    } catch (error) {
+      console.error('Error updating podcast:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Delete podcast (admin only)
+  app.delete('/api/podcasts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      await storage.deletePodcast(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting podcast:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Rate podcast
+  app.post('/api/podcasts/:id/rate', isAuthenticated, async (req: any, res) => {
+    try {
+      const { rating, review } = insertPodcastRatingSchema.parse(req.body);
+      
+      const podcastRating = await storage.ratePodcast(
+        req.user.claims.sub,
+        req.params.id,
+        { rating, review }
+      );
+      
+      res.json(podcastRating);
+    } catch (error) {
+      console.error('Error rating podcast:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid rating data", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get podcast ratings
+  app.get('/api/podcasts/:id/ratings', async (req, res) => {
+    try {
+      const ratings = await storage.getPodcastRatings(req.params.id);
+      res.json(ratings);
+    } catch (error) {
+      console.error('Error fetching podcast ratings:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Track podcast view
+  app.post('/api/podcasts/:id/view', async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const ipAddress = req.ip || req.connection.remoteAddress;
+      
+      await storage.incrementPodcastViews(req.params.id, userId, ipAddress);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error tracking podcast view:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
 
