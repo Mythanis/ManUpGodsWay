@@ -578,3 +578,21 @@ export const insertLogoSettingsSchema = createInsertSchema(logoSettings).omit({
 
 export type LogoSettings = typeof logoSettings.$inferSelect;
 export type InsertLogoSettings = z.infer<typeof insertLogoSettingsSchema>;
+
+// System settings table for customizable app settings
+export const systemSettings = pgTable("system_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  homepageTagline: text("homepage_tagline").default("Ready to grow in God's strength?"),
+  updatedBy: varchar("updated_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSystemSettingsSchema = createInsertSchema(systemSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type SystemSettings = typeof systemSettings.$inferSelect;
+export type InsertSystemSettings = z.infer<typeof insertSystemSettingsSchema>;

@@ -12,7 +12,8 @@ import {
   insertDevotionalSchema,
   insertStudyRatingSchema,
   insertVideoRatingSchema,
-  insertLogoSettingsSchema 
+  insertLogoSettingsSchema,
+  insertSystemSettingsSchema 
 } from "@shared/schema";
 import { z } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -2404,6 +2405,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to update logo settings" });
+    }
+  });
+
+  // Get system settings
+  app.get('/api/system-settings', async (req, res) => {
+    try {
+      const systemSettings = await storage.getSystemSettings();
+      res.json(systemSettings);
+    } catch (error) {
+      console.error("Error fetching system settings:", error);
+      res.status(500).json({ message: "Failed to fetch system settings" });
+    }
+  });
+
+  // Update system settings (admin only)
+  app.put('/api/system-settings', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const systemSettingsData = insertSystemSettingsSchema.parse({
+        ...req.body,
+        updatedBy: user.id
+      });
+      
+      const settings = await storage.updateSystemSettings(systemSettingsData);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating system settings:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid system settings data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update system settings" });
     }
   });
 

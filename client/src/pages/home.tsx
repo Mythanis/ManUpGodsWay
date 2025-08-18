@@ -72,6 +72,17 @@ export default function Home() {
     refetchIntervalInBackground: true,
   });
 
+  // Fetch system settings for homepage tagline
+  const { data: systemSettings } = useQuery({
+    queryKey: ['/api/system-settings'],
+    queryFn: async () => {
+      const response = await fetch('/api/system-settings', { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch system settings');
+      return response.json();
+    },
+    retry: false,
+  });
+
   const { data: weeklyCompletions } = useQuery({
     queryKey: ["/api/progress/weekly-completions"],
     retry: false,
@@ -247,7 +258,7 @@ export default function Home() {
             Good Morning, {user?.firstName || 'Brother'}
           </h1>
           <p className="text-blue-200 text-sm" data-testid="text-motivation">
-            Ready to grow in God's strength?
+            {systemSettings?.homepageTagline || "Ready to grow in God's strength?"}
           </p>
         </div>
         

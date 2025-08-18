@@ -53,6 +53,9 @@ import {
   type InsertUserSilence,
   type LogoSettings,
   type InsertLogoSettings,
+  type SystemSettings,
+  type InsertSystemSettings,
+  systemSettings,
   videos,
   type Video,
   type InsertVideo,
@@ -187,6 +190,10 @@ export interface IStorage {
   // Logo settings operations
   getLogoSettings(): Promise<LogoSettings | undefined>;
   updateLogoSettings(logoSettings: InsertLogoSettings): Promise<LogoSettings>;
+  
+  // System settings operations
+  getSystemSettings(): Promise<SystemSettings | undefined>;
+  updateSystemSettings(systemSettings: InsertSystemSettings): Promise<SystemSettings>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2351,6 +2358,44 @@ export class DatabaseStorage implements IStorage {
       );
 
     return result[0]?.count || 0;
+  }
+
+  // System settings operations
+  async getSystemSettings(): Promise<SystemSettings | undefined> {
+    const [settings] = await db
+      .select()
+      .from(systemSettings)
+      .orderBy(desc(systemSettings.createdAt))
+      .limit(1);
+    return settings;
+  }
+
+  async updateSystemSettings(systemSettingsData: InsertSystemSettings): Promise<SystemSettings> {
+    // Check if any settings exist
+    const [existingSettings] = await db
+      .select()
+      .from(systemSettings)
+      .limit(1);
+
+    if (existingSettings) {
+      // Update existing record
+      const [updatedSettings] = await db
+        .update(systemSettings)
+        .set({ 
+          ...systemSettingsData, 
+          updatedAt: new Date() 
+        })
+        .where(eq(systemSettings.id, existingSettings.id))
+        .returning();
+      return updatedSettings;
+    } else {
+      // Create new record
+      const [newSettings] = await db
+        .insert(systemSettings)
+        .values(systemSettingsData)
+        .returning();
+      return newSettings;
+    }
   }
 }
 
