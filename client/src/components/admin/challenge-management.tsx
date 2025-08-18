@@ -61,14 +61,17 @@ export default function ChallengeManagement() {
         credentials: 'include'
       }).then(res => res.json()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'challenges'] });
-      queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
-      setShowCreateDialog(false);
-      resetForm();
       toast({
         title: "Success",
         description: "Challenge created successfully"
       });
+      setShowCreateDialog(false);
+      resetForm();
+      // Delay the query invalidation slightly to prevent form reset during submission
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['admin', 'challenges'] });
+        queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
+      }, 100);
     },
     onError: () => {
       toast({
@@ -89,15 +92,18 @@ export default function ChallengeManagement() {
         credentials: 'include'
       }).then(res => res.json()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'challenges'] });
-      queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
-      setShowEditDialog(false);
-      setEditingChallenge(null);
-      resetForm();
       toast({
         title: "Success",
         description: "Challenge updated successfully"
       });
+      setShowEditDialog(false);
+      setEditingChallenge(null);
+      resetForm();
+      // Delay the query invalidation slightly to prevent form reset during submission
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['admin', 'challenges'] });
+        queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
+      }, 100);
     },
     onError: () => {
       toast({
@@ -291,7 +297,12 @@ export default function ChallengeManagement() {
           <p className="text-ministry-slate">Create and manage weekly challenges for the community</p>
         </div>
         
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <Dialog open={showCreateDialog} onOpenChange={(open) => {
+          setShowCreateDialog(open);
+          if (!open) {
+            resetForm();
+          }
+        }}>
           <DialogTrigger asChild>
             <Button className="bg-ministry-gold hover:bg-ministry-gold/90 text-white">
               <Plus className="w-4 h-4 mr-2" />
@@ -301,7 +312,13 @@ export default function ChallengeManagement() {
           <ChallengeDialog />
         </Dialog>
 
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <Dialog open={showEditDialog} onOpenChange={(open) => {
+          setShowEditDialog(open);
+          if (!open) {
+            setEditingChallenge(null);
+            resetForm();
+          }
+        }}>
           <ChallengeDialog isEdit />
         </Dialog>
       </div>
