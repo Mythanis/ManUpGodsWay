@@ -216,34 +216,24 @@ export default function Challenges() {
             {/* Sort Controls */}
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium text-ministry-slate">Sort by:</span>
-              <div className="flex space-x-2">
-                <Button
-                  variant={sortOrder === 'desc' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSortOrder('desc')}
-                  className={`flex items-center space-x-1 ${
-                    sortOrder === 'desc' 
-                      ? 'bg-ministry-gold hover:bg-ministry-gold/90 text-white' 
-                      : 'text-ministry-slate hover:text-ministry-charcoal'
-                  }`}
-                >
-                  <ArrowDown className="w-4 h-4" />
-                  <span className="text-xs">Newest First</span>
-                </Button>
-                <Button
-                  variant={sortOrder === 'asc' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSortOrder('asc')}
-                  className={`flex items-center space-x-1 ${
-                    sortOrder === 'asc' 
-                      ? 'bg-ministry-gold hover:bg-ministry-gold/90 text-white' 
-                      : 'text-ministry-slate hover:text-ministry-charcoal'
-                  }`}
-                >
-                  <ArrowUp className="w-4 h-4" />
-                  <span className="text-xs">Oldest First</span>
-                </Button>
-              </div>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+                className="flex items-center space-x-1 bg-ministry-gold hover:bg-ministry-gold/90 text-white"
+              >
+                {sortOrder === 'desc' ? (
+                  <>
+                    <ArrowDown className="w-4 h-4" />
+                    <span className="text-xs">Newest First</span>
+                  </>
+                ) : (
+                  <>
+                    <ArrowUp className="w-4 h-4" />
+                    <span className="text-xs">Oldest First</span>
+                  </>
+                )}
+              </Button>
             </div>
           </div>
 
