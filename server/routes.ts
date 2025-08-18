@@ -2677,6 +2677,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/challenges/:id/push-to-current', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const challenge = await storage.pushChallengeToCurrentWeek(req.params.id);
+      res.json(challenge);
+    } catch (error) {
+      console.error('Error pushing challenge to current week:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

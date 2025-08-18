@@ -2663,6 +2663,28 @@ export class DatabaseStorage implements IStorage {
     
     return challenge;
   }
+
+  async pushChallengeToCurrentWeek(id: string): Promise<Challenge> {
+    // Calculate the Monday of the current week
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // Sunday = 0, Monday = 1, etc.
+    const daysUntilMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const mondayOfThisWeek = new Date(today);
+    mondayOfThisWeek.setDate(today.getDate() + daysUntilMonday);
+    mondayOfThisWeek.setHours(0, 0, 0, 0);
+
+    // Update the challenge's release date to this Monday
+    const [challenge] = await db
+      .update(challenges)
+      .set({ 
+        releaseDate: mondayOfThisWeek,
+        updatedAt: new Date() 
+      })
+      .where(eq(challenges.id, id))
+      .returning();
+    
+    return challenge;
+  }
 }
 
 export const storage = new DatabaseStorage();

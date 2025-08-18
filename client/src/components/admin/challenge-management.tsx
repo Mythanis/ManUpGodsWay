@@ -12,7 +12,9 @@ import {
   Trash2,
   Calendar,
   Trophy,
-  Clock
+  Clock,
+  ArrowUp,
+  Zap
 } from "lucide-react";
 import { formatDistanceToNow, format, startOfWeek, addDays } from "date-fns";
 
@@ -185,6 +187,37 @@ export default function ChallengeManagement() {
     }
   };
 
+  // Push to current week mutation
+  const pushToCurrentMutation = useMutation({
+    mutationFn: (challengeId: string) =>
+      fetch(`/api/challenges/${challengeId}/push-to-current`, {
+        method: 'POST',
+        credentials: 'include'
+      }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', 'current'] });
+      toast({
+        title: "Success",
+        description: "Challenge pushed to current week successfully"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to push challenge to current week",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handlePushToCurrent = (challengeId: string, challengeTitle: string) => {
+    if (confirm(`Push "${challengeTitle}" to current week? This will override the current weekly challenge and move it to previous challenges.`)) {
+      pushToCurrentMutation.mutate(challengeId);
+    }
+  };
+
   // Get the Monday date for display
   const getMondayDisplay = useCallback((releaseDate: string) => {
     const date = new Date(releaseDate);
@@ -326,6 +359,30 @@ export default function ChallengeManagement() {
                   </div>
 
                   <div className="flex items-center space-x-2 ml-4">
+                    {(() => {
+                      const now = new Date();
+                      const challengeDate = new Date(challenge.releaseDate);
+                      const startOfThisWeek = startOfWeek(now, { weekStartsOn: 1 });
+                      const endOfThisWeek = addDays(startOfThisWeek, 6);
+                      
+                      // Show "Push to Current" button for past and future challenges
+                      if (challengeDate < startOfThisWeek || challengeDate > endOfThisWeek) {
+                        return (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePushToCurrent(challenge.id, challenge.title)}
+                            disabled={pushToCurrentMutation.isPending}
+                            className="text-ministry-gold hover:text-ministry-gold/80 hover:bg-ministry-gold/10 border-ministry-gold/30"
+                            title="Push to current week"
+                          >
+                            <Zap className="w-4 h-4" />
+                          </Button>
+                        );
+                      }
+                      return null;
+                    })()}
+                    
                     <Button
                       variant="outline"
                       size="sm"

@@ -19,6 +19,7 @@
 - **Complete Podcasts System**: Built comprehensive podcast management system with audio/video content support, user ratings (1-5 stars), review system, view tracking, search/filter functionality, sorting options (date, rating, views, alphabetical), category organization, and admin upload/management interface with title, description, topic fields
 - **Weekly Challenges System**: Implemented complete challenges system with Monday-based weekly release logic, admin creation/management interface, user-facing challenges page with current week display, challenge history with sorting by date/topic, topic-based filtering, and navigation integration
 - **Differentiated Challenge Visibility**: Admin challenge management shows all challenges (past, current, future) with visual status badges and intelligent sorting (Future → Current → Past), while user challenges page displays only current and previous challenges to prevent spoilers
+- **Dynamic Challenge Promotion**: Admins can push any challenge (past or future) to the current week using the "Push to Current" button, which immediately overrides the current challenge and moves it to the previous challenges section
 
 # User Preferences
 Preferred communication style: Simple, everyday language.
