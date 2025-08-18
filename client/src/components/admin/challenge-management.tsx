@@ -46,6 +46,16 @@ export default function ChallengeManagement() {
     },
   });
 
+  // Fetch current week's challenge to determine which one is "Current"
+  const { data: currentWeekChallenge } = useQuery({
+    queryKey: ['api', 'challenges', 'current'],
+    queryFn: async () => {
+      const response = await fetch('/api/challenges/current', { credentials: 'include' });
+      if (!response.ok) return null;
+      return response.json();
+    },
+  });
+
   // Create challenge mutation
   const createChallengeMutation = useMutation({
     mutationFn: (challengeData: any) =>
@@ -139,14 +149,17 @@ export default function ChallengeManagement() {
     const aDate = new Date(a.releaseDate);
     const bDate = new Date(b.releaseDate);
     
-    const getTimeCategory = (date: Date) => {
-      if (date >= startOfThisWeek && date <= endOfThisWeek) return 1; // Current
+    const getTimeCategory = (challenge: Challenge) => {
+      // Check if this challenge is the current week challenge
+      if (currentWeekChallenge && challenge.id === currentWeekChallenge.id) return 1; // Current
+      
+      const date = new Date(challenge.releaseDate);
       if (date > endOfThisWeek) return 0; // Future
       return 2; // Past
     };
     
-    const aCat = getTimeCategory(aDate);
-    const bCat = getTimeCategory(bDate);
+    const aCat = getTimeCategory(a);
+    const bCat = getTimeCategory(b);
     
     if (aCat !== bCat) return aCat - bCat;
     
@@ -317,14 +330,16 @@ export default function ChallengeManagement() {
                               {challenge.title}
                             </h3>
                             {(() => {
+                              // Check if this challenge is the current week challenge
+                              if (currentWeekChallenge && challenge.id === currentWeekChallenge.id) {
+                                return <Badge className="bg-ministry-gold text-white">Current</Badge>;
+                              }
+                              
                               const now = new Date();
                               const challengeDate = new Date(challenge.releaseDate);
-                              const startOfThisWeek = startOfWeek(now, { weekStartsOn: 1 });
-                              const endOfThisWeek = addDays(startOfThisWeek, 6);
+                              const endOfThisWeek = addDays(startOfWeek(now, { weekStartsOn: 1 }), 6);
                               
-                              if (challengeDate >= startOfThisWeek && challengeDate <= endOfThisWeek) {
-                                return <Badge className="bg-ministry-gold text-white">Current</Badge>;
-                              } else if (challengeDate > endOfThisWeek) {
+                              if (challengeDate > endOfThisWeek) {
                                 return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Future</Badge>;
                               } else {
                                 return <Badge variant="outline" className="text-ministry-slate">Past</Badge>;
@@ -360,13 +375,8 @@ export default function ChallengeManagement() {
 
                   <div className="flex items-center space-x-2 ml-4">
                     {(() => {
-                      const now = new Date();
-                      const challengeDate = new Date(challenge.releaseDate);
-                      const startOfThisWeek = startOfWeek(now, { weekStartsOn: 1 });
-                      const endOfThisWeek = addDays(startOfThisWeek, 6);
-                      
-                      // Show "Push to Current" button for past and future challenges
-                      if (challengeDate < startOfThisWeek || challengeDate > endOfThisWeek) {
+                      // Show "Push to Current" button for challenges that are not the current week challenge
+                      if (!currentWeekChallenge || challenge.id !== currentWeekChallenge.id) {
                         return (
                           <Button
                             variant="outline"
