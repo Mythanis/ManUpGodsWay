@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trophy, Calendar, Filter, SortAsc, Target, Star, ArrowUp, ArrowDown, Clock } from "lucide-react";
+import { Trophy, Calendar, Filter, SortAsc, Target, Star, ArrowUp, ArrowDown, Clock, X } from "lucide-react";
 import { format, startOfWeek, isAfter, isSameWeek } from "date-fns";
 
 interface Challenge {
@@ -58,20 +58,29 @@ export default function Challenges() {
       return true;
     })
     .sort((a: Challenge, b: Challenge) => {
+      // Always sort by date first, then by topic if dates are the same
+      const dateA = new Date(a.releaseDate).getTime();
+      const dateB = new Date(b.releaseDate).getTime();
+      
       if (sortBy === 'date') {
-        const dateA = new Date(a.releaseDate).getTime();
-        const dateB = new Date(b.releaseDate).getTime();
         return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
       } else {
+        // When sorting by topic, still use date as secondary sort
         const topicA = a.topic.toLowerCase();
         const topicB = b.topic.toLowerCase();
-        const comparison = topicA.localeCompare(topicB);
-        return sortOrder === 'desc' ? -comparison : comparison;
+        const topicComparison = topicA.localeCompare(topicB);
+        
+        if (topicComparison === 0) {
+          // If topics are the same, sort by date (newest first)
+          return dateB - dateA;
+        }
+        
+        return sortOrder === 'desc' ? -topicComparison : topicComparison;
       }
     });
 
   // Get unique topics for filter
-  const uniqueTopics = [...new Set(challenges.map((c: Challenge) => c.topic))].sort();
+  const uniqueTopics: string[] = Array.from(new Set(challenges.map((c: Challenge) => c.topic))).sort();
 
   const formatChallengeDate = (releaseDate: string) => {
     const date = new Date(releaseDate);
@@ -196,50 +205,75 @@ export default function Challenges() {
         )}
 
         {/* Previous Challenges Header & Controls */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col space-y-4 mb-6">
           <h2 className="text-xl font-bold text-ministry-charcoal">Previous Challenges</h2>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
             {/* Topic Filter */}
-            <Select value={filterTopic} onValueChange={setFilterTopic}>
-              <SelectTrigger className="w-40">
-                <div className="flex items-center">
-                  <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="All Topics" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Topics</SelectItem>
-                {uniqueTopics.map((topic) => (
-                  <SelectItem key={topic} value={topic}>
-                    {topic.charAt(0).toUpperCase() + topic.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-ministry-slate">Filter by Topic:</span>
+              <Select value={filterTopic} onValueChange={setFilterTopic}>
+                <SelectTrigger className="w-40">
+                  <div className="flex items-center">
+                    <Filter className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="All Topics" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Topics</SelectItem>
+                  {uniqueTopics.map((topic) => (
+                    <SelectItem key={topic as string} value={topic as string}>
+                      {(topic as string).charAt(0).toUpperCase() + (topic as string).slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Sort Controls */}
-            <Select value={sortBy} onValueChange={(value: 'date' | 'topic') => setSortBy(value)}>
-              <SelectTrigger className="w-32">
-                <div className="flex items-center">
-                  <SortAsc className="w-4 h-4 mr-2" />
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-ministry-slate">Sort by:</span>
+              <Select value={sortBy} onValueChange={(value: 'date' | 'topic') => setSortBy(value)}>
+                <SelectTrigger className="w-24">
                   <SelectValue />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="date">Date</SelectItem>
-                <SelectItem value="topic">Topic</SelectItem>
-              </SelectContent>
-            </Select>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date">Date</SelectItem>
+                  <SelectItem value="topic">Topic</SelectItem>
+                </SelectContent>
+              </Select>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            >
-              {sortOrder === 'desc' ? <ArrowDown className="w-4 h-4" /> : <ArrowUp className="w-4 h-4" />}
-            </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="flex items-center space-x-1"
+              >
+                {sortOrder === 'desc' ? <ArrowDown className="w-4 h-4" /> : <ArrowUp className="w-4 h-4" />}
+                <span className="text-xs">
+                  {sortOrder === 'desc' ? 'Newest' : 'Oldest'} First
+                </span>
+              </Button>
+            </div>
           </div>
+
+          {/* Active Filters Display */}
+          {filterTopic !== 'all' && (
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-ministry-slate">Showing:</span>
+              <Badge variant="outline" className="capitalize">
+                {filterTopic} challenges
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setFilterTopic('all')}
+                className="text-xs text-ministry-slate hover:text-ministry-charcoal"
+              >
+                Clear filter
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Previous Challenges List */}
