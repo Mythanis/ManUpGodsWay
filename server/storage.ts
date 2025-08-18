@@ -79,6 +79,7 @@ export interface IStorage {
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
   updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
   updateUserStreak(userId: string, userLocalDate?: Date): Promise<void>;
+  getWeeklyStudyCompletions(userId: string): Promise<number>;
   
   // Study-specific methods
   getStudyDiscussion(studyId: string): Promise<(Discussion & { user: User }) | null>;
@@ -2324,6 +2325,32 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updatedSettings;
+  }
+
+  // Get weekly study completions count for a user
+  async getWeeklyStudyCompletions(userId: string): Promise<number> {
+    // Calculate date one week ago from today (local timezone)
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    oneWeekAgo.setHours(0, 0, 0, 0);
+
+    // Count distinct studies completed in the past 7 days
+    // A study is considered "completed" when progress is 100% (completedLessons >= lessonCount)
+    const result = await db
+      .select({
+        count: sql<number>`COUNT(DISTINCT ${userProgress.studyId})`
+      })
+      .from(userProgress)
+      .innerJoin(studies, eq(userProgress.studyId, studies.id))
+      .where(
+        and(
+          eq(userProgress.userId, userId),
+          sql`${userProgress.completedLessons} >= ${studies.lessonCount}`,
+          sql`${userProgress.lastAccessedAt} >= ${oneWeekAgo.toISOString()}`
+        )
+      );
+
+    return result[0]?.count || 0;
   }
 }
 

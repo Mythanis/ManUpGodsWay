@@ -434,6 +434,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get weekly study completion count
+  app.get('/api/progress/weekly-completions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const weeklyCompletions = await storage.getWeeklyStudyCompletions(userId);
+      res.json({ count: weeklyCompletions });
+    } catch (error) {
+      console.error("Error fetching weekly completions:", error);
+      res.status(500).json({ message: "Failed to fetch weekly completions" });
+    }
+  });
+
   app.post('/api/progress/:studyId', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

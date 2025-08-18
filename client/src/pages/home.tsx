@@ -72,6 +72,13 @@ export default function Home() {
     refetchIntervalInBackground: true,
   });
 
+  const { data: weeklyCompletions } = useQuery({
+    queryKey: ["/api/progress/weekly-completions"],
+    retry: false,
+    refetchInterval: 30000, // Update every 30 seconds
+    refetchIntervalInBackground: true,
+  });
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -217,17 +224,31 @@ export default function Home() {
       {/* Header Section */}
       <div className="bg-gradient-to-br from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-8">
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold" data-testid="text-greeting">
-              Good Morning, {user?.firstName || 'Brother'}
-            </h1>
-            <p className="text-blue-200 text-sm" data-testid="text-motivation">
-              Ready to grow in God's strength?
-            </p>
+          <div className="flex items-center space-x-4">
+            {/* User Profile Picture */}
+            <div className="flex items-center space-x-3">
+              <img
+                src={user?.profileImageUrl || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=4A90B8&color=fff&size=60`}
+                alt={`${user?.firstName} ${user?.lastName}`}
+                className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
+              />
+              <div className="bg-ministry-gold text-ministry-navy px-3 py-1 rounded-full text-sm font-bold">
+                {weeklyCompletions?.count || 0} studies this week
+              </div>
+            </div>
           </div>
           <div className="relative">
             <NotificationPanel />
           </div>
+        </div>
+        
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold" data-testid="text-greeting">
+            Good Morning, {user?.firstName || 'Brother'}
+          </h1>
+          <p className="text-blue-200 text-sm" data-testid="text-motivation">
+            Ready to grow in God's strength?
+          </p>
         </div>
         
         {/* Subscription Banner */}
