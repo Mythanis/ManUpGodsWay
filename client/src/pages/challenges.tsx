@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trophy, Calendar, Filter, SortAsc, Target, Star, ArrowUp, ArrowDown, Clock, X } from "lucide-react";
+import { Trophy, Calendar, Filter, Target, Star, ArrowUp, ArrowDown, Clock, X } from "lucide-react";
 import { format, startOfWeek, isAfter, isSameWeek } from "date-fns";
 
 interface Challenge {
@@ -18,7 +18,6 @@ interface Challenge {
 }
 
 export default function Challenges() {
-  const [sortBy, setSortBy] = useState<'date' | 'topic'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterTopic, setFilterTopic] = useState<string>('all');
 
@@ -58,25 +57,9 @@ export default function Challenges() {
       return true;
     })
     .sort((a: Challenge, b: Challenge) => {
-      // Always sort by date first, then by topic if dates are the same
       const dateA = new Date(a.releaseDate).getTime();
       const dateB = new Date(b.releaseDate).getTime();
-      
-      if (sortBy === 'date') {
-        return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
-      } else {
-        // When sorting by topic, still use date as secondary sort
-        const topicA = a.topic.toLowerCase();
-        const topicB = b.topic.toLowerCase();
-        const topicComparison = topicA.localeCompare(topicB);
-        
-        if (topicComparison === 0) {
-          // If topics are the same, sort by date (newest first)
-          return dateB - dateA;
-        }
-        
-        return sortOrder === 'desc' ? -topicComparison : topicComparison;
-      }
+      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
     });
 
   // Get unique topics for filter
@@ -233,27 +216,34 @@ export default function Challenges() {
             {/* Sort Controls */}
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium text-ministry-slate">Sort by:</span>
-              <Select value={sortBy} onValueChange={(value: 'date' | 'topic') => setSortBy(value)}>
-                <SelectTrigger className="w-24">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date">Date</SelectItem>
-                  <SelectItem value="topic">Topic</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                className="flex items-center space-x-1"
-              >
-                {sortOrder === 'desc' ? <ArrowDown className="w-4 h-4" /> : <ArrowUp className="w-4 h-4" />}
-                <span className="text-xs">
-                  {sortOrder === 'desc' ? 'Newest' : 'Oldest'} First
-                </span>
-              </Button>
+              <div className="flex space-x-2">
+                <Button
+                  variant={sortOrder === 'desc' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSortOrder('desc')}
+                  className={`flex items-center space-x-1 ${
+                    sortOrder === 'desc' 
+                      ? 'bg-ministry-gold hover:bg-ministry-gold/90 text-white' 
+                      : 'text-ministry-slate hover:text-ministry-charcoal'
+                  }`}
+                >
+                  <ArrowDown className="w-4 h-4" />
+                  <span className="text-xs">Newest First</span>
+                </Button>
+                <Button
+                  variant={sortOrder === 'asc' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSortOrder('asc')}
+                  className={`flex items-center space-x-1 ${
+                    sortOrder === 'asc' 
+                      ? 'bg-ministry-gold hover:bg-ministry-gold/90 text-white' 
+                      : 'text-ministry-slate hover:text-ministry-charcoal'
+                  }`}
+                >
+                  <ArrowUp className="w-4 h-4" />
+                  <span className="text-xs">Oldest First</span>
+                </Button>
+              </div>
             </div>
           </div>
 
