@@ -282,15 +282,7 @@ export default function Podcasts() {
             </h1>
             <p className="text-blue-200 text-sm">Audio & Video Content</p>
           </div>
-          {(user as any)?.role === 'admin' && (
-            <Button
-              onClick={() => setShowUploadDialog(true)}
-              className="bg-white/20 text-white hover:bg-white/30 border border-white/30"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload
-            </Button>
-          )}
+
         </div>
 
         {/* Search and Filters */}

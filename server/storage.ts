@@ -206,11 +206,12 @@ export interface IStorage {
   
   // Podcast operations
   getPodcasts(options?: { search?: string; category?: string; sort?: string }): Promise<Podcast[]>;
+  getAllPodcasts(): Promise<Podcast[]>;
   getPodcastById(id: string): Promise<Podcast | undefined>;
   createPodcast(podcast: InsertPodcast): Promise<Podcast>;
   updatePodcast(id: string, podcast: Partial<Podcast>): Promise<Podcast>;
   deletePodcast(id: string): Promise<void>;
-  ratePodcast(userId: string, podcastId: string, rating: InsertPodcastRating): Promise<PodcastRating>;
+  ratePodcast(userId: string, podcastId: string, rating: { rating: number; review?: string }): Promise<PodcastRating>;
   getPodcastRatings(podcastId: string): Promise<PodcastRating[]>;
   getUserPodcastRating(userId: string, podcastId: string): Promise<PodcastRating | undefined>;
   incrementPodcastViews(podcastId: string, userId?: string, ipAddress?: string): Promise<void>;
@@ -2456,6 +2457,13 @@ export class DatabaseStorage implements IStorage {
     return await query;
   }
 
+  async getAllPodcasts(): Promise<Podcast[]> {
+    return await db
+      .select()
+      .from(podcasts)
+      .orderBy(desc(podcasts.createdAt));
+  }
+
   async getPodcastById(id: string): Promise<Podcast | undefined> {
     const [podcast] = await db
       .select()
@@ -2485,7 +2493,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(podcasts).where(eq(podcasts.id, id));
   }
 
-  async ratePodcast(userId: string, podcastId: string, ratingData: InsertPodcastRating): Promise<PodcastRating> {
+  async ratePodcast(userId: string, podcastId: string, ratingData: { rating: number; review?: string }): Promise<PodcastRating> {
     // Insert or update rating
     const [rating] = await db
       .insert(podcastRatings)

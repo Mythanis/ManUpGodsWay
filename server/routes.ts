@@ -2536,12 +2536,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rate podcast
   app.post('/api/podcasts/:id/rate', isAuthenticated, async (req: any, res) => {
     try {
-      const { rating, review } = insertPodcastRatingSchema.parse(req.body);
+      const { rating, review } = req.body;
       
       const podcastRating = await storage.ratePodcast(
         req.user.claims.sub,
         req.params.id,
-        { rating, review }
+        { rating: parseInt(rating), review }
       );
       
       res.json(podcastRating);
@@ -2575,6 +2575,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       console.error('Error tracking podcast view:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Admin podcast routes
+  app.get('/api/admin/podcasts', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Get all podcasts including unpublished ones
+      const podcasts = await storage.getAllPodcasts();
+      res.json(podcasts);
+    } catch (error) {
+      console.error('Error fetching admin podcasts:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

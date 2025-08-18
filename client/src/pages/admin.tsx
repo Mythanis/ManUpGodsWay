@@ -17,8 +17,9 @@ import DevotionalManagement from "@/components/admin/devotional-management";
 import VideoManagement from "@/components/admin/video-management";
 import LogoManagement from "@/components/admin/logo-management";
 import SystemSettings from "@/components/admin/system-settings";
+import PodcastManagement from "@/components/admin/podcast-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones } from "lucide-react";
 
 interface Study {
   id: string;
@@ -42,6 +43,7 @@ const adminTabs = [
   { id: "content", label: "Content", icon: Book },
   { id: "studies", label: "Studies", icon: Activity },
   { id: "videos", label: "Videos", icon: Video },
+  { id: "podcasts", label: "Podcasts", icon: Headphones },
   { id: "devotionals", label: "Devotionals", icon: Calendar },
   { id: "logo", label: "Logo", icon: Image },
   { id: "settings", label: "Settings", icon: Settings },
@@ -649,6 +651,12 @@ export default function Admin() {
             <div>
               <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Logo Management</h2>
               <LogoManagement />
+            </div>
+          )}
+          
+          {activeTab === "podcasts" && (
+            <div>
+              <PodcastManagement />
             </div>
           )}
 
