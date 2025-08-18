@@ -14,7 +14,7 @@ import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, Tre
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 
-export default function Dashboard() {
+export default function Home() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();

@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 
 const navItems = [
-  { id: 'dashboard', path: '/', label: 'Dashboard', icon: Home },
+  { id: 'home', path: '/', label: 'Home', icon: Home },
   { id: 'library', path: '/library', label: 'Studies', icon: BookOpen },
   { id: 'videos', path: '/videos', label: 'Videos', icon: Video },
   { id: 'community', path: '/community', label: 'Community', icon: Users },

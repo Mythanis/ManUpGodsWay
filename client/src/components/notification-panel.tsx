@@ -191,8 +191,8 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         
       case 'new_devotional':
       case 'devotional':
-        // Navigate to dashboard where today's devotional is shown (dashboard is at root path)
-        console.log('Navigating to dashboard for devotional');
+        // Navigate to home where today's devotional is shown (home is at root path)
+        console.log('Navigating to home for devotional');
         setLocation('/');
         break;
         
@@ -217,7 +217,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
           // Navigate to the conversation related to the admin notification (likely a report)
           setLocation(`/messages?conversation=${notification.relatedId}`);
         } else {
-          // Navigate to admin dashboard for general admin notifications
+          // Navigate to admin page for general admin notifications
           setLocation('/admin');
         }
         break;
@@ -233,8 +233,8 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
           console.log('Navigating to message URL:', messageUrl);
           setLocation(messageUrl);
         } else {
-          // Default fallback for truly unknown types (dashboard is at root path)
-          console.log('Navigating to dashboard as fallback');
+          // Default fallback for truly unknown types (home is at root path)
+          console.log('Navigating to home as fallback');
           setLocation('/');
         }
         break;

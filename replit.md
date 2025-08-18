@@ -15,6 +15,7 @@
 - **Complete Logo Management System**: Implemented comprehensive admin logo upload functionality with ministry theme background color selection (white, light gray, charcoal, gold, steel, slate), real-time splash screen preview, database storage, and automatic splash screen display on every app load/reload with configurable duration and background styling
 - **SPA Navigation Fix**: Fixed notification panel to use proper single-page application navigation instead of window.location.href, preventing app restarts when clicking on notifications and maintaining smooth user experience
 - **Persistent Account Settings Access**: Added fixed cog wheel icon at top right of all authenticated pages with "Account Settings" tooltip that navigates to user profile page, and removed Profile button from bottom menu for cleaner mobile navigation
+- **Navigation Renaming**: Renamed Dashboard to Home throughout the application including navigation labels, page names, routing, and all code references for improved clarity
 
 # User Preferences
 Preferred communication style: Simple, everyday language.

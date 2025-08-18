@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import SplashScreen from "@/components/splash-screen";
 import Landing from "@/pages/landing";
-import Dashboard from "@/pages/dashboard";
+import Home from "@/pages/home";
 import Library from "@/pages/library";
 import Videos from "@/pages/videos";
 import Community from "@/pages/community";
@@ -59,7 +59,7 @@ function Router() {
           <Route path="/" component={Landing} />
         ) : (
           <>
-            <Route path="/" component={Dashboard} />
+            <Route path="/" component={Home} />
             <Route path="/library" component={Library} />
             <Route path="/videos" component={Videos} />
             <Route path="/community" component={Community} />
