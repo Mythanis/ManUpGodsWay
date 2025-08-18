@@ -2611,17 +2611,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createChallenge(challengeData: InsertChallenge): Promise<Challenge> {
+    // Ensure releaseDate is a proper Date object
+    const processedData = {
+      ...challengeData,
+      releaseDate: new Date(challengeData.releaseDate)
+    };
+    
     const [challenge] = await db
       .insert(challenges)
-      .values(challengeData)
+      .values(processedData)
       .returning();
     return challenge;
   }
 
   async updateChallenge(id: string, updates: Partial<Challenge>): Promise<Challenge> {
+    // Ensure releaseDate is a proper Date object if provided
+    const processedUpdates = {
+      ...updates,
+      updatedAt: new Date(),
+      ...(updates.releaseDate && { releaseDate: new Date(updates.releaseDate) })
+    };
+    
     const [challenge] = await db
       .update(challenges)
-      .set({ ...updates, updatedAt: new Date() })
+      .set(processedUpdates)
       .where(eq(challenges.id, id))
       .returning();
     return challenge;
