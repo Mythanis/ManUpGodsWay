@@ -222,26 +222,38 @@ export default function ChallengeManagement() {
       const data = await response.json();
       return data;
     },
-    onSuccess: () => {
-      // Remove all cached data and force immediate refetch with cache busting
-      queryClient.removeQueries({ queryKey: ['admin', 'challenges'] });
-      queryClient.removeQueries({ queryKey: ['api', 'challenges'] });
-      queryClient.removeQueries({ queryKey: ['api', 'challenges', 'current'] });
+    onSuccess: (updatedChallenge) => {
+      // Immediately update the React Query cache with the new data
+      queryClient.setQueryData(['api', 'challenges', 'current'], updatedChallenge);
       
-      // Add a small delay then force refetch to ensure cache is cleared
-      setTimeout(() => {
-        queryClient.refetchQueries({ queryKey: ['admin', 'challenges'], type: 'active' });
-        queryClient.refetchQueries({ queryKey: ['api', 'challenges'], type: 'active' });
-        queryClient.refetchQueries({ queryKey: ['api', 'challenges', 'current'], type: 'active' });
-      }, 100);
+      // Update the admin challenges list cache
+      queryClient.setQueryData(['admin', 'challenges'], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((challenge: any) => 
+          challenge.id === updatedChallenge.id 
+            ? { ...challenge, releaseDate: updatedChallenge.releaseDate }
+            : challenge
+        );
+      });
       
-      // Also invalidate to trigger refetch on other components
-      queryClient.invalidateQueries({ queryKey: ['admin'] });
-      queryClient.invalidateQueries({ queryKey: ['api'] });
+      // Update the challenges list cache
+      queryClient.setQueryData(['api', 'challenges'], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((challenge: any) => 
+          challenge.id === updatedChallenge.id 
+            ? { ...challenge, releaseDate: updatedChallenge.releaseDate }
+            : challenge
+        );
+      });
+      
+      // Force immediate refetch to ensure data consistency
+      queryClient.refetchQueries({ queryKey: ['admin', 'challenges'] });
+      queryClient.refetchQueries({ queryKey: ['api', 'challenges'] });
+      queryClient.refetchQueries({ queryKey: ['api', 'challenges', 'current'] });
       
       toast({
         title: "Success",
-        description: "Challenge pushed to current week successfully"
+        description: `"${updatedChallenge.title}" is now the current week's challenge!`
       });
     },
     onError: () => {
@@ -254,6 +266,15 @@ export default function ChallengeManagement() {
   });
 
   const handlePushToCurrent = (challengeId: string, challengeTitle: string) => {
+    // Check if this challenge is already the current one
+    if (currentWeekChallenge?.id === challengeId) {
+      toast({
+        title: "Already Current",
+        description: `"${challengeTitle}" is already the current week's challenge.`
+      });
+      return;
+    }
+    
     if (confirm(`Push "${challengeTitle}" to current week? This will override the current weekly challenge and move it to previous challenges.`)) {
       pushToCurrentMutation.mutate(challengeId);
     }
