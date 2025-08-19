@@ -59,11 +59,11 @@ export default function ChallengeForm({ challenge, onSubmit, onCancel, isSubmitt
       return;
     }
 
-    // Convert the date to the Monday of that week, ensuring timezone neutrality
-    // Parse as local date first to avoid timezone conversion issues
-    const [year, month, day] = formData.releaseDate.split('-').map(Number);
-    const selectedDate = new Date(year, month - 1, day); // Month is 0-indexed
+    // Parse the selected date and convert to Monday at noon UTC to avoid timezone issues
+    const selectedDate = new Date(formData.releaseDate + 'T12:00:00.000Z');
     const mondayOfWeek = startOfWeek(selectedDate, { weekStartsOn: 1 });
+    // Set to noon UTC to ensure the date doesn't shift due to timezone differences
+    mondayOfWeek.setUTCHours(12, 0, 0, 0);
     
     const challengeData = {
       ...formData,
