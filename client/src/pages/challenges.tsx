@@ -85,7 +85,7 @@ export default function Challenges() {
     });
 
   // Get unique topics for filter
-  const uniqueTopics: string[] = Array.from(new Set(challenges.map((c: Challenge) => c.topic))).sort();
+  const uniqueTopics: string[] = Array.from(new Set(challenges.map((c: Challenge) => c.topic as string))).sort();
 
   const formatChallengeDate = (releaseDate: string) => {
     const date = new Date(releaseDate);
