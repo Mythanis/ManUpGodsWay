@@ -73,7 +73,7 @@ export default function Lesson() {
             className="flex items-center space-x-2"
           >
             <MessageCircle className="w-4 h-4" />
-            <span>Message</span>
+            <span>Discussion</span>
           </Button>
 
           {/* Lesson Title (Center) */}
@@ -105,19 +105,47 @@ export default function Lesson() {
             {/* Video Section */}
             {(lesson.videoId || lesson.videoUrl) && (
               <div className="mb-8">
-                <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
                   {lesson.videoUrl ? (
+                    lesson.videoUrl.startsWith('http') ? (
+                      // External video URL
+                      <video
+                        controls
+                        className="w-full h-full object-cover"
+                        preload="metadata"
+                      >
+                        <source src={lesson.videoUrl} type="video/mp4" />
+                        <source src={lesson.videoUrl} type="video/webm" />
+                        <source src={lesson.videoUrl} type="video/ogg" />
+                        Your browser does not support the video tag.
+                      </video>
+                    ) : (
+                      // Uploaded video ID - use streaming endpoint
+                      <video
+                        controls
+                        className="w-full h-full object-cover"
+                        preload="metadata"
+                      >
+                        <source src={`/api/videos/${lesson.videoUrl}/stream`} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    )
+                  ) : lesson.videoId ? (
+                    // Video ID reference
                     <video
                       controls
-                      className="w-full h-full rounded-lg"
+                      className="w-full h-full object-cover"
+                      preload="metadata"
                     >
-                      <source src={lesson.videoUrl} type="video/mp4" />
+                      <source src={`/api/videos/${lesson.videoId}/stream`} type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
                   ) : (
-                    <div className="text-center text-ministry-slate">
-                      <div className="text-4xl mb-2">🎥</div>
-                      <p>Video content will be available soon</p>
+                    <div className="text-center text-ministry-slate flex items-center justify-center h-full">
+                      <div>
+                        <div className="text-4xl mb-2">🎥</div>
+                        <p>Video content will be available soon</p>
+                      </div>
                     </div>
                   )}
                 </div>
