@@ -99,6 +99,7 @@ export interface IStorage {
   // Progress operations
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
   updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
+  markLessonCompleted(userId: string, studyId: string, lessonNumber: number): Promise<UserProgress>;
   updateUserStreak(userId: string, userLocalDate?: Date): Promise<void>;
   getWeeklyStudyCompletions(userId: string): Promise<number>;
   
@@ -596,6 +597,57 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (existing.length > 0) {
+      const [updated] = await db
+        .update(userProgress)
+        .set(updateData)
+        .where(and(eq(userProgress.userId, userId), eq(userProgress.studyId, studyId)))
+        .returning();
+      return updated;
+    } else {
+      const [newProgress] = await db
+        .insert(userProgress)
+        .values({
+          userId,
+          studyId,
+          ...updateData,
+        })
+        .returning();
+      return newProgress;
+    }
+  }
+
+  async markLessonCompleted(userId: string, studyId: string, lessonNumber: number): Promise<UserProgress> {
+    // Get current progress
+    const existingProgress = await db
+      .select()
+      .from(userProgress)
+      .where(and(eq(userProgress.userId, userId), eq(userProgress.studyId, studyId)));
+    
+    // Get total lessons for this study
+    const [study] = await db.select().from(studies).where(eq(studies.id, studyId));
+    if (!study) {
+      throw new Error('Study not found');
+    }
+    
+    const totalLessons = study.lessonCount || 1;
+    const currentProgress = existingProgress[0];
+    const currentCompletedLessons = currentProgress?.completedLessons || 0;
+    const newCompletedLessons = Math.max(currentCompletedLessons, lessonNumber);
+    const newCurrentLesson = Math.min(lessonNumber + 1, totalLessons);
+    const isCompleted = newCompletedLessons >= totalLessons;
+    
+    // Update user streak when they complete a lesson
+    await this.updateUserStreak(userId);
+    
+    const updateData = {
+      currentLesson: newCurrentLesson,
+      completedLessons: newCompletedLessons,
+      isCompleted,
+      lastAccessedAt: new Date(),
+      completedAt: isCompleted ? new Date() : currentProgress?.completedAt || null,
+    };
+    
+    if (existingProgress.length > 0) {
       const [updated] = await db
         .update(userProgress)
         .set(updateData)

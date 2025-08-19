@@ -119,7 +119,6 @@ export default function StudyDetail() {
       });
     };
   }, [discussionDialogOpen]);
-  const [currentLesson, setCurrentLesson] = useState(1);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -161,15 +160,7 @@ export default function StudyDetail() {
     retry: false,
   });
 
-  // Update current lesson when progress data loads
-  useEffect(() => {
-    if (progress) {
-      const userProgress = Array.isArray(progress) ? progress[0] : progress;
-      if (userProgress?.currentLesson) {
-        setCurrentLesson(userProgress.currentLesson);
-      }
-    }
-  }, [progress]);
+  // Progress data is handled directly from the query
 
   // Determine video URL - use direct stream URL for uploaded videos
   const isUploadedVideo = study?.videoUrl && !study.videoUrl.startsWith('http') && study.videoUrl.length > 10;
@@ -182,55 +173,6 @@ export default function StudyDetail() {
     defaultValues: {
       rating: 5,
       review: "",
-    },
-  });
-
-  const updateProgress = useMutation({
-    mutationFn: async (data: { currentLesson: number; completedLessons: number; isCompleted?: boolean }) => {
-      // Add user's local date for accurate streak calculation
-      const progressData = {
-        ...data,
-        userLocalDate: new Date().toISOString()
-      };
-      await apiRequest('POST', `/api/progress/${id}`, progressData);
-    },
-    onSuccess: () => {
-      // Invalidate all progress-related queries
-      queryClient.invalidateQueries({ queryKey: ["/api/progress"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/progress", id] });
-      // Force invalidate and refetch user data to update streak display
-      queryClient.removeQueries({ queryKey: ["/api/auth/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
-      // Force refetch of current progress
-      queryClient.refetchQueries({ queryKey: ["/api/progress", id] });
-      const newCompletedLessons = Math.min(currentLesson, study?.lessonCount || 1);
-      const isCompleted = newCompletedLessons === study?.lessonCount;
-      
-      toast({
-        title: "Progress Updated",
-        description: isCompleted 
-          ? "Study completed! Your streak has been updated." 
-          : "Your study progress and daily streak have been saved!",
-      });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: "Failed to update progress. Please try again.",
-        variant: "destructive",
-      });
     },
   });
 
@@ -264,19 +206,6 @@ export default function StudyDetail() {
       });
     },
   });
-
-  const handleProgressUpdate = () => {
-    if (!study) return;
-    
-    const newCompletedLessons = Math.min(currentLesson, study.lessonCount || 1);
-    const isCompleted = newCompletedLessons === study.lessonCount;
-    
-    updateProgress.mutate({
-      currentLesson,
-      completedLessons: newCompletedLessons,
-      isCompleted,
-    });
-  };
 
   const onSubmitRating = (data: z.infer<typeof ratingSchema>) => {
     rateStudy.mutate(data);
@@ -484,49 +413,15 @@ export default function StudyDetail() {
                 
                 <Progress value={progressPercent} className="mb-4" data-testid="progress-bar" />
                 
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium text-ministry-charcoal mb-2 block">
-                      Current Lesson
-                    </label>
-                    <Select
-                      value={currentLesson.toString()}
-                      onValueChange={(value) => {
-                        setCurrentLesson(parseInt(value));
-                        // Auto-update progress when lesson changes
-                        setTimeout(() => {
-                          const newLesson = parseInt(value);
-                          const newCompletedLessons = Math.min(newLesson, study.lessonCount || 1);
-                          const isCompleted = newCompletedLessons === study.lessonCount;
-                          
-                          updateProgress.mutate({
-                            currentLesson: newLesson,
-                            completedLessons: newCompletedLessons,
-                            isCompleted,
-                          });
-                        }, 100);
-                      }}
-                    >
-                      <SelectTrigger data-testid="select-current-lesson">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: study.lessonCount || 1 }, (_, i) => i + 1).map((lesson: number) => (
-                          <SelectItem key={lesson} value={lesson.toString()}>
-                            Lesson {lesson}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-ministry-charcoal">
+                    <span className="font-medium">
+                      {actualCompletedLessons >= (study.lessonCount || 1) 
+                        ? "All lessons completed" 
+                        : `Currently on: Lesson ${progress?.currentLesson || 1}`
+                      }
+                    </span>
                   </div>
-                  <Button
-                    onClick={handleProgressUpdate}
-                    disabled={updateProgress.isPending}
-                    className="bg-ministry-navy hover:bg-ministry-charcoal mt-6"
-                    data-testid="button-update-progress"
-                  >
-                    {updateProgress.isPending ? "Saving..." : "Update Progress"}
-                  </Button>
                 </div>
 
                 {progressPercent === 100 && (

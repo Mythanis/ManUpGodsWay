@@ -497,6 +497,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mark lesson completed
+  app.post('/api/lessons/:studyId/:lessonNumber/complete', isAuthenticated, async (req: any, res) => {
+    try {
+      const { studyId, lessonNumber } = req.params;
+      const lessonNum = parseInt(lessonNumber);
+      
+      if (isNaN(lessonNum) || lessonNum < 1) {
+        return res.status(400).json({ message: 'Invalid lesson number' });
+      }
+      
+      const userId = req.user.claims.sub;
+      const updatedProgress = await storage.markLessonCompleted(userId, studyId, lessonNum);
+      
+      res.json(updatedProgress);
+    } catch (error) {
+      console.error('Error marking lesson completed:', error);
+      res.status(500).json({ message: 'Failed to mark lesson completed' });
+    }
+  });
+
   // Progress routes
   app.get('/api/progress', isAuthenticated, async (req: any, res) => {
     try {

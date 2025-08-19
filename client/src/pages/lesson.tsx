@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DiscussionCard from "@/components/discussion-card";
-import { X, MessageCircle, ArrowLeft } from "lucide-react";
+import { X, MessageCircle, ArrowLeft, CheckCircle } from "lucide-react";
 import type { Lesson as LessonType } from "@shared/schema";
 
 export default function Lesson() {
@@ -212,7 +212,29 @@ export default function Lesson() {
           </Button>
 
           <div className="flex items-center space-x-4">
-            {/* Previous/Next lesson buttons could go here */}
+            <Button
+              onClick={async () => {
+                try {
+                  const { apiRequest } = await import("@/lib/queryClient");
+                  const { queryClient } = await import("@/lib/queryClient");
+                  
+                  await apiRequest('POST', `/lessons/${studyId}/${lessonNumber}/complete`);
+                  
+                  // Invalidate progress queries to update UI
+                  queryClient.invalidateQueries({ queryKey: ["/api/progress"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/progress", studyId] });
+                  
+                  // Go back to study after marking complete
+                  setLocation(`/studies/${studyId}`);
+                } catch (error) {
+                  console.error('Error marking lesson completed:', error);
+                }
+              }}
+              className="bg-ministry-gold hover:bg-ministry-gold/90 text-white px-6 py-2"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Finished
+            </Button>
           </div>
         </div>
       </div>
