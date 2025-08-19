@@ -17,6 +17,7 @@ import {
   userReports,
   userSilences,
   logoSettings,
+  contentFlags,
   type User,
   type UpsertUser,
   type Study,
@@ -71,9 +72,11 @@ import {
   challenges,
   type Challenge,
   type InsertChallenge,
+  type ContentFlag,
+  type InsertContentFlag,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, or, sql, ilike, count, inArray, not } from "drizzle-orm";
+import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -226,6 +229,18 @@ export interface IStorage {
   updateChallenge(id: string, challenge: Partial<Challenge>): Promise<Challenge>;
   deleteChallenge(id: string): Promise<void>;
   getCurrentWeekChallenge(): Promise<Challenge | undefined>;
+  pushChallengeToCurrentWeek(id: string): Promise<Challenge>;
+
+  // Content flagging operations
+  flagContent(flagData: InsertContentFlag): Promise<ContentFlag>;
+  notifyAdminsOfFlag(flag: ContentFlag): Promise<void>;
+  getAllFlags(): Promise<(ContentFlag & { reporter: { firstName: string; lastName: string } })[]>;
+  updateFlagStatus(flagId: string, updateData: {
+    status: string;
+    reviewNotes?: string;
+    reviewedBy: string;
+    reviewedAt: Date;
+  }): Promise<ContentFlag>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2697,6 +2712,118 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return challenge;
+  }
+
+  // Content Flagging Methods
+  async flagContent(flagData: InsertContentFlag): Promise<ContentFlag> {
+    const [flag] = await db
+      .insert(contentFlags)
+      .values({
+        ...flagData,
+        status: 'pending',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    
+    return flag;
+  }
+
+  async notifyAdminsOfFlag(flag: ContentFlag): Promise<void> {
+    // Get all admin users
+    const admins = await db
+      .select()
+      .from(users)
+      .where(eq(users.role, 'admin'));
+
+    // Get the content details for notification
+    let contentTitle = '';
+    let contentUrl = '';
+    
+    if (flag.contentType === 'discussion') {
+      const [discussion] = await db
+        .select({ title: discussions.title })
+        .from(discussions)
+        .where(eq(discussions.id, flag.contentId));
+      
+      contentTitle = discussion?.title || 'Discussion';
+      contentUrl = `/community?discussion=${flag.contentId}`;
+    } else if (flag.contentType === 'reply') {
+      const [reply] = await db
+        .select({ 
+          content: discussionReplies.content,
+          discussionId: discussionReplies.discussionId 
+        })
+        .from(discussionReplies)
+        .where(eq(discussionReplies.id, flag.contentId));
+      
+      contentTitle = `Reply: ${reply?.content?.substring(0, 50) || 'Reply'}...`;
+      contentUrl = `/community?discussion=${reply?.discussionId}&reply=${flag.contentId}`;
+    }
+
+    // Create notifications for all admins
+    const notifications = admins.map(admin => ({
+      userId: admin.id,
+      title: 'Content Flagged',
+      message: `A user has flagged ${flag.contentType}: "${contentTitle}" for ${flag.reason}`,
+      type: 'admin' as const,
+      metadata: JSON.stringify({
+        flagId: flag.id,
+        contentType: flag.contentType,
+        contentId: flag.contentId,
+        reason: flag.reason,
+        url: contentUrl
+      }),
+      isRead: false,
+      createdAt: new Date()
+    }));
+
+    await db.insert(notifications).values(notifications);
+  }
+
+  async getAllFlags(): Promise<(ContentFlag & { reporter: { firstName: string; lastName: string } })[]> {
+    const flags = await db
+      .select({
+        id: contentFlags.id,
+        reporterId: contentFlags.reporterId,
+        contentType: contentFlags.contentType,
+        contentId: contentFlags.contentId,
+        reason: contentFlags.reason,
+        description: contentFlags.description,
+        status: contentFlags.status,
+        reviewedBy: contentFlags.reviewedBy,
+        reviewedAt: contentFlags.reviewedAt,
+        reviewNotes: contentFlags.reviewNotes,
+        createdAt: contentFlags.createdAt,
+        updatedAt: contentFlags.updatedAt,
+        reporter: {
+          firstName: users.firstName,
+          lastName: users.lastName
+        }
+      })
+      .from(contentFlags)
+      .leftJoin(users, eq(contentFlags.reporterId, users.id))
+      .orderBy(desc(contentFlags.createdAt));
+
+    return flags;
+  }
+
+  async updateFlagStatus(flagId: string, updateData: {
+    status: string;
+    reviewNotes?: string;
+    reviewedBy: string;
+    reviewedAt: Date;
+  }): Promise<ContentFlag> {
+    const [flag] = await db
+      .update(contentFlags)
+      .set({
+        ...updateData,
+        updatedAt: new Date()
+      })
+      .where(eq(contentFlags.id, flagId))
+      .returning();
+
+    return flag;
   }
 }
 

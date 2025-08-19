@@ -135,6 +135,22 @@ export const discussionReplies = pgTable("discussion_replies", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Content flags table for reporting inappropriate content
+export const contentFlags = pgTable("content_flags", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reporterId: varchar("reporter_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  contentType: varchar("content_type").notNull(), // 'discussion' or 'reply'
+  contentId: varchar("content_id").notNull(), // ID of the flagged discussion or reply
+  reason: varchar("reason").notNull(), // 'inappropriate', 'spam', 'harassment', 'offensive', 'other'
+  description: text("description"), // Optional additional details
+  status: varchar("status").default("pending"), // pending, reviewed, resolved, dismissed
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Discussion subscriptions for notifications
 export const discussionSubscriptions = pgTable("discussion_subscriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -686,3 +702,17 @@ export const insertChallengeSchema = createInsertSchema(challenges).omit({
 
 export type Challenge = typeof challenges.$inferSelect;
 export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
+
+// Content flags schema and types
+export const insertContentFlagSchema = createInsertSchema(contentFlags).omit({
+  id: true,
+  status: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  reviewNotes: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ContentFlag = typeof contentFlags.$inferSelect;
+export type InsertContentFlag = z.infer<typeof insertContentFlagSchema>;

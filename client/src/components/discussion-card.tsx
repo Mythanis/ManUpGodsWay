@@ -13,7 +13,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus } from "lucide-react";
+import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag } from "lucide-react";
+import { FlagContentDialog } from "@/components/flag-content-dialog";
 import { z } from "zod";
 
 interface DiscussionCardProps {
@@ -289,6 +290,17 @@ export default function DiscussionCard({
                   : 'Reply'
                 }
               </Button>
+              
+              {/* Flag Discussion Button */}
+              <FlagContentDialog 
+                contentType="discussion" 
+                contentId={discussion.id}
+                triggerElement={
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-red-600 p-1">
+                    <Flag className="h-4 w-4" />
+                  </Button>
+                }
+              />
             </div>
           </div>
         </div>
@@ -318,6 +330,19 @@ export default function DiscussionCard({
                       </span>
                     </div>
                     <p className="text-sm text-ministry-slate">{reply.content}</p>
+                    
+                    {/* Flag Reply Button */}
+                    <div className="flex justify-end mt-2">
+                      <FlagContentDialog 
+                        contentType="reply" 
+                        contentId={reply.id}
+                        triggerElement={
+                          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-red-600 p-1">
+                            <Flag className="h-3 w-3" />
+                          </Button>
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
               ))}

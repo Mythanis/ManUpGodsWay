@@ -15,7 +15,8 @@ import {
   insertLogoSettingsSchema,
   insertSystemSettingsSchema,
   insertPodcastSchema,
-  insertPodcastRatingSchema 
+  insertPodcastRatingSchema,
+  insertContentFlagSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -2688,6 +2689,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(challenge);
     } catch (error) {
       console.error('Error pushing challenge to current week:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Content Flagging Routes
+  
+  // Flag content (discussion or reply)
+  app.post('/api/content/flag', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertContentFlagSchema.parse({
+        ...req.body,
+        reporterId: userId
+      });
+
+      const flag = await storage.flagContent(validatedData);
+      
+      // Send notification to all admins
+      await storage.notifyAdminsOfFlag(flag);
+      
+      res.json(flag);
+    } catch (error) {
+      console.error('Error flagging content:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get all flags (admin only)
+  app.get('/api/admin/flags', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const flags = await storage.getAllFlags();
+      res.json(flags);
+    } catch (error) {
+      console.error('Error fetching flags:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Update flag status (admin only)
+  app.patch('/api/admin/flags/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { status, reviewNotes } = req.body;
+      const flag = await storage.updateFlagStatus(req.params.id, {
+        status,
+        reviewNotes,
+        reviewedBy: user.id,
+        reviewedAt: new Date()
+      });
+      
+      res.json(flag);
+    } catch (error) {
+      console.error('Error updating flag:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
