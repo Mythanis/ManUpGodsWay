@@ -42,7 +42,7 @@ const tiers = [
 const createStudySchema = insertStudySchema.extend({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  content: z.string().min(50, "Content must be at least 50 characters"),
+  content: z.string().optional(), // Content is optional if lessons are provided
   category: z.string().min(1, "Category is required"),
   videoId: z.string().optional(),
 });
@@ -67,6 +67,9 @@ export default function UploadStudyForm() {
   const { toast } = useToast();
   const { effectiveTheme } = useTheme();
   const queryClient = useQueryClient();
+  
+  // Add debug logging for troubleshooting
+  console.log('UploadStudyForm rendered - lessons:', lessons.length);
 
   const { data: videos = [] } = useQuery<Array<{
     id: string;
@@ -167,15 +170,14 @@ export default function UploadStudyForm() {
       setLessons([]);
     },
     onError: (error: any) => {
+      console.error('Study creation error:', error);
+      
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: "Unauthorized", 
+          description: "You need admin access to create studies. Please log in as an admin.",
           variant: "destructive",
         });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
         return;
       }
       
@@ -196,6 +198,31 @@ export default function UploadStudyForm() {
   });
 
   const onSubmit = (data: any) => {
+    // Validate that either content is provided or lessons exist
+    if (lessons.length === 0 && (!data.content || data.content.trim().length < 50)) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide either study content (50+ characters) or add at least one lesson.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate lessons if provided
+    if (lessons.length > 0) {
+      const invalidLessons = lessons.filter(lesson => 
+        !lesson.title.trim() || !lesson.content.trim()
+      );
+      if (invalidLessons.length > 0) {
+        toast({
+          title: "Validation Error",
+          description: "All lessons must have a title and content.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     // Update lesson count based on actual lessons
     const submitData = {
       ...data,
@@ -609,6 +636,14 @@ export default function UploadStudyForm() {
                 disabled={createStudy.isPending || titleExists || checkingTitle}
                 className="flex-1 bg-ministry-navy hover:bg-ministry-charcoal disabled:opacity-50"
                 data-testid="button-create-study"
+                onClick={(e) => {
+                  // Debug: log form state
+                  console.log('Form errors:', form.formState.errors);
+                  console.log('Form values:', form.getValues());
+                  console.log('Lessons:', lessons);
+                  console.log('Title exists:', titleExists);
+                  console.log('Checking title:', checkingTitle);
+                }}
               >
                 {createStudy.isPending ? "Creating..." : "Create Study"}
               </Button>
