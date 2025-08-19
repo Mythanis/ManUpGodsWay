@@ -52,24 +52,45 @@ export default function ChallengeForm({ challenge, onSubmit, onCancel, isSubmitt
   const getMondayDisplay = (releaseDate: string) => {
     if (!releaseDate) return '';
     
-    // Parse the selected date string to avoid timezone issues
-    const [year, month, day] = releaseDate.split('-').map(Number);
-    const selectedDate = new Date(year, month - 1, day); // month is 0-indexed in JS
-    
-    let mondayOfWeek;
-    
-    // Check if selected date is already a Monday (1 = Monday)
-    if (selectedDate.getDay() === 1) {
-      // Use the selected Monday directly
-      mondayOfWeek = selectedDate;
-    } else {
-      // Find the next Monday (not the Monday of the current week)
-      const daysUntilMonday = (8 - selectedDate.getDay()) % 7 || 7;
-      mondayOfWeek = new Date(selectedDate);
-      mondayOfWeek.setDate(selectedDate.getDate() + daysUntilMonday);
+    try {
+      // Parse the selected date string to avoid timezone issues
+      const [year, month, day] = releaseDate.split('-').map(Number);
+      
+      // Validate the parsed values
+      if (isNaN(year) || isNaN(month) || isNaN(day)) {
+        return '';
+      }
+      
+      const selectedDate = new Date(year, month - 1, day); // month is 0-indexed in JS
+      
+      // Check if the date is valid
+      if (isNaN(selectedDate.getTime())) {
+        return '';
+      }
+      
+      let mondayOfWeek;
+      
+      // Check if selected date is already a Monday (1 = Monday)
+      if (selectedDate.getDay() === 1) {
+        // Use the selected Monday directly
+        mondayOfWeek = selectedDate;
+      } else {
+        // Find the next Monday (not the Monday of the current week)
+        const daysUntilMonday = (8 - selectedDate.getDay()) % 7 || 7;
+        mondayOfWeek = new Date(selectedDate);
+        mondayOfWeek.setDate(selectedDate.getDate() + daysUntilMonday);
+      }
+      
+      // Validate the final date
+      if (isNaN(mondayOfWeek.getTime())) {
+        return '';
+      }
+      
+      return format(mondayOfWeek, 'MMM d, yyyy');
+    } catch (error) {
+      console.error('Error in getMondayDisplay:', error);
+      return '';
     }
-    
-    return format(mondayOfWeek, 'MMM d, yyyy');
   };
 
   const handleSubmit = () => {
