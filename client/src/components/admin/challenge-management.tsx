@@ -44,6 +44,8 @@ export default function ChallengeManagement() {
       if (!response.ok) throw new Error('Failed to fetch challenges');
       return response.json();
     },
+    staleTime: 0,
+    refetchInterval: 5000, // Poll every 5 seconds for admin challenges
   });
 
   // Fetch current week's challenge to determine which one is "Current"
@@ -54,6 +56,9 @@ export default function ChallengeManagement() {
       if (!response.ok) return null;
       return response.json();
     },
+    staleTime: 0, // Always consider data stale to enable faster updates
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchInterval: 3000, // Poll every 3 seconds for real-time updates
   });
 
   // Create challenge mutation
@@ -208,9 +213,17 @@ export default function ChallengeManagement() {
         credentials: 'include'
       }).then(res => res.json()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'challenges'] });
-      queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
-      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', 'current'] });
+      // Force immediate refetch of all challenge-related queries
+      queryClient.invalidateQueries({ queryKey: ['admin', 'challenges'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', 'current'], refetchType: 'active' });
+      
+      // Also remove stale data and force refetch
+      queryClient.removeQueries({ queryKey: ['api', 'challenges', 'current'] });
+      queryClient.refetchQueries({ queryKey: ['admin', 'challenges'] });
+      queryClient.refetchQueries({ queryKey: ['api', 'challenges'] });
+      queryClient.refetchQueries({ queryKey: ['api', 'challenges', 'current'] });
+      
       toast({
         title: "Success",
         description: "Challenge pushed to current week successfully"

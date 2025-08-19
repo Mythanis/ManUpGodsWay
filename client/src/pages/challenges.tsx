@@ -29,6 +29,8 @@ export default function Challenges() {
       if (!response.ok) throw new Error('Failed to fetch challenges');
       return response.json();
     },
+    staleTime: 0,
+    refetchInterval: 5000, // Poll every 5 seconds for challenges list
   });
 
   // Fetch current week's challenge
@@ -39,6 +41,9 @@ export default function Challenges() {
       if (!response.ok) return null;
       return response.json();
     },
+    staleTime: 0, // Always consider data stale to enable faster updates
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchInterval: 3000, // Poll every 3 seconds for real-time updates
   });
 
   // Filter and sort challenges (current and previous only, excluding current week display)
