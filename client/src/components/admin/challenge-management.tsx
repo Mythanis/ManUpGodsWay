@@ -207,11 +207,17 @@ export default function ChallengeManagement() {
 
   // Push to current week mutation
   const pushToCurrentMutation = useMutation({
-    mutationFn: (challengeId: string) =>
-      fetch(`/api/challenges/${challengeId}/push-to-current`, {
+    mutationFn: async (challengeId: string) => {
+      console.log('Making API call to push challenge to current:', challengeId);
+      const response = await fetch(`/api/challenges/${challengeId}/push-to-current`, {
         method: 'POST',
         credentials: 'include'
-      }).then(res => res.json()),
+      });
+      console.log('API response status:', response.status);
+      const data = await response.json();
+      console.log('API response data:', data);
+      return data;
+    },
     onSuccess: () => {
       // Force immediate refetch of all challenge-related queries
       queryClient.invalidateQueries({ queryKey: ['admin', 'challenges'], refetchType: 'active' });
@@ -239,8 +245,12 @@ export default function ChallengeManagement() {
   });
 
   const handlePushToCurrent = (challengeId: string, challengeTitle: string) => {
+    console.log('handlePushToCurrent called with:', { challengeId, challengeTitle });
     if (confirm(`Push "${challengeTitle}" to current week? This will override the current weekly challenge and move it to previous challenges.`)) {
+      console.log('User confirmed, calling mutation...');
       pushToCurrentMutation.mutate(challengeId);
+    } else {
+      console.log('User cancelled push to current');
     }
   };
 
