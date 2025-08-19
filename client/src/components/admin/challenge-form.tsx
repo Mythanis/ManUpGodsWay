@@ -59,22 +59,16 @@ export default function ChallengeForm({ challenge, onSubmit, onCancel, isSubmitt
       return;
     }
 
-    // Convert the date to the Monday of that week
-    const selectedDate = new Date(formData.releaseDate);
+    // Convert the date to the Monday of that week, ensuring timezone neutrality
+    // Parse as local date first to avoid timezone conversion issues
+    const [year, month, day] = formData.releaseDate.split('-').map(Number);
+    const selectedDate = new Date(year, month - 1, day); // Month is 0-indexed
     const mondayOfWeek = startOfWeek(selectedDate, { weekStartsOn: 1 });
     
     const challengeData = {
       ...formData,
       releaseDate: mondayOfWeek.toISOString()
     };
-
-    console.log('Form submission data:', {
-      selectedFormDate: formData.releaseDate,
-      selectedDateObject: selectedDate,
-      mondayOfWeek: mondayOfWeek,
-      finalISOString: mondayOfWeek.toISOString(),
-      challengeData
-    });
 
     onSubmit(challengeData);
   };
