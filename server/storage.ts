@@ -2673,7 +2673,20 @@ export class DatabaseStorage implements IStorage {
     mondayOfThisWeek.setDate(today.getDate() + daysUntilMonday);
     mondayOfThisWeek.setHours(0, 0, 0, 0);
 
-    // Update the challenge's release date to this Monday
+    // First, push all other challenges to be before this Monday if they're currently set to this Monday
+    // This ensures that only the challenge we're pushing will be the "current" one
+    await db
+      .update(challenges)
+      .set({ 
+        releaseDate: new Date(mondayOfThisWeek.getTime() - 24 * 60 * 60 * 1000), // Set to Sunday (day before Monday)
+        updatedAt: new Date() 
+      })
+      .where(and(
+        eq(challenges.releaseDate, mondayOfThisWeek),
+        not(eq(challenges.id, id))
+      ));
+
+    // Now update the target challenge's release date to this Monday
     const [challenge] = await db
       .update(challenges)
       .set({ 
