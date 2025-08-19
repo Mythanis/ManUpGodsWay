@@ -47,11 +47,12 @@ export default function Home() {
     retry: false,
   });
 
-  const { data: progress = [] } = useQuery({
+  const { data: progress = [], isLoading: progressLoading } = useQuery({
     queryKey: ["/api/progress"],
     retry: false,
     refetchInterval: 10000, // Real-time updates for user progress
     refetchIntervalInBackground: true,
+    staleTime: 5000, // Keep data fresh for 5 seconds to prevent flicker
   });
 
   const { data: currentChallenge } = useQuery({
@@ -100,11 +101,13 @@ export default function Home() {
   }
 
   // Find the most recently accessed study that's not completed
-  const currentStudy = progress
-    .filter((p: any) => !p.isCompleted)
+  // Add safety check to ensure progress is an array
+  const safeProgress = Array.isArray(progress) ? progress : [];
+  const currentStudy = safeProgress
+    .filter((p: any) => p && !p.isCompleted)
     .sort((a: any, b: any) => new Date(b.lastAccessedAt || 0).getTime() - new Date(a.lastAccessedAt || 0).getTime())[0];
   
-  const completedCount = progress.filter((p: any) => p.isCompleted).length;
+  const completedCount = safeProgress.filter((p: any) => p && p.isCompleted).length;
 
   // Prayer timer functionality
   useEffect(() => {
@@ -442,9 +445,9 @@ export default function Home() {
       <div className="px-6 mb-6">
         <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Your Journey</h2>
         
-        {currentStudy ? (
+        {currentStudy && currentStudy.study ? (
           <ProgressCard 
-            study={currentStudy} 
+            study={currentStudy.study} 
             progress={currentStudy}
             data-testid="progress-current-study"
           />

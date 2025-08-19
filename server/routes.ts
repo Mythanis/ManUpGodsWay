@@ -523,6 +523,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { studyId } = req.query;
       const progress = await storage.getUserProgress(userId, studyId as string);
+      
+      // Add debug logging to see what's happening
+      if (progress.length === 0) {
+        console.log('Progress query returned empty array for user:', userId);
+      } else {
+        console.log('Progress query returned', progress.length, 'items for user:', userId);
+      }
+      
       res.json(progress);
     } catch (error) {
       console.error("Error fetching progress:", error);
