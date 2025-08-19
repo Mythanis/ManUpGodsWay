@@ -47,10 +47,23 @@ const createStudySchema = insertStudySchema.extend({
   videoId: z.string().optional(),
 });
 
+const lessonSchema = z.object({
+  title: z.string().min(1, "Lesson title is required"),
+  content: z.string().min(1, "Lesson content is required"),
+  estimatedMinutes: z.number().min(1).default(30),
+  videoId: z.string().optional(),
+});
+
 export default function UploadStudyForm() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [titleExists, setTitleExists] = useState(false);
   const [checkingTitle, setCheckingTitle] = useState(false);
+  const [lessons, setLessons] = useState<Array<{
+    title: string;
+    content: string;
+    estimatedMinutes: number;
+    videoId?: string;
+  }>>([]);
   const { toast } = useToast();
   const { effectiveTheme } = useTheme();
   const queryClient = useQueryClient();
@@ -117,17 +130,41 @@ export default function UploadStudyForm() {
 
   const createStudy = useMutation({
     mutationFn: async (data: z.infer<typeof createStudySchema>) => {
-      await apiRequest('POST', '/api/studies', data);
+      const study = await apiRequest('POST', '/api/studies', data);
+      return study;
     },
-    onSuccess: () => {
+    onSuccess: async (study) => {
+      // Create lessons if any were defined
+      if (lessons.length > 0) {
+        try {
+          for (let i = 0; i < lessons.length; i++) {
+            const lesson = lessons[i];
+            await apiRequest('POST', `/api/studies/${study.id}/lessons`, {
+              ...lesson,
+              lessonNumber: i + 1,
+            });
+          }
+        } catch (error) {
+          console.error('Error creating lessons:', error);
+          toast({
+            title: "Warning",
+            description: "Study created but some lessons failed to save. Please edit the study to add lessons.",
+            variant: "destructive",
+          });
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
       toast({
         title: "Success",
-        description: "Study created successfully!",
+        description: lessons.length > 0 
+          ? `Study with ${lessons.length} lessons created successfully!`
+          : "Study created successfully!",
       });
       setDialogOpen(false);
       form.reset();
+      setLessons([]);
     },
     onError: (error: any) => {
       if (isUnauthorizedError(error)) {
@@ -159,10 +196,12 @@ export default function UploadStudyForm() {
   });
 
   const onSubmit = (data: any) => {
-    // Convert 'none' videoId back to undefined for database
+    // Update lesson count based on actual lessons
     const submitData = {
       ...data,
-      videoId: data.videoId === 'none' ? undefined : data.videoId
+      lessonCount: lessons.length > 0 ? lessons.length : 1,
+      videoId: data.videoId === 'none' ? undefined : data.videoId,
+      content: lessons.length > 0 ? data.content || 'See individual lessons for content.' : data.content
     };
     createStudy.mutate(submitData);
   };
@@ -412,24 +451,124 @@ export default function UploadStudyForm() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="content"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Study Content</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Full study content..."
-                      className="min-h-[120px]"
-                      {...field}
-                      data-testid="textarea-study-content"
+            {lessons.length === 0 && (
+              <FormField
+                control={form.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Study Overview Content</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Overview content (optional if using individual lessons)"
+                        className="min-h-[120px]"
+                        {...field}
+                        data-testid="textarea-study-content"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Lesson Management Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Lessons</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setLessons([...lessons, {
+                      title: `Lesson ${lessons.length + 1}`,
+                      content: '',
+                      estimatedMinutes: 30,
+                    }]);
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Lesson
+                </Button>
+              </div>
+
+              {lessons.map((lesson, index) => (
+                <Card key={index} className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Lesson {index + 1}</h4>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setLessons(lessons.filter((_, i) => i !== index));
+                        }}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                    
+                    <Input
+                      placeholder="Lesson title"
+                      value={lesson.title}
+                      onChange={(e) => {
+                        const newLessons = [...lessons];
+                        newLessons[index].title = e.target.value;
+                        setLessons(newLessons);
+                      }}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    
+                    <Textarea
+                      placeholder="Lesson content"
+                      className="min-h-[100px]"
+                      value={lesson.content}
+                      onChange={(e) => {
+                        const newLessons = [...lessons];
+                        newLessons[index].content = e.target.value;
+                        setLessons(newLessons);
+                      }}
+                    />
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        type="number"
+                        placeholder="Est. minutes"
+                        value={lesson.estimatedMinutes}
+                        onChange={(e) => {
+                          const newLessons = [...lessons];
+                          newLessons[index].estimatedMinutes = parseInt(e.target.value) || 30;
+                          setLessons(newLessons);
+                        }}
+                      />
+                      
+                      <Select
+                        value={lesson.videoId || 'none'}
+                        onValueChange={(value) => {
+                          const newLessons = [...lessons];
+                          newLessons[index].videoId = value === 'none' ? undefined : value;
+                          setLessons(newLessons);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select video" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No video</SelectItem>
+                          {videos.filter(video => video.processingStatus === 'completed').map((video) => (
+                            <SelectItem key={video.id} value={video.id}>
+                              {video.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
 
             <FormField
               control={form.control}

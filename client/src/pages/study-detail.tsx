@@ -154,6 +154,13 @@ export default function StudyDetail() {
     enabled: !!id,
   });
 
+  // Fetch lessons for this study
+  const { data: lessons = [] } = useQuery<any[]>({
+    queryKey: ["/api/studies", id, "lessons"],
+    enabled: !!id && !!study,
+    retry: false,
+  });
+
   // Update current lesson when progress data loads
   useEffect(() => {
     if (progress) {
@@ -646,14 +653,52 @@ export default function StudyDetail() {
           <div className="px-6 mb-6">
             <Card data-testid="card-content">
               <CardContent className="p-6">
-                <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Study Content</h2>
-                <div className="prose prose-sm max-w-none text-ministry-slate" data-testid="text-study-content">
-                  {study.content ? (
-                    <div dangerouslySetInnerHTML={{ __html: study.content.replace(/\n/g, '<br>') }} />
-                  ) : (
-                    <p>No content available for this study.</p>
-                  )}
-                </div>
+                {lessons.length > 0 ? (
+                  <>
+                    <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Study Lessons</h2>
+                    <div className="space-y-3">
+                      {lessons.map((lesson: any) => (
+                        <div key={lesson.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-ministry-charcoal dark:text-white">
+                                Lesson {lesson.lessonNumber}: {lesson.title}
+                              </h3>
+                              <div className="flex items-center space-x-4 mt-2 text-sm text-ministry-slate">
+                                <span className="flex items-center">
+                                  <Clock className="w-4 h-4 mr-1" />
+                                  {lesson.estimatedMinutes} minutes
+                                </span>
+                                {lesson.videoId && (
+                                  <span className="flex items-center">
+                                    <Play className="w-4 h-4 mr-1" />
+                                    Video included
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <Link href={`/study/${id}/lesson/${lesson.lessonNumber}`}>
+                              <Button variant="outline" size="sm">
+                                Start Lesson
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Study Content</h2>
+                    <div className="prose prose-sm max-w-none text-ministry-slate" data-testid="text-study-content">
+                      {study.content ? (
+                        <div dangerouslySetInnerHTML={{ __html: study.content.replace(/\n/g, '<br>') }} />
+                      ) : (
+                        <p>No content available for this study.</p>
+                      )}
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>

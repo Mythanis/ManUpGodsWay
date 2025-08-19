@@ -6,6 +6,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   insertStudySchema, 
+  insertLessonSchema,
   insertDiscussionSchema, 
   insertDiscussionReplySchema,
   insertDiscussionSubscriptionSchema,
@@ -407,6 +408,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting study:", error);
       res.status(500).json({ message: "Failed to delete study" });
+    }
+  });
+
+  // Lessons routes
+  app.get('/api/lessons/:studyId/:lessonNumber', async (req: any, res) => {
+    try {
+      const { studyId, lessonNumber } = req.params;
+      const lesson = await storage.getLesson(studyId, parseInt(lessonNumber));
+      
+      if (!lesson) {
+        return res.status(404).json({ message: "Lesson not found" });
+      }
+      
+      res.json(lesson);
+    } catch (error) {
+      console.error("Error fetching lesson:", error);
+      res.status(500).json({ message: "Failed to fetch lesson" });
+    }
+  });
+
+  app.get('/api/studies/:studyId/lessons', async (req: any, res) => {
+    try {
+      const { studyId } = req.params;
+      const lessons = await storage.getLessonsByStudy(studyId);
+      res.json(lessons);
+    } catch (error) {
+      console.error("Error fetching lessons:", error);
+      res.status(500).json({ message: "Failed to fetch lessons" });
+    }
+  });
+
+  app.post('/api/studies/:studyId/lessons', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { studyId } = req.params;
+      const lessonData = insertLessonSchema.parse({
+        ...req.body,
+        studyId
+      });
+      
+      const lesson = await storage.createLesson(lessonData);
+      res.status(201).json(lesson);
+    } catch (error) {
+      console.error("Error creating lesson:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid lesson data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create lesson" });
+    }
+  });
+
+  app.put('/api/lessons/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const lessonData = insertLessonSchema.partial().parse(req.body);
+      const lesson = await storage.updateLesson(req.params.id, lessonData);
+      res.json(lesson);
+    } catch (error) {
+      console.error("Error updating lesson:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid lesson data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update lesson" });
+    }
+  });
+
+  app.delete('/api/lessons/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      await storage.deleteLesson(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting lesson:", error);
+      res.status(500).json({ message: "Failed to delete lesson" });
     }
   });
 

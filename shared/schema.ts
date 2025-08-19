@@ -96,6 +96,22 @@ export const studies = pgTable("studies", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Individual lessons within studies
+export const lessons = pgTable("lessons", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studyId: varchar("study_id").notNull().references(() => studies.id, { onDelete: 'cascade' }),
+  lessonNumber: integer("lesson_number").notNull(),
+  title: varchar("title").notNull(),
+  content: text("content"),
+  videoId: varchar("video_id").references(() => videos.id),
+  videoUrl: varchar("video_url"),
+  estimatedMinutes: integer("estimated_minutes").default(30),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  unique().on(table.studyId, table.lessonNumber), // Ensure unique lesson numbers per study
+]);
+
 // User progress tracking
 export const userProgress = pgTable("user_progress", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -291,7 +307,13 @@ export const studiesRelations = relations(studies, ({ one, many }) => ({
   progress: many(userProgress),
   ratings: many(studyRatings),
   discussions: many(discussions),
+  lessons: many(lessons),
   video: one(videos, { fields: [studies.videoId], references: [videos.id] }),
+}));
+
+export const lessonsRelations = relations(lessons, ({ one }) => ({
+  study: one(studies, { fields: [lessons.studyId], references: [studies.id] }),
+  video: one(videos, { fields: [lessons.videoId], references: [videos.id] }),
 }));
 
 export const discussionsRelations = relations(discussions, ({ one, many }) => ({
@@ -407,6 +429,19 @@ export const insertStudySchema = createInsertSchema(studies, {
   ratingCount: true, 
   createdAt: true, 
   updatedAt: true 
+});
+
+export const insertLessonSchema = createInsertSchema(lessons, {
+  title: z.string().min(1, "Lesson title is required"),
+  content: z.string().min(1, "Lesson content is required"),
+  lessonNumber: z.number().int().min(1, "Lesson number must be at least 1"),
+  estimatedMinutes: z.number().int().min(1).default(30),
+  videoId: z.string().optional(),
+  videoUrl: z.string().optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const insertDiscussionSchema = createInsertSchema(discussions).omit({
@@ -527,6 +562,8 @@ export type InsertVideo = z.infer<typeof insertVideoSchema>;
 
 export type Study = typeof studies.$inferSelect;
 export type InsertStudy = z.infer<typeof insertStudySchema>;
+export type Lesson = typeof lessons.$inferSelect;
+export type InsertLesson = z.infer<typeof insertLessonSchema>;
 export type Discussion = typeof discussions.$inferSelect;
 export type InsertDiscussion = z.infer<typeof insertDiscussionSchema>;
 export type DiscussionReply = typeof discussionReplies.$inferSelect;

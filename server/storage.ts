@@ -1,6 +1,7 @@
 import {
   users,
   studies,
+  lessons,
   discussions,
   discussionReplies,
   discussionSubscriptions,
@@ -22,6 +23,8 @@ import {
   type UpsertUser,
   type Study,
   type InsertStudy,
+  type Lesson,
+  type InsertLesson,
   type Discussion,
   type InsertDiscussion,
   type DiscussionReply,
@@ -379,6 +382,41 @@ export class DatabaseStorage implements IStorage {
 
   async deleteStudy(id: string): Promise<void> {
     await db.delete(studies).where(eq(studies.id, id));
+  }
+
+  // Lesson operations
+  async getLesson(studyId: string, lessonNumber: number): Promise<Lesson | undefined> {
+    const [lesson] = await db
+      .select()
+      .from(lessons)
+      .where(and(eq(lessons.studyId, studyId), eq(lessons.lessonNumber, lessonNumber)));
+    return lesson;
+  }
+
+  async getLessonsByStudy(studyId: string): Promise<Lesson[]> {
+    return await db
+      .select()
+      .from(lessons)
+      .where(eq(lessons.studyId, studyId))
+      .orderBy(lessons.lessonNumber);
+  }
+
+  async createLesson(lesson: InsertLesson): Promise<Lesson> {
+    const [newLesson] = await db.insert(lessons).values(lesson).returning();
+    return newLesson;
+  }
+
+  async updateLesson(id: string, lesson: Partial<InsertLesson>): Promise<Lesson> {
+    const [updatedLesson] = await db
+      .update(lessons)
+      .set(lesson)
+      .where(eq(lessons.id, id))
+      .returning();
+    return updatedLesson;
+  }
+
+  async deleteLesson(id: string): Promise<void> {
+    await db.delete(lessons).where(eq(lessons.id, id));
   }
 
   async searchStudies(query: string): Promise<Study[]> {
