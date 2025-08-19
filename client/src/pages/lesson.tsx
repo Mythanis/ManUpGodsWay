@@ -215,10 +215,26 @@ export default function Lesson() {
             <Button
               onClick={async () => {
                 try {
-                  const { apiRequest } = await import("@/lib/queryClient");
-                  const { queryClient } = await import("@/lib/queryClient");
+                  // Use fetch with credentials to ensure session auth works
+                  const response = await fetch(`/api/lessons/${studyId}/${lessonNumber}/complete`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    credentials: 'include', // Include session cookies
+                  });
                   
-                  await apiRequest('POST', `/lessons/${studyId}/${lessonNumber}/complete`);
+                  if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API Error:', response.status, errorText);
+                    throw new Error(`Failed to mark lesson completed: ${response.status} - ${errorText}`);
+                  }
+                  
+                  const result = await response.json();
+                  console.log('Lesson completion result:', result);
+                  
+                  // Import query client after successful API call
+                  const { queryClient } = await import("@/lib/queryClient");
                   
                   // Invalidate progress queries to update UI
                   queryClient.invalidateQueries({ queryKey: ["/api/progress"] });
