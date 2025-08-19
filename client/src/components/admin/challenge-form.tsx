@@ -59,21 +59,23 @@ export default function ChallengeForm({ challenge, onSubmit, onCancel, isSubmitt
       return;
     }
 
-    // Parse the selected date and find the Monday of that week at noon UTC
-    const selectedDate = new Date(formData.releaseDate + 'T12:00:00.000Z');
+    // Parse the selected date string into year, month, day to avoid timezone issues
+    const [year, month, day] = formData.releaseDate.split('-').map(Number);
     
-    // Always find the Monday of the selected week
-    const mondayOfWeek = startOfWeek(selectedDate, { weekStartsOn: 1 });
+    // Create date object for the selected date
+    const selectedDate = new Date(year, month - 1, day); // month is 0-indexed in JS
     
-    // If the selected date is already a Monday, use it at noon UTC
-    // Otherwise use the calculated Monday at noon UTC
-    if (selectedDate.getUTCDay() === 1) {
-      // Selected date is already Monday - use it but set to noon
-      mondayOfWeek.setUTCFullYear(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate());
+    let mondayOfWeek;
+    
+    // Check if selected date is already a Monday (1 = Monday)
+    if (selectedDate.getDay() === 1) {
+      // Use the selected Monday directly
+      mondayOfWeek = new Date(year, month - 1, day, 12, 0, 0); // Set to noon local time
+    } else {
+      // Find the Monday of that week
+      const mondayCalc = startOfWeek(selectedDate, { weekStartsOn: 1 });
+      mondayOfWeek = new Date(mondayCalc.getFullYear(), mondayCalc.getMonth(), mondayCalc.getDate(), 12, 0, 0);
     }
-    
-    // Always set to noon UTC to prevent timezone shift issues
-    mondayOfWeek.setUTCHours(12, 0, 0, 0);
     
     const challengeData = {
       ...formData,
