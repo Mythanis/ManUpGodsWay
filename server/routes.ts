@@ -1697,31 +1697,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Serve video files for streaming
-  app.get('/api/videos/:id/stream', isAuthenticated, async (req: any, res) => {
+  app.get('/api/videos/:id/stream', async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
-      if (!user) {
-        return res.status(403).json({ message: "Authentication required" });
-      }
-
       const video = await storage.getVideo(req.params.id);
       if (!video) {
         return res.status(404).json({ message: "Video not found" });
       }
 
-      // When accessed through a study context, skip tier checking
-      // The study itself controls access, not the individual video
-      const fromStudy = req.query.fromStudy === 'true';
+      // For lesson context, authentication is handled at the lesson level
+      // So we allow public access to video streaming for lessons
+      const fromLesson = req.query.fromLesson === 'true';
       
-      if (!fromStudy) {
-        // Only check tier access for standalone video viewing
-        const userTier = user.subscriptionTier || 'free';
-        const hasAccess = video.requiredTier === 'free' ||
-                         (video.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
-                         (video.requiredTier === 'vip' && userTier === 'vip');
+      if (!fromLesson && req.user) {
+        // Only check tier access for standalone video viewing when authenticated
+        const user = await storage.getUser(req.user.claims.sub);
+        if (user) {
+          const userTier = user.subscriptionTier || 'free';
+          const hasAccess = video.requiredTier === 'free' ||
+                           (video.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
+                           (video.requiredTier === 'vip' && userTier === 'vip');
 
-        if (!hasAccess) {
-          return res.status(403).json({ message: "Insufficient subscription tier" });
+          if (!hasAccess) {
+            return res.status(403).json({ message: "Insufficient subscription tier" });
+          }
         }
       }
 

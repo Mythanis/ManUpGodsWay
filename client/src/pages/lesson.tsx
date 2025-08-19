@@ -113,6 +113,13 @@ export default function Lesson() {
                         controls
                         className="w-full h-full object-cover"
                         preload="metadata"
+                        crossOrigin="anonymous"
+                        onError={(e) => {
+                          console.error('Video playback error:', e);
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
                       >
                         <source src={lesson.videoUrl} type="video/mp4" />
                         <source src={lesson.videoUrl} type="video/webm" />
@@ -125,8 +132,18 @@ export default function Lesson() {
                         controls
                         className="w-full h-full object-cover"
                         preload="metadata"
+                        crossOrigin="anonymous"
+                        onError={(e) => {
+                          console.error('Video stream error:', e);
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                        onLoadStart={() => console.log('Video loading started')}
+                        onCanPlay={() => console.log('Video can play')}
+                        onLoadedData={() => console.log('Video data loaded')}
                       >
-                        <source src={`/api/videos/${lesson.videoUrl}/stream`} type="video/mp4" />
+                        <source src={`/api/videos/${lesson.videoUrl}/stream?fromLesson=true`} type="video/mp4" />
                         Your browser does not support the video tag.
                       </video>
                     )
@@ -136,8 +153,18 @@ export default function Lesson() {
                       controls
                       className="w-full h-full object-cover"
                       preload="metadata"
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        console.error('Video ID stream error:', e);
+                        e.currentTarget.style.display = 'none';
+                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = 'flex';
+                      }}
+                      onLoadStart={() => console.log('Video loading started')}
+                      onCanPlay={() => console.log('Video can play')}
+                      onLoadedData={() => console.log('Video data loaded')}
                     >
-                      <source src={`/api/videos/${lesson.videoId}/stream`} type="video/mp4" />
+                      <source src={`/api/videos/${lesson.videoId}/stream?fromLesson=true`} type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
                   ) : (
@@ -148,6 +175,18 @@ export default function Lesson() {
                       </div>
                     </div>
                   )}
+                  
+                  {/* Fallback error message (hidden by default) */}
+                  <div 
+                    className="text-center text-ministry-slate flex items-center justify-center h-full"
+                    style={{ display: 'none' }}
+                  >
+                    <div>
+                      <div className="text-4xl mb-2">⚠️</div>
+                      <p>Video cannot be played at this time</p>
+                      <p className="text-sm mt-2">Please check your connection or try again later</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
