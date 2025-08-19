@@ -50,8 +50,26 @@ export default function ChallengeForm({ challenge, onSubmit, onCancel, isSubmitt
   }, [challenge]);
 
   const getMondayDisplay = (releaseDate: string) => {
-    const date = new Date(releaseDate);
-    return format(date, 'MMM d, yyyy');
+    if (!releaseDate) return '';
+    
+    // Parse the selected date string to avoid timezone issues
+    const [year, month, day] = releaseDate.split('-').map(Number);
+    const selectedDate = new Date(year, month - 1, day); // month is 0-indexed in JS
+    
+    let mondayOfWeek;
+    
+    // Check if selected date is already a Monday (1 = Monday)
+    if (selectedDate.getDay() === 1) {
+      // Use the selected Monday directly
+      mondayOfWeek = selectedDate;
+    } else {
+      // Find the next Monday (not the Monday of the current week)
+      const daysUntilMonday = (8 - selectedDate.getDay()) % 7 || 7;
+      mondayOfWeek = new Date(selectedDate);
+      mondayOfWeek.setDate(selectedDate.getDate() + daysUntilMonday);
+    }
+    
+    return format(mondayOfWeek, 'MMM d, yyyy');
   };
 
   const handleSubmit = () => {
@@ -79,10 +97,12 @@ export default function ChallengeForm({ challenge, onSubmit, onCancel, isSubmitt
       mondayOfWeek = new Date(year, month - 1, day, 12, 0, 0);
       console.log('Using selected Monday directly:', mondayOfWeek);
     } else {
-      // Find the Monday of that week
-      const mondayCalc = startOfWeek(selectedDate, { weekStartsOn: 1 });
-      mondayOfWeek = new Date(mondayCalc.getFullYear(), mondayCalc.getMonth(), mondayCalc.getDate(), 12, 0, 0);
-      console.log('Calculated Monday from week:', mondayOfWeek);
+      // Find the next Monday (not the Monday of the current week)
+      const daysUntilMonday = (8 - selectedDate.getDay()) % 7 || 7;
+      mondayOfWeek = new Date(selectedDate);
+      mondayOfWeek.setDate(selectedDate.getDate() + daysUntilMonday);
+      mondayOfWeek.setHours(12, 0, 0, 0); // Set to noon
+      console.log('Calculated next Monday:', mondayOfWeek);
     }
     
     console.log('Final Monday ISO string:', mondayOfWeek.toISOString());
