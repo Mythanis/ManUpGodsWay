@@ -27,7 +27,7 @@ export default function Navigation() {
     ? [...navItems, { id: 'admin', path: '/admin', label: 'Admin', icon: Settings }]
     : navItems;
 
-  const maxVisibleItems = 4;
+  const maxVisibleItems = 5;
   const shouldShowScrollControls = allNavItems.length > maxVisibleItems;
 
   // Check scroll position and update arrow visibility
@@ -69,16 +69,16 @@ export default function Navigation() {
 
   return (
     <nav 
-      className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-card border-t border-border py-2 z-50"
+      className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-card border-t border-border z-50 h-16"
       data-testid="navigation-bottom"
     >
-      <div className="relative flex items-center">
+      <div className="relative flex items-center h-full">
         {/* Left Arrow */}
         {shouldShowScrollControls && canScrollLeft && (
           <Button
             variant="ghost"
             size="sm"
-            className="absolute left-0 z-10 h-12 w-6 p-0 bg-card/80 backdrop-blur-sm border-r border-border rounded-none"
+            className="absolute left-0 z-10 h-full w-6 p-0 bg-card/90 backdrop-blur-sm border-r border-border rounded-none"
             onClick={() => scrollToDirection('left')}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -88,8 +88,8 @@ export default function Navigation() {
         {/* Scrollable container */}
         <div 
           ref={scrollContainerRef}
-          className={`flex items-center overflow-x-auto scrollbar-hide ${
-            shouldShowScrollControls ? 'mx-6' : 'mx-4'
+          className={`flex items-center h-full overflow-x-auto scrollbar-hide ${
+            shouldShowScrollControls ? 'mx-6' : 'mx-2'
           }`}
           style={{
             scrollbarWidth: 'none',
@@ -97,7 +97,7 @@ export default function Navigation() {
           }}
           onWheel={handleWheel}
         >
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center h-full">
             {allNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.path || 
@@ -108,15 +108,15 @@ export default function Navigation() {
                 <Link key={item.id} href={item.path}>
                   <Button
                     variant="ghost"
-                    className={`flex flex-col items-center p-2 min-w-[64px] flex-shrink-0 ${
+                    className={`flex flex-col items-center justify-center h-full px-3 py-1 min-w-[60px] max-w-[70px] flex-shrink-0 rounded-none ${
                       isActive 
-                        ? 'text-foreground font-semibold' 
-                        : 'text-muted-foreground hover:text-foreground'
+                        ? 'text-ministry-gold font-semibold bg-ministry-gold/10' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                     }`}
                     data-testid={`nav-${item.id}`}
                   >
-                    <Icon className="w-5 h-5 mb-1" />
-                    <span className="font-medium text-xs whitespace-nowrap">
+                    <Icon className="w-4 h-4 mb-0.5 flex-shrink-0" />
+                    <span className="font-medium text-[10px] leading-tight truncate w-full text-center">
                       {item.label}
                     </span>
                   </Button>
@@ -131,15 +131,13 @@ export default function Navigation() {
           <Button
             variant="ghost"
             size="sm"
-            className="absolute right-0 z-10 h-12 w-6 p-0 bg-card/80 backdrop-blur-sm border-l border-border rounded-none"
+            className="absolute right-0 z-10 h-full w-6 p-0 bg-card/90 backdrop-blur-sm border-l border-border rounded-none"
             onClick={() => scrollToDirection('right')}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         )}
       </div>
-
-
     </nav>
   );
 }

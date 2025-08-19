@@ -60,6 +60,19 @@
   --ministry-success: 158 64% 52%;
 }
 
+/* Ministry color utilities */
+.text-ministry-gold {
+  color: hsl(var(--ministry-gold));
+}
+
+.bg-ministry-gold {
+  background-color: hsl(var(--ministry-gold));
+}
+
+.bg-ministry-gold\/10 {
+  background-color: hsl(var(--ministry-gold) / 0.1);
+}
+
 /* Mobile viewport fixes for keyboards */
 @supports (-webkit-touch-callout: none) {
   /* iOS Safari */
