@@ -53,10 +53,10 @@ export default function Home() {
     refetchIntervalInBackground: true,
   });
 
-  const { data: featuredStudy } = useQuery({
-    queryKey: ["/api/studies/featured"],
+  const { data: currentChallenge } = useQuery({
+    queryKey: ["/api/challenges/current"],
     retry: false,
-    refetchInterval: 8000, // Real-time updates for featured study
+    refetchInterval: 8000, // Real-time updates for current challenge
     refetchIntervalInBackground: true,
   });
 
@@ -391,36 +391,42 @@ export default function Home() {
         </Card>
       </div>
 
-      {/* Featured Study Section */}
-      {featuredStudy && (
+      {/* This Week's Challenge Section */}
+      {currentChallenge && (
         <div className="px-6 mb-6">
-          <Card className="bg-gradient-to-br from-ministry-steel to-ministry-navy dark:from-featured-dark dark:to-featured-dark-secondary text-white relative overflow-hidden" data-testid="card-featured-study">
+          <Card className="bg-gradient-to-br from-ministry-steel to-ministry-navy dark:from-featured-dark dark:to-featured-dark-secondary text-white relative overflow-hidden" data-testid="card-current-challenge">
             <CardContent className="p-6">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
               <div className="relative z-10">
                 <div className="inline-flex items-center bg-ministry-gold/20 text-ministry-gold px-3 py-1 rounded-full text-xs font-medium mb-3">
-                  <Play className="w-3 h-3 mr-1" fill="currentColor" />
-                  Featured Study
+                  <Target className="w-3 h-3 mr-1" fill="currentColor" />
+                  This Week's Challenge
                 </div>
-                <h3 className="text-lg font-bold mb-2" data-testid="text-featured-study-title">
-                  {featuredStudy.title}
+                <h3 className="text-lg font-bold mb-2" data-testid="text-current-challenge-title">
+                  {(currentChallenge as any)?.title}
                 </h3>
-                <p className="text-blue-100 text-sm mb-4" data-testid="text-featured-study-description">
-                  {featuredStudy.description}
+                <p className="text-blue-100 text-sm mb-4" data-testid="text-current-challenge-description">
+                  {(currentChallenge as any)?.description}
                 </p>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4 text-xs text-blue-200">
-                    <span>{featuredStudy.lessonCount} lessons</span>
-                    <span>{featuredStudy.estimatedHours}h</span>
-                    <span className="capitalize">{featuredStudy.difficulty}</span>
+                    <span className="flex items-center">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      Week of {formatLocalDate(new Date((currentChallenge as any)?.releaseDate), { 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })}
+                    </span>
+                    <span className="capitalize">{(currentChallenge as any)?.topic}</span>
                   </div>
-                  <Button 
-                    className="bg-white/20 text-white hover:bg-white/30 border border-white/30"
-                    data-testid="button-start-featured-study"
-                    onClick={() => window.location.href = `/studies/${featuredStudy.id}`}
-                  >
-                    Start Study
-                  </Button>
+                  <Link href="/challenges">
+                    <Button 
+                      className="bg-white/20 text-white hover:bg-white/30 border border-white/30"
+                      data-testid="button-view-challenge"
+                    >
+                      View Challenge
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </CardContent>
