@@ -2611,16 +2611,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createChallenge(challengeData: InsertChallenge): Promise<Challenge> {
+    console.log('Storage createChallenge received:', {
+      rawData: challengeData,
+      releaseDateType: typeof challengeData.releaseDate,
+      releaseDateValue: challengeData.releaseDate
+    });
+    
     // Ensure releaseDate is a proper Date object
     const processedData = {
       ...challengeData,
       releaseDate: new Date(challengeData.releaseDate)
     };
     
+    console.log('Storage createChallenge processed:', {
+      processedReleaseDate: processedData.releaseDate,
+      processedReleaseDateISO: processedData.releaseDate.toISOString()
+    });
+    
     const [challenge] = await db
       .insert(challenges)
       .values(processedData)
       .returning();
+      
+    console.log('Storage createChallenge result:', {
+      challengeId: challenge.id,
+      challengeReleaseDate: challenge.releaseDate,
+      challengeReleaseDateType: typeof challenge.releaseDate
+    });
+    
     return challenge;
   }
 

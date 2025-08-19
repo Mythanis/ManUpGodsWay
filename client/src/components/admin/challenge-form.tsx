@@ -68,6 +68,14 @@ export default function ChallengeForm({ challenge, onSubmit, onCancel, isSubmitt
       releaseDate: mondayOfWeek.toISOString()
     };
 
+    console.log('Form submission data:', {
+      selectedFormDate: formData.releaseDate,
+      selectedDateObject: selectedDate,
+      mondayOfWeek: mondayOfWeek,
+      finalISOString: mondayOfWeek.toISOString(),
+      challengeData
+    });
+
     onSubmit(challengeData);
   };
 
