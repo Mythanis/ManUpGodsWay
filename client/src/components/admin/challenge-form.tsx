@@ -59,19 +59,21 @@ export default function ChallengeForm({ challenge, onSubmit, onCancel, isSubmitt
       return;
     }
 
-    // Parse the selected date and convert to Monday at noon UTC to avoid timezone issues
+    // Parse the selected date and find the Monday of that week at noon UTC
     const selectedDate = new Date(formData.releaseDate + 'T12:00:00.000Z');
     
-    // If the selected date is already a Monday, use it directly
-    // Otherwise, find the Monday of that week
-    let mondayOfWeek;
-    if (selectedDate.getUTCDay() === 1) { // 1 = Monday
-      mondayOfWeek = selectedDate;
-    } else {
-      mondayOfWeek = startOfWeek(selectedDate, { weekStartsOn: 1 });
-      // Set to noon UTC to ensure the date doesn't shift due to timezone differences
-      mondayOfWeek.setUTCHours(12, 0, 0, 0);
+    // Always find the Monday of the selected week
+    const mondayOfWeek = startOfWeek(selectedDate, { weekStartsOn: 1 });
+    
+    // If the selected date is already a Monday, use it at noon UTC
+    // Otherwise use the calculated Monday at noon UTC
+    if (selectedDate.getUTCDay() === 1) {
+      // Selected date is already Monday - use it but set to noon
+      mondayOfWeek.setUTCFullYear(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate());
     }
+    
+    // Always set to noon UTC to prevent timezone shift issues
+    mondayOfWeek.setUTCHours(12, 0, 0, 0);
     
     const challengeData = {
       ...formData,
