@@ -21,6 +21,7 @@
 - **Differentiated Challenge Visibility**: Admin challenge management shows all challenges (past, current, future) with visual status badges and intelligent sorting (Future → Current → Past), while user challenges page displays only current and previous challenges to prevent spoilers
 - **Real-time Challenge Management**: Enhanced push-to-current functionality with immediate UI updates through direct cache manipulation, smart duplicate detection preventing unnecessary operations, visual status indicators (Current/Future/Past badges), and intelligent button display logic that only shows push option for non-current challenges
 - **Unified Color Scheme**: Updated all yellow/gold colors throughout the application to use RGB 251,208,0 (HSL 50, 100%, 49%) for consistent visual branding across buttons, badges, tier indicators, challenge cards, stars, and accent elements
+- **Challenge Date Selection Fix**: Resolved critical bug where Monday date selection was defaulting to previous Monday instead of selected/next Monday, implemented proper next-Monday calculation logic with comprehensive validation and error handling for accurate challenge release date management
 
 # User Preferences
 Preferred communication style: Simple, everyday language.
