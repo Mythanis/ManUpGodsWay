@@ -46,12 +46,12 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
           <Progress value={progressPercent} className="h-2 mb-2" data-testid="progress-bar" />
         </div>
         
-        <Link href={isStudyCompleted ? `/studies/${study.id}` : `/study/${study.id}/lesson/${currentLesson}`}>
+        <Link href={`/studies/${study.id}`}>
           <Button 
             className="w-full bg-ministry-charcoal text-white py-3 rounded-xl font-medium hover:bg-ministry-steel"
             data-testid="button-continue-study"
           >
-            {isStudyCompleted ? "Review Study" : "Continue Study"}
+            Continue Study
           </Button>
         </Link>
       </CardContent>
