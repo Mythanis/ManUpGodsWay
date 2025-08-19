@@ -225,13 +225,8 @@ export default function Lesson() {
                   });
                   
                   if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('API Error:', response.status, errorText);
-                    throw new Error(`Failed to mark lesson completed: ${response.status} - ${errorText}`);
+                    throw new Error(`Failed to mark lesson completed: ${response.status}`);
                   }
-                  
-                  const result = await response.json();
-                  console.log('Lesson completion result:', result);
                   
                   // Import query client after successful API call
                   const { queryClient } = await import("@/lib/queryClient");

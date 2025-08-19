@@ -500,7 +500,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mark lesson completed
   app.post('/api/lessons/:studyId/:lessonNumber/complete', isAuthenticated, async (req: any, res) => {
     try {
-      console.log('Lesson completion request:', req.params);
       const { studyId, lessonNumber } = req.params;
       const lessonNum = parseInt(lessonNumber);
       
@@ -509,15 +508,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const userId = req.user.claims.sub;
-      console.log('Marking lesson completed for user:', userId, 'study:', studyId, 'lesson:', lessonNum);
-      
       const updatedProgress = await storage.markLessonCompleted(userId, studyId, lessonNum);
-      console.log('Updated progress:', updatedProgress);
       
       res.json(updatedProgress);
     } catch (error) {
       console.error('Error marking lesson completed:', error);
-      res.status(500).json({ message: 'Failed to mark lesson completed', error: error.message });
+      res.status(500).json({ message: 'Failed to mark lesson completed' });
     }
   });
 

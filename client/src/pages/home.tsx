@@ -99,7 +99,11 @@ export default function Home() {
     );
   }
 
-  const currentStudy = progress.find((p: any) => !p.isCompleted);
+  // Find the most recently accessed study that's not completed
+  const currentStudy = progress
+    .filter((p: any) => !p.isCompleted)
+    .sort((a: any, b: any) => new Date(b.lastAccessedAt || 0).getTime() - new Date(a.lastAccessedAt || 0).getTime())[0];
+  
   const completedCount = progress.filter((p: any) => p.isCompleted).length;
 
   // Prayer timer functionality

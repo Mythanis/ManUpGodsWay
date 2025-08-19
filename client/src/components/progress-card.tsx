@@ -10,6 +10,9 @@ interface ProgressCardProps {
 
 export default function ProgressCard({ study, progress }: ProgressCardProps) {
   const progressPercent = Math.round((progress.completedLessons / (study.lessonCount || 1)) * 100);
+  const actualCompletedLessons = progress.completedLessons || 0;
+  const currentLesson = progress.currentLesson || 1;
+  const isStudyCompleted = actualCompletedLessons >= (study.lessonCount || 1);
 
   return (
     <Card className="shadow-sm border border-gray-100" data-testid="progress-card">
@@ -22,13 +25,19 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
             <p className="text-sm text-muted-foreground" data-testid="text-study-info">
               {study.lessonCount}-lesson study series
             </p>
+            <p className="text-xs text-ministry-steel mt-1">
+              {isStudyCompleted 
+                ? "All lessons completed" 
+                : `Currently on: Lesson ${currentLesson}`
+              }
+            </p>
           </div>
           <div className="text-right">
             <p className="text-ministry-steel font-bold text-lg" data-testid="text-progress-percent">
               {progressPercent}%
             </p>
             <p className="text-xs text-ministry-slate" data-testid="text-progress-fraction">
-              {progress.completedLessons} of {study.lessonCount} complete
+              {actualCompletedLessons} of {study.lessonCount} complete
             </p>
           </div>
         </div>
@@ -37,12 +46,12 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
           <Progress value={progressPercent} className="h-2 mb-2" data-testid="progress-bar" />
         </div>
         
-        <Link href={`/studies/${study.id}`}>
+        <Link href={isStudyCompleted ? `/studies/${study.id}` : `/study/${study.id}/lesson/${currentLesson}`}>
           <Button 
             className="w-full bg-ministry-charcoal text-white py-3 rounded-xl font-medium hover:bg-ministry-steel"
             data-testid="button-continue-study"
           >
-            Continue Study
+            {isStudyCompleted ? "Review Study" : "Continue Study"}
           </Button>
         </Link>
       </CardContent>
