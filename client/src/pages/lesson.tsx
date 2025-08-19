@@ -42,7 +42,7 @@ export default function Lesson() {
   });
 
   const handleClose = () => {
-    setLocation(`/study/${studyId}`);
+    setLocation(`/studies/${studyId}`);
   };
 
   const handleShowDiscussions = () => {
