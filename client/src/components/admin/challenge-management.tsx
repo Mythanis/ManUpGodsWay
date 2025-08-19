@@ -52,11 +52,18 @@ export default function ChallengeManagement() {
   const { data: currentWeekChallenge } = useQuery({
     queryKey: ['api', 'challenges', 'current'],
     queryFn: async () => {
-      const response = await fetch('/api/challenges/current', { credentials: 'include' });
+      const response = await fetch(`/api/challenges/current?t=${Date.now()}`, { 
+        credentials: 'include',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
       if (!response.ok) return null;
       return response.json();
     },
     staleTime: 0, // Always consider data stale to enable faster updates
+    gcTime: 0, // Don't cache at all (gcTime is the new name for cacheTime)
     refetchOnWindowFocus: true, // Refetch when window gains focus
     refetchInterval: 3000, // Poll every 3 seconds for real-time updates
   });
@@ -208,27 +215,29 @@ export default function ChallengeManagement() {
   // Push to current week mutation
   const pushToCurrentMutation = useMutation({
     mutationFn: async (challengeId: string) => {
-      console.log('Making API call to push challenge to current:', challengeId);
       const response = await fetch(`/api/challenges/${challengeId}/push-to-current`, {
         method: 'POST',
         credentials: 'include'
       });
-      console.log('API response status:', response.status);
       const data = await response.json();
-      console.log('API response data:', data);
       return data;
     },
     onSuccess: () => {
-      // Force immediate refetch of all challenge-related queries
-      queryClient.invalidateQueries({ queryKey: ['admin', 'challenges'], refetchType: 'active' });
-      queryClient.invalidateQueries({ queryKey: ['api', 'challenges'], refetchType: 'active' });
-      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', 'current'], refetchType: 'active' });
-      
-      // Also remove stale data and force refetch
+      // Remove all cached data and force immediate refetch with cache busting
+      queryClient.removeQueries({ queryKey: ['admin', 'challenges'] });
+      queryClient.removeQueries({ queryKey: ['api', 'challenges'] });
       queryClient.removeQueries({ queryKey: ['api', 'challenges', 'current'] });
-      queryClient.refetchQueries({ queryKey: ['admin', 'challenges'] });
-      queryClient.refetchQueries({ queryKey: ['api', 'challenges'] });
-      queryClient.refetchQueries({ queryKey: ['api', 'challenges', 'current'] });
+      
+      // Add a small delay then force refetch to ensure cache is cleared
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['admin', 'challenges'], type: 'active' });
+        queryClient.refetchQueries({ queryKey: ['api', 'challenges'], type: 'active' });
+        queryClient.refetchQueries({ queryKey: ['api', 'challenges', 'current'], type: 'active' });
+      }, 100);
+      
+      // Also invalidate to trigger refetch on other components
+      queryClient.invalidateQueries({ queryKey: ['admin'] });
+      queryClient.invalidateQueries({ queryKey: ['api'] });
       
       toast({
         title: "Success",
@@ -245,12 +254,8 @@ export default function ChallengeManagement() {
   });
 
   const handlePushToCurrent = (challengeId: string, challengeTitle: string) => {
-    console.log('handlePushToCurrent called with:', { challengeId, challengeTitle });
     if (confirm(`Push "${challengeTitle}" to current week? This will override the current weekly challenge and move it to previous challenges.`)) {
-      console.log('User confirmed, calling mutation...');
       pushToCurrentMutation.mutate(challengeId);
-    } else {
-      console.log('User cancelled push to current');
     }
   };
 

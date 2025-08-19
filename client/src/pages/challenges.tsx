@@ -37,11 +37,18 @@ export default function Challenges() {
   const { data: currentWeekChallenge } = useQuery({
     queryKey: ['api', 'challenges', 'current'],
     queryFn: async () => {
-      const response = await fetch('/api/challenges/current', { credentials: 'include' });
+      const response = await fetch(`/api/challenges/current?t=${Date.now()}`, { 
+        credentials: 'include',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
       if (!response.ok) return null;
       return response.json();
     },
     staleTime: 0, // Always consider data stale to enable faster updates
+    gcTime: 0, // Don't cache at all (gcTime is the new name for cacheTime)
     refetchOnWindowFocus: true, // Refetch when window gains focus
     refetchInterval: 3000, // Poll every 3 seconds for real-time updates
   });
