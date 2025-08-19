@@ -25,6 +25,7 @@ export default function Home() {
   const [isPraying, setIsPraying] = useState(false);
   const [prayerTimeLeft, setPrayerTimeLeft] = useState(0);
   const [showProgressDialog, setShowProgressDialog] = useState(false);
+  const [showChallengeDialog, setShowChallengeDialog] = useState(false);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -419,14 +420,13 @@ export default function Home() {
                     </span>
                     <span className="capitalize">{(currentChallenge as any)?.topic}</span>
                   </div>
-                  <Link href="/challenges">
-                    <Button 
-                      className="bg-white/20 text-white hover:bg-white/30 border border-white/30"
-                      data-testid="button-view-challenge"
-                    >
-                      View Challenge
-                    </Button>
-                  </Link>
+                  <Button 
+                    onClick={() => setShowChallengeDialog(true)}
+                    className="bg-white/20 text-white hover:bg-white/30 border border-white/30"
+                    data-testid="button-view-challenge"
+                  >
+                    View Challenge
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -886,6 +886,65 @@ export default function Home() {
                 >
                   Close
                 </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Challenge Dialog */}
+      <Dialog open={showChallengeDialog} onOpenChange={setShowChallengeDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2 text-ministry-navy">
+              <Target className="w-5 h-5 text-ministry-gold" />
+              <span>This Week's Challenge</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {currentChallenge && (
+            <div className="space-y-4">
+              {/* Challenge Header */}
+              <div className="bg-gradient-to-br from-ministry-steel to-ministry-navy text-white p-6 rounded-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="inline-flex items-center bg-ministry-gold/20 text-ministry-gold px-3 py-1 rounded-full text-xs font-medium">
+                    <Target className="w-3 h-3 mr-1" fill="currentColor" />
+                    Week of {formatLocalDate(new Date((currentChallenge as any)?.releaseDate), { 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
+                  </div>
+                  <span className="text-xs text-blue-200 capitalize">
+                    {(currentChallenge as any)?.topic}
+                  </span>
+                </div>
+                
+                <h3 className="text-xl font-bold mb-3">
+                  {(currentChallenge as any)?.title}
+                </h3>
+                
+                <p className="text-blue-100 leading-relaxed">
+                  {(currentChallenge as any)?.description}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between pt-4">
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowChallengeDialog(false)}
+                >
+                  Close
+                </Button>
+                
+                <Link href="/challenges">
+                  <Button 
+                    className="bg-ministry-navy hover:bg-ministry-steel text-white"
+                    onClick={() => setShowChallengeDialog(false)}
+                  >
+                    View All Challenges
+                  </Button>
+                </Link>
               </div>
             </div>
           )}
