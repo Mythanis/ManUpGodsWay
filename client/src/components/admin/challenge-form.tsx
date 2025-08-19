@@ -59,11 +59,17 @@ export default function ChallengeForm({ challenge, onSubmit, onCancel, isSubmitt
       return;
     }
 
+    console.log('=== DEBUG CHALLENGE CREATION ===');
+    console.log('Form release date:', formData.releaseDate);
+    
     // Parse the selected date string into year, month, day to avoid timezone issues
     const [year, month, day] = formData.releaseDate.split('-').map(Number);
+    console.log('Parsed components:', { year, month, day });
     
     // Create date object for the selected date and find the Monday
     const selectedDate = new Date(year, month - 1, day); // month is 0-indexed in JS
+    console.log('Selected date object:', selectedDate);
+    console.log('Selected date day of week:', selectedDate.getDay());
     
     let mondayOfWeek;
     
@@ -71,16 +77,23 @@ export default function ChallengeForm({ challenge, onSubmit, onCancel, isSubmitt
     if (selectedDate.getDay() === 1) {
       // Use the selected Monday directly at noon local time
       mondayOfWeek = new Date(year, month - 1, day, 12, 0, 0);
+      console.log('Using selected Monday directly:', mondayOfWeek);
     } else {
       // Find the Monday of that week
       const mondayCalc = startOfWeek(selectedDate, { weekStartsOn: 1 });
       mondayOfWeek = new Date(mondayCalc.getFullYear(), mondayCalc.getMonth(), mondayCalc.getDate(), 12, 0, 0);
+      console.log('Calculated Monday from week:', mondayOfWeek);
     }
+    
+    console.log('Final Monday ISO string:', mondayOfWeek.toISOString());
     
     const challengeData = {
       ...formData,
       releaseDate: mondayOfWeek.toISOString()
     };
+    
+    console.log('Challenge data being sent:', challengeData);
+    console.log('=== END DEBUG ===');
 
     onSubmit(challengeData);
   };
