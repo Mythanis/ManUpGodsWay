@@ -514,15 +514,7 @@ export default function Podcasts() {
                             Reviews
                           </Button>
                           
-                          {user?.role === 'admin' && (
-                            <div className="flex items-center space-x-2 ml-4 pl-4 border-l border-ministry-steel">
-                              <LiveStreamSetupDialog 
-                                podcastId={podcast.id}
-                                podcastTitle={podcast.title}
-                                isLive={podcast.isLive}
-                              />
-                            </div>
-                          )}
+
                         </div>
                       </div>
 

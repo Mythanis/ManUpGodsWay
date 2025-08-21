@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { RiversideIntegrationPanel } from "@/components/riverside-integration-panel";
 import { 
   Plus, 
   Edit2, 
@@ -17,7 +18,8 @@ import {
   Video,
   Eye,
   Star,
-  Calendar
+  Calendar,
+  Radio
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -361,12 +363,16 @@ export default function PodcastManagement() {
   );
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-ministry-charcoal">Podcast Management</h2>
-          <p className="text-ministry-slate">Manage audio and video podcast content</p>
-        </div>
+    <div className="space-y-6">
+      {/* Riverside.fm Integration Panel */}
+      <RiversideIntegrationPanel />
+      
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-ministry-charcoal">Podcast Management</h2>
+            <p className="text-ministry-slate">Manage audio and video podcast content</p>
+          </div>
         
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
@@ -500,6 +506,7 @@ export default function PodcastManagement() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }
