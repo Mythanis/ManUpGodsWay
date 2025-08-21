@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { LiveStreamBanner } from "@/components/live-stream-banner";
+import { LiveStreamSetupDialog } from "@/components/live-stream-setup-dialog";
 import { 
   Headphones, 
   Video, 
@@ -515,27 +516,11 @@ export default function Podcasts() {
                           
                           {user?.role === 'admin' && (
                             <div className="flex items-center space-x-2 ml-4 pl-4 border-l border-ministry-steel">
-                              {podcast.isLive ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => endLiveStreamMutation.mutate(podcast.id)}
-                                  disabled={endLiveStreamMutation.isPending}
-                                  className="text-red-600 border-red-200 hover:bg-red-50"
-                                >
-                                  End Live
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => startLiveStreamMutation.mutate(podcast.id)}
-                                  disabled={startLiveStreamMutation.isPending}
-                                  className="text-green-600 border-green-200 hover:bg-green-50"
-                                >
-                                  Go Live
-                                </Button>
-                              )}
+                              <LiveStreamSetupDialog 
+                                podcastId={podcast.id}
+                                podcastTitle={podcast.title}
+                                isLive={podcast.isLive}
+                              />
                             </div>
                           )}
                         </div>

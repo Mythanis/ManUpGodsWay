@@ -2710,7 +2710,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const podcast = await storage.startLiveStream(req.params.id);
+      const { liveUrl } = req.body;
+      if (!liveUrl) {
+        return res.status(400).json({ message: "Live stream URL is required" });
+      }
+
+      const podcast = await storage.startLiveStream(req.params.id, liveUrl);
       await storage.notifyLiveStreamStart(req.params.id);
       res.json(podcast);
     } catch (error) {

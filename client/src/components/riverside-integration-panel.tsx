@@ -1,0 +1,208 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { LiveStreamSetupDialog } from "@/components/live-stream-setup-dialog";
+import { 
+  Radio, 
+  ExternalLink, 
+  Tv, 
+  Clock, 
+  Users, 
+  Eye,
+  AlertCircle,
+  CheckCircle2
+} from "lucide-react";
+
+interface Podcast {
+  id: string;
+  title: string;
+  description?: string;
+  isLive: boolean;
+  liveUrl?: string;
+  viewCount: number;
+  category: string;
+  type: 'audio' | 'video';
+  liveStartedAt?: string;
+  createdAt: string;
+}
+
+export function RiversideIntegrationPanel() {
+  const { data: podcasts = [], isLoading } = useQuery<Podcast[]>({
+    queryKey: ['/api/admin/podcasts'],
+    refetchInterval: 10000, // Refresh every 10 seconds for real-time updates
+  });
+
+  const { data: liveStreams = [] } = useQuery<Podcast[]>({
+    queryKey: ['/api/livestreams'],
+    refetchInterval: 5000, // More frequent updates for live streams
+  });
+
+  const formatTimeElapsed = (startTime: string) => {
+    const start = new Date(startTime);
+    const now = new Date();
+    const diffMs = now.getTime() - start.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    
+    if (diffMins < 60) {
+      return `${diffMins}m`;
+    }
+    const diffHours = Math.floor(diffMins / 60);
+    const remainingMins = diffMins % 60;
+    return `${diffHours}h ${remainingMins}m`;
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Tv className="w-5 h-5 text-ministry-gold" />
+            <span>Riverside.fm Integration</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Tv className="w-5 h-5 text-ministry-gold" />
+            <span>Riverside.fm Live Streaming</span>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => window.open('https://riverside.fm/studio', '_blank')}
+            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+          >
+            <ExternalLink className="w-4 h-4 mr-2" />
+            Open Riverside
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Live Streams Status */}
+        {liveStreams.length > 0 && (
+          <div>
+            <h3 className="font-medium text-ministry-charcoal mb-3 flex items-center">
+              <Radio className="w-4 h-4 mr-2 text-red-500" />
+              Currently Live ({liveStreams.length})
+            </h3>
+            <div className="space-y-3">
+              {liveStreams.map((stream) => (
+                <Alert key={stream.id} className="border-red-200 bg-red-50">
+                  <CheckCircle2 className="h-4 w-4 text-red-500" />
+                  <AlertDescription>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-medium">{stream.title}</span>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Live for {formatTimeElapsed(stream.liveStartedAt!)} • {stream.viewCount} viewers
+                        </div>
+                      </div>
+                      <Badge className="bg-red-500 text-white">
+                        LIVE
+                      </Badge>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Setup Instructions */}
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <div className="space-y-2">
+              <p className="font-medium">How to go live:</p>
+              <ol className="text-sm space-y-1 list-decimal ml-4">
+                <li>Start your session in Riverside.fm Studio</li>
+                <li>Begin recording/streaming</li>
+                <li>Copy the share URL from Riverside</li>
+                <li>Click "Go Live" on any podcast below</li>
+                <li>Paste the URL to make it available to users</li>
+              </ol>
+            </div>
+          </AlertDescription>
+        </Alert>
+
+        {/* Available Podcasts for Live Streaming */}
+        <div>
+          <h3 className="font-medium text-ministry-charcoal mb-3">Available Podcasts</h3>
+          <div className="grid gap-3">
+            {podcasts
+              .filter(p => p.type === 'video' || p.type === 'audio') // Only streamable content
+              .slice(0, 8) // Show recent podcasts
+              .map((podcast) => (
+                <div 
+                  key={podcast.id}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <h4 className="font-medium text-sm text-ministry-charcoal">
+                        {podcast.title}
+                      </h4>
+                      {podcast.isLive && (
+                        <Badge className="bg-red-500 text-white text-xs">
+                          LIVE
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-3 text-xs text-ministry-slate mt-1">
+                      <span className="flex items-center">
+                        {podcast.type === 'video' ? <Tv className="w-3 h-3 mr-1" /> : <Radio className="w-3 h-3 mr-1" />}
+                        {podcast.type}
+                      </span>
+                      <span className="capitalize">{podcast.category}</span>
+                      <span className="flex items-center">
+                        <Eye className="w-3 h-3 mr-1" />
+                        {podcast.viewCount} views
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <LiveStreamSetupDialog
+                      podcastId={podcast.id}
+                      podcastTitle={podcast.title}
+                      isLive={podcast.isLive}
+                    />
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-ministry-charcoal">
+              {liveStreams.length}
+            </div>
+            <div className="text-sm text-ministry-slate">Active Streams</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-ministry-charcoal">
+              {liveStreams.reduce((sum, stream) => sum + stream.viewCount, 0)}
+            </div>
+            <div className="text-sm text-ministry-slate">Total Viewers</div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

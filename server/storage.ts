@@ -2707,11 +2707,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Live streaming operations
-  async startLiveStream(podcastId: string): Promise<Podcast> {
+  async startLiveStream(podcastId: string, liveUrl: string): Promise<Podcast> {
     const [podcast] = await db
       .update(podcasts)
       .set({
-        isCurrentlyLive: true,
+        isLive: true,
+        liveUrl: liveUrl,
         liveStartedAt: new Date(),
         liveNotificationsSent: false,
         updatedAt: new Date()
@@ -2725,7 +2726,8 @@ export class DatabaseStorage implements IStorage {
     const [podcast] = await db
       .update(podcasts)
       .set({
-        isCurrentlyLive: false,
+        isLive: false,
+        liveUrl: null,
         liveEndedAt: new Date(),
         updatedAt: new Date()
       })
@@ -2735,14 +2737,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLiveStreams(): Promise<Podcast[]> {
-    return await db
-      .select()
-      .from(podcasts)
-      .where(and(
-        eq(podcasts.isLiveStream, true),
-        eq(podcasts.isCurrentlyLive, true)
-      ))
-      .orderBy(desc(podcasts.liveStartedAt));
+    return db.select().from(podcasts).where(eq(podcasts.isLive, true));
   }
 
   async notifyLiveStreamStart(podcastId: string): Promise<void> {
