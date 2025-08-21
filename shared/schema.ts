@@ -188,6 +188,7 @@ export const notificationPreferences = pgTable("notification_preferences", {
   messageNotifications: boolean("message_notifications").default(true),
   videoNotifications: boolean("video_notifications").default(true),
   communityNotifications: boolean("community_notifications").default(true),
+  liveStreamNotifications: boolean("live_stream_notifications").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -667,6 +668,14 @@ export const podcasts = pgTable("podcasts", {
   ratingCount: integer("rating_count").default(0),
   viewCount: integer("view_count").default(0),
   isPublished: boolean("is_published").default(true),
+  // Live streaming fields
+  isLiveStream: boolean("is_live_stream").default(false),
+  liveStreamUrl: varchar("live_stream_url"), // Riverside.fm embed URL
+  isCurrentlyLive: boolean("is_currently_live").default(false),
+  liveStartedAt: timestamp("live_started_at"),
+  liveEndedAt: timestamp("live_ended_at"),
+  scheduledLiveDate: timestamp("scheduled_live_date"),
+  liveNotificationsSent: boolean("live_notifications_sent").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

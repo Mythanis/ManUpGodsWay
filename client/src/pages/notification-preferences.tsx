@@ -31,6 +31,7 @@ interface NotificationPreferences {
   directMessages: boolean;
   groupMessages: boolean;
   weeklyDigest: boolean;
+  liveStreamNotifications: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -43,6 +44,7 @@ const preferencesSchema = z.object({
   directMessages: z.boolean(),
   groupMessages: z.boolean(),
   weeklyDigest: z.boolean(),
+  liveStreamNotifications: z.boolean(),
 });
 
 type PreferencesFormValues = z.infer<typeof preferencesSchema>;
@@ -65,6 +67,7 @@ export default function NotificationPreferences() {
       directMessages: true,
       groupMessages: true,
       weeklyDigest: true,
+      liveStreamNotifications: true,
     },
   });
 
@@ -79,6 +82,7 @@ export default function NotificationPreferences() {
         directMessages: preferences.directMessages,
         groupMessages: preferences.groupMessages,
         weeklyDigest: preferences.weeklyDigest,
+        liveStreamNotifications: preferences.liveStreamNotifications,
       });
     }
   }, [preferences]);
@@ -199,6 +203,29 @@ export default function NotificationPreferences() {
                       </FormLabel>
                       <FormDescription>
                         Get notified when new daily devotionals are available
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="liveStreamNotifications"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-ministry-steel p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base font-medium text-ministry-charcoal">
+                        Live Stream Notifications
+                      </FormLabel>
+                      <FormDescription>
+                        Get notified when live podcasts start streaming
                       </FormDescription>
                     </div>
                     <FormControl>

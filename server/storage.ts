@@ -225,6 +225,11 @@ export interface IStorage {
   getPodcastRatings(podcastId: string): Promise<PodcastRating[]>;
   getUserPodcastRating(userId: string, podcastId: string): Promise<PodcastRating | undefined>;
   incrementPodcastViews(podcastId: string, userId?: string, ipAddress?: string): Promise<void>;
+  // Live streaming operations
+  startLiveStream(podcastId: string): Promise<Podcast>;
+  endLiveStream(podcastId: string): Promise<Podcast>;
+  getLiveStreams(): Promise<Podcast[]>;
+  notifyLiveStreamStart(podcastId: string): Promise<void>;
 
   // Challenge operations
   getChallenges(): Promise<Challenge[]>;
@@ -1800,6 +1805,8 @@ export class DatabaseStorage implements IStorage {
         return preferences.videoNotifications ?? true;
       case 'community':
         return preferences.communityNotifications ?? true;
+      case 'live_stream':
+        return preferences.liveStreamNotifications ?? true;
       default:
         // For unknown types, default to true (send notification)
         return true;
@@ -2696,6 +2703,80 @@ export class DatabaseStorage implements IStorage {
         viewCount: sql`${podcasts.viewCount} + 1`,
         updatedAt: new Date()
       })
+      .where(eq(podcasts.id, podcastId));
+  }
+
+  // Live streaming operations
+  async startLiveStream(podcastId: string): Promise<Podcast> {
+    const [podcast] = await db
+      .update(podcasts)
+      .set({
+        isCurrentlyLive: true,
+        liveStartedAt: new Date(),
+        liveNotificationsSent: false,
+        updatedAt: new Date()
+      })
+      .where(eq(podcasts.id, podcastId))
+      .returning();
+    return podcast;
+  }
+
+  async endLiveStream(podcastId: string): Promise<Podcast> {
+    const [podcast] = await db
+      .update(podcasts)
+      .set({
+        isCurrentlyLive: false,
+        liveEndedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(podcasts.id, podcastId))
+      .returning();
+    return podcast;
+  }
+
+  async getLiveStreams(): Promise<Podcast[]> {
+    return await db
+      .select()
+      .from(podcasts)
+      .where(and(
+        eq(podcasts.isLiveStream, true),
+        eq(podcasts.isCurrentlyLive, true)
+      ))
+      .orderBy(desc(podcasts.liveStartedAt));
+  }
+
+  async notifyLiveStreamStart(podcastId: string): Promise<void> {
+    const podcast = await this.getPodcastById(podcastId);
+    if (!podcast) return;
+
+    // Get all users who want live stream notifications
+    const usersToNotify = await db
+      .select({ id: users.id })
+      .from(users)
+      .leftJoin(notificationPreferences, eq(users.id, notificationPreferences.userId))
+      .where(
+        or(
+          eq(notificationPreferences.liveStreamNotifications, true),
+          isNull(notificationPreferences.userId) // Users without preferences get notifications by default
+        )
+      );
+
+    const notificationData = usersToNotify.map(user => ({
+      userId: user.id,
+      type: 'live_stream',
+      title: 'Live Stream Started!',
+      message: `${podcast.title} is now streaming live. Join us now!`,
+      relatedId: podcastId
+    }));
+
+    if (notificationData.length > 0) {
+      await db.insert(notifications).values(notificationData);
+    }
+
+    // Mark notifications as sent for this live stream
+    await db
+      .update(podcasts)
+      .set({ liveNotificationsSent: true })
       .where(eq(podcasts.id, podcastId));
   }
 

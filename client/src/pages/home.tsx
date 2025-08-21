@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProgressCard from "@/components/progress-card";
 import { NotificationPanel } from "@/components/notification-panel";
+import { LiveStreamBanner } from "@/components/live-stream-banner";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -291,6 +292,9 @@ export default function Home() {
 
       {/* Daily Devotional Section */}
       <div className="px-6 -mt-6 relative z-10">
+        {/* Live Stream Banner */}
+        <LiveStreamBanner />
+        
         <Card className="shadow-lg mb-6" data-testid="card-devotional">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { LiveStreamBanner } from "@/components/live-stream-banner";
 import { 
   Headphones, 
   Video, 
@@ -20,7 +21,9 @@ import {
   Filter,
   Search,
   Upload,
-  MessageSquare
+  MessageSquare,
+  Radio,
+  ExternalLink
 } from "lucide-react";
 
 interface Podcast {
@@ -38,6 +41,8 @@ interface Podcast {
   ratingCount: number;
   viewCount: number;
   isPublished: boolean;
+  isLive: boolean;
+  liveUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -129,6 +134,57 @@ export default function Podcasts() {
     }
   });
 
+  // Live streaming mutations
+  const startLiveStreamMutation = useMutation({
+    mutationFn: async (podcastId: string) => {
+      const response = await fetch(`/api/admin/livestream/start/${podcastId}`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to start live stream');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['api', 'podcasts'] });
+      toast({
+        title: "Live Stream Started",
+        description: "The podcast is now live!"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start live stream",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const endLiveStreamMutation = useMutation({
+    mutationFn: async (podcastId: string) => {
+      const response = await fetch(`/api/admin/livestream/end/${podcastId}`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to end live stream');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['api', 'podcasts'] });
+      toast({
+        title: "Live Stream Ended",
+        description: "The live stream has been stopped."
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to end live stream",
+        variant: "destructive"
+      });
+    }
+  });
+
   const formatDuration = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -170,6 +226,11 @@ export default function Podcasts() {
 
   const handleTimeUpdate = (podcastId: string, currentTime: number) => {
     setPlaybackPosition(prev => ({ ...prev, [podcastId]: currentTime }));
+  };
+
+  const handlePodcastView = (podcastId: string) => {
+    // Track view and potentially navigate to detailed view
+    trackViewMutation.mutate(podcastId);
   };
 
   const renderStars = (rating: number, interactive = false, onRatingSelect?: (rating: number) => void) => {
@@ -329,6 +390,9 @@ export default function Podcasts() {
 
       {/* Content */}
       <div className="p-6">
+        {/* Live Stream Banner */}
+        <LiveStreamBanner />
+        
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold"></div>
@@ -381,6 +445,12 @@ export default function Podcasts() {
                             <Badge variant="outline" className="text-xs">
                               {podcast.type === 'audio' ? 'Audio' : 'Video'}
                             </Badge>
+                            {podcast.isLive && (
+                              <Badge className="text-xs bg-red-500 hover:bg-red-600 text-white">
+                                <Radio className="w-3 h-3 mr-1" />
+                                LIVE
+                              </Badge>
+                            )}
                             <span className="capitalize">{podcast.category}</span>
                             <span className="flex items-center">
                               <Clock className="w-3 h-3 mr-1" />
@@ -389,16 +459,26 @@ export default function Podcasts() {
                           </div>
                         </div>
                         
-                        <Button
-                          onClick={() => handlePlayPause(podcast)}
-                          className="bg-ministry-gold hover:bg-ministry-gold/90 text-white"
-                        >
-                          {currentlyPlaying === podcast.id ? (
-                            <Pause className="w-4 h-4" />
-                          ) : (
-                            <Play className="w-4 h-4" />
-                          )}
-                        </Button>
+                        {podcast.isLive ? (
+                          <Button
+                            onClick={() => window.open(podcast.liveUrl, '_blank')}
+                            className="bg-red-500 hover:bg-red-600 text-white"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Join Live
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => handlePlayPause(podcast)}
+                            className="bg-ministry-gold hover:bg-ministry-gold/90 text-white"
+                          >
+                            {currentlyPlaying === podcast.id ? (
+                              <Pause className="w-4 h-4" />
+                            ) : (
+                              <Play className="w-4 h-4" />
+                            )}
+                          </Button>
+                        )}
                       </div>
 
                       {podcast.description && (
@@ -424,6 +504,40 @@ export default function Podcasts() {
 
                         <div className="flex items-center space-x-2">
                           <RatingDialog podcast={podcast} />
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handlePodcastView(podcast.id)}
+                          >
+                            <MessageSquare className="w-4 h-4 mr-1" />
+                            Reviews
+                          </Button>
+                          
+                          {user?.role === 'admin' && (
+                            <div className="flex items-center space-x-2 ml-4 pl-4 border-l border-ministry-steel">
+                              {podcast.isLive ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => endLiveStreamMutation.mutate(podcast.id)}
+                                  disabled={endLiveStreamMutation.isPending}
+                                  className="text-red-600 border-red-200 hover:bg-red-50"
+                                >
+                                  End Live
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => startLiveStreamMutation.mutate(podcast.id)}
+                                  disabled={startLiveStreamMutation.isPending}
+                                  className="text-green-600 border-green-200 hover:bg-green-50"
+                                >
+                                  Go Live
+                                </Button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
 

@@ -2702,6 +2702,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Live streaming routes
+  app.post('/api/admin/livestream/start/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const podcast = await storage.startLiveStream(req.params.id);
+      await storage.notifyLiveStreamStart(req.params.id);
+      res.json(podcast);
+    } catch (error) {
+      console.error("Error starting live stream:", error);
+      res.status(500).json({ message: "Failed to start live stream" });
+    }
+  });
+
+  app.post('/api/admin/livestream/end/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const podcast = await storage.endLiveStream(req.params.id);
+      res.json(podcast);
+    } catch (error) {
+      console.error("Error ending live stream:", error);
+      res.status(500).json({ message: "Failed to end live stream" });
+    }
+  });
+
+  app.get('/api/livestreams', async (req, res) => {
+    try {
+      const liveStreams = await storage.getLiveStreams();
+      res.json(liveStreams);
+    } catch (error) {
+      console.error("Error fetching live streams:", error);
+      res.status(500).json({ message: "Failed to fetch live streams" });
+    }
+  });
+
   // Challenge routes
   app.get('/api/challenges', async (req, res) => {
     try {
