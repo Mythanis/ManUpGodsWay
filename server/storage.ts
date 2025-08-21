@@ -2716,10 +2716,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createChallenge(challengeData: InsertChallenge): Promise<Challenge> {
-    // Ensure releaseDate is a proper Date object
+    // Parse the ISO date and ensure it's stored at noon UTC to avoid timezone issues
+    const inputDate = new Date(challengeData.releaseDate);
+    const noonUTCDate = new Date(Date.UTC(
+      inputDate.getUTCFullYear(),
+      inputDate.getUTCMonth(),
+      inputDate.getUTCDate(),
+      12, 0, 0
+    ));
+    
     const processedData = {
       ...challengeData,
-      releaseDate: new Date(challengeData.releaseDate)
+      releaseDate: noonUTCDate
     };
     
     const [challenge] = await db
@@ -2730,12 +2738,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateChallenge(id: string, updates: Partial<Challenge>): Promise<Challenge> {
-    // Ensure releaseDate is a proper Date object if provided
     const processedUpdates = {
       ...updates,
-      updatedAt: new Date(),
-      ...(updates.releaseDate && { releaseDate: new Date(updates.releaseDate) })
+      updatedAt: new Date()
     };
+    
+    // Handle releaseDate with proper timezone handling
+    if (updates.releaseDate) {
+      const inputDate = new Date(updates.releaseDate);
+      const noonUTCDate = new Date(Date.UTC(
+        inputDate.getUTCFullYear(),
+        inputDate.getUTCMonth(),
+        inputDate.getUTCDate(),
+        12, 0, 0
+      ));
+      processedUpdates.releaseDate = noonUTCDate;
+    }
     
     const [challenge] = await db
       .update(challenges)
@@ -2750,19 +2768,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCurrentWeekChallenge(): Promise<Challenge | undefined> {
-    // Calculate the Monday of the current week
+    // Calculate the Monday of the current week at noon UTC
     const today = new Date();
     const dayOfWeek = today.getDay(); // Sunday = 0, Monday = 1, etc.
     const daysUntilMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     const mondayOfThisWeek = new Date(today);
     mondayOfThisWeek.setDate(today.getDate() + daysUntilMonday);
-    mondayOfThisWeek.setHours(0, 0, 0, 0);
+    
+    // Set to noon UTC to match how we store dates
+    const mondayAtNoonUTC = new Date(Date.UTC(
+      mondayOfThisWeek.getFullYear(),
+      mondayOfThisWeek.getMonth(),
+      mondayOfThisWeek.getDate(),
+      12, 0, 0
+    ));
 
     // Find the most recent challenge released on or before this Monday
     const [challenge] = await db
       .select()
       .from(challenges)
-      .where(sql`${challenges.releaseDate} <= ${mondayOfThisWeek.toISOString()}`)
+      .where(sql`${challenges.releaseDate} <= ${mondayAtNoonUTC.toISOString()}`)
       .orderBy(desc(challenges.releaseDate))
       .limit(1);
     
@@ -2770,24 +2795,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async pushChallengeToCurrentWeek(id: string): Promise<Challenge> {
-    // Calculate the Monday of the current week
+    // Calculate the Monday of the current week at noon UTC
     const today = new Date();
     const dayOfWeek = today.getDay(); // Sunday = 0, Monday = 1, etc.
     const daysUntilMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     const mondayOfThisWeek = new Date(today);
     mondayOfThisWeek.setDate(today.getDate() + daysUntilMonday);
-    mondayOfThisWeek.setHours(0, 0, 0, 0);
+    
+    const mondayAtNoonUTC = new Date(Date.UTC(
+      mondayOfThisWeek.getFullYear(),
+      mondayOfThisWeek.getMonth(),
+      mondayOfThisWeek.getDate(),
+      12, 0, 0
+    ));
+    
+    const sundayBeforeAtNoonUTC = new Date(mondayAtNoonUTC.getTime() - 24 * 60 * 60 * 1000);
 
     // First, push all other challenges to be before this Monday if they're currently set to this Monday
     // This ensures that only the challenge we're pushing will be the "current" one
     await db
       .update(challenges)
       .set({ 
-        releaseDate: new Date(mondayOfThisWeek.getTime() - 24 * 60 * 60 * 1000), // Set to Sunday (day before Monday)
+        releaseDate: sundayBeforeAtNoonUTC,
         updatedAt: new Date() 
       })
       .where(and(
-        eq(challenges.releaseDate, mondayOfThisWeek),
+        eq(challenges.releaseDate, mondayAtNoonUTC),
         not(eq(challenges.id, id))
       ));
 
@@ -2795,7 +2828,7 @@ export class DatabaseStorage implements IStorage {
     const [challenge] = await db
       .update(challenges)
       .set({ 
-        releaseDate: mondayOfThisWeek,
+        releaseDate: mondayAtNoonUTC,
         updatedAt: new Date() 
       })
       .where(eq(challenges.id, id))

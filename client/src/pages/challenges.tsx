@@ -88,9 +88,9 @@ export default function Challenges() {
   const uniqueTopics: string[] = Array.from(new Set(challenges.map((c: Challenge) => c.topic as string))).sort();
 
   const formatChallengeDate = (releaseDate: string) => {
+    // Parse the UTC date and format it correctly
     const date = new Date(releaseDate);
-    const mondayOfWeek = startOfWeek(date, { weekStartsOn: 1 });
-    return format(mondayOfWeek, 'MMM d, yyyy');
+    return format(date, 'MMM d, yyyy');
   };
 
   const getTopicColor = (topic: string) => {
