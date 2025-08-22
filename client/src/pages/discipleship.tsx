@@ -243,7 +243,7 @@ export default function Discipleship() {
                                     <Badge 
                                       key={index}
                                       variant="outline" 
-                                      className="text-xs bg-ministry-gold-exact/20 text-ministry-gold border-ministry-gold"
+                                      className="text-xs bg-ministry-gold-exact/20 text-black border-ministry-gold"
                                     >
                                       {tag}
                                     </Badge>
