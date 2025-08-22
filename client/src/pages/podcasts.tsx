@@ -430,7 +430,7 @@ export default function Podcasts() {
                         )
                       ) : (
                         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-ministry-gold-exact/20 rounded-lg flex items-center justify-center">
-                          <Headphones className="w-5 h-5 sm:w-6 sm:h-6 text-ministry-gold" />
+                          <Headphones className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
                         </div>
                       )}
                     </div>
