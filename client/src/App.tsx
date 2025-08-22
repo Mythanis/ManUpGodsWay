@@ -22,6 +22,7 @@ import Lesson from "@/pages/lesson";
 import UserProfile from "@/pages/user-profile";
 import NotificationPreferences from "@/pages/notification-preferences";
 import MoreManUp from "@/pages/more-man-up";
+import Discipleship from "@/pages/discipleship";
 import NotFound from "@/pages/not-found";
 import Navigation from "@/components/navigation";
 import { UserSetupWizard } from "@/components/user-setup-wizard";
@@ -76,6 +77,7 @@ function Router() {
             <Route path="/study/:studyId/lesson/:lessonNumber" component={Lesson} />
             <Route path="/users/:userId" component={UserProfile} />
             <Route path="/notification-preferences" component={NotificationPreferences} />
+            <Route path="/discipleship" component={Discipleship} />
             <Route path="/more-man-up" component={MoreManUp} />
           </>
         )}

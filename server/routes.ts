@@ -3058,6 +3058,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Discipleship Routes - Tag-based user discovery
+  
+  // Get all unique testimony tags with counts
+  app.get('/api/testimony-tags', async (req, res) => {
+    try {
+      const tags = await storage.getAllTestimonyTags();
+      res.json(tags);
+    } catch (error) {
+      console.error('Error fetching testimony tags:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get users with public testimonies and their tags
+  app.get('/api/users-with-testimonies', async (req, res) => {
+    try {
+      const users = await storage.getUsersWithPublicTestimonies();
+      res.json(users);
+    } catch (error) {
+      console.error('Error fetching users with testimonies:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

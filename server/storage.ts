@@ -276,6 +276,17 @@ export interface IStorage {
   getUserTestimony(userId: string): Promise<Testimony | undefined>;
   upsertTestimony(testimony: InsertTestimony): Promise<Testimony>;
   deleteTestimony(userId: string): Promise<void>;
+  
+  // Discipleship/Tag-based user discovery operations
+  getAllTestimonyTags(): Promise<{ tag: string; count: number }[]>;
+  getUsersWithPublicTestimonies(): Promise<{
+    id: number;
+    username: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+    testimonyTags: string[];
+    tier: string;
+  }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3310,6 +3321,80 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(testimonies)
       .where(eq(testimonies.userId, userId));
+  }
+
+  // Discipleship/Tag-based user discovery operations
+  async getAllTestimonyTags(): Promise<{ tag: string; count: number }[]> {
+    const testimoniesWithTags = await db
+      .select({
+        tags: testimonies.tags
+      })
+      .from(testimonies)
+      .where(and(
+        eq(testimonies.isPublic, true),
+        isNotNull(testimonies.tags)
+      ));
+
+    // Flatten all tags and count occurrences
+    const tagCounts: { [key: string]: number } = {};
+    
+    testimoniesWithTags.forEach(testimony => {
+      if (testimony.tags && Array.isArray(testimony.tags)) {
+        testimony.tags.forEach(tag => {
+          if (tag && tag.trim()) {
+            const normalizedTag = tag.trim();
+            tagCounts[normalizedTag] = (tagCounts[normalizedTag] || 0) + 1;
+          }
+        });
+      }
+    });
+
+    // Convert to array and sort by count (descending) then by name (ascending)
+    return Object.entries(tagCounts)
+      .map(([tag, count]) => ({ tag, count }))
+      .sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count; // Higher counts first
+        }
+        return a.tag.localeCompare(b.tag); // Alphabetical for same counts
+      });
+  }
+
+  async getUsersWithPublicTestimonies(): Promise<{
+    id: string;
+    username: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+    testimonyTags: string[];
+    tier: string;
+  }[]> {
+    const usersWithTestimonies = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        subscriptionTier: users.subscriptionTier,
+        tags: testimonies.tags
+      })
+      .from(users)
+      .innerJoin(testimonies, eq(users.id, testimonies.userId))
+      .where(and(
+        eq(testimonies.isPublic, true),
+        isNotNull(testimonies.tags)
+      ))
+      .orderBy(users.firstName, users.lastName);
+
+    // Format the results
+    return usersWithTestimonies.map(user => ({
+      id: user.id,
+      username: user.email || 'Unknown User', // Use email as username since there's no username field
+      displayName: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : null,
+      avatarUrl: user.profileImageUrl,
+      testimonyTags: user.tags || [],
+      tier: user.subscriptionTier || 'free'
+    }));
   }
 }
 
