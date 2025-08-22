@@ -301,13 +301,13 @@ export default function Profile() {
 
       {/* Progress Summary */}
       <div className="px-6">
-        <h2 className="text-lg font-bold text-foreground mb-4">Your Journey</h2>
+        <h2 className="text-lg font-bold text-black mb-4">Your Journey</h2>
         
         <Card className="border-border bg-ministry-gold-exact/20" data-testid="card-progress">
           <CardContent className="p-6">
             {currentStudies.length === 0 && completedStudies.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">You haven't started any studies yet</p>
+                <p className="text-black mb-4">You haven't started any studies yet</p>
                 <Button 
                   className="bg-ministry-navy text-white hover:bg-ministry-charcoal"
                   data-testid="button-start-journey"
@@ -322,10 +322,10 @@ export default function Profile() {
                   return (
                     <div key={item.id} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-foreground">
+                        <span className="text-sm font-medium text-black">
                           {item.study?.title || 'Study'}
                         </span>
-                        <span className="text-sm text-ministry-steel font-bold">
+                        <span className="text-sm text-black font-bold">
                           {item.completedLessons}/{item.study?.lessonCount || 0}
                         </span>
                       </div>
@@ -338,11 +338,11 @@ export default function Profile() {
                   <div key={item.id} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <span className="text-sm font-medium text-foreground">
+                        <span className="text-sm font-medium text-black">
                           {item.study?.title || 'Study'}
                         </span>
                         {item.completedAt && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-black">
                             Completed {new Date(item.completedAt).toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric',
