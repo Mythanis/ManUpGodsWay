@@ -443,7 +443,7 @@ export default function Podcasts() {
                             {podcast.title}
                           </h3>
                           <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-ministry-slate mb-2">
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="outline" className="text-xs text-black">
                               {podcast.type === 'audio' ? 'Audio' : 'Video'}
                             </Badge>
                             {podcast.isLive && (
