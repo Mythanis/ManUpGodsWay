@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Users, Star, MessageSquare, Video, CheckCircle } from "lucide-react";
 import { Link } from "wouter";
 import { StudyReviewsDialog } from "@/components/study-reviews-dialog";
+import { getDefaultThumbnail } from "@/lib/default-thumbnail";
 
 interface StudyCardProps {
   study: any;
@@ -45,7 +46,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt }: S
         )}
         <div className="flex">
           <img 
-            src={study.thumbnailUrl || `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=120`}
+            src={getDefaultThumbnail(study.thumbnailUrl)}
             alt={study.title}
             className="w-24 h-20 object-cover"
             data-testid="img-study-thumbnail"

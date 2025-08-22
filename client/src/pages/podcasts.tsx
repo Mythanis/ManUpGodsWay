@@ -26,6 +26,7 @@ import {
   Radio,
   ExternalLink
 } from "lucide-react";
+import { getDefaultThumbnail } from "@/lib/default-thumbnail";
 
 interface Podcast {
   id: string;
@@ -417,21 +418,17 @@ export default function Podcasts() {
                     {/* Thumbnail/Icon */}
                     <div className="flex-shrink-0">
                       {podcast.type === 'video' ? (
-                        podcast.thumbnailUrl ? (
-                          <img
-                            src={podcast.thumbnailUrl}
-                            alt={podcast.title}
-                            className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-ministry-steel/20 rounded-lg flex items-center justify-center">
-                            <Video className="w-5 h-5 sm:w-6 sm:h-6 text-ministry-steel" />
-                          </div>
-                        )
+                        <img
+                          src={getDefaultThumbnail(podcast.thumbnailUrl)}
+                          alt={podcast.title}
+                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
+                        />
                       ) : (
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-ministry-gold-exact/20 rounded-lg flex items-center justify-center">
-                          <Headphones className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
-                        </div>
+                        <img
+                          src={getDefaultThumbnail(podcast.thumbnailUrl)}
+                          alt={podcast.title}
+                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
+                        />
                       )}
                     </div>
 

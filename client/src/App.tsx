@@ -28,6 +28,7 @@ import NotFound from "@/pages/not-found";
 import Navigation from "@/components/navigation";
 import { UserSetupWizard } from "@/components/user-setup-wizard";
 import { AccountSettingsButton } from "@/components/account-settings-button";
+import { TopRightLogo } from "@/components/top-right-logo";
 
 // Splash screen context
 const SplashContext = createContext<{
@@ -99,6 +100,9 @@ function Router() {
       
       {/* Persistent Account Settings Button for authenticated users */}
       {isAuthenticated && <AccountSettingsButton />}
+      
+      {/* Persistent Top Right Logo for authenticated users */}
+      {isAuthenticated && <TopRightLogo />}
     </>
   );
 }

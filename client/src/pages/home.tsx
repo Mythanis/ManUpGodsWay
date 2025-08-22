@@ -13,6 +13,7 @@ import { NotificationPanel } from "@/components/notification-panel";
 import { LiveStreamBanner } from "@/components/live-stream-banner";
 import BrotherhoodRequests from "@/components/brotherhood-requests";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
+import { getDefaultThumbnail } from "@/lib/default-thumbnail";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
@@ -253,12 +254,12 @@ export default function Home() {
             {/* User Profile Picture */}
             <div className="flex items-center space-x-3">
               <img
-                src={user?.profileImageUrl || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=4A90B8&color=fff&size=60`}
+                src={(user as any)?.profileImageUrl || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=4A90B8&color=fff&size=60`}
                 alt={`${user?.firstName} ${user?.lastName}`}
                 className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
               />
               <div className="bg-ministry-gold text-ministry-navy px-3 py-1 rounded-full text-sm font-bold">
-                {weeklyCompletions?.count || 0} studies this week
+                {(weeklyCompletions as any)?.count || 0} studies this week
               </div>
             </div>
           </div>
@@ -316,27 +317,21 @@ export default function Home() {
             {devotional ? (
               <>
                 {/* Devotional Image */}
-                {devotional.imageUrl && (
-                  <div className="mb-4 rounded-lg overflow-hidden">
-                    <img 
-                      src={devotional.imageUrl} 
-                      alt={devotional.title}
-                      className="w-full h-48 object-cover"
-                      onError={(e) => {
-                        // Hide image if it fails to load
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
+                <div className="mb-4 rounded-lg overflow-hidden">
+                  <img 
+                    src={getDefaultThumbnail((devotional as any)?.imageUrl)} 
+                    alt={(devotional as any)?.title || 'Daily Devotional'}
+                    className="w-full h-48 object-cover"
+                  />
+                </div>
                 
                 <div className="bg-ministry-steel/10 rounded-lg p-4 mb-4">
-                  <h3 className="text-ministry-navy font-bold text-base mb-2">{devotional.title}</h3>
+                  <h3 className="text-ministry-navy font-bold text-base mb-2">{(devotional as any)?.title}</h3>
                   <p className="text-ministry-navy font-semibold text-sm mb-2" data-testid="text-verse">
-                    "{devotional.verse}" - {devotional.verseReference}
+                    "{(devotional as any)?.verse}" - {(devotional as any)?.verseReference}
                   </p>
                   <p className="text-ministry-slate text-sm leading-relaxed" data-testid="text-devotional-content">
-                    {devotional.content.substring(0, 120)}...
+                    {(devotional as any)?.content?.substring(0, 120)}...
                   </p>
                 </div>
                 

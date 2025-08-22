@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useToast } from "@/hooks/use-toast";
+import { getDefaultThumbnail } from "@/lib/default-thumbnail";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -330,17 +331,11 @@ export default function Videos() {
                        setSelectedVideo(video);
                        setShowVideoDialog(true);
                      }}>
-                  {video.thumbnailUrl ? (
-                    <img 
-                      src={video.thumbnailUrl} 
-                      alt={video.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Play className="w-12 h-12 text-gray-400" />
-                    </div>
-                  )}
+                  <img 
+                    src={getDefaultThumbnail(video.thumbnailUrl)} 
+                    alt={video.title}
+                    className="w-full h-full object-cover"
+                  />
                   <div className="absolute top-2 left-2 space-y-1">
                     {getTierBadge(video.requiredTier)}
                     {video.isFeatured && (
