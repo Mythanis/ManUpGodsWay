@@ -474,8 +474,8 @@ export default function Home() {
             {/* Recommended Studies */}
             {recommendedStudies.length > 0 && (
               <>
-                <h3 className="text-md font-semibold text-ministry-charcoal mb-3">Recommended for You</h3>
-                <p className="text-xs text-ministry-slate mb-4">Based on your interests</p>
+                <h3 className="text-md font-semibold text-white mb-3">Recommended for You</h3>
+                <p className="text-xs text-white mb-4">Based on your interests</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
                     <Card key={study.id} className="border border-border hover:shadow-sm transition-shadow bg-ministry-gold-exact/20">
@@ -514,7 +514,7 @@ export default function Home() {
 
       {/* Quick Actions */}
       <div className="px-6 mb-6">
-        <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Quick Access</h2>
+        <h2 className="text-lg font-bold text-white mb-4">Quick Access</h2>
         
         <div className="grid grid-cols-2 gap-4">
           <Link href="/videos">
@@ -572,7 +572,7 @@ export default function Home() {
 
       {/* Recent Activity */}
       <div className="px-6 mb-8">
-        <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Recent Activity</h2>
+        <h2 className="text-lg font-bold text-white mb-4">Recent Activity</h2>
         
         <div className="space-y-3">
           {completedCount > 0 && (
