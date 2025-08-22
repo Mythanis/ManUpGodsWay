@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from 'ws';
 import multer from 'multer';
 import path from 'path';
 import { storage } from "./storage";
@@ -3128,13 +3129,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create notification for the recipient
       const requester = await storage.getUser(requesterId);
-      await storage.createNotificationWithPreferences({
+      const notification = await storage.createNotificationWithPreferences({
         userId: recipientId,
         type: 'brotherhood',
         title: '🤝 Brotherhood Request',
         message: `${requester?.firstName} ${requester?.lastName} wants to be your brother in faith`,
         relatedId: request.id,
       });
+      
+      // Send real-time notification if user is connected
+      if ((app as any).sendRealtimeNotification) {
+        (app as any).sendRealtimeNotification(recipientId, {
+          type: 'brotherhood_request',
+          requestId: request.id,
+          requester: {
+            id: requesterId,
+            firstName: requester?.firstName,
+            lastName: requester?.lastName,
+          },
+          message: `${requester?.firstName} ${requester?.lastName} wants to be your brother in faith`
+        });
+      }
 
       res.json({ message: "Brotherhood request sent successfully" });
     } catch (error) {
@@ -3236,5 +3251,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // WebSocket server for real-time notifications
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Store connected clients with their user IDs
+  const connectedClients = new Map<string, WebSocket>();
+  
+  wss.on('connection', (ws, req) => {
+    console.log('WebSocket connection established');
+    
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        if (data.type === 'auth' && data.userId) {
+          // Store the connection with user ID for targeted messaging
+          connectedClients.set(data.userId, ws);
+          console.log(`User ${data.userId} connected to WebSocket`);
+          
+          ws.send(JSON.stringify({
+            type: 'auth_success',
+            message: 'Successfully authenticated'
+          }));
+        }
+      } catch (error) {
+        console.error('Error handling WebSocket message:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      // Remove client from connected clients when they disconnect
+      for (const [userId, client] of connectedClients.entries()) {
+        if (client === ws) {
+          connectedClients.delete(userId);
+          console.log(`User ${userId} disconnected from WebSocket`);
+          break;
+        }
+      }
+    });
+  });
+  
+  // Add function to send real-time notifications
+  (app as any).sendRealtimeNotification = (userId: string, notification: any) => {
+    const client = connectedClients.get(userId);
+    if (client && client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({
+        type: 'notification',
+        data: notification
+      }));
+    }
+  };
+  
   return httpServer;
 }

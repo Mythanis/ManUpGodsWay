@@ -9,6 +9,8 @@ import { UserPlus, Users, Calendar, Search, Tag, Send } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 interface Brother {
   id: string;
@@ -35,6 +37,10 @@ export default function Brothers() {
   const [showUserSearch, setShowUserSearch] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  // Initialize WebSocket for real-time notifications
+  useWebSocket(user?.id);
   
   const { data: brothers, isLoading } = useQuery<Brother[]>({
     queryKey: ['/api/brothers'],

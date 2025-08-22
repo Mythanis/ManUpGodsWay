@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,9 @@ export default function Home() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Initialize WebSocket for real-time notifications
+  useWebSocket(user?.id);
   const [showFullDevotional, setShowFullDevotional] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showPrayerDialog, setShowPrayerDialog] = useState(false);
