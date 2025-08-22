@@ -91,7 +91,7 @@
 }
 
 .bg-ministry-gold-exact\/20 {
-  background-color: #FBD00033 !important; /* #FBD000 with 20% opacity */
+  background-color: #FBD00000 !important; /* #FBD000 with 0% opacity (transparent) */
 }
 
 .bg-ministry-gold-exact\/30 {
