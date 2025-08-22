@@ -62,11 +62,11 @@ export default function Landing() {
 
           <Card className="border-none shadow-lg bg-ministry-gold-exact/20" data-testid="card-community">
             <CardContent className="p-8">
-              <div className="text-ministry-steel mb-4">
+              <div className="text-black mb-4">
                 <MessageCircle size={48} />
               </div>
-              <h3 className="text-xl font-bold text-ministry-charcoal mb-3">Community</h3>
-              <p className="text-ministry-slate">
+              <h3 className="text-xl font-bold text-black mb-3">Community</h3>
+              <p className="text-black">
                 Connect with like-minded men, share insights, and encourage one another
               </p>
             </CardContent>
@@ -74,11 +74,11 @@ export default function Landing() {
 
           <Card className="border-none shadow-lg bg-ministry-gold-exact/20" data-testid="card-progress">
             <CardContent className="p-8">
-              <div className="text-ministry-steel mb-4">
+              <div className="text-black mb-4">
                 <Users size={48} />
               </div>
-              <h3 className="text-xl font-bold text-ministry-charcoal mb-3">Progress Tracking</h3>
-              <p className="text-ministry-slate">
+              <h3 className="text-xl font-bold text-black mb-3">Progress Tracking</h3>
+              <p className="text-black">
                 Track your spiritual journey and celebrate milestones in your growth
               </p>
             </CardContent>

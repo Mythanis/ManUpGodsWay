@@ -561,22 +561,22 @@ export default function Community() {
           <CardContent className="p-4">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <p className="text-2xl font-bold text-ministry-navy" data-testid="text-total-members">
+                <p className="text-2xl font-bold text-black" data-testid="text-total-members">
                   {stats.totalMembers.toLocaleString()}
                 </p>
-                <p className="text-xs text-ministry-slate">Members</p>
+                <p className="text-xs text-black">Members</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-ministry-steel" data-testid="text-active-today">
+                <p className="text-2xl font-bold text-black" data-testid="text-active-today">
                   {stats.activeToday}
                 </p>
-                <p className="text-xs text-ministry-slate">Active Today</p>
+                <p className="text-xs text-black">Active Today</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-ministry-success" data-testid="text-new-posts">
+                <p className="text-2xl font-bold text-black" data-testid="text-new-posts">
                   {stats.newPosts}
                 </p>
-                <p className="text-xs text-ministry-slate">New Posts</p>
+                <p className="text-xs text-black">New Posts</p>
               </div>
             </div>
           </CardContent>
