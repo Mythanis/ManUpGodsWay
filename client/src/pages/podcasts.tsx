@@ -513,16 +513,16 @@ export default function Podcasts() {
                           </div>
                         </div>
 
-                        <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                        <div className="flex items-center space-x-1 flex-shrink-0">
                           <RatingDialog podcast={podcast} />
                           <Button 
                             variant="outline" 
                             size="sm"
                             onClick={() => handlePodcastView(podcast.id)}
-                            className="text-xs px-2 sm:px-3 whitespace-nowrap"
+                            className="text-xs px-1.5 py-1 h-auto whitespace-nowrap"
                           >
-                            <MessageSquare className="w-3 h-3 mr-1" />
-                            Reviews
+                            <MessageSquare className="w-3 h-3" />
+                            <span className="ml-1 hidden sm:inline">Reviews</span>
                           </Button>
                         </div>
                       </div>
