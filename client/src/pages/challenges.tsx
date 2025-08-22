@@ -187,7 +187,7 @@ export default function Challenges() {
           <div className="mb-8">
             <div className="flex items-center mb-4">
               <Target className="w-6 h-6 text-ministry-gold mr-2" />
-              <h2 className="text-xl font-bold text-black">This Week's Challenge</h2>
+              <h2 className="text-xl font-bold text-white">This Week's Challenge</h2>
             </div>
             <ChallengeCard challenge={currentWeekChallenge} isCurrentWeek={true} />
           </div>
@@ -195,7 +195,7 @@ export default function Challenges() {
           <div className="mb-8">
             <div className="flex items-center mb-4">
               <Target className="w-6 h-6 text-ministry-gold mr-2" />
-              <h2 className="text-xl font-bold text-black">This Week's Challenge</h2>
+              <h2 className="text-xl font-bold text-white">This Week's Challenge</h2>
             </div>
             <Card className="text-center py-12 bg-ministry-gold-exact/20">
               <CardContent>
@@ -214,7 +214,7 @@ export default function Challenges() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
             {/* Topic Filter */}
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-black">Filter by Topic:</span>
+              <span className="text-sm font-medium text-white">Filter by Topic:</span>
               <Select value={filterTopic} onValueChange={setFilterTopic}>
                 <SelectTrigger className="w-40">
                   <div className="flex items-center">
@@ -235,7 +235,7 @@ export default function Challenges() {
 
             {/* Sort Controls */}
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-black">Sort by:</span>
+              <span className="text-sm font-medium text-white">Sort by:</span>
               <Button
                 variant="default"
                 size="sm"
