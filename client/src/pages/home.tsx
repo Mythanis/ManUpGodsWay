@@ -410,7 +410,7 @@ export default function Home() {
             <CardContent className="p-6">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
               <div className="relative z-10">
-                <div className="inline-flex items-center bg-ministry-gold-exact/20 text-ministry-gold px-3 py-1 rounded-full text-xs font-medium mb-3">
+                <div className="inline-flex items-center bg-ministry-gold-exact/20 text-black px-3 py-1 rounded-full text-xs font-medium mb-3">
                   <Target className="w-3 h-3 mr-1" fill="currentColor" />
                   This Week's Challenge
                 </div>
@@ -909,7 +909,7 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2 text-ministry-navy">
               <Target className="w-5 h-5 text-ministry-gold" />
-              <span>This Week's Challenge</span>
+              <span className="text-black">This Week's Challenge</span>
             </DialogTitle>
           </DialogHeader>
           
