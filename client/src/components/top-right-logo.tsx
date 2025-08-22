@@ -10,12 +10,12 @@ export function TopRightLogo() {
   const displayLogo = headerLogoSettings?.logoUrl || logoUrl;
 
   return (
-    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-black flex justify-center py-4 shadow-lg">
       <img 
-        src={displayLogo}
-        alt="Man Up God's Way Logo"
-        className="h-12 w-auto object-contain rounded-md shadow-sm bg-black/10 backdrop-blur-sm"
-        data-testid="top-center-logo"
+        src={displayLogo} 
+        alt="Man Up God's Way Logo" 
+        className="h-12 w-auto object-contain"
+        data-testid="app-logo"
       />
     </div>
   );
