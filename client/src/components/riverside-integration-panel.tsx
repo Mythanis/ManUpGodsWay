@@ -136,7 +136,7 @@ export function RiversideIntegrationPanel() {
                 <li><strong>Go Live:</strong> Return here, paste the URL, and click "Start Live Session"</li>
                 <li><strong>Automatic Setup:</strong> A new podcast entry is created and users are notified automatically</li>
               </ol>
-              <div className="mt-3 p-2 bg-blue-50 rounded text-xs">
+              <div className="mt-3 p-2 bg-gray-50 rounded text-xs text-black">
                 <strong>Note:</strong> Each live session becomes a permanent podcast entry that you can edit later. The recording will be saved to your podcast library after the stream ends.
               </div>
             </div>
