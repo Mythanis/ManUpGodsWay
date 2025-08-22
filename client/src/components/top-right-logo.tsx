@@ -14,7 +14,8 @@ export function TopRightLogo() {
       <img 
         src={displayLogo} 
         alt="Man Up God's Way Logo" 
-        className="h-12 w-auto object-contain opacity-100"
+        className="h-12 w-auto object-contain"
+        style={{ opacity: 1 }}
         data-testid="app-logo"
       />
     </div>
