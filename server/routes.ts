@@ -17,7 +17,8 @@ import {
   insertSystemSettingsSchema,
   insertPodcastSchema,
   insertPodcastRatingSchema,
-  insertContentFlagSchema
+  insertContentFlagSchema,
+  insertTestimonySchema
 } from "@shared/schema";
 import { z } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -2993,6 +2994,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(flag);
     } catch (error) {
       console.error('Error updating flag:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Testimony Routes
+  
+  // Get user's own testimony
+  app.get('/api/testimony', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const testimony = await storage.getUserTestimony(userId);
+      res.json(testimony);
+    } catch (error) {
+      console.error('Error fetching testimony:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get another user's testimony (only if public)
+  app.get('/api/testimony/:userId', async (req, res) => {
+    try {
+      const testimony = await storage.getUserTestimony(req.params.userId);
+      if (!testimony || !testimony.isPublic) {
+        return res.status(404).json({ message: 'Testimony not found or private' });
+      }
+      res.json(testimony);
+    } catch (error) {
+      console.error('Error fetching public testimony:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Create or update user's testimony
+  app.post('/api/testimony', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertTestimonySchema.parse({
+        ...req.body,
+        userId
+      });
+
+      const testimony = await storage.upsertTestimony(validatedData);
+      res.json(testimony);
+    } catch (error) {
+      console.error('Error creating/updating testimony:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Delete user's testimony
+  app.delete('/api/testimony', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.deleteTestimony(userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting testimony:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

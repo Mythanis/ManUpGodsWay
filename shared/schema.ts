@@ -197,6 +197,26 @@ export const replyHonors = pgTable("reply_honors", {
   unique().on(table.userId, table.replyId), // Prevent duplicate honors from same user
 ]);
 
+// User testimonies
+export const testimonies = pgTable("testimonies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }).unique(),
+  content: text("content").notNull(),
+  tags: text("tags").array(), // Array of string tags
+  isPublic: boolean("is_public").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTestimonySchema = createInsertSchema(testimonies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Testimony = typeof testimonies.$inferSelect;
+export type InsertTestimony = z.infer<typeof insertTestimonySchema>;
+
 // User notification preferences
 export const notificationPreferences = pgTable("notification_preferences", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

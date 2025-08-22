@@ -21,6 +21,7 @@ import {
   userSilences,
   logoSettings,
   contentFlags,
+  testimonies,
   type User,
   type UpsertUser,
   type Study,
@@ -79,6 +80,8 @@ import {
   type InsertChallenge,
   type ContentFlag,
   type InsertContentFlag,
+  type Testimony,
+  type InsertTestimony,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull } from "drizzle-orm";
@@ -268,6 +271,11 @@ export interface IStorage {
     discussionHonorsReceived: number;
     replyHonorsReceived: number;
   }>;
+
+  // Testimony operations
+  getUserTestimony(userId: string): Promise<Testimony | undefined>;
+  upsertTestimony(testimony: InsertTestimony): Promise<Testimony>;
+  deleteTestimony(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3267,6 +3275,41 @@ export class DatabaseStorage implements IStorage {
       discussionHonorsReceived,
       replyHonorsReceived
     };
+  }
+
+  // Testimony operations
+  async getUserTestimony(userId: string): Promise<Testimony | undefined> {
+    const [testimony] = await db
+      .select()
+      .from(testimonies)
+      .where(eq(testimonies.userId, userId));
+    return testimony;
+  }
+
+  async upsertTestimony(testimonyData: InsertTestimony): Promise<Testimony> {
+    const [testimony] = await db
+      .insert(testimonies)
+      .values({
+        ...testimonyData,
+        updatedAt: new Date()
+      })
+      .onConflictDoUpdate({
+        target: testimonies.userId,
+        set: {
+          content: testimonyData.content,
+          tags: testimonyData.tags,
+          isPublic: testimonyData.isPublic,
+          updatedAt: new Date()
+        }
+      })
+      .returning();
+    return testimony;
+  }
+
+  async deleteTestimony(userId: string): Promise<void> {
+    await db
+      .delete(testimonies)
+      .where(eq(testimonies.userId, userId));
   }
 }
 

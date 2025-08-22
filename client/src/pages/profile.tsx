@@ -12,6 +12,7 @@ import { NotificationPanel } from "@/components/notification-panel";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { FeedbackDialog } from "@/components/feedback-dialog";
 import { SilencedUsersButton } from "@/components/silenced-users-button";
+import { TestimonyForm } from "@/components/testimony-form";
 import { 
   User, 
   Bell, 
@@ -365,6 +366,12 @@ export default function Profile() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Testimony Section */}
+      <div className="px-6 mt-6">
+        <h2 className="text-lg font-bold text-black mb-4">Your Testimony</h2>
+        <TestimonyForm isOwnProfile={true} />
       </div>
       
       <FeedbackDialog 
