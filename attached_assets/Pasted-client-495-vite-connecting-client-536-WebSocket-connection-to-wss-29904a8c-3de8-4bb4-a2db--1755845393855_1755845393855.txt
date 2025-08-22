@@ -1,0 +1,2015 @@
+client:495 [vite] connecting...
+client:536  WebSocket connection to 'wss://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/?token=bFfUCjxOcMxi' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536  Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=bFfUCjxOcMxi' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+react-dom.development.js:29895 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+useWebSocket.ts:26 WebSocket connected
+useWebSocket.ts:37 WebSocket message received: {type: 'auth_success', message: 'Successfully authenticated'}
+useWebSocket.ts:41 WebSocket authentication successful
+29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/:1  Tracking Prevention blocked access to storage for https://i.pinimg.com/originals/f3/34/79/f33479acba545a43863a64292511dd97.jpg.
+29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/:1  Tracking Prevention blocked access to storage for https://i.pinimg.com/originals/f3/34/79/f33479acba545a43863a64292511dd97.jpg.
+29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/:1  Tracking Prevention blocked access to storage for https://i.pinimg.com/originals/f3/34/79/f33479acba545a43863a64292511dd97.jpg.
+29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/:1  Tracking Prevention blocked access to storage for https://i.pinimg.com/originals/f3/34/79/f33479acba545a43863a64292511dd97.jpg.
+useWebSocket.ts:70 WebSocket disconnected
+queryClient.ts:66   GET https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/api/challenges/current 502 (Bad Gateway)
+(anonymous) @ queryClient.ts:66
+fetchFn @ query.ts:429
+run @ retryer.ts:153
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+queryClient.ts:66   GET https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/api/brotherhood-requests 502 (Bad Gateway)
+(anonymous) @ queryClient.ts:66
+fetchFn @ query.ts:429
+run @ retryer.ts:153
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+queryClient.ts:66   GET https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/api/progress 502 (Bad Gateway)
+(anonymous) @ queryClient.ts:66
+fetchFn @ query.ts:429
+run @ retryer.ts:153
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+queryClient.ts:66   GET https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/api/challenges/current 502 (Bad Gateway)
+(anonymous) @ queryClient.ts:66
+fetchFn @ query.ts:429
+run @ retryer.ts:153
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+queryClient.ts:66   GET https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/api/notifications/unread-count 502 (Bad Gateway)
+(anonymous) @ queryClient.ts:66
+fetchFn @ query.ts:429
+run @ retryer.ts:153
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+queryClient.ts:66   GET https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/api/notifications/unread-count 502 (Bad Gateway)
+(anonymous) @ queryClient.ts:66
+fetchFn @ query.ts:429
+run @ retryer.ts:153
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+onError @ query.ts:465
+reject @ retryer.ts:116
+(anonymous) @ retryer.ts:180
+Promise.catch
+run @ retryer.ts:160
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+setInterval
+updateRefetchInterval_fn @ queryObserver.ts:404
+updateTimers_fn @ queryObserver.ts:416
+onQueryUpdate @ queryObserver.ts:739
+(anonymous) @ query.ts:619
+(anonymous) @ query.ts:618
+batch @ notifyManager.ts:52
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+(anonymous) @ queryObserver.ts:409
+navigation.tsx:49  Unable to preventDefault inside passive event listener invocation.
+preventDefault @ react-dom.development.js:6878
+handleWheel @ navigation.tsx:49
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchContinuousEvent @ react-dom.development.js:6444
+navigation.tsx:49  Unable to preventDefault inside passive event listener invocation.
+preventDefault @ react-dom.development.js:6878
+handleWheel @ navigation.tsx:49
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchContinuousEvent @ react-dom.development.js:6444
+navigation.tsx:49  Unable to preventDefault inside passive event listener invocation.
+preventDefault @ react-dom.development.js:6878
+handleWheel @ navigation.tsx:49
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchContinuousEvent @ react-dom.development.js:6444
+useWebSocket.ts:26 WebSocket connected
+useWebSocket.ts:37 WebSocket message received: {type: 'auth_success', message: 'Successfully authenticated'}
+useWebSocket.ts:41 WebSocket authentication successful
+select.tsx:1241  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at select.tsx:1241:13
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at updateForwardRef (react-dom.development.js:19245:20)
+    at beginWork (react-dom.development.js:21675:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+(anonymous) @ select.tsx:1241
+renderWithHooks @ react-dom.development.js:15486
+updateForwardRef @ react-dom.development.js:19245
+beginWork @ react-dom.development.js:21675
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+beginWork$1 @ react-dom.development.js:27490
+performUnitOfWork @ react-dom.development.js:26596
+workLoopSync @ react-dom.development.js:26505
+renderRootSync @ react-dom.development.js:26473
+performSyncWorkOnRoot @ react-dom.development.js:26124
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+setTimeout
+scheduleFn @ notifyManager.ts:22
+flush @ notifyManager.ts:37
+batch @ notifyManager.ts:56
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+onSubscribe @ queryObserver.ts:108
+subscribe @ subscribable.ts:11
+(anonymous) @ useBaseQuery.ts:92
+subscribeToStore @ react-dom.development.js:16139
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+select.tsx:1241  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at select.tsx:1241:13
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at updateForwardRef (react-dom.development.js:19245:20)
+    at beginWork (react-dom.development.js:21675:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+(anonymous) @ select.tsx:1241
+renderWithHooks @ react-dom.development.js:15486
+updateForwardRef @ react-dom.development.js:19245
+beginWork @ react-dom.development.js:21675
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+beginWork$1 @ react-dom.development.js:27490
+performUnitOfWork @ react-dom.development.js:26596
+workLoopSync @ react-dom.development.js:26505
+renderRootSync @ react-dom.development.js:26473
+recoverFromConcurrentError @ react-dom.development.js:25889
+performSyncWorkOnRoot @ react-dom.development.js:26135
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+setTimeout
+scheduleFn @ notifyManager.ts:22
+flush @ notifyManager.ts:37
+batch @ notifyManager.ts:56
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+onSubscribe @ queryObserver.ts:108
+subscribe @ subscribable.ts:11
+(anonymous) @ useBaseQuery.ts:92
+subscribeToStore @ react-dom.development.js:16139
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+react-dom.development.js:18704  The above error occurred in the <SelectItem> component:
+
+    at https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=218b0eed:848:7
+    at _c11 (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/src/components/ui/select.tsx:208:13)
+    at div
+    at https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-IWFJIMEQ.js?v=218b0eed:42:13
+    at https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LHPXHTGV.js?v=218b0eed:43:13
+    at https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LHPXHTGV.js?v=218b0eed:20:13
+    at https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-5KSDU44R.js?v=218b0eed:41:15
+    at https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=218b0eed:759:13
+    at div
+    at https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LHPXHTGV.js?v=218b0eed:43:13
+    at https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LHPXHTGV.js?v=218b0eed:20:13
+    at https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-5KSDU44R.js?v=218b0eed:41:15
+    at Provider (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=218b0eed:38:15)
+    at https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=218b0eed:302:58
+    at https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LHPXHTGV.js?v=218b0eed:43:13
+    at https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LHPXHTGV.js?v=218b0eed:20:13
+    at https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-IWFJIMEQ.js?v=218b0eed:42:13
+    at https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TUJRHL6D.js?v=218b0eed:260:22
+    at SelectPortal
+    at _c7 (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/src/components/ui/select.tsx:123:12)
+    at Provider (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=218b0eed:38:15)
+    at Provider (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=218b0eed:38:15)
+    at CollectionProvider (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-5KSDU44R.js?v=218b0eed:31:13)
+    at Provider (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=218b0eed:38:15)
+    at Provider (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=218b0eed:38:15)
+    at Popper (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MUMRWAMN.js?v=218b0eed:1921:11)
+    at Select (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=218b0eed:90:5)
+    at div
+    at div
+    at div
+    at div
+    at div
+    at _c9 (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at div
+    at Brothers (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/src/pages/brothers.tsx:32:49)
+    at Route (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=218b0eed:323:16)
+    at Switch (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=218b0eed:379:17)
+    at Router (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/src/App.tsx?v=cMq9K3rNjSa6XDhnvtAar:60:48)
+    at div
+    at AppContent (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/src/App.tsx?v=cMq9K3rNjSa6XDhnvtAar:228:42)
+    at Provider (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=218b0eed:38:15)
+    at TooltipProvider (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=218b0eed:66:5)
+    at ThemeProvider (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/src/hooks/useTheme.tsx:23:33)
+    at QueryClientProvider (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=218b0eed:2805:3)
+    at App (https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/src/App.tsx?v=cMq9K3rNjSa6XDhnvtAar:253:49)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+update.callback @ react-dom.development.js:18737
+callCallback @ react-dom.development.js:15036
+commitUpdateQueue @ react-dom.development.js:15057
+commitLayoutEffectOnFiber @ react-dom.development.js:23430
+commitLayoutMountEffects_complete @ react-dom.development.js:24727
+commitLayoutEffects_begin @ react-dom.development.js:24713
+commitLayoutEffects @ react-dom.development.js:24651
+commitRootImpl @ react-dom.development.js:26862
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+setTimeout
+scheduleFn @ notifyManager.ts:22
+flush @ notifyManager.ts:37
+batch @ notifyManager.ts:56
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+onSubscribe @ queryObserver.ts:108
+subscribe @ subscribable.ts:11
+(anonymous) @ useBaseQuery.ts:92
+subscribeToStore @ react-dom.development.js:16139
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+react-dom.development.js:12056  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at select.tsx:1241:13
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at updateForwardRef (react-dom.development.js:19245:20)
+    at beginWork (react-dom.development.js:21675:16)
+    at beginWork$1 (react-dom.development.js:27465:14)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+    at renderRootSync (react-dom.development.js:26473:7)
+    at recoverFromConcurrentError (react-dom.development.js:25889:20)
+    at performSyncWorkOnRoot (react-dom.development.js:26135:20)
+(anonymous) @ select.tsx:1241
+renderWithHooks @ react-dom.development.js:15486
+updateForwardRef @ react-dom.development.js:19245
+beginWork @ react-dom.development.js:21675
+beginWork$1 @ react-dom.development.js:27465
+performUnitOfWork @ react-dom.development.js:26596
+workLoopSync @ react-dom.development.js:26505
+renderRootSync @ react-dom.development.js:26473
+recoverFromConcurrentError @ react-dom.development.js:25889
+performSyncWorkOnRoot @ react-dom.development.js:26135
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+setTimeout
+scheduleFn @ notifyManager.ts:22
+flush @ notifyManager.ts:37
+batch @ notifyManager.ts:56
+dispatch_fn @ query.ts:617
+setData @ query.ts:218
+onSuccess @ query.ts:507
+resolve @ retryer.ts:107
+Promise.then
+run @ retryer.ts:159
+start @ retryer.ts:218
+fetch @ query.ts:540
+executeFetch_fn @ queryObserver.ts:346
+onSubscribe @ queryObserver.ts:108
+subscribe @ subscribable.ts:11
+(anonymous) @ useBaseQuery.ts:92
+subscribeToStore @ react-dom.development.js:16139
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+useWebSocket.ts:70 WebSocket disconnected

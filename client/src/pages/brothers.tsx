@@ -323,9 +323,9 @@ export default function Brothers() {
                             <div className="flex items-center space-x-2">
                               <span className="text-xs text-muted-foreground">Tag:</span>
                               <Select
-                                value={brother.tag || ""}
+                                value={brother.tag || "none"}
                                 onValueChange={(value) => {
-                                  const tag = value === "" ? null : value;
+                                  const tag = value === "none" ? null : value;
                                   updateTagMutation.mutate({ 
                                     brotherhoodId: brother.brotherhoodId, 
                                     tag 
@@ -337,7 +337,7 @@ export default function Brothers() {
                                   <SelectValue placeholder="None" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">None</SelectItem>
+                                  <SelectItem value="none">None</SelectItem>
                                   <SelectItem value="Paul">Paul - Mentor</SelectItem>
                                   <SelectItem value="Timothy">Timothy - Student</SelectItem>
                                   <SelectItem value="Barnabas">Barnabas - Encourager</SelectItem>
