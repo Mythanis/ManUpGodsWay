@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Home, BookOpen, Video, Users, MessageCircle, Settings, Headphones, Trophy, ChevronLeft, ChevronRight, ExternalLink, Heart } from "lucide-react";
+import { Home, BookOpen, Video, Users, MessageCircle, Settings, Headphones, Trophy, ChevronLeft, ChevronRight, ExternalLink, Heart, UserPlus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { useRef, useState, useEffect } from "react";
@@ -12,6 +12,7 @@ const navItems = [
   { id: 'podcasts', path: '/podcasts', label: 'Podcasts', icon: Headphones },
   { id: 'challenges', path: '/challenges', label: 'Challenges', icon: Trophy },
   { id: 'community', path: '/community', label: 'Community', icon: Users },
+  { id: 'brothers', path: '/brothers', label: 'Brothers', icon: UserPlus },
   { id: 'messages', path: '/messages', label: 'Messages', icon: MessageCircle },
   { id: 'discipleship', path: '/discipleship', label: 'Discipleship', icon: Heart },
   { id: 'more-man-up', path: '/more-man-up', label: 'More', icon: ExternalLink },

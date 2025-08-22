@@ -3082,6 +3082,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Brotherhood endpoints
+  app.get('/api/brothers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const brothers = await storage.getUserBrothers(userId);
+      res.json(brothers);
+    } catch (error) {
+      console.error("Error fetching brothers:", error);
+      res.status(500).json({ message: "Failed to fetch brothers" });
+    }
+  });
+
+  app.post('/api/brotherhood-requests', isAuthenticated, async (req: any, res) => {
+    try {
+      const requesterId = req.user.claims.sub;
+      const { recipientId, message } = req.body;
+
+      if (!recipientId) {
+        return res.status(400).json({ message: "Recipient ID is required" });
+      }
+
+      if (requesterId === recipientId) {
+        return res.status(400).json({ message: "Cannot request to be your own brother" });
+      }
+
+      // Check if they're already brothers
+      const alreadyBrothers = await storage.checkBrotherhoodExists(requesterId, recipientId);
+      if (alreadyBrothers) {
+        return res.status(400).json({ message: "You are already brothers with this user" });
+      }
+
+      // Check if a request already exists
+      const existingRequest = await storage.checkBrotherhoodRequestExists(requesterId, recipientId);
+      if (existingRequest) {
+        return res.status(400).json({ message: "Brotherhood request already sent" });
+      }
+
+      // Create the request
+      const request = await storage.createBrotherhoodRequest({
+        requesterId,
+        recipientId,
+        message: message || '',
+      });
+
+      // Create notification for the recipient
+      const requester = await storage.getUser(requesterId);
+      await storage.createNotificationWithPreferences({
+        userId: recipientId,
+        type: 'brotherhood',
+        title: '🤝 Brotherhood Request',
+        message: `${requester?.firstName} ${requester?.lastName} wants to be your brother in faith`,
+        relatedId: request.id,
+      });
+
+      res.json({ message: "Brotherhood request sent successfully" });
+    } catch (error) {
+      console.error("Error creating brotherhood request:", error);
+      res.status(500).json({ message: "Failed to send brotherhood request" });
+    }
+  });
+
+  app.get('/api/brotherhood-requests', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const requests = await storage.getBrotherhoodRequests(userId);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching brotherhood requests:", error);
+      res.status(500).json({ message: "Failed to fetch brotherhood requests" });
+    }
+  });
+
+  app.post('/api/brotherhood-requests/:requestId/respond', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { requestId } = req.params;
+      const { response } = req.body; // 'approved' or 'denied'
+
+      if (!['approved', 'denied'].includes(response)) {
+        return res.status(400).json({ message: "Response must be 'approved' or 'denied'" });
+      }
+
+      // Verify the request exists and belongs to this user
+      const request = await storage.getBrotherhoodRequest(requestId);
+      if (!request || request.recipientId !== userId) {
+        return res.status(404).json({ message: "Brotherhood request not found" });
+      }
+
+      if (request.status !== 'pending') {
+        return res.status(400).json({ message: "Request has already been responded to" });
+      }
+
+      // Update the request
+      await storage.respondToBrotherhoodRequest(requestId, response);
+
+      if (response === 'approved') {
+        // Create the brotherhood relationship
+        await storage.createBrotherhood(request.requesterId, request.recipientId);
+
+        // Notify the requester
+        const recipient = await storage.getUser(userId);
+        await storage.createNotificationWithPreferences({
+          userId: request.requesterId,
+          type: 'brotherhood',
+          title: '✅ Brotherhood Request Approved',
+          message: `${recipient?.firstName} ${recipient?.lastName} accepted your brotherhood request! You are now brothers in faith.`,
+          relatedId: null,
+        });
+      }
+
+      res.json({ message: `Brotherhood request ${response} successfully` });
+    } catch (error) {
+      console.error("Error responding to brotherhood request:", error);
+      res.status(500).json({ message: "Failed to respond to request" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ProgressCard from "@/components/progress-card";
 import { NotificationPanel } from "@/components/notification-panel";
 import { LiveStreamBanner } from "@/components/live-stream-banner";
+import BrotherhoodRequests from "@/components/brotherhood-requests";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -401,6 +402,9 @@ export default function Home() {
             )}
           </CardContent>
         </Card>
+        
+        {/* Brotherhood Requests Section */}
+        <BrotherhoodRequests />
       </div>
 
       {/* This Week's Challenge Section */}

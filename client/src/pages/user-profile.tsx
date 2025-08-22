@@ -26,6 +26,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { TestimonyForm } from "@/components/testimony-form";
+import BrotherhoodRequestButton from "@/components/brotherhood-request-button";
 
 interface UserProfile {
   user: {
@@ -288,6 +289,10 @@ export default function UserProfile() {
                   <MessageCircle className="w-4 h-4 mr-2" />
                   {createDirectConversation.isPending ? 'Opening...' : 'Direct Message'}
                 </Button>
+                <BrotherhoodRequestButton
+                  recipientId={profile.user.id}
+                  recipientName={`${profile.user.firstName} ${profile.user.lastName}`}
+                />
                 <Button
                   onClick={handleSilenceUser}
                   variant="outline"

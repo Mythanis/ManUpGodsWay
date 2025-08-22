@@ -817,3 +817,44 @@ export const insertContentFlagSchema = createInsertSchema(contentFlags).omit({
 
 export type ContentFlag = typeof contentFlags.$inferSelect;
 export type InsertContentFlag = z.infer<typeof insertContentFlagSchema>;
+
+// Brotherhood requests table
+export const brotherhoodRequests = pgTable("brotherhood_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requesterId: varchar("requester_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  recipientId: varchar("recipient_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  status: varchar("status").notNull().default("pending"), // pending, approved, denied
+  message: text("message"), // Optional message with request
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  unique: unique().on(table.requesterId, table.recipientId),
+}));
+
+export const insertBrotherhoodRequestSchema = createInsertSchema(brotherhoodRequests).omit({
+  id: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type BrotherhoodRequest = typeof brotherhoodRequests.$inferSelect;
+export type InsertBrotherhoodRequest = z.infer<typeof insertBrotherhoodRequestSchema>;
+
+// Brotherhoods table (approved relationships)
+export const brotherhoods = pgTable("brotherhoods", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId1: varchar("user_id_1").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId2: varchar("user_id_2").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  unique: unique().on(table.userId1, table.userId2),
+}));
+
+export const insertBrotherhoodSchema = createInsertSchema(brotherhoods).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type Brotherhood = typeof brotherhoods.$inferSelect;
+export type InsertBrotherhood = z.infer<typeof insertBrotherhoodSchema>;

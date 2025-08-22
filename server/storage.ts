@@ -22,6 +22,8 @@ import {
   logoSettings,
   contentFlags,
   testimonies,
+  brotherhoodRequests,
+  brotherhoods,
   type User,
   type UpsertUser,
   type Study,
@@ -82,6 +84,10 @@ import {
   type InsertContentFlag,
   type Testimony,
   type InsertTestimony,
+  type BrotherhoodRequest,
+  type InsertBrotherhoodRequest,
+  type Brotherhood,
+  type InsertBrotherhood,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull } from "drizzle-orm";
@@ -2101,6 +2107,116 @@ export class DatabaseStorage implements IStorage {
     await db.delete(notifications).where(
       and(eq(notifications.userId, userId), eq(notifications.id, notificationId))
     );
+  }
+
+  // Brotherhood methods
+  async createBrotherhoodRequest(request: InsertBrotherhoodRequest): Promise<BrotherhoodRequest> {
+    const [newRequest] = await db.insert(brotherhoodRequests)
+      .values(request)
+      .returning();
+    return newRequest;
+  }
+
+  async getBrotherhoodRequests(userId: string): Promise<(BrotherhoodRequest & { requester: User })[]> {
+    return await db.select({
+      id: brotherhoodRequests.id,
+      requesterId: brotherhoodRequests.requesterId,
+      recipientId: brotherhoodRequests.recipientId,
+      status: brotherhoodRequests.status,
+      message: brotherhoodRequests.message,
+      createdAt: brotherhoodRequests.createdAt,
+      updatedAt: brotherhoodRequests.updatedAt,
+      requester: users,
+    })
+      .from(brotherhoodRequests)
+      .innerJoin(users, eq(brotherhoodRequests.requesterId, users.id))
+      .where(and(
+        eq(brotherhoodRequests.recipientId, userId),
+        eq(brotherhoodRequests.status, 'pending')
+      ))
+      .orderBy(desc(brotherhoodRequests.createdAt));
+  }
+
+  async respondToBrotherhoodRequest(requestId: string, response: 'approved' | 'denied'): Promise<BrotherhoodRequest> {
+    const [updatedRequest] = await db.update(brotherhoodRequests)
+      .set({ 
+        status: response,
+        updatedAt: new Date()
+      })
+      .where(eq(brotherhoodRequests.id, requestId))
+      .returning();
+    return updatedRequest;
+  }
+
+  async createBrotherhood(userId1: string, userId2: string): Promise<Brotherhood> {
+    // Ensure consistent ordering (lower ID first)
+    const sortedIds = [userId1, userId2].sort();
+    const [newBrotherhood] = await db.insert(brotherhoods)
+      .values({
+        userId1: sortedIds[0],
+        userId2: sortedIds[1],
+      })
+      .returning();
+    return newBrotherhood;
+  }
+
+  async getUserBrothers(userId: string): Promise<User[]> {
+    const brotherRelations = await db.select({
+      brotherId: sql<string>`CASE 
+        WHEN ${brotherhoods.userId1} = ${userId} THEN ${brotherhoods.userId2}
+        ELSE ${brotherhoods.userId1}
+      END`.as('brotherId'),
+      createdAt: brotherhoods.createdAt,
+    })
+      .from(brotherhoods)
+      .where(or(eq(brotherhoods.userId1, userId), eq(brotherhoods.userId2, userId)));
+
+    if (brotherRelations.length === 0) {
+      return [];
+    }
+
+    const brotherIds = brotherRelations.map(r => r.brotherId);
+    const brothers = await db.select()
+      .from(users)
+      .where(inArray(users.id, brotherIds));
+
+    // Add the createdAt from the brotherhood relationship
+    return brothers.map(brother => ({
+      ...brother,
+      createdAt: brotherRelations.find(r => r.brotherId === brother.id)?.createdAt || brother.createdAt,
+    })) as User[];
+  }
+
+  async checkBrotherhoodExists(userId1: string, userId2: string): Promise<boolean> {
+    const sortedIds = [userId1, userId2].sort();
+    const [existing] = await db.select()
+      .from(brotherhoods)
+      .where(and(
+        eq(brotherhoods.userId1, sortedIds[0]),
+        eq(brotherhoods.userId2, sortedIds[1])
+      ))
+      .limit(1);
+    return !!existing;
+  }
+
+  async checkBrotherhoodRequestExists(requesterId: string, recipientId: string): Promise<boolean> {
+    const [existing] = await db.select()
+      .from(brotherhoodRequests)
+      .where(and(
+        eq(brotherhoodRequests.requesterId, requesterId),
+        eq(brotherhoodRequests.recipientId, recipientId),
+        eq(brotherhoodRequests.status, 'pending')
+      ))
+      .limit(1);
+    return !!existing;
+  }
+
+  async getBrotherhoodRequest(requestId: string): Promise<BrotherhoodRequest | undefined> {
+    const [request] = await db.select()
+      .from(brotherhoodRequests)
+      .where(eq(brotherhoodRequests.id, requestId))
+      .limit(1);
+    return request;
   }
 
   // Video rating operations
