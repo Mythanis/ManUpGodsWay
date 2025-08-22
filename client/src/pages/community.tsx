@@ -770,7 +770,7 @@ export default function Community() {
           <div className="flex items-center space-x-2">
             <ArrowUpDown className="w-4 h-4 text-ministry-slate" />
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-32" data-testid="select-sort-by">
+              <SelectTrigger className="w-32 border-white" data-testid="select-sort-by">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
