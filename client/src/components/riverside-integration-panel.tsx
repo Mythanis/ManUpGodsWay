@@ -79,7 +79,7 @@ export function RiversideIntegrationPanel() {
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Tv className="w-5 h-5 text-ministry-gold" />
-            <span>Riverside.fm Live Streaming</span>
+            <span>Live Podcast Management</span>
           </div>
           <Button
             variant="outline"
@@ -87,7 +87,7 @@ export function RiversideIntegrationPanel() {
             className="text-blue-600 border-blue-200 hover:bg-blue-50"
           >
             <ExternalLink className="w-4 h-4 mr-2" />
-            Open Riverside
+            Open Riverside Studio
           </Button>
         </CardTitle>
       </CardHeader>
@@ -126,23 +126,33 @@ export function RiversideIntegrationPanel() {
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            <div className="space-y-2">
-              <p className="font-medium">How to go live:</p>
-              <ol className="text-sm space-y-1 list-decimal ml-4">
-                <li>Start your session in Riverside.fm Studio</li>
-                <li>Begin recording/streaming</li>
-                <li>Copy the share URL from Riverside</li>
-                <li>Click "Go Live" on any podcast below</li>
-                <li>Paste the URL to make it available to users</li>
+            <div className="space-y-3">
+              <p className="font-medium">How to Start a New Live Podcast Session:</p>
+              <ol className="text-sm space-y-2 list-decimal ml-4">
+                <li><strong>Prepare Your Session:</strong> Click "Start New Live Session" below to set up your podcast details (title, description, category)</li>
+                <li><strong>Open Riverside:</strong> Click the "Open Riverside.fm" button to launch the streaming platform in a new tab</li>
+                <li><strong>Start Recording:</strong> Begin your recording/live stream in Riverside Studio</li>
+                <li><strong>Get Share URL:</strong> Copy the viewer/share URL from Riverside (this is what users will use to join)</li>
+                <li><strong>Go Live:</strong> Return here, paste the URL, and click "Start Live Session"</li>
+                <li><strong>Automatic Setup:</strong> A new podcast entry is created and users are notified automatically</li>
               </ol>
+              <div className="mt-3 p-2 bg-blue-50 rounded text-xs">
+                <strong>Note:</strong> Each live session becomes a permanent podcast entry that you can edit later. The recording will be saved to your podcast library after the stream ends.
+              </div>
             </div>
           </AlertDescription>
         </Alert>
 
-        {/* Start New Live Session */}
+        {/* Start New Live Podcast */}
         <div>
-          <h3 className="font-medium text-ministry-charcoal mb-3">Start New Live Session</h3>
+          <h3 className="font-medium text-ministry-charcoal mb-3 flex items-center">
+            <Radio className="w-4 h-4 mr-2 text-ministry-gold" />
+            Create New Live Podcast Session
+          </h3>
           <NewLiveSessionDialog />
+          <p className="text-xs text-ministry-slate mt-2">
+            Each live session creates a new podcast entry that will be saved to your library after streaming.
+          </p>
         </div>
 
         {/* Quick Stats */}

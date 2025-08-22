@@ -102,28 +102,43 @@ export function NewLiveSessionDialog() {
       <DialogTrigger asChild>
         <Button className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-white">
           <Radio className="w-4 h-4 mr-2" />
-          Start New Live Session
+          Create New Live Podcast
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Start New Live Session</DialogTitle>
+          <DialogTitle>Create New Live Podcast Session</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <div className="space-y-2">
-                <p className="font-medium">Live Session Workflow:</p>
-                <ol className="text-sm space-y-1 list-decimal ml-4">
-                  <li>Fill out the session details below</li>
-                  <li>Open Riverside.fm and start your recording/stream</li>
-                  <li>Copy the share URL from Riverside</li>
-                  <li>Paste it in the "Stream URL" field</li>
-                  <li>Click "Start Live Session" to go live</li>
-                  <li>This session will be saved as a new podcast entry</li>
-                </ol>
+              <div className="space-y-3">
+                <p className="font-medium">Live Podcast Session Setup:</p>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="font-medium text-blue-700 mb-1">Before Going Live:</p>
+                    <ol className="space-y-1 list-decimal ml-3">
+                      <li>Fill out session details below</li>
+                      <li>Open Riverside.fm Studio</li>
+                      <li>Set up your recording/stream</li>
+                      <li>Copy the viewer share URL</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <p className="font-medium text-green-700 mb-1">Going Live:</p>
+                    <ol className="space-y-1 list-decimal ml-3">
+                      <li>Paste Riverside URL below</li>
+                      <li>Click "Start Live Session"</li>
+                      <li>New podcast entry is created</li>
+                      <li>Users get notified automatically</li>
+                    </ol>
+                  </div>
+                </div>
+                <div className="bg-yellow-50 p-2 rounded text-xs">
+                  <strong>Important:</strong> This creates a new podcast that will appear in your podcast library. You can edit the title and details after the session ends.
+                </div>
               </div>
             </AlertDescription>
           </Alert>
