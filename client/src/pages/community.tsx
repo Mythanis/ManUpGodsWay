@@ -704,7 +704,7 @@ export default function Community() {
 
       {/* Discussion Categories */}
       <div className="px-6 mb-6">
-        <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Popular Topics</h2>
+        <h2 className="text-lg font-bold text-white mb-4">Popular Topics</h2>
         
         <div className="grid grid-cols-2 gap-3">
           {allCategories.map((category) => {
@@ -764,7 +764,7 @@ export default function Community() {
       {/* Recent Discussions */}
       <div className="px-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-ministry-charcoal">
+          <h2 className="text-lg font-bold text-white">
             {searchQuery ? `Search Results for "${searchQuery}"` : 'Recent Discussions'}
           </h2>
           <div className="flex items-center space-x-2">
