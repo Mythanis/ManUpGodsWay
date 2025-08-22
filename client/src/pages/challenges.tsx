@@ -126,9 +126,7 @@ export default function Challenges() {
           <div className="flex-1">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <h3 className={`font-semibold text-lg mb-1 ${
-                  isCurrentWeek ? 'text-ministry-charcoal' : 'text-ministry-charcoal'
-                }`}>
+                <h3 className="font-semibold text-lg mb-1 text-black">
                   {challenge.title}
                   {isCurrentWeek && (
                     <Badge className="ml-2 bg-ministry-gold text-black">
@@ -136,7 +134,7 @@ export default function Challenges() {
                     </Badge>
                   )}
                 </h3>
-                <div className="flex items-center space-x-3 text-sm text-ministry-slate mb-2">
+                <div className="flex items-center space-x-3 text-sm text-black mb-2">
                   <Badge className={`text-xs capitalize border ${getTopicColor(challenge.topic)}`}>
                     {challenge.topic}
                   </Badge>
@@ -149,7 +147,7 @@ export default function Challenges() {
             </div>
 
             {challenge.description && (
-              <p className="text-ministry-slate text-sm line-clamp-2">
+              <p className="text-black text-sm line-clamp-2">
                 {challenge.description}
               </p>
             )}
@@ -189,7 +187,7 @@ export default function Challenges() {
           <div className="mb-8">
             <div className="flex items-center mb-4">
               <Target className="w-6 h-6 text-ministry-gold mr-2" />
-              <h2 className="text-xl font-bold text-ministry-charcoal">This Week's Challenge</h2>
+              <h2 className="text-xl font-bold text-black">This Week's Challenge</h2>
             </div>
             <ChallengeCard challenge={currentWeekChallenge} isCurrentWeek={true} />
           </div>
@@ -197,13 +195,13 @@ export default function Challenges() {
           <div className="mb-8">
             <div className="flex items-center mb-4">
               <Target className="w-6 h-6 text-ministry-gold mr-2" />
-              <h2 className="text-xl font-bold text-ministry-charcoal">This Week's Challenge</h2>
+              <h2 className="text-xl font-bold text-black">This Week's Challenge</h2>
             </div>
             <Card className="text-center py-12 bg-ministry-gold-exact/20">
               <CardContent>
                 <Clock className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
-                <h3 className="text-lg font-medium text-ministry-charcoal mb-2">No Current Challenge</h3>
-                <p className="text-ministry-slate">Check back soon for this week's challenge!</p>
+                <h3 className="text-lg font-medium text-black mb-2">No Current Challenge</h3>
+                <p className="text-black">Check back soon for this week's challenge!</p>
               </CardContent>
             </Card>
           </div>
@@ -216,7 +214,7 @@ export default function Challenges() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
             {/* Topic Filter */}
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-ministry-slate">Filter by Topic:</span>
+              <span className="text-sm font-medium text-black">Filter by Topic:</span>
               <Select value={filterTopic} onValueChange={setFilterTopic}>
                 <SelectTrigger className="w-40">
                   <div className="flex items-center">
@@ -237,7 +235,7 @@ export default function Challenges() {
 
             {/* Sort Controls */}
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-ministry-slate">Sort by:</span>
+              <span className="text-sm font-medium text-black">Sort by:</span>
               <Button
                 variant="default"
                 size="sm"
@@ -262,7 +260,7 @@ export default function Challenges() {
           {/* Active Filters Display */}
           {filterTopic !== 'all' && (
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-ministry-slate">Showing:</span>
+              <span className="text-sm text-black">Showing:</span>
               <Badge variant="outline" className="capitalize">
                 {filterTopic} challenges
               </Badge>
@@ -283,10 +281,10 @@ export default function Challenges() {
           <Card className="text-center py-12 bg-ministry-gold-exact/20">
             <CardContent>
               <Trophy className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
-              <h3 className="text-lg font-medium text-ministry-charcoal mb-2">
+              <h3 className="text-lg font-medium text-black mb-2">
                 {filterTopic !== 'all' ? 'No challenges found for this topic' : 'No previous challenges yet'}
               </h3>
-              <p className="text-ministry-slate">
+              <p className="text-black">
                 {filterTopic !== 'all' 
                   ? 'Try selecting a different topic or clear the filter' 
                   : 'Check back as more challenges are added!'}
