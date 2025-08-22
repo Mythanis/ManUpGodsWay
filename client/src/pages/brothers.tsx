@@ -75,8 +75,8 @@ export default function Brothers() {
           </div>
         </div>
 
-        {/* Search Bar */}
-        {brothers && brothers.length > 0 && (
+        {/* Search Bar - Always show when not loading */}
+        {!isLoading && (
           <div className="relative mb-6">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
