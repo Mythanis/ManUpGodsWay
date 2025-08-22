@@ -519,10 +519,10 @@ export default function Podcasts() {
                             variant="outline" 
                             size="sm"
                             onClick={() => handlePodcastView(podcast.id)}
-                            className="text-xs px-1.5 py-1 h-auto whitespace-nowrap"
+                            className="text-xs px-2 py-1 h-auto whitespace-nowrap"
                           >
-                            <MessageSquare className="w-3 h-3" />
-                            <span className="ml-1 hidden sm:inline">Reviews</span>
+                            <MessageSquare className="w-3 h-3 mr-1" />
+                            Reviews
                           </Button>
                         </div>
                       </div>
