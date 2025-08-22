@@ -74,8 +74,11 @@ export function useWebSocket(userId?: string) {
             break;
 
           case 'brotherhood_removed':
-            // Invalidate brothers list to update UI
+            // Invalidate brothers list and user profile to update UI immediately
             queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
+            
+            // Also invalidate user profile queries in case we're viewing the removed brother's profile
+            queryClient.invalidateQueries({ queryKey: ['/api/users'] });
             
             // Show toast notification
             toast({

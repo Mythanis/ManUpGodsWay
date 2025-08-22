@@ -80,7 +80,9 @@ export default function BrotherhoodRequestButton({
         title: "Brotherhood Removed",
         description: `You are no longer brothers with ${recipientName || 'this user'}`,
       });
+      // Invalidate both brothers list and user profiles for instant updates
       queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
     },
     onError: (error: any) => {
       toast({

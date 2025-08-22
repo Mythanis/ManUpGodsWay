@@ -3282,16 +3282,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Remove the brotherhood
       await storage.removeBrotherhood(brotherhoodId);
 
-      // Send real-time WebSocket notification to the other user
+      // Send real-time WebSocket notifications to both users
       const wsMessage = {
         type: 'brotherhood_removed',
         message: `${currentUser?.firstName} ${currentUser?.lastName} has removed your brotherhood`,
         removedBy: currentUser?.firstName + ' ' + currentUser?.lastName
       };
 
+      // Send to the other user
       const targetWs = connectedClients.get(otherId);
       if (targetWs && targetWs.readyState === WebSocket.OPEN) {
         targetWs.send(JSON.stringify(wsMessage));
+      }
+
+      // Get the other user's info for the initiator message
+      const otherUser = await storage.getUser(otherId);
+      
+      // Send update to the initiating user as well for real-time UI update
+      const initiatorMessage = {
+        type: 'brotherhood_removed',
+        message: `You removed your brotherhood with ${otherUser?.firstName} ${otherUser?.lastName}`,
+        removedBy: currentUser?.firstName + ' ' + currentUser?.lastName
+      };
+
+      const initiatorWs = connectedClients.get(userId);
+      if (initiatorWs && initiatorWs.readyState === WebSocket.OPEN) {
+        initiatorWs.send(JSON.stringify(initiatorMessage));
       }
 
       res.json({
