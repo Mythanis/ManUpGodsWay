@@ -322,7 +322,7 @@ export default function Videos() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVideos.map((video: Video) => (
-              <Card key={video.id} className={`overflow-hidden hover:shadow-lg transition-shadow bg-ministry-gold/20 ${
+              <Card key={video.id} className={`overflow-hidden hover:shadow-lg transition-shadow bg-ministry-gold-exact/20 ${
                 video.isFeatured ? 'ring-2 ring-yellow-400 shadow-xl' : ''
               }`}>
                 <div className="aspect-video bg-gray-900 relative cursor-pointer"

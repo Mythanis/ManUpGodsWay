@@ -385,7 +385,7 @@ export default function Admin() {
 
       {/* Quick Stats */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-lg bg-ministry-gold/20" data-testid="card-admin-stats">
+        <Card className="shadow-lg bg-ministry-gold-exact/20" data-testid="card-admin-stats">
           <CardContent className="p-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
@@ -508,7 +508,7 @@ export default function Admin() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-navy"></div>
               </div>
             ) : studies.length === 0 ? (
-              <Card className="bg-ministry-gold/20">
+              <Card className="bg-ministry-gold-exact/20">
                 <CardContent className="p-8 text-center">
                   <Book className="w-12 h-12 text-ministry-slate mx-auto mb-4" />
                   <p className="text-ministry-slate">No studies created yet</p>
@@ -518,7 +518,7 @@ export default function Admin() {
             ) : (
               <div className="space-y-4">
                 {studies.map((study) => (
-                  <Card key={study.id} className="border-border bg-ministry-gold/20">
+                  <Card key={study.id} className="border-border bg-ministry-gold-exact/20">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">

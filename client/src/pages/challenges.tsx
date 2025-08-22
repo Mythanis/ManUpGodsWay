@@ -108,12 +108,12 @@ export default function Challenges() {
   };
 
   const ChallengeCard = ({ challenge, isCurrentWeek = false }: { challenge: Challenge; isCurrentWeek?: boolean }) => (
-    <Card className={`hover:shadow-md transition-shadow bg-ministry-gold/20 ${isCurrentWeek ? 'ring-2 ring-ministry-gold bg-ministry-gold/30' : ''}`}>
+    <Card className={`hover:shadow-md transition-shadow bg-ministry-gold-exact/20 ${isCurrentWeek ? 'ring-2 ring-ministry-gold bg-ministry-gold-exact/30' : ''}`}>
       <CardContent className="p-6">
         <div className="flex items-start space-x-4">
           <div className="flex-shrink-0">
             <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
-              isCurrentWeek ? 'bg-ministry-gold text-white' : 'bg-ministry-gold/20 text-ministry-gold'
+              isCurrentWeek ? 'bg-ministry-gold text-white' : 'bg-ministry-gold-exact/20 text-ministry-gold'
             }`}>
               {isCurrentWeek ? (
                 <Star className="w-8 h-8 fill-current" />
@@ -199,7 +199,7 @@ export default function Challenges() {
               <Target className="w-6 h-6 text-ministry-gold mr-2" />
               <h2 className="text-xl font-bold text-ministry-charcoal">This Week's Challenge</h2>
             </div>
-            <Card className="text-center py-12 bg-ministry-gold/20">
+            <Card className="text-center py-12 bg-ministry-gold-exact/20">
               <CardContent>
                 <Clock className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
                 <h3 className="text-lg font-medium text-ministry-charcoal mb-2">No Current Challenge</h3>
@@ -280,7 +280,7 @@ export default function Challenges() {
 
         {/* Previous Challenges List */}
         {processedChallenges.length === 0 ? (
-          <Card className="text-center py-12 bg-ministry-gold/20">
+          <Card className="text-center py-12 bg-ministry-gold-exact/20">
             <CardContent>
               <Trophy className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
               <h3 className="text-lg font-medium text-ministry-charcoal mb-2">

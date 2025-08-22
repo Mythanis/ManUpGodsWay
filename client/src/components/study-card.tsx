@@ -19,7 +19,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt }: S
       case 'premium':
         return 'bg-ministry-steel/20 text-ministry-steel';
       case 'vip':
-        return 'bg-ministry-gold/20 text-ministry-gold';
+        return 'bg-ministry-gold-exact/20 text-ministry-gold';
       default:
         return 'bg-ministry-success/20 text-ministry-success';
     }

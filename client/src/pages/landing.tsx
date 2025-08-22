@@ -36,7 +36,7 @@ export default function Landing() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          <Card className="border-none shadow-lg bg-ministry-gold/20" data-testid="card-bible-studies">
+          <Card className="border-none shadow-lg bg-ministry-gold-exact/20" data-testid="card-bible-studies">
             <CardContent className="p-8">
               <div className="text-ministry-steel mb-4">
                 <BookOpen size={48} />
@@ -48,7 +48,7 @@ export default function Landing() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-lg bg-ministry-gold/20" data-testid="card-video-content">
+          <Card className="border-none shadow-lg bg-ministry-gold-exact/20" data-testid="card-video-content">
             <CardContent className="p-8">
               <div className="text-ministry-steel mb-4">
                 <Video size={48} />
@@ -60,7 +60,7 @@ export default function Landing() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-lg bg-ministry-gold/20" data-testid="card-community">
+          <Card className="border-none shadow-lg bg-ministry-gold-exact/20" data-testid="card-community">
             <CardContent className="p-8">
               <div className="text-ministry-steel mb-4">
                 <MessageCircle size={48} />
@@ -72,7 +72,7 @@ export default function Landing() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-lg bg-ministry-gold/20" data-testid="card-progress">
+          <Card className="border-none shadow-lg bg-ministry-gold-exact/20" data-testid="card-progress">
             <CardContent className="p-8">
               <div className="text-ministry-steel mb-4">
                 <Users size={48} />

@@ -410,7 +410,7 @@ export default function Home() {
             <CardContent className="p-6">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
               <div className="relative z-10">
-                <div className="inline-flex items-center bg-ministry-gold/20 text-ministry-gold px-3 py-1 rounded-full text-xs font-medium mb-3">
+                <div className="inline-flex items-center bg-ministry-gold-exact/20 text-ministry-gold px-3 py-1 rounded-full text-xs font-medium mb-3">
                   <Target className="w-3 h-3 mr-1" fill="currentColor" />
                   This Week's Challenge
                 </div>
@@ -598,7 +598,7 @@ export default function Home() {
           <Card className="border-border bg-ministry-gold-exact/20" data-testid="activity-streak">
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-ministry-gold/20 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-ministry-gold-exact/20 flex items-center justify-center">
                   <svg className="w-5 h-5 text-ministry-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
                   </svg>
@@ -918,7 +918,7 @@ export default function Home() {
               {/* Challenge Header */}
               <div className="bg-gradient-to-br from-ministry-steel to-ministry-navy text-white p-6 rounded-lg">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="inline-flex items-center bg-ministry-gold/20 text-ministry-gold px-3 py-1 rounded-full text-xs font-medium">
+                  <div className="inline-flex items-center bg-ministry-gold-exact/20 text-ministry-gold px-3 py-1 rounded-full text-xs font-medium">
                     <Target className="w-3 h-3 mr-1" fill="currentColor" />
                     Week of {formatLocalDate(new Date((currentChallenge as any)?.releaseDate), { 
                       month: 'short', 

@@ -422,7 +422,7 @@ export default function PodcastManagement() {
                       <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
                         podcast.type === 'video' 
                           ? 'bg-ministry-steel/20' 
-                          : 'bg-ministry-gold/20'
+                          : 'bg-ministry-gold-exact/20'
                       }`}>
                         {podcast.type === 'video' ? (
                           <Video className="w-8 h-8 text-ministry-steel" />

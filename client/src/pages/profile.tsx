@@ -45,7 +45,7 @@ export default function Profile() {
       case 'premium':
         return <Badge className="bg-ministry-steel/20 text-ministry-steel">Premium Member</Badge>;
       case 'vip':
-        return <Badge className="bg-ministry-gold/20 text-ministry-gold">VIP Member</Badge>;
+        return <Badge className="bg-ministry-gold-exact/20 text-ministry-gold">VIP Member</Badge>;
       default:
         return <Badge variant="outline">Free Member</Badge>;
     }
@@ -116,7 +116,7 @@ export default function Profile() {
             <div className="space-y-4">
               <div className={`flex items-center justify-between p-4 rounded-xl border ${
                 user?.subscriptionTier === 'free' 
-                  ? 'bg-ministry-gold/10 border-ministry-gold/20' 
+                  ? 'bg-ministry-gold-exact/10 border-ministry-gold-exact/20' 
                   : 'bg-ministry-steel/10 border-ministry-steel/20'
               }`}>
                 <div className="flex items-center space-x-3">
@@ -181,7 +181,7 @@ export default function Profile() {
               data-testid="button-notification-preferences"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-ministry-gold/20 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact/20 flex items-center justify-center">
                   <Settings className="w-4 h-4 text-ministry-gold" />
                 </div>
                 <span className="font-medium text-foreground">Notification Preferences</span>
@@ -242,7 +242,7 @@ export default function Profile() {
               data-testid="button-help"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-ministry-gold/20 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact/20 flex items-center justify-center">
                   <HelpCircle className="w-4 h-4 text-ministry-gold" />
                 </div>
                 <span className="font-medium text-foreground">Help & Support</span>
