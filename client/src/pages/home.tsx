@@ -458,7 +458,7 @@ export default function Home() {
         ) : (
           <>
             {/* No Current Study - Show Recommendations */}
-            <Card className="border border-border p-6 mb-4 bg-ministry-gold/20" data-testid="card-no-current-study">
+            <Card className="border border-border p-6 mb-4 bg-ministry-gold-exact/20" data-testid="card-no-current-study">
               <div className="text-center">
                 <p className="text-ministry-slate mb-4">You haven't started any studies yet</p>
                 <Button 
@@ -478,7 +478,7 @@ export default function Home() {
                 <p className="text-xs text-ministry-slate mb-4">Based on your interests</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
-                    <Card key={study.id} className="border border-border hover:shadow-sm transition-shadow bg-ministry-gold/20">
+                    <Card key={study.id} className="border border-border hover:shadow-sm transition-shadow bg-ministry-gold-exact/20">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
@@ -576,7 +576,7 @@ export default function Home() {
         
         <div className="space-y-3">
           {completedCount > 0 && (
-            <Card className="border-border bg-ministry-gold/20" data-testid="activity-completed-study">
+            <Card className="border-border bg-ministry-gold-exact/20" data-testid="activity-completed-study">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-full bg-ministry-steel/20 flex items-center justify-center">
@@ -595,7 +595,7 @@ export default function Home() {
             </Card>
           )}
           
-          <Card className="border-border bg-ministry-gold/20" data-testid="activity-streak">
+          <Card className="border-border bg-ministry-gold-exact/20" data-testid="activity-streak">
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-full bg-ministry-gold/20 flex items-center justify-center">

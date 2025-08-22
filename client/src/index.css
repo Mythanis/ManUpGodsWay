@@ -56,7 +56,7 @@
   --ministry-charcoal: 215 25% 27%;
   --ministry-steel: 213 12% 47%;
   --ministry-slate: 215 14% 34%;
-  --ministry-gold: 49.8 100% 49.2%;
+  --ministry-gold: 50 100% 49%;
   --ministry-success: 158 64% 52%;
 }
 
@@ -79,6 +79,23 @@
 
 .bg-ministry-gold\/30 {
   background-color: hsl(var(--ministry-gold) / 0.3);
+}
+
+/* Exact hex color overrides for ministry gold */
+.bg-ministry-gold-exact {
+  background-color: #FBD000 !important;
+}
+
+.bg-ministry-gold-exact\/10 {
+  background-color: #FBD00019 !important; /* #FBD000 with 10% opacity */
+}
+
+.bg-ministry-gold-exact\/20 {
+  background-color: #FBD00033 !important; /* #FBD000 with 20% opacity */
+}
+
+.bg-ministry-gold-exact\/30 {
+  background-color: #FBD0004D !important; /* #FBD000 with 30% opacity */
 }
 
 /* Mobile viewport fixes for keyboards */
@@ -234,7 +251,7 @@
   --ministry-charcoal: 215 25% 27%;
   --ministry-steel: 213 12% 47%;
   --ministry-slate: 215 14% 34%;
-  --ministry-gold: 49.8 100% 49.2%;
+  --ministry-gold: 50 100% 49%;
   --ministry-success: 158 64% 62%;
   
   /* Additional dark theme colors for headers and featured cards */

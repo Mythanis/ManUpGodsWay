@@ -33,7 +33,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt }: S
     <Card className={`shadow-sm border overflow-hidden transition-all ${
       isCompleted 
         ? 'border-ministry-success/30 bg-ministry-success/5' 
-        : 'border-gray-100 bg-ministry-gold/20'
+        : 'border-gray-100 bg-ministry-gold-exact/20'
     }`} data-testid="study-card">
       <CardContent className="p-0">
         <div className="flex">
