@@ -50,10 +50,14 @@ export function useWebSocket(userId?: string) {
                 duration: 5000,
               });
               
-              // Invalidate brotherhood requests to refresh the UI
+              // Invalidate all related queries to refresh the UI immediately
               queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
               queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
               queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
+              
+              // Force refresh of brotherhood requests data
+              queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
             }
             break;
         }
