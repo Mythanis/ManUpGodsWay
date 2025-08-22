@@ -31,10 +31,7 @@ export default function BrotherhoodRequests() {
 
   const respondMutation = useMutation({
     mutationFn: async ({ requestId, response }: { requestId: string; response: 'approved' | 'denied' }) => {
-      return apiRequest(`/api/brotherhood-requests/${requestId}/respond`, {
-        method: 'POST',
-        body: JSON.stringify({ response }),
-      });
+      return apiRequest('POST', `/api/brotherhood-requests/${requestId}/respond`, { response });
     },
     onSuccess: (_, { response }) => {
       toast({
