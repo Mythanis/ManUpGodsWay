@@ -82,7 +82,7 @@ function DiscussionReplies({ discussionId }: { discussionId: string }) {
   return (
     <div className="space-y-3">
       {replies.map((reply: any) => (
-        <div key={reply.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+        <div key={reply.id} className="flex items-start space-x-3 p-3 bg-ministry-gold-exact/10 rounded-lg">
           <img 
             src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=4A90B8&color=fff&size=32`}
             alt={`${reply.user?.firstName} ${reply.user?.lastName}`}

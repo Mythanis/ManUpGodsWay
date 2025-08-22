@@ -178,7 +178,7 @@ export default function DiscussionCard({
   };
 
   return (
-    <Card className="shadow-sm border border-gray-100" data-testid="discussion-card">
+    <Card className="shadow-sm border border-gray-100 bg-ministry-gold-exact/20 hover:shadow-md transition-shadow" data-testid="discussion-card">
       <CardContent className="p-4">
         <div className="flex items-start space-x-3">
           <img 
@@ -304,7 +304,7 @@ export default function DiscussionCard({
           <div className="mt-4 pt-4 border-t border-gray-100">
             <div className="space-y-3">
               {(replies as any[])?.map((reply: any) => (
-                <div key={reply.id} className="flex items-start space-x-3 ml-4 p-3 bg-gray-50 rounded-lg">
+                <div key={reply.id} className="flex items-start space-x-3 ml-4 p-3 bg-ministry-gold-exact/10 rounded-lg">
                   <img 
                     src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=4A90B8&color=fff&size=32`}
                     alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
