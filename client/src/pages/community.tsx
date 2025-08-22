@@ -746,7 +746,7 @@ export default function Community() {
             placeholder="Search discussions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10"
+            className="pl-10 pr-10 border-white"
           />
           {searchQuery && (
             <Button
