@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff, X, Plus, Heart, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import type { Testimony } from "@shared/schema";
 
 interface TestimonyFormProps {
   userId?: string;
@@ -28,7 +29,7 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
   const { toast } = useToast();
 
   // Fetch existing testimony
-  const { data: testimony, isLoading } = useQuery({
+  const { data: testimony, isLoading } = useQuery<Testimony | null>({
     queryKey: [`/api/testimony${userId && !isOwnProfile ? `/${userId}` : ''}`],
     retry: false,
   });
@@ -56,7 +57,11 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate testimony queries
       queryClient.invalidateQueries({ queryKey: [`/api/testimony`] });
+      // Invalidate discipleship page data
+      queryClient.invalidateQueries({ queryKey: ['/api/users-with-testimonies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/testimony-tags'] });
       setIsEditing(false);
       toast({
         title: "Testimony saved",
@@ -83,10 +88,15 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate testimony queries
       queryClient.invalidateQueries({ queryKey: [`/api/testimony`] });
+      // Invalidate discipleship page data
+      queryClient.invalidateQueries({ queryKey: ['/api/users-with-testimonies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/testimony-tags'] });
       setContent("");
       setTags([]);
       setIsPublic(false);
+      setFaithJourneyStage("beginning");
       setIsEditing(false);
       toast({
         title: "Testimony deleted",
