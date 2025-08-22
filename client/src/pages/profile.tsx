@@ -302,7 +302,7 @@ export default function Profile() {
 
       {/* Progress Summary */}
       <div className="px-6">
-        <h2 className="text-lg font-bold text-black mb-4">Your Journey</h2>
+        <h2 className="text-lg font-bold text-white mb-4">Your Journey</h2>
         
         <Card className="border-border bg-ministry-gold-exact/20" data-testid="card-progress">
           <CardContent className="p-6">
@@ -370,7 +370,7 @@ export default function Profile() {
 
       {/* Testimony Section */}
       <div className="px-6 mt-6">
-        <h2 className="text-lg font-bold text-black mb-4">Your Testimony</h2>
+        <h2 className="text-lg font-bold text-white mb-4">Your Testimony</h2>
         <TestimonyForm isOwnProfile={true} />
       </div>
       
