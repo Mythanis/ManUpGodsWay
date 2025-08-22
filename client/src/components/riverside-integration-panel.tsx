@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { LiveStreamSetupDialog } from "@/components/live-stream-setup-dialog";
+import { NewLiveSessionDialog } from "@/components/new-live-session-dialog";
 import { 
   Radio, 
   ExternalLink, 
@@ -139,52 +139,10 @@ export function RiversideIntegrationPanel() {
           </AlertDescription>
         </Alert>
 
-        {/* Available Podcasts for Live Streaming */}
+        {/* Start New Live Session */}
         <div>
-          <h3 className="font-medium text-ministry-charcoal mb-3">Available Podcasts</h3>
-          <div className="grid gap-3">
-            {podcasts
-              .filter(p => p.type === 'video' || p.type === 'audio') // Only streamable content
-              .slice(0, 8) // Show recent podcasts
-              .map((podcast) => (
-                <div 
-                  key={podcast.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <h4 className="font-medium text-sm text-ministry-charcoal">
-                        {podcast.title}
-                      </h4>
-                      {podcast.isLive && (
-                        <Badge className="bg-red-500 text-white text-xs">
-                          LIVE
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-3 text-xs text-ministry-slate mt-1">
-                      <span className="flex items-center">
-                        {podcast.type === 'video' ? <Tv className="w-3 h-3 mr-1" /> : <Radio className="w-3 h-3 mr-1" />}
-                        {podcast.type}
-                      </span>
-                      <span className="capitalize">{podcast.category}</span>
-                      <span className="flex items-center">
-                        <Eye className="w-3 h-3 mr-1" />
-                        {podcast.viewCount} views
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <LiveStreamSetupDialog
-                      podcastId={podcast.id}
-                      podcastTitle={podcast.title}
-                      isLive={podcast.isLive}
-                    />
-                  </div>
-                </div>
-              ))}
-          </div>
+          <h3 className="font-medium text-ministry-charcoal mb-3">Start New Live Session</h3>
+          <NewLiveSessionDialog />
         </div>
 
         {/* Quick Stats */}

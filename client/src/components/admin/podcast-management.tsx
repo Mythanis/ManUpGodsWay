@@ -37,6 +37,9 @@ interface Podcast {
   ratingCount: number;
   viewCount: number;
   isPublished: boolean;
+  isCurrentlyLive?: boolean;
+  liveStreamUrl?: string;
+  liveStartedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

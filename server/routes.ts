@@ -2702,6 +2702,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create new live session (creates new podcast entry)
+  app.post('/api/admin/live-sessions', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { title, description, category, type, liveUrl, scheduledDate } = req.body;
+      
+      if (!title || !liveUrl) {
+        return res.status(400).json({ message: "Title and live stream URL are required" });
+      }
+
+      const liveSession = await storage.createLiveSession({
+        title,
+        description: description || '',
+        category: category || 'general',
+        type: type || 'video',
+        liveUrl,
+        scheduledDate: scheduledDate ? new Date(scheduledDate) : null,
+        uploadedBy: user.id
+      });
+
+      await storage.notifyLiveStreamStart(liveSession.id);
+      res.json(liveSession);
+    } catch (error) {
+      console.error("Error creating live session:", error);
+      res.status(500).json({ message: "Failed to create live session" });
+    }
+  });
+
   // Live streaming routes
   app.post('/api/admin/livestream/start/:id', isAuthenticated, async (req: any, res) => {
     try {

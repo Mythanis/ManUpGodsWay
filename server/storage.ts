@@ -2706,6 +2706,39 @@ export class DatabaseStorage implements IStorage {
       .where(eq(podcasts.id, podcastId));
   }
 
+  // Create new live session (new podcast entry that's live)
+  async createLiveSession(data: {
+    title: string;
+    description: string;
+    category: string;
+    type: string;
+    liveUrl: string;
+    scheduledDate: Date | null;
+    uploadedBy: string;
+  }): Promise<Podcast> {
+    const [podcast] = await db
+      .insert(podcasts)
+      .values({
+        title: data.title,
+        description: data.description,
+        type: data.type,
+        fileUrl: '/placeholder-live-session', // Placeholder, will be updated after recording
+        category: data.category,
+        uploadedBy: data.uploadedBy,
+        isCurrentlyLive: true,
+        liveStreamUrl: data.liveUrl,
+        liveStartedAt: new Date(),
+        scheduledLiveDate: data.scheduledDate,
+        liveNotificationsSent: false,
+        isPublished: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+      
+    return podcast;
+  }
+
   // Live streaming operations
   async startLiveStream(podcastId: string, liveUrl: string): Promise<Podcast> {
     const [podcast] = await db
@@ -2729,6 +2762,20 @@ export class DatabaseStorage implements IStorage {
         isCurrentlyLive: false,
         liveStreamUrl: null,
         liveEndedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(podcasts.id, podcastId))
+      .returning();
+    return podcast;
+  }
+
+  // Update live session with recorded file URL after stream ends
+  async updateLiveSessionRecording(podcastId: string, fileUrl: string, duration?: number): Promise<Podcast> {
+    const [podcast] = await db
+      .update(podcasts)
+      .set({
+        fileUrl: fileUrl,
+        duration: duration,
         updatedAt: new Date()
       })
       .where(eq(podcasts.id, podcastId))
