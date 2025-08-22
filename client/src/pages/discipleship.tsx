@@ -28,7 +28,7 @@ interface TestimonyTag {
 export default function Discipleship() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState("");
-  const [selectedFaithStage, setSelectedFaithStage] = useState("");
+  const [selectedFaithStage, setSelectedFaithStage] = useState("all");
   const [filteredUsers, setFilteredUsers] = useState<UserWithTestimony[]>([]);
 
   // Fetch all available testimony tags
@@ -55,7 +55,7 @@ export default function Discipleship() {
     }
 
     // Filter by faith journey stage
-    if (selectedFaithStage) {
+    if (selectedFaithStage && selectedFaithStage !== "all") {
       filtered = filtered.filter(user => 
         user.faithJourneyStage === selectedFaithStage
       );
@@ -84,7 +84,7 @@ export default function Discipleship() {
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedTag("");
-    setSelectedFaithStage("");
+    setSelectedFaithStage("all");
   };
 
   return (
@@ -159,7 +159,7 @@ export default function Discipleship() {
                   <SelectValue placeholder="All stages" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All stages</SelectItem>
+                  <SelectItem value="all">All stages</SelectItem>
                   <SelectItem value="beginning">Just beginning their walk in faith</SelectItem>
                   <SelectItem value="middle">In the middle of their faith, still transforming</SelectItem>
                   <SelectItem value="mature">Mature in their faith, steady in God's love</SelectItem>
@@ -168,7 +168,7 @@ export default function Discipleship() {
             </div>
 
             {/* Active Filters and Clear */}
-            {(searchQuery || selectedTag || selectedFaithStage) && (
+            {(searchQuery || selectedTag || (selectedFaithStage && selectedFaithStage !== "all")) && (
               <div className="flex items-center justify-between pt-2 border-t">
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-white">Active filters:</span>
@@ -177,7 +177,7 @@ export default function Discipleship() {
                       {selectedTag}
                     </Badge>
                   )}
-                  {selectedFaithStage && (
+                  {selectedFaithStage && selectedFaithStage !== "all" && (
                     <Badge className="bg-ministry-navy text-white">
                       {selectedFaithStage === 'beginning' ? 'Beginning' : 
                        selectedFaithStage === 'middle' ? 'Middle' : 'Mature'}
@@ -221,7 +221,7 @@ export default function Discipleship() {
                 <Heart className="w-12 h-12 mx-auto mb-4 text-ministry-slate/50" />
                 <h3 className="text-lg font-semibold text-white mb-2">No members found</h3>
                 <p className="text-white/70 text-sm">
-                  {searchQuery || selectedTag || selectedFaithStage
+                  {searchQuery || selectedTag || (selectedFaithStage && selectedFaithStage !== "all")
                     ? "Try adjusting your search filters or browse different options" 
                     : "No community members have shared testimonies with tags yet"
                   }
