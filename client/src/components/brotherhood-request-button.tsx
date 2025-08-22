@@ -19,6 +19,8 @@ export default function BrotherhoodRequestButton({
   const queryClient = useQueryClient();
   const [isRequested, setIsRequested] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showCooldownDialog, setShowCooldownDialog] = useState(false);
+  const [cooldownMessage, setCooldownMessage] = useState('');
 
   // Check if already brothers - this should now work with real-time updates via WebSocket
   const { data: brothers } = useQuery<any[]>({
@@ -51,6 +53,13 @@ export default function BrotherhoodRequestButton({
       if (status === 409 && data?.requiresConfirmation) {
         // Show confirmation dialog for previously denied request
         setShowConfirmDialog(true);
+        return;
+      }
+      
+      if (status === 400 && data?.message?.includes('wait')) {
+        // Show cooldown dialog for 40-day restriction
+        setCooldownMessage(data.message);
+        setShowCooldownDialog(true);
         return;
       }
       
@@ -168,7 +177,7 @@ export default function BrotherhoodRequestButton({
             <AlertDialogDescription>
               {recipientName || 'This user'} previously denied your brotherhood request. 
               Are you sure you want to send another request? If they deny again, 
-              you won't be able to send another request for 30 days.
+              you won't be able to send another request for 40 days.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -181,6 +190,23 @@ export default function BrotherhoodRequestButton({
               className="bg-ministry-charcoal hover:bg-ministry-charcoal/90"
             >
               Yes, Send Request
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cooldown dialog for 40-day restriction */}
+      <AlertDialog open={showCooldownDialog} onOpenChange={setShowCooldownDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Request Blocked</AlertDialogTitle>
+            <AlertDialogDescription>
+              The recipient has denied this request twice. You must wait 40 days before sending another.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowCooldownDialog(false)}>
+              OK
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

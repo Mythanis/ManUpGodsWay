@@ -23,6 +23,7 @@ import {
   contentFlags,
   testimonies,
   brotherhoodRequests,
+  brotherhoodDenials,
   brotherhoods,
   type User,
   type UpsertUser,
@@ -88,6 +89,8 @@ import {
   type InsertBrotherhoodRequest,
   type Brotherhood,
   type InsertBrotherhood,
+  type BrotherhoodDenial,
+  type InsertBrotherhoodDenial,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull } from "drizzle-orm";
@@ -293,6 +296,15 @@ export interface IStorage {
     testimonyTags: string[];
     tier: string;
   }[]>;
+  
+  // Brotherhood denial tracking operations
+  getBrotherhoodDenial(requesterId: string, recipientId: string): Promise<BrotherhoodDenial | undefined>;
+  upsertBrotherhoodDenial(denial: InsertBrotherhoodDenial): Promise<BrotherhoodDenial>;
+  checkDenialCooldown(requesterId: string, recipientId: string): Promise<{
+    inCooldown: boolean;
+    daysRemaining?: number;
+    denialCount: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2314,38 +2326,20 @@ export class DatabaseStorage implements IStorage {
       return { canSend: false, reason: "Brotherhood request already sent or pending" };
     }
 
-    // Check for previous denied requests
-    const lastDeniedRequest = await this.getLastDeniedRequest(requesterId, recipientId);
-    if (lastDeniedRequest) {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      // Count how many times this user has been denied by the same recipient
-      const deniedCount = await db.select({ count: count() })
-        .from(brotherhoodRequests)
-        .where(and(
-          eq(brotherhoodRequests.requesterId, requesterId),
-          eq(brotherhoodRequests.recipientId, recipientId),
-          eq(brotherhoodRequests.status, 'denied')
-        ));
-
-      const totalDenials = deniedCount[0].count;
-
-      if (totalDenials >= 2 && lastDeniedRequest.updatedAt > thirtyDaysAgo) {
-        // Two or more denials within 30 days - block completely
-        const daysRemaining = Math.ceil((lastDeniedRequest.updatedAt.getTime() + (30 * 24 * 60 * 60 * 1000) - Date.now()) / (24 * 60 * 60 * 1000));
-        return { 
-          canSend: false, 
-          reason: `You cannot send another request to this user. Please wait ${daysRemaining} more days before trying again.`
-        };
-      } else {
-        // First denial or more than 30 days have passed - require confirmation
-        return { 
-          canSend: true, 
-          requiresConfirmation: true,
-          lastDenied: lastDeniedRequest.updatedAt
-        };
-      }
+    // Check for previous denied requests using the new denial tracking table
+    const denialCheck = await this.checkDenialCooldown(requesterId, recipientId);
+    
+    if (denialCheck.inCooldown) {
+      return {
+        canSend: false,
+        reason: `The recipient has denied this request twice. You must wait ${denialCheck.daysRemaining} more days before sending another.`
+      };
+    } else if (denialCheck.denialCount > 0) {
+      // First denial - require confirmation
+      return {
+        canSend: true,
+        requiresConfirmation: true
+      };
     }
 
     // No previous interactions - can send freely
@@ -3656,6 +3650,63 @@ export class DatabaseStorage implements IStorage {
       faithJourneyStage: user.faithJourneyStage,
       tier: user.subscriptionTier || 'free'
     }));
+  }
+
+  // Brotherhood denial tracking methods
+  async getBrotherhoodDenial(requesterId: string, recipientId: string): Promise<BrotherhoodDenial | undefined> {
+    const [denial] = await db.select()
+      .from(brotherhoodDenials)
+      .where(and(
+        eq(brotherhoodDenials.requesterId, requesterId),
+        eq(brotherhoodDenials.recipientId, recipientId)
+      ));
+    return denial;
+  }
+
+  async upsertBrotherhoodDenial(denial: InsertBrotherhoodDenial): Promise<BrotherhoodDenial> {
+    const [newDenial] = await db.insert(brotherhoodDenials)
+      .values(denial)
+      .onConflictDoUpdate({
+        target: [brotherhoodDenials.requesterId, brotherhoodDenials.recipientId],
+        set: {
+          denialCount: sql`${brotherhoodDenials.denialCount} + 1`,
+          lastDenialAt: new Date(),
+          cooldownUntil: denial.denialCount && denial.denialCount >= 1 ? 
+            new Date(Date.now() + (40 * 24 * 60 * 60 * 1000)) : null, // 40 days cooldown after 2nd denial
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return newDenial;
+  }
+
+  async checkDenialCooldown(requesterId: string, recipientId: string): Promise<{
+    inCooldown: boolean;
+    daysRemaining?: number;
+    denialCount: number;
+  }> {
+    const denial = await this.getBrotherhoodDenial(requesterId, recipientId);
+    
+    if (!denial) {
+      return { inCooldown: false, denialCount: 0 };
+    }
+
+    // If there's a cooldown period and it hasn't expired
+    if (denial.cooldownUntil && denial.cooldownUntil > new Date()) {
+      const daysRemaining = Math.ceil(
+        (denial.cooldownUntil.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+      );
+      return {
+        inCooldown: true,
+        daysRemaining,
+        denialCount: denial.denialCount
+      };
+    }
+
+    return {
+      inCooldown: false,
+      denialCount: denial.denialCount
+    };
   }
 }
 

@@ -841,6 +841,29 @@ export const insertBrotherhoodRequestSchema = createInsertSchema(brotherhoodRequ
 export type BrotherhoodRequest = typeof brotherhoodRequests.$inferSelect;
 export type InsertBrotherhoodRequest = z.infer<typeof insertBrotherhoodRequestSchema>;
 
+// Track brotherhood request denials for cooldown management
+export const brotherhoodDenials = pgTable("brotherhood_denials", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requesterId: varchar("requester_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  recipientId: varchar("recipient_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  denialCount: integer("denial_count").notNull().default(1),
+  lastDenialAt: timestamp("last_denial_at").defaultNow(),
+  cooldownUntil: timestamp("cooldown_until"), // Set after 2nd denial
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  unique: unique().on(table.requesterId, table.recipientId),
+}));
+
+export const insertBrotherhoodDenialSchema = createInsertSchema(brotherhoodDenials).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type BrotherhoodDenial = typeof brotherhoodDenials.$inferSelect;
+export type InsertBrotherhoodDenial = z.infer<typeof insertBrotherhoodDenialSchema>;
+
 // Brotherhoods table (approved relationships)
 export const brotherhoods = pgTable("brotherhoods", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

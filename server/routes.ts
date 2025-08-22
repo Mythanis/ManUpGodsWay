@@ -3230,6 +3230,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (targetWs && targetWs.readyState === WebSocket.OPEN) {
           targetWs.send(JSON.stringify(wsMessage));
         }
+      } else if (response === 'denied') {
+        // Track the denial for cooldown management
+        await storage.upsertBrotherhoodDenial({
+          requesterId: request.requesterId,
+          recipientId: userId,
+          denialCount: 1, // Will be incremented by the upsert logic
+          lastDenialAt: new Date()
+        });
       }
 
       res.json({ message: `Brotherhood request ${response} successfully` });
