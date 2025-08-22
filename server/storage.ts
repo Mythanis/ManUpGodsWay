@@ -2216,6 +2216,42 @@ export class DatabaseStorage implements IStorage {
       .where(eq(brotherhoods.id, brotherhoodId));
   }
 
+  async searchUsers(query: string, excludeUserId: string): Promise<User[]> {
+    const searchTerm = `%${query.toLowerCase()}%`;
+    
+    const searchResults = await db.select({
+      id: users.id,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      email: users.email,
+      profileImageUrl: users.profileImageUrl,
+      role: users.role,
+      subscriptionTier: users.subscriptionTier,
+      streakDays: users.streakDays,
+      lastActiveAt: users.lastActiveAt,
+      isProfilePrivate: users.isProfilePrivate,
+      isSilenced: users.isSilenced,
+      mutedUntil: users.mutedUntil,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+    })
+      .from(users)
+      .where(
+        and(
+          not(eq(users.id, excludeUserId)), // Exclude current user
+          or(
+            sql`LOWER(${users.firstName}) LIKE ${searchTerm}`,
+            sql`LOWER(${users.lastName}) LIKE ${searchTerm}`,
+            sql`LOWER(CONCAT(${users.firstName}, ' ', ${users.lastName})) LIKE ${searchTerm}`
+          )
+        )
+      )
+      .limit(10)
+      .orderBy(users.firstName, users.lastName);
+
+    return searchResults;
+  }
+
   async checkBrotherhoodExists(userId1: string, userId2: string): Promise<boolean> {
     const sortedIds = [userId1, userId2].sort();
     const [existing] = await db.select()

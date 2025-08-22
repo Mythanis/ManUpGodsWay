@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, Users, Calendar, Search, Tag } from "lucide-react";
+import { UserPlus, Users, Calendar, Search, Tag, Send } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -22,8 +22,18 @@ interface Brother {
   brotherhoodId: string;
 }
 
+interface SearchUser {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  profileImageUrl: string | null;
+}
+
 export default function Brothers() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [showUserSearch, setShowUserSearch] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -31,12 +41,35 @@ export default function Brothers() {
     queryKey: ['/api/brothers'],
   });
 
+  // User search query - only search when user types at least 2 characters
+  const { data: searchUsers, isLoading: isSearchingUsers } = useQuery<SearchUser[]>({
+    queryKey: ['/api/users/search', userSearchQuery],
+    queryFn: async () => {
+      const response = await fetch(`/api/users/search?q=${encodeURIComponent(userSearchQuery)}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to search users');
+      }
+      return response.json();
+    },
+    enabled: userSearchQuery.length >= 2,
+  });
+
   const updateTagMutation = useMutation({
     mutationFn: async ({ brotherhoodId, tag }: { brotherhoodId: string; tag: string | null }) => {
-      return apiRequest(`/api/brothers/${brotherhoodId}/tag`, {
+      const response = await fetch(`/api/brothers/${brotherhoodId}/tag`, {
         method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
         body: JSON.stringify({ tag }),
       });
+      if (!response.ok) {
+        throw new Error('Failed to update tag');
+      }
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -53,6 +86,26 @@ export default function Brothers() {
       });
     },
   });
+
+  // Handle keyboard events for search
+  const handleSearchKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === 'Return') {
+      handleSearch();
+    }
+  };
+
+  const handleSearch = () => {
+    if (userSearchQuery.trim().length >= 2) {
+      setShowUserSearch(true);
+    }
+  };
+
+  // Hide user search results when clicking outside or clearing search
+  useEffect(() => {
+    if (userSearchQuery.length < 2) {
+      setShowUserSearch(false);
+    }
+  }, [userSearchQuery]);
 
   // Filter brothers based on search query
   const filteredBrothers = brothers?.filter(brother => {
@@ -118,7 +171,7 @@ export default function Brothers() {
           </div>
         </div>
 
-        {/* Search Bar - Always show when not loading */}
+        {/* Brother Search Bar */}
         {!isLoading && (
           <div className="relative mb-6">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -130,6 +183,91 @@ export default function Brothers() {
               className="pl-10 border-white dark:border-white"
               data-testid="input-search-brothers"
             />
+          </div>
+        )}
+
+        {/* User Search Bar - Find new brothers */}
+        {!isLoading && (
+          <div className="relative mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Search for users to connect with as brothers..."
+                value={userSearchQuery}
+                onChange={(e) => {
+                  setUserSearchQuery(e.target.value);
+                  if (e.target.value.length >= 2) {
+                    setShowUserSearch(true);
+                  }
+                }}
+                onKeyDown={handleSearchKeyPress}
+                className="pl-10 pr-12 border-white dark:border-white"
+                data-testid="input-search-users"
+              />
+              <Button
+                onClick={handleSearch}
+                disabled={userSearchQuery.length < 2}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                data-testid="button-search-users"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* User Search Results Dropdown */}
+            {showUserSearch && userSearchQuery.length >= 2 && (
+              <div className="absolute top-full left-0 right-0 z-50 bg-background border border-white dark:border-white rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+                {isSearchingUsers ? (
+                  <div className="p-4 text-center text-muted-foreground">
+                    Searching users...
+                  </div>
+                ) : searchUsers && searchUsers.length > 0 ? (
+                  <div className="py-2">
+                    {searchUsers.map((user) => {
+                      // Check if user is already a brother
+                      const isAlreadyBrother = brothers?.some(brother => brother.id === user.id);
+                      
+                      return (
+                        <Link key={user.id} href={`/users/${user.id}`}>
+                          <div 
+                            className="flex items-center space-x-3 px-4 py-3 hover:bg-muted cursor-pointer transition-colors"
+                            onClick={() => {
+                              setShowUserSearch(false);
+                              setUserSearchQuery("");
+                            }}
+                          >
+                            <Avatar className="w-10 h-10">
+                              <AvatarFallback className="bg-ministry-gold text-black text-sm font-semibold">
+                                {user.firstName?.[0]}{user.lastName?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">
+                                {user.firstName} {user.lastName}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {user.email}
+                              </p>
+                            </div>
+                            {isAlreadyBrother && (
+                              <div className="flex items-center space-x-1 text-xs text-ministry-gold">
+                                <Users className="w-3 h-3" />
+                                <span>Brother</span>
+                              </div>
+                            )}
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-muted-foreground">
+                    No users found matching "{userSearchQuery}"
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 

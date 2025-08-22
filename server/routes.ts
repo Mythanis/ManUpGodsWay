@@ -3218,6 +3218,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/users/search', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUserId = req.user.claims.sub;
+      const { q } = req.query;
+
+      if (!q || q.length < 2) {
+        return res.json([]);
+      }
+
+      const users = await storage.searchUsers(q, currentUserId);
+      res.json(users);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      res.status(500).json({ message: "Failed to search users" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
