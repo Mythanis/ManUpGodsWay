@@ -3310,6 +3310,7 @@ export class DatabaseStorage implements IStorage {
           content: testimonyData.content,
           tags: testimonyData.tags,
           isPublic: testimonyData.isPublic,
+          faithJourneyStage: testimonyData.faithJourneyStage,
           updatedAt: new Date()
         }
       })
@@ -3366,6 +3367,7 @@ export class DatabaseStorage implements IStorage {
     displayName: string | null;
     avatarUrl: string | null;
     testimonyTags: string[];
+    faithJourneyStage: string | null;
     tier: string;
   }[]> {
     const usersWithTestimonies = await db
@@ -3376,7 +3378,8 @@ export class DatabaseStorage implements IStorage {
         lastName: users.lastName,
         profileImageUrl: users.profileImageUrl,
         subscriptionTier: users.subscriptionTier,
-        tags: testimonies.tags
+        tags: testimonies.tags,
+        faithJourneyStage: testimonies.faithJourneyStage
       })
       .from(users)
       .innerJoin(testimonies, eq(users.id, testimonies.userId))
@@ -3393,6 +3396,7 @@ export class DatabaseStorage implements IStorage {
       displayName: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : null,
       avatarUrl: user.profileImageUrl,
       testimonyTags: user.tags || [],
+      faithJourneyStage: user.faithJourneyStage,
       tier: user.subscriptionTier || 'free'
     }));
   }

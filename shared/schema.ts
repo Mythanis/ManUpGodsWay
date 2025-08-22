@@ -203,6 +203,7 @@ export const testimonies = pgTable("testimonies", {
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }).unique(),
   content: text("content").notNull(),
   tags: text("tags").array(), // Array of string tags
+  faithJourneyStage: varchar("faith_journey_stage").default("beginning"), // beginning, middle, mature
   isPublic: boolean("is_public").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

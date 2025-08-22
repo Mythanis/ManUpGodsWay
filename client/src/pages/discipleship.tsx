@@ -16,6 +16,7 @@ interface UserWithTestimony {
   displayName: string | null;
   avatarUrl: string | null;
   testimonyTags: string[];
+  faithJourneyStage: string | null;
   tier: string;
 }
 
@@ -27,6 +28,7 @@ interface TestimonyTag {
 export default function Discipleship() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState("");
+  const [selectedFaithStage, setSelectedFaithStage] = useState("");
   const [filteredUsers, setFilteredUsers] = useState<UserWithTestimony[]>([]);
 
   // Fetch all available testimony tags
@@ -39,7 +41,7 @@ export default function Discipleship() {
     queryKey: ['/api/users-with-testimonies'],
   });
 
-  // Filter users based on search query and selected tag
+  // Filter users based on search query, selected tag, and faith journey stage
   useEffect(() => {
     let filtered = users;
 
@@ -49,6 +51,13 @@ export default function Discipleship() {
         user.testimonyTags.some(tag => 
           tag.toLowerCase() === selectedTag.toLowerCase()
         )
+      );
+    }
+
+    // Filter by faith journey stage
+    if (selectedFaithStage) {
+      filtered = filtered.filter(user => 
+        user.faithJourneyStage === selectedFaithStage
       );
     }
 
@@ -65,7 +74,7 @@ export default function Discipleship() {
     }
 
     setFilteredUsers(filtered);
-  }, [users, searchQuery, selectedTag]);
+  }, [users, searchQuery, selectedTag, selectedFaithStage]);
 
   const handleTagSelect = (tag: string) => {
     setSelectedTag(tag);
@@ -75,6 +84,7 @@ export default function Discipleship() {
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedTag("");
+    setSelectedFaithStage("");
   };
 
   return (
@@ -141,14 +151,36 @@ export default function Discipleship() {
               )}
             </div>
 
+            {/* Faith Journey Stage Filter */}
+            <div className="space-y-2">
+              <Label className="text-white">Filter by faith journey stage</Label>
+              <Select value={selectedFaithStage} onValueChange={setSelectedFaithStage}>
+                <SelectTrigger data-testid="select-faith-stage-filter">
+                  <SelectValue placeholder="All stages" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All stages</SelectItem>
+                  <SelectItem value="beginning">Just beginning their walk in faith</SelectItem>
+                  <SelectItem value="middle">In the middle of their faith, still transforming</SelectItem>
+                  <SelectItem value="mature">Mature in their faith, steady in God's love</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Active Filters and Clear */}
-            {(searchQuery || selectedTag) && (
+            {(searchQuery || selectedTag || selectedFaithStage) && (
               <div className="flex items-center justify-between pt-2 border-t">
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-white">Active filters:</span>
                   {selectedTag && (
                     <Badge className="bg-ministry-gold-exact text-black">
                       {selectedTag}
+                    </Badge>
+                  )}
+                  {selectedFaithStage && (
+                    <Badge className="bg-ministry-navy text-white">
+                      {selectedFaithStage === 'beginning' ? 'Beginning' : 
+                       selectedFaithStage === 'middle' ? 'Middle' : 'Mature'}
                     </Badge>
                   )}
                 </div>
@@ -189,8 +221,8 @@ export default function Discipleship() {
                 <Heart className="w-12 h-12 mx-auto mb-4 text-ministry-slate/50" />
                 <h3 className="text-lg font-semibold text-white mb-2">No members found</h3>
                 <p className="text-white/70 text-sm">
-                  {searchQuery || selectedTag 
-                    ? "Try adjusting your search or browse different tags" 
+                  {searchQuery || selectedTag || selectedFaithStage
+                    ? "Try adjusting your search filters or browse different options" 
                     : "No community members have shared testimonies with tags yet"
                   }
                 </p>
@@ -254,6 +286,20 @@ export default function Discipleship() {
                                     </Badge>
                                   )}
                                 </div>
+                              </div>
+                            )}
+                            
+                            {/* Faith Journey Stage */}
+                            {user.faithJourneyStage && (
+                              <div className="mt-2">
+                                <Badge 
+                                  variant="outline" 
+                                  className="text-xs bg-ministry-navy/20 text-ministry-gold border-ministry-navy"
+                                >
+                                  {user.faithJourneyStage === 'beginning' ? 'Beginning Faith Journey' : 
+                                   user.faithJourneyStage === 'middle' ? 'Faith Journey in Progress' : 
+                                   'Mature Faith Journey'}
+                                </Badge>
                               </div>
                             )}
                           </div>

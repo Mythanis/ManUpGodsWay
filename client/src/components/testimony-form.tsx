@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff, X, Plus, Heart, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,6 +21,7 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
   const [isPublic, setIsPublic] = useState(false);
+  const [faithJourneyStage, setFaithJourneyStage] = useState("beginning");
   const [isEditing, setIsEditing] = useState(false);
   
   const queryClient = useQueryClient();
@@ -37,12 +39,13 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
       setContent(testimony.content || "");
       setTags(testimony.tags || []);
       setIsPublic(testimony.isPublic || false);
+      setFaithJourneyStage(testimony.faithJourneyStage || "beginning");
     }
   }, [testimony]);
 
   // Save testimony mutation
   const saveTestimonyMutation = useMutation({
-    mutationFn: async (testimonyData: { content: string; tags: string[]; isPublic: boolean }) => {
+    mutationFn: async (testimonyData: { content: string; tags: string[]; isPublic: boolean; faithJourneyStage: string }) => {
       const response = await fetch('/api/testimony', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -123,7 +126,8 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
     saveTestimonyMutation.mutate({
       content: content.trim(),
       tags,
-      isPublic
+      isPublic,
+      faithJourneyStage
     });
   };
 
@@ -310,6 +314,24 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
               </div>
             </div>
 
+            {/* Faith Journey Stage */}
+            <div className="space-y-2">
+              <Label htmlFor="faith-journey-stage" className="text-white">Where are you in your faith journey?</Label>
+              <Select value={faithJourneyStage} onValueChange={setFaithJourneyStage}>
+                <SelectTrigger data-testid="select-faith-journey-stage">
+                  <SelectValue placeholder="Select your faith stage" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="beginning">Just beginning my walk in faith</SelectItem>
+                  <SelectItem value="middle">In the middle of my faith, still going through transformation</SelectItem>
+                  <SelectItem value="mature">Mature in my faith, steady in God's love and mercy</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="text-xs text-white">
+                This helps others connect with testimonies that relate to their own journey.
+              </div>
+            </div>
+
             {/* Privacy Setting */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-white">Privacy Setting</Label>
@@ -365,6 +387,7 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
                     setContent(testimony.content || "");
                     setTags(testimony.tags || []);
                     setIsPublic(testimony.isPublic || false);
+                    setFaithJourneyStage(testimony.faithJourneyStage || "beginning");
                   }
                 }}
                 data-testid="button-cancel-edit"
