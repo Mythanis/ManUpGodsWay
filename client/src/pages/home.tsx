@@ -447,7 +447,7 @@ export default function Home() {
 
       {/* Current Progress Section */}
       <div className="px-6 mb-6">
-        <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Your Journey</h2>
+        <h2 className="text-lg font-bold text-white mb-4">Your Journey</h2>
         
         {currentStudy && currentStudy.study ? (
           <ProgressCard 
@@ -683,7 +683,7 @@ export default function Home() {
 
             {/* Progress Insights */}
             <div className="bg-ministry-navy/5 p-4 rounded-lg border border-ministry-navy/20">
-              <h4 className="font-medium text-ministry-charcoal mb-2">Your Journey</h4>
+              <h4 className="font-medium text-white mb-2">Your Journey</h4>
               <div className="space-y-2 text-sm text-ministry-slate">
                 {completedCount === 0 && (
                   <p>🌱 Ready to start your first study? Check out the featured study above!</p>
