@@ -20,6 +20,7 @@ import {
   userReports,
   userSilences,
   logoSettings,
+  headerLogoSettings,
   contentFlags,
   testimonies,
   brotherhoodRequests,
@@ -63,6 +64,8 @@ import {
   type InsertUserSilence,
   type LogoSettings,
   type InsertLogoSettings,
+  type HeaderLogoSettings,
+  type InsertHeaderLogoSettings,
   type SystemSettings,
   type InsertSystemSettings,
   systemSettings,
@@ -223,6 +226,11 @@ export interface IStorage {
   // Logo settings operations
   getLogoSettings(): Promise<LogoSettings | undefined>;
   updateLogoSettings(logoSettings: InsertLogoSettings): Promise<LogoSettings>;
+  
+  // Header logo settings operations
+  getHeaderLogoSettings(): Promise<HeaderLogoSettings | undefined>;
+  updateHeaderLogoSettings(headerLogoSettings: InsertHeaderLogoSettings): Promise<HeaderLogoSettings>;
+  deleteHeaderLogoSettings(): Promise<void>;
   
   // System settings operations
   getSystemSettings(): Promise<SystemSettings | undefined>;
@@ -2739,6 +2747,39 @@ export class DatabaseStorage implements IStorage {
       .values(logoSettingsData)
       .returning();
     return newSettings;
+  }
+
+  async getHeaderLogoSettings(): Promise<HeaderLogoSettings | undefined> {
+    const [settings] = await db
+      .select()
+      .from(headerLogoSettings)
+      .where(eq(headerLogoSettings.isEnabled, true))
+      .orderBy(desc(headerLogoSettings.createdAt))
+      .limit(1);
+    return settings;
+  }
+
+  async updateHeaderLogoSettings(headerLogoSettingsData: InsertHeaderLogoSettings): Promise<HeaderLogoSettings> {
+    // Disable all existing header logo settings first
+    await db
+      .update(headerLogoSettings)
+      .set({ isEnabled: false, updatedAt: new Date() })
+      .where(eq(headerLogoSettings.isEnabled, true));
+
+    // Insert new header logo settings
+    const [newSettings] = await db
+      .insert(headerLogoSettings)
+      .values(headerLogoSettingsData)
+      .returning();
+    return newSettings;
+  }
+
+  async deleteHeaderLogoSettings(): Promise<void> {
+    // Disable all header logo settings
+    await db
+      .update(headerLogoSettings)
+      .set({ isEnabled: false, updatedAt: new Date() })
+      .where(eq(headerLogoSettings.isEnabled, true));
   }
 
   async updateLogoSettingsPartial(updateData: Partial<LogoSettings>): Promise<LogoSettings> {

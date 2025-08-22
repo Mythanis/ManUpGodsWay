@@ -16,6 +16,7 @@ import UserManagement from "@/components/admin/user-management";
 import DevotionalManagement from "@/components/admin/devotional-management";
 import VideoManagement from "@/components/admin/video-management";
 import LogoManagement from "@/components/admin/logo-management";
+import HeaderLogoManagement from "@/components/admin/header-logo-management";
 import SystemSettings from "@/components/admin/system-settings";
 import PodcastManagement from "@/components/admin/podcast-management";
 import ChallengeManagement from "@/components/admin/challenge-management";
@@ -650,9 +651,15 @@ export default function Admin() {
           )}
 
           {activeTab === "logo" && (
-            <div>
-              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Logo Management</h2>
-              <LogoManagement />
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Splash Screen Logo</h2>
+                <LogoManagement />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Header Logo</h2>
+                <HeaderLogoManagement />
+              </div>
             </div>
           )}
           

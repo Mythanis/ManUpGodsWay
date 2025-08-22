@@ -113,7 +113,10 @@ function AppContent() {
 
   return (
     <div className="max-w-md mx-auto bg-background text-foreground shadow-2xl min-h-screen relative">
-      <Router />
+      {/* Add top padding to create space for the logo */}
+      <div className="pt-20">
+        <Router />
+      </div>
       {isAuthenticated && !isLoading && splashCompleted && <Navigation />}
     </div>
   );

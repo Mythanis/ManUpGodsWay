@@ -15,6 +15,7 @@ import {
   insertStudyRatingSchema,
   insertVideoRatingSchema,
   insertLogoSettingsSchema,
+  insertHeaderLogoSettingsSchema,
   insertSystemSettingsSchema,
   insertPodcastSchema,
   insertPodcastRatingSchema,
@@ -2526,6 +2527,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid logo data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to upload logo" });
+    }
+  });
+
+  // Get current header logo settings
+  app.get('/api/header-logo', async (req, res) => {
+    try {
+      const headerLogoSettings = await storage.getHeaderLogoSettings();
+      res.json(headerLogoSettings);
+    } catch (error) {
+      console.error("Error fetching header logo settings:", error);
+      res.status(500).json({ message: "Failed to fetch header logo settings" });
+    }
+  });
+
+  // Upload/update header logo (admin only)
+  app.post('/api/admin/header-logo', isAuthenticated, imageUpload.single('logo'), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'Header logo file is required' });
+      }
+
+      // Convert uploaded file to base64 data URL
+      const base64Data = req.file.buffer.toString('base64');
+      const dataUrl = `data:${req.file.mimetype};base64,${base64Data}`;
+      
+      const headerLogoSettingsData = insertHeaderLogoSettingsSchema.parse({
+        logoUrl: dataUrl,
+        isEnabled: true,
+        uploadedBy: userId
+      });
+
+      const headerLogoSettings = await storage.updateHeaderLogoSettings(headerLogoSettingsData);
+      res.json(headerLogoSettings);
+    } catch (error) {
+      console.error("Error uploading header logo:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid header logo data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to upload header logo" });
+    }
+  });
+
+  // Delete header logo (admin only)
+  app.delete('/api/admin/header-logo', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      await storage.deleteHeaderLogoSettings();
+      res.json({ message: "Header logo deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting header logo:", error);
+      res.status(500).json({ message: "Failed to delete header logo" });
     }
   });
 

@@ -688,6 +688,25 @@ export const insertLogoSettingsSchema = createInsertSchema(logoSettings).omit({
 export type LogoSettings = typeof logoSettings.$inferSelect;
 export type InsertLogoSettings = z.infer<typeof insertLogoSettingsSchema>;
 
+// Header logo settings (separate from splash screen logo)
+export const headerLogoSettings = pgTable("header_logo_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  logoUrl: varchar("logo_url"),
+  isEnabled: boolean("is_enabled").default(true),
+  uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertHeaderLogoSettingsSchema = createInsertSchema(headerLogoSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type HeaderLogoSettings = typeof headerLogoSettings.$inferSelect;
+export type InsertHeaderLogoSettings = z.infer<typeof insertHeaderLogoSettingsSchema>;
+
 // System settings table for customizable app settings
 export const systemSettings = pgTable("system_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
