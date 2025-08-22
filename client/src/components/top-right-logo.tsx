@@ -10,7 +10,7 @@ export function TopRightLogo() {
   const displayLogo = headerLogoSettings?.logoUrl || logoUrl;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-black flex justify-center py-4 shadow-lg opacity-100">
+    <div className="fixed top-0 left-0 right-0 z-50 flex justify-center py-4 shadow-lg opacity-100" style={{ backgroundColor: '#000000' }}>
       <img 
         src={displayLogo} 
         alt="Man Up God's Way Logo" 
