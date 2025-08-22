@@ -366,7 +366,7 @@ export default function Videos() {
                       {video.title}
                     </h3>
                     {video.isFeatured && (
-                      <Star className="w-4 h-4 text-yellow-500 fill-current ml-2 flex-shrink-0" />
+                      <Star className="w-4 h-4 text-black fill-current ml-2 flex-shrink-0" />
                     )}
                   </div>
                   {video.description && (
@@ -379,7 +379,7 @@ export default function Videos() {
                     <div className="flex items-center space-x-2">
                       {video.rating > 0 && (
                         <div className="flex items-center">
-                          <Star className="w-4 h-4 text-ministry-gold fill-current mr-1" />
+                          <Star className="w-4 h-4 text-black fill-current mr-1" />
                           <span className="text-sm text-ministry-slate">{video.rating}</span>
                           <span className="text-xs text-ministry-slate ml-1">({video.ratingCount})</span>
                         </div>
@@ -474,7 +474,7 @@ export default function Videos() {
                   )}
                   {selectedVideo.rating > 0 && (
                     <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4 text-ministry-gold fill-current" />
+                      <Star className="w-4 h-4 text-black fill-current" />
                       <span>{selectedVideo.rating} ({selectedVideo.ratingCount} reviews)</span>
                     </div>
                   )}
@@ -492,7 +492,7 @@ export default function Videos() {
                               {[...Array(5)].map((_, i) => (
                                 <Star 
                                   key={i} 
-                                  className={`w-3 h-3 ${i < review.rating ? 'text-ministry-gold fill-current' : 'text-gray-300'}`} 
+                                  className={`w-3 h-3 ${i < review.rating ? 'text-black fill-current' : 'text-black'}`} 
                                 />
                               ))}
                             </div>
@@ -534,7 +534,7 @@ export default function Videos() {
                     className="focus:outline-none"
                   >
                     <Star 
-                      className={`w-6 h-6 ${star <= rating ? 'text-ministry-gold fill-current' : 'text-gray-300'} hover:text-ministry-gold transition-colors`} 
+                      className={`w-6 h-6 ${star <= rating ? 'text-black fill-current' : 'text-black'} hover:text-black transition-colors`} 
                     />
                   </button>
                 ))}

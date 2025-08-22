@@ -240,9 +240,9 @@ export default function Podcasts() {
         key={i}
         className={`w-4 h-4 ${
           i < rating 
-            ? 'fill-ministry-gold text-ministry-gold' 
-            : 'text-ministry-steel'
-        } ${interactive ? 'cursor-pointer hover:text-ministry-gold' : ''}`}
+            ? 'fill-current text-black' 
+            : 'text-black'
+        } ${interactive ? 'cursor-pointer hover:text-black' : ''}`}
         onClick={interactive && onRatingSelect ? () => onRatingSelect(i + 1) : undefined}
       />
     ));

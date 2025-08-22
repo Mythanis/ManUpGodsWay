@@ -232,8 +232,8 @@ export default function Home() {
         key={i}
         className={`w-3 h-3 ${
           i < Math.floor(rating)
-            ? "text-ministry-gold fill-current"
-            : "text-gray-300"
+            ? "text-black fill-current"
+            : "text-black"
         }`}
       />
     ));

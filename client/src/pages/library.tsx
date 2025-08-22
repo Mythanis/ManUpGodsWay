@@ -253,7 +253,7 @@ export default function Library() {
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
               <div className="relative z-10">
                 <div className="inline-flex items-center bg-ministry-gold-exact/20 text-ministry-gold px-3 py-1 rounded-full text-xs font-medium mb-3">
-                  <Star className="w-3 h-3 mr-1" fill="currentColor" />
+                  <Star className="w-3 h-3 mr-1 text-black" fill="currentColor" />
                   Featured
                 </div>
                 <h3 className="text-lg font-bold mb-2" data-testid="text-featured-title">

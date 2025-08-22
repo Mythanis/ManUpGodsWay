@@ -36,8 +36,8 @@ export function StudyReviewsDialog({ studyId, studyTitle, isOpen, onClose }: Stu
         key={i}
         className={`w-4 h-4 ${
           i < rating
-            ? "text-ministry-gold fill-current"
-            : "text-gray-300"
+            ? "text-black fill-current"
+            : "text-black"
         }`}
       />
     ));

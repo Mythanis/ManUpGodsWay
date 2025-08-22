@@ -82,7 +82,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt }: S
               {study.rating > 0 && (
                 <div className="flex items-center ml-2 space-x-2" data-testid="rating-display">
                   <div className="flex items-center">
-                    <Star className="w-3 h-3 text-ministry-gold fill-current mr-1" />
+                    <Star className="w-3 h-3 text-black fill-current mr-1" />
                     <span className="text-xs text-ministry-slate">{study.rating}</span>
                   </div>
                   {study.ratingCount > 0 && (

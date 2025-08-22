@@ -307,7 +307,7 @@ export default function StudyDetail() {
                 </Badge>
                 {(study.rating && parseFloat(study.rating.toString()) > 0) && (
                   <div className="flex items-center space-x-1" data-testid="rating-display">
-                    <Star className="w-4 h-4 text-ministry-gold fill-current" />
+                    <Star className="w-4 h-4 text-black fill-current" />
                     <span className="text-sm font-medium">{study.rating}</span>
                     <span className="text-xs text-ministry-slate">({study.ratingCount} reviews)</span>
                   </div>
