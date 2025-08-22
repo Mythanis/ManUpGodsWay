@@ -32,10 +32,17 @@ export default function StudyCard({ study, isCompleted = false, completedAt }: S
   return (
     <Card className={`shadow-sm border overflow-hidden transition-all ${
       isCompleted 
-        ? 'border-ministry-success/30 bg-ministry-success/5' 
+        ? 'border-green-500 border-2 bg-ministry-success/5' 
         : 'border-gray-100 bg-ministry-gold-exact/20'
     }`} data-testid="study-card">
-      <CardContent className="p-0">
+      <CardContent className="p-0 relative">
+        {isCompleted && (
+          <div className="absolute top-2 right-2 z-10">
+            <span className="bg-green-500 text-black text-xs font-bold px-2 py-1 rounded">
+              Completed
+            </span>
+          </div>
+        )}
         <div className="flex">
           <img 
             src={study.thumbnailUrl || `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=120`}
