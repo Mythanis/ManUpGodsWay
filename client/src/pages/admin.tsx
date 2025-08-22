@@ -389,28 +389,28 @@ export default function Admin() {
           <CardContent className="p-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-foreground" data-testid="text-total-users">
+                <p className="text-2xl font-bold text-black" data-testid="text-total-users">
                   {(stats as any)?.totalUsers || 0}
                 </p>
-                <p className="text-xs text-muted-foreground">Total Users</p>
+                <p className="text-xs text-black">Total Users</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-ministry-steel" data-testid="text-total-studies">
+                <p className="text-2xl font-bold text-black" data-testid="text-total-studies">
                   {(stats as any)?.totalStudies || 0}
                 </p>
-                <p className="text-xs text-muted-foreground">Studies</p>
+                <p className="text-xs text-black">Studies</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-ministry-success" data-testid="text-active-today">
+                <p className="text-2xl font-bold text-black" data-testid="text-active-today">
                   {(stats as any)?.activeToday || 0}
                 </p>
-                <p className="text-xs text-muted-foreground">Active Today</p>
+                <p className="text-xs text-black">Active Today</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-ministry-gold" data-testid="text-new-posts">
+                <p className="text-2xl font-bold text-black" data-testid="text-new-posts">
                   {(stats as any)?.newPosts || 0}
                 </p>
-                <p className="text-xs text-muted-foreground">New Posts</p>
+                <p className="text-xs text-black">New Posts</p>
               </div>
             </div>
           </CardContent>
