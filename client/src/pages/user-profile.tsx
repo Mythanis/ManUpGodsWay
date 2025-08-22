@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { TestimonyForm } from "@/components/testimony-form";
 
 interface UserProfile {
   user: {
@@ -440,6 +441,13 @@ export default function UserProfile() {
               <p className="text-xs text-ministry-slate overflow-wrap-anywhere">Subscription level</p>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Testimony Section - Only show if profile is not private */}
+      {!profile.user.isProfilePrivate && (
+        <div className="mb-6">
+          <TestimonyForm userId={userId} isOwnProfile={false} />
         </div>
       )}
     </div>
