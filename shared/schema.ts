@@ -846,6 +846,8 @@ export const brotherhoods = pgTable("brotherhoods", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId1: varchar("user_id_1").notNull().references(() => users.id, { onDelete: 'cascade' }),
   userId2: varchar("user_id_2").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  tagFromUser1: varchar("tag_from_user_1"), // Paul, Timothy, Barnabas, or null
+  tagFromUser2: varchar("tag_from_user_2"), // Paul, Timothy, Barnabas, or null
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
   unique: unique().on(table.userId1, table.userId2),

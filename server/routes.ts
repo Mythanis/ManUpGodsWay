@@ -3199,6 +3199,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/brothers/:brotherhoodId/tag', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { brotherhoodId } = req.params;
+      const { tag } = req.body; // 'Paul', 'Timothy', 'Barnabas', or null
+
+      // Validate tag value
+      if (tag !== null && !['Paul', 'Timothy', 'Barnabas'].includes(tag)) {
+        return res.status(400).json({ message: "Tag must be 'Paul', 'Timothy', 'Barnabas', or null" });
+      }
+
+      await storage.updateBrotherhoodTag(brotherhoodId, userId, tag);
+      res.json({ message: "Brotherhood tag updated successfully" });
+    } catch (error) {
+      console.error("Error updating brotherhood tag:", error);
+      res.status(500).json({ message: "Failed to update brotherhood tag" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -2160,12 +2160,17 @@ export class DatabaseStorage implements IStorage {
     return newBrotherhood;
   }
 
-  async getUserBrothers(userId: string): Promise<User[]> {
+  async getUserBrothers(userId: string): Promise<(User & { tag?: string; brotherhoodId: string })[]> {
     const brotherRelations = await db.select({
       brotherId: sql<string>`CASE 
         WHEN ${brotherhoods.userId1} = ${userId} THEN ${brotherhoods.userId2}
         ELSE ${brotherhoods.userId1}
       END`.as('brotherId'),
+      tag: sql<string>`CASE 
+        WHEN ${brotherhoods.userId1} = ${userId} THEN ${brotherhoods.tagFromUser1}
+        ELSE ${brotherhoods.tagFromUser2}
+      END`.as('tag'),
+      brotherhoodId: brotherhoods.id,
       createdAt: brotherhoods.createdAt,
     })
       .from(brotherhoods)
@@ -2180,11 +2185,35 @@ export class DatabaseStorage implements IStorage {
       .from(users)
       .where(inArray(users.id, brotherIds));
 
-    // Add the createdAt from the brotherhood relationship
+    // Add the tag and brotherhood info from the relationship
     return brothers.map(brother => ({
       ...brother,
+      tag: brotherRelations.find(r => r.brotherId === brother.id)?.tag || undefined,
+      brotherhoodId: brotherRelations.find(r => r.brotherId === brother.id)?.brotherhoodId || '',
       createdAt: brotherRelations.find(r => r.brotherId === brother.id)?.createdAt || brother.createdAt,
-    })) as User[];
+    })) as (User & { tag?: string; brotherhoodId: string })[];
+  }
+
+  async updateBrotherhoodTag(brotherhoodId: string, userId: string, tag: string | null): Promise<void> {
+    // First, get the brotherhood to determine which field to update
+    const [brotherhood] = await db.select()
+      .from(brotherhoods)
+      .where(eq(brotherhoods.id, brotherhoodId))
+      .limit(1);
+
+    if (!brotherhood) {
+      throw new Error('Brotherhood not found');
+    }
+
+    // Determine which tag field to update based on the user
+    const updateField = brotherhood.userId1 === userId ? 'tagFromUser1' : 'tagFromUser2';
+    
+    await db.update(brotherhoods)
+      .set({
+        [updateField]: tag,
+        updatedAt: new Date(),
+      } as any)
+      .where(eq(brotherhoods.id, brotherhoodId));
   }
 
   async checkBrotherhoodExists(userId1: string, userId2: string): Promise<boolean> {
