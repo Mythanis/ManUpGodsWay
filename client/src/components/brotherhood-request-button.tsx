@@ -27,10 +27,7 @@ export default function BrotherhoodRequestButton({
 
   const requestMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('/api/brotherhood-requests', {
-        method: 'POST',
-        body: JSON.stringify({ recipientId }),
-      });
+      return apiRequest('POST', '/api/brotherhood-requests', { recipientId });
     },
     onSuccess: () => {
       setIsRequested(true);
