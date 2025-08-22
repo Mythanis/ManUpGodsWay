@@ -425,12 +425,12 @@ export default function Podcasts() {
                           />
                         ) : (
                           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-ministry-steel/20 rounded-lg flex items-center justify-center">
-                            <Video className="w-6 h-6 sm:w-8 sm:h-8 text-ministry-steel" />
+                            <Video className="w-5 h-5 sm:w-6 sm:h-6 text-ministry-steel" />
                           </div>
                         )
                       ) : (
                         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-ministry-gold/20 rounded-lg flex items-center justify-center">
-                          <Headphones className="w-6 h-6 sm:w-8 sm:h-8 text-ministry-gold" />
+                          <Headphones className="w-5 h-5 sm:w-6 sm:h-6 text-ministry-gold" />
                         </div>
                       )}
                     </div>
@@ -513,16 +513,17 @@ export default function Podcasts() {
                           </div>
                         </div>
 
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
                           <RatingDialog podcast={podcast} />
                           <Button 
                             variant="outline" 
                             size="sm"
                             onClick={() => handlePodcastView(podcast.id)}
-                            className="text-xs sm:text-sm"
+                            className="text-xs px-2 sm:px-3 whitespace-nowrap"
                           >
-                            <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                            Reviews
+                            <MessageSquare className="w-3 h-3 mr-1" />
+                            <span className="hidden sm:inline">Reviews</span>
+                            <span className="sm:hidden">Rate</span>
                           </Button>
                         </div>
                       </div>
