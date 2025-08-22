@@ -379,7 +379,7 @@ export default function PodcastManagement() {
         
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-ministry-gold hover:bg-ministry-gold/90 text-white">
+            <Button className="bg-ministry-gold hover:bg-ministry-gold/90 text-black">
               <Plus className="w-4 h-4 mr-2" />
               New Podcast
             </Button>

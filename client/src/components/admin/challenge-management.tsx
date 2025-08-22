@@ -298,7 +298,7 @@ export default function ChallengeManagement() {
         
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-ministry-gold hover:bg-ministry-gold/90 text-white">
+            <Button className="bg-ministry-gold hover:bg-ministry-gold/90 text-black">
               <Plus className="w-4 h-4 mr-2" />
               New Challenge
             </Button>
@@ -381,7 +381,7 @@ export default function ChallengeManagement() {
                             {(() => {
                               // Check if this challenge is the current week challenge
                               if (currentWeekChallenge && challenge.id === currentWeekChallenge.id) {
-                                return <Badge className="bg-ministry-gold text-white">Current</Badge>;
+                                return <Badge className="bg-ministry-gold text-black">Current</Badge>;
                               }
                               
                               const now = new Date();

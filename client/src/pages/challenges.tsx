@@ -113,7 +113,7 @@ export default function Challenges() {
         <div className="flex items-start space-x-4">
           <div className="flex-shrink-0">
             <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
-              isCurrentWeek ? 'bg-ministry-gold text-white' : 'bg-ministry-gold-exact/20 text-ministry-gold'
+              isCurrentWeek ? 'bg-ministry-gold text-black' : 'bg-ministry-gold-exact/20 text-ministry-gold'
             }`}>
               {isCurrentWeek ? (
                 <Star className="w-8 h-8 fill-current" />
@@ -131,7 +131,7 @@ export default function Challenges() {
                 }`}>
                   {challenge.title}
                   {isCurrentWeek && (
-                    <Badge className="ml-2 bg-ministry-gold text-white">
+                    <Badge className="ml-2 bg-ministry-gold text-black">
                       Current Week
                     </Badge>
                   )}
@@ -242,7 +242,7 @@ export default function Challenges() {
                 variant="default"
                 size="sm"
                 onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-                className="flex items-center space-x-1 bg-ministry-gold hover:bg-ministry-gold/90 text-white"
+                className="flex items-center space-x-1 bg-ministry-gold hover:bg-ministry-gold/90 text-black"
               >
                 {sortOrder === 'desc' ? (
                   <>

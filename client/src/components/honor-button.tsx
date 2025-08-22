@@ -85,7 +85,7 @@ export function HonorButton({
       disabled={honorMutation.isPending}
       className={`flex items-center space-x-1 ${
         honored 
-          ? 'bg-ministry-gold text-white hover:bg-ministry-gold/90' 
+          ? 'bg-ministry-gold text-black hover:bg-ministry-gold/90' 
           : 'text-ministry-slate hover:text-ministry-gold hover:bg-ministry-gold/10'
       }`}
     >

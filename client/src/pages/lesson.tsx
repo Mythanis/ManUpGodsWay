@@ -241,7 +241,7 @@ export default function Lesson() {
                   console.error('Error marking lesson completed:', error);
                 }
               }}
-              className="bg-ministry-gold hover:bg-ministry-gold/90 text-white px-6 py-2"
+              className="bg-ministry-gold hover:bg-ministry-gold/90 text-black px-6 py-2"
             >
               <CheckCircle className="w-4 h-4 mr-2" />
               Finished

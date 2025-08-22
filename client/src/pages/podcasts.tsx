@@ -473,7 +473,7 @@ export default function Podcasts() {
                           ) : (
                             <Button
                               onClick={() => handlePlayPause(podcast)}
-                              className="bg-ministry-gold hover:bg-ministry-gold/90 text-white"
+                              className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
                               size="sm"
                             >
                               {currentlyPlaying === podcast.id ? (

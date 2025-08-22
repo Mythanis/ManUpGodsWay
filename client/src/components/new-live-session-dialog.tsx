@@ -100,7 +100,7 @@ export function NewLiveSessionDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-white">
+        <Button className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-black">
           <Radio className="w-4 h-4 mr-2" />
           Create New Live Podcast
         </Button>
