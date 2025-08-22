@@ -31,12 +31,12 @@ export default function LogoManagement() {
 
   // Ministry theme color options
   const colorOptions = [
+    { name: "Ministry Gold", value: "ministry-gold", class: "bg-ministry-gold-exact", preview: "#FBD000" },
+    { name: "Black", value: "black", class: "bg-black", preview: "#000000" },
     { name: "White", value: "white", class: "bg-white", preview: "#ffffff" },
-    { name: "Light Gray", value: "light-gray", class: "bg-gray-100", preview: "#f3f4f6" },
-    { name: "Charcoal", value: "charcoal", class: "bg-ministry-charcoal", preview: "hsl(215, 25%, 27%)" },
-    { name: "Gold", value: "gold", class: "bg-ministry-gold", preview: "hsl(49, 100%, 49%)" },
     { name: "Steel", value: "steel", class: "bg-ministry-steel", preview: "hsl(213, 12%, 47%)" },
     { name: "Slate", value: "slate", class: "bg-ministry-slate", preview: "hsl(215, 16%, 47%)" },
+    { name: "Charcoal", value: "charcoal", class: "bg-ministry-charcoal", preview: "hsl(215, 25%, 27%)" },
   ];
 
   // Get CSS background class for selected color
@@ -327,8 +327,7 @@ export default function LogoManagement() {
                   }`}
                 >
                   <div 
-                    className={`w-full h-8 rounded ${color.class} mb-2`}
-                    style={color.value === 'charcoal' ? { backgroundColor: color.preview } : {}}
+                    className={`w-full h-8 rounded ${color.class} mb-2 border border-gray-200`}
                   ></div>
                   <span className="text-xs font-medium text-ministry-charcoal">
                     {color.name}

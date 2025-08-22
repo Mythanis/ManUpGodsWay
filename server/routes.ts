@@ -2544,7 +2544,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Duration must be between 1 and 10 seconds" });
       }
 
-      const validColors = ['white', 'light-gray', 'charcoal', 'gold', 'steel', 'slate'];
+      const validColors = ['ministry-gold', 'black', 'white', 'steel', 'slate', 'charcoal', 'gold', 'light-gray'];
       if (backgroundColor && !validColors.includes(backgroundColor)) {
         return res.status(400).json({ message: "Invalid background color" });
       }

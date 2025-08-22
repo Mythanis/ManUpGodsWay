@@ -28,12 +28,15 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   // Ministry theme color options for background
   const getBackgroundStyle = (backgroundColor: string) => {
     const colorMap: Record<string, string> = {
+      'ministry-gold': '#FBD000',
+      'black': '#000000',
       'white': '#ffffff',
-      'light-gray': '#f3f4f6',
-      'charcoal': 'hsl(215, 25%, 27%)',
-      'gold': 'hsl(49, 100%, 49%)',
       'steel': 'hsl(213, 12%, 47%)',
       'slate': 'hsl(215, 16%, 47%)',
+      'charcoal': 'hsl(215, 25%, 27%)',
+      // Legacy support for old color names
+      'gold': '#FBD000',
+      'light-gray': '#f3f4f6',
     };
     return colorMap[backgroundColor] || '#ffffff';
   };
