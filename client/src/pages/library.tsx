@@ -105,7 +105,7 @@ export default function Library() {
 
       {/* Search Bar */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-lg" data-testid="card-search">
+        <Card className="shadow-lg bg-ministry-gold/20" data-testid="card-search">
           <CardContent className="p-4">
             <div className="relative">
               <Input

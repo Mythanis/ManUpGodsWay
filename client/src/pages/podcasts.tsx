@@ -399,7 +399,7 @@ export default function Podcasts() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold"></div>
           </div>
         ) : filteredPodcasts.length === 0 ? (
-          <Card className="text-center py-12">
+          <Card className="text-center py-12 bg-ministry-gold/20">
             <CardContent>
               <Headphones className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
               <h3 className="text-lg font-medium text-ministry-charcoal mb-2">No Podcasts Found</h3>
@@ -411,7 +411,7 @@ export default function Podcasts() {
         ) : (
           <div className="space-y-4">
             {filteredPodcasts.map((podcast: Podcast) => (
-              <Card key={podcast.id} className="hover:shadow-md transition-shadow">
+              <Card key={podcast.id} className="hover:shadow-md transition-shadow bg-ministry-gold/20">
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex items-start space-x-4">
                     {/* Thumbnail/Icon */}

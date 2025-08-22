@@ -557,7 +557,7 @@ export default function Community() {
 
       {/* Community Stats */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-lg" data-testid="card-stats">
+        <Card className="shadow-lg bg-ministry-gold/20" data-testid="card-stats">
           <CardContent className="p-4">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>

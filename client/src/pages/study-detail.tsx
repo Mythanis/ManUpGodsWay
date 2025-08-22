@@ -289,7 +289,7 @@ export default function StudyDetail() {
 
       {/* Study Info */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-lg" data-testid="card-study-info">
+        <Card className="shadow-lg bg-ministry-gold/20" data-testid="card-study-info">
           <CardContent className="p-6">
             {study.thumbnailUrl && (
               <img 
@@ -402,7 +402,7 @@ export default function StudyDetail() {
         <>
           {/* Progress Section */}
           <div className="px-6 mb-6">
-            <Card data-testid="card-progress">
+            <Card className="bg-ministry-gold/20" data-testid="card-progress">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-ministry-charcoal">Your Progress</h2>

@@ -73,6 +73,14 @@
   background-color: hsl(var(--ministry-gold) / 0.1);
 }
 
+.bg-ministry-gold\/20 {
+  background-color: hsl(var(--ministry-gold) / 0.2);
+}
+
+.bg-ministry-gold\/30 {
+  background-color: hsl(var(--ministry-gold) / 0.3);
+}
+
 /* Mobile viewport fixes for keyboards */
 @supports (-webkit-touch-callout: none) {
   /* iOS Safari */

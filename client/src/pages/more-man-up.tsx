@@ -58,7 +58,7 @@ export default function MoreManUp() {
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="flex items-center justify-between p-4 bg-ministry-gold/20 dark:bg-ministry-gold/10 rounded-lg hover:bg-ministry-gold/30 dark:hover:bg-ministry-gold/20 transition-colors"
               >
                 <div className="flex items-center space-x-4">
                   <IconComponent className={`w-6 h-6 ${link.color}`} />

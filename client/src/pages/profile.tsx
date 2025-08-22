@@ -303,7 +303,7 @@ export default function Profile() {
       <div className="px-6">
         <h2 className="text-lg font-bold text-foreground mb-4">Your Journey</h2>
         
-        <Card className="border-border" data-testid="card-progress">
+        <Card className="border-border bg-ministry-gold/20" data-testid="card-progress">
           <CardContent className="p-6">
             {currentStudies.length === 0 && completedStudies.length === 0 ? (
               <div className="text-center py-8">
