@@ -172,12 +172,12 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="prose prose-sm max-w-none">
-            <p className="text-ministry-charcoal leading-relaxed whitespace-pre-wrap">{testimony.content}</p>
+            <p className="text-white leading-relaxed whitespace-pre-wrap">{testimony.content}</p>
           </div>
           
           {testimony.tags && testimony.tags.length > 0 && (
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-ministry-slate">Tags</Label>
+              <Label className="text-sm font-medium text-white">Tags</Label>
               <div className="flex flex-wrap gap-2">
                 {testimony.tags.map((tag, index) => (
                   <Badge 
@@ -192,7 +192,7 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
             </div>
           )}
           
-          <div className="text-xs text-ministry-slate">
+          <div className="text-xs text-white">
             Shared on {new Date(testimony.createdAt).toLocaleDateString()}
           </div>
         </CardContent>
@@ -207,8 +207,8 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
         <CardContent className="p-6">
           <div className="text-center py-8">
             <Heart className="w-12 h-12 mx-auto mb-4 text-ministry-slate/50" />
-            <h3 className="text-lg font-semibold text-ministry-charcoal mb-2">Share Your Testimony</h3>
-            <p className="text-ministry-slate mb-4">
+            <h3 className="text-lg font-semibold text-white mb-2">Share Your Testimony</h3>
+            <p className="text-white mb-4">
               Share your faith journey and inspire others with your testimony of God's work in your life.
             </p>
             <Button 
@@ -250,7 +250,7 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
           <>
             {/* Testimony Content */}
             <div className="space-y-2">
-              <Label htmlFor="testimony-content">Your Testimony</Label>
+              <Label htmlFor="testimony-content" className="text-white">Your Testimony</Label>
               <Textarea
                 id="testimony-content"
                 placeholder="Share your faith journey, how God has worked in your life, moments of transformation, answered prayers, or any testimony of His goodness..."
@@ -259,14 +259,14 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
                 className="min-h-[200px] resize-none"
                 data-testid="textarea-testimony-content"
               />
-              <div className="text-xs text-ministry-slate">
+              <div className="text-xs text-white">
                 {content.length} characters • No limit
               </div>
             </div>
 
             {/* Tags */}
             <div className="space-y-2">
-              <Label htmlFor="testimony-tags">Tags (Optional)</Label>
+              <Label htmlFor="testimony-tags" className="text-white">Tags (Optional)</Label>
               <div className="space-y-3">
                 <div className="flex space-x-2">
                   <Input
@@ -304,7 +304,7 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
                     ))}
                   </div>
                 )}
-                <div className="text-xs text-ministry-slate">
+                <div className="text-xs text-white">
                   {tags.length}/10 tags • Click tags to remove them
                 </div>
               </div>
@@ -312,7 +312,7 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
 
             {/* Privacy Setting */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Privacy Setting</Label>
+              <Label className="text-sm font-medium text-white">Privacy Setting</Label>
               <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center space-x-3">
                   {isPublic ? (
@@ -321,10 +321,10 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
                     <EyeOff className="w-4 h-4 text-ministry-slate" />
                   )}
                   <div>
-                    <p className="text-sm font-medium text-ministry-charcoal">
+                    <p className="text-sm font-medium text-white">
                       {isPublic ? "Public" : "Private"}
                     </p>
-                    <p className="text-xs text-ministry-slate">
+                    <p className="text-xs text-white">
                       {isPublic 
                         ? "Visible on your profile to other community members" 
                         : "Only visible to you"
@@ -396,12 +396,12 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
           <>
             {/* Display Mode */}
             <div className="prose prose-sm max-w-none">
-              <p className="text-ministry-charcoal leading-relaxed whitespace-pre-wrap">{testimony.content}</p>
+              <p className="text-white leading-relaxed whitespace-pre-wrap">{testimony.content}</p>
             </div>
             
             {testimony.tags && testimony.tags.length > 0 && (
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-ministry-slate">Tags</Label>
+                <Label className="text-sm font-medium text-white">Tags</Label>
                 <div className="flex flex-wrap gap-2">
                   {testimony.tags.map((tag, index) => (
                     <Badge 
@@ -417,7 +417,7 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
             )}
             
             <div className="flex items-center justify-between pt-4 border-t">
-              <div className="flex items-center space-x-2 text-xs text-ministry-slate">
+              <div className="flex items-center space-x-2 text-xs text-white">
                 {testimony.isPublic ? (
                   <>
                     <Eye className="w-3 h-3" />
@@ -430,7 +430,7 @@ export function TestimonyForm({ userId, isOwnProfile = false }: TestimonyFormPro
                   </>
                 )}
               </div>
-              <div className="text-xs text-ministry-slate">
+              <div className="text-xs text-white">
                 Last updated {new Date(testimony.updatedAt).toLocaleDateString()}
               </div>
             </div>
