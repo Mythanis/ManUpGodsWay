@@ -412,7 +412,7 @@ export default function Podcasts() {
           <div className="space-y-4">
             {filteredPodcasts.map((podcast: Podcast) => (
               <Card key={podcast.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-start space-x-4">
                     {/* Thumbnail/Icon */}
                     <div className="flex-shrink-0">
@@ -421,28 +421,28 @@ export default function Podcasts() {
                           <img
                             src={podcast.thumbnailUrl}
                             alt={podcast.title}
-                            className="w-20 h-20 rounded-lg object-cover"
+                            className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
                           />
                         ) : (
-                          <div className="w-20 h-20 bg-ministry-steel/20 rounded-lg flex items-center justify-center">
-                            <Video className="w-8 h-8 text-ministry-steel" />
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-ministry-steel/20 rounded-lg flex items-center justify-center">
+                            <Video className="w-6 h-6 sm:w-8 sm:h-8 text-ministry-steel" />
                           </div>
                         )
                       ) : (
-                        <div className="w-20 h-20 bg-ministry-gold/20 rounded-lg flex items-center justify-center">
-                          <Headphones className="w-8 h-8 text-ministry-gold" />
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-ministry-gold/20 rounded-lg flex items-center justify-center">
+                          <Headphones className="w-6 h-6 sm:w-8 sm:h-8 text-ministry-gold" />
                         </div>
                       )}
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="font-semibold text-lg text-ministry-charcoal mb-1">
+                        <div className="flex-1 min-w-0 pr-2">
+                          <h3 className="font-semibold text-base sm:text-lg text-ministry-charcoal mb-1 truncate">
                             {podcast.title}
                           </h3>
-                          <div className="flex items-center space-x-4 text-sm text-ministry-slate mb-2">
+                          <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-ministry-slate mb-2">
                             <Badge variant="outline" className="text-xs">
                               {podcast.type === 'audio' ? 'Audio' : 'Video'}
                             </Badge>
@@ -452,7 +452,7 @@ export default function Podcasts() {
                                 LIVE
                               </Badge>
                             )}
-                            <span className="capitalize">{podcast.category}</span>
+                            <span className="capitalize hidden sm:inline">{podcast.category}</span>
                             <span className="flex items-center">
                               <Clock className="w-3 h-3 mr-1" />
                               {formatDuration(podcast.duration)}
@@ -460,37 +460,47 @@ export default function Podcasts() {
                           </div>
                         </div>
                         
-                        {podcast.isLive ? (
-                          <Button
-                            onClick={() => window.open(podcast.liveUrl, '_blank')}
-                            className="bg-red-500 hover:bg-red-600 text-white"
-                          >
-                            <ExternalLink className="w-4 h-4 mr-2" />
-                            Join Live
-                          </Button>
-                        ) : (
-                          <Button
-                            onClick={() => handlePlayPause(podcast)}
-                            className="bg-ministry-gold hover:bg-ministry-gold/90 text-white"
-                          >
-                            {currentlyPlaying === podcast.id ? (
-                              <Pause className="w-4 h-4" />
-                            ) : (
-                              <Play className="w-4 h-4" />
-                            )}
-                          </Button>
-                        )}
+                        <div className="flex-shrink-0">
+                          {podcast.isLive ? (
+                            <Button
+                              onClick={() => window.open(podcast.liveUrl, '_blank')}
+                              className="bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm px-2 sm:px-4"
+                              size="sm"
+                            >
+                              <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                              Join Live
+                            </Button>
+                          ) : (
+                            <Button
+                              onClick={() => handlePlayPause(podcast)}
+                              className="bg-ministry-gold hover:bg-ministry-gold/90 text-white"
+                              size="sm"
+                            >
+                              {currentlyPlaying === podcast.id ? (
+                                <Pause className="w-4 h-4" />
+                              ) : (
+                                <Play className="w-4 h-4" />
+                              )}
+                            </Button>
+                          )}
+                        </div>
                       </div>
 
                       {podcast.description && (
-                        <p className="text-ministry-slate text-sm mb-3 line-clamp-2">
+                        <p className="text-ministry-slate text-sm mb-3 overflow-hidden" 
+                           style={{
+                             display: '-webkit-box',
+                             WebkitLineClamp: 2,
+                             WebkitBoxOrient: 'vertical',
+                             maxHeight: '2.5rem'
+                           }}>
                           {podcast.description}
                         </p>
                       )}
 
                       {/* Stats and Actions */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4 text-sm text-ministry-slate">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="flex items-center space-x-3 text-xs sm:text-sm text-ministry-slate">
                           <div className="flex items-center">
                             {renderStars(Math.round(parseFloat(podcast.rating)))}
                             <span className="ml-1">
@@ -498,7 +508,7 @@ export default function Podcasts() {
                             </span>
                           </div>
                           <div className="flex items-center">
-                            <Eye className="w-4 h-4 mr-1" />
+                            <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                             {podcast.viewCount} views
                           </div>
                         </div>
@@ -509,12 +519,11 @@ export default function Podcasts() {
                             variant="outline" 
                             size="sm"
                             onClick={() => handlePodcastView(podcast.id)}
+                            className="text-xs sm:text-sm"
                           >
-                            <MessageSquare className="w-4 h-4 mr-1" />
+                            <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                             Reviews
                           </Button>
-                          
-
                         </div>
                       </div>
 
