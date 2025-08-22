@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -28,9 +28,20 @@ import Navigation from "@/components/navigation";
 import { UserSetupWizard } from "@/components/user-setup-wizard";
 import { AccountSettingsButton } from "@/components/account-settings-button";
 
+// Splash screen context
+const SplashContext = createContext<{
+  splashCompleted: boolean;
+  setSplashCompleted: (completed: boolean) => void;
+}>({
+  splashCompleted: false,
+  setSplashCompleted: () => {},
+});
+
+const useSplash = () => useContext(SplashContext);
+
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
-  const [splashCompleted, setSplashCompleted] = useState(false);
+  const { splashCompleted, setSplashCompleted } = useSplash();
 
   // Show splash screen first (on every app load)
   if (!splashCompleted) {
@@ -92,21 +103,26 @@ function Router() {
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { splashCompleted } = useSplash();
 
   return (
     <div className="max-w-md mx-auto bg-background text-foreground shadow-2xl min-h-screen relative">
       <Router />
-      {isAuthenticated && !isLoading && <Navigation />}
+      {isAuthenticated && !isLoading && splashCompleted && <Navigation />}
     </div>
   );
 }
 
 function App() {
+  const [splashCompleted, setSplashCompleted] = useState(false);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <AppContent />
+          <SplashContext.Provider value={{ splashCompleted, setSplashCompleted }}>
+            <AppContent />
+          </SplashContext.Provider>
           <Toaster />
         </TooltipProvider>
       </ThemeProvider>
