@@ -714,20 +714,20 @@ export default function Community() {
                 key={category.id}
                 variant="outline"
                 onClick={() => setSelectedCategory(selectedCategory === category.id ? '' : category.id)}
-                className={`h-auto p-4 border-border hover:shadow-sm ${
-                  selectedCategory === category.id ? 'bg-ministry-steel/10 border-ministry-steel' : ''
+                className={`h-auto p-4 bg-ministry-gold-exact/20 hover:bg-ministry-gold-exact/30 hover:shadow-md transition-all ${
+                  selectedCategory === category.id ? 'ring-2 ring-ministry-gold bg-ministry-gold-exact/30' : 'border-gray-100'
                 }`}
                 data-testid={`button-category-${category.id}`}
               >
                 <div className="flex items-center space-x-3 w-full">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    selectedCategory === category.id ? 'bg-ministry-steel/20' : 'bg-ministry-steel/20'
+                    selectedCategory === category.id ? 'bg-ministry-gold' : 'bg-ministry-gold-exact/40'
                   }`}>
-                    <Icon className="w-5 h-5 text-ministry-steel" />
+                    <Icon className="w-5 h-5 text-black" />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-semibold text-sm text-ministry-charcoal">{category.label}</h3>
-                    <p className="text-xs text-ministry-slate">
+                    <h3 className="font-semibold text-sm text-black">{category.label}</h3>
+                    <p className="text-xs text-black">
                       {communityStats?.categoryStats[category.id] || 0} posts
                     </p>
                   </div>
