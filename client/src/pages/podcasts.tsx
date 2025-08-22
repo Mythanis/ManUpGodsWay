@@ -522,8 +522,7 @@ export default function Podcasts() {
                             className="text-xs px-2 sm:px-3 whitespace-nowrap"
                           >
                             <MessageSquare className="w-3 h-3 mr-1" />
-                            <span className="hidden sm:inline">Reviews</span>
-                            <span className="sm:hidden">Rate</span>
+                            Reviews
                           </Button>
                         </div>
                       </div>
