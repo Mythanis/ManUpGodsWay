@@ -27,6 +27,9 @@ export default function BrotherhoodRequestButton({
 
   const isAlreadyBrother = brothers?.some(brother => brother.id === recipientId);
   const brotherhoodData = brothers?.find(brother => brother.id === recipientId);
+  
+  // Get the tag that the current user has assigned to this brother
+  const brotherTag = brotherhoodData?.tag;
 
   const requestMutation = useMutation({
     mutationFn: async ({ confirmed = false }: { confirmed?: boolean } = {}) => {
@@ -91,6 +94,8 @@ export default function BrotherhoodRequestButton({
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
 
   if (isAlreadyBrother) {
+    const displayText = brotherTag ? `Brother-${brotherTag}` : 'Brother';
+    
     return (
       <>
         <Button 
@@ -100,7 +105,7 @@ export default function BrotherhoodRequestButton({
           data-testid={`button-remove-brother-${recipientId}`}
         >
           <Check className="w-4 h-4 text-green-500" />
-          Brother
+          {displayText}
         </Button>
 
         <AlertDialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
