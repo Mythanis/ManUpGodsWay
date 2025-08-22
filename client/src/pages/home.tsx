@@ -520,50 +520,50 @@ export default function Home() {
           <Link href="/videos">
             <Button 
               variant="outline"
-              className="h-20 flex flex-col items-center justify-center space-y-2 bg-card text-foreground border-border hover:bg-muted w-full"
+              className="h-20 flex flex-col items-center justify-center space-y-2 bg-ministry-gold-exact/20 text-black border-ministry-gold hover:bg-ministry-gold-exact/30 w-full"
               data-testid="button-watch-videos"
             >
-              <Play className="w-8 h-8 text-ministry-steel" />
-              <span className="font-medium text-sm text-ministry-charcoal">Watch Videos</span>
+              <Play className="w-8 h-8 text-black" />
+              <span className="font-medium text-sm text-black">Watch Videos</span>
             </Button>
           </Link>
           
           <Link href="/community">
             <Button 
               variant="outline"
-              className="h-20 flex flex-col items-center justify-center space-y-2 bg-card text-foreground border-border hover:bg-muted w-full"
+              className="h-20 flex flex-col items-center justify-center space-y-2 bg-ministry-gold-exact/20 text-black border-ministry-gold hover:bg-ministry-gold-exact/30 w-full"
               data-testid="button-join-discussion"
             >
-              <Users className="w-8 h-8 text-ministry-steel" />
-              <span className="font-medium text-sm text-ministry-charcoal">Join Discussion</span>
+              <Users className="w-8 h-8 text-black" />
+              <span className="font-medium text-sm text-black">Join Discussion</span>
             </Button>
           </Link>
           
           <Button 
             variant="outline"
-            className="h-20 flex flex-col items-center justify-center space-y-2 bg-card text-foreground border-border hover:bg-muted"
+            className="h-20 flex flex-col items-center justify-center space-y-2 bg-ministry-gold-exact/20 text-black border-ministry-gold hover:bg-ministry-gold-exact/30"
             data-testid="button-track-progress"
             onClick={() => setShowProgressDialog(true)}
           >
-            <BarChart3 className="w-8 h-8 text-ministry-steel" />
-            <span className="font-medium text-sm text-ministry-charcoal">Track Progress</span>
+            <BarChart3 className="w-8 h-8 text-black" />
+            <span className="font-medium text-sm text-black">Track Progress</span>
           </Button>
           
           <Button 
             variant="outline"
-            className="h-20 flex flex-col items-center justify-center space-y-2 bg-card text-foreground border-border hover:bg-muted"
+            className="h-20 flex flex-col items-center justify-center space-y-2 bg-ministry-gold-exact/20 text-black border-ministry-gold hover:bg-ministry-gold-exact/30"
             data-testid="button-prayer-time"
             onClick={() => isPraying ? endPrayerTime() : setShowPrayerDialog(true)}
           >
             {isPraying ? (
               <>
-                <PauseCircle className="w-8 h-8 text-ministry-steel" />
-                <span className="font-medium text-sm text-ministry-charcoal">{formatTime(prayerTimeLeft)}</span>
+                <PauseCircle className="w-8 h-8 text-black" />
+                <span className="font-medium text-sm text-black">{formatTime(prayerTimeLeft)}</span>
               </>
             ) : (
               <>
-                <Clock className="w-8 h-8 text-ministry-steel" />
-                <span className="font-medium text-sm text-ministry-charcoal">Prayer Time</span>
+                <Clock className="w-8 h-8 text-black" />
+                <span className="font-medium text-sm text-black">Prayer Time</span>
               </>
             )}
           </Button>
