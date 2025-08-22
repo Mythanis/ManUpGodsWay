@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Users, Calendar } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { UserPlus, Users, Calendar, Search } from "lucide-react";
 import { Link } from "wouter";
 
 interface Brother {
@@ -17,9 +18,20 @@ interface Brother {
 }
 
 export default function Brothers() {
+  const [searchQuery, setSearchQuery] = useState("");
+  
   const { data: brothers, isLoading } = useQuery<Brother[]>({
     queryKey: ['/api/brothers'],
   });
+
+  // Filter brothers based on search query
+  const filteredBrothers = brothers?.filter(brother => {
+    const fullName = `${brother.firstName} ${brother.lastName}`.toLowerCase();
+    const username = brother.username.toLowerCase();
+    const query = searchQuery.toLowerCase();
+    
+    return fullName.includes(query) || username.includes(query);
+  }) || [];
 
   if (isLoading) {
     return (
@@ -63,6 +75,21 @@ export default function Brothers() {
           </div>
         </div>
 
+        {/* Search Bar */}
+        {brothers && brothers.length > 0 && (
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Search your brothers by name or username..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+              data-testid="input-search-brothers"
+            />
+          </div>
+        )}
+
         {!brothers || brothers.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
@@ -80,8 +107,19 @@ export default function Brothers() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4">
-            {brothers.map((brother) => (
+          <>
+            {/* Show search results count */}
+            {searchQuery && (
+              <div className="mb-4 text-sm text-muted-foreground">
+                {filteredBrothers.length === 0 
+                  ? `No brothers found matching "${searchQuery}"`
+                  : `${filteredBrothers.length} brother${filteredBrothers.length !== 1 ? 's' : ''} found`
+                }
+              </div>
+            )}
+            
+            <div className="grid gap-4">
+              {(searchQuery ? filteredBrothers : brothers).map((brother) => (
               <Card
                 key={brother.id}
                 className="hover:shadow-md transition-shadow cursor-pointer"
@@ -114,8 +152,29 @@ export default function Brothers() {
                   </CardContent>
                 </Link>
               </Card>
-            ))}
-          </div>
+              ))}
+            </div>
+            
+            {/* No search results message */}
+            {searchQuery && filteredBrothers.length === 0 && (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Search className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <h2 className="text-xl font-semibold mb-2">No Brothers Found</h2>
+                  <p className="text-muted-foreground mb-4">
+                    No brothers match your search for "{searchQuery}"
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSearchQuery("")}
+                    data-testid="button-clear-search"
+                  >
+                    Clear Search
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </div>
     </div>
