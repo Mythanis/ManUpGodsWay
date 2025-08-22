@@ -3114,18 +3114,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "You are already brothers with this user" });
       }
 
-      // Check if a request already exists
+      // Check if a request already exists (in either direction)
       const existingRequest = await storage.checkBrotherhoodRequestExists(requesterId, recipientId);
       if (existingRequest) {
-        return res.status(400).json({ message: "Brotherhood request already sent" });
+        return res.status(400).json({ message: "Brotherhood request already sent or pending" });
       }
 
       // Create the request
-      const request = await storage.createBrotherhoodRequest({
-        requesterId,
-        recipientId,
-        message: message || '',
-      });
+      let request;
+      try {
+        request = await storage.createBrotherhoodRequest({
+          requesterId,
+          recipientId,
+          message: message || '',
+        });
+      } catch (error: any) {
+        // Handle duplicate key constraint error
+        if (error.code === '23505') {
+          return res.status(400).json({ message: "Brotherhood request already exists" });
+        }
+        throw error;
+      }
 
       // Create notification for the recipient
       const requester = await storage.getUser(requesterId);

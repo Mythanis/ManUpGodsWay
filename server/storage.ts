@@ -2250,11 +2250,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async checkBrotherhoodRequestExists(requesterId: string, recipientId: string): Promise<boolean> {
+    // Check for requests in both directions
     const [existing] = await db.select()
       .from(brotherhoodRequests)
       .where(and(
-        eq(brotherhoodRequests.requesterId, requesterId),
-        eq(brotherhoodRequests.recipientId, recipientId),
+        or(
+          and(
+            eq(brotherhoodRequests.requesterId, requesterId),
+            eq(brotherhoodRequests.recipientId, recipientId)
+          ),
+          and(
+            eq(brotherhoodRequests.requesterId, recipientId),
+            eq(brotherhoodRequests.recipientId, requesterId)
+          )
+        ),
         eq(brotherhoodRequests.status, 'pending')
       ))
       .limit(1);
