@@ -60,6 +60,30 @@ export function useWebSocket(userId?: string) {
               queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
             }
             break;
+
+          case 'brotherhood_established':
+            // Invalidate both brotherhood requests and brothers list to update UI
+            queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
+            
+            // Show toast notification
+            toast({
+              title: 'Brotherhood Established!',
+              description: `You are now brothers with ${message.partnerName}`,
+            });
+            break;
+
+          case 'brotherhood_removed':
+            // Invalidate brothers list to update UI
+            queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
+            
+            // Show toast notification
+            toast({
+              title: 'Brotherhood Removed',
+              description: message.message,
+              variant: 'destructive'
+            });
+            break;
         }
       } catch (error) {
         console.error('Error parsing WebSocket message:', error);

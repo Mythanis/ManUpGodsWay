@@ -20,12 +20,13 @@ export default function BrotherhoodRequestButton({
   const [isRequested, setIsRequested] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
-  // Check if already brothers
+  // Check if already brothers - this should now work with real-time updates via WebSocket
   const { data: brothers } = useQuery<any[]>({
     queryKey: ['/api/brothers'],
   });
 
   const isAlreadyBrother = brothers?.some(brother => brother.id === recipientId);
+  const brotherhoodData = brothers?.find(brother => brother.id === recipientId);
 
   const requestMutation = useMutation({
     mutationFn: async ({ confirmed = false }: { confirmed?: boolean } = {}) => {
@@ -67,12 +68,68 @@ export default function BrotherhoodRequestButton({
     requestMutation.mutate({ confirmed: true });
   };
 
+  const removeBrotherhoodMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('DELETE', `/api/brothers/${brotherhoodData?.brotherhoodId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Brotherhood Removed",
+        description: `You are no longer brothers with ${recipientName || 'this user'}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to remove brotherhood",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+
   if (isAlreadyBrother) {
     return (
-      <Button variant="outline" disabled className="gap-2">
-        <Check className="w-4 h-4 text-green-500" />
-        Brother
-      </Button>
+      <>
+        <Button 
+          variant="outline" 
+          className="gap-2 hover:bg-red-50 hover:border-red-200"
+          onClick={() => setShowRemoveDialog(true)}
+          data-testid={`button-remove-brother-${recipientId}`}
+        >
+          <Check className="w-4 h-4 text-green-500" />
+          Brother
+        </Button>
+
+        <AlertDialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove Brotherhood</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove your brotherhood with {recipientName || 'this user'}? 
+                This action cannot be undone and they will need to send a new request to reconnect.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowRemoveDialog(false)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => {
+                  removeBrotherhoodMutation.mutate();
+                  setShowRemoveDialog(false);
+                }}
+                disabled={removeBrotherhoodMutation.isPending}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Yes, Remove Brotherhood
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
     );
   }
 

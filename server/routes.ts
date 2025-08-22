@@ -3217,6 +3217,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: `${recipient?.firstName} ${recipient?.lastName} accepted your brotherhood request! You are now brothers in faith.`,
           relatedId: null,
         });
+
+        // Send real-time WebSocket notification for brotherhood establishment
+        const wsMessage = {
+          type: 'brotherhood_established',
+          message: 'Brotherhood established',
+          partnerName: recipient?.firstName + ' ' + recipient?.lastName
+        };
+        
+        // Send to the requester
+        const targetWs = connectedClients.get(request.requesterId);
+        if (targetWs && targetWs.readyState === WebSocket.OPEN) {
+          targetWs.send(JSON.stringify(wsMessage));
+        }
       }
 
       res.json({ message: `Brotherhood request ${response} successfully` });
@@ -3242,6 +3255,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating brotherhood tag:", error);
       res.status(500).json({ message: "Failed to update brotherhood tag" });
+    }
+  });
+
+  // Remove brotherhood relationship
+  app.delete('/api/brothers/:brotherhoodId', isAuthenticated, async (req: any, res) => {
+    try {
+      const brotherhoodId = req.params.brotherhoodId;
+      const userId = req.user.claims.sub;
+
+      // Get the brotherhood relationship to verify user is part of it
+      const brotherhood = await storage.getBrotherhood(brotherhoodId);
+      if (!brotherhood) {
+        return res.status(404).json({ message: "Brotherhood relationship not found" });
+      }
+
+      // Verify user is part of this brotherhood
+      if (brotherhood.userId1 !== userId && brotherhood.userId2 !== userId) {
+        return res.status(403).json({ message: "You can only remove your own brotherhood relationships" });
+      }
+
+      // Get the other user's ID and info for notifications
+      const otherId = brotherhood.userId1 === userId ? brotherhood.userId2 : brotherhood.userId1;
+      const currentUser = await storage.getUser(userId);
+
+      // Remove the brotherhood
+      await storage.removeBrotherhood(brotherhoodId);
+
+      // Send real-time WebSocket notification to the other user
+      const wsMessage = {
+        type: 'brotherhood_removed',
+        message: `${currentUser?.firstName} ${currentUser?.lastName} has removed your brotherhood`,
+        removedBy: currentUser?.firstName + ' ' + currentUser?.lastName
+      };
+
+      const targetWs = connectedClients.get(otherId);
+      if (targetWs && targetWs.readyState === WebSocket.OPEN) {
+        targetWs.send(JSON.stringify(wsMessage));
+      }
+
+      res.json({
+        success: true,
+        message: "Brotherhood removed successfully"
+      });
+    } catch (error) {
+      console.error('Error removing brotherhood:', error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 

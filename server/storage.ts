@@ -2216,6 +2216,19 @@ export class DatabaseStorage implements IStorage {
       .where(eq(brotherhoods.id, brotherhoodId));
   }
 
+  async getBrotherhood(brotherhoodId: string): Promise<any> {
+    const [brotherhood] = await db.select()
+      .from(brotherhoods)
+      .where(eq(brotherhoods.id, brotherhoodId))
+      .limit(1);
+    return brotherhood;
+  }
+
+  async removeBrotherhood(brotherhoodId: string): Promise<void> {
+    await db.delete(brotherhoods)
+      .where(eq(brotherhoods.id, brotherhoodId));
+  }
+
   async searchUsers(query: string, excludeUserId: string): Promise<User[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
     
