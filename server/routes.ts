@@ -862,6 +862,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Honor system routes
+  app.post('/api/discussions/:id/honor', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const discussionId = req.params.id;
+      
+      const result = await storage.honorDiscussion(userId, discussionId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error toggling discussion honor:", error);
+      res.status(500).json({ message: "Failed to toggle honor" });
+    }
+  });
+
+  app.post('/api/replies/:id/honor', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const replyId = req.params.id;
+      
+      const result = await storage.honorReply(userId, replyId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error toggling reply honor:", error);
+      res.status(500).json({ message: "Failed to toggle honor" });
+    }
+  });
+
+  app.get('/api/users/:id/honor-status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { discussionIds, replyIds } = req.query;
+      
+      const discussionIdsArray = discussionIds ? (Array.isArray(discussionIds) ? discussionIds : [discussionIds]) : [];
+      const replyIdsArray = replyIds ? (Array.isArray(replyIds) ? replyIds : [replyIds]) : [];
+      
+      const honorStatus = await storage.getUserHonorStatus(userId, discussionIdsArray, replyIdsArray);
+      res.json(honorStatus);
+    } catch (error) {
+      console.error("Error getting user honor status:", error);
+      res.status(500).json({ message: "Failed to get honor status" });
+    }
+  });
+
+  app.get('/api/users/:id/honor-stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const targetUserId = req.params.id;
+      
+      const honorStats = await storage.getUserHonorStats(targetUserId);
+      res.json(honorStats);
+    } catch (error) {
+      console.error("Error getting user honor stats:", error);
+      res.status(500).json({ message: "Failed to get honor stats" });
+    }
+  });
+
   // Devotional routes
   app.get('/api/devotionals/today', async (req, res) => {
     try {

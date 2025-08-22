@@ -15,6 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag } from "lucide-react";
 import { FlagContentDialog } from "@/components/flag-content-dialog";
+import { HonorButton } from "@/components/honor-button";
 import { z } from "zod";
 
 interface DiscussionCardProps {
@@ -223,21 +224,14 @@ export default function DiscussionCard({
             
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <Button 
+                <HonorButton
+                  type="discussion"
+                  id={discussion.id}
+                  initialCount={discussion.likes || 0}
                   variant="ghost"
                   size="sm"
-                  onClick={() => toggleLike.mutate()}
-                  disabled={toggleLike.isPending}
-                  className={`flex items-center space-x-1 p-1 ${
-                    userHasLiked 
-                      ? 'text-red-500 hover:text-red-600' 
-                      : 'text-ministry-slate hover:text-ministry-steel'
-                  }`}
-                  data-testid="button-like"
-                >
-                  <Heart className={`w-4 h-4 ${userHasLiked ? 'fill-current' : ''}`} />
-                  <span className="text-xs">{discussion.likes || 0}</span>
-                </Button>
+                  showText={true}
+                />
                 
                 <Button 
                   variant="ghost"
@@ -331,8 +325,16 @@ export default function DiscussionCard({
                     </div>
                     <p className="text-sm text-ministry-slate">{reply.content}</p>
                     
-                    {/* Flag Reply Button */}
-                    <div className="flex justify-end mt-2">
+                    {/* Honor and Flag Reply Buttons */}
+                    <div className="flex justify-between items-center mt-2">
+                      <HonorButton
+                        type="reply"
+                        id={reply.id}
+                        initialCount={reply.likes || 0}
+                        variant="ghost"
+                        size="sm"
+                        showText={true}
+                      />
                       <FlagContentDialog 
                         contentType="reply" 
                         contentId={reply.id}

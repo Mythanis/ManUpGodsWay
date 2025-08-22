@@ -18,6 +18,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X, Send, Hash } from "lucide-react";
+import { HonorButton } from "@/components/honor-button";
 import { z } from "zod";
 import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
 
@@ -97,6 +98,16 @@ function DiscussionReplies({ discussionId }: { discussionId: string }) {
               </span>
             </div>
             <p className="text-sm text-ministry-slate">{reply.content}</p>
+            <div className="mt-2">
+              <HonorButton
+                type="reply"
+                id={reply.id}
+                initialCount={reply.likes || 0}
+                variant="ghost"
+                size="sm"
+                showText={true}
+              />
+            </div>
           </div>
         </div>
       ))}

@@ -5,6 +5,8 @@ import {
   discussions,
   discussionReplies,
   discussionSubscriptions,
+  discussionHonors,
+  replyHonors,
   userProgress,
   devotionals,
   studyRatings,
@@ -250,6 +252,22 @@ export interface IStorage {
     reviewedBy: string;
     reviewedAt: Date;
   }): Promise<ContentFlag>;
+
+  // Honor system operations
+  honorDiscussion(userId: string, discussionId: string): Promise<{ honored: boolean }>;
+  honorReply(userId: string, replyId: string): Promise<{ honored: boolean }>;
+  getUserHonorStatus(userId: string, discussionIds: string[], replyIds: string[]): Promise<{
+    discussionHonors: string[];
+    replyHonors: string[];
+  }>;
+  getUserHonorStats(userId: string): Promise<{
+    honorsGiven: number;
+    honorsReceived: number;
+    discussionHonorsGiven: number;
+    replyHonorsGiven: number;
+    discussionHonorsReceived: number;
+    replyHonorsReceived: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3070,6 +3088,185 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return flag;
+  }
+
+  // Honor system operations
+  async honorDiscussion(userId: string, discussionId: string): Promise<{ honored: boolean }> {
+    try {
+      // Check if user already honored this discussion
+      const existingHonor = await db
+        .select()
+        .from(discussionHonors)
+        .where(
+          and(
+            eq(discussionHonors.userId, userId),
+            eq(discussionHonors.discussionId, discussionId)
+          )
+        )
+        .limit(1);
+
+      if (existingHonor.length > 0) {
+        // Remove honor (toggle off)
+        await db
+          .delete(discussionHonors)
+          .where(
+            and(
+              eq(discussionHonors.userId, userId),
+              eq(discussionHonors.discussionId, discussionId)
+            )
+          );
+
+        // Decrement likes count
+        await db
+          .update(discussions)
+          .set({ likes: sql`${discussions.likes} - 1` })
+          .where(eq(discussions.id, discussionId));
+
+        return { honored: false };
+      } else {
+        // Add honor
+        await db
+          .insert(discussionHonors)
+          .values({ userId, discussionId });
+
+        // Increment likes count
+        await db
+          .update(discussions)
+          .set({ likes: sql`${discussions.likes} + 1` })
+          .where(eq(discussions.id, discussionId));
+
+        return { honored: true };
+      }
+    } catch (error) {
+      console.error('Error toggling discussion honor:', error);
+      throw new Error('Failed to toggle discussion honor');
+    }
+  }
+
+  async honorReply(userId: string, replyId: string): Promise<{ honored: boolean }> {
+    try {
+      // Check if user already honored this reply
+      const existingHonor = await db
+        .select()
+        .from(replyHonors)
+        .where(
+          and(
+            eq(replyHonors.userId, userId),
+            eq(replyHonors.replyId, replyId)
+          )
+        )
+        .limit(1);
+
+      if (existingHonor.length > 0) {
+        // Remove honor (toggle off)
+        await db
+          .delete(replyHonors)
+          .where(
+            and(
+              eq(replyHonors.userId, userId),
+              eq(replyHonors.replyId, replyId)
+            )
+          );
+
+        // Decrement likes count
+        await db
+          .update(discussionReplies)
+          .set({ likes: sql`${discussionReplies.likes} - 1` })
+          .where(eq(discussionReplies.id, replyId));
+
+        return { honored: false };
+      } else {
+        // Add honor
+        await db
+          .insert(replyHonors)
+          .values({ userId, replyId });
+
+        // Increment likes count
+        await db
+          .update(discussionReplies)
+          .set({ likes: sql`${discussionReplies.likes} + 1` })
+          .where(eq(discussionReplies.id, replyId));
+
+        return { honored: true };
+      }
+    } catch (error) {
+      console.error('Error toggling reply honor:', error);
+      throw new Error('Failed to toggle reply honor');
+    }
+  }
+
+  async getUserHonorStatus(userId: string, discussionIds: string[], replyIds: string[]) {
+    const [discussionHonorsData, replyHonorsData] = await Promise.all([
+      discussionIds.length > 0 ? 
+        db
+          .select({ discussionId: discussionHonors.discussionId })
+          .from(discussionHonors)
+          .where(
+            and(
+              eq(discussionHonors.userId, userId),
+              inArray(discussionHonors.discussionId, discussionIds)
+            )
+          ) : [],
+      replyIds.length > 0 ?
+        db
+          .select({ replyId: replyHonors.replyId })
+          .from(replyHonors)
+          .where(
+            and(
+              eq(replyHonors.userId, userId),
+              inArray(replyHonors.replyId, replyIds)
+            )
+          ) : []
+    ]);
+
+    return {
+      discussionHonors: discussionHonorsData.map(h => h.discussionId),
+      replyHonors: replyHonorsData.map(h => h.replyId)
+    };
+  }
+
+  async getUserHonorStats(userId: string) {
+    const [honorsGivenResult, honorsReceivedResult] = await Promise.all([
+      // Count honors given by this user
+      Promise.all([
+        db
+          .select({ count: sql<number>`COUNT(*)` })
+          .from(discussionHonors)
+          .where(eq(discussionHonors.userId, userId)),
+        db
+          .select({ count: sql<number>`COUNT(*)` })
+          .from(replyHonors)
+          .where(eq(replyHonors.userId, userId))
+      ]),
+      
+      // Count honors received by this user's content
+      Promise.all([
+        db
+          .select({ count: sql<number>`COUNT(dh.id)` })
+          .from(discussions)
+          .leftJoin(discussionHonors.as('dh'), eq(discussions.id, sql`dh.discussion_id`))
+          .where(eq(discussions.userId, userId)),
+        db
+          .select({ count: sql<number>`COUNT(rh.id)` })
+          .from(discussionReplies)
+          .leftJoin(replyHonors.as('rh'), eq(discussionReplies.id, sql`rh.reply_id`))
+          .where(eq(discussionReplies.userId, userId))
+      ])
+    ]);
+
+    const discussionHonorsGiven = honorsGivenResult[0][0]?.count || 0;
+    const replyHonorsGiven = honorsGivenResult[1][0]?.count || 0;
+    const discussionHonorsReceived = honorsReceivedResult[0][0]?.count || 0;
+    const replyHonorsReceived = honorsReceivedResult[1][0]?.count || 0;
+
+    return {
+      honorsGiven: discussionHonorsGiven + replyHonorsGiven,
+      honorsReceived: discussionHonorsReceived + replyHonorsReceived,
+      discussionHonorsGiven,
+      replyHonorsGiven,
+      discussionHonorsReceived,
+      replyHonorsReceived
+    };
   }
 }
 

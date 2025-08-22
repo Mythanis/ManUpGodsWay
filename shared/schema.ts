@@ -177,6 +177,26 @@ export const discussionSubscriptions = pgTable("discussion_subscriptions", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Honor system for discussions
+export const discussionHonors = pgTable("discussion_honors", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  discussionId: varchar("discussion_id").notNull().references(() => discussions.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.discussionId), // Prevent duplicate honors from same user
+]);
+
+// Honor system for replies
+export const replyHonors = pgTable("reply_honors", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  replyId: varchar("reply_id").notNull().references(() => discussionReplies.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.replyId), // Prevent duplicate honors from same user
+]);
+
 // User notification preferences
 export const notificationPreferences = pgTable("notification_preferences", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -296,6 +316,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   videoRatings: many(videoRatings),
   discussionSubscriptions: many(discussionSubscriptions),
   notificationPreferences: one(notificationPreferences),
+  discussionHonors: many(discussionHonors),
+  replyHonors: many(replyHonors),
 }));
 
 export const videosRelations = relations(videos, ({ one, many }) => ({
@@ -322,11 +344,13 @@ export const discussionsRelations = relations(discussions, ({ one, many }) => ({
   study: one(studies, { fields: [discussions.studyId], references: [studies.id] }),
   replies: many(discussionReplies),
   subscriptions: many(discussionSubscriptions),
+  honors: many(discussionHonors),
 }));
 
-export const discussionRepliesRelations = relations(discussionReplies, ({ one }) => ({
+export const discussionRepliesRelations = relations(discussionReplies, ({ one, many }) => ({
   discussion: one(discussions, { fields: [discussionReplies.discussionId], references: [discussions.id] }),
   user: one(users, { fields: [discussionReplies.userId], references: [users.id] }),
+  honors: many(replyHonors),
 }));
 
 export const discussionSubscriptionsRelations = relations(discussionSubscriptions, ({ one }) => ({
@@ -338,6 +362,16 @@ export const discussionSubscriptionsRelations = relations(discussionSubscription
     fields: [discussionSubscriptions.userId],
     references: [users.id],
   }),
+}));
+
+export const discussionHonorsRelations = relations(discussionHonors, ({ one }) => ({
+  user: one(users, { fields: [discussionHonors.userId], references: [users.id] }),
+  discussion: one(discussions, { fields: [discussionHonors.discussionId], references: [discussions.id] }),
+}));
+
+export const replyHonorsRelations = relations(replyHonors, ({ one }) => ({
+  user: one(users, { fields: [replyHonors.userId], references: [users.id] }),
+  reply: one(discussionReplies, { fields: [replyHonors.replyId], references: [discussionReplies.id] }),
 }));
 
 export const userProgressRelations = relations(userProgress, ({ one }) => ({
