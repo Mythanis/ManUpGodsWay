@@ -3108,16 +3108,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Cannot request to be your own brother" });
       }
 
-      // Check if they're already brothers
-      const alreadyBrothers = await storage.checkBrotherhoodExists(requesterId, recipientId);
-      if (alreadyBrothers) {
-        return res.status(400).json({ message: "You are already brothers with this user" });
+      // Check if request can be sent (handles brothers, pending requests, denied history, cooldowns)
+      const requestStatus = await storage.canSendBrotherhoodRequest(requesterId, recipientId);
+      if (!requestStatus.canSend) {
+        return res.status(400).json({ message: requestStatus.reason });
       }
 
-      // Check if a request already exists (in either direction)
-      const existingRequest = await storage.checkBrotherhoodRequestExists(requesterId, recipientId);
-      if (existingRequest) {
-        return res.status(400).json({ message: "Brotherhood request already sent or pending" });
+      // If requires confirmation, check if user confirmed
+      if (requestStatus.requiresConfirmation && !req.body.confirmed) {
+        return res.status(409).json({ 
+          message: "User previously denied your request", 
+          requiresConfirmation: true,
+          lastDenied: requestStatus.lastDenied
+        });
       }
 
       // Create the request

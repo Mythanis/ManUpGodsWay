@@ -2270,6 +2270,75 @@ export class DatabaseStorage implements IStorage {
     return !!existing;
   }
 
+  async getLastDeniedRequest(requesterId: string, recipientId: string): Promise<BrotherhoodRequest | undefined> {
+    const [lastDenied] = await db.select()
+      .from(brotherhoodRequests)
+      .where(and(
+        eq(brotherhoodRequests.requesterId, requesterId),
+        eq(brotherhoodRequests.recipientId, recipientId),
+        eq(brotherhoodRequests.status, 'denied')
+      ))
+      .orderBy(desc(brotherhoodRequests.updatedAt))
+      .limit(1);
+    return lastDenied;
+  }
+
+  async canSendBrotherhoodRequest(requesterId: string, recipientId: string): Promise<{
+    canSend: boolean;
+    reason?: string;
+    requiresConfirmation?: boolean;
+    lastDenied?: Date;
+  }> {
+    // Check if they're already brothers
+    const alreadyBrothers = await this.checkBrotherhoodExists(requesterId, recipientId);
+    if (alreadyBrothers) {
+      return { canSend: false, reason: "You are already brothers with this user" };
+    }
+
+    // Check for pending requests
+    const pendingRequest = await this.checkBrotherhoodRequestExists(requesterId, recipientId);
+    if (pendingRequest) {
+      return { canSend: false, reason: "Brotherhood request already sent or pending" };
+    }
+
+    // Check for previous denied requests
+    const lastDeniedRequest = await this.getLastDeniedRequest(requesterId, recipientId);
+    if (lastDeniedRequest) {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      // Count how many times this user has been denied by the same recipient
+      const deniedCount = await db.select({ count: count() })
+        .from(brotherhoodRequests)
+        .where(and(
+          eq(brotherhoodRequests.requesterId, requesterId),
+          eq(brotherhoodRequests.recipientId, recipientId),
+          eq(brotherhoodRequests.status, 'denied')
+        ));
+
+      const totalDenials = deniedCount[0].count;
+
+      if (totalDenials >= 2 && lastDeniedRequest.updatedAt > thirtyDaysAgo) {
+        // Two or more denials within 30 days - block completely
+        const daysRemaining = Math.ceil((lastDeniedRequest.updatedAt.getTime() + (30 * 24 * 60 * 60 * 1000) - Date.now()) / (24 * 60 * 60 * 1000));
+        return { 
+          canSend: false, 
+          reason: `You cannot send another request to this user. Please wait ${daysRemaining} more days before trying again.`
+        };
+      } else {
+        // First denial or more than 30 days have passed - require confirmation
+        return { 
+          canSend: true, 
+          requiresConfirmation: true,
+          lastDenied: lastDeniedRequest.updatedAt
+        };
+      }
+    }
+
+    // No previous interactions - can send freely
+    return { canSend: true };
+  }
+
   async getBrotherhoodRequest(requestId: string): Promise<BrotherhoodRequest | undefined> {
     const [request] = await db.select()
       .from(brotherhoodRequests)
