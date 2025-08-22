@@ -2219,22 +2219,7 @@ export class DatabaseStorage implements IStorage {
   async searchUsers(query: string, excludeUserId: string): Promise<User[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
     
-    const searchResults = await db.select({
-      id: users.id,
-      firstName: users.firstName,
-      lastName: users.lastName,
-      email: users.email,
-      profileImageUrl: users.profileImageUrl,
-      role: users.role,
-      subscriptionTier: users.subscriptionTier,
-      streakDays: users.streakDays,
-      lastActiveAt: users.lastActiveAt,
-      isProfilePrivate: users.isProfilePrivate,
-      isSilenced: users.isSilenced,
-      mutedUntil: users.mutedUntil,
-      createdAt: users.createdAt,
-      updatedAt: users.updatedAt,
-    })
+    const searchResults = await db.select()
       .from(users)
       .where(
         and(

@@ -31,7 +31,6 @@ interface SearchUser {
 }
 
 export default function Brothers() {
-  const [searchQuery, setSearchQuery] = useState("");
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [showUserSearch, setShowUserSearch] = useState(false);
   const { toast } = useToast();
@@ -107,14 +106,7 @@ export default function Brothers() {
     }
   }, [userSearchQuery]);
 
-  // Filter brothers based on search query
-  const filteredBrothers = brothers?.filter(brother => {
-    const fullName = `${brother.firstName} ${brother.lastName}`.toLowerCase();
-    const username = brother.username.toLowerCase();
-    const query = searchQuery.toLowerCase();
-    
-    return fullName.includes(query) || username.includes(query);
-  }) || [];
+  // No need to filter brothers since we removed the search functionality
 
   const getTagInfo = (tag?: string) => {
     switch (tag) {
@@ -170,21 +162,6 @@ export default function Brothers() {
             <span>{brothers?.length || 0} Brothers</span>
           </div>
         </div>
-
-        {/* Brother Search Bar */}
-        {!isLoading && (
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              type="text"
-              placeholder="Search your brothers by name or username..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 border-white dark:border-white"
-              data-testid="input-search-brothers"
-            />
-          </div>
-        )}
 
         {/* User Search Bar - Find new brothers */}
         {!isLoading && (
@@ -289,18 +266,8 @@ export default function Brothers() {
           </Card>
         ) : (
           <>
-            {/* Show search results count */}
-            {searchQuery && (
-              <div className="mb-4 text-sm text-muted-foreground">
-                {filteredBrothers.length === 0 
-                  ? `No brothers found matching "${searchQuery}"`
-                  : `${filteredBrothers.length} brother${filteredBrothers.length !== 1 ? 's' : ''} found`
-                }
-              </div>
-            )}
-            
             <div className="grid gap-4">
-              {(searchQuery ? filteredBrothers : brothers).map((brother) => {
+              {brothers.map((brother) => {
                 const tagInfo = getTagInfo(brother.tag);
                 
                 return (
@@ -380,25 +347,7 @@ export default function Brothers() {
               })}
             </div>
             
-            {/* No search results message */}
-            {searchQuery && filteredBrothers.length === 0 && (
-              <Card>
-                <CardContent className="text-center py-12">
-                  <Search className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h2 className="text-xl font-semibold mb-2">No Brothers Found</h2>
-                  <p className="text-muted-foreground mb-4">
-                    No brothers match your search for "{searchQuery}"
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setSearchQuery("")}
-                    data-testid="button-clear-search"
-                  >
-                    Clear Search
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+
           </>
         )}
       </div>
