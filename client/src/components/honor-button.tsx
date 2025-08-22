@@ -61,7 +61,10 @@ export function HonorButton({
     }
   });
 
-  const handleHonor = () => {
+  const handleHonor = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!user) {
       toast({
         title: "Sign in required",
