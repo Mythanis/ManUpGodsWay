@@ -195,31 +195,6 @@ export default function Profile() {
             {/* Silenced Users */}
             <SilencedUsersButton />
             
-            {/* Theme Switch */}
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-ministry-navy/20 flex items-center justify-center">
-                  {effectiveTheme === 'dark' ? (
-                    <Moon className="w-4 h-4 text-ministry-navy" />
-                  ) : (
-                    <Sun className="w-4 h-4 text-ministry-navy" />
-                  )}
-                </div>
-                <div>
-                  <span className="font-medium text-foreground">Dark Mode</span>
-                  <p className="text-xs text-muted-foreground">
-                    {theme === 'system' ? 'Follow system settings' : `${theme.charAt(0).toUpperCase() + theme.slice(1)} theme`}
-                  </p>
-                </div>
-              </div>
-              <Switch
-                checked={effectiveTheme === 'dark'}
-                onCheckedChange={(checked) => {
-                  setTheme(checked ? 'dark' : 'light');
-                }}
-                data-testid="switch-theme"
-              />
-            </div>
             
             <Button 
               variant="ghost"
