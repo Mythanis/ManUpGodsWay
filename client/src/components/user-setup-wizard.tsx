@@ -109,19 +109,19 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-ministry-navy to-ministry-charcoal flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md bg-ministry-charcoal dark:bg-ministry-charcoal border-ministry-steel dark:border-ministry-steel">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-ministry-navy">
+          <CardTitle className="text-2xl text-white dark:text-white">
             Welcome to Man Up God's Way
           </CardTitle>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-ministry-slate dark:text-ministry-slate">
             Let's set up your profile to get started
           </p>
           <div className="flex justify-center mt-4">
             <div className="flex space-x-2">
-              <div className={`w-3 h-3 rounded-full ${step >= 1 ? 'bg-ministry-gold' : 'bg-gray-200'}`} />
-              <div className={`w-3 h-3 rounded-full ${step >= 2 ? 'bg-ministry-gold' : 'bg-gray-200'}`} />
-              <div className={`w-3 h-3 rounded-full ${step >= 3 ? 'bg-ministry-gold' : 'bg-gray-200'}`} />
+              <div className={`w-3 h-3 rounded-full ${step >= 1 ? 'bg-ministry-gold' : 'bg-ministry-steel'}`} />
+              <div className={`w-3 h-3 rounded-full ${step >= 2 ? 'bg-ministry-gold' : 'bg-ministry-steel'}`} />
+              <div className={`w-3 h-3 rounded-full ${step >= 3 ? 'bg-ministry-gold' : 'bg-ministry-steel'}`} />
             </div>
           </div>
         </CardHeader>
@@ -131,17 +131,17 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
             <>
               <div className="text-center">
                 <User className="w-12 h-12 mx-auto mb-4 text-ministry-gold" />
-                <h3 className="text-lg font-semibold text-ministry-charcoal mb-2">
+                <h3 className="text-lg font-semibold text-white dark:text-white mb-2">
                   Personal Information
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-ministry-slate dark:text-ministry-slate">
                   Tell us a bit about yourself
                 </p>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="firstName">First Name *</Label>
+                  <Label htmlFor="firstName" className="text-white dark:text-white">First Name *</Label>
                   <Input
                     id="firstName"
                     value={setupData.firstName}
@@ -152,7 +152,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                 </div>
 
                 <div>
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="lastName" className="text-white dark:text-white">Last Name</Label>
                   <Input
                     id="lastName"
                     value={setupData.lastName}
@@ -163,7 +163,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                 </div>
               </div>
 
-              <Button onClick={handleNext} className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-black">
+              <Button onClick={handleNext} className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal dark:text-ministry-charcoal">
                 Continue
               </Button>
             </>
@@ -173,21 +173,21 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
             <>
               <div className="text-center">
                 <MessageSquare className="w-12 h-12 mx-auto mb-4 text-ministry-gold" />
-                <h3 className="text-lg font-semibold text-ministry-charcoal mb-2">
+                <h3 className="text-lg font-semibold text-white dark:text-white mb-2">
                   Communication Preferences
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-ministry-slate dark:text-ministry-slate">
                   Choose how other members can connect with you
                 </p>
               </div>
 
               <div className="space-y-6">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-ministry-steel dark:border-ministry-steel rounded-lg">
                   <div className="flex items-start space-x-3">
-                    <MessageSquare className="w-5 h-5 text-ministry-navy mt-0.5" />
+                    <MessageSquare className="w-5 h-5 text-ministry-gold mt-0.5" />
                     <div>
-                      <h4 className="font-medium text-ministry-charcoal">Direct Messages</h4>
-                      <p className="text-sm text-muted-foreground">
+                      <h4 className="font-medium text-white dark:text-white">Direct Messages</h4>
+                      <p className="text-sm text-ministry-slate dark:text-ministry-slate">
                         Allow other members to send you private messages
                       </p>
                     </div>
@@ -200,12 +200,12 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-ministry-steel dark:border-ministry-steel rounded-lg">
                   <div className="flex items-start space-x-3">
-                    <Users className="w-5 h-5 text-ministry-navy mt-0.5" />
+                    <Users className="w-5 h-5 text-ministry-gold mt-0.5" />
                     <div>
-                      <h4 className="font-medium text-ministry-charcoal">Group Invites</h4>
-                      <p className="text-sm text-muted-foreground">
+                      <h4 className="font-medium text-white dark:text-white">Group Invites</h4>
+                      <p className="text-sm text-ministry-slate dark:text-ministry-slate">
                         Allow other members to invite you to group chats
                       </p>
                     </div>
@@ -218,12 +218,12 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                   />
                 </div>
 
-                <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="bg-ministry-navy/50 dark:bg-ministry-navy/50 p-4 rounded-lg border border-ministry-steel dark:border-ministry-steel">
                   <div className="flex items-start space-x-2">
-                    <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-ministry-gold mt-0.5" />
                     <div>
-                      <p className="text-sm text-blue-800 font-medium">Privacy Note</p>
-                      <p className="text-xs text-blue-700 mt-1">
+                      <p className="text-sm text-white dark:text-white font-medium">Privacy Note</p>
+                      <p className="text-xs text-ministry-slate dark:text-ministry-slate mt-1">
                         You can change these preferences anytime in your profile settings. 
                         These settings help maintain a respectful community environment.
                       </p>
@@ -242,7 +242,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                 </Button>
                 <Button
                   onClick={handleNext}
-                  className="flex-1 bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                  className="flex-1 bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal dark:text-ministry-charcoal"
                 >
                   Continue
                 </Button>
@@ -254,21 +254,21 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
             <>
               <div className="text-center">
                 <Clock className="w-12 h-12 mx-auto mb-4 text-ministry-gold" />
-                <h3 className="text-lg font-semibold text-ministry-charcoal mb-2">
+                <h3 className="text-lg font-semibold text-white dark:text-white mb-2">
                   Prayer Time Features
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-ministry-slate dark:text-ministry-slate">
                   Enable focus mode and notifications for your prayer time
                 </p>
               </div>
 
               <div className="space-y-6">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-ministry-steel dark:border-ministry-steel rounded-lg">
                   <div className="flex items-start space-x-3">
-                    <Bell className="w-5 h-5 text-ministry-navy mt-0.5" />
+                    <Bell className="w-5 h-5 text-ministry-gold mt-0.5" />
                     <div>
-                      <h4 className="font-medium text-ministry-charcoal">Prayer Notifications</h4>
-                      <p className="text-sm text-muted-foreground">
+                      <h4 className="font-medium text-white dark:text-white">Prayer Notifications</h4>
+                      <p className="text-sm text-ministry-slate dark:text-ministry-slate">
                         Get notified when your prayer time is complete and enable focus mode during prayer
                       </p>
                     </div>
@@ -281,12 +281,12 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                   />
                 </div>
 
-                <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="bg-ministry-navy/50 dark:bg-ministry-navy/50 p-4 rounded-lg border border-ministry-steel dark:border-ministry-steel">
                   <div className="flex items-start space-x-2">
-                    <Clock className="w-5 h-5 text-blue-600 mt-0.5" />
+                    <Clock className="w-5 h-5 text-ministry-gold mt-0.5" />
                     <div>
-                      <p className="text-sm text-blue-800 font-medium">Prayer Time Benefits</p>
-                      <p className="text-xs text-blue-700 mt-1">
+                      <p className="text-sm text-white dark:text-white font-medium">Prayer Time Benefits</p>
+                      <p className="text-xs text-ministry-slate dark:text-ministry-slate mt-1">
                         When enabled, prayer time will enter fullscreen focus mode, keep your screen awake, 
                         and notify you when your dedicated prayer time is complete. This helps create a 
                         distraction-free environment for connecting with God.
@@ -307,7 +307,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                 <Button
                   onClick={handleNext}
                   disabled={updateProfileMutation.isPending}
-                  className="flex-1 bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                  className="flex-1 bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal dark:text-ministry-charcoal"
                 >
                   {updateProfileMutation.isPending ? 'Setting up...' : 'Complete Setup'}
                 </Button>
