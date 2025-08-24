@@ -5,9 +5,9 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(210 25% 7.8431%);
-  --card: hsl(180 6.6667% 97.0588%);
+  --background: hsl(0 0% 0%);
+  --foreground: hsl(0 0% 95%);
+  --card: hsl(0 0% 5%);
   --card-foreground: hsl(210 25% 7.8431%);
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(210 25% 7.8431%);
@@ -15,8 +15,8 @@
   --primary-foreground: hsl(0 0% 100%);
   --secondary: hsl(210 25% 7.8431%);
   --secondary-foreground: hsl(0 0% 100%);
-  --muted: hsl(240 1.9608% 90%);
-  --muted-foreground: hsl(210 25% 7.8431%);
+  --muted: hsl(0 0% 10%);
+  --muted-foreground: hsl(0 0% 70%);
   --accent: hsl(211.5789 51.3514% 92.7451%);
   --accent-foreground: hsl(203.8863 88.2845% 53.1373%);
   --destructive: hsl(356.3033 90.5579% 54.3137%);
@@ -202,9 +202,9 @@
 }
 
 .dark {
-  --background: hsl(220 8% 18%);
+  --background: hsl(0 0% 0%);
   --foreground: hsl(0 0% 95%);
-  --card: hsl(220 8% 22%);
+  --card: hsl(0 0% 5%);
   --card-foreground: hsl(0 0% 95%);
   --popover: hsl(220 8% 22%);
   --popover-foreground: hsl(0 0% 95%);

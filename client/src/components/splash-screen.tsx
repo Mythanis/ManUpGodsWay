@@ -38,7 +38,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
       'gold': '#FBD000',
       'light-gray': '#f3f4f6',
     };
-    return colorMap[backgroundColor] || '#ffffff';
+    return colorMap[backgroundColor] || '#000000';
   };
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   // Show loading state while fetching logo settings
   if (isLoading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-ministry-charcoal">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black dark:bg-black">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ministry-gold"></div>
       </div>
     );
