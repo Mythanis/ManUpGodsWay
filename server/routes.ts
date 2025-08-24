@@ -3424,6 +3424,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all fitness challenges (admin only - includes unpublished)
+  app.get('/api/admin/fitness-challenges', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const challenges = await storage.getAllFitnessChallenges();
+      res.json(challenges);
+    } catch (error) {
+      console.error('Error fetching all fitness challenges:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Get fitness challenge by ID
   app.get('/api/fitness-challenges/:id', async (req, res) => {
     try {

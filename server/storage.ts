@@ -319,6 +319,7 @@ export interface IStorage {
   
   // Fitness Challenge operations
   getFitnessChallenges(): Promise<FitnessChallenge[]>;
+  getAllFitnessChallenges(): Promise<FitnessChallenge[]>;
   getFitnessChallengeById(id: string): Promise<FitnessChallenge | undefined>;
   createFitnessChallenge(challenge: InsertFitnessChallenge): Promise<FitnessChallenge>;
   updateFitnessChallenge(id: string, updates: Partial<InsertFitnessChallenge>): Promise<FitnessChallenge>;
@@ -3768,6 +3769,13 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(fitnessChallenge)
       .where(eq(fitnessChallenge.isPublished, true))
+      .orderBy(desc(fitnessChallenge.targetDate));
+  }
+
+  async getAllFitnessChallenges(): Promise<FitnessChallenge[]> {
+    return await db
+      .select()
+      .from(fitnessChallenge)
       .orderBy(desc(fitnessChallenge.targetDate));
   }
 
