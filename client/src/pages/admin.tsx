@@ -21,7 +21,7 @@ import SystemSettings from "@/components/admin/system-settings";
 import PodcastManagement from "@/components/admin/podcast-management";
 import ChallengeManagement from "@/components/admin/challenge-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell } from "lucide-react";
 
 interface Study {
   id: string;
@@ -47,6 +47,7 @@ const adminTabs = [
   { id: "videos", label: "Videos", icon: Video },
   { id: "podcasts", label: "Podcasts", icon: Headphones },
   { id: "challenges", label: "Challenges", icon: Trophy },
+  { id: "fitness", label: "Fitness", icon: Dumbbell },
   { id: "devotionals", label: "Devotionals", icon: Calendar },
   { id: "logo", label: "Logo", icon: Image },
   { id: "settings", label: "Settings", icon: Settings },
@@ -672,6 +673,18 @@ export default function Admin() {
           {activeTab === "challenges" && (
             <div>
               <ChallengeManagement />
+            </div>
+          )}
+
+          {activeTab === "fitness" && (
+            <div>
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Fitness Challenge Management</h2>
+              <iframe 
+                src="/fitness" 
+                className="w-full h-[800px] border-0 rounded-lg"
+                style={{ minHeight: "800px" }}
+                title="Fitness Management"
+              />
             </div>
           )}
 
