@@ -62,7 +62,7 @@ export default function MoreManUp() {
               >
                 <div className="flex items-center space-x-4">
                   <IconComponent className={`w-6 h-6 ${link.color}`} />
-                  <span className="font-medium text-ministry-charcoal dark:text-white">
+                  <span className="font-medium text-black">
                     {link.name}
                   </span>
                 </div>

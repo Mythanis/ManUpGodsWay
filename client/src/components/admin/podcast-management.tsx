@@ -435,10 +435,10 @@ export default function PodcastManagement() {
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h3 className="font-semibold text-lg text-ministry-charcoal mb-1">
+                          <h3 className="font-semibold text-lg text-black mb-1">
                             {podcast.title}
                           </h3>
-                          <div className="flex items-center space-x-4 text-sm text-ministry-slate mb-2">
+                          <div className="flex items-center space-x-4 text-sm text-black mb-2">
                             <Badge variant="outline" className="text-xs">
                               {podcast.type === 'audio' ? 'Audio' : 'Video'}
                             </Badge>
@@ -454,12 +454,12 @@ export default function PodcastManagement() {
                       </div>
 
                       {podcast.description && (
-                        <p className="text-ministry-slate text-sm mb-3 line-clamp-2">
+                        <p className="text-black text-sm mb-3 line-clamp-2">
                           {podcast.description}
                         </p>
                       )}
 
-                      <div className="flex items-center space-x-6 text-sm text-ministry-slate">
+                      <div className="flex items-center space-x-6 text-sm text-black">
                         <div className="flex items-center">
                           <Star className="w-4 h-4 mr-1 text-ministry-gold" />
                           {parseFloat(podcast.rating).toFixed(1)} ({podcast.ratingCount})

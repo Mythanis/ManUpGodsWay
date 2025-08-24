@@ -309,11 +309,11 @@ export default function StudyDetail() {
                   <div className="flex items-center space-x-1" data-testid="rating-display">
                     <Star className="w-4 h-4 text-black fill-current" />
                     <span className="text-sm font-medium">{study.rating}</span>
-                    <span className="text-xs text-ministry-slate">({study.ratingCount} reviews)</span>
+                    <span className="text-xs text-black">({study.ratingCount} reviews)</span>
                   </div>
                 )}
               </div>
-              <div className="flex items-center space-x-4 text-sm text-ministry-slate">
+              <div className="flex items-center space-x-4 text-sm text-black">
                 <div className="flex items-center space-x-1">
                   <Clock className="w-4 h-4" />
                   <span>{study.estimatedHours}h</span>
@@ -325,7 +325,7 @@ export default function StudyDetail() {
               </div>
             </div>
 
-            <p className="text-ministry-slate mb-6" data-testid="text-study-description">
+            <p className="text-black mb-6" data-testid="text-study-description">
               {study.description}
             </p>
 
@@ -405,8 +405,8 @@ export default function StudyDetail() {
             <Card className="bg-ministry-gold-exact/20" data-testid="card-progress">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-ministry-charcoal">Your Progress</h2>
-                  <span className="text-sm text-ministry-steel font-bold" data-testid="text-progress-fraction">
+                  <h2 className="text-lg font-bold text-black">Your Progress</h2>
+                  <span className="text-sm text-black font-bold" data-testid="text-progress-fraction">
                     {actualCompletedLessons}/{study.lessonCount}
                   </span>
                 </div>
@@ -414,7 +414,7 @@ export default function StudyDetail() {
                 <Progress value={progressPercent} className="mb-4" data-testid="progress-bar" />
                 
                 <div className="flex items-center justify-between">
-                  <div className="text-sm text-ministry-charcoal">
+                  <div className="text-sm text-black">
                     <span className="font-medium">
                       {actualCompletedLessons >= (study.lessonCount || 1) 
                         ? "All lessons completed" 
@@ -434,9 +434,9 @@ export default function StudyDetail() {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-bold text-ministry-success text-lg">🎉 Study Completed!</h3>
-                        <p className="text-sm text-ministry-slate">Congratulations on finishing this study and growing in your faith journey.</p>
+                        <p className="text-sm text-black">Congratulations on finishing this study and growing in your faith journey.</p>
                         {userProgress?.completedAt && (
-                          <p className="text-xs text-ministry-steel mt-1 font-medium">
+                          <p className="text-xs text-black mt-1 font-medium">
                             Completed on {new Date(userProgress.completedAt).toLocaleDateString('en-US', {
                               weekday: 'long',
                               year: 'numeric',

@@ -132,7 +132,7 @@ export function SilencedUsersButton() {
                 >
                   <Avatar className="w-10 h-10">
                     <AvatarImage src={user.avatar || ''} alt={user.firstName || ''} />
-                    <AvatarFallback className="bg-ministry-gold-exact/20 text-ministry-gold">
+                    <AvatarFallback className="bg-ministry-gold-exact/20 text-black">
                       {user.firstName?.[0] || user.email[0].toUpperCase()}
                     </AvatarFallback>
                   </Avatar>

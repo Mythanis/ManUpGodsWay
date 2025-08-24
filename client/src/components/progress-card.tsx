@@ -19,13 +19,13 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-semibold text-foreground" data-testid="text-study-title">
+            <h3 className="font-semibold text-black" data-testid="text-study-title">
               {study.title}
             </h3>
-            <p className="text-sm text-muted-foreground" data-testid="text-study-info">
+            <p className="text-sm text-black" data-testid="text-study-info">
               {study.lessonCount}-lesson study series
             </p>
-            <p className="text-xs text-ministry-steel mt-1">
+            <p className="text-xs text-black mt-1">
               {isStudyCompleted 
                 ? "All lessons completed" 
                 : `Currently on: Lesson ${currentLesson}`
@@ -33,10 +33,10 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-ministry-steel font-bold text-lg" data-testid="text-progress-percent">
+            <p className="text-black font-bold text-lg" data-testid="text-progress-percent">
               {progressPercent}%
             </p>
-            <p className="text-xs text-ministry-slate" data-testid="text-progress-fraction">
+            <p className="text-xs text-black" data-testid="text-progress-fraction">
               {actualCompletedLessons} of {study.lessonCount} complete
             </p>
           </div>
