@@ -4,7 +4,7 @@ import { Users, BookOpen, Video, MessageCircle } from "lucide-react";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-black">
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-ministry-charcoal to-ministry-steel dark:from-header-dark dark:to-ministry-charcoal text-white px-6 pt-16 pb-12">
         <div className="text-center">
@@ -25,12 +25,12 @@ export default function Landing() {
       </div>
 
       {/* Features Section */}
-      <div className="px-6 py-12">
+      <div className="px-6 py-12 bg-black">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4" data-testid="features-title">
+          <h2 className="text-3xl font-bold text-white mb-4" data-testid="features-title">
             Everything You Need to Grow
           </h2>
-          <p className="text-muted-foreground text-lg" data-testid="features-description">
+          <p className="text-gray-300 text-lg" data-testid="features-description">
             Comprehensive tools for spiritual growth and biblical masculinity
           </p>
         </div>
