@@ -26,6 +26,7 @@ import {
   brotherhoodRequests,
   brotherhoodDenials,
   brotherhoods,
+  fitnessChallenge,
   type User,
   type UpsertUser,
   type Study,
@@ -94,9 +95,11 @@ import {
   type InsertBrotherhood,
   type BrotherhoodDenial,
   type InsertBrotherhoodDenial,
+  type FitnessChallenge,
+  type InsertFitnessChallenge,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull } from "drizzle-orm";
+import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -313,6 +316,15 @@ export interface IStorage {
     daysRemaining?: number;
     denialCount: number;
   }>;
+  
+  // Fitness Challenge operations
+  getFitnessChallenges(): Promise<FitnessChallenge[]>;
+  getFitnessChallengeById(id: string): Promise<FitnessChallenge | undefined>;
+  createFitnessChallenge(challenge: InsertFitnessChallenge): Promise<FitnessChallenge>;
+  updateFitnessChallenge(id: string, updates: Partial<InsertFitnessChallenge>): Promise<FitnessChallenge>;
+  deleteFitnessChallenge(id: string): Promise<void>;
+  publishFitnessChallenge(id: string): Promise<FitnessChallenge>;
+  getTodaysFitnessChallenge(): Promise<FitnessChallenge | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3748,6 +3760,78 @@ export class DatabaseStorage implements IStorage {
       inCooldown: false,
       denialCount: denial.denialCount
     };
+  }
+
+  // Fitness Challenge methods
+  async getFitnessChallenges(): Promise<FitnessChallenge[]> {
+    return await db
+      .select()
+      .from(fitnessChallenge)
+      .where(eq(fitnessChallenge.isPublished, true))
+      .orderBy(desc(fitnessChallenge.targetDate));
+  }
+
+  async getFitnessChallengeById(id: string): Promise<FitnessChallenge | undefined> {
+    const [challenge] = await db
+      .select()
+      .from(fitnessChallenge)
+      .where(eq(fitnessChallenge.id, id));
+    return challenge;
+  }
+
+  async createFitnessChallenge(challengeData: InsertFitnessChallenge): Promise<FitnessChallenge> {
+    const [challenge] = await db
+      .insert(fitnessChallenge)
+      .values(challengeData)
+      .returning();
+    return challenge;
+  }
+
+  async updateFitnessChallenge(id: string, updates: Partial<InsertFitnessChallenge>): Promise<FitnessChallenge> {
+    const [challenge] = await db
+      .update(fitnessChallenge)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(fitnessChallenge.id, id))
+      .returning();
+    return challenge;
+  }
+
+  async deleteFitnessChallenge(id: string): Promise<void> {
+    await db
+      .delete(fitnessChallenge)
+      .where(eq(fitnessChallenge.id, id));
+  }
+
+  async publishFitnessChallenge(id: string): Promise<FitnessChallenge> {
+    const [challenge] = await db
+      .update(fitnessChallenge)
+      .set({ 
+        isPublished: true, 
+        publishedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(fitnessChallenge.id, id))
+      .returning();
+    return challenge;
+  }
+
+  async getTodaysFitnessChallenge(): Promise<FitnessChallenge | null> {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+    const [challenge] = await db
+      .select()
+      .from(fitnessChallenge)
+      .where(
+        and(
+          eq(fitnessChallenge.isPublished, true),
+          gte(fitnessChallenge.targetDate, startOfDay),
+          lte(fitnessChallenge.targetDate, endOfDay)
+        )
+      );
+    
+    return challenge || null;
   }
 }
 

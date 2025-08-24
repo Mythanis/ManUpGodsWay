@@ -20,7 +20,8 @@ import {
   insertPodcastSchema,
   insertPodcastRatingSchema,
   insertContentFlagSchema,
-  insertTestimonySchema
+  insertTestimonySchema,
+  insertFitnessChallengeSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -3407,6 +3408,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error searching users:", error);
       res.status(500).json({ message: "Failed to search users" });
+    }
+  });
+
+  // Fitness Challenge Routes
+  
+  // Get all published fitness challenges
+  app.get('/api/fitness-challenges', async (req, res) => {
+    try {
+      const challenges = await storage.getFitnessChallenges();
+      res.json(challenges);
+    } catch (error) {
+      console.error('Error fetching fitness challenges:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get fitness challenge by ID
+  app.get('/api/fitness-challenges/:id', async (req, res) => {
+    try {
+      const challenge = await storage.getFitnessChallengeById(req.params.id);
+      if (!challenge) {
+        return res.status(404).json({ message: 'Fitness challenge not found' });
+      }
+      res.json(challenge);
+    } catch (error) {
+      console.error('Error fetching fitness challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Create new fitness challenge (admin only)
+  app.post('/api/fitness-challenges', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const challengeData = insertFitnessChallengeSchema.parse({
+        ...req.body,
+        createdBy: user.id
+      });
+      
+      const challenge = await storage.createFitnessChallenge(challengeData);
+      res.status(201).json(challenge);
+    } catch (error) {
+      console.error('Error creating fitness challenge:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid challenge data", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Update fitness challenge (admin only)
+  app.put('/api/fitness-challenges/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const updates = req.body;
+      const challenge = await storage.updateFitnessChallenge(req.params.id, updates);
+      res.json(challenge);
+    } catch (error) {
+      console.error('Error updating fitness challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Delete fitness challenge (admin only)
+  app.delete('/api/fitness-challenges/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      await storage.deleteFitnessChallenge(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting fitness challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Publish fitness challenge (admin only)
+  app.post('/api/fitness-challenges/:id/publish', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const challenge = await storage.publishFitnessChallenge(req.params.id);
+      res.json(challenge);
+    } catch (error) {
+      console.error('Error publishing fitness challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
 

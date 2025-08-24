@@ -13,6 +13,7 @@ import Library from "@/pages/library";
 import Videos from "@/pages/videos";
 import Podcasts from "@/pages/podcasts";
 import Challenges from "@/pages/challenges";
+import Fitness from "@/pages/fitness";
 import Community from "@/pages/community";
 import Brothers from "@/pages/brothers";
 import Messages from "@/pages/messages";
@@ -82,6 +83,7 @@ function Router() {
             <Route path="/videos" component={Videos} />
             <Route path="/podcasts" component={Podcasts} />
             <Route path="/challenges" component={Challenges} />
+            <Route path="/fitness" component={Fitness} />
             <Route path="/community" component={Community} />
             <Route path="/brothers" component={Brothers} />
             <Route path="/messages" component={Messages} />

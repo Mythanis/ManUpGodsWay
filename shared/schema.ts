@@ -209,6 +209,25 @@ export const testimonies = pgTable("testimonies", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Daily fitness challenges
+export const fitnessChallenge = pgTable("fitness_challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  description: text("description").notNull(),
+  targetDate: timestamp("target_date").notNull(), // The date this challenge is for
+  videoId: varchar("video_id").references(() => videos.id),
+  videoUrl: varchar("video_url"), // For external video URLs
+  difficulty: varchar("difficulty").default("beginner"), // beginner, intermediate, advanced
+  duration: integer("duration").default(30), // in minutes
+  equipment: text("equipment"), // equipment needed
+  category: varchar("category").default("general"), // strength, cardio, flexibility, general
+  isPublished: boolean("is_published").default(false),
+  publishedAt: timestamp("published_at"),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertTestimonySchema = createInsertSchema(testimonies).omit({
   id: true,
   createdAt: true,
@@ -217,6 +236,26 @@ export const insertTestimonySchema = createInsertSchema(testimonies).omit({
 
 export type Testimony = typeof testimonies.$inferSelect;
 export type InsertTestimony = z.infer<typeof insertTestimonySchema>;
+
+export const insertFitnessChallengeSchema = createInsertSchema(fitnessChallenge, {
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  targetDate: z.string().min(1, "Target date is required"),
+  difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
+  category: z.enum(["strength", "cardio", "flexibility", "general"]).default("general"),
+  duration: z.number().int().min(1).default(30),
+  equipment: z.string().optional(),
+  videoId: z.string().optional(),
+  videoUrl: z.string().optional(),
+}).omit({
+  id: true,
+  publishedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type FitnessChallenge = typeof fitnessChallenge.$inferSelect;
+export type InsertFitnessChallenge = z.infer<typeof insertFitnessChallengeSchema>;
 
 // User notification preferences
 export const notificationPreferences = pgTable("notification_preferences", {
@@ -339,12 +378,19 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   notificationPreferences: one(notificationPreferences),
   discussionHonors: many(discussionHonors),
   replyHonors: many(replyHonors),
+  createdFitnessChallenges: many(fitnessChallenge),
 }));
 
 export const videosRelations = relations(videos, ({ one, many }) => ({
   uploader: one(users, { fields: [videos.uploadedBy], references: [users.id] }),
   studies: many(studies),
   ratings: many(videoRatings),
+  fitnessChallenges: many(fitnessChallenge),
+}));
+
+export const fitnessChallengeRelations = relations(fitnessChallenge, ({ one }) => ({
+  creator: one(users, { fields: [fitnessChallenge.createdBy], references: [users.id] }),
+  video: one(videos, { fields: [fitnessChallenge.videoId], references: [videos.id] }),
 }));
 
 export const studiesRelations = relations(studies, ({ one, many }) => ({
