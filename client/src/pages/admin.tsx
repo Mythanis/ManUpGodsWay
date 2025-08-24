@@ -445,7 +445,8 @@ export default function Admin() {
                     ? 'hsl(49, 100%, 49%)' 
                     : effectiveTheme === 'dark' 
                       ? 'hsl(210 5.2632% 14.9020%)' 
-                      : 'hsl(201.4286 30.4348% 90.9804%)'
+                      : 'hsl(201.4286 30.4348% 90.9804%)',
+                  borderWidth: activeTab === tab.id ? '2px' : '1px'
                 }}
                 className="px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start border cursor-pointer transition-colors flex items-center space-x-2"
                 data-testid={`tab-${tab.id}`}
