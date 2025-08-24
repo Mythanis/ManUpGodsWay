@@ -442,7 +442,7 @@ export default function Admin() {
                       ? 'hsl(0 0% 95%)' 
                       : 'hsl(210 25% 7.8431%)',
                   borderColor: activeTab === tab.id 
-                    ? 'hsl(0 0% 0%)' 
+                    ? 'hsl(49, 100%, 49%)' 
                     : effectiveTheme === 'dark' 
                       ? 'hsl(210 5.2632% 14.9020%)' 
                       : 'hsl(201.4286 30.4348% 90.9804%)'
