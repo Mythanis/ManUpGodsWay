@@ -173,11 +173,11 @@ export default function Challenges() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       <div className="px-6 pt-6 space-y-6">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-ministry-charcoal mb-2">
+        <div className="text-center mb-8 bg-black p-6 rounded-lg">
+          <h1 className="text-3xl font-bold text-white mb-2">
             Weekly Challenges
           </h1>
-          <p className="text-ministry-slate">
+          <p className="text-white">
             Grow stronger in faith through weekly challenges designed to build godly character
           </p>
         </div>
@@ -209,7 +209,7 @@ export default function Challenges() {
 
         {/* Previous Challenges Header & Controls */}
         <div className="flex flex-col space-y-4 mb-6">
-          <h2 className="text-xl font-bold text-ministry-charcoal">Previous Challenges</h2>
+          <h2 className="text-xl font-bold text-white">Previous Challenges</h2>
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
             {/* Topic Filter */}
