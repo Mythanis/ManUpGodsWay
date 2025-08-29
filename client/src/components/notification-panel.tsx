@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Bell, Check, CheckCheck, MessageSquare, BookOpen, Heart, Users, Trash2, X, MoreVertical, Settings } from "lucide-react";
+import { Bell, Check, CheckCheck, MessageSquare, BookOpen, Heart, Users, Trash2, X, MoreVertical, Settings, UserCheck, UserX } from "lucide-react";
 import { cn, formatLocalDateTime } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { NotificationPreferences } from "./notification-preferences";
@@ -15,7 +15,7 @@ import { NotificationPreferences } from "./notification-preferences";
 interface Notification {
   id: string;
   userId: string;
-  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'discussion_reply' | 'study' | 'video' | 'new_video' | 'admin';
+  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'discussion_reply' | 'study' | 'video' | 'new_video' | 'admin' | 'brotherhood';
   title: string;
   message: string;
   relatedId?: string;
@@ -54,6 +54,8 @@ const getNotificationIcon = (type: string) => {
     case 'discussion':
     case 'discussion_reply':
       return <MessageSquare className="h-4 w-4" />;
+    case 'brotherhood':
+      return <Users className="h-4 w-4" />;
     default:
       return <Bell className="h-4 w-4" />;
   }
@@ -135,6 +137,17 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       queryClient.invalidateQueries({ queryKey: ['/api/message-requests'] });
       queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+    },
+  });
+
+  // Respond to brotherhood request
+  const respondToBrotherhoodMutation = useMutation({
+    mutationFn: ({ requestId, action }: { requestId: string; action: 'approved' | 'denied' }) =>
+      apiRequest('POST', `/api/brotherhood-requests/${requestId}/respond`, { response: action }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
     },
   });
 
@@ -222,6 +235,24 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         }
         break;
         
+      case 'brotherhood':
+        // For brotherhood requests, navigate to the requester's profile
+        if (notification.relatedId) {
+          // The relatedId is the requestId, we need to get the requester's userId
+          // We'll extract it from the current brotherhood requests
+          const brotherhoodRequests = queryClient.getQueryData(['/api/brotherhood-requests']) as any[];
+          const request = brotherhoodRequests?.find(r => r.id === notification.relatedId);
+          if (request) {
+            setLocation(`/users/${request.requesterId}`);
+          } else {
+            // Fallback to home if we can't find the request
+            setLocation('/');
+          }
+        } else {
+          setLocation('/');
+        }
+        break;
+        
       default:
         // For unknown notification types, try to navigate to related content if available
         console.log('Unknown notification type:', notification.type, 'with relatedId:', notification.relatedId);
@@ -243,6 +274,37 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
 
   const handleRequestResponse = (requestId: string, action: 'accept' | 'decline') => {
     respondToRequestMutation.mutate({ requestId, action });
+  };
+
+  const handleBrotherhoodResponse = (requestId: string, action: 'approved' | 'denied') => {
+    respondToBrotherhoodMutation.mutate({ requestId, action });
+  };
+
+  const handleBrotherhoodNotificationClick = (notification: Notification, event: React.MouseEvent) => {
+    // Only handle the click if it's not on a button
+    const target = event.target as HTMLElement;
+    if (target.closest('button')) {
+      return; // Don't handle if clicking on a button
+    }
+    
+    if (!notification.isRead) {
+      markAsReadMutation.mutate(notification.id);
+    }
+    
+    setShowPanel(false);
+    
+    // Navigate to the requester's profile
+    if (notification.relatedId) {
+      const brotherhoodRequests = queryClient.getQueryData(['/api/brotherhood-requests']) as any[];
+      const request = brotherhoodRequests?.find(r => r.id === notification.relatedId);
+      if (request) {
+        setLocation(`/users/${request.requesterId}`);
+      } else {
+        setLocation('/');
+      }
+    } else {
+      setLocation('/');
+    }
   };
 
   if (variant === 'button') {
@@ -380,49 +442,122 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                     key={notification.id}
                     className={cn(
                       "p-3 border rounded-lg transition-colors",
-                      notification.isRead ? "opacity-60" : "bg-muted/20"
+                      notification.isRead ? "opacity-60" : "bg-muted/20",
+                      notification.type === 'brotherhood' && !notification.isRead && "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800"
                     )}
                   >
-                    <div className="flex items-start gap-2">
-                      {getNotificationIcon(notification.type)}
-                      <div 
-                        className="flex-1 min-w-0 cursor-pointer hover:bg-muted/30 p-1 -m-1 rounded"
-                        onClick={() => handleNotificationClick(notification)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium">{notification.title}</p>
-                          {!notification.isRead && (
-                            <div className="h-2 w-2 bg-blue-500 rounded-full" />
-                          )}
+                    {notification.type === 'brotherhood' ? (
+                      // Special handling for brotherhood notifications
+                      <>
+                        <div className="flex items-start gap-2 mb-2">
+                          {getNotificationIcon(notification.type)}
+                          <div 
+                            className="flex-1 min-w-0 cursor-pointer hover:bg-muted/30 p-1 -m-1 rounded"
+                            onClick={(e) => handleBrotherhoodNotificationClick(notification, e)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium">{notification.title}</p>
+                              {!notification.isRead && (
+                                <div className="h-2 w-2 bg-blue-500 rounded-full" />
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground break-words">
+                              {notification.message}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {formatLocalDateTime(notification.createdAt)}
+                            </p>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 hover:bg-muted"
+                              >
+                                <MoreVertical className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-32">
+                              <DropdownMenuItem
+                                onClick={() => clearNotificationMutation.mutate(notification.id)}
+                                className="text-red-600 hover:text-red-700 focus:text-red-700"
+                              >
+                                <Trash2 className="h-3 w-3 mr-2" />
+                                Clear
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
-                        <p className="text-xs text-muted-foreground break-words">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {formatLocalDateTime(notification.createdAt)}
-                        </p>
+                        {/* Approve/Deny buttons for brotherhood requests */}
+                        {notification.relatedId && (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => handleBrotherhoodResponse(notification.relatedId!, 'approved')}
+                              disabled={respondToBrotherhoodMutation.isPending}
+                              className="flex-1 text-xs h-7 bg-green-600 hover:bg-green-700"
+                            >
+                              <UserCheck className="h-3 w-3 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleBrotherhoodResponse(notification.relatedId!, 'denied')}
+                              disabled={respondToBrotherhoodMutation.isPending}
+                              className="flex-1 text-xs h-7 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+                            >
+                              <UserX className="h-3 w-3 mr-1" />
+                              Deny
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      // Regular notification handling for all other types
+                      <div className="flex items-start gap-2">
+                        {getNotificationIcon(notification.type)}
+                        <div 
+                          className="flex-1 min-w-0 cursor-pointer hover:bg-muted/30 p-1 -m-1 rounded"
+                          onClick={() => handleNotificationClick(notification)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium">{notification.title}</p>
+                            {!notification.isRead && (
+                              <div className="h-2 w-2 bg-blue-500 rounded-full" />
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground break-words">
+                            {notification.message}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {formatLocalDateTime(notification.createdAt)}
+                          </p>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 hover:bg-muted"
+                            >
+                              <MoreVertical className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-32">
+                            <DropdownMenuItem
+                              onClick={() => clearNotificationMutation.mutate(notification.id)}
+                              className="text-red-600 hover:text-red-700 focus:text-red-700"
+                            >
+                              <Trash2 className="h-3 w-3 mr-2" />
+                              Clear
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 hover:bg-muted"
-                          >
-                            <MoreVertical className="h-3 w-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-32">
-                          <DropdownMenuItem
-                            onClick={() => clearNotificationMutation.mutate(notification.id)}
-                            className="text-red-600 hover:text-red-700 focus:text-red-700"
-                          >
-                            <Trash2 className="h-3 w-3 mr-2" />
-                            Clear
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+                    )}
                   </div>
                 ))}
 
@@ -545,49 +680,122 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                   key={notification.id}
                   className={cn(
                     "p-3 border rounded-lg transition-colors",
-                    notification.isRead ? "opacity-60" : "bg-muted/20"
+                    notification.isRead ? "opacity-60" : "bg-muted/20",
+                    notification.type === 'brotherhood' && !notification.isRead && "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800"
                   )}
                 >
-                  <div className="flex items-start gap-2">
-                    {getNotificationIcon(notification.type)}
-                    <div 
-                      className="flex-1 min-w-0 cursor-pointer hover:bg-muted/30 p-1 -m-1 rounded"
-                      onClick={() => handleNotificationClick(notification)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">{notification.title}</p>
-                        {!notification.isRead && (
-                          <div className="h-2 w-2 bg-blue-500 rounded-full" />
-                        )}
+                  {notification.type === 'brotherhood' ? (
+                    // Special handling for brotherhood notifications
+                    <>
+                      <div className="flex items-start gap-2 mb-2">
+                        {getNotificationIcon(notification.type)}
+                        <div 
+                          className="flex-1 min-w-0 cursor-pointer hover:bg-muted/30 p-1 -m-1 rounded"
+                          onClick={(e) => handleBrotherhoodNotificationClick(notification, e)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium">{notification.title}</p>
+                            {!notification.isRead && (
+                              <div className="h-2 w-2 bg-blue-500 rounded-full" />
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground break-words">
+                            {notification.message}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {formatLocalDateTime(notification.createdAt)}
+                          </p>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 hover:bg-muted"
+                            >
+                              <MoreVertical className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-32">
+                            <DropdownMenuItem
+                              onClick={() => clearNotificationMutation.mutate(notification.id)}
+                              className="text-red-600 hover:text-red-700 focus:text-red-700"
+                            >
+                              <Trash2 className="h-3 w-3 mr-2" />
+                              Clear
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                      <p className="text-xs text-muted-foreground break-words">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatLocalDateTime(notification.createdAt)}
-                      </p>
+                      {/* Approve/Deny buttons for brotherhood requests */}
+                      {notification.relatedId && (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => handleBrotherhoodResponse(notification.relatedId!, 'approved')}
+                            disabled={respondToBrotherhoodMutation.isPending}
+                            className="flex-1 text-xs h-7 bg-green-600 hover:bg-green-700"
+                          >
+                            <UserCheck className="h-3 w-3 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleBrotherhoodResponse(notification.relatedId!, 'denied')}
+                            disabled={respondToBrotherhoodMutation.isPending}
+                            className="flex-1 text-xs h-7 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+                          >
+                            <UserX className="h-3 w-3 mr-1" />
+                            Deny
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    // Regular notification handling for all other types
+                    <div className="flex items-start gap-2">
+                      {getNotificationIcon(notification.type)}
+                      <div 
+                        className="flex-1 min-w-0 cursor-pointer hover:bg-muted/30 p-1 -m-1 rounded"
+                        onClick={() => handleNotificationClick(notification)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">{notification.title}</p>
+                          {!notification.isRead && (
+                            <div className="h-2 w-2 bg-blue-500 rounded-full" />
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground break-words">
+                          {notification.message}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatLocalDateTime(notification.createdAt)}
+                        </p>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 hover:bg-muted"
+                          >
+                            <MoreVertical className="h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-32">
+                          <DropdownMenuItem
+                            onClick={() => clearNotificationMutation.mutate(notification.id)}
+                            className="text-red-600 hover:text-red-700 focus:text-red-700"
+                          >
+                            <Trash2 className="h-3 w-3 mr-2" />
+                            Clear
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 hover:bg-muted"
-                        >
-                          <MoreVertical className="h-3 w-3" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-32">
-                        <DropdownMenuItem
-                          onClick={() => clearNotificationMutation.mutate(notification.id)}
-                          className="text-red-600 hover:text-red-700 focus:text-red-700"
-                        >
-                          <Trash2 className="h-3 w-3 mr-2" />
-                          Clear
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                  )}
                 </div>
               ))}
 
