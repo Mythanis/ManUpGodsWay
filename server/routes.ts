@@ -3292,16 +3292,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         // Send real-time WebSocket notification for brotherhood establishment
-        const wsMessage = {
-          type: 'brotherhood_established',
-          message: 'Brotherhood established',
-          partnerName: recipient?.firstName + ' ' + recipient?.lastName
-        };
+        const requester = await storage.getUser(request.requesterId);
         
-        // Send to the requester
-        const targetWs = connectedClients.get(request.requesterId);
-        if (targetWs && targetWs.readyState === WebSocket.OPEN) {
-          targetWs.send(JSON.stringify(wsMessage));
+        // Send to the requester (Josh who sent the request)
+        const requesterWs = connectedClients.get(request.requesterId);
+        if (requesterWs && requesterWs.readyState === WebSocket.OPEN) {
+          requesterWs.send(JSON.stringify({
+            type: 'brotherhood_established',
+            message: 'Brotherhood established',
+            partnerName: recipient?.firstName + ' ' + recipient?.lastName
+          }));
+        }
+        
+        // Send to the responder (Jody who accepted the request)  
+        const responderWs = connectedClients.get(request.recipientId);
+        if (responderWs && responderWs.readyState === WebSocket.OPEN) {
+          responderWs.send(JSON.stringify({
+            type: 'brotherhood_established', 
+            message: 'Brotherhood established',
+            partnerName: requester?.firstName + ' ' + requester?.lastName
+          }));
         }
       } else if (response === 'denied') {
         // Track the denial for cooldown management

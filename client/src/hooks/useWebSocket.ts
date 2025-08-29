@@ -96,6 +96,10 @@ export function useWebSocket(userId?: string) {
             queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
             queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
             
+            // Force immediate refresh to ensure real-time updates on Brothers page
+            queryClient.refetchQueries({ queryKey: ['/api/brothers'] });
+            queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+            
             // Show toast notification
             toast({
               title: 'Brotherhood Established!',
