@@ -2152,7 +2152,8 @@ export class DatabaseStorage implements IStorage {
     return newRequest;
   }
 
-  async getBrotherhoodRequests(userId: string): Promise<(BrotherhoodRequest & { requester: User })[]> {
+  async getBrotherhoodRequests(userId: string): Promise<any[]> {
+    // Get both incoming (where user is recipient) and outgoing (where user is requester) requests
     return await db.select({
       id: brotherhoodRequests.id,
       requesterId: brotherhoodRequests.requesterId,
@@ -2166,7 +2167,10 @@ export class DatabaseStorage implements IStorage {
       .from(brotherhoodRequests)
       .innerJoin(users, eq(brotherhoodRequests.requesterId, users.id))
       .where(and(
-        eq(brotherhoodRequests.recipientId, userId),
+        or(
+          eq(brotherhoodRequests.recipientId, userId), // incoming requests
+          eq(brotherhoodRequests.requesterId, userId)  // outgoing requests
+        ),
         eq(brotherhoodRequests.status, 'pending')
       ))
       .orderBy(desc(brotherhoodRequests.createdAt));
