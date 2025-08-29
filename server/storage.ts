@@ -3722,16 +3722,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertBrotherhoodDenial(denial: InsertBrotherhoodDenial): Promise<BrotherhoodDenial> {
-    // Add individual denial record to history
-    await db.insert(brotherhoodDenialHistory)
-      .values({
-        requesterId: denial.requesterId,
-        recipientId: denial.recipientId,
-      });
-
-    // Update main denial count
+    // Update main denial count in brotherhood_denials table
     const [newDenial] = await db.insert(brotherhoodDenials)
-      .values(denial)
+      .values({
+        ...denial,
+        denialCount: 1, // Start with 1 if new record
+        lastDenialAt: new Date(),
+      })
       .onConflictDoUpdate({
         target: [brotherhoodDenials.requesterId, brotherhoodDenials.recipientId],
         set: {
@@ -3751,51 +3748,59 @@ export class DatabaseStorage implements IStorage {
     denialCount: number;
     cooldownUntil?: Date;
   }> {
-    // Count active denials (within last 10 days) - READ ONLY
-    const tenDaysAgo = new Date(Date.now() - (10 * 24 * 60 * 60 * 1000));
-    const activeDenials = await db.select({ count: count() })
-      .from(brotherhoodDenialHistory)
+    // Get the denial record for this user pair
+    const [denialRecord] = await db.select()
+      .from(brotherhoodDenials)
       .where(and(
-        eq(brotherhoodDenialHistory.requesterId, requesterId),
-        eq(brotherhoodDenialHistory.recipientId, recipientId),
-        sql`${brotherhoodDenialHistory.deniedAt} >= ${tenDaysAgo}`
-      ));
+        eq(brotherhoodDenials.requesterId, requesterId),
+        eq(brotherhoodDenials.recipientId, recipientId)
+      ))
+      .limit(1);
 
-    const activeCount = activeDenials[0]?.count || 0;
+    // If no denial record exists, user can send requests freely
+    if (!denialRecord) {
+      return {
+        inCooldown: false,
+        denialCount: 0
+      };
+    }
 
+    const denialCount = denialRecord.denialCount;
+    
     // Check if in cooldown (3 or more denials)
-    if (activeCount >= 3) {
-      // Calculate when the oldest active denial will expire
-      const oldestDenial = await db.select({ deniedAt: brotherhoodDenialHistory.deniedAt })
-        .from(brotherhoodDenialHistory)
-        .where(and(
-          eq(brotherhoodDenialHistory.requesterId, requesterId),
-          eq(brotherhoodDenialHistory.recipientId, recipientId),
-          sql`${brotherhoodDenialHistory.deniedAt} >= ${tenDaysAgo}`
-        ))
-        .orderBy(asc(brotherhoodDenialHistory.deniedAt))
-        .limit(1);
-
-      if (oldestDenial.length > 0) {
-        const cooldownUntil = new Date(oldestDenial[0].deniedAt.getTime() + (10 * 24 * 60 * 60 * 1000));
+    if (denialCount >= 3) {
+      // Check if cooldown period has expired
+      if (denialRecord.cooldownUntil && denialRecord.cooldownUntil > new Date()) {
         const daysRemaining = Math.ceil(
-          (cooldownUntil.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+          (denialRecord.cooldownUntil.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
         );
 
-        if (daysRemaining > 0) {
-          return {
-            inCooldown: true,
-            daysRemaining,
-            denialCount: activeCount,
-            cooldownUntil
-          };
-        }
+        return {
+          inCooldown: true,
+          daysRemaining,
+          denialCount,
+          cooldownUntil: denialRecord.cooldownUntil
+        };
+      } else {
+        // Cooldown has expired, reset the denial count
+        await db.update(brotherhoodDenials)
+          .set({
+            denialCount: 0,
+            cooldownUntil: null,
+            updatedAt: new Date()
+          })
+          .where(eq(brotherhoodDenials.id, denialRecord.id));
+        
+        return {
+          inCooldown: false,
+          denialCount: 0
+        };
       }
     }
 
     return {
       inCooldown: false,
-      denialCount: activeCount
+      denialCount
     };
   }
 
