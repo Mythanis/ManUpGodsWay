@@ -913,12 +913,21 @@ export const brotherhoodDenials = pgTable("brotherhood_denials", {
   recipientId: varchar("recipient_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   denialCount: integer("denial_count").notNull().default(1),
   lastDenialAt: timestamp("last_denial_at").defaultNow(),
-  cooldownUntil: timestamp("cooldown_until"), // Set after 2nd denial
+  cooldownUntil: timestamp("cooldown_until"), // Set after 3rd denial
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
   unique: unique().on(table.requesterId, table.recipientId),
 }));
+
+// Track individual denial records for 10-day decay logic
+export const brotherhoodDenialHistory = pgTable("brotherhood_denial_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requesterId: varchar("requester_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  recipientId: varchar("recipient_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  deniedAt: timestamp("denied_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
 export const insertBrotherhoodDenialSchema = createInsertSchema(brotherhoodDenials).omit({
   id: true,
@@ -926,8 +935,15 @@ export const insertBrotherhoodDenialSchema = createInsertSchema(brotherhoodDenia
   updatedAt: true,
 });
 
+export const insertBrotherhoodDenialHistorySchema = createInsertSchema(brotherhoodDenialHistory).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type BrotherhoodDenial = typeof brotherhoodDenials.$inferSelect;
 export type InsertBrotherhoodDenial = z.infer<typeof insertBrotherhoodDenialSchema>;
+export type BrotherhoodDenialHistory = typeof brotherhoodDenialHistory.$inferSelect;
+export type InsertBrotherhoodDenialHistory = z.infer<typeof insertBrotherhoodDenialHistorySchema>;
 
 // Brotherhoods table (approved relationships)
 export const brotherhoods = pgTable("brotherhoods", {

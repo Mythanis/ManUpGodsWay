@@ -25,6 +25,7 @@ import {
   testimonies,
   brotherhoodRequests,
   brotherhoodDenials,
+  brotherhoodDenialHistory,
   brotherhoods,
   fitnessChallenge,
   type User,
@@ -315,6 +316,7 @@ export interface IStorage {
     inCooldown: boolean;
     daysRemaining?: number;
     denialCount: number;
+    cooldownUntil?: Date;
   }>;
   
   // Fitness Challenge operations
@@ -2353,13 +2355,15 @@ export class DatabaseStorage implements IStorage {
     if (denialCheck.inCooldown) {
       return {
         canSend: false,
-        reason: `The recipient has denied this request twice. You must wait ${denialCheck.daysRemaining} more days before sending another.`
+        reason: `The recipient has denied this request three times. You must wait ${denialCheck.daysRemaining} more days before sending another.`,
+        cooldownUntil: denialCheck.cooldownUntil
       };
     } else if (denialCheck.denialCount > 0) {
-      // First denial - require confirmation
+      // Previous denials - require confirmation
       return {
         canSend: true,
-        requiresConfirmation: true
+        requiresConfirmation: true,
+        denialCount: denialCheck.denialCount
       };
     }
 
@@ -3718,6 +3722,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertBrotherhoodDenial(denial: InsertBrotherhoodDenial): Promise<BrotherhoodDenial> {
+    // Add individual denial record to history
+    await db.insert(brotherhoodDenialHistory)
+      .values({
+        requesterId: denial.requesterId,
+        recipientId: denial.recipientId,
+      });
+
+    // Update main denial count
     const [newDenial] = await db.insert(brotherhoodDenials)
       .values(denial)
       .onConflictDoUpdate({
@@ -3725,8 +3737,7 @@ export class DatabaseStorage implements IStorage {
         set: {
           denialCount: sql`${brotherhoodDenials.denialCount} + 1`,
           lastDenialAt: new Date(),
-          cooldownUntil: denial.denialCount && denial.denialCount >= 1 ? 
-            new Date(Date.now() + (40 * 24 * 60 * 60 * 1000)) : null, // 40 days cooldown after 2nd denial
+          cooldownUntil: sql`CASE WHEN ${brotherhoodDenials.denialCount} + 1 >= 3 THEN NOW() + INTERVAL '10 days' ELSE NULL END`,
           updatedAt: new Date(),
         },
       })
@@ -3738,28 +3749,63 @@ export class DatabaseStorage implements IStorage {
     inCooldown: boolean;
     daysRemaining?: number;
     denialCount: number;
+    cooldownUntil?: Date;
   }> {
-    const denial = await this.getBrotherhoodDenial(requesterId, recipientId);
-    
-    if (!denial) {
-      return { inCooldown: false, denialCount: 0 };
-    }
+    // First, clean up old denial history records (older than 10 days)
+    const tenDaysAgo = new Date(Date.now() - (10 * 24 * 60 * 60 * 1000));
+    await db.delete(brotherhoodDenialHistory)
+      .where(and(
+        eq(brotherhoodDenialHistory.requesterId, requesterId),
+        eq(brotherhoodDenialHistory.recipientId, recipientId),
+        sql`${brotherhoodDenialHistory.deniedAt} < ${tenDaysAgo}`
+      ));
 
-    // If there's a cooldown period and it hasn't expired
-    if (denial.cooldownUntil && denial.cooldownUntil > new Date()) {
+    // Count active denials (within last 10 days)
+    const activeDenials = await db.select({ count: count() })
+      .from(brotherhoodDenialHistory)
+      .where(and(
+        eq(brotherhoodDenialHistory.requesterId, requesterId),
+        eq(brotherhoodDenialHistory.recipientId, recipientId),
+        sql`${brotherhoodDenialHistory.deniedAt} >= ${tenDaysAgo}`
+      ));
+
+    const activeCount = activeDenials[0]?.count || 0;
+
+    // Update the main denial record with current count
+    await db.insert(brotherhoodDenials)
+      .values({
+        requesterId,
+        recipientId,
+        denialCount: activeCount,
+        lastDenialAt: new Date(),
+        cooldownUntil: activeCount >= 3 ? new Date(Date.now() + (10 * 24 * 60 * 60 * 1000)) : null
+      })
+      .onConflictDoUpdate({
+        target: [brotherhoodDenials.requesterId, brotherhoodDenials.recipientId],
+        set: {
+          denialCount: activeCount,
+          cooldownUntil: activeCount >= 3 ? new Date(Date.now() + (10 * 24 * 60 * 60 * 1000)) : null,
+          updatedAt: new Date(),
+        },
+      });
+
+    // Check if in cooldown
+    if (activeCount >= 3) {
+      const cooldownUntil = new Date(Date.now() + (10 * 24 * 60 * 60 * 1000));
       const daysRemaining = Math.ceil(
-        (denial.cooldownUntil.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+        (cooldownUntil.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
       );
       return {
         inCooldown: true,
         daysRemaining,
-        denialCount: denial.denialCount
+        denialCount: activeCount,
+        cooldownUntil
       };
     }
 
     return {
       inCooldown: false,
-      denialCount: denial.denialCount
+      denialCount: activeCount
     };
   }
 

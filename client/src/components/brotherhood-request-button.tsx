@@ -27,8 +27,16 @@ export default function BrotherhoodRequestButton({
     queryKey: ['/api/brothers'],
   });
 
+  // Check for incoming requests from this user
+  const { data: brotherhoodRequests } = useQuery<any[]>({
+    queryKey: ['/api/brotherhood-requests'],
+  });
+
   const isAlreadyBrother = brothers?.some(brother => brother.id === recipientId);
   const brotherhoodData = brothers?.find(brother => brother.id === recipientId);
+  
+  // Check if there's a pending request FROM the profile owner TO the current user
+  const incomingRequest = brotherhoodRequests?.find(request => request.requesterId === recipientId);
   
   // Get the tag that the current user has assigned to this brother
   const brotherTag = brotherhoodData?.tag;
@@ -57,8 +65,10 @@ export default function BrotherhoodRequestButton({
       }
       
       if (status === 400 && data?.message?.includes('wait')) {
-        // Show cooldown dialog for 40-day restriction
-        setCooldownMessage(data.message);
+        // Show cooldown dialog for 10-day restriction with exact date
+        const cooldownUntil = data.cooldownUntil ? new Date(data.cooldownUntil) : null;
+        const dateString = cooldownUntil ? cooldownUntil.toLocaleDateString() : 'a few days';
+        setCooldownMessage(`This user has denied your brotherhood request three times. You cannot send another request until ${dateString}.`);
         setShowCooldownDialog(true);
         return;
       }
@@ -79,6 +89,50 @@ export default function BrotherhoodRequestButton({
   const handleConfirmSend = () => {
     requestMutation.mutate({ confirmed: true });
   };
+
+  // Accept/Deny mutations for incoming requests
+  const acceptRequestMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', `/api/brotherhood-requests/${incomingRequest.id}/respond`, { response: 'approved' });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Request Accepted",
+        description: `You are now brothers with ${recipientName || 'this user'}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || "Failed to accept request";
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const denyRequestMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', `/api/brotherhood-requests/${incomingRequest.id}/respond`, { response: 'denied' });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Request Denied",
+        description: `Brotherhood request from ${recipientName || 'this user'} was denied`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || "Failed to deny request";
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const removeBrotherhoodMutation = useMutation({
     mutationFn: async () => {
@@ -103,6 +157,33 @@ export default function BrotherhoodRequestButton({
   });
 
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+
+  // If there's an incoming request, show Accept/Deny buttons
+  if (incomingRequest) {
+    return (
+      <>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => acceptRequestMutation.mutate()}
+            disabled={acceptRequestMutation.isPending}
+            className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+            data-testid={`button-accept-brotherhood-${recipientId}`}
+          >
+            <Check className="w-4 h-4 mr-2" />
+            Accept Brotherhood
+          </Button>
+          <Button 
+            variant="destructive"
+            onClick={() => denyRequestMutation.mutate()}
+            disabled={denyRequestMutation.isPending}
+            data-testid={`button-deny-brotherhood-${recipientId}`}
+          >
+            Deny
+          </Button>
+        </div>
+      </>
+    );
+  }
 
   if (isAlreadyBrother) {
     const displayText = brotherTag ? `Brother-${brotherTag}` : 'Brother';
@@ -195,13 +276,13 @@ export default function BrotherhoodRequestButton({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Cooldown dialog for 40-day restriction */}
+      {/* Cooldown dialog for 10-day restriction */}
       <AlertDialog open={showCooldownDialog} onOpenChange={setShowCooldownDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Request Blocked</AlertDialogTitle>
             <AlertDialogDescription>
-              The recipient has denied this request twice. You must wait 40 days before sending another.
+              {cooldownMessage}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
