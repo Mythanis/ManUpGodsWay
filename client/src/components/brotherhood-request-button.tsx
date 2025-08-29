@@ -73,7 +73,7 @@ export default function BrotherhoodRequestButton({
   });
 
   const handleSendRequest = () => {
-    requestMutation.mutate();
+    requestMutation.mutate({});
   };
 
   const handleConfirmSend = () => {
