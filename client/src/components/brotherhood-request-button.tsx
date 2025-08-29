@@ -21,6 +21,11 @@ export default function BrotherhoodRequestButton({
   const [showCooldownDialog, setShowCooldownDialog] = useState(false);
   const [cooldownMessage, setCooldownMessage] = useState('');
 
+  // Get current user to properly determine request direction
+  const { data: currentUser } = useQuery<any>({
+    queryKey: ['/api/auth/user'],
+  });
+
   // Check if already brothers - this should now work with real-time updates via WebSocket
   const { data: brothers } = useQuery<any[]>({
     queryKey: ['/api/brothers'],
@@ -33,14 +38,20 @@ export default function BrotherhoodRequestButton({
     refetchIntervalInBackground: true, // Keep refreshing even when tab is not active
   });
 
+  const currentUserId = currentUser?.id;
+  
   const isAlreadyBrother = brothers?.some(brother => brother.id === recipientId);
   const brotherhoodData = brothers?.find(brother => brother.id === recipientId);
   
   // Check if there's a pending request FROM the profile owner TO the current user
-  const incomingRequest = brotherhoodRequests?.find(request => request.requesterId === recipientId);
+  const incomingRequest = brotherhoodRequests?.find(request => 
+    request.requesterId === recipientId && request.recipientId === currentUserId
+  );
   
-  // Check if there's a pending request FROM the current user TO the profile owner
-  const outgoingRequest = brotherhoodRequests?.find(request => request.recipientId === recipientId);
+  // Check if there's a pending request FROM the current user TO the profile owner  
+  const outgoingRequest = brotherhoodRequests?.find(request => 
+    request.requesterId === currentUserId && request.recipientId === recipientId
+  );
   
   // Get the tag that the current user has assigned to this brother
   const brotherTag = brotherhoodData?.tag;
