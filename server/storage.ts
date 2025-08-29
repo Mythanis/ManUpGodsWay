@@ -3751,16 +3751,8 @@ export class DatabaseStorage implements IStorage {
     denialCount: number;
     cooldownUntil?: Date;
   }> {
-    // First, clean up old denial history records (older than 10 days)
+    // Count active denials (within last 10 days) - READ ONLY
     const tenDaysAgo = new Date(Date.now() - (10 * 24 * 60 * 60 * 1000));
-    await db.delete(brotherhoodDenialHistory)
-      .where(and(
-        eq(brotherhoodDenialHistory.requesterId, requesterId),
-        eq(brotherhoodDenialHistory.recipientId, recipientId),
-        sql`${brotherhoodDenialHistory.deniedAt} < ${tenDaysAgo}`
-      ));
-
-    // Count active denials (within last 10 days)
     const activeDenials = await db.select({ count: count() })
       .from(brotherhoodDenialHistory)
       .where(and(
@@ -3771,36 +3763,34 @@ export class DatabaseStorage implements IStorage {
 
     const activeCount = activeDenials[0]?.count || 0;
 
-    // Update the main denial record with current count
-    await db.insert(brotherhoodDenials)
-      .values({
-        requesterId,
-        recipientId,
-        denialCount: activeCount,
-        lastDenialAt: new Date(),
-        cooldownUntil: activeCount >= 3 ? new Date(Date.now() + (10 * 24 * 60 * 60 * 1000)) : null
-      })
-      .onConflictDoUpdate({
-        target: [brotherhoodDenials.requesterId, brotherhoodDenials.recipientId],
-        set: {
-          denialCount: activeCount,
-          cooldownUntil: activeCount >= 3 ? new Date(Date.now() + (10 * 24 * 60 * 60 * 1000)) : null,
-          updatedAt: new Date(),
-        },
-      });
-
-    // Check if in cooldown
+    // Check if in cooldown (3 or more denials)
     if (activeCount >= 3) {
-      const cooldownUntil = new Date(Date.now() + (10 * 24 * 60 * 60 * 1000));
-      const daysRemaining = Math.ceil(
-        (cooldownUntil.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
-      );
-      return {
-        inCooldown: true,
-        daysRemaining,
-        denialCount: activeCount,
-        cooldownUntil
-      };
+      // Calculate when the oldest active denial will expire
+      const oldestDenial = await db.select({ deniedAt: brotherhoodDenialHistory.deniedAt })
+        .from(brotherhoodDenialHistory)
+        .where(and(
+          eq(brotherhoodDenialHistory.requesterId, requesterId),
+          eq(brotherhoodDenialHistory.recipientId, recipientId),
+          sql`${brotherhoodDenialHistory.deniedAt} >= ${tenDaysAgo}`
+        ))
+        .orderBy(asc(brotherhoodDenialHistory.deniedAt))
+        .limit(1);
+
+      if (oldestDenial.length > 0) {
+        const cooldownUntil = new Date(oldestDenial[0].deniedAt.getTime() + (10 * 24 * 60 * 60 * 1000));
+        const daysRemaining = Math.ceil(
+          (cooldownUntil.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+        );
+
+        if (daysRemaining > 0) {
+          return {
+            inCooldown: true,
+            daysRemaining,
+            denialCount: activeCount,
+            cooldownUntil
+          };
+        }
+      }
     }
 
     return {
