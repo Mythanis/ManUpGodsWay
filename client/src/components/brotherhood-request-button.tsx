@@ -26,9 +26,11 @@ export default function BrotherhoodRequestButton({
     queryKey: ['/api/brothers'],
   });
 
-  // Check for incoming requests from this user
+  // Check for incoming requests from this user - refresh every 5 seconds to catch missed WebSocket notifications
   const { data: brotherhoodRequests } = useQuery<any[]>({
     queryKey: ['/api/brotherhood-requests'],
+    refetchInterval: 5000, // Auto-refresh every 5 seconds for real-time updates
+    refetchIntervalInBackground: true, // Keep refreshing even when tab is not active
   });
 
   const isAlreadyBrother = brothers?.some(brother => brother.id === recipientId);

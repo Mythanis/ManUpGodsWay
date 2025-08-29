@@ -30,6 +30,11 @@ export function useWebSocket(userId?: string) {
         type: 'auth',
         userId: userId
       }));
+      
+      // Refresh all queries when reconnecting to catch any missed updates
+      queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
+      queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
     };
 
     ws.onmessage = (event) => {
@@ -131,7 +136,16 @@ export function useWebSocket(userId?: string) {
     };
 
     ws.onclose = () => {
-      console.log('WebSocket disconnected');
+      console.log('WebSocket disconnected - attempting reconnection in 2 seconds...');
+      // Automatically reconnect after a short delay
+      setTimeout(() => {
+        if (userId) {
+          console.log('Reconnecting WebSocket...');
+          // Trigger a re-render to establish new connection
+          const reconnectEvent = new CustomEvent('websocket-reconnect');
+          window.dispatchEvent(reconnectEvent);
+        }
+      }, 2000);
     };
 
     ws.onerror = (error) => {
