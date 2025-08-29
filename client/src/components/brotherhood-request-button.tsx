@@ -53,8 +53,9 @@ export default function BrotherhoodRequestButton({
         title: "Request Sent",
         description: `Brotherhood request sent to ${recipientName || 'user'}`,
       });
-      // Invalidate all related queries to update UI in real-time
+      // Force immediate refresh to update UI in real-time
       queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
+      queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
       queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
     },
