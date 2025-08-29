@@ -2173,14 +2173,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async respondToBrotherhoodRequest(requestId: string, response: 'approved' | 'denied'): Promise<BrotherhoodRequest> {
-    const [updatedRequest] = await db.update(brotherhoodRequests)
-      .set({ 
-        status: response,
-        updatedAt: new Date()
-      })
+    // Get the request details before deleting it
+    const [request] = await db.select()
+      .from(brotherhoodRequests)
       .where(eq(brotherhoodRequests.id, requestId))
-      .returning();
-    return updatedRequest;
+      .limit(1);
+    
+    if (!request) {
+      throw new Error('Brotherhood request not found');
+    }
+    
+    // Delete the request from the table (no longer needed after response)
+    // The outcome is tracked elsewhere: 
+    // - Approved: brotherhood relationship in brothers table
+    // - Denied: denial count in brotherhood_denials table
+    await db.delete(brotherhoodRequests)
+      .where(eq(brotherhoodRequests.id, requestId));
+    
+    // Return the original request with updated status for API response
+    return {
+      ...request,
+      status: response,
+      updatedAt: new Date()
+    };
   }
 
   async createBrotherhood(userId1: string, userId2: string): Promise<Brotherhood> {
