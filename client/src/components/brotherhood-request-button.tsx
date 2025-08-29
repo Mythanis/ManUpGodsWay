@@ -38,6 +38,9 @@ export default function BrotherhoodRequestButton({
   // Check if there's a pending request FROM the profile owner TO the current user
   const incomingRequest = brotherhoodRequests?.find(request => request.requesterId === recipientId);
   
+  // Check if there's a pending request FROM the current user TO the profile owner
+  const outgoingRequest = brotherhoodRequests?.find(request => request.recipientId === recipientId);
+  
   // Get the tag that the current user has assigned to this brother
   const brotherTag = brotherhoodData?.tag;
 
@@ -230,7 +233,7 @@ export default function BrotherhoodRequestButton({
     );
   }
 
-  if (isRequested) {
+  if (isRequested || outgoingRequest) {
     return (
       <Button variant="outline" disabled className="gap-2">
         <Users className="w-4 h-4" />
