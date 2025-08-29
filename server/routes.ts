@@ -3177,7 +3177,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if request can be sent (handles brothers, pending requests, denied history, cooldowns)
       const requestStatus = await storage.canSendBrotherhoodRequest(requesterId, recipientId);
       if (!requestStatus.canSend) {
-        return res.status(400).json({ message: requestStatus.reason });
+        return res.status(400).json({ 
+          message: requestStatus.reason,
+          cooldownUntil: requestStatus.cooldownUntil
+        });
       }
 
       // If requires confirmation, check if user confirmed

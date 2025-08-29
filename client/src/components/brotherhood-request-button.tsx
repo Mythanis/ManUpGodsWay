@@ -46,7 +46,6 @@ export default function BrotherhoodRequestButton({
 
   const requestMutation = useMutation({
     mutationFn: async ({ confirmed = false }: { confirmed?: boolean } = {}) => {
-      console.log("Sending brotherhood request with confirmed:", confirmed);
       return apiRequest('POST', '/api/brotherhood-requests', { recipientId, confirmed });
     },
     onSuccess: () => {
@@ -59,23 +58,11 @@ export default function BrotherhoodRequestButton({
       queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
     },
     onError: (error: any) => {
-      console.log("Brotherhood request error:", error);
-      console.log("Error response:", error.response);
-      console.log("Error data:", error.response?.data);
-      
-      // Show toast to confirm error handler is being called
-      toast({
-        title: "Debug: Error Handler Called",
-        description: `Status: ${error.response?.status}, Has requiresConfirmation: ${!!error.response?.data?.requiresConfirmation}`,
-        variant: "destructive",
-      });
-      
       const status = error.response?.status;
       const data = error.response?.data;
       
       if (status === 409 && data?.requiresConfirmation) {
         // Show confirmation dialog for previously denied request
-        console.log("Showing confirmation dialog for 409 response");
         setShowConfirmDialog(true);
         return;
       }
