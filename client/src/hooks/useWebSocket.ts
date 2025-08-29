@@ -57,8 +57,11 @@ export function useWebSocket(userId?: string) {
               queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
               queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
               
-              // Force refresh of brotherhood requests data
+              // Force immediate refresh of brotherhood requests data to update profile views
               queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+              
+              // Also force refresh of user profile data if we're viewing profiles
+              queryClient.invalidateQueries({ queryKey: ['/api/users'] });
             }
             break;
 
