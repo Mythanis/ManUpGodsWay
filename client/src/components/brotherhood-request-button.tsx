@@ -58,11 +58,16 @@ export default function BrotherhoodRequestButton({
       queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
     },
     onError: (error: any) => {
+      console.log("Brotherhood request error:", error);
+      console.log("Error response:", error.response);
+      console.log("Error data:", error.response?.data);
+      
       const status = error.response?.status;
       const data = error.response?.data;
       
       if (status === 409 && data?.requiresConfirmation) {
         // Show confirmation dialog for previously denied request
+        console.log("Showing confirmation dialog for 409 response");
         setShowConfirmDialog(true);
         return;
       }
