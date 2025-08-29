@@ -17,7 +17,6 @@ export default function BrotherhoodRequestButton({
 }: BrotherhoodRequestButtonProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isRequested, setIsRequested] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showCooldownDialog, setShowCooldownDialog] = useState(false);
   const [cooldownMessage, setCooldownMessage] = useState('');
@@ -49,13 +48,15 @@ export default function BrotherhoodRequestButton({
       return apiRequest('POST', '/api/brotherhood-requests', { recipientId, confirmed });
     },
     onSuccess: () => {
-      setIsRequested(true);
       setShowConfirmDialog(false);
       toast({
         title: "Request Sent",
         description: `Brotherhood request sent to ${recipientName || 'user'}`,
       });
+      // Invalidate all related queries to update UI in real-time
       queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
     },
     onError: (error: any) => {
       const status = error.response?.status;
@@ -109,8 +110,10 @@ export default function BrotherhoodRequestButton({
         title: "Request Accepted",
         description: `You are now brothers with ${recipientName || 'this user'}`,
       });
+      // Invalidate all related queries to update UI in real-time
       queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
       queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
     },
     onError: (error: any) => {
       const message = error.response?.data?.message || "Failed to accept request";
@@ -131,7 +134,10 @@ export default function BrotherhoodRequestButton({
         title: "Request Denied",
         description: `Brotherhood request from ${recipientName || 'this user'} was denied`,
       });
+      // Invalidate all related queries to update UI in real-time
       queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
     },
     onError: (error: any) => {
       const message = error.response?.data?.message || "Failed to deny request";
@@ -239,7 +245,7 @@ export default function BrotherhoodRequestButton({
     );
   }
 
-  if (isRequested || outgoingRequest) {
+  if (outgoingRequest) {
     return (
       <Button variant="outline" disabled className="gap-2">
         <Users className="w-4 h-4" />
