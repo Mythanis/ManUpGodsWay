@@ -20,13 +20,33 @@ export async function apiRequest(
   });
 
   if (!res.ok) {
-    const errorText = await res.text();
+    let errorData;
+    const contentType = res.headers.get("content-type");
+    
+    if (contentType && contentType.includes("application/json")) {
+      try {
+        errorData = await res.json();
+      } catch {
+        errorData = { message: res.statusText };
+      }
+    } else {
+      const errorText = await res.text();
+      errorData = { message: errorText || res.statusText };
+    }
+    
     if (res.status === 401) {
       // Redirect to login on unauthorized
       window.location.href = "/api/login";
       throw new Error("Unauthorized - redirecting to login");
     }
-    throw new Error(`${res.status}: ${errorText || res.statusText}`);
+    
+    // Create error object that mimics axios error structure
+    const error = new Error(`${res.status}: ${errorData.message || res.statusText}`) as any;
+    error.response = {
+      status: res.status,
+      data: errorData
+    };
+    throw error;
   }
 
   const contentType = res.headers.get("content-type");
