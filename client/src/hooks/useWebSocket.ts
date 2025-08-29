@@ -42,6 +42,27 @@ export function useWebSocket(userId?: string) {
             console.log('WebSocket authentication successful');
             break;
           
+          case 'brotherhood_request':
+            // Show toast notification for new brotherhood request
+            toast({
+              title: "🤝 New Brotherhood Request",
+              description: message.message,
+              duration: 5000,
+            });
+            
+            // Invalidate all related queries to refresh the UI immediately
+            queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
+            
+            // Force immediate refresh of brotherhood requests data to update profile views
+            queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+            
+            // Also force refresh of user profile data if we're viewing profiles
+            queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+            break;
+            
           case 'notification':
             if (message.data?.type === 'brotherhood_request') {
               // Show toast notification for new brotherhood request
