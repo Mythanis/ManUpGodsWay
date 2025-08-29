@@ -242,7 +242,9 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
           // We'll extract it from the current brotherhood requests
           const brotherhoodRequests = queryClient.getQueryData(['/api/brotherhood-requests']) as any[];
           const request = brotherhoodRequests?.find(r => r.id === notification.relatedId);
-          if (request) {
+          if (request && request.requester) {
+            setLocation(`/users/${request.requester.id}`);
+          } else if (request && request.requesterId) {
             setLocation(`/users/${request.requesterId}`);
           } else {
             // Fallback to home if we can't find the request
@@ -297,7 +299,9 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
     if (notification.relatedId) {
       const brotherhoodRequests = queryClient.getQueryData(['/api/brotherhood-requests']) as any[];
       const request = brotherhoodRequests?.find(r => r.id === notification.relatedId);
-      if (request) {
+      if (request && request.requester) {
+        setLocation(`/users/${request.requester.id}`);
+      } else if (request && request.requesterId) {
         setLocation(`/users/${request.requesterId}`);
       } else {
         setLocation('/');
