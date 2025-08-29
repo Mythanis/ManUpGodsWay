@@ -96,7 +96,7 @@ export default function Discipleship() {
           <h1 className="text-2xl font-bold">Discipleship</h1>
         </div>
         <p className="text-ministry-gold/90 text-sm">
-          Connect with others through shared testimony tags and discover fellow believers' faith journeys
+          It is important for every man regardless of where they are on their Journey in their faith to have a Paul, someone who is discipling to them, a Timothy, someone you are discipling, and a Barnabas someone on in a similar position within their walk. Use this page to find these type of people and build relationships to help in your walk.
         </p>
       </div>
 
