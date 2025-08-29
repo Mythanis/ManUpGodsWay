@@ -47,17 +47,25 @@ export default function BrotherhoodRequestButton({
     mutationFn: async ({ confirmed = false }: { confirmed?: boolean } = {}) => {
       return apiRequest('POST', '/api/brotherhood-requests', { recipientId, confirmed });
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      console.log('Brotherhood request mutation success:', response);
       setShowConfirmDialog(false);
       toast({
         title: "Request Sent",
         description: `Brotherhood request sent to ${recipientName || 'user'}`,
       });
       // Force immediate refresh to update UI in real-time
+      console.log('Invalidating and refetching brotherhood requests queries...');
       queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
       queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
       queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      
+      // Force a complete refresh after a short delay to ensure the UI updates
+      setTimeout(() => {
+        console.log('Forcing final query refetch...');
+        queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+      }, 100);
     },
     onError: (error: any) => {
       const status = error.response?.status;

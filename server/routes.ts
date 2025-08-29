@@ -3218,9 +3218,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         relatedId: request.id,
       });
       
-      // Send real-time notification if user is connected
-      if ((app as any).sendRealtimeNotification) {
-        (app as any).sendRealtimeNotification(recipientId, {
+      // Send real-time WebSocket notification if user is connected
+      if ((app as any).sendDirectRealtimeNotification) {
+        (app as any).sendDirectRealtimeNotification(recipientId, {
           type: 'brotherhood_request',
           requestId: request.id,
           requester: {
@@ -3585,7 +3585,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  // Add function to send real-time notifications
+  // Add function to send real-time notifications (wrapped format)
   (app as any).sendRealtimeNotification = (userId: string, notification: any) => {
     const client = connectedClients.get(userId);
     if (client && client.readyState === WebSocket.OPEN) {
@@ -3593,6 +3593,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: 'notification',
         data: notification
       }));
+    }
+  };
+
+  // Add function to send direct real-time notifications (unwrapped format)
+  (app as any).sendDirectRealtimeNotification = (userId: string, notification: any) => {
+    const client = connectedClients.get(userId);
+    if (client && client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(notification));
     }
   };
   
