@@ -2351,6 +2351,7 @@ export class DatabaseStorage implements IStorage {
     reason?: string;
     requiresConfirmation?: boolean;
     lastDenied?: Date;
+    cooldownUntil?: Date;
   }> {
     // Check if they're already brothers
     const alreadyBrothers = await this.checkBrotherhoodExists(requesterId, recipientId);

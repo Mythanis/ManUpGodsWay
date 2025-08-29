@@ -67,10 +67,10 @@ export default function BrotherhoodRequestButton({
         return;
       }
       
-      if (status === 400 && data?.message?.includes('wait')) {
+      if (status === 400 && (data?.message?.includes('wait') || data?.message?.includes('denied this request three times'))) {
         // Show cooldown dialog for 10-day restriction with exact date
         const cooldownUntil = data.cooldownUntil ? new Date(data.cooldownUntil) : null;
-        const dateString = cooldownUntil ? 
+        const dateString = cooldownUntil && !isNaN(cooldownUntil.getTime()) ? 
           cooldownUntil.toLocaleDateString('en-US', { 
             year: 'numeric', 
             month: 'long', 
