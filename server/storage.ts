@@ -2373,8 +2373,8 @@ export class DatabaseStorage implements IStorage {
         reason: `The recipient has denied this request three times. You must wait ${denialCheck.daysRemaining} more days before sending another.`,
         cooldownUntil: denialCheck.cooldownUntil
       };
-    } else if (denialCheck.denialCount > 0) {
-      // Previous denials - require confirmation
+    } else if (denialCheck.denialCount >= 1 && denialCheck.denialCount <= 2) {
+      // 1-2 previous denials - require confirmation
       // Get the last denial date from the brotherhood_denials table
       const [denialRecord] = await db.select()
         .from(brotherhoodDenials)
