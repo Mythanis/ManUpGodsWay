@@ -2360,10 +2360,20 @@ export class DatabaseStorage implements IStorage {
       };
     } else if (denialCheck.denialCount > 0) {
       // Previous denials - require confirmation
+      // Get the last denial date from the brotherhood_denials table
+      const [denialRecord] = await db.select()
+        .from(brotherhoodDenials)
+        .where(and(
+          eq(brotherhoodDenials.requesterId, requesterId),
+          eq(brotherhoodDenials.recipientId, recipientId)
+        ))
+        .limit(1);
+      
       return {
         canSend: true,
         requiresConfirmation: true,
-        denialCount: denialCheck.denialCount
+        denialCount: denialCheck.denialCount,
+        lastDenied: denialRecord?.lastDenialAt
       };
     }
 
