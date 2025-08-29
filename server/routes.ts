@@ -3304,6 +3304,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           denialCount: 1, // Will be incremented by the upsert logic
           lastDenialAt: new Date()
         });
+
+        // Send real-time WebSocket notification for denied request
+        const recipient = await storage.getUser(userId);
+        const wsMessage = {
+          type: 'brotherhood_request_denied',
+          message: 'Brotherhood request denied',
+          partnerName: recipient?.firstName + ' ' + recipient?.lastName
+        };
+        
+        // Send to the requester so their UI updates immediately
+        const targetWs = connectedClients.get(request.requesterId);
+        if (targetWs && targetWs.readyState === WebSocket.OPEN) {
+          targetWs.send(JSON.stringify(wsMessage));
+        }
       }
 
       res.json({ message: `Brotherhood request ${response} successfully` });

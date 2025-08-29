@@ -6,6 +6,7 @@ interface WebSocketMessage {
   type: string;
   data?: any;
   message?: string;
+  partnerName?: string;
 }
 
 export function useWebSocket(userId?: string) {
@@ -84,6 +85,18 @@ export function useWebSocket(userId?: string) {
             toast({
               title: 'Brotherhood Removed',
               description: message.message,
+              variant: 'destructive'
+            });
+            break;
+
+          case 'brotherhood_request_denied':
+            // Invalidate brotherhood requests to update UI immediately (e.g., Request Sent → Request Brotherhood)
+            queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
+            
+            // Show toast notification
+            toast({
+              title: 'Request Denied',
+              description: `${message.partnerName} denied your brotherhood request`,
               variant: 'destructive'
             });
             break;
