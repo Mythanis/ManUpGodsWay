@@ -70,7 +70,13 @@ export default function BrotherhoodRequestButton({
       if (status === 400 && data?.message?.includes('wait')) {
         // Show cooldown dialog for 10-day restriction with exact date
         const cooldownUntil = data.cooldownUntil ? new Date(data.cooldownUntil) : null;
-        const dateString = cooldownUntil ? cooldownUntil.toLocaleDateString() : 'a few days';
+        const dateString = cooldownUntil ? 
+          cooldownUntil.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          }) : 
+          'the cooldown period ends';
         setCooldownMessage(`This user has denied your brotherhood request three times. You cannot send another request until ${dateString}.`);
         setShowCooldownDialog(true);
         return;
