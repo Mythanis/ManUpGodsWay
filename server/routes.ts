@@ -3192,17 +3192,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the request
       let request;
       try {
+        console.log("Creating brotherhood request with data:", {
+          requesterId,
+          recipientId,
+          message: message || '',
+        });
         request = await storage.createBrotherhoodRequest({
           requesterId,
           recipientId,
           message: message || '',
         });
+        console.log("Brotherhood request created successfully:", request);
       } catch (error: any) {
+        console.error("Error creating brotherhood request:", error);
         // Handle duplicate key constraint error
         if (error.code === '23505') {
           return res.status(400).json({ message: "Brotherhood request already exists" });
         }
         throw error;
+      }
+
+      if (!request) {
+        console.error("Request was not created - request is undefined");
+        return res.status(500).json({ message: "Failed to create brotherhood request" });
       }
 
       // Create notification for the recipient
