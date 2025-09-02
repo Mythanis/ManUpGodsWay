@@ -28,6 +28,7 @@ interface HurdleWallPost {
     lastName: string;
   };
   userHasPrayed?: boolean;
+  replies: HurdleWallReply[];
 }
 
 interface HurdleWallReply {
@@ -159,7 +160,7 @@ export default function HurdleWall() {
     createReplyMutation.mutate({
       postId,
       content,
-      isAnonymous: replyAnonymous[postId] !== false, // Default to true
+      isAnonymous: false, // Always use real name for replies
     });
   };
 
@@ -349,6 +350,26 @@ export default function HurdleWall() {
                   {/* Reply Section for Discussions */}
                   {post.postType === 'discussion' && expandedPost === post.id && (
                     <div className="space-y-4 pt-4 border-t border-gray-700">
+                      {/* Existing Replies */}
+                      {post.replies && post.replies.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="text-white font-medium">Replies</h4>
+                          {post.replies.map((reply) => (
+                            <div key={reply.id} className="bg-gray-800 rounded-lg p-3 border-l-2 border-yellow-600">
+                              <div className="flex items-start justify-between mb-2">
+                                <span className="text-white font-medium text-sm">
+                                  {getUserDisplayName(reply.user, reply.isAnonymous)}
+                                </span>
+                                <span className="text-gray-400 text-xs">
+                                  {formatTimeAgo(reply.createdAt)}
+                                </span>
+                              </div>
+                              <p className="text-gray-200 text-sm leading-relaxed">{reply.content}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
                       {/* Reply Form */}
                       <div className="space-y-3">
                         <Textarea
@@ -360,21 +381,6 @@ export default function HurdleWall() {
                           }))}
                           className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                         />
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            {replyAnonymous[post.id] !== false ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            <Label className="text-white text-sm">
-                              {replyAnonymous[post.id] !== false ? 'Replying Anonymously' : 'Replying with Name'}
-                            </Label>
-                          </div>
-                          <Switch
-                            checked={replyAnonymous[post.id] !== false}
-                            onCheckedChange={(checked) => setReplyAnonymous(prev => ({
-                              ...prev,
-                              [post.id]: checked
-                            }))}
-                          />
-                        </div>
                         <Button
                           onClick={() => handleCreateReply(post.id)}
                           disabled={createReplyMutation.isPending || !replyContent[post.id]?.trim()}

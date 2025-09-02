@@ -3948,6 +3948,7 @@ export class DatabaseStorage implements IStorage {
     user: { id: string; firstName: string; lastName: string }; 
     userHasPrayed?: boolean;
     replyCount: number;
+    replies: (HurdleWallReply & { user: { id: string; firstName: string; lastName: string } })[];
   })[]> {
     const posts = await db
       .select({
@@ -3970,7 +3971,34 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(hurdleWallPosts.userId, users.id))
       .orderBy(desc(hurdleWallPosts.createdAt));
     
-    return posts;
+    // Fetch replies for each post
+    const postsWithReplies = await Promise.all(
+      posts.map(async (post) => {
+        const replies = await db
+          .select({
+            id: hurdleWallReplies.id,
+            postId: hurdleWallReplies.postId,
+            userId: hurdleWallReplies.userId,
+            content: hurdleWallReplies.content,
+            isAnonymous: hurdleWallReplies.isAnonymous,
+            createdAt: hurdleWallReplies.createdAt,
+            updatedAt: hurdleWallReplies.updatedAt,
+            user: {
+              id: users.id,
+              firstName: users.firstName,
+              lastName: users.lastName,
+            }
+          })
+          .from(hurdleWallReplies)
+          .innerJoin(users, eq(hurdleWallReplies.userId, users.id))
+          .where(eq(hurdleWallReplies.postId, post.id))
+          .orderBy(asc(hurdleWallReplies.createdAt));
+        
+        return { ...post, replies };
+      })
+    );
+    
+    return postsWithReplies;
   }
 
   async getHurdleWallPost(postId: string): Promise<(HurdleWallPost & { 
