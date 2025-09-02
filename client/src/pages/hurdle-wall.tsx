@@ -11,7 +11,8 @@ import { Separator } from '@/components/ui/separator';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageSquare, HandHeart, Send, Plus, Eye, EyeOff } from 'lucide-react';
+import { MessageSquare, Send, Plus, Eye, EyeOff } from 'lucide-react';
+import prayerHandsIcon from '@assets/53-535374_hands-praying-pray-icon-png_1756847787696.png';
 
 interface HurdleWallPost {
   id: string;
@@ -330,7 +331,11 @@ export default function HurdleWall() {
                         }`}
                         disabled={prayerMutation.isPending}
                       >
-                        <HandHeart className={`h-4 w-4 ${post.userHasPrayed ? 'fill-current' : ''}`} />
+                        <img 
+                          src={prayerHandsIcon} 
+                          alt="Prayer hands" 
+                          className={`h-4 w-4 ${post.userHasPrayed ? 'brightness-0 invert' : 'opacity-70'}`} 
+                        />
                         {post.prayerCount} {post.prayerCount === 1 ? 'Prayer' : 'Prayers'}
                       </Button>
                     ) : (
