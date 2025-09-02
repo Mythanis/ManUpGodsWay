@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Home, BookOpen, Video, Users, MessageCircle, Settings, Headphones, Trophy, ChevronLeft, ChevronRight, ExternalLink, Heart, UserPlus, Dumbbell, Shield } from "lucide-react";
+import { Home, BookOpen, Video, Users, MessageCircle, Settings, Headphones, Trophy, ChevronLeft, ChevronRight, ExternalLink, Heart, UserPlus, Dumbbell, Shield, Crown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { useRef, useState, useEffect } from "react";
@@ -27,10 +27,17 @@ export default function Navigation() {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  // Add admin tab if user is admin
-  const allNavItems = (user as any)?.role === 'admin' 
-    ? [...navItems, { id: 'admin', path: '/admin', label: 'Admin', icon: Settings }]
-    : navItems;
+  // Add admin/owner tabs based on user role
+  let allNavItems = navItems;
+  
+  if ((user as any)?.role === 'admin') {
+    allNavItems = [...navItems, { id: 'admin', path: '/admin', label: 'Admin', icon: Settings }];
+  } else if ((user as any)?.role === 'owner') {
+    allNavItems = [...navItems, 
+      { id: 'admin', path: '/admin', label: 'Admin', icon: Settings },
+      { id: 'owners', path: '/owners', label: 'Owners', icon: Crown }
+    ];
+  }
 
   const maxVisibleItems = 5;
   const shouldShowScrollControls = allNavItems.length > maxVisibleItems;

@@ -26,6 +26,23 @@ import {
 import { z } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
 
+// Role checking helper functions
+function isAdmin(user: any): boolean {
+  return user && (user.role === 'admin' || user.role === 'owner');
+}
+
+function isOwner(user: any): boolean {
+  return user && user.role === 'owner';
+}
+
+function hasAdminPrivileges(user: any): boolean {
+  return isAdmin(user);
+}
+
+function hasOwnerPrivileges(user: any): boolean {
+  return isOwner(user);
+}
+
 // Feedback schema
 const feedbackSchema = z.object({
   feedback: z.string().min(1, "Feedback is required").max(1000, "Feedback must be 1000 characters or less"),
@@ -75,6 +92,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Owner-only system control routes
+  app.post('/api/owners/system/clear-cache', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!hasOwnerPrivileges(user)) {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+
+      // Return success - cache clearing happens on frontend
+      res.json({ success: true, message: "Cache clear operation completed" });
+    } catch (error) {
+      console.error("Error clearing cache:", error);
+      res.status(500).json({ message: "Failed to clear cache" });
+    }
+  });
+
+  app.post('/api/owners/system/emergency-reset', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!hasOwnerPrivileges(user)) {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+
+      // Return success - emergency reset happens on frontend
+      res.json({ success: true, message: "Emergency reset operation completed" });
+    } catch (error) {
+      console.error("Error performing emergency reset:", error);
+      res.status(500).json({ message: "Failed to perform emergency reset" });
     }
   });
 
@@ -1449,7 +1497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { role } = req.body;
-      if (!role || !['user', 'admin'].includes(role)) {
+      if (!role || !['user', 'admin', 'owner'].includes(role)) {
         return res.status(400).json({ message: "Invalid role" });
       }
 

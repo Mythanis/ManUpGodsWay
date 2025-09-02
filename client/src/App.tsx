@@ -19,6 +19,7 @@ import Brothers from "@/pages/brothers";
 import Messages from "@/pages/messages";
 import Profile from "@/pages/profile";
 import Admin from "@/pages/admin";
+import Owners from "@/pages/owners";
 import StudyDetail from "@/pages/study-detail";
 import Lesson from "@/pages/lesson";
 import UserProfile from "@/pages/user-profile";
@@ -90,6 +91,7 @@ function Router() {
             <Route path="/messages" component={Messages} />
             <Route path="/profile" component={Profile} />
             <Route path="/admin" component={Admin} />
+            <Route path="/owners" component={Owners} />
             <Route path="/studies/:id" component={StudyDetail} />
             <Route path="/study/:studyId/lesson/:lessonNumber" component={Lesson} />
             <Route path="/users/:userId" component={UserProfile} />

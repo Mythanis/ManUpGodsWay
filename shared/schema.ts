@@ -34,7 +34,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  role: varchar("role").default("user"), // user, admin
+  role: varchar("role").default("user"), // user, admin, owner
   subscriptionTier: varchar("subscription_tier").default("free"), // free, premium, vip
   streakDays: integer("streak_days").default(0),
   lastActiveDate: timestamp("last_active_date"),
