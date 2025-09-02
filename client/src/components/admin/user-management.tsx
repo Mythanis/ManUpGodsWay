@@ -192,6 +192,9 @@ export default function UserManagement() {
   };
 
   const getRoleBadge = (role: string) => {
+    if (role === 'owner') {
+      return <Badge className="bg-purple-100 text-purple-800 text-xs">Owner</Badge>;
+    }
     return role === 'admin' 
       ? <Badge className="bg-red-100 text-red-800 text-xs">Admin</Badge>
       : <Badge variant="secondary" className="text-xs">User</Badge>;

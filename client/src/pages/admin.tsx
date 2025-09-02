@@ -104,7 +104,7 @@ export default function Admin() {
 
   // Check admin access
   useEffect(() => {
-    if (!authLoading && (!isAuthenticated || (user as any)?.role !== 'admin')) {
+    if (!authLoading && (!isAuthenticated || !['admin', 'owner'].includes((user as any)?.role))) {
       toast({
         title: "Access Denied",
         description: "Admin access required",
@@ -125,14 +125,14 @@ export default function Admin() {
   }>({
     queryKey: ["/api/admin/stats"],
     retry: false,
-    enabled: (user as any)?.role === 'admin',
+    enabled: ['admin', 'owner'].includes((user as any)?.role),
   });
 
   // Fetch all studies for management
   const { data: studies = [], isLoading: studiesLoading } = useQuery<Study[]>({
     queryKey: ["/api/studies"],
     retry: false,
-    enabled: (user as any)?.role === 'admin',
+    enabled: ['admin', 'owner'].includes((user as any)?.role),
   });
 
   // Fetch users for individual targeting
@@ -368,7 +368,7 @@ export default function Admin() {
     }
   };
 
-  if (authLoading || (user as any)?.role !== 'admin') {
+  if (authLoading || !['admin', 'owner'].includes((user as any)?.role)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ministry-navy"></div>

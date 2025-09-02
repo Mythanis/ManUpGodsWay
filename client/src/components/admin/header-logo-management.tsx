@@ -133,7 +133,7 @@ export default function HeaderLogoManagement() {
     }
   };
 
-  if (!user || user.role !== 'admin') {
+  if (!user || !['admin', 'owner'].includes(user.role)) {
     return (
       <div className="text-center py-8 text-ministry-slate">
         <p>Access denied. Admin privileges required.</p>
