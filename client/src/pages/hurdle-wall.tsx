@@ -11,7 +11,9 @@ import { Separator } from '@/components/ui/separator';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageSquare, HandHeart, Send, Plus, Eye, EyeOff } from 'lucide-react';
+import { MessageSquare, HandHeart, Send, Plus, Eye, EyeOff, Trash2, Search, Filter, SortDesc } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface HurdleWallPost {
   id: string;
@@ -54,11 +56,43 @@ export default function HurdleWall() {
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState<Record<string, string>>({});
   const [replyAnonymous, setReplyAnonymous] = useState<Record<string, boolean>>({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<'all' | 'discussion' | 'prayer_request'>('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
+  
+  // Get current user
+  const { data: currentUser } = useQuery<{ id: string }>({ queryKey: ['/api/auth/user'] });
 
   // Fetch hurdle wall posts
-  const { data: posts = [], isLoading } = useQuery<HurdleWallPost[]>({
+  const { data: allPosts = [], isLoading } = useQuery<HurdleWallPost[]>({
     queryKey: ['/api/hurdle-wall'],
   });
+  
+  // Filter and sort posts
+  const posts = React.useMemo(() => {
+    let filtered = allPosts;
+    
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(post => 
+        post.content.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Apply type filter
+    if (filterType !== 'all') {
+      filtered = filtered.filter(post => post.postType === filterType);
+    }
+    
+    // Apply sorting
+    filtered = [...filtered].sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return sortBy === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+    
+    return filtered;
+  }, [allPosts, searchTerm, filterType, sortBy]);
 
   // Create post mutation
   const createPostMutation = useMutation({
@@ -129,6 +163,48 @@ export default function HurdleWall() {
     },
   });
 
+  // Delete post mutation
+  const deletePostMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      return apiRequest('DELETE', `/api/hurdle-wall/posts/${postId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Post Deleted",
+        description: "Your post has been removed from the Hurdle Wall",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to delete post",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Delete reply mutation
+  const deleteReplyMutation = useMutation({
+    mutationFn: async (replyId: string) => {
+      return apiRequest('DELETE', `/api/hurdle-wall/replies/${replyId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Reply Deleted",
+        description: "Your reply has been removed",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to delete reply",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreatePost = () => {
     if (!newPostContent.trim()) {
       toast({
@@ -162,6 +238,24 @@ export default function HurdleWall() {
       content,
       isAnonymous: false, // Always use real name for replies
     });
+    
+    // Clear the reply content after submission
+    setReplyContent(prev => ({
+      ...prev,
+      [postId]: ''
+    }));
+  };
+  
+  const handleDeletePost = (postId: string) => {
+    if (window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+      deletePostMutation.mutate(postId);
+    }
+  };
+  
+  const handleDeleteReply = (replyId: string) => {
+    if (window.confirm('Are you sure you want to delete this reply? This action cannot be undone.')) {
+      deleteReplyMutation.mutate(replyId);
+    }
   };
 
   const handlePrayer = (postId: string, currentlyPrayed?: boolean) => {
@@ -204,6 +298,42 @@ export default function HurdleWall() {
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-white">Hurdle Wall</h1>
           <p className="text-gray-400">Share your struggles and prayer requests anonymously</p>
+        </div>
+        
+        {/* Search and Filter Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search posts..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Select value={filterType} onValueChange={(value: any) => setFilterType(value)}>
+              <SelectTrigger className="w-40 bg-gray-800 border-gray-600 text-white">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Posts</SelectItem>
+                <SelectItem value="discussion">Discussions</SelectItem>
+                <SelectItem value="prayer_request">Prayer Requests</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+              <SelectTrigger className="w-36 bg-gray-800 border-gray-600 text-white">
+                <SortDesc className="h-4 w-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest</SelectItem>
+                <SelectItem value="oldest">Oldest</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* New Post Form */}
@@ -311,6 +441,17 @@ export default function HurdleWall() {
                       </div>
                       <p className="text-sm text-gray-400">{formatTimeAgo(post.createdAt)}</p>
                     </div>
+                    {currentUser?.id === post.userId && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeletePost(post.id)}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-1 h-auto"
+                        disabled={deletePostMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -360,9 +501,22 @@ export default function HurdleWall() {
                                 <span className="text-white font-medium text-sm">
                                   {getUserDisplayName(reply.user, reply.isAnonymous)}
                                 </span>
-                                <span className="text-gray-400 text-xs">
-                                  {formatTimeAgo(reply.createdAt)}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-gray-400 text-xs">
+                                    {formatTimeAgo(reply.createdAt)}
+                                  </span>
+                                  {currentUser?.id === reply.userId && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteReply(reply.id)}
+                                      className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-1 h-auto"
+                                      disabled={deleteReplyMutation.isPending}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                               <p className="text-gray-200 text-sm leading-relaxed">{reply.content}</p>
                             </div>

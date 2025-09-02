@@ -4194,6 +4194,121 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(userPrayerStats.userId, userId));
   }
+
+  async deleteHurdleWallPost(postId: string, userId: string): Promise<boolean> {
+    try {
+      // First verify the user owns this post
+      const [post] = await db
+        .select()
+        .from(hurdleWallPosts)
+        .where(eq(hurdleWallPosts.id, postId));
+      
+      if (!post || post.userId !== userId) {
+        return false;
+      }
+      
+      // Delete all related data first
+      await db.delete(hurdleWallPrayers).where(eq(hurdleWallPrayers.postId, postId));
+      await db.delete(hurdleWallReplies).where(eq(hurdleWallReplies.postId, postId));
+      
+      // Delete the post
+      await db.delete(hurdleWallPosts).where(eq(hurdleWallPosts.id, postId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting hurdle wall post:', error);
+      return false;
+    }
+  }
+
+  async deleteHurdleWallReply(replyId: string, userId: string): Promise<boolean> {
+    try {
+      // First verify the user owns this reply
+      const [reply] = await db
+        .select()
+        .from(hurdleWallReplies)
+        .where(eq(hurdleWallReplies.id, replyId));
+      
+      if (!reply || reply.userId !== userId) {
+        return false;
+      }
+      
+      // Delete the reply
+      await db.delete(hurdleWallReplies).where(eq(hurdleWallReplies.id, replyId));
+      
+      // Update the reply count on the post
+      await db
+        .update(hurdleWallPosts)
+        .set({
+          replyCount: sql`${hurdleWallPosts.replyCount} - 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(hurdleWallPosts.id, reply.postId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting hurdle wall reply:', error);
+      return false;
+    }
+  }
+
+  async getUserHurdleWallPosts(userId: string): Promise<(HurdleWallPost & { 
+    user: { id: string; firstName: string; lastName: string }; 
+    userHasPrayed?: boolean;
+    replyCount: number;
+    replies: (HurdleWallReply & { user: { id: string; firstName: string; lastName: string } })[];
+  })[]> {
+    const posts = await db
+      .select({
+        id: hurdleWallPosts.id,
+        userId: hurdleWallPosts.userId,
+        content: hurdleWallPosts.content,
+        isAnonymous: hurdleWallPosts.isAnonymous,
+        postType: hurdleWallPosts.postType,
+        prayerCount: hurdleWallPosts.prayerCount,
+        replyCount: hurdleWallPosts.replyCount,
+        createdAt: hurdleWallPosts.createdAt,
+        updatedAt: hurdleWallPosts.updatedAt,
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        }
+      })
+      .from(hurdleWallPosts)
+      .innerJoin(users, eq(hurdleWallPosts.userId, users.id))
+      .where(eq(hurdleWallPosts.userId, userId))
+      .orderBy(desc(hurdleWallPosts.createdAt));
+    
+    // Fetch replies for each post
+    const postsWithReplies = await Promise.all(
+      posts.map(async (post) => {
+        const replies = await db
+          .select({
+            id: hurdleWallReplies.id,
+            postId: hurdleWallReplies.postId,
+            userId: hurdleWallReplies.userId,
+            content: hurdleWallReplies.content,
+            isAnonymous: hurdleWallReplies.isAnonymous,
+            createdAt: hurdleWallReplies.createdAt,
+            updatedAt: hurdleWallReplies.updatedAt,
+            user: {
+              id: users.id,
+              firstName: users.firstName,
+              lastName: users.lastName,
+            }
+          })
+          .from(hurdleWallReplies)
+          .innerJoin(users, eq(hurdleWallReplies.userId, users.id))
+          .where(eq(hurdleWallReplies.postId, post.id))
+          .orderBy(asc(hurdleWallReplies.createdAt));
+        
+        return { ...post, replies };
+      })
+    );
+    
+    return postsWithReplies;
+  }
 }
 
 export const storage = new DatabaseStorage();

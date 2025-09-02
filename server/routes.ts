@@ -3710,6 +3710,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch prayer stats" });
     }
   });
+
+  app.delete('/api/hurdle-wall/posts/:postId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+
+      const success = await storage.deleteHurdleWallPost(postId, userId);
+      
+      if (!success) {
+        return res.status(403).json({ message: "You can only delete your own posts" });
+      }
+
+      res.json({ message: "Post deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting hurdle wall post:", error);
+      res.status(500).json({ message: "Failed to delete post" });
+    }
+  });
+
+  app.delete('/api/hurdle-wall/replies/:replyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { replyId } = req.params;
+
+      const success = await storage.deleteHurdleWallReply(replyId, userId);
+      
+      if (!success) {
+        return res.status(403).json({ message: "You can only delete your own replies" });
+      }
+
+      res.json({ message: "Reply deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting hurdle wall reply:", error);
+      res.status(500).json({ message: "Failed to delete reply" });
+    }
+  });
+
+  app.get('/api/hurdle-wall/user/:userId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const posts = await storage.getUserHurdleWallPosts(userId);
+      res.json(posts);
+    } catch (error) {
+      console.error("Error fetching user hurdle wall posts:", error);
+      res.status(500).json({ message: "Failed to fetch user posts" });
+    }
+  });
   
   // WebSocket server for real-time notifications
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });

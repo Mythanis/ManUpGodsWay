@@ -14,7 +14,7 @@ import { LiveStreamBanner } from "@/components/live-stream-banner";
 import BrotherhoodRequests from "@/components/brotherhood-requests";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
-import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star } from "lucide-react";
+import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 
@@ -33,6 +33,7 @@ export default function Home() {
   const [prayerTimeLeft, setPrayerTimeLeft] = useState(0);
   const [showProgressDialog, setShowProgressDialog] = useState(false);
   const [showChallengeDialog, setShowChallengeDialog] = useState(false);
+  const [showHurdleWallDialog, setShowHurdleWallDialog] = useState(false);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -99,6 +100,13 @@ export default function Home() {
     refetchIntervalInBackground: true,
   });
 
+  // Fetch user's Hurdle Wall posts
+  const { data: userHurdleWallPosts = [] } = useQuery({
+    queryKey: [`/api/hurdle-wall/user/${user?.id}`],
+    enabled: !!user?.id,
+    retry: false,
+  });
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -115,6 +123,29 @@ export default function Home() {
     .sort((a: any, b: any) => new Date(b.lastAccessedAt || 0).getTime() - new Date(a.lastAccessedAt || 0).getTime())[0];
   
   const completedCount = safeProgress.filter((p: any) => p && p.isCompleted).length;
+  
+  // Helper function to get display name for posts
+  const getUserDisplayName = (user: any, isAnonymous: boolean) => {
+    if (isAnonymous) {
+      return 'Anonymous';
+    }
+    return `${user.firstName} ${user.lastName}`;
+  };
+  
+  // Helper function to format time ago
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  };
 
   // Prayer timer functionality
   useEffect(() => {
@@ -570,6 +601,27 @@ export default function Home() {
               </>
             )}
           </Button>
+          
+          <Button 
+            variant="outline"
+            className="h-20 flex flex-col items-center justify-center space-y-2 bg-ministry-gold-exact/20 text-black border-ministry-gold hover:bg-ministry-gold-exact/30"
+            data-testid="button-my-posts"
+            onClick={() => setShowHurdleWallDialog(true)}
+          >
+            <Shield className="w-8 h-8 text-black" />
+            <span className="font-medium text-sm text-black">My Posts ({userHurdleWallPosts.length})</span>
+          </Button>
+          
+          <Link href="/hurdle-wall">
+            <Button 
+              variant="outline"
+              className="h-20 flex flex-col items-center justify-center space-y-2 bg-ministry-gold-exact/20 text-black border-ministry-gold hover:bg-ministry-gold-exact/30 w-full"
+              data-testid="button-hurdle-wall"
+            >
+              <Shield className="w-8 h-8 text-black" />
+              <span className="font-medium text-sm text-black">Hurdle Wall</span>
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -962,6 +1014,87 @@ export default function Home() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Hurdle Wall Posts Dialog */}
+      <Dialog open={showHurdleWallDialog} onOpenChange={setShowHurdleWallDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Shield className="w-5 h-5 text-ministry-steel" />
+              <span>My Hurdle Wall Posts</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto space-y-4 py-4">
+            {userHurdleWallPosts.length === 0 ? (
+              <div className="text-center py-8">
+                <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-2">No posts yet</p>
+                <p className="text-sm text-gray-500">Share your first prayer request or discussion on the Hurdle Wall!</p>
+                <Link href="/hurdle-wall">
+                  <Button className="mt-4 bg-ministry-navy hover:bg-ministry-steel text-white">
+                    Go to Hurdle Wall
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              userHurdleWallPosts.map((post: any) => (
+                <div key={post.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-900">
+                        {getUserDisplayName(post.user, post.isAnonymous)}
+                      </span>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        post.postType === 'prayer_request' 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : 'bg-green-100 text-green-700'
+                      }`}>
+                        {post.postType === 'prayer_request' ? 'Prayer Request' : 'Discussion'}
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500">{formatTimeAgo(post.createdAt)}</span>
+                  </div>
+                  
+                  <p className="text-gray-700 text-sm leading-relaxed mb-3">{post.content}</p>
+                  
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    {post.postType === 'prayer_request' ? (
+                      <div className="flex items-center gap-1">
+                        <HandHeart className="w-3 h-3" />
+                        <span>{post.prayerCount} {post.prayerCount === 1 ? 'Prayer' : 'Prayers'}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3" />
+                        <span>{post.replyCount} {post.replyCount === 1 ? 'Reply' : 'Replies'}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          
+          <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+            <Button 
+              variant="outline"
+              onClick={() => setShowHurdleWallDialog(false)}
+            >
+              Close
+            </Button>
+            
+            <Link href="/hurdle-wall">
+              <Button 
+                className="bg-ministry-navy hover:bg-ministry-steel text-white"
+                onClick={() => setShowHurdleWallDialog(false)}
+              >
+                Go to Hurdle Wall
+              </Button>
+            </Link>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
