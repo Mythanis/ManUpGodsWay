@@ -133,6 +133,30 @@ export function useWebSocket(userId?: string) {
               variant: 'destructive'
             });
             break;
+
+          case 'hurdle_wall_post_created':
+            // Invalidate hurdle wall posts to show new post
+            queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall/user'] });
+            break;
+
+          case 'hurdle_wall_reply_created':
+            // Invalidate hurdle wall posts to show new reply
+            queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall/user'] });
+            break;
+
+          case 'hurdle_wall_post_deleted':
+            // Invalidate hurdle wall posts to remove deleted post
+            queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall/user'] });
+            break;
+
+          case 'hurdle_wall_reply_deleted':
+            // Invalidate hurdle wall posts to remove deleted reply
+            queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall/user'] });
+            break;
         }
       } catch (error) {
         console.error('Error parsing WebSocket message:', error);

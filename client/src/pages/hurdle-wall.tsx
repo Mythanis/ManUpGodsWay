@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useWebSocket } from '@/hooks/useWebSocket';
 import { formatDistanceToNow } from 'date-fns';
 import { MessageSquare, HandHeart, Send, Plus, Eye, EyeOff, Trash2, Search, Filter, SortDesc } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -62,6 +63,9 @@ export default function HurdleWall() {
   
   // Get current user
   const { data: currentUser } = useQuery<{ id: string }>({ queryKey: ['/api/auth/user'] });
+  
+  // Set up real-time WebSocket connection
+  useWebSocket(currentUser?.id);
 
   // Fetch hurdle wall posts
   const { data: allPosts = [], isLoading } = useQuery<HurdleWallPost[]>({

@@ -3591,6 +3591,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         postType
       });
 
+      // Broadcast to all connected clients about new post
+      Array.from(connectedClients.entries()).forEach(([connectedUserId, ws]) => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'hurdle_wall_post_created',
+            data: post
+          }));
+        }
+      });
+
       res.json(post);
     } catch (error) {
       console.error("Error creating hurdle wall post:", error);
@@ -3639,6 +3649,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         content: content.trim(),
         isAnonymous: isAnonymous !== false // Default to true (anonymous)
+      });
+
+      // Broadcast to all connected clients about new reply
+      Array.from(connectedClients.entries()).forEach(([connectedUserId, ws]) => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'hurdle_wall_reply_created',
+            data: { reply, postId }
+          }));
+        }
       });
 
       res.json(reply);
@@ -3722,6 +3742,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You can only delete your own posts" });
       }
 
+      // Broadcast to all connected clients about deleted post
+      Array.from(connectedClients.entries()).forEach(([connectedUserId, ws]) => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'hurdle_wall_post_deleted',
+            data: { postId }
+          }));
+        }
+      });
+
       res.json({ message: "Post deleted successfully" });
     } catch (error) {
       console.error("Error deleting hurdle wall post:", error);
@@ -3739,6 +3769,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!success) {
         return res.status(403).json({ message: "You can only delete your own replies" });
       }
+
+      // Broadcast to all connected clients about deleted reply
+      Array.from(connectedClients.entries()).forEach(([connectedUserId, ws]) => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'hurdle_wall_reply_deleted',
+            data: { replyId }
+          }));
+        }
+      });
 
       res.json({ message: "Reply deleted successfully" });
     } catch (error) {
@@ -3787,13 +3827,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     ws.on('close', () => {
       // Remove client from connected clients when they disconnect
-      for (const [userId, client] of connectedClients.entries()) {
+      Array.from(connectedClients.entries()).forEach(([userId, client]) => {
         if (client === ws) {
           connectedClients.delete(userId);
           console.log(`User ${userId} disconnected from WebSocket`);
-          break;
         }
-      }
+      });
     });
   });
   
