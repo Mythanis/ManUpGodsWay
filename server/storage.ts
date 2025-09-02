@@ -28,6 +28,10 @@ import {
   brotherhoodDenialHistory,
   brotherhoods,
   fitnessChallenge,
+  hurdleWallPosts,
+  hurdleWallReplies,
+  hurdleWallPrayers,
+  userPrayerStats,
   type User,
   type UpsertUser,
   type Study,
@@ -98,6 +102,14 @@ import {
   type InsertBrotherhoodDenial,
   type FitnessChallenge,
   type InsertFitnessChallenge,
+  type HurdleWallPost,
+  type InsertHurdleWallPost,
+  type HurdleWallReply,
+  type InsertHurdleWallReply,
+  type HurdleWallPrayer,
+  type InsertHurdleWallPrayer,
+  type UserPrayerStats,
+  type InsertUserPrayerStats,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt } from "drizzle-orm";
@@ -319,6 +331,24 @@ export interface IStorage {
     cooldownUntil?: Date;
   }>;
   
+  // Hurdle Wall operations
+  getHurdleWallPosts(): Promise<(HurdleWallPost & { 
+    user: { id: string; firstName: string; lastName: string }; 
+    userHasPrayed?: boolean;
+    replyCount: number;
+  })[]>;
+  getHurdleWallPost(postId: string): Promise<(HurdleWallPost & { 
+    user: { id: string; firstName: string; lastName: string }; 
+    replies: (HurdleWallReply & { user: { id: string; firstName: string; lastName: string } })[];
+    userHasPrayed?: boolean;
+  }) | undefined>;
+  createHurdleWallPost(post: InsertHurdleWallPost): Promise<HurdleWallPost>;
+  createHurdleWallReply(reply: InsertHurdleWallReply): Promise<HurdleWallReply>;
+  prayForPost(userId: string, postId: string): Promise<{ success: boolean; prayerCount: number }>;
+  removePrayerFromPost(userId: string, postId: string): Promise<{ success: boolean; prayerCount: number }>;
+  getUserPrayerStats(userId: string): Promise<UserPrayerStats | undefined>;
+  ensurePrayerStatsExist(userId: string): Promise<UserPrayerStats>;
+
   // Fitness Challenge operations
   getFitnessChallenges(): Promise<FitnessChallenge[]>;
   getAllFitnessChallenges(): Promise<FitnessChallenge[]>;
@@ -3911,6 +3941,230 @@ export class DatabaseStorage implements IStorage {
       );
     
     return challenge || null;
+  }
+
+  // Hurdle Wall implementation methods
+  async getHurdleWallPosts(): Promise<(HurdleWallPost & { 
+    user: { id: string; firstName: string; lastName: string }; 
+    userHasPrayed?: boolean;
+    replyCount: number;
+  })[]> {
+    const posts = await db
+      .select({
+        id: hurdleWallPosts.id,
+        userId: hurdleWallPosts.userId,
+        content: hurdleWallPosts.content,
+        isAnonymous: hurdleWallPosts.isAnonymous,
+        postType: hurdleWallPosts.postType,
+        prayerCount: hurdleWallPosts.prayerCount,
+        replyCount: hurdleWallPosts.replyCount,
+        createdAt: hurdleWallPosts.createdAt,
+        updatedAt: hurdleWallPosts.updatedAt,
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        }
+      })
+      .from(hurdleWallPosts)
+      .innerJoin(users, eq(hurdleWallPosts.userId, users.id))
+      .orderBy(desc(hurdleWallPosts.createdAt));
+    
+    return posts;
+  }
+
+  async getHurdleWallPost(postId: string): Promise<(HurdleWallPost & { 
+    user: { id: string; firstName: string; lastName: string }; 
+    replies: (HurdleWallReply & { user: { id: string; firstName: string; lastName: string } })[];
+    userHasPrayed?: boolean;
+  }) | undefined> {
+    const [post] = await db
+      .select({
+        id: hurdleWallPosts.id,
+        userId: hurdleWallPosts.userId,
+        content: hurdleWallPosts.content,
+        isAnonymous: hurdleWallPosts.isAnonymous,
+        postType: hurdleWallPosts.postType,
+        prayerCount: hurdleWallPosts.prayerCount,
+        replyCount: hurdleWallPosts.replyCount,
+        createdAt: hurdleWallPosts.createdAt,
+        updatedAt: hurdleWallPosts.updatedAt,
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        }
+      })
+      .from(hurdleWallPosts)
+      .innerJoin(users, eq(hurdleWallPosts.userId, users.id))
+      .where(eq(hurdleWallPosts.id, postId));
+    
+    if (!post) return undefined;
+    
+    const replies = await db
+      .select({
+        id: hurdleWallReplies.id,
+        postId: hurdleWallReplies.postId,
+        userId: hurdleWallReplies.userId,
+        content: hurdleWallReplies.content,
+        isAnonymous: hurdleWallReplies.isAnonymous,
+        createdAt: hurdleWallReplies.createdAt,
+        updatedAt: hurdleWallReplies.updatedAt,
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        }
+      })
+      .from(hurdleWallReplies)
+      .innerJoin(users, eq(hurdleWallReplies.userId, users.id))
+      .where(eq(hurdleWallReplies.postId, postId))
+      .orderBy(asc(hurdleWallReplies.createdAt));
+    
+    return { ...post, replies };
+  }
+
+  async createHurdleWallPost(post: InsertHurdleWallPost): Promise<HurdleWallPost> {
+    const [newPost] = await db
+      .insert(hurdleWallPosts)
+      .values(post)
+      .returning();
+    return newPost;
+  }
+
+  async createHurdleWallReply(reply: InsertHurdleWallReply): Promise<HurdleWallReply> {
+    const [newReply] = await db
+      .insert(hurdleWallReplies)
+      .values(reply)
+      .returning();
+    
+    // Update reply count on the post
+    await db
+      .update(hurdleWallPosts)
+      .set({
+        replyCount: sql`${hurdleWallPosts.replyCount} + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(hurdleWallPosts.id, reply.postId));
+    
+    return newReply;
+  }
+
+  async prayForPost(userId: string, postId: string): Promise<{ success: boolean; prayerCount: number }> {
+    try {
+      // Check if user already prayed for this post
+      const [existing] = await db
+        .select()
+        .from(hurdleWallPrayers)
+        .where(and(
+          eq(hurdleWallPrayers.postId, postId),
+          eq(hurdleWallPrayers.userId, userId)
+        ));
+      
+      if (existing) {
+        return { success: false, prayerCount: 0 };
+      }
+      
+      // Add the prayer
+      await db.insert(hurdleWallPrayers).values({
+        postId,
+        userId,
+      });
+      
+      // Update prayer count and get the new count
+      const [updatedPost] = await db
+        .update(hurdleWallPosts)
+        .set({
+          prayerCount: sql`${hurdleWallPosts.prayerCount} + 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(hurdleWallPosts.id, postId))
+        .returning({ prayerCount: hurdleWallPosts.prayerCount });
+      
+      // Update user prayer stats
+      await this.updateUserPrayerStats(userId, 'given');
+      
+      // Update post author's prayer stats
+      const [post] = await db
+        .select({ userId: hurdleWallPosts.userId })
+        .from(hurdleWallPosts)
+        .where(eq(hurdleWallPosts.id, postId));
+      
+      if (post) {
+        await this.updateUserPrayerStats(post.userId, 'received');
+      }
+      
+      return { success: true, prayerCount: updatedPost?.prayerCount || 0 };
+    } catch (error) {
+      console.error('Error praying for post:', error);
+      return { success: false, prayerCount: 0 };
+    }
+  }
+
+  async removePrayerFromPost(userId: string, postId: string): Promise<{ success: boolean; prayerCount: number }> {
+    try {
+      // Remove the prayer
+      const deletedRows = await db
+        .delete(hurdleWallPrayers)
+        .where(and(
+          eq(hurdleWallPrayers.postId, postId),
+          eq(hurdleWallPrayers.userId, userId)
+        ));
+      
+      if (deletedRows.length === 0) {
+        return { success: false, prayerCount: 0 };
+      }
+      
+      // Update prayer count
+      const [updatedPost] = await db
+        .update(hurdleWallPosts)
+        .set({
+          prayerCount: sql`${hurdleWallPosts.prayerCount} - 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(hurdleWallPosts.id, postId))
+        .returning({ prayerCount: hurdleWallPosts.prayerCount });
+      
+      return { success: true, prayerCount: updatedPost?.prayerCount || 0 };
+    } catch (error) {
+      console.error('Error removing prayer from post:', error);
+      return { success: false, prayerCount: 0 };
+    }
+  }
+
+  async getUserPrayerStats(userId: string): Promise<UserPrayerStats | undefined> {
+    const [stats] = await db
+      .select()
+      .from(userPrayerStats)
+      .where(eq(userPrayerStats.userId, userId));
+    return stats;
+  }
+
+  async ensurePrayerStatsExist(userId: string): Promise<UserPrayerStats> {
+    const existing = await this.getUserPrayerStats(userId);
+    if (existing) {
+      return existing;
+    }
+    
+    const [newStats] = await db
+      .insert(userPrayerStats)
+      .values({ userId })
+      .returning();
+    return newStats;
+  }
+
+  private async updateUserPrayerStats(userId: string, type: 'given' | 'received'): Promise<void> {
+    await this.ensurePrayerStatsExist(userId);
+    
+    const updateField = type === 'given' ? 'prayersGiven' : 'prayersReceived';
+    
+    await db
+      .update(userPrayerStats)
+      .set({
+        [updateField]: sql`${userPrayerStats[updateField]} + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(userPrayerStats.userId, userId));
   }
 }
 

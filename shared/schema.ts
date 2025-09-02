@@ -964,3 +964,83 @@ export const insertBrotherhoodSchema = createInsertSchema(brotherhoods).omit({
 
 export type Brotherhood = typeof brotherhoods.$inferSelect;
 export type InsertBrotherhood = z.infer<typeof insertBrotherhoodSchema>;
+
+// Hurdle Wall Posts table
+export const hurdleWallPosts = pgTable("hurdle_wall_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  isAnonymous: boolean("is_anonymous").default(true),
+  postType: varchar("post_type").notNull().default("discussion"), // "discussion" or "prayer_request"
+  prayerCount: integer("prayer_count").default(0),
+  replyCount: integer("reply_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Hurdle Wall Replies table
+export const hurdleWallReplies = pgTable("hurdle_wall_replies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull().references(() => hurdleWallPosts.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  isAnonymous: boolean("is_anonymous").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Hurdle Wall Prayers table (tracks who prayed for what)
+export const hurdleWallPrayers = pgTable("hurdle_wall_prayers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull().references(() => hurdleWallPosts.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.postId, table.userId), // Prevent duplicate prayers from same user
+]);
+
+// User Prayer Statistics table
+export const userPrayerStats = pgTable("user_prayer_stats", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }).unique(),
+  prayersGiven: integer("prayers_given").default(0),
+  prayersReceived: integer("prayers_received").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Insert schemas for Hurdle Wall
+export const insertHurdleWallPostSchema = createInsertSchema(hurdleWallPosts).omit({
+  id: true,
+  prayerCount: true,
+  replyCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertHurdleWallReplySchema = createInsertSchema(hurdleWallReplies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertHurdleWallPrayerSchema = createInsertSchema(hurdleWallPrayers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserPrayerStatsSchema = createInsertSchema(userPrayerStats).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Types for Hurdle Wall
+export type HurdleWallPost = typeof hurdleWallPosts.$inferSelect;
+export type InsertHurdleWallPost = z.infer<typeof insertHurdleWallPostSchema>;
+export type HurdleWallReply = typeof hurdleWallReplies.$inferSelect;
+export type InsertHurdleWallReply = z.infer<typeof insertHurdleWallReplySchema>;
+export type HurdleWallPrayer = typeof hurdleWallPrayers.$inferSelect;
+export type InsertHurdleWallPrayer = z.infer<typeof insertHurdleWallPrayerSchema>;
+export type UserPrayerStats = typeof userPrayerStats.$inferSelect;
+export type InsertUserPrayerStats = z.infer<typeof insertUserPrayerStatsSchema>;

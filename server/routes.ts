@@ -3560,6 +3560,157 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   
+  // Hurdle Wall routes
+  app.get('/api/hurdle-wall', isAuthenticated, async (req: any, res) => {
+    try {
+      const posts = await storage.getHurdleWallPosts();
+      res.json(posts);
+    } catch (error) {
+      console.error("Error fetching hurdle wall posts:", error);
+      res.status(500).json({ message: "Failed to fetch hurdle wall posts" });
+    }
+  });
+
+  app.post('/api/hurdle-wall', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { content, isAnonymous, postType } = req.body;
+
+      if (!content || content.trim().length === 0) {
+        return res.status(400).json({ message: "Content is required" });
+      }
+
+      if (!['discussion', 'prayer_request'].includes(postType)) {
+        return res.status(400).json({ message: "Post type must be 'discussion' or 'prayer_request'" });
+      }
+
+      const post = await storage.createHurdleWallPost({
+        userId,
+        content: content.trim(),
+        isAnonymous: isAnonymous !== false, // Default to true (anonymous)
+        postType
+      });
+
+      res.json(post);
+    } catch (error) {
+      console.error("Error creating hurdle wall post:", error);
+      res.status(500).json({ message: "Failed to create post" });
+    }
+  });
+
+  app.get('/api/hurdle-wall/:postId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { postId } = req.params;
+      const post = await storage.getHurdleWallPost(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      res.json(post);
+    } catch (error) {
+      console.error("Error fetching hurdle wall post:", error);
+      res.status(500).json({ message: "Failed to fetch post" });
+    }
+  });
+
+  app.post('/api/hurdle-wall/:postId/replies', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+      const { content, isAnonymous } = req.body;
+
+      if (!content || content.trim().length === 0) {
+        return res.status(400).json({ message: "Content is required" });
+      }
+
+      // Check if post exists and is a discussion
+      const post = await storage.getHurdleWallPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      if (post.postType !== 'discussion') {
+        return res.status(400).json({ message: "Can only reply to discussion posts" });
+      }
+
+      const reply = await storage.createHurdleWallReply({
+        postId,
+        userId,
+        content: content.trim(),
+        isAnonymous: isAnonymous !== false // Default to true (anonymous)
+      });
+
+      res.json(reply);
+    } catch (error) {
+      console.error("Error creating hurdle wall reply:", error);
+      res.status(500).json({ message: "Failed to create reply" });
+    }
+  });
+
+  app.post('/api/hurdle-wall/:postId/pray', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+
+      // Check if post exists and is a prayer request
+      const post = await storage.getHurdleWallPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      if (post.postType !== 'prayer_request') {
+        return res.status(400).json({ message: "Can only pray for prayer request posts" });
+      }
+
+      const result = await storage.prayForPost(userId, postId);
+      
+      if (!result.success) {
+        return res.status(400).json({ message: "Already prayed for this post" });
+      }
+
+      res.json({ message: "Prayer added successfully", prayerCount: result.prayerCount });
+    } catch (error) {
+      console.error("Error praying for post:", error);
+      res.status(500).json({ message: "Failed to add prayer" });
+    }
+  });
+
+  app.delete('/api/hurdle-wall/:postId/pray', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+
+      const result = await storage.removePrayerFromPost(userId, postId);
+      
+      if (!result.success) {
+        return res.status(400).json({ message: "Haven't prayed for this post" });
+      }
+
+      res.json({ message: "Prayer removed successfully", prayerCount: result.prayerCount });
+    } catch (error) {
+      console.error("Error removing prayer from post:", error);
+      res.status(500).json({ message: "Failed to remove prayer" });
+    }
+  });
+
+  app.get('/api/prayer-stats/:userId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const stats = await storage.getUserPrayerStats(userId);
+      
+      if (!stats) {
+        const newStats = await storage.ensurePrayerStatsExist(userId);
+        return res.json(newStats);
+      }
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching prayer stats:", error);
+      res.status(500).json({ message: "Failed to fetch prayer stats" });
+    }
+  });
+  
   // WebSocket server for real-time notifications
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
