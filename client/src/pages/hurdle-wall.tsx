@@ -283,7 +283,7 @@ export default function HurdleWall() {
     }
     
     return (
-      <Link href={`/profile/${user.id}`}>
+      <Link href={`/users/${user.id}`}>
         <span className="text-white font-medium hover:text-yellow-400 cursor-pointer transition-colors">
           {user.firstName} {user.lastName}
         </span>

@@ -139,7 +139,7 @@ export default function Home() {
     }
     
     return (
-      <Link href={`/profile/${user.id}`}>
+      <Link href={`/users/${user.id}`}>
         <span className="text-sm font-medium text-gray-900 hover:text-ministry-navy cursor-pointer transition-colors">
           {user.firstName} {user.lastName}
         </span>
