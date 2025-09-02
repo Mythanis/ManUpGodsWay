@@ -15,6 +15,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { MessageSquare, HandHeart, Send, Plus, Eye, EyeOff, Trash2, Search, Filter, SortDesc } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Link } from 'wouter';
 
 interface HurdleWallPost {
   id: string;
@@ -276,6 +277,20 @@ export default function HurdleWall() {
     return `${user.firstName} ${user.lastName}`;
   };
 
+  const renderUserName = (user: HurdleWallPost['user'], isAnonymous: boolean) => {
+    if (isAnonymous) {
+      return <span className="text-white font-medium">Anonymous</span>;
+    }
+    
+    return (
+      <Link href={`/profile/${user.id}`}>
+        <span className="text-white font-medium hover:text-yellow-400 cursor-pointer transition-colors">
+          {user.firstName} {user.lastName}
+        </span>
+      </Link>
+    );
+  };
+
   const formatTimeAgo = (dateString: string) => {
     return formatDistanceToNow(new Date(dateString), { addSuffix: true });
   };
@@ -430,9 +445,7 @@ export default function HurdleWall() {
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-white font-medium">
-                          {getUserDisplayName(post.user, post.isAnonymous)}
-                        </span>
+                        {renderUserName(post.user, post.isAnonymous)}
                         <Badge 
                           variant={post.postType === 'prayer_request' ? 'default' : 'secondary'}
                           className={post.postType === 'prayer_request' 
@@ -502,8 +515,8 @@ export default function HurdleWall() {
                           {post.replies.map((reply) => (
                             <div key={reply.id} className="bg-gray-800 rounded-lg p-3 border-l-2 border-yellow-600">
                               <div className="flex items-start justify-between mb-2">
-                                <span className="text-white font-medium text-sm">
-                                  {getUserDisplayName(reply.user, reply.isAnonymous)}
+                                <span className="text-sm">
+                                  {renderUserName(reply.user, reply.isAnonymous)}
                                 </span>
                                 <div className="flex items-center gap-2">
                                   <span className="text-gray-400 text-xs">

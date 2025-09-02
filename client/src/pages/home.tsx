@@ -131,6 +131,21 @@ export default function Home() {
     }
     return `${user.firstName} ${user.lastName}`;
   };
+
+  // Helper function to render clickable user names
+  const renderUserName = (user: any, isAnonymous: boolean) => {
+    if (isAnonymous) {
+      return <span className="text-sm font-medium text-gray-900">Anonymous</span>;
+    }
+    
+    return (
+      <Link href={`/profile/${user.id}`}>
+        <span className="text-sm font-medium text-gray-900 hover:text-ministry-navy cursor-pointer transition-colors">
+          {user.firstName} {user.lastName}
+        </span>
+      </Link>
+    );
+  };
   
   // Helper function to format time ago
   const formatTimeAgo = (dateString: string) => {
@@ -1044,9 +1059,7 @@ export default function Home() {
                 <div key={post.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-900">
-                        {getUserDisplayName(post.user, post.isAnonymous)}
-                      </span>
+                      {renderUserName(post.user, post.isAnonymous)}
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         post.postType === 'prayer_request' 
                           ? 'bg-blue-100 text-blue-700' 
