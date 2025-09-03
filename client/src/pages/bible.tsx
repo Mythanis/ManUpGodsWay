@@ -99,6 +99,20 @@ export default function Bible() {
   // Generate chapter options for selected book
   const chapterOptions = currentBook ? Array.from({ length: currentBook.chapters }, (_, i) => i + 1) : [];
 
+  // Clean Bible text by removing Strong's numbers and HTML markup
+  const cleanBibleText = (text: string): string => {
+    return text
+      // Remove Strong's numbers like <S>157</S>
+      .replace(/<S>\d+<\/S>/g, '')
+      // Remove HTML sup tags and content like <sup>undefiled: or, perfect, or, sincere</sup>
+      .replace(/<sup>.*?<\/sup>/g, '')
+      // Remove any remaining HTML tags
+      .replace(/<[^>]*>/g, '')
+      // Clean up extra spaces
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
   // Bible API service functions using multiple reliable APIs
   const fetchBibleText = async (book: string, chapter: number, version: string): Promise<{ verse: number; text: string }[]> => {
     console.log(`Fetching ${book} ${chapter} in ${version}`);
@@ -152,7 +166,7 @@ export default function Bible() {
               if (data && Array.isArray(data)) {
                 return data.map((verse: any) => ({
                   verse: parseInt(verse.verse) || 1,
-                  text: verse.text ? verse.text.trim() : 'Verse text not available'
+                  text: verse.text ? cleanBibleText(verse.text) : 'Verse text not available'
                 }));
               }
             }
@@ -186,7 +200,7 @@ export default function Bible() {
             if (data && data.data && Array.isArray(data.data)) {
               return data.data.map((verse: any) => ({
                 verse: parseInt(verse.verse) || 1,
-                text: verse.text ? verse.text.trim() : 'Verse text not available'
+                text: verse.text ? cleanBibleText(verse.text) : 'Verse text not available'
               }));
             }
           }
@@ -208,7 +222,7 @@ export default function Bible() {
             if (data && data.verses && Array.isArray(data.verses)) {
               return data.verses.map((v: any) => ({
                 verse: v.verse || 1,
-                text: v.text ? v.text.trim() : 'Verse text not available'
+                text: v.text ? cleanBibleText(v.text) : 'Verse text not available'
               }));
             }
           }
