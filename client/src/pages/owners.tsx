@@ -36,7 +36,7 @@ function StripeConfiguration() {
       }
       return response.json();
     },
-    refetchInterval: stripeInfo?.connected === false ? 5000 : false, // Auto retry every 5 seconds if disconnected
+    refetchInterval: false
   });
 
   // Save Stripe keys
