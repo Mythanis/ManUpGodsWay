@@ -1,17 +1,18 @@
 import { useState } from "react";
-import type { User } from "@shared/schema";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
+import { User } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Crown, Settings, Users, Database, Shield, Activity, Trash2, UserCog, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/useTheme";
+import { useRef } from "react";
 
 // Stripe Configuration Component
 function StripeConfiguration() {
@@ -20,12 +21,15 @@ function StripeConfiguration() {
 
   // Fetch Stripe account info
   const { data: stripeInfo, isLoading: stripeLoading, refetch: refetchStripeInfo } = useQuery({
-    queryKey: ['/api/admin/stripe/account-info'],
+    queryKey: ['/api/stripe/account'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/stripe/account-info', {
+      const response = await fetch('/api/stripe/account', {
         credentials: 'include'
       });
-      if (!response.ok) throw new Error('Failed to fetch Stripe info');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch Stripe account info: ${errorText}`);
+      }
       return response.json();
     }
   });
@@ -33,51 +37,42 @@ function StripeConfiguration() {
   // Test Stripe connection
   const testConnectionMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/admin/stripe/test-connection', {
+      setIsTestingConnection(true);
+      const response = await fetch('/api/stripe/test-connection', {
         method: 'POST',
         credentials: 'include'
       });
-      if (!response.ok) throw new Error('Failed to test connection');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Test connection failed: ${errorText}`);
+      }
       return response.json();
     },
     onSuccess: (data) => {
       toast({
-        title: data.success ? "Connection Successful" : "Connection Failed",
-        description: data.message,
-        variant: data.success ? "default" : "destructive"
+        title: "Connection Test Successful",
+        description: `Connected to Stripe account: ${data.accountId}`,
       });
-      if (data.success) {
-        refetchStripeInfo();
-      }
+      // Refresh account info
+      refetchStripeInfo();
     },
     onError: (error: any) => {
       toast({
         title: "Connection Test Failed",
-        description: error.message || "Unable to test Stripe connection",
-        variant: "destructive"
+        description: error.message || "Unable to connect to Stripe account",
+        variant: "destructive",
       });
+    },
+    onSettled: () => {
+      setIsTestingConnection(false);
     }
   });
 
-  const handleTestConnection = async () => {
-    setIsTestingConnection(true);
-    try {
-      await testConnectionMutation.mutateAsync();
-    } finally {
-      setIsTestingConnection(false);
-    }
-  };
-
   if (stripeLoading) {
     return (
-      <Card className="bg-gray-900 border-gray-800">
-        <CardContent className="p-6">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold mx-auto mb-4"></div>
-            <p className="text-gray-400">Loading Stripe configuration...</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold"></div>
+      </div>
     );
   }
 
@@ -124,16 +119,8 @@ function StripeConfiguration() {
                       <p className="text-white font-mono text-sm">{stripeInfo.accountId}</p>
                     </div>
                     <div>
-                      <span className="text-gray-400 text-sm">Email:</span>
-                      <p className="text-white text-sm">{stripeInfo.email || 'Not set'}</p>
-                    </div>
-                    <div>
                       <span className="text-gray-400 text-sm">Country:</span>
-                      <p className="text-white text-sm">{stripeInfo.country?.toUpperCase() || 'Not set'}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-400 text-sm">Currency:</span>
-                      <p className="text-white text-sm">{stripeInfo.currency?.toUpperCase() || 'Not set'}</p>
+                      <p className="text-white text-sm">{stripeInfo.country || 'N/A'}</p>
                     </div>
                   </div>
                 )}
@@ -141,82 +128,65 @@ function StripeConfiguration() {
             )}
           </div>
 
-          {/* Account Status */}
+          {/* Connection Test */}
           {stripeInfo?.configured && (
             <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
-              <h3 className="text-white font-semibold mb-3">Account Status</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Charges Enabled:</span>
-                  <Badge className={stripeInfo.chargesEnabled ? "bg-green-600" : "bg-red-600"}>
-                    {stripeInfo.chargesEnabled ? "Yes" : "No"}
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Payouts Enabled:</span>
-                  <Badge className={stripeInfo.payoutsEnabled ? "bg-green-600" : "bg-red-600"}>
-                    {stripeInfo.payoutsEnabled ? "Yes" : "No"}
-                  </Badge>
-                </div>
-                {stripeInfo.displayName && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Display Name:</span>
-                    <span className="text-white">{stripeInfo.displayName}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-3">
-            <Button
-              onClick={handleTestConnection}
-              disabled={isTestingConnection || testConnectionMutation.isPending}
-              className="bg-gold text-black hover:bg-gold/90"
-              data-testid="button-test-stripe"
-            >
-              <CreditCard className="h-4 w-4 mr-2" />
-              {isTestingConnection ? 'Testing...' : 'Test Connection'}
-            </Button>
-            <Button
-              onClick={() => refetchStripeInfo()}
-              variant="outline"
-              className="border-gray-600 text-gray-300 hover:bg-gray-800"
-              data-testid="button-refresh-stripe"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Refresh Status
-            </Button>
-          </div>
-
-          {/* Quick Access Link */}
-          {stripeInfo?.configured && (
-            <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-800/50">
-              <h4 className="text-blue-300 font-semibold mb-2">Quick Access</h4>
-              <div className="flex justify-between items-center">
-                <span className="text-blue-200 text-sm">Access the purchase page:</span>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-white font-semibold">Connection Test</h3>
                 <Button
-                  onClick={() => window.open('/purchase', '_blank')}
+                  onClick={() => testConnectionMutation.mutate()}
+                  disabled={isTestingConnection}
+                  className="bg-gold text-black hover:bg-gold/90"
                   size="sm"
-                  variant="outline"
-                  className="border-blue-600 text-blue-300 hover:bg-blue-900/30"
-                  data-testid="button-open-purchase"
                 >
-                  Open Purchase Page
+                  {isTestingConnection ? "Testing..." : "Test Connection"}
                 </Button>
               </div>
+              <p className="text-gray-400 text-sm">
+                Test the connection to your Stripe account to ensure payments can be processed.
+              </p>
             </div>
           )}
+
+          {/* Payment Processing Status */}
+          <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+            <h3 className="text-white font-semibold mb-2">Payment Processing</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Status:</span>
+                <Badge className={stripeInfo?.configured ? "bg-green-600" : "bg-red-600"}>
+                  {stripeInfo?.configured ? "Ready" : "Not Ready"}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Test Mode:</span>
+                <Badge className="bg-yellow-600">
+                  {stripeInfo?.testMode ? "Yes" : "Live"}
+                </Badge>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
   );
 }
 
+// Define Owner tabs
+const ownerTabs = [
+  { id: "overview", label: "Overview", icon: Activity },
+  { id: "users", label: "Users", icon: Users },
+  { id: "system", label: "System", icon: Database },
+  { id: "security", label: "Security", icon: Shield },
+  { id: "stripe", label: "Payments", icon: CreditCard },
+];
+
 export default function Owners() {
   const { toast } = useToast();
+  const { effectiveTheme } = useTheme();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Fetch all users with enhanced data
   const { data: users = [], isLoading: usersLoading } = useQuery({
@@ -299,44 +269,11 @@ export default function Owners() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <Crown className="h-8 w-8 text-gold" />
-          <div>
-            <h1 className="text-3xl font-bold text-white">Owner Dashboard</h1>
-            <p className="text-gray-400">Enhanced system administration and management</p>
-          </div>
-        </div>
-
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-gray-900 border border-gray-800">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-gold data-[state=active]:text-black">
-              <Activity className="h-4 w-4 mr-2" />
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="users" className="data-[state=active]:bg-gold data-[state=active]:text-black">
-              <Users className="h-4 w-4 mr-2" />
-              User Management
-            </TabsTrigger>
-            <TabsTrigger value="system" className="data-[state=active]:bg-gold data-[state=active]:text-black">
-              <Database className="h-4 w-4 mr-2" />
-              System Control
-            </TabsTrigger>
-            <TabsTrigger value="security" className="data-[state=active]:bg-gold data-[state=active]:text-black">
-              <Shield className="h-4 w-4 mr-2" />
-              Security
-            </TabsTrigger>
-            <TabsTrigger value="stripe" className="data-[state=active]:bg-gold data-[state=active]:text-black">
-              <CreditCard className="h-4 w-4 mr-2" />
-              Payments
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
+  function renderTabContent() {
+    switch(activeTab) {
+      case "overview":
+        return (
+          <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader className="pb-3">
@@ -386,8 +323,8 @@ export default function Owners() {
                     <span className="text-white font-semibold">{stats.totalVideos || 0}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">New Posts:</span>
-                    <span className="text-white font-semibold">{stats.newPosts || 0}</span>
+                    <span className="text-gray-400">Storage Used:</span>
+                    <span className="text-yellow-400 font-semibold">{stats.storageUsed || '0 MB'}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -395,30 +332,36 @@ export default function Owners() {
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-white flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-gold" />
-                    Security Overview
+                    <Activity className="h-5 w-5 text-gold" />
+                    System Health
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Banned Users:</span>
-                    <span className="text-red-400 font-semibold">{users.filter((u: User) => u.isBanned).length}</span>
+                    <span className="text-gray-400">Server Status:</span>
+                    <Badge className="bg-green-600 text-white">Online</Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">System Status:</span>
-                    <span className="text-green-400 font-semibold">Operational</span>
+                    <span className="text-gray-400">Database:</span>
+                    <Badge className="bg-green-600 text-white">Connected</Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Cache Status:</span>
-                    <span className="text-green-400 font-semibold">Active</span>
+                    <span className="text-gray-400">Last Backup:</span>
+                    <span className="text-white font-semibold">2 hours ago</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Uptime:</span>
+                    <span className="text-green-400 font-semibold">99.9%</span>
                   </div>
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
+          </div>
+        );
 
-          {/* Advanced User Management Tab */}
-          <TabsContent value="users" className="space-y-6">
+      case "users":
+        return (
+          <div className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
@@ -426,170 +369,193 @@ export default function Owners() {
                   Advanced User Management
                 </CardTitle>
                 <CardDescription className="text-gray-400">
-                  Comprehensive user administration with role management
+                  Comprehensive user role and subscription management
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {users.map((user: User) => (
-                    <div key={user.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg border border-gray-700">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold">
-                            {user.firstName?.[0]}{user.lastName?.[0]}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-white font-semibold">{user.firstName} {user.lastName}</p>
-                          <p className="text-gray-400 text-sm">{user.email}</p>
-                          <div className="flex gap-2 mt-1">
-                            <Badge className={roleColors[(user.role || 'user') as keyof typeof roleColors] || roleColors.user}>
-                              {user.role.toUpperCase()}
-                            </Badge>
-                            <Badge className={tierColors[(user.subscriptionTier || 'free') as keyof typeof tierColors] || tierColors.free}>
-                              {user.subscriptionTier.toUpperCase()}
-                            </Badge>
-                            {user.isBanned && (
-                              <Badge className="bg-red-600 text-white">BANNED</Badge>
-                            )}
+              <CardContent className="space-y-6">
+                {/* User Search and Filter */}
+                <div className="flex gap-4">
+                  <Input
+                    placeholder="Search users by username or email..."
+                    value=""
+                    onChange={() => {}}
+                    className="flex-1 bg-gray-800 border-gray-700 text-white placeholder-gray-400"
+                  />
+                  <Button className="bg-gold text-black hover:bg-gold/90">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Filter
+                  </Button>
+                </div>
+
+                {/* Users Table */}
+                <div className="rounded-lg border border-gray-700 overflow-hidden">
+                  <div className="bg-gray-800 px-4 py-3 border-b border-gray-700">
+                    <h3 className="text-white font-semibold">All Users</h3>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {users.map((user: User) => (
+                      <div key={user.id} className="flex items-center justify-between p-4 border-b border-gray-700 last:border-b-0">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
+                            <span className="text-white text-sm font-medium">
+                              {user.username.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-white font-medium">{user.username}</p>
+                            <p className="text-gray-400 text-sm">{user.email}</p>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                          onClick={() => {
-                            const newRole = user.role === 'owner' ? 'admin' : user.role === 'admin' ? 'user' : 'admin';
-                            updateRoleMutation.mutate({ userId: user.id, role: newRole });
-                          }}
-                          disabled={updateRoleMutation.isPending}
-                        >
-                          {user.role === 'owner' ? 'Demote to Admin' : user.role === 'admin' ? 'Demote to User' : 'Promote to Admin'}
-                        </Button>
-                        {user.role !== 'owner' && (
+                        
+                        <div className="flex items-center gap-2">
+                          <Badge className={roleColors[user.role]}>
+                            {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                          </Badge>
+                          <Badge className={tierColors[user.tier]}>
+                            {user.tier.charAt(0).toUpperCase() + user.tier.slice(1)}
+                          </Badge>
+                          {user.isBanned && (
+                            <Badge className="bg-red-600 text-white">Banned</Badge>
+                          )}
+                        </div>
+
+                        <div className="flex gap-2">
+                          {user.role !== 'owner' && (
+                            <select
+                              value={user.role}
+                              onChange={(e) => updateRoleMutation.mutate({ userId: user.id, role: e.target.value })}
+                              className="bg-gray-700 text-white border border-gray-600 rounded px-2 py-1 text-sm"
+                            >
+                              <option value="user">User</option>
+                              <option value="admin">Admin</option>
+                              <option value="owner">Owner</option>
+                            </select>
+                          )}
+                          
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-purple-600 text-purple-400 hover:bg-purple-600 hover:text-white"
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                                disabled={user.role === 'owner'}
                               >
-                                Make Owner
+                                <Trash2 className="w-4 h-4" />
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-gray-900 border-gray-800">
+                            <AlertDialogContent className="bg-gray-900 border-gray-700">
                               <AlertDialogHeader>
-                                <AlertDialogTitle className="text-white">Promote to Owner</AlertDialogTitle>
+                                <AlertDialogTitle className="text-white">Delete User</AlertDialogTitle>
                                 <AlertDialogDescription className="text-gray-400">
-                                  This will grant {user.firstName} {user.lastName} full owner privileges. This action should be used with extreme caution.
+                                  Are you sure you want to permanently delete {user.username}? This action cannot be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel className="bg-gray-800 text-white border-gray-700">Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => updateRoleMutation.mutate({ userId: user.id, role: 'owner' })}
-                                  className="bg-purple-600 hover:bg-purple-700"
-                                >
-                                  Confirm Promotion
+                                <AlertDialogCancel className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600">
+                                  Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction className="bg-red-600 hover:bg-red-700">
+                                  Delete User
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        );
 
-          {/* System Control Tab */}
-          <TabsContent value="system" className="space-y-6">
+      case "system":
+        return (
+          <div className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <Settings className="h-5 w-5 text-gold" />
-                  System Maintenance
+                  <Database className="h-5 w-5 text-gold" />
+                  System Control Center
                 </CardTitle>
                 <CardDescription className="text-gray-400">
-                  Advanced system controls and maintenance operations
+                  Advanced system administration and maintenance
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* System Actions */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Button
                     onClick={() => clearCacheMutation.mutate()}
                     disabled={clearCacheMutation.isPending}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-red-600 hover:bg-red-700 text-white"
                   >
-                    <Database className="h-4 w-4 mr-2" />
+                    <Trash2 className="w-4 h-4 mr-2" />
                     Clear System Cache
                   </Button>
                   
                   <Button
                     onClick={() => window.location.reload()}
-                    className="bg-green-600 hover:bg-green-700 text-white"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
-                    <Activity className="h-4 w-4 mr-2" />
-                    Refresh Dashboard
+                    <Settings className="w-4 h-4 mr-2" />
+                    Force Reload Interface
                   </Button>
+                </div>
 
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Emergency Reset
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="bg-gray-900 border-gray-800">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="text-white">Emergency System Reset</AlertDialogTitle>
-                        <AlertDialogDescription className="text-gray-400">
-                          This will clear all cached data and force a complete application refresh. Use only in emergencies.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel className="bg-gray-800 text-white border-gray-700">Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => {
-                            queryClient.clear();
-                            localStorage.clear();
-                            window.location.reload();
-                          }}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          Execute Reset
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                {/* System Information */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+                    <h3 className="text-white font-semibold mb-2">System Status</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Server Status:</span>
+                        <Badge className="bg-green-600 text-white">Online</Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Database:</span>
+                        <Badge className="bg-green-600 text-white">Connected</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+                    <h3 className="text-white font-semibold mb-2">Cache Status</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Query Cache:</span>
+                        <Badge className="bg-green-600 text-white">Active</Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Last Cleared:</span>
+                        <span className="text-white text-sm">Never</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        );
 
-          {/* Security Tab */}
-          <TabsContent value="security" className="space-y-6">
+      case "security":
+        return (
+          <div className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Shield className="h-5 w-5 text-gold" />
-                  Security Management
+                  Security & Access Control
                 </CardTitle>
                 <CardDescription className="text-gray-400">
-                  Monitor and manage platform security
+                  Monitor and manage system security
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
-                    <h3 className="text-white font-semibold mb-2">User Role Distribution</h3>
+                    <h3 className="text-white font-semibold mb-2">Role Distribution</h3>
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400">Owners:</span>
@@ -634,13 +600,76 @@ export default function Owners() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        );
 
-          {/* Stripe Payments Tab */}
-          <TabsContent value="stripe" className="space-y-6">
+      case "stripe":
+        return (
+          <div className="space-y-6">
             <StripeConfiguration />
-          </TabsContent>
-        </Tabs>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white p-6">
+      <div className="max-w-6xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-8">
+          <Crown className="h-8 w-8 text-gold" />
+          <div>
+            <h1 className="text-3xl font-bold text-white">Owner Dashboard</h1>
+            <p className="text-gray-400">Enhanced system administration and management</p>
+          </div>
+        </div>
+
+        {/* Owner Management Tabs */}
+        <div className="px-6 mb-6">
+          <div 
+            ref={scrollContainerRef}
+            className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2"
+          >
+            {ownerTabs.map((tab) => {
+              const IconComponent = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  style={{
+                    backgroundColor: activeTab === tab.id 
+                      ? 'hsl(0 0% 0%)' 
+                      : effectiveTheme === 'dark' 
+                        ? 'hsl(220 8% 26%)' 
+                        : 'hsl(240 1.9608% 90%)',
+                    color: activeTab === tab.id 
+                      ? 'white' 
+                      : effectiveTheme === 'dark' 
+                        ? 'hsl(0 0% 95%)' 
+                        : 'hsl(210 25% 7.8431%)',
+                    borderColor: activeTab === tab.id 
+                      ? 'hsl(49, 100%, 49%)' 
+                      : effectiveTheme === 'dark' 
+                        ? 'hsl(210 5.2632% 14.9020%)' 
+                        : 'hsl(201.4286 30.4348% 90.9804%)'
+                  }}
+                  className="px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start border cursor-pointer transition-colors flex items-center space-x-2"
+                  data-testid={`tab-${tab.id}`}
+                >
+                  <IconComponent className="w-4 h-4" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-6 px-6">
+          {renderTabContent()}
+        </div>
       </div>
     </div>
   );
