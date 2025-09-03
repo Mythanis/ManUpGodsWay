@@ -447,8 +447,8 @@ export default function Bible() {
               </Select>
             </div>
 
-            {/* Book, Chapter, and Search - Three Columns */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Book and Chapter - Two Columns */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Book Selector */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Book</label>
@@ -489,30 +489,32 @@ export default function Bible() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
-              {/* Search */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Search</label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                      className="pl-10 bg-background border-border"
-                    />
-                  </div>
-                  <Button 
-                    onClick={handleSearch}
-                    disabled={!searchTerm.trim() || isSearching}
-                    variant="outline"
-                    size="sm"
-                  >
-                    {isSearching ? "..." : "Go"}
-                  </Button>
+            {/* Search - Full Width Below */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Search Verses</label>
+              <div className="flex gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search for verses containing..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="pl-10 bg-background border-border text-foreground"
+                    data-testid="input-bible-search"
+                  />
                 </div>
+                <Button 
+                  onClick={handleSearch}
+                  disabled={!searchTerm.trim() || isSearching}
+                  variant="outline"
+                  className="px-6"
+                  data-testid="button-bible-search"
+                >
+                  {isSearching ? "Searching..." : "Search"}
+                </Button>
               </div>
             </div>
 
