@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Crown, Settings, Users, Database, Shield, Activity, Trash2, UserCog, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 
 // Stripe Configuration Component
 function StripeConfiguration() {
@@ -187,6 +187,22 @@ export default function Owners() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Horizontal scroll with mouse wheel
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Prevent default vertical scroll
+      e.preventDefault();
+      // Scroll horizontally instead
+      container.scrollLeft += e.deltaY;
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, []);
 
   // Fetch all users with enhanced data
   const { data: users = [], isLoading: usersLoading } = useQuery({
