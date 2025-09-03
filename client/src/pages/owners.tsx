@@ -174,14 +174,14 @@ function StripeConfiguration() {
 
 // Define Owner tabs
 const ownerTabs = [
-  { id: "overview", label: "Overview", icon: Activity },
-  { id: "users", label: "User Management", icon: Users },
-  { id: "system", label: "System Settings", icon: Database },
-  { id: "security", label: "Security & Access", icon: Shield },
-  { id: "stripe", label: "Payment Gateway", icon: CreditCard },
-  { id: "analytics", label: "Analytics Dashboard", icon: Crown },
-  { id: "backup", label: "Backup & Recovery", icon: Settings },
-  { id: "integrations", label: "API Integrations", icon: UserCog }
+  { id: "overview", label: "System Overview Dashboard", icon: Activity },
+  { id: "users", label: "User Management & Administration", icon: Users },
+  { id: "system", label: "System Settings & Configuration", icon: Database },
+  { id: "security", label: "Security & Access Control", icon: Shield },
+  { id: "stripe", label: "Payment Gateway & Billing", icon: CreditCard },
+  { id: "analytics", label: "Analytics Dashboard & Reports", icon: Crown },
+  { id: "backup", label: "Backup & Recovery Management", icon: Settings },
+  { id: "integrations", label: "API Integrations & Webhooks", icon: UserCog }
 ];
 
 export default function Owners() {
@@ -191,21 +191,16 @@ export default function Owners() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Horizontal scroll with mouse wheel
+  // Mouse wheel horizontal scrolling for owner tabs
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
     const handleWheel = (e: WheelEvent) => {
-      console.log('Wheel event triggered on tab container', e.deltaY, 'current scrollLeft:', container.scrollLeft);
-      // Only handle horizontal scrolling if we're over the tab container
-      if (e.deltaY !== 0) {
-        e.preventDefault();
-        e.stopPropagation();
-        // Scroll horizontally instead
-        container.scrollLeft += e.deltaY;
-        console.log('After scroll - new position:', container.scrollLeft);
-      }
+      // Prevent default vertical scroll
+      e.preventDefault();
+      // Scroll horizontally instead
+      container.scrollLeft += e.deltaY;
     };
 
     container.addEventListener('wheel', handleWheel, { passive: false });
@@ -698,7 +693,6 @@ export default function Owners() {
           <div 
             ref={scrollContainerRef}
             className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2"
-            style={{ maxWidth: '600px' }}
           >
             {ownerTabs.map((tab) => {
               const IconComponent = tab.icon;
