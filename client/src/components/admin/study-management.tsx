@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { apiRequest } from "@/lib/queryClient";
 import { Edit, Trash2, Plus, Book, Users, Crown, Gem } from "lucide-react";
 
@@ -24,6 +25,9 @@ interface Study {
   tags: string[];
   author: string;
   isActive: boolean;
+  requiresPurchase?: boolean;
+  price?: string;
+  purchaseRequiredTiers?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -38,6 +42,9 @@ interface FormData {
   author: string;
   tags: string;
   lessons: string;
+  requiresPurchase: boolean;
+  price: string;
+  purchaseRequiredTiers: string[];
 }
 
 export default function StudyManagement() {
@@ -55,6 +62,9 @@ export default function StudyManagement() {
     author: "",
     tags: "",
     lessons: "",
+    requiresPurchase: false,
+    price: "",
+    purchaseRequiredTiers: [],
   });
 
   // Fetch all studies
@@ -121,6 +131,9 @@ export default function StudyManagement() {
       author: study.author,
       tags: study.tags.join(", "),
       lessons: JSON.stringify(study.lessons, null, 2),
+      requiresPurchase: study.requiresPurchase || false,
+      price: study.price || "",
+      purchaseRequiredTiers: study.purchaseRequiredTiers || [],
     });
     setShowEditDialog(true);
   };
@@ -138,6 +151,9 @@ export default function StudyManagement() {
       author: formData.author,
       tags: formData.tags.split(",").map(tag => tag.trim()).filter(Boolean),
       lessons: formData.lessons ? JSON.parse(formData.lessons) : [],
+      requiresPurchase: formData.requiresPurchase,
+      price: formData.requiresPurchase && formData.price ? formData.price : undefined,
+      purchaseRequiredTiers: formData.requiresPurchase ? formData.purchaseRequiredTiers : [],
     };
 
     updateStudyMutation.mutate({ id: editingStudy.id, updates });
@@ -360,6 +376,97 @@ export default function StudyManagement() {
                 data-testid="input-edit-video-url"
               />
             </div>
+
+            {/* Purchase Options Section */}
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <Label className="text-base">Requires Purchase</Label>
+                <div className="text-sm text-muted-foreground">
+                  Make this study available for purchase
+                </div>
+              </div>
+              <Switch
+                checked={formData.requiresPurchase}
+                onCheckedChange={(checked) => setFormData({ ...formData, requiresPurchase: checked })}
+                data-testid="switch-edit-requires-purchase"
+              />
+            </div>
+
+            {/* Price field - only show when requiresPurchase is true */}
+            {formData.requiresPurchase && (
+              <div>
+                <Label htmlFor="edit-price">Price ($)</Label>
+                <Input
+                  id="edit-price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="0.00"
+                  data-testid="input-edit-price"
+                />
+              </div>
+            )}
+
+            {/* Tier checkboxes - only show when requiresPurchase is true */}
+            {formData.requiresPurchase && (
+              <div>
+                <Label>Purchase Required For</Label>
+                <div className="space-y-2">
+                  {/* All selection checkbox */}
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="edit-all-tiers"
+                      checked={formData.purchaseRequiredTiers.length === 3}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({ ...formData, purchaseRequiredTiers: ['free', 'premium', 'vip'] });
+                        } else {
+                          setFormData({ ...formData, purchaseRequiredTiers: [] });
+                        }
+                      }}
+                      className="rounded border-ministry-steel"
+                      data-testid="checkbox-edit-all-tiers"
+                    />
+                    <label htmlFor="edit-all-tiers" className="text-sm font-medium">
+                      All Tiers
+                    </label>
+                  </div>
+                  
+                  {/* Individual tier checkboxes */}
+                  {[{ id: 'free', label: 'Free' }, { id: 'premium', label: 'Premium' }, { id: 'vip', label: 'VIP' }].map((tier) => (
+                    <div key={tier.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`edit-tier-${tier.id}`}
+                        checked={formData.purchaseRequiredTiers.includes(tier.id)}
+                        onChange={(e) => {
+                          const currentTiers = [...formData.purchaseRequiredTiers];
+                          if (e.target.checked) {
+                            if (!currentTiers.includes(tier.id)) {
+                              currentTiers.push(tier.id);
+                            }
+                          } else {
+                            const index = currentTiers.indexOf(tier.id);
+                            if (index > -1) {
+                              currentTiers.splice(index, 1);
+                            }
+                          }
+                          setFormData({ ...formData, purchaseRequiredTiers: currentTiers });
+                        }}
+                        className="rounded border-ministry-steel"
+                        data-testid={`checkbox-edit-tier-${tier.id}`}
+                      />
+                      <label htmlFor={`edit-tier-${tier.id}`} className="text-sm">
+                        {tier.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="edit-tags">Tags (comma-separated)</Label>
