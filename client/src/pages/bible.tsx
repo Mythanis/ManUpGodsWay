@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Book, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -88,6 +89,7 @@ export default function Bible() {
   const [bibleText, setBibleText] = useState<{ verse: number; text: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [apiStatus, setApiStatus] = useState<"connected" | "fallback" | "error">("connected");
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const bibleVersions = [
     { id: "LSB", name: "Legacy Standard Bible", description: "Faithful to the original text (uses ESV as reference)" },
@@ -347,21 +349,29 @@ export default function Bible() {
     
     setIsSearching(true);
     setSearchResults([]);
+    setIsSearchModalOpen(true);
     
     try {
       // Search through multiple books for the term
       const searchQuery = searchTerm.toLowerCase();
       const results: { verse: number; text: string; book: string; chapter: number }[] = [];
       
-      // For demo purposes, search through some key books
-      const booksToSearch = ['John', 'Psalms', 'Matthew', 'Romans', 'Genesis'];
+      // Search through more books comprehensively
+      const booksToSearch = [
+        'Genesis', 'Exodus', 'Psalms', 'Proverbs', 'Isaiah', 'Jeremiah',
+        'Matthew', 'Mark', 'Luke', 'John', 'Acts', 'Romans', 
+        '1 Corinthians', '2 Corinthians', 'Ephesians', 'Philippians', 
+        'Colossians', '1 Thessalonians', '2 Thessalonians', 
+        '1 Timothy', '2 Timothy', 'Hebrews', 'James', '1 Peter', 
+        '2 Peter', '1 John', 'Revelation'
+      ];
       
       for (const bookName of booksToSearch) {
         const book = bibleBooks.find(b => b.name === bookName);
         if (!book) continue;
         
-        // Search through first few chapters of each book
-        const chaptersToSearch = Math.min(5, book.chapters);
+        // Search through more chapters for comprehensive results
+        const chaptersToSearch = Math.min(10, book.chapters);
         
         for (let chap = 1; chap <= chaptersToSearch; chap++) {
           try {
@@ -376,18 +386,18 @@ export default function Bible() {
                   chapter: chap
                 });
                 
-                // Limit results to 10 for performance
-                if (results.length >= 10) break;
+                // Limit results to 50 for better user experience
+                if (results.length >= 50) break;
               }
             }
             
-            if (results.length >= 10) break;
+            if (results.length >= 50) break;
           } catch (error) {
             console.error(`Search error in ${bookName} ${chap}:`, error);
           }
         }
         
-        if (results.length >= 10) break;
+        if (results.length >= 50) break;
       }
       
       setSearchResults(results);
@@ -403,6 +413,7 @@ export default function Bible() {
   const goToSearchResult = (result: { book: string; chapter: number; verse: number }) => {
     setSelectedBook(result.book);
     setSelectedChapter(result.chapter);
+    setIsSearchModalOpen(false);
     setSearchResults([]);
     setSearchTerm('');
   };
@@ -591,46 +602,6 @@ export default function Bible() {
           </CardContent>
         </Card>
 
-        {/* Search Results */}
-        {searchResults.length > 0 && (
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-foreground">Search Results for "{searchTerm}"</CardTitle>
-              <CardDescription>
-                Found {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} in {selectedVersion}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {searchResults.map((result, index) => (
-                  <div 
-                    key={index}
-                    className="p-3 border border-border rounded-lg hover:bg-accent/5 cursor-pointer transition-colors"
-                    onClick={() => goToSearchResult(result)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <Badge variant="outline" className="text-xs">
-                        {result.book} {result.chapter}:{result.verse}
-                      </Badge>
-                      <p className="text-sm text-foreground leading-relaxed flex-1">
-                        {result.text}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 pt-3 border-t border-border">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setSearchResults([])}
-                  className="text-sm"
-                >
-                  Clear Results
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* API Status and Version Information */}
         <Card className="bg-card border-border">
@@ -682,6 +653,77 @@ export default function Bible() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Search Results Modal */}
+      <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              Search Results for "{searchTerm}"
+            </DialogTitle>
+            <DialogDescription>
+              {isSearching ? (
+                "Searching Bible verses..."
+              ) : (
+                `Found ${searchResults.length} verse${searchResults.length !== 1 ? 's' : ''} containing "${searchTerm}" in ${selectedVersion}`
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-hidden">
+            {isSearching ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center space-y-2">
+                  <div className="animate-spin w-8 h-8 border-4 border-ministry-gold border-t-transparent rounded-full mx-auto"></div>
+                  <p className="text-sm text-muted-foreground">Searching through Bible books...</p>
+                </div>
+              </div>
+            ) : searchResults.length > 0 ? (
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                {searchResults.map((result, index) => (
+                  <div 
+                    key={index}
+                    className="p-4 border border-border rounded-lg hover:bg-accent/10 cursor-pointer transition-colors"
+                    onClick={() => goToSearchResult(result)}
+                    data-testid={`search-result-${index}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Badge variant="outline" className="text-xs font-medium shrink-0">
+                        {result.book} {result.chapter}:{result.verse}
+                      </Badge>
+                      <p className="text-sm text-foreground leading-relaxed flex-1">
+                        {result.text}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  No verses found containing "{searchTerm}" in the searched books.
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Try searching for a different word or phrase.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-between items-center pt-4 border-t border-border">
+            <p className="text-xs text-muted-foreground">
+              Click any verse to navigate directly to that location
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsSearchModalOpen(false)}
+              data-testid="button-close-search"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
