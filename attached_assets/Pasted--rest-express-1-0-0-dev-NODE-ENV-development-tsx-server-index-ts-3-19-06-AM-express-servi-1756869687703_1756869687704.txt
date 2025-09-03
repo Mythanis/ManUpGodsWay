@@ -1,0 +1,97 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+3:19:06 AM [express] serving on port 5000
+Starting devotional notification service...
+Checking for devotionals that need notifications...
+Devotional notification service started - checking every 15 minutes
+No new devotionals need notifications at this time
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+3:19:25 AM [express] GET /api/auth/user 304 in 1004ms :: {"id":"46399698","email":"josh.a.westfall@g…
+3:19:25 AM [express] GET /api/logo 304 in 1030ms :: {"id":"304c1ab2-df5d-4dd8-aba9-86e3960e7195","lo…
+Error fetching user registrations: TypeError: Cannot convert undefined or null to object
+    at Function.entries (<anonymous>)
+    at orderSelectedFields (/home/runner/workspace/node_modules/src/utils.ts:77:16)
+    at <anonymous> (/home/runner/workspace/node_modules/src/utils.ts:88:19)
+    at Array.reduce (<anonymous>)
+    at orderSelectedFields (/home/runner/workspace/node_modules/src/utils.ts:77:32)
+    at <anonymous> (/home/runner/workspace/node_modules/src/pg-core/query-builders/select.ts:979:23)
+    at Object.startActiveSpan (/home/runner/workspace/node_modules/src/tracing.ts:27:11)
+    at PgSelectBase._prepare (/home/runner/workspace/node_modules/src/pg-core/query-builders/select.ts:978:17)
+    at <anonymous> (/home/runner/workspace/node_modules/src/pg-core/query-builders/select.ts:1009:16)
+    at Object.startActiveSpan (/home/runner/workspace/node_modules/src/tracing.ts:27:11)
+    at PgSelectBase.execute (/home/runner/workspace/node_modules/src/pg-core/query-builders/select.ts:1008:17)
+    at PgSelectBase.then (/home/runner/workspace/node_modules/src/query-promise.ts:31:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+3:19:28 AM [express] GET /api/events 304 in 340ms :: []
+3:19:28 AM [express] GET /api/events/registrations/my 500 in 351ms :: {"message":"Internal server er…
+3:19:29 AM [express] GET /api/header-logo 304 in 1035ms :: {"id":"6bd4920e-cbd7-4dae-bfd0-37e60665f8…
+3:20:44 AM [express] GET /api/auth/user 304 in 799ms :: {"id":"46399196","email":"jody@manupgodsway.…
+3:20:45 AM [express] GET /api/logo 304 in 1029ms :: {"id":"304c1ab2-df5d-4dd8-aba9-86e3960e7195","lo…
+3:20:49 AM [express] GET /api/admin/videos 304 in 578ms :: [{"id":"0633119c-00f3-475b-a75c-54f028a30…
+3:20:49 AM [express] GET /api/studies 304 in 814ms :: [{"id":"7cfe4bf1-d2c3-4e60-86c4-eee6d3b56967",…
+3:20:49 AM [express] GET /api/header-logo 304 in 1020ms :: {"id":"6bd4920e-cbd7-4dae-bfd0-37e60665f8…
+3:20:49 AM [express] GET /api/admin/stats 304 in 1028ms :: {"totalUsers":2,"totalStudies":8,"activeT…
+3:20:58 AM [express] GET /api/events 304 in 342ms :: []
+Request body: {
+  "title": "free test",
+  "description": "test",
+  "eventDate": "2025-09-10",
+  "eventTime": "14:20",
+  "location": "test",
+  "eventUrl": "https://127.0.0.1",
+  "requiresPurchase": false,
+  "price": null
+}
+Data to validate: {
+  "title": "free test",
+  "description": "test",
+  "eventDate": "2025-09-10",
+  "eventTime": "14:20",
+  "location": "test",
+  "eventUrl": "https://127.0.0.1",
+  "requiresPurchase": false,
+  "price": null,
+  "createdBy": "46399196",
+  "isPublished": false
+}
+Error creating event: ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "price"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+    at get error [as error] (file:///home/runner/workspace/node_modules/zod/lib/index.mjs:587:31)
+    at ZodObject.parse (file:///home/runner/workspace/node_modules/zod/lib/index.mjs:663:22)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:3658:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  issues: [
+    {
+      code: 'invalid_type',
+      expected: 'string',
+      received: 'null',
+      path: [Array],
+      message: 'Expected string, received null'
+    }
+  ],
+  addIssue: [Function (anonymous)],
+  addIssues: [Function (anonymous)],
+  errors: [
+    {
+      code: 'invalid_type',
+      expected: 'string',
+      received: 'null',
+      path: [Array],
+      message: 'Expected string, received null'
+    }
+  ]
+}
+3:21:24 AM [express] POST /api/events 400 in 1497ms :: {"message":"Invalid even

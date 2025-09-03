@@ -896,7 +896,7 @@ export const insertEventSchema = z.object({
   location: z.string().optional(),
   url: z.string().optional(),
   requiresPurchase: z.boolean().optional().default(false),
-  price: z.string().optional(),
+  price: z.string().nullable().optional(),
   maxAttendees: z.number().optional(),
   isPublished: z.boolean().optional().default(true),
   createdBy: z.string()
