@@ -3640,10 +3640,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const eventData = insertEventSchema.parse({
+      // Log what we're receiving
+      console.log('Request body:', JSON.stringify(req.body, null, 2));
+      
+      // Manually prepare the data with proper types
+      const dataToValidate = {
         ...req.body,
-        createdBy: user.id
-      });
+        createdBy: user.id,
+        eventDate: req.body.eventDate, // Keep as string for schema transform
+        requiresPurchase: req.body.requiresPurchase === 'true' || req.body.requiresPurchase === true,
+        isPublished: req.body.isPublished === 'true' || req.body.isPublished === true,
+        maxAttendees: req.body.maxAttendees ? parseInt(req.body.maxAttendees) : undefined
+      };
+      
+      console.log('Data to validate:', JSON.stringify(dataToValidate, null, 2));
+      
+      const eventData = insertEventSchema.parse(dataToValidate);
 
       const event = await storage.createEvent(eventData);
       res.status(201).json(event);
