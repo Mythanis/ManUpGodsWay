@@ -83,6 +83,8 @@ export default function Bible() {
   const [selectedBook, setSelectedBook] = useState("John");
   const [selectedChapter, setSelectedChapter] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<{ verse: number; text: string; book: string; chapter: number }[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [bibleText, setBibleText] = useState<{ verse: number; text: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [apiStatus, setApiStatus] = useState<"connected" | "fallback" | "error">("connected");
@@ -339,6 +341,72 @@ export default function Bible() {
     }
   };
 
+  // Handle search functionality
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) return;
+    
+    setIsSearching(true);
+    setSearchResults([]);
+    
+    try {
+      // Search through multiple books for the term
+      const searchQuery = searchTerm.toLowerCase();
+      const results: { verse: number; text: string; book: string; chapter: number }[] = [];
+      
+      // For demo purposes, search through some key books
+      const booksToSearch = ['John', 'Psalms', 'Matthew', 'Romans', 'Genesis'];
+      
+      for (const bookName of booksToSearch) {
+        const book = bibleBooks.find(b => b.name === bookName);
+        if (!book) continue;
+        
+        // Search through first few chapters of each book
+        const chaptersToSearch = Math.min(5, book.chapters);
+        
+        for (let chap = 1; chap <= chaptersToSearch; chap++) {
+          try {
+            const verses = await fetchBibleText(bookName, chap, selectedVersion);
+            
+            for (const verse of verses) {
+              if (verse.text.toLowerCase().includes(searchQuery)) {
+                results.push({
+                  verse: verse.verse,
+                  text: verse.text,
+                  book: bookName,
+                  chapter: chap
+                });
+                
+                // Limit results to 10 for performance
+                if (results.length >= 10) break;
+              }
+            }
+            
+            if (results.length >= 10) break;
+          } catch (error) {
+            console.error(`Search error in ${bookName} ${chap}:`, error);
+          }
+        }
+        
+        if (results.length >= 10) break;
+      }
+      
+      setSearchResults(results);
+      
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Navigate to a search result
+  const goToSearchResult = (result: { book: string; chapter: number; verse: number }) => {
+    setSelectedBook(result.book);
+    setSelectedChapter(result.chapter);
+    setSearchResults([]);
+    setSearchTerm('');
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground p-6 pb-20">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -424,14 +492,25 @@ export default function Bible() {
               {/* Search */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search verses..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-background border-border"
-                  />
+                <div className="relative flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search verses..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                      className="pl-10 bg-background border-border"
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleSearch}
+                    disabled={!searchTerm.trim() || isSearching}
+                    variant="outline"
+                    className="px-4"
+                  >
+                    {isSearching ? "Searching..." : "Search"}
+                  </Button>
                 </div>
               </div>
             </div>
@@ -508,6 +587,47 @@ export default function Bible() {
             )}
           </CardContent>
         </Card>
+
+        {/* Search Results */}
+        {searchResults.length > 0 && (
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-foreground">Search Results for "{searchTerm}"</CardTitle>
+              <CardDescription>
+                Found {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} in {selectedVersion}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {searchResults.map((result, index) => (
+                  <div 
+                    key={index}
+                    className="p-3 border border-border rounded-lg hover:bg-accent/5 cursor-pointer transition-colors"
+                    onClick={() => goToSearchResult(result)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Badge variant="outline" className="text-xs">
+                        {result.book} {result.chapter}:{result.verse}
+                      </Badge>
+                      <p className="text-sm text-foreground leading-relaxed flex-1">
+                        {result.text}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 pt-3 border-t border-border">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSearchResults([])}
+                  className="text-sm"
+                >
+                  Clear Results
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* API Status and Version Information */}
         <Card className="bg-card border-border">
