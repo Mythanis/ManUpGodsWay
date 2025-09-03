@@ -199,7 +199,7 @@ export default function EventManagement() {
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-rgb(251,208,0) text-black hover:bg-yellow-500">
+            <Button className="bg-[rgb(251,208,0)] text-black hover:bg-[rgb(251,208,0)]/90">
               <Plus className="w-4 h-4 mr-2" />
               Create Event
             </Button>
@@ -329,7 +329,7 @@ export default function EventManagement() {
                 <Button
                   type="submit"
                   disabled={createEventMutation.isPending}
-                  className="bg-rgb(251,208,0) text-black hover:bg-yellow-500"
+                  className="bg-[rgb(251,208,0)] text-black hover:bg-[rgb(251,208,0)]/90"
                   data-testid="button-create-event"
                 >
                   {createEventMutation.isPending ? 'Creating...' : 'Create Event'}
@@ -459,7 +459,7 @@ export default function EventManagement() {
               <Button
                 type="submit"
                 disabled={updateEventMutation.isPending}
-                className="bg-rgb(251,208,0) text-black hover:bg-yellow-500"
+                className="bg-[rgb(251,208,0)] text-black hover:bg-[rgb(251,208,0)]/90"
               >
                 {updateEventMutation.isPending ? 'Updating...' : 'Update Event'}
               </Button>
