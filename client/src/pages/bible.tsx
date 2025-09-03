@@ -427,27 +427,28 @@ export default function Bible() {
             <CardTitle className="text-foreground">Bible Navigation</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Version Selector */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Version</label>
-                <Select value={selectedVersion} onValueChange={setSelectedVersion}>
-                  <SelectTrigger className="bg-background border-border">
-                    <SelectValue placeholder="Select version" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {bibleVersions.map((version) => (
-                      <SelectItem key={version.id} value={version.id}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{version.id}</span>
-                          <span className="text-xs text-muted-foreground">{version.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Version Selector - Full Width at Top */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Bible Version</label>
+              <Select value={selectedVersion} onValueChange={setSelectedVersion}>
+                <SelectTrigger className="bg-background border-border w-full">
+                  <SelectValue placeholder="Select Bible version" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bibleVersions.map((version) => (
+                    <SelectItem key={version.id} value={version.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{version.id} - {version.name}</span>
+                        <span className="text-xs text-muted-foreground">{version.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
+            {/* Book, Chapter, and Search - Three Columns */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Book Selector */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Book</label>
@@ -492,11 +493,11 @@ export default function Bible() {
               {/* Search */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Search</label>
-                <div className="relative flex gap-2">
+                <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search verses..."
+                      placeholder="Search..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -507,9 +508,9 @@ export default function Bible() {
                     onClick={handleSearch}
                     disabled={!searchTerm.trim() || isSearching}
                     variant="outline"
-                    className="px-4"
+                    size="sm"
                   >
-                    {isSearching ? "Searching..." : "Search"}
+                    {isSearching ? "..." : "Go"}
                   </Button>
                 </div>
               </div>
