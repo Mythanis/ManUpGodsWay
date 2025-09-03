@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { User } from "@shared/schema";
@@ -12,29 +12,71 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Crown, Settings, Users, Database, Shield, Activity, Trash2, UserCog, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 
 // Stripe Configuration Component
 function StripeConfiguration() {
   const { toast } = useToast();
   const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [publishableKey, setPublishableKey] = useState('');
+  const [secretKey, setSecretKey] = useState('');
+  const [connectionRetries, setConnectionRetries] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
 
-  // Fetch Stripe account info
+  // Fetch Stripe configuration status
   const { data: stripeInfo, isLoading: stripeLoading, refetch: refetchStripeInfo } = useQuery({
-    queryKey: ['/api/stripe/account'],
+    queryKey: ['/api/stripe/status'],
     queryFn: async () => {
-      const response = await fetch('/api/stripe/account', {
+      const response = await fetch('/api/stripe/status', {
         credentials: 'include'
       });
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to fetch Stripe account info: ${errorText}`);
+        throw new Error('Failed to fetch Stripe status');
       }
       return response.json();
+    },
+    refetchInterval: stripeInfo?.connected === false ? 5000 : false, // Auto retry every 5 seconds if disconnected
+  });
+
+  // Save Stripe keys
+  const saveKeysMutation = useMutation({
+    mutationFn: async (keys: { publishableKey: string; secretKey: string }) => {
+      setIsSaving(true);
+      const response = await fetch('/api/stripe/configure', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(keys)
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to save Stripe keys: ${errorText}`);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Stripe Configuration Saved",
+        description: "Your Stripe keys have been saved and connection is being established.",
+      });
+      setPublishableKey('');
+      setSecretKey('');
+      refetchStripeInfo();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Configuration Failed",
+        description: error.message || "Unable to save Stripe configuration",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      setIsSaving(false);
     }
   });
 
-  // Test Stripe connection
+  // Test connection and retry logic
   const testConnectionMutation = useMutation({
     mutationFn: async () => {
       setIsTestingConnection(true);
@@ -53,20 +95,67 @@ function StripeConfiguration() {
         title: "Connection Test Successful",
         description: `Connected to Stripe account: ${data.accountId}`,
       });
-      // Refresh account info
+      setConnectionRetries(0);
       refetchStripeInfo();
     },
     onError: (error: any) => {
-      toast({
-        title: "Connection Test Failed",
-        description: error.message || "Unable to connect to Stripe account",
-        variant: "destructive",
-      });
+      const newRetries = connectionRetries + 1;
+      setConnectionRetries(newRetries);
+      
+      if (newRetries < 3) {
+        toast({
+          title: "Connection Failed - Retrying",
+          description: `Attempt ${newRetries}/3: ${error.message}`,
+          variant: "destructive",
+        });
+        // Auto retry after 3 seconds
+        setTimeout(() => {
+          testConnectionMutation.mutate();
+        }, 3000);
+      } else {
+        toast({
+          title: "Connection Failed",
+          description: `Max retries reached: ${error.message}`,
+          variant: "destructive",
+        });
+      }
     },
     onSettled: () => {
       setIsTestingConnection(false);
     }
   });
+
+  // Auto retry connection if configured but not connected
+  useEffect(() => {
+    if (stripeInfo?.configured && !stripeInfo?.connected && !isRetrying) {
+      setIsRetrying(true);
+      const retryTimeout = setTimeout(() => {
+        testConnectionMutation.mutate();
+        setIsRetrying(false);
+      }, 2000);
+      return () => clearTimeout(retryTimeout);
+    }
+  }, [stripeInfo]);
+
+  const handleSaveKeys = () => {
+    if (!publishableKey.startsWith('pk_')) {
+      toast({
+        title: "Invalid Publishable Key",
+        description: "Publishable key must start with 'pk_'",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!secretKey.startsWith('sk_')) {
+      toast({
+        title: "Invalid Secret Key",
+        description: "Secret key must start with 'sk_'",
+        variant: "destructive",
+      });
+      return;
+    }
+    saveKeysMutation.mutate({ publishableKey, secretKey });
+  };
 
   if (stripeLoading) {
     return (
@@ -85,54 +174,100 @@ function StripeConfiguration() {
             Stripe Payment Configuration
           </CardTitle>
           <CardDescription className="text-gray-400">
-            Manage your Stripe payment processing settings
+            Configure your Stripe payment processing
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Configuration Status */}
+          {/* Status Display */}
           <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-white font-semibold">Configuration Status</h3>
-              <Badge className={stripeInfo?.configured ? "bg-green-600" : "bg-red-600"}>
-                {stripeInfo?.configured ? "Configured" : "Not Configured"}
+              <h3 className="text-white font-semibold">Connection Status</h3>
+              <Badge className={
+                stripeInfo?.connected ? "bg-green-600" : 
+                stripeInfo?.configured ? "bg-yellow-600" : "bg-red-600"
+              }>
+                {stripeInfo?.connected ? "Live" : 
+                 stripeInfo?.configured ? "Connecting..." : "Not Configured"}
               </Badge>
             </div>
-
-            {!stripeInfo?.configured ? (
-              <div className="space-y-3">
-                <p className="text-gray-400 text-sm">
-                  Stripe API keys are not configured. To enable payment processing:
-                </p>
-                <ol className="text-gray-300 text-sm space-y-1 list-decimal list-inside">
-                  <li>Go to your Stripe Dashboard: <span className="text-blue-400">https://dashboard.stripe.com/apikeys</span></li>
-                  <li>Copy your Publishable key (starts with pk_) → Set as <span className="text-green-400">VITE_STRIPE_PUBLIC_KEY</span></li>
-                  <li>Copy your Secret key (starts with sk_) → Set as <span className="text-green-400">STRIPE_SECRET_KEY</span></li>
-                  <li>Restart the application after adding the keys</li>
-                </ol>
-              </div>
-            ) : (
-              <div className="space-y-3">
+            
+            {stripeInfo?.connected && (
+              <div className="space-y-2">
+                <p className="text-green-400 text-sm">✓ Stripe connection established successfully</p>
                 {stripeInfo.accountId && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-gray-400 text-sm">Account ID:</span>
-                      <p className="text-white font-mono text-sm">{stripeInfo.accountId}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-400 text-sm">Country:</span>
-                      <p className="text-white text-sm">{stripeInfo.country || 'N/A'}</p>
-                    </div>
-                  </div>
+                  <p className="text-gray-400 text-sm">Account: {stripeInfo.accountId}</p>
+                )}
+              </div>
+            )}
+            
+            {stripeInfo?.configured && !stripeInfo?.connected && (
+              <div className="space-y-2">
+                <p className="text-yellow-400 text-sm">⟳ Establishing connection to Stripe...</p>
+                {connectionRetries > 0 && (
+                  <p className="text-gray-400 text-sm">Retry attempt: {connectionRetries}/3</p>
                 )}
               </div>
             )}
           </div>
 
-          {/* Connection Test */}
-          {stripeInfo?.configured && (
+          {/* API Key Configuration */}
+          {!stripeInfo?.configured ? (
+            <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+              <h3 className="text-white font-semibold mb-4">Stripe API Keys</h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="publishable-key" className="text-gray-300">
+                    Publishable Key
+                  </Label>
+                  <Input
+                    id="publishable-key"
+                    type="text"
+                    placeholder="pk_live_... or pk_test_..."
+                    value={publishableKey}
+                    onChange={(e) => setPublishableKey(e.target.value)}
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
+                  <p className="text-gray-400 text-xs">Your Stripe publishable key (safe to share publicly)</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="secret-key" className="text-gray-300">
+                    Secret Key
+                  </Label>
+                  <Input
+                    id="secret-key"
+                    type="password"
+                    placeholder="sk_live_... or sk_test_..."
+                    value={secretKey}
+                    onChange={(e) => setSecretKey(e.target.value)}
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
+                  <p className="text-gray-400 text-xs">Your Stripe secret key (keep this secure)</p>
+                </div>
+                
+                <Button
+                  onClick={handleSaveKeys}
+                  disabled={isSaving || !publishableKey || !secretKey}
+                  className="bg-gold text-black hover:bg-gold/90 w-full"
+                >
+                  {isSaving ? "Saving..." : "Save Configuration"}
+                </Button>
+                
+                <div className="mt-4 p-3 bg-blue-900/20 border border-blue-700 rounded">
+                  <p className="text-blue-300 text-sm font-medium mb-2">Setup Instructions:</p>
+                  <ol className="text-blue-200 text-sm space-y-1 list-decimal list-inside">
+                    <li>Go to your <a href="https://dashboard.stripe.com/apikeys" target="_blank" className="text-blue-400 underline">Stripe Dashboard</a></li>
+                    <li>Copy your Publishable key (starts with pk_)</li>
+                    <li>Copy your Secret key (starts with sk_)</li>
+                    <li>Paste both keys above and click Save</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          ) : (
             <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="text-white font-semibold">Connection Test</h3>
+                <h3 className="text-white font-semibold">Connection Management</h3>
                 <Button
                   onClick={() => testConnectionMutation.mutate()}
                   disabled={isTestingConnection}
@@ -143,29 +278,10 @@ function StripeConfiguration() {
                 </Button>
               </div>
               <p className="text-gray-400 text-sm">
-                Test the connection to your Stripe account to ensure payments can be processed.
+                Test the connection to verify payment processing is working correctly.
               </p>
             </div>
           )}
-
-          {/* Payment Processing Status */}
-          <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
-            <h3 className="text-white font-semibold mb-2">Payment Processing</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Status:</span>
-                <Badge className={stripeInfo?.configured ? "bg-green-600" : "bg-red-600"}>
-                  {stripeInfo?.configured ? "Ready" : "Not Ready"}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Test Mode:</span>
-                <Badge className="bg-yellow-600">
-                  {stripeInfo?.testMode ? "Yes" : "Live"}
-                </Badge>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

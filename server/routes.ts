@@ -4014,6 +4014,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New Stripe configuration routes
+  app.get('/api/stripe/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isOwner(user)) {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+
+      const configured = !!(process.env.STRIPE_SECRET_KEY && process.env.VITE_STRIPE_PUBLIC_KEY);
+      
+      if (!configured) {
+        return res.json({
+          configured: false,
+          connected: false
+        });
+      }
+
+      // Test connection
+      try {
+        const Stripe = require('stripe');
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+          apiVersion: "2023-10-16",
+        });
+        
+        const account = await stripe.accounts.retrieve();
+        
+        res.json({
+          configured: true,
+          connected: true,
+          accountId: account.id,
+          country: account.country,
+          testMode: process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_') || false
+        });
+      } catch (connectionError) {
+        res.json({
+          configured: true,
+          connected: false,
+          error: 'Connection failed'
+        });
+      }
+    } catch (error: any) {
+      console.error("Error checking Stripe status:", error);
+      res.status(500).json({ message: "Failed to check Stripe status" });
+    }
+  });
+
+  app.post('/api/stripe/configure', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isOwner(user)) {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+
+      const { publishableKey, secretKey } = req.body;
+
+      if (!publishableKey || !secretKey) {
+        return res.status(400).json({ message: "Both publishable and secret keys are required" });
+      }
+
+      if (!publishableKey.startsWith('pk_')) {
+        return res.status(400).json({ message: "Invalid publishable key format" });
+      }
+
+      if (!secretKey.startsWith('sk_')) {
+        return res.status(400).json({ message: "Invalid secret key format" });
+      }
+
+      // Validate keys by testing connection
+      try {
+        const Stripe = require('stripe');
+        const stripe = new Stripe(secretKey, {
+          apiVersion: "2023-10-16",
+        });
+        
+        const account = await stripe.accounts.retrieve();
+        
+        // Keys are valid, set them as environment variables
+        process.env.STRIPE_SECRET_KEY = secretKey;
+        process.env.VITE_STRIPE_PUBLIC_KEY = publishableKey;
+        
+        res.json({
+          success: true,
+          message: "Stripe configuration saved successfully",
+          accountId: account.id
+        });
+      } catch (validationError: any) {
+        return res.status(400).json({ 
+          message: "Invalid Stripe keys: " + (validationError.message || "Authentication failed")
+        });
+      }
+    } catch (error: any) {
+      console.error("Error configuring Stripe:", error);
+      res.status(500).json({ message: "Failed to configure Stripe" });
+    }
+  });
+
+  app.post('/api/stripe/test-connection', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isOwner(user)) {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Stripe secret key not configured"
+        });
+      }
+
+      const Stripe = require('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2023-10-16",
+      });
+
+      const account = await stripe.accounts.retrieve();
+      
+      res.json({
+        success: true,
+        message: "Stripe connection successful",
+        accountId: account.id,
+        country: account.country,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error("Stripe connection test failed:", error);
+      res.status(400).json({ 
+        success: false,
+        message: "Stripe connection failed: " + (error.message || "Unknown error")
+      });
+    }
+  });
+
   // WebSocket server for real-time notifications
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
