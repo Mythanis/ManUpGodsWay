@@ -10,8 +10,209 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Crown, Settings, Users, Database, Shield, Activity, Trash2, UserCog } from "lucide-react";
+import { Crown, Settings, Users, Database, Shield, Activity, Trash2, UserCog, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+// Stripe Configuration Component
+function StripeConfiguration() {
+  const { toast } = useToast();
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+
+  // Fetch Stripe account info
+  const { data: stripeInfo, isLoading: stripeLoading, refetch: refetchStripeInfo } = useQuery({
+    queryKey: ['/api/admin/stripe/account-info'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/stripe/account-info', {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch Stripe info');
+      return response.json();
+    }
+  });
+
+  // Test Stripe connection
+  const testConnectionMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/admin/stripe/test-connection', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to test connection');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: data.success ? "Connection Successful" : "Connection Failed",
+        description: data.message,
+        variant: data.success ? "default" : "destructive"
+      });
+      if (data.success) {
+        refetchStripeInfo();
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Connection Test Failed",
+        description: error.message || "Unable to test Stripe connection",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleTestConnection = async () => {
+    setIsTestingConnection(true);
+    try {
+      await testConnectionMutation.mutateAsync();
+    } finally {
+      setIsTestingConnection(false);
+    }
+  };
+
+  if (stripeLoading) {
+    return (
+      <Card className="bg-gray-900 border-gray-800">
+        <CardContent className="p-6">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading Stripe configuration...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-gold" />
+            Stripe Payment Configuration
+          </CardTitle>
+          <CardDescription className="text-gray-400">
+            Manage your Stripe payment processing settings
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Configuration Status */}
+          <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-white font-semibold">Configuration Status</h3>
+              <Badge className={stripeInfo?.configured ? "bg-green-600" : "bg-red-600"}>
+                {stripeInfo?.configured ? "Configured" : "Not Configured"}
+              </Badge>
+            </div>
+
+            {!stripeInfo?.configured ? (
+              <div className="space-y-3">
+                <p className="text-gray-400 text-sm">
+                  Stripe API keys are not configured. To enable payment processing:
+                </p>
+                <ol className="text-gray-300 text-sm space-y-1 list-decimal list-inside">
+                  <li>Go to your Stripe Dashboard: <span className="text-blue-400">https://dashboard.stripe.com/apikeys</span></li>
+                  <li>Copy your Publishable key (starts with pk_) → Set as <span className="text-green-400">VITE_STRIPE_PUBLIC_KEY</span></li>
+                  <li>Copy your Secret key (starts with sk_) → Set as <span className="text-green-400">STRIPE_SECRET_KEY</span></li>
+                  <li>Restart the application after adding the keys</li>
+                </ol>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stripeInfo.accountId && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-gray-400 text-sm">Account ID:</span>
+                      <p className="text-white font-mono text-sm">{stripeInfo.accountId}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 text-sm">Email:</span>
+                      <p className="text-white text-sm">{stripeInfo.email || 'Not set'}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 text-sm">Country:</span>
+                      <p className="text-white text-sm">{stripeInfo.country?.toUpperCase() || 'Not set'}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 text-sm">Currency:</span>
+                      <p className="text-white text-sm">{stripeInfo.currency?.toUpperCase() || 'Not set'}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Account Status */}
+          {stripeInfo?.configured && (
+            <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+              <h3 className="text-white font-semibold mb-3">Account Status</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Charges Enabled:</span>
+                  <Badge className={stripeInfo.chargesEnabled ? "bg-green-600" : "bg-red-600"}>
+                    {stripeInfo.chargesEnabled ? "Yes" : "No"}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Payouts Enabled:</span>
+                  <Badge className={stripeInfo.payoutsEnabled ? "bg-green-600" : "bg-red-600"}>
+                    {stripeInfo.payoutsEnabled ? "Yes" : "No"}
+                  </Badge>
+                </div>
+                {stripeInfo.displayName && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400">Display Name:</span>
+                    <span className="text-white">{stripeInfo.displayName}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <Button
+              onClick={handleTestConnection}
+              disabled={isTestingConnection || testConnectionMutation.isPending}
+              className="bg-gold text-black hover:bg-gold/90"
+              data-testid="button-test-stripe"
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              {isTestingConnection ? 'Testing...' : 'Test Connection'}
+            </Button>
+            <Button
+              onClick={() => refetchStripeInfo()}
+              variant="outline"
+              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+              data-testid="button-refresh-stripe"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Refresh Status
+            </Button>
+          </div>
+
+          {/* Quick Access Link */}
+          {stripeInfo?.configured && (
+            <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-800/50">
+              <h4 className="text-blue-300 font-semibold mb-2">Quick Access</h4>
+              <div className="flex justify-between items-center">
+                <span className="text-blue-200 text-sm">Access the purchase page:</span>
+                <Button
+                  onClick={() => window.open('/purchase', '_blank')}
+                  size="sm"
+                  variant="outline"
+                  className="border-blue-600 text-blue-300 hover:bg-blue-900/30"
+                  data-testid="button-open-purchase"
+                >
+                  Open Purchase Page
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 export default function Owners() {
   const { toast } = useToast();
@@ -111,7 +312,7 @@ export default function Owners() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-gray-900 border border-gray-800">
+          <TabsList className="grid w-full grid-cols-5 bg-gray-900 border border-gray-800">
             <TabsTrigger value="overview" className="data-[state=active]:bg-gold data-[state=active]:text-black">
               <Activity className="h-4 w-4 mr-2" />
               Overview
@@ -127,6 +328,10 @@ export default function Owners() {
             <TabsTrigger value="security" className="data-[state=active]:bg-gold data-[state=active]:text-black">
               <Shield className="h-4 w-4 mr-2" />
               Security
+            </TabsTrigger>
+            <TabsTrigger value="stripe" className="data-[state=active]:bg-gold data-[state=active]:text-black">
+              <CreditCard className="h-4 w-4 mr-2" />
+              Payments
             </TabsTrigger>
           </TabsList>
 
@@ -429,6 +634,11 @@ export default function Owners() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Stripe Payments Tab */}
+          <TabsContent value="stripe" className="space-y-6">
+            <StripeConfiguration />
           </TabsContent>
         </Tabs>
       </div>

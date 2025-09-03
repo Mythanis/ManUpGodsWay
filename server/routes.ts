@@ -3846,6 +3846,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // ========================================
+  // STRIPE PAYMENT ROUTES
+  // ========================================
+  
+  // Create payment intent for one-time purchases
+  app.post('/api/payments/create-payment-intent', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if Stripe keys are configured
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(503).json({ 
+          message: "Payment system not configured. Please contact administrator." 
+        });
+      }
+
+      const Stripe = require('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2023-10-16",
+      });
+
+      const { amount, currency = 'usd', metadata = {} } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: currency.toLowerCase(),
+        metadata: {
+          userId: userId,
+          userEmail: user?.email || '',
+          ...metadata
+        },
+        receipt_email: user?.email
+      });
+
+      console.log(`Payment intent created: ${paymentIntent.id} for user ${userId} amount: $${amount}`);
+
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id
+      });
+    } catch (error: any) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ 
+        message: "Error creating payment intent: " + (error.message || "Unknown error")
+      });
+    }
+  });
+
+  // Get payment status
+  app.get('/api/payments/:paymentIntentId/status', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(503).json({ 
+          message: "Payment system not configured" 
+        });
+      }
+
+      const Stripe = require('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2023-10-16",
+      });
+
+      const { paymentIntentId } = req.params;
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+      res.json({
+        status: paymentIntent.status,
+        amount: paymentIntent.amount / 100, // Convert back to dollars
+        currency: paymentIntent.currency,
+        created: paymentIntent.created
+      });
+    } catch (error: any) {
+      console.error("Error retrieving payment status:", error);
+      res.status(500).json({ 
+        message: "Error retrieving payment status: " + (error.message || "Unknown error")
+      });
+    }
+  });
+
+  // Owner-only: Get Stripe account info
+  app.get('/api/admin/stripe/account-info', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isOwner(user)) {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.json({ 
+          configured: false,
+          message: "Stripe API keys not configured"
+        });
+      }
+
+      const Stripe = require('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2023-10-16",
+      });
+
+      const account = await stripe.accounts.retrieve();
+      
+      res.json({
+        configured: true,
+        accountId: account.id,
+        email: account.email,
+        displayName: account.display_name || account.business_profile?.name,
+        country: account.country,
+        currency: account.default_currency,
+        chargesEnabled: account.charges_enabled,
+        payoutsEnabled: account.payouts_enabled
+      });
+    } catch (error: any) {
+      console.error("Error fetching Stripe account info:", error);
+      res.status(500).json({ 
+        message: "Error fetching Stripe account info: " + (error.message || "Unknown error")
+      });
+    }
+  });
+
+  // Owner-only: Test Stripe connection
+  app.post('/api/admin/stripe/test-connection', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isOwner(user)) {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Stripe secret key not configured"
+        });
+      }
+
+      if (!process.env.VITE_STRIPE_PUBLIC_KEY) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Stripe public key not configured"
+        });
+      }
+
+      const Stripe = require('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2023-10-16",
+      });
+
+      // Test the connection by fetching account info
+      await stripe.accounts.retrieve();
+      
+      res.json({
+        success: true,
+        message: "Stripe connection successful",
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error("Stripe connection test failed:", error);
+      res.status(400).json({ 
+        success: false,
+        message: "Stripe connection failed: " + (error.message || "Unknown error")
+      });
+    }
+  });
+
   // WebSocket server for real-time notifications
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
