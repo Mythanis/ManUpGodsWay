@@ -175,10 +175,13 @@ function StripeConfiguration() {
 // Define Owner tabs
 const ownerTabs = [
   { id: "overview", label: "Overview", icon: Activity },
-  { id: "users", label: "Users", icon: Users },
-  { id: "system", label: "System", icon: Database },
-  { id: "security", label: "Security", icon: Shield },
-  { id: "stripe", label: "Payments", icon: CreditCard },
+  { id: "users", label: "User Management", icon: Users },
+  { id: "system", label: "System Settings", icon: Database },
+  { id: "security", label: "Security & Access", icon: Shield },
+  { id: "stripe", label: "Payment Gateway", icon: CreditCard },
+  { id: "analytics", label: "Analytics Dashboard", icon: Crown },
+  { id: "backup", label: "Backup & Recovery", icon: Settings },
+  { id: "integrations", label: "API Integrations", icon: UserCog }
 ];
 
 export default function Owners() {
@@ -194,10 +197,12 @@ export default function Owners() {
     if (!container) return;
 
     const handleWheel = (e: WheelEvent) => {
+      console.log('Wheel event triggered', e.deltaY);
       // Prevent default vertical scroll
       e.preventDefault();
       // Scroll horizontally instead
       container.scrollLeft += e.deltaY;
+      console.log('New scroll position:', container.scrollLeft);
     };
 
     container.addEventListener('wheel', handleWheel, { passive: false });
@@ -623,6 +628,48 @@ export default function Owners() {
         return (
           <div className="space-y-6">
             <StripeConfiguration />
+          </div>
+        );
+
+      case "analytics":
+        return (
+          <div className="space-y-6">
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader>
+                <CardTitle className="text-white">Analytics Dashboard</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-400">Advanced analytics and reporting coming soon...</p>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case "backup":
+        return (
+          <div className="space-y-6">
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader>
+                <CardTitle className="text-white">Backup & Recovery</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-400">Backup and recovery management coming soon...</p>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case "integrations":
+        return (
+          <div className="space-y-6">
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader>
+                <CardTitle className="text-white">API Integrations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-400">Third-party API integrations coming soon...</p>
+              </CardContent>
+            </Card>
           </div>
         );
 
