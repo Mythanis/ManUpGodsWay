@@ -890,11 +890,11 @@ export const events = pgTable("events", {
 
 export const insertEventSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   eventDate: z.string().transform((val) => new Date(val)),
-  eventTime: z.string().optional(),
-  location: z.string().optional(),
-  url: z.string().optional(),
+  eventTime: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  eventUrl: z.string().nullable().optional(),
   requiresPurchase: z.boolean().optional().default(false),
   price: z.string().nullable().optional(),
   maxAttendees: z.number().optional(),
