@@ -893,6 +893,8 @@ export const insertEventSchema = createInsertSchema(events).omit({
   currentAttendees: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  eventDate: z.string().transform((val) => new Date(val))
 });
 
 export type Event = typeof events.$inferSelect;
