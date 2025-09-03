@@ -51,8 +51,7 @@ export default function EventManagement() {
   // Create event mutation
   const createEventMutation = useMutation({
     mutationFn: async (eventData: any) => {
-      const response = await apiRequest('POST', '/api/events', eventData);
-      return response.json();
+      return await apiRequest('POST', '/api/events', eventData);
     },
     onSuccess: () => {
       toast({
@@ -75,8 +74,7 @@ export default function EventManagement() {
   // Update event mutation
   const updateEventMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const response = await apiRequest('PUT', `/api/events/${id}`, data);
-      return response.json();
+      return await apiRequest('PUT', `/api/events/${id}`, data);
     },
     onSuccess: () => {
       toast({
