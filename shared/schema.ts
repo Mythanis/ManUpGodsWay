@@ -869,6 +869,58 @@ export const insertChallengeSchema = createInsertSchema(challenges).omit({
 export type Challenge = typeof challenges.$inferSelect;
 export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
 
+// Events
+export const events = pgTable("events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  eventDate: timestamp("event_date").notNull(),
+  eventTime: varchar("event_time"), // Optional time as string (e.g., "7:00 PM")
+  location: varchar("location"),
+  url: varchar("url"),
+  requiresPurchase: boolean("requires_purchase").default(false),
+  price: decimal("price", { precision: 10, scale: 2 }), // Price in dollars
+  maxAttendees: integer("max_attendees"),
+  currentAttendees: integer("current_attendees").default(0),
+  isPublished: boolean("is_published").default(true),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertEventSchema = createInsertSchema(events).omit({
+  id: true,
+  currentAttendees: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Event = typeof events.$inferSelect;
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+
+// Event purchases/registrations
+export const eventRegistrations = pgTable("event_registrations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").notNull().references(() => events.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  registrationType: varchar("registration_type").notNull().default("free"), // free, paid
+  paymentIntentId: varchar("payment_intent_id"), // Stripe payment intent ID for paid events
+  paymentStatus: varchar("payment_status").default("pending"), // pending, completed, failed, refunded
+  amountPaid: decimal("amount_paid", { precision: 10, scale: 2 }),
+  registeredAt: timestamp("registered_at").defaultNow(),
+  cancelledAt: timestamp("cancelled_at"),
+}, (table) => ({
+  unique: unique().on(table.eventId, table.userId),
+}));
+
+export const insertEventRegistrationSchema = createInsertSchema(eventRegistrations).omit({
+  id: true,
+  registeredAt: true,
+});
+
+export type EventRegistration = typeof eventRegistrations.$inferSelect;
+export type InsertEventRegistration = z.infer<typeof insertEventRegistrationSchema>;
+
 // Content flags schema and types
 export const insertContentFlagSchema = createInsertSchema(contentFlags).omit({
   id: true,

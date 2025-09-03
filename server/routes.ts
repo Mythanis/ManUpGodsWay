@@ -21,7 +21,9 @@ import {
   insertPodcastRatingSchema,
   insertContentFlagSchema,
   insertTestimonySchema,
-  insertFitnessChallengeSchema
+  insertFitnessChallengeSchema,
+  insertEventSchema,
+  insertEventRegistrationSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -3602,6 +3604,170 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(challenge);
     } catch (error) {
       console.error('Error publishing fitness challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Events routes
+  app.get('/api/events', async (req, res) => {
+    try {
+      const events = await storage.getEvents();
+      res.json(events);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/events/:id', async (req, res) => {
+    try {
+      const event = await storage.getEventById(req.params.id);
+      if (!event) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+      res.json(event);
+    } catch (error) {
+      console.error('Error fetching event:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Create event (admin only)
+  app.post('/api/events', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const eventData = insertEventSchema.parse({
+        ...req.body,
+        createdBy: user.id
+      });
+
+      const event = await storage.createEvent(eventData);
+      res.status(201).json(event);
+    } catch (error) {
+      console.error('Error creating event:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid event data", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Update event (admin only)
+  app.put('/api/events/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const eventData = insertEventSchema.partial().parse(req.body);
+      const event = await storage.updateEvent(req.params.id, eventData);
+      
+      if (!event) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+      
+      res.json(event);
+    } catch (error) {
+      console.error('Error updating event:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid event data", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Delete event (admin only)
+  app.delete('/api/events/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      await storage.deleteEvent(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Register for event (free events)
+  app.post('/api/events/:id/register', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const eventId = req.params.id;
+      
+      const event = await storage.getEventById(eventId);
+      if (!event) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+      
+      if (event.requiresPurchase) {
+        return res.status(400).json({ message: 'This event requires payment. Use the purchase endpoint instead.' });
+      }
+      
+      const registration = await storage.registerForEvent({
+        eventId,
+        userId,
+        registrationType: 'free',
+        paymentStatus: 'completed'
+      });
+      
+      res.status(201).json(registration);
+    } catch (error) {
+      console.error('Error registering for event:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get user's event registrations
+  app.get('/api/events/registrations/my', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const registrations = await storage.getUserEventRegistrations(userId);
+      res.json(registrations);
+    } catch (error) {
+      console.error('Error fetching user registrations:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Create payment intent for event purchase
+  app.post('/api/events/:id/create-payment-intent', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const eventId = req.params.id;
+      
+      const event = await storage.getEventById(eventId);
+      if (!event) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+      
+      if (!event.requiresPurchase || !event.price) {
+        return res.status(400).json({ message: 'This event does not require payment' });
+      }
+      
+      // Check if already registered
+      const existingRegistration = await storage.getEventRegistration(eventId, userId);
+      if (existingRegistration && existingRegistration.paymentStatus === 'completed') {
+        return res.status(400).json({ message: 'Already registered for this event' });
+      }
+      
+      // Here we would create Stripe payment intent
+      // For now, return a placeholder
+      res.json({ 
+        clientSecret: 'placeholder_client_secret',
+        eventId,
+        amount: parseFloat(event.price) * 100 // Convert to cents
+      });
+    } catch (error) {
+      console.error('Error creating payment intent:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

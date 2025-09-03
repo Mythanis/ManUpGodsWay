@@ -14,6 +14,7 @@ import Videos from "@/pages/videos";
 import Podcasts from "@/pages/podcasts";
 import Challenges from "@/pages/challenges";
 import Fitness from "@/pages/fitness";
+import Events from "@/pages/events";
 import Community from "@/pages/community";
 import Brothers from "@/pages/brothers";
 import Messages from "@/pages/messages";
@@ -88,6 +89,7 @@ function Router() {
             <Route path="/podcasts" component={Podcasts} />
             <Route path="/challenges" component={Challenges} />
             <Route path="/fitness" component={Fitness} />
+            <Route path="/events" component={Events} />
             <Route path="/community" component={Community} />
             <Route path="/brothers" component={Brothers} />
             <Route path="/messages" component={Messages} />

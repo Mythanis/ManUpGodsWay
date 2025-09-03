@@ -28,6 +28,8 @@ import {
   brotherhoodDenialHistory,
   brotherhoods,
   fitnessChallenge,
+  events,
+  eventRegistrations,
   hurdleWallPosts,
   hurdleWallReplies,
   hurdleWallPrayers,
@@ -102,6 +104,10 @@ import {
   type InsertBrotherhoodDenial,
   type FitnessChallenge,
   type InsertFitnessChallenge,
+  type Event,
+  type InsertEvent,
+  type EventRegistration,
+  type InsertEventRegistration,
   type HurdleWallPost,
   type InsertHurdleWallPost,
   type HurdleWallReply,
@@ -358,6 +364,16 @@ export interface IStorage {
   deleteFitnessChallenge(id: string): Promise<void>;
   publishFitnessChallenge(id: string): Promise<FitnessChallenge>;
   getTodaysFitnessChallenge(): Promise<FitnessChallenge | null>;
+
+  // Events operations
+  getEvents(): Promise<Event[]>;
+  getEventById(id: string): Promise<Event | undefined>;
+  createEvent(event: InsertEvent): Promise<Event>;
+  updateEvent(id: string, updates: Partial<InsertEvent>): Promise<Event>;
+  deleteEvent(id: string): Promise<void>;
+  registerForEvent(registration: InsertEventRegistration): Promise<EventRegistration>;
+  getEventRegistration(eventId: string, userId: string): Promise<EventRegistration | undefined>;
+  getUserEventRegistrations(userId: string): Promise<(EventRegistration & { event: Event })[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4308,6 +4324,111 @@ export class DatabaseStorage implements IStorage {
     );
     
     return postsWithReplies;
+  }
+
+  // Events implementation methods
+  async getEvents(): Promise<Event[]> {
+    return await db
+      .select()
+      .from(events)
+      .orderBy(desc(events.eventDate));
+  }
+
+  async getEventById(id: string): Promise<Event | undefined> {
+    const [event] = await db
+      .select()
+      .from(events)
+      .where(eq(events.id, id));
+    return event;
+  }
+
+  async createEvent(event: InsertEvent): Promise<Event> {
+    const [newEvent] = await db
+      .insert(events)
+      .values(event)
+      .returning();
+    return newEvent;
+  }
+
+  async updateEvent(id: string, updates: Partial<InsertEvent>): Promise<Event> {
+    const [updatedEvent] = await db
+      .update(events)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(events.id, id))
+      .returning();
+    return updatedEvent;
+  }
+
+  async deleteEvent(id: string): Promise<void> {
+    await db
+      .delete(events)
+      .where(eq(events.id, id));
+  }
+
+  async registerForEvent(registration: InsertEventRegistration): Promise<EventRegistration> {
+    const [newRegistration] = await db
+      .insert(eventRegistrations)
+      .values(registration)
+      .returning();
+    return newRegistration;
+  }
+
+  async getEventRegistration(eventId: string, userId: string): Promise<EventRegistration | undefined> {
+    const [registration] = await db
+      .select()
+      .from(eventRegistrations)
+      .where(
+        and(
+          eq(eventRegistrations.eventId, eventId),
+          eq(eventRegistrations.userId, userId)
+        )
+      );
+    return registration;
+  }
+
+  async getUserEventRegistrations(userId: string): Promise<(EventRegistration & { event: Event })[]> {
+    const registrations = await db
+      .select({
+        id: eventRegistrations.id,
+        eventId: eventRegistrations.eventId,
+        userId: eventRegistrations.userId,
+        registrationType: eventRegistrations.registrationType,
+        paymentStatus: eventRegistrations.paymentStatus,
+        stripePaymentIntentId: eventRegistrations.stripePaymentIntentId,
+        registeredAt: eventRegistrations.registeredAt,
+        event: {
+          id: events.id,
+          title: events.title,
+          description: events.description,
+          eventDate: events.eventDate,
+          eventTime: events.eventTime,
+          location: events.location,
+          eventUrl: events.eventUrl,
+          requiresPurchase: events.requiresPurchase,
+          price: events.price,
+          createdBy: events.createdBy,
+          createdAt: events.createdAt,
+          updatedAt: events.updatedAt
+        }
+      })
+      .from(eventRegistrations)
+      .innerJoin(events, eq(eventRegistrations.eventId, events.id))
+      .where(eq(eventRegistrations.userId, userId))
+      .orderBy(desc(events.eventDate));
+
+    return registrations.map(r => ({
+      id: r.id,
+      eventId: r.eventId,
+      userId: r.userId,
+      registrationType: r.registrationType,
+      paymentStatus: r.paymentStatus,
+      stripePaymentIntentId: r.stripePaymentIntentId,
+      registeredAt: r.registeredAt,
+      event: r.event
+    }));
   }
 }
 
