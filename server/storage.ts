@@ -270,7 +270,7 @@ export interface IStorage {
   getUserPodcastRating(userId: string, podcastId: string): Promise<PodcastRating | undefined>;
   incrementPodcastViews(podcastId: string, userId?: string, ipAddress?: string): Promise<void>;
   // Live streaming operations
-  startLiveStream(podcastId: string): Promise<Podcast>;
+  startLiveStream(podcastId: string, liveUrl: string): Promise<Podcast>;
   endLiveStream(podcastId: string): Promise<Podcast>;
   getLiveStreams(): Promise<Podcast[]>;
   notifyLiveStreamStart(podcastId: string): Promise<void>;
@@ -319,7 +319,7 @@ export interface IStorage {
   // Discipleship/Tag-based user discovery operations
   getAllTestimonyTags(): Promise<{ tag: string; count: number }[]>;
   getUsersWithPublicTestimonies(): Promise<{
-    id: number;
+    id: string;
     username: string;
     displayName: string | null;
     avatarUrl: string | null;
@@ -1880,13 +1880,18 @@ export class DatabaseStorage implements IStorage {
     return newPreferences;
   }
 
-  async updateNotificationPreferences(userId: string, preferences: Partial<InsertNotificationPreferences>): Promise<NotificationPreferences | null> {
+  async updateNotificationPreferences(userId: string, preferences: Partial<InsertNotificationPreferences>): Promise<NotificationPreferences> {
     const [updatedPreferences] = await db
       .update(notificationPreferences)
       .set({ ...preferences, updatedAt: new Date() })
       .where(eq(notificationPreferences.userId, userId))
       .returning();
-    return updatedPreferences || null;
+    
+    if (!updatedPreferences) {
+      throw new Error('Failed to update notification preferences');
+    }
+    
+    return updatedPreferences;
   }
 
   async getOrCreateNotificationPreferences(userId: string): Promise<NotificationPreferences> {
@@ -2439,7 +2444,7 @@ export class DatabaseStorage implements IStorage {
         canSend: true,
         requiresConfirmation: true,
         denialCount: denialCheck.denialCount,
-        lastDenied: denialRecord?.lastDenialAt
+        lastDenied: denialRecord?.lastDenialAt || undefined
       };
     }
 
@@ -2966,21 +2971,23 @@ export class DatabaseStorage implements IStorage {
 
   // Podcast operations
   async getPodcasts(options: { search?: string; category?: string; sort?: string } = {}): Promise<Podcast[]> {
-    let query = db.select().from(podcasts).where(eq(podcasts.isPublished, true));
+    let conditions = [eq(podcasts.isPublished, true)];
     
     // Apply filters
     if (options.category) {
-      query = query.where(eq(podcasts.category, options.category)) as any;
+      conditions.push(eq(podcasts.category, options.category));
     }
     
     if (options.search) {
-      query = query.where(
+      conditions.push(
         or(
           ilike(podcasts.title, `%${options.search}%`),
           ilike(podcasts.description, `%${options.search}%`)
-        )
-      ) as any;
+        )!
+      );
     }
+    
+    let query = db.select().from(podcasts).where(and(...conditions));
     
     // Apply sorting
     switch (options.sort) {
@@ -3430,7 +3437,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Create notifications for all admins
-    const notifications = admins.map(admin => ({
+    const notificationData = admins.map(admin => ({
       userId: admin.id,
       title: 'Content Flagged',
       message: `A user has flagged ${flag.contentType}: "${contentTitle}" for ${flag.reason}`,
@@ -3446,7 +3453,7 @@ export class DatabaseStorage implements IStorage {
       createdAt: new Date()
     }));
 
-    await db.insert(notifications).values(notifications);
+    await db.insert(notifications).values(notificationData);
   }
 
   async getAllFlags(): Promise<(ContentFlag & { reporter: { firstName: string; lastName: string } })[]> {
@@ -3907,15 +3914,21 @@ export class DatabaseStorage implements IStorage {
   async createFitnessChallenge(challengeData: InsertFitnessChallenge): Promise<FitnessChallenge> {
     const [challenge] = await db
       .insert(fitnessChallenge)
-      .values(challengeData)
+      .values([challengeData])
       .returning();
     return challenge;
   }
 
   async updateFitnessChallenge(id: string, updates: Partial<InsertFitnessChallenge>): Promise<FitnessChallenge> {
+    // Convert targetDate string to Date if needed
+    const processedUpdates = { ...updates };
+    if (processedUpdates.targetDate && typeof processedUpdates.targetDate === 'string') {
+      processedUpdates.targetDate = new Date(processedUpdates.targetDate);
+    }
+    
     const [challenge] = await db
       .update(fitnessChallenge)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ ...processedUpdates, updatedAt: new Date() })
       .where(eq(fitnessChallenge.id, id))
       .returning();
     return challenge;
