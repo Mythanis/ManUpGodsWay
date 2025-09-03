@@ -128,6 +128,21 @@ export const userProgress = pgTable("user_progress", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// User purchases
+export const userPurchases = pgTable("user_purchases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  studyId: varchar("study_id").notNull().references(() => studies.id, { onDelete: 'cascade' }),
+  stripePaymentIntentId: varchar("stripe_payment_intent_id").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency").default("usd").notNull(),
+  status: varchar("status").default("completed").notNull(), // completed, refunded, etc.
+  purchasedAt: timestamp("purchased_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.studyId), // Prevent duplicate purchases
+]);
+
 // Community discussions
 export const discussions = pgTable("discussions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -449,6 +464,11 @@ export const userProgressRelations = relations(userProgress, ({ one }) => ({
   study: one(studies, { fields: [userProgress.studyId], references: [studies.id] }),
 }));
 
+export const userPurchasesRelations = relations(userPurchases, ({ one }) => ({
+  user: one(users, { fields: [userPurchases.userId], references: [users.id] }),
+  study: one(studies, { fields: [userPurchases.studyId], references: [studies.id] }),
+}));
+
 export const studyRatingsRelations = relations(studyRatings, ({ one }) => ({
   user: one(users, { fields: [studyRatings.userId], references: [users.id] }),
   study: one(studies, { fields: [studyRatings.studyId], references: [studies.id] }),
@@ -550,6 +570,17 @@ export const insertLessonSchema = createInsertSchema(lessons, {
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+export const insertUserPurchaseSchema = createInsertSchema(userPurchases, {
+  stripePaymentIntentId: z.string().min(1, "Payment intent ID is required"),
+  amount: z.string().min(1, "Amount is required"),
+  currency: z.string().default("usd"),
+  status: z.string().default("completed"),
+}).omit({
+  id: true,
+  createdAt: true,
+  purchasedAt: true,
 });
 
 export const insertDiscussionSchema = createInsertSchema(discussions).omit({
@@ -1109,3 +1140,7 @@ export type HurdleWallPrayer = typeof hurdleWallPrayers.$inferSelect;
 export type InsertHurdleWallPrayer = z.infer<typeof insertHurdleWallPrayerSchema>;
 export type UserPrayerStats = typeof userPrayerStats.$inferSelect;
 export type InsertUserPrayerStats = z.infer<typeof insertUserPrayerStatsSchema>;
+
+// Purchase types
+export type UserPurchase = typeof userPurchases.$inferSelect;
+export type InsertUserPurchase = z.infer<typeof insertUserPurchaseSchema>;
