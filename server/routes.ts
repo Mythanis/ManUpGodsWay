@@ -249,6 +249,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if user has purchased a study
+  app.get('/api/purchases/check/:studyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const studyId = req.params.studyId;
+      
+      const hasPurchased = await storage.checkUserPurchase(userId, studyId);
+      res.json(hasPurchased);
+    } catch (error) {
+      console.error("Error checking purchase:", error);
+      res.status(500).json({ message: "Failed to check purchase" });
+    }
+  });
+
   // Get study discussion
   app.get('/api/studies/:id/discussion', isAuthenticated, async (req: any, res) => {
     try {

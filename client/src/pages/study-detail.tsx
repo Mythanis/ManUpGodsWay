@@ -21,6 +21,7 @@ import { ArrowLeft, Play, Clock, Users, Star, MessageCircle, Send } from "lucide
 import { Link } from "wouter";
 import { z } from "zod";
 import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
+import { PurchasePopup } from "@/components/purchase-popup";
 
 const ratingSchema = insertStudyRatingSchema.pick({ rating: true, review: true });
 
@@ -32,6 +33,7 @@ export default function StudyDetail() {
   const { id } = useParams<{ id: string }>();
   const [discussionDialogOpen, setDiscussionDialogOpen] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [purchasePopupOpen, setPurchasePopupOpen] = useState(false);
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -139,6 +141,13 @@ export default function StudyDetail() {
     queryKey: ["/api/studies", id],
     retry: false,
     enabled: !!id,
+  });
+
+  // Check if user has purchased this study
+  const { data: hasPurchased, isLoading: purchaseLoading } = useQuery<boolean>({
+    queryKey: ["/api/purchases/check", id],
+    retry: false,
+    enabled: !!id && !!user?.id,
   });
 
   const { data: progress } = useQuery<UserProgress>({
@@ -257,9 +266,34 @@ export default function StudyDetail() {
     }
   };
 
-  const canAccess = study.requiredTier === 'free' || 
-                   (study.requiredTier === 'premium' && ['premium', 'vip'].includes(user?.subscriptionTier || '')) ||
-                   (study.requiredTier === 'vip' && user?.subscriptionTier === 'vip');
+  // Check access based on purchase status or tier
+  const canAccess = () => {
+    if (!study) return false;
+    
+    // If study requires purchase, check if user has purchased it
+    if (study.requiresPurchase) {
+      // If user has purchased, they have access regardless of tier
+      if (hasPurchased) return true;
+      
+      // If study requires purchase for their tier, they need to purchase
+      const userTier = user?.subscriptionTier || 'free';
+      if (study.purchaseRequiredTiers?.includes(userTier)) {
+        return false; // Need to purchase
+      }
+      
+      // If their tier doesn't require purchase, check normal tier access
+      return study.requiredTier === 'free' || 
+             (study.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
+             (study.requiredTier === 'vip' && userTier === 'vip');
+    }
+    
+    // Normal tier-based access for non-purchasable studies
+    return study.requiredTier === 'free' || 
+           (study.requiredTier === 'premium' && ['premium', 'vip'].includes(user?.subscriptionTier || '')) ||
+           (study.requiredTier === 'vip' && user?.subscriptionTier === 'vip');
+  };
+  
+  const hasAccess = canAccess();
 
   return (
     <div className="pb-20">
@@ -329,7 +363,23 @@ export default function StudyDetail() {
               {study.description}
             </p>
 
-            {!canAccess && (
+            {!hasAccess && study.requiresPurchase && study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free') && (
+              <div className="bg-ministry-gold/10 border border-ministry-gold/20 rounded-lg p-4 mb-6" data-testid="purchase-restriction">
+                <h3 className="font-semibold text-ministry-charcoal mb-2">Purchase Required</h3>
+                <p className="text-sm text-ministry-slate mb-3">
+                  This study requires a one-time purchase of {study.price ? `$${parseFloat(study.price).toFixed(2)}` : 'a fee'} to access.
+                </p>
+                <Button 
+                  onClick={() => setPurchasePopupOpen(true)}
+                  className="bg-ministry-gold text-ministry-navy hover:bg-ministry-gold/90"
+                  data-testid="button-purchase-study"
+                >
+                  Purchase Study
+                </Button>
+              </div>
+            )}
+
+            {!hasAccess && (!study.requiresPurchase || !study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free')) && (
               <div className="bg-ministry-gold/10 border border-ministry-gold/20 rounded-lg p-4 mb-6" data-testid="access-restriction">
                 <h3 className="font-semibold text-ministry-charcoal mb-2">Premium Content</h3>
                 <p className="text-sm text-ministry-slate mb-3">
@@ -345,7 +395,7 @@ export default function StudyDetail() {
             )}
 
             {/* Join Discussion Section - Only for users with tier access */}
-            {studyDiscussion && canAccess && (
+            {studyDiscussion && hasAccess && (
               <div className="flex items-center justify-between p-4 bg-ministry-navy/5 rounded-lg border border-ministry-navy/20">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-full bg-ministry-navy/10 flex items-center justify-center">
@@ -371,7 +421,7 @@ export default function StudyDetail() {
             )}
             
             {/* Tier Access Required for Discussion */}
-            {studyDiscussion && !canAccess && (
+            {studyDiscussion && !hasAccess && (
               <div className="flex items-center justify-between p-4 bg-ministry-gold/10 rounded-lg border border-ministry-gold/20">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-full bg-ministry-gold/10 flex items-center justify-center">
@@ -733,6 +783,24 @@ export default function StudyDetail() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Purchase Popup */}
+      {purchasePopupOpen && study && (
+        <PurchasePopup
+          study={study}
+          isOpen={purchasePopupOpen}
+          onClose={() => setPurchasePopupOpen(false)}
+          onPurchaseComplete={() => {
+            // Invalidate purchase check query to update access
+            queryClient.invalidateQueries({ queryKey: ["/api/purchases/check", id] });
+            setPurchasePopupOpen(false);
+            toast({
+              title: "Purchase Complete",
+              description: "You now have access to this study!",
+            });
+          }}
+        />
+      )}
     </div>
   );
 }

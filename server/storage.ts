@@ -34,6 +34,7 @@ import {
   hurdleWallReplies,
   hurdleWallPrayers,
   userPrayerStats,
+  userPurchases,
   type User,
   type UpsertUser,
   type Study,
@@ -116,6 +117,8 @@ import {
   type InsertHurdleWallPrayer,
   type UserPrayerStats,
   type InsertUserPrayerStats,
+  type UserPurchase,
+  type InsertUserPurchase,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt } from "drizzle-orm";
@@ -134,6 +137,9 @@ export interface IStorage {
   searchStudies(query: string): Promise<Study[]>;
   getFeaturedStudy(): Promise<Study | null>;
   getRecommendedStudies(userId: string, limit?: number): Promise<Study[]>;
+  
+  // Purchase operations
+  checkUserPurchase(userId: string, studyId: string): Promise<boolean>;
   
   // Progress operations
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
@@ -673,6 +679,21 @@ export class DatabaseStorage implements IStorage {
     // Get recommendations based on studied categories + tier logic
     const categoryBasedRecs = await getTierRecommendations();
     return categoryBasedRecs.slice(0, limit);
+  }
+
+  // Purchase operations
+  async checkUserPurchase(userId: string, studyId: string): Promise<boolean> {
+    const [purchase] = await db
+      .select()
+      .from(userPurchases)
+      .where(and(
+        eq(userPurchases.userId, userId),
+        eq(userPurchases.studyId, studyId),
+        eq(userPurchases.status, 'completed')
+      ))
+      .limit(1);
+
+    return !!purchase;
   }
 
   // Progress operations
