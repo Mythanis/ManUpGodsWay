@@ -197,12 +197,15 @@ export default function Owners() {
     if (!container) return;
 
     const handleWheel = (e: WheelEvent) => {
-      console.log('Wheel event triggered', e.deltaY);
-      // Prevent default vertical scroll
-      e.preventDefault();
-      // Scroll horizontally instead
-      container.scrollLeft += e.deltaY;
-      console.log('New scroll position:', container.scrollLeft);
+      console.log('Wheel event triggered on tab container', e.deltaY, 'current scrollLeft:', container.scrollLeft);
+      // Only handle horizontal scrolling if we're over the tab container
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Scroll horizontally instead
+        container.scrollLeft += e.deltaY;
+        console.log('After scroll - new position:', container.scrollLeft);
+      }
     };
 
     container.addEventListener('wheel', handleWheel, { passive: false });
@@ -695,6 +698,7 @@ export default function Owners() {
           <div 
             ref={scrollContainerRef}
             className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2"
+            style={{ maxWidth: '600px' }}
           >
             {ownerTabs.map((tab) => {
               const IconComponent = tab.icon;
