@@ -28,6 +28,7 @@ import MoreManUp from "@/pages/more-man-up";
 import Discipleship from "@/pages/discipleship";
 import HurdleWall from "@/pages/hurdle-wall";
 import Purchase from "@/pages/purchase";
+import Bible from "@/pages/bible";
 import NotFound from "@/pages/not-found";
 import Navigation from "@/components/navigation";
 import { UserSetupWizard } from "@/components/user-setup-wizard";
@@ -100,6 +101,7 @@ function Router() {
             <Route path="/discipleship" component={Discipleship} />
             <Route path="/hurdle-wall" component={HurdleWall} />
             <Route path="/purchase" component={Purchase} />
+            <Route path="/bible" component={Bible} />
             <Route path="/more-man-up" component={MoreManUp} />
           </>
         )}
