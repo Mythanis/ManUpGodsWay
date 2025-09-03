@@ -380,17 +380,19 @@ export default function Bible() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold"></div>
               </div>
             ) : (
-              <div className="space-y-4">
-                {bibleText.map((verseData) => (
-                  <div key={verseData.verse} className="flex gap-4 p-3 hover:bg-accent/5 rounded-lg transition-colors">
-                    <span className="text-ministry-gold font-semibold text-sm min-w-[2rem] mt-1">
-                      {verseData.verse}
-                    </span>
-                    <p className="text-foreground leading-relaxed text-base">
-                      {verseData.text}
-                    </p>
-                  </div>
-                ))}
+              <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-ministry-gold/20 scrollbar-track-accent/10 pr-2">
+                <div className="space-y-4">
+                  {bibleText.map((verseData) => (
+                    <div key={verseData.verse} className="flex gap-4 p-3 hover:bg-accent/5 rounded-lg transition-colors">
+                      <span className="text-ministry-gold font-semibold text-sm min-w-[2rem] mt-1 flex-shrink-0">
+                        {verseData.verse}
+                      </span>
+                      <p className="text-foreground leading-relaxed text-base">
+                        {verseData.text}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </CardContent>
