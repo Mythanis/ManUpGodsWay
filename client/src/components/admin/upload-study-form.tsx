@@ -45,6 +45,9 @@ const createStudySchema = insertStudySchema.extend({
   content: z.string().optional(), // Content is optional if lessons are provided
   category: z.string().min(1, "Category is required"),
   videoId: z.string().optional(),
+  requiresPurchase: z.boolean().default(false),
+  price: z.string().optional(),
+  purchaseRequiredTiers: z.array(z.enum(["free", "premium", "vip"])).default([]),
 });
 
 const lessonSchema = z.object({
@@ -94,6 +97,9 @@ export default function UploadStudyForm() {
       videoUrl: '',
       videoId: 'none',
       requiredTier: 'free',
+      requiresPurchase: false,
+      price: '',
+      purchaseRequiredTiers: [],
       isPublished: false,
     },
   });
@@ -371,6 +377,121 @@ export default function UploadStudyForm() {
                 )}
               />
             </div>
+
+            {/* Purchase Options Section */}
+            <FormField
+              control={form.control}
+              name="requiresPurchase"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">
+                      Requires Purchase
+                    </FormLabel>
+                    <div className="text-sm text-muted-foreground">
+                      Make this study available for purchase
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      data-testid="switch-requires-purchase"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            {/* Price field - only show when requiresPurchase is true */}
+            {form.watch('requiresPurchase') && (
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Price ($)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        {...field}
+                        data-testid="input-study-price"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Tier checkboxes - only show when requiresPurchase is true */}
+            {form.watch('requiresPurchase') && (
+              <FormField
+                control={form.control}
+                name="purchaseRequiredTiers"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Purchase Required For</FormLabel>
+                    <div className="space-y-2">
+                      {/* All selection checkbox */}
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="all-tiers"
+                          checked={field.value.length === 3}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              field.onChange(['free', 'premium', 'vip']);
+                            } else {
+                              field.onChange([]);
+                            }
+                          }}
+                          className="rounded border-ministry-steel"
+                          data-testid="checkbox-all-tiers"
+                        />
+                        <label htmlFor="all-tiers" className="text-sm font-medium">
+                          All Tiers
+                        </label>
+                      </div>
+                      
+                      {/* Individual tier checkboxes */}
+                      {tiers.map((tier) => (
+                        <div key={tier.id} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`tier-${tier.id}`}
+                            checked={field.value.includes(tier.id as 'free' | 'premium' | 'vip')}
+                            onChange={(e) => {
+                              const currentTiers = [...field.value];
+                              if (e.target.checked) {
+                                if (!currentTiers.includes(tier.id as 'free' | 'premium' | 'vip')) {
+                                  currentTiers.push(tier.id as 'free' | 'premium' | 'vip');
+                                }
+                              } else {
+                                const index = currentTiers.indexOf(tier.id as 'free' | 'premium' | 'vip');
+                                if (index > -1) {
+                                  currentTiers.splice(index, 1);
+                                }
+                              }
+                              field.onChange(currentTiers);
+                            }}
+                            className="rounded border-ministry-steel"
+                            data-testid={`checkbox-tier-${tier.id}`}
+                          />
+                          <label htmlFor={`tier-${tier.id}`} className="text-sm">
+                            {tier.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <FormField

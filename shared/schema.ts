@@ -88,6 +88,9 @@ export const studies = pgTable("studies", {
   videoId: varchar("video_id").references(() => videos.id), // Reference to videos table
   videoUrl: varchar("video_url"), // Keep for backward compatibility with external URLs
   requiredTier: varchar("required_tier").default("free"), // free, premium, vip
+  requiresPurchase: boolean("requires_purchase").default(false), // Whether study requires purchase
+  price: decimal("price", { precision: 10, scale: 2 }), // Price for purchase (if required)
+  purchaseRequiredTiers: text("purchase_required_tiers").array().default(sql`'{}'::text[]`), // Which tiers require purchase: free, premium, vip
   rating: decimal("rating", { precision: 2, scale: 1 }).default("0.0"),
   ratingCount: integer("rating_count").default(0),
   isPublished: boolean("is_published").default(false),
@@ -523,6 +526,9 @@ export const insertStudySchema = createInsertSchema(studies, {
   estimatedHours: z.number().int().min(1).default(1),
   lessonCount: z.number().int().min(1).default(1),
   requiredTier: z.enum(["free", "premium", "vip"]).default("free"),
+  requiresPurchase: z.boolean().default(false),
+  price: z.string().nullable().optional(),
+  purchaseRequiredTiers: z.array(z.enum(["free", "premium", "vip"])).default([]),
   isPublished: z.boolean().default(false),
   videoId: z.string().optional(),
 }).omit({ 
