@@ -3724,6 +3724,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'This event requires payment. Use the purchase endpoint instead.' });
       }
       
+      // Check if user is already registered
+      const existingRegistration = await storage.getEventRegistration(eventId, userId);
+      if (existingRegistration) {
+        return res.status(400).json({ message: 'You are already registered for this event' });
+      }
+      
       const registration = await storage.registerForEvent({
         eventId,
         userId,
