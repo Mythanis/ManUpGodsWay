@@ -31,7 +31,7 @@ export default function MoreManUp() {
       name: "Man Up God's Way Merch",
       url: "https://kickmerch.com/collections/man-up-gods-way",
       icon: FaTshirt,
-      color: "text-ministry-gold hover:text-yellow-600"
+      color: "text-black hover:text-gray-800"
     }
   ];
 
