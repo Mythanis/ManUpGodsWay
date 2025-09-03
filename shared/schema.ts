@@ -888,13 +888,18 @@ export const events = pgTable("events", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertEventSchema = createInsertSchema(events).omit({
-  id: true,
-  currentAttendees: true,
-  createdAt: true,
-  updatedAt: true,
-}).extend({
-  eventDate: z.string().transform((val) => new Date(val))
+export const insertEventSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  eventDate: z.string().transform((val) => new Date(val)),
+  eventTime: z.string().optional(),
+  location: z.string().optional(),
+  url: z.string().optional(),
+  requiresPurchase: z.boolean().optional().default(false),
+  price: z.string().optional(),
+  maxAttendees: z.number().optional(),
+  isPublished: z.boolean().optional().default(true),
+  createdBy: z.string()
 });
 
 export type Event = typeof events.$inferSelect;
