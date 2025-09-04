@@ -141,6 +141,7 @@ export interface IStorage {
   // Purchase operations
   checkUserPurchase(userId: string, studyId: string): Promise<boolean>;
   getUserPurchases(userId: string): Promise<UserPurchase[]>;
+  createPurchase(purchase: InsertUserPurchase): Promise<UserPurchase>;
   
   // Progress operations
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
@@ -703,6 +704,14 @@ export class DatabaseStorage implements IStorage {
       .from(userPurchases)
       .where(eq(userPurchases.userId, userId))
       .orderBy(desc(userPurchases.createdAt));
+  }
+
+  async createPurchase(purchase: InsertUserPurchase): Promise<UserPurchase> {
+    const [newPurchase] = await db
+      .insert(userPurchases)
+      .values(purchase)
+      .returning();
+    return newPurchase;
   }
 
   // Progress operations

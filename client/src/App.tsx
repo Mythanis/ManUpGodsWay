@@ -103,6 +103,7 @@ function Router() {
             <Route path="/discipleship" component={Discipleship} />
             <Route path="/hurdle-wall" component={HurdleWall} />
             <Route path="/purchase" component={Purchase} />
+            <Route path="/purchase/:studyId" component={Purchase} />
             <Route path="/bible" component={Bible} />
             <Route path="/more-man-up" component={MoreManUp} />
           </>

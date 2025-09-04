@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, CreditCard, Shield } from 'lucide-react';
+import { ArrowLeft, CreditCard, Shield, BookOpen } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 
 // Load Stripe with error handling
 const stripePromise = (() => {
@@ -23,11 +24,13 @@ const stripePromise = (() => {
 interface PurchaseFormProps {
   amount: number;
   description: string;
+  studyId?: string;
+  studyTitle?: string;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-const PurchaseForm = ({ amount, description, onSuccess, onCancel }: PurchaseFormProps) => {
+const PurchaseForm = ({ amount, description, studyId, studyTitle, onSuccess, onCancel }: PurchaseFormProps) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -51,7 +54,9 @@ const PurchaseForm = ({ amount, description, onSuccess, onCancel }: PurchaseForm
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/purchase?success=true`,
+          return_url: studyId 
+            ? `${window.location.origin}/studies/${studyId}?purchased=true`
+            : `${window.location.origin}/purchase?success=true`,
         },
       });
 
@@ -62,10 +67,44 @@ const PurchaseForm = ({ amount, description, onSuccess, onCancel }: PurchaseForm
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Payment Successful",
-          description: "Thank you for your purchase!",
-        });
+        // Payment succeeded, now complete the purchase on the backend
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const paymentIntentId = urlParams.get('payment_intent');
+          
+          if (paymentIntentId && studyId) {
+            // Complete the study purchase
+            const response = await apiRequest("POST", "/api/purchases/complete", {
+              paymentIntentId
+            });
+            
+            if (response.ok) {
+              toast({
+                title: "Purchase Complete",
+                description: "Study purchased successfully! You now have access.",
+              });
+            } else {
+              const data = await response.json();
+              console.warn("Purchase completion warning:", data.message);
+              toast({
+                title: "Payment Successful",
+                description: "Your payment was processed. If you don't see access, please contact support.",
+              });
+            }
+          } else {
+            toast({
+              title: "Payment Successful",
+              description: "Thank you for your purchase!",
+            });
+          }
+        } catch (error) {
+          console.error("Error completing purchase:", error);
+          toast({
+            title: "Payment Successful",
+            description: "Your payment was processed. If you don't see access, please contact support.",
+          });
+        }
+        
         onSuccess();
       }
     } catch (error) {
@@ -132,7 +171,29 @@ export default function Purchase() {
   const [isCreatingIntent, setIsCreatingIntent] = useState(false);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  // Extract study ID from URL path
+  const currentPath = window.location.pathname;
+  const studyId = currentPath.includes('/purchase/') ? currentPath.split('/purchase/')[1] : null;
+  
+  // Fetch study details if study ID is provided
+  const { data: study, isLoading: studyLoading } = useQuery({
+    queryKey: ["/api/studies", studyId],
+    enabled: !!studyId,
+    retry: false,
+  });
 
+  // Initialize form with study data when study is loaded
+  useEffect(() => {
+    if (study && studyId) {
+      const studyPrice = study.price ? parseFloat(study.price) : 0;
+      if (studyPrice > 0) {
+        setAmount(studyPrice);
+        setDescription(`Study: ${study.title}`);
+      }
+    }
+  }, [study, studyId]);
+  
   // Check for success parameter in URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -142,9 +203,9 @@ export default function Purchase() {
         description: "Thank you for your purchase. Your payment has been processed successfully.",
       });
       // Clear the success parameter
-      window.history.replaceState({}, '', '/purchase');
+      window.history.replaceState({}, '', studyId ? `/purchase/${studyId}` : '/purchase');
     }
-  }, [toast]);
+  }, [toast, studyId]);
 
   const createPaymentIntent = async () => {
     if (!amount || amount <= 0) {
@@ -158,13 +219,22 @@ export default function Purchase() {
 
     setIsCreatingIntent(true);
     try {
-      const response = await apiRequest("POST", "/api/payments/create-payment-intent", { 
-        amount,
-        metadata: { 
-          description,
-          timestamp: new Date().toISOString()
-        }
-      });
+      // Use study purchase endpoint if this is a study purchase
+      const endpoint = studyId 
+        ? "/api/purchases/create-payment-intent"
+        : "/api/payments/create-payment-intent";
+        
+      const payload = studyId 
+        ? { studyId, amount }
+        : { 
+            amount,
+            metadata: { 
+              description,
+              timestamp: new Date().toISOString()
+            }
+          };
+      
+      const response = await apiRequest("POST", endpoint, payload);
       
       const data = await response.json();
       if (response.ok) {
@@ -190,8 +260,15 @@ export default function Purchase() {
     setPaymentIntentId(null);
     toast({
       title: "Payment Complete",
-      description: "Your payment was processed successfully!",
+      description: studyId ? "Study purchased successfully! You now have access." : "Your payment was processed successfully!",
     });
+    
+    // Redirect to study if this was a study purchase
+    if (studyId) {
+      setTimeout(() => {
+        setLocation(`/studies/${studyId}`);
+      }, 2000);
+    }
   };
 
   const handleCancel = () => {
@@ -200,7 +277,11 @@ export default function Purchase() {
   };
 
   const goBack = () => {
-    setLocation('/home');
+    if (studyId) {
+      setLocation('/library');
+    } else {
+      setLocation('/home');
+    }
   };
 
   // Show payment form if client secret is available
@@ -231,6 +312,8 @@ export default function Purchase() {
                 <PurchaseForm
                   amount={amount}
                   description={description}
+                  studyId={studyId || undefined}
+                  studyTitle={study?.title}
                   onSuccess={handleSuccess}
                   onCancel={handleCancel}
                 />
@@ -248,36 +331,65 @@ export default function Purchase() {
       <div className="max-w-md mx-auto pt-8">
         <Card className="bg-white text-black">
           <CardHeader>
-            <CardTitle className="text-center">Make a Purchase</CardTitle>
+            <CardTitle className="text-center flex items-center justify-center gap-2">
+              {studyId ? <BookOpen className="h-5 w-5" /> : <CreditCard className="h-5 w-5" />}
+              {studyId ? 'Purchase Study' : 'Make a Purchase'}
+            </CardTitle>
             <CardDescription className="text-center">
-              Support "Man Up God's Way" ministry
+              {studyId ? `Complete your purchase to access "${study?.title}"` : 'Support "Man Up God\'s Way" ministry'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Amount ($)</Label>
-              <Input
-                id="amount"
-                type="number"
-                min="1"
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
-                placeholder="Enter amount"
-                data-testid="input-amount"
-              />
-            </div>
+            {studyId && study ? (
+              <div className="bg-ministry-charcoal/5 p-4 rounded-lg border">
+                <h3 className="font-semibold text-ministry-charcoal mb-2">Study Details</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-ministry-slate">Title:</span>
+                    <span className="font-medium">{study.title}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-ministry-slate">Category:</span>
+                    <span>{study.category}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-ministry-slate">Lessons:</span>
+                    <span>{study.lessonCount}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-ministry-slate">Price:</span>
+                    <span className="font-bold text-xl text-ministry-charcoal">${amount.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Amount ($)</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    value={amount}
+                    onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+                    placeholder="Enter amount"
+                    data-testid="input-amount"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="What is this for?"
-                data-testid="input-description"
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Input
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="What is this for?"
+                    data-testid="input-description"
+                  />
+                </div>
+              </>
+            )}
 
             {!stripePromise && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
@@ -299,11 +411,11 @@ export default function Purchase() {
               </Button>
               <Button
                 onClick={createPaymentIntent}
-                disabled={isCreatingIntent || !amount || !stripePromise}
+                disabled={isCreatingIntent || !amount || !stripePromise || (studyId && studyLoading)}
                 className="flex-1 bg-ministry-gold text-black hover:bg-ministry-gold-exact/90"
                 data-testid="button-continue-purchase"
               >
-                {isCreatingIntent ? 'Setting up...' : 'Continue to Payment'}
+                {isCreatingIntent ? 'Setting up...' : (studyId ? `Purchase for $${amount.toFixed(2)}` : 'Continue to Payment')}
               </Button>
             </div>
           </CardContent>

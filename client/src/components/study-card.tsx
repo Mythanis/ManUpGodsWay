@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users, Star, MessageSquare, Video, CheckCircle } from "lucide-react";
+import { Clock, Users, Star, MessageSquare, Video, CheckCircle, ShoppingCart } from "lucide-react";
 import { Link } from "wouter";
 import { StudyReviewsDialog } from "@/components/study-reviews-dialog";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
@@ -12,9 +12,12 @@ interface StudyCardProps {
   isCompleted?: boolean;
   completedAt?: string;
   hideTierBadge?: boolean;
+  requiresPurchase?: boolean;
+  hasPurchased?: boolean;
+  onPurchase?: () => void;
 }
 
-export default function StudyCard({ study, isCompleted = false, completedAt, hideTierBadge = false }: StudyCardProps) {
+export default function StudyCard({ study, isCompleted = false, completedAt, hideTierBadge = false, requiresPurchase = false, hasPurchased = false, onPurchase }: StudyCardProps) {
   const [showReviews, setShowReviews] = useState(false);
   const getTierColor = (tier: string) => {
     switch (tier) {
@@ -109,6 +112,34 @@ export default function StudyCard({ study, isCompleted = false, completedAt, hid
               {study.description}
             </p>
             
+            {/* Purchase section for studies requiring purchase */}
+            {requiresPurchase && !hasPurchased && (
+              <div className="bg-ministry-gold/10 border border-ministry-gold/30 rounded-lg p-3 mb-3" data-testid="purchase-section">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-ministry-charcoal mb-1">
+                      Purchase Required
+                    </p>
+                    <p className="text-xs text-ministry-slate">
+                      {study.price ? `$${parseFloat(study.price).toFixed(2)}` : 'Contact for pricing'}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onPurchase?.();
+                    }}
+                    className="bg-ministry-gold text-ministry-navy hover:bg-ministry-gold/90 text-xs px-3 py-1 h-auto"
+                    data-testid="button-purchase"
+                  >
+                    <ShoppingCart className="w-3 h-3 mr-1" />
+                    Purchase
+                  </Button>
+                </div>
+              </div>
+            )}
+            
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 {/* Only show tier badge if not hidden */}
@@ -122,19 +153,30 @@ export default function StudyCard({ study, isCompleted = false, completedAt, hid
                   <span>{study.difficulty}</span>
                 </div>
               </div>
-              <Link href={`/studies/${study.id}`}>
+              {requiresPurchase && !hasPurchased ? (
                 <Button
                   variant="ghost"
-                  className={`text-xs font-medium p-1 ${
-                    isCompleted 
-                      ? 'text-ministry-success hover:text-ministry-success/80'
-                      : 'text-ministry-steel hover:text-ministry-navy'
-                  }`}
-                  data-testid="button-view-study"
+                  className="text-xs font-medium p-1 text-ministry-slate cursor-not-allowed opacity-50"
+                  disabled
+                  data-testid="button-locked-study"
                 >
-                  {isCompleted ? 'Review' : (study.requiredTier === 'free' ? 'Start' : 'View')}
+                  Locked
                 </Button>
-              </Link>
+              ) : (
+                <Link href={`/studies/${study.id}`}>
+                  <Button
+                    variant="ghost"
+                    className={`text-xs font-medium p-1 ${
+                      isCompleted 
+                        ? 'text-ministry-success hover:text-ministry-success/80'
+                        : 'text-ministry-steel hover:text-ministry-navy'
+                    }`}
+                    data-testid="button-view-study"
+                  >
+                    {isCompleted ? 'Review' : (study.requiredTier === 'free' ? 'Start' : 'View')}
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>

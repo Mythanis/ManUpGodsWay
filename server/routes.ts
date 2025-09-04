@@ -276,6 +276,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create payment intent for study purchase
+  app.post('/api/purchases/create-payment-intent', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if Stripe keys are configured
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(503).json({ 
+          message: "Payment system not configured. Please contact administrator." 
+        });
+      }
+
+      // Import Stripe here to avoid issues if not configured
+      const Stripe = require('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: '2023-10-16',
+      });
+
+      const { studyId, amount } = req.body;
+      const userId = req.user.claims.sub;
+
+      if (!studyId || !amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid study ID or amount" });
+      }
+
+      // Verify study exists and has a price
+      const study = await storage.getStudy(studyId);
+      if (!study) {
+        return res.status(404).json({ message: "Study not found" });
+      }
+
+      if (!study.price || parseFloat(study.price) !== amount) {
+        return res.status(400).json({ message: "Invalid amount for this study" });
+      }
+
+      // Check if user already purchased this study
+      const existingPurchase = await storage.checkUserPurchase(userId, studyId);
+      if (existingPurchase) {
+        return res.status(400).json({ message: "Study already purchased" });
+      }
+
+      // Create payment intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: 'usd',
+        metadata: {
+          userId,
+          studyId,
+          studyTitle: study.title,
+          type: 'study_purchase'
+        },
+        description: `Study Purchase: ${study.title}`,
+      });
+
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id 
+      });
+    } catch (error: any) {
+      console.error("Error creating study purchase payment intent:", error);
+      res.status(500).json({ 
+        message: "Failed to create payment intent: " + error.message 
+      });
+    }
+  });
+
   // Get study discussion
   app.get('/api/studies/:id/discussion', isAuthenticated, async (req: any, res) => {
     try {
@@ -4137,6 +4201,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error retrieving payment status:", error);
       res.status(500).json({ 
         message: "Error retrieving payment status: " + (error.message || "Unknown error")
+      });
+    }
+  });
+
+  // Complete study purchase after successful payment
+  app.post('/api/purchases/complete', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(503).json({ 
+          message: "Payment system not configured" 
+        });
+      }
+
+      const Stripe = require('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2023-10-16",
+      });
+
+      const { paymentIntentId } = req.body;
+      const userId = req.user.claims.sub;
+
+      if (!paymentIntentId) {
+        return res.status(400).json({ message: "Payment intent ID required" });
+      }
+
+      // Verify payment was successful
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      if (paymentIntent.status !== 'succeeded') {
+        return res.status(400).json({ message: "Payment not completed" });
+      }
+
+      const metadata = paymentIntent.metadata;
+      
+      // Check if this is a study purchase
+      if (metadata.type === 'study_purchase' && metadata.studyId && metadata.userId === userId) {
+        // Create the purchase record
+        const purchase = await storage.createPurchase({
+          userId,
+          studyId: metadata.studyId,
+          amount: (paymentIntent.amount / 100).toString(),
+          status: 'completed',
+          paymentIntentId,
+          purchasedAt: new Date()
+        });
+
+        res.json({ 
+          success: true,
+          purchase,
+          message: "Study purchase completed successfully" 
+        });
+      } else {
+        res.json({ 
+          success: true,
+          message: "Payment completed successfully" 
+        });
+      }
+    } catch (error: any) {
+      console.error("Error completing purchase:", error);
+      res.status(500).json({ 
+        message: "Error completing purchase: " + (error.message || "Unknown error")
       });
     }
   });

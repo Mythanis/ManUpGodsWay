@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import StudyCard from "@/components/study-card";
 import { Search, Star, Filter } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -310,10 +310,18 @@ export default function Library() {
             // Check if user has purchased this study
             const hasPurchased = (userPurchases as any[]).some((p: any) => p.studyId === study.id && p.status === 'completed');
             
+            // Check if this study requires purchase for the current user
+            const requiresPurchase = study.requiresPurchase && 
+              study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free');
+            
             // Hide tier badge if study requires purchase for current user's tier and they haven't purchased it
-            const shouldHideTierBadge = study.requiresPurchase && 
-              study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free') && 
-              !hasPurchased;
+            const shouldHideTierBadge = requiresPurchase && !hasPurchased;
+            
+            // Handle purchase action
+            const handlePurchase = () => {
+              // Navigate to purchase page for this study
+              window.location.href = `/purchase/${study.id}`;
+            };
             
             return (
               <StudyCard 
@@ -322,6 +330,9 @@ export default function Library() {
                 isCompleted={isCompleted}
                 completedAt={completedAt}
                 hideTierBadge={shouldHideTierBadge}
+                requiresPurchase={requiresPurchase}
+                hasPurchased={hasPurchased}
+                onPurchase={handlePurchase}
                 data-testid={`study-card-${study.id}`}
               />
             );
