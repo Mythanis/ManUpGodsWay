@@ -143,7 +143,7 @@ const PurchaseForm = ({ amount, description, studyId, studyTitle, onSuccess, onC
           variant="outline"
           onClick={onCancel}
           disabled={isProcessing}
-          className="flex-1"
+          className="flex-1 text-white border-white hover:bg-white hover:text-black"
           data-testid="button-cancel-payment"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
