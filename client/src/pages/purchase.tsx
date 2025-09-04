@@ -403,7 +403,7 @@ export default function Purchase() {
               <Button
                 variant="outline"
                 onClick={goBack}
-                className="flex-1"
+                className="flex-1 text-white border-white hover:bg-white hover:text-black"
                 data-testid="button-back"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />

@@ -4369,7 +4369,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Test connection
       try {
-        const Stripe = require('stripe');
+        const { default: Stripe } = await import('stripe');
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
           apiVersion: "2023-10-16",
         });
@@ -4419,7 +4419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate keys by testing connection
       try {
-        const Stripe = require('stripe');
+        const { default: Stripe } = await import('stripe');
         const stripe = new Stripe(secretKey, {
           apiVersion: "2023-10-16",
         });
