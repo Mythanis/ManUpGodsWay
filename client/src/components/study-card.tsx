@@ -11,9 +11,10 @@ interface StudyCardProps {
   study: any;
   isCompleted?: boolean;
   completedAt?: string;
+  hideTierBadge?: boolean;
 }
 
-export default function StudyCard({ study, isCompleted = false, completedAt }: StudyCardProps) {
+export default function StudyCard({ study, isCompleted = false, completedAt, hideTierBadge = false }: StudyCardProps) {
   const [showReviews, setShowReviews] = useState(false);
   const getTierColor = (tier: string) => {
     switch (tier) {
@@ -110,9 +111,12 @@ export default function StudyCard({ study, isCompleted = false, completedAt }: S
             
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Badge className={`${getTierColor(study.requiredTier)} text-xs px-2 py-1`} data-testid="badge-tier">
-                  {getTierLabel(study.requiredTier)}
-                </Badge>
+                {/* Only show tier badge if not hidden */}
+                {!hideTierBadge && (
+                  <Badge className={`${getTierColor(study.requiredTier)} text-xs px-2 py-1`} data-testid="badge-tier">
+                    {getTierLabel(study.requiredTier)}
+                  </Badge>
+                )}
                 <div className="flex items-center space-x-1 text-xs text-ministry-slate">
                   <Users className="w-3 h-3" />
                   <span>{study.difficulty}</span>

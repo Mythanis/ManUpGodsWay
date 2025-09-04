@@ -263,6 +263,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all user purchases
+  app.get('/api/purchases', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      const purchases = await storage.getUserPurchases(userId);
+      res.json(purchases);
+    } catch (error) {
+      console.error("Error fetching user purchases:", error);
+      res.status(500).json({ message: "Failed to fetch user purchases" });
+    }
+  });
+
   // Get study discussion
   app.get('/api/studies/:id/discussion', isAuthenticated, async (req: any, res) => {
     try {

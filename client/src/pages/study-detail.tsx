@@ -336,9 +336,12 @@ export default function StudyDetail() {
             
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <Badge className={getTierColor(study.requiredTier || 'free')} data-testid="badge-study-tier">
-                  {study.requiredTier || 'free'}
-                </Badge>
+                {/* Only show tier badge if study doesn't require purchase for this user */}
+                {!(study.requiresPurchase && study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free') && !hasPurchased) && (
+                  <Badge className={getTierColor(study.requiredTier || 'free')} data-testid="badge-study-tier">
+                    {study.requiredTier || 'free'}
+                  </Badge>
+                )}
                 {(study.rating && parseFloat(study.rating.toString()) > 0) && (
                   <div className="flex items-center space-x-1" data-testid="rating-display">
                     <Star className="w-4 h-4 text-black fill-current" />

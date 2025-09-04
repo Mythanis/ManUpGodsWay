@@ -45,7 +45,7 @@ export default function Library() {
     return () => container.removeEventListener('wheel', handleWheel);
   }, []);
 
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const { data: studies = [], isLoading } = useQuery({
     queryKey: ["/api/studies"],
@@ -68,6 +68,15 @@ export default function Library() {
     enabled: isAuthenticated,
     retry: false,
     refetchInterval: 10000, // Update user progress every 10 seconds
+    refetchIntervalInBackground: true,
+  });
+
+  // Fetch user purchases to determine tier badge visibility
+  const { data: userPurchases = [] } = useQuery({
+    queryKey: ["/api/purchases"],
+    enabled: isAuthenticated,
+    retry: false,
+    refetchInterval: 10000, // Update user purchases every 10 seconds
     refetchIntervalInBackground: true,
   });
 
@@ -298,12 +307,21 @@ export default function Library() {
             const isCompleted = progress?.isCompleted || false;
             const completedAt = progress?.completedAt;
             
+            // Check if user has purchased this study
+            const hasPurchased = (userPurchases as any[]).some((p: any) => p.studyId === study.id && p.status === 'completed');
+            
+            // Hide tier badge if study requires purchase for current user's tier and they haven't purchased it
+            const shouldHideTierBadge = study.requiresPurchase && 
+              study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free') && 
+              !hasPurchased;
+            
             return (
               <StudyCard 
                 key={study.id} 
                 study={study} 
                 isCompleted={isCompleted}
                 completedAt={completedAt}
+                hideTierBadge={shouldHideTierBadge}
                 data-testid={`study-card-${study.id}`}
               />
             );
