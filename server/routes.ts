@@ -287,7 +287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Import Stripe here to avoid issues if not configured
-      const Stripe = require('stripe');
+      const { default: Stripe } = await import('stripe');
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
         apiVersion: '2023-10-16',
       });
@@ -4135,7 +4135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const Stripe = require('stripe');
+      const { default: Stripe } = await import('stripe');
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
         apiVersion: "2023-10-16",
       });
@@ -4183,7 +4183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const Stripe = require('stripe');
+      const { default: Stripe } = await import('stripe');
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
         apiVersion: "2023-10-16",
       });
@@ -4214,7 +4214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const Stripe = require('stripe');
+      const { default: Stripe } = await import('stripe');
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
         apiVersion: "2023-10-16",
       });
@@ -4281,7 +4281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const Stripe = require('stripe');
+      const { default: Stripe } = await import('stripe');
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
         apiVersion: "2023-10-16",
       });
@@ -4328,7 +4328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const Stripe = require('stripe');
+      const { default: Stripe } = await import('stripe');
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
         apiVersion: "2023-10-16",
       });
@@ -4460,7 +4460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const Stripe = require('stripe');
+      const { default: Stripe } = await import('stripe');
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
         apiVersion: "2023-10-16",
       });
