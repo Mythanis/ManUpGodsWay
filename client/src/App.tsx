@@ -51,9 +51,17 @@ function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const { splashCompleted, setSplashCompleted } = useSplash();
 
-  // Show splash screen first (on every app load)
-  if (!splashCompleted) {
+  // Skip splash screen for purchase pages
+  const isPurchasePage = window.location.pathname.includes('/purchase');
+  
+  // Show splash screen first (on every app load), unless it's a purchase page
+  if (!splashCompleted && !isPurchasePage) {
     return <SplashScreen onComplete={() => setSplashCompleted(true)} />;
+  }
+  
+  // If this is a purchase page and splash hasn't completed, mark it as completed
+  if (!splashCompleted && isPurchasePage) {
+    setSplashCompleted(true);
   }
 
   if (isLoading) {
