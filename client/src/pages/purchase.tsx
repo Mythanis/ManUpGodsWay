@@ -234,15 +234,10 @@ export default function Purchase() {
             }
           };
       
-      const response = await apiRequest("POST", endpoint, payload);
+      const data = await apiRequest("POST", endpoint, payload);
       
-      const data = await response.json();
-      if (response.ok) {
-        setClientSecret(data.clientSecret);
-        setPaymentIntentId(data.paymentIntentId);
-      } else {
-        throw new Error(data.message || 'Failed to create payment');
-      }
+      setClientSecret(data.clientSecret);
+      setPaymentIntentId(data.paymentIntentId);
     } catch (error: any) {
       console.error('Error creating payment intent:', error);
       toast({
