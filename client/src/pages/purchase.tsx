@@ -137,7 +137,7 @@ const PurchaseForm = ({ amount, description, studyId, studyTitle, onSuccess, onC
         <PaymentElement />
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 pb-24">
         <Button
           type="button"
           variant="outline"
@@ -394,7 +394,7 @@ export default function Purchase() {
               </div>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 pb-24">
               <Button
                 variant="outline"
                 onClick={goBack}
