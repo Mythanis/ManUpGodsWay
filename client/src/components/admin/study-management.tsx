@@ -163,7 +163,7 @@ export default function StudyManagement() {
       tags: formData.tags.split(",").map(tag => tag.trim()).filter(Boolean),
       lessons: formData.lessons ? JSON.parse(formData.lessons) : [],
       requiresPurchase: formData.requiresPurchase,
-      price: formData.requiresPurchase && formData.price ? formData.price : undefined,
+      price: formData.requiresPurchase && formData.price && formData.price.trim() !== '' ? formData.price : null,
       purchaseRequiredTiers: formData.requiresPurchase ? formData.purchaseRequiredTiers : [],
     };
 

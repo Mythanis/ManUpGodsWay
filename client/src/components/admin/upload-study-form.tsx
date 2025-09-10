@@ -235,7 +235,9 @@ export default function UploadStudyForm() {
       ...data,
       lessonCount: lessons.length > 0 ? lessons.length : 1,
       videoId: data.videoId === 'none' ? undefined : data.videoId,
-      content: lessons.length > 0 ? data.content || 'See individual lessons for content.' : data.content
+      content: lessons.length > 0 ? data.content || 'See individual lessons for content.' : data.content,
+      // Convert price to proper format - null if not required for purchase, or empty/invalid
+      price: data.requiresPurchase && data.price && data.price.trim() !== '' ? data.price : null
     };
     createStudy.mutate(submitData);
   };
