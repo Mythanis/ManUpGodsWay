@@ -186,7 +186,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                   variant={billingCycle === "monthly" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setBillingCycle("monthly")}
-                  className={billingCycle === "monthly" ? "bg-ministry-gold text-black shadow-sm hover:bg-ministry-gold/90" : "hover:bg-ministry-gold/20"}
+                  className={billingCycle === "monthly" ? "bg-ministry-gold text-black shadow-sm hover:bg-ministry-gold/90" : "text-black hover:bg-ministry-gold/20"}
                 >
                   Monthly
                 </Button>
@@ -194,7 +194,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                   variant={billingCycle === "yearly" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setBillingCycle("yearly")}
-                  className={billingCycle === "yearly" ? "bg-ministry-gold text-black shadow-sm hover:bg-ministry-gold/90" : "hover:bg-ministry-gold/20"}
+                  className={billingCycle === "yearly" ? "bg-ministry-gold text-black shadow-sm hover:bg-ministry-gold/90" : "text-black hover:bg-ministry-gold/20"}
                 >
                   Yearly
                   <Badge className="ml-2 bg-green-500 text-white text-xs">Save up to {getHighestSavingsPercentage()}%</Badge>
