@@ -26,7 +26,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt, hid
       case 'vip':
         return 'bg-ministry-gold-exact/20 text-ministry-gold';
       default:
-        return 'bg-ministry-success/20 text-ministry-success';
+        return 'bg-white text-black border border-gray-300';
     }
   };
 

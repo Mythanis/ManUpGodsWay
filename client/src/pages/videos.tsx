@@ -176,7 +176,7 @@ export default function Videos() {
         );
       default:
         return (
-          <Badge className="bg-muted text-foreground flex items-center space-x-1">
+          <Badge className="bg-white text-black border border-gray-300 flex items-center space-x-1">
             <Zap className="w-3 h-3" />
             <span>Free</span>
           </Badge>

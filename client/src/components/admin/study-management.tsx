@@ -173,7 +173,7 @@ export default function StudyManagement() {
       case "vip":
         return <Gem className="w-4 h-4 text-purple-600" />;
       default:
-        return <Users className="w-4 h-4 text-green-600" />;
+        return <Users className="w-4 h-4 text-black" />;
     }
   };
 
@@ -184,7 +184,7 @@ export default function StudyManagement() {
       case "vip":
         return "bg-purple-100 text-purple-800";
       default:
-        return "bg-green-100 text-green-800";
+        return "bg-white text-black border border-gray-300";
     }
   };
 
