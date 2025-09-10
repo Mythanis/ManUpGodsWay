@@ -35,10 +35,14 @@ export default function TierPricingManagement() {
   const [formData, setFormData] = useState<{
     monthlyPrice: string;
     yearlyPrice: string;
+    yearlyDiscountPercent: string;
+    yearlyPricingType: 'fixed' | 'discount';
     features: string;
   }>({
     monthlyPrice: "",
     yearlyPrice: "",
+    yearlyDiscountPercent: "",
+    yearlyPricingType: 'discount',
     features: "",
   });
 
@@ -72,9 +76,16 @@ export default function TierPricingManagement() {
 
   const handleEdit = (tier: TierPricing) => {
     setEditingTier(tier.tier);
+    const monthlyPrice = parseFloat(tier.monthlyPrice);
+    const yearlyPrice = tier.yearlyPrice ? parseFloat(tier.yearlyPrice) : 0;
+    const expectedDiscountPrice = monthlyPrice * 12 * 0.95; // Assume 5% discount as default
+    const isLikelyDiscount = yearlyPrice > 0 && Math.abs(yearlyPrice - expectedDiscountPrice) < Math.abs(yearlyPrice - (monthlyPrice * 12));
+    
     setFormData({
       monthlyPrice: tier.monthlyPrice,
       yearlyPrice: tier.yearlyPrice || "",
+      yearlyDiscountPercent: isLikelyDiscount ? "5" : "",
+      yearlyPricingType: tier.yearlyPrice ? (isLikelyDiscount ? 'discount' : 'fixed') : 'discount',
       features: tier.features.join("\n"),
     });
   };
@@ -87,11 +98,20 @@ export default function TierPricingManagement() {
       .map(f => f.trim())
       .filter(f => f.length > 0);
 
+    let yearlyPrice = null;
+    if (formData.yearlyPricingType === 'fixed' && formData.yearlyPrice) {
+      yearlyPrice = parseFloat(formData.yearlyPrice);
+    } else if (formData.yearlyPricingType === 'discount' && formData.yearlyDiscountPercent) {
+      const monthlyPrice = parseFloat(formData.monthlyPrice);
+      const discountPercent = parseFloat(formData.yearlyDiscountPercent);
+      yearlyPrice = monthlyPrice * 12 * (1 - discountPercent / 100);
+    }
+
     updateTierMutation.mutate({
       tier: editingTier,
       data: {
         monthlyPrice: parseFloat(formData.monthlyPrice),
-        yearlyPrice: formData.yearlyPrice ? parseFloat(formData.yearlyPrice) : null,
+        yearlyPrice: yearlyPrice,
         features: featuresArray,
       },
     });
@@ -99,7 +119,13 @@ export default function TierPricingManagement() {
 
   const handleCancel = () => {
     setEditingTier(null);
-    setFormData({ monthlyPrice: "", yearlyPrice: "", features: "" });
+    setFormData({ 
+      monthlyPrice: "", 
+      yearlyPrice: "", 
+      yearlyDiscountPercent: "",
+      yearlyPricingType: 'discount',
+      features: "" 
+    });
   };
 
   const getTierDisplayName = (tier: string) => {
@@ -188,7 +214,7 @@ export default function TierPricingManagement() {
             <CardContent className="space-y-4">
               {editingTier === tier.tier ? (
                 <>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <div>
                       <Label htmlFor={`monthly-${tier.tier}`}>Monthly Price ($)</Label>
                       <Input
@@ -202,18 +228,66 @@ export default function TierPricingManagement() {
                         className="border-ministry-steel focus:border-ministry-gold"
                       />
                     </div>
-                    <div>
-                      <Label htmlFor={`yearly-${tier.tier}`}>Yearly Price ($) <span className="text-gray-500">(optional)</span></Label>
-                      <Input
-                        id={`yearly-${tier.tier}`}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.yearlyPrice}
-                        onChange={(e) => setFormData({ ...formData, yearlyPrice: e.target.value })}
-                        placeholder="199.99"
-                        className="border-ministry-steel focus:border-ministry-gold"
-                      />
+                    
+                    <div className="space-y-3">
+                      <Label>Yearly Pricing <span className="text-gray-500">(optional)</span></Label>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={formData.yearlyPricingType === 'discount' ? 'default' : 'outline'}
+                          onClick={() => setFormData({ ...formData, yearlyPricingType: 'discount' })}
+                          className={formData.yearlyPricingType === 'discount' ? 'bg-ministry-gold text-black hover:bg-ministry-gold/90' : ''}
+                        >
+                          Discount %
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={formData.yearlyPricingType === 'fixed' ? 'default' : 'outline'}
+                          onClick={() => setFormData({ ...formData, yearlyPricingType: 'fixed' })}
+                          className={formData.yearlyPricingType === 'fixed' ? 'bg-ministry-gold text-black hover:bg-ministry-gold/90' : ''}
+                        >
+                          Set Price
+                        </Button>
+                      </div>
+                      
+                      {formData.yearlyPricingType === 'discount' ? (
+                        <div>
+                          <Label htmlFor={`discount-${tier.tier}`}>Yearly Discount (%)</Label>
+                          <Input
+                            id={`discount-${tier.tier}`}
+                            type="number"
+                            step="1"
+                            min="0"
+                            max="50"
+                            value={formData.yearlyDiscountPercent}
+                            onChange={(e) => setFormData({ ...formData, yearlyDiscountPercent: e.target.value })}
+                            placeholder="5"
+                            className="border-ministry-steel focus:border-ministry-gold"
+                          />
+                          {formData.monthlyPrice && formData.yearlyDiscountPercent && (
+                            <div className="text-sm text-gray-600 mt-1">
+                              Yearly price: ${(parseFloat(formData.monthlyPrice) * 12 * (1 - parseFloat(formData.yearlyDiscountPercent) / 100)).toFixed(2)}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <Label htmlFor={`yearly-${tier.tier}`}>Yearly Price ($)</Label>
+                          <Input
+                            id={`yearly-${tier.tier}`}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={formData.yearlyPrice}
+                            onChange={(e) => setFormData({ ...formData, yearlyPrice: e.target.value })}
+                            placeholder="199.99"
+                            className="border-ministry-steel focus:border-ministry-gold"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div>
