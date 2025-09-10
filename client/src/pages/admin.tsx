@@ -553,6 +553,11 @@ export default function Admin() {
                                 {study.requiredTier.toUpperCase()}
                               </span>
                             </Badge>
+                            {study.requiresPurchase && study.price && (
+                              <Badge className="text-xs bg-ministry-gold text-black border-ministry-gold">
+                                ${parseFloat(String(study.price)).toFixed(2)}
+                              </Badge>
+                            )}
                             <span className="text-xs text-black">
                               {study.duration} min
                             </span>
