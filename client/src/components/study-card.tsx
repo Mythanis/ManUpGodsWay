@@ -25,7 +25,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt, hid
       case 'premium':
         return 'bg-ministry-steel/20 text-ministry-steel';
       case 'vip':
-        return 'bg-ministry-gold-exact/20 text-ministry-gold';
+        return 'bg-ministry-gold-exact text-black';
       default:
         return 'bg-white text-black border border-gray-300';
     }

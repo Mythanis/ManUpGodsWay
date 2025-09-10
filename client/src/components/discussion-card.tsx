@@ -158,7 +158,7 @@ export default function DiscussionCard({
   const getTierBadge = (subscriptionTier: string) => {
     switch (subscriptionTier) {
       case 'vip':
-        return <Badge className="bg-black text-white text-xs">VIP</Badge>;
+        return <Badge className="bg-ministry-gold-exact text-black text-xs">VIP</Badge>;
       case 'premium':
         return <Badge className="bg-black text-white text-xs">Premium</Badge>;
       default:

@@ -260,7 +260,7 @@ export default function VideoManagement() {
     switch (tier) {
       case 'vip':
         return (
-          <Badge className="bg-purple-100 text-purple-800 flex items-center space-x-1">
+          <Badge className="bg-ministry-gold-exact text-black flex items-center space-x-1">
             <Crown className="w-3 h-3" />
             <span>VIP</span>
           </Badge>

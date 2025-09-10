@@ -181,7 +181,7 @@ export default function StudyManagement() {
       case "premium":
         return <Crown className="w-4 h-4 text-yellow-600" />;
       case "vip":
-        return <Gem className="w-4 h-4 text-purple-600" />;
+        return <Gem className="w-4 h-4 text-ministry-gold" />;
       default:
         return <Users className="w-4 h-4 text-black" />;
     }
@@ -192,7 +192,7 @@ export default function StudyManagement() {
       case "premium":
         return "bg-yellow-100 text-yellow-800";
       case "vip":
-        return "bg-purple-100 text-purple-800";
+        return "bg-ministry-gold-exact text-black";
       default:
         return "bg-white text-black border border-gray-300";
     }

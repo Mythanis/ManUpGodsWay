@@ -46,7 +46,7 @@ export default function Profile() {
       case 'premium':
         return <Badge className="bg-ministry-steel/20 text-ministry-steel">Premium Member</Badge>;
       case 'vip':
-        return <Badge className="bg-ministry-gold-exact/20 text-ministry-gold">VIP Member</Badge>;
+        return <Badge className="bg-ministry-gold-exact text-black">VIP Member</Badge>;
       default:
         return <Badge variant="outline">Free Member</Badge>;
     }
