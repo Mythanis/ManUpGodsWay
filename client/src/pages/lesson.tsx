@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DiscussionCard from "@/components/discussion-card";
 import { X, MessageCircle, ArrowLeft, CheckCircle } from "lucide-react";
-import type { Lesson as LessonType } from "@shared/schema";
+import type { Lesson as LessonType, Study } from "@shared/schema";
 
 export default function Lesson() {
   const [match, params] = useRoute("/study/:studyId/lesson/:lessonNumber");
@@ -29,7 +29,7 @@ export default function Lesson() {
   });
 
   // Fetch study data for access control and discussion
-  const { data: study } = useQuery({
+  const { data: study } = useQuery<Study>({
     queryKey: ["/api/studies", studyId],
     retry: false,
   });
