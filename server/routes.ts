@@ -561,13 +561,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Lessons routes
-  app.get('/api/lessons/:studyId/:lessonNumber', async (req: any, res) => {
+  app.get('/api/lessons/:studyId/:lessonNumber', isAuthenticated, async (req: any, res) => {
     try {
       const { studyId, lessonNumber } = req.params;
       const lesson = await storage.getLesson(studyId, parseInt(lessonNumber));
       
       if (!lesson) {
         return res.status(404).json({ message: "Lesson not found" });
+      }
+
+      // Get the study to check access permissions
+      const study = await storage.getStudy(studyId);
+      if (!study) {
+        return res.status(404).json({ message: "Study not found" });
+      }
+
+      // Get user for permission checking
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const userTier = user.subscriptionTier || 'free';
+      const lessonNum = parseInt(lessonNumber);
+
+      // Check if user has full access to the study
+      const hasFullAccess = study.requiredTier === 'free' || 
+                           (study.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
+                           (study.requiredTier === 'vip' && userTier === 'vip');
+
+      // Check if user has preview access (free users accessing premium/VIP studies with free lessons)
+      const hasPreviewAccess = userTier === 'free' && 
+                               (study.requiredTier === 'premium' || study.requiredTier === 'vip') && 
+                               (study.freeLessonCount || 0) > 0;
+
+      // Determine if user can access this specific lesson
+      let canAccessLesson = false;
+      
+      if (hasFullAccess) {
+        canAccessLesson = true;
+      } else if (hasPreviewAccess) {
+        // Free users can only access lessons up to the free lesson count
+        canAccessLesson = lessonNum <= (study.freeLessonCount || 0);
+      }
+
+      if (!canAccessLesson) {
+        return res.status(403).json({ 
+          message: "Access denied", 
+          reason: hasPreviewAccess 
+            ? `You can only access the first ${study.freeLessonCount} lesson${study.freeLessonCount === 1 ? '' : 's'} of this ${study.requiredTier} study`
+            : `This lesson requires ${study.requiredTier} subscription to access`
+        });
       }
       
       res.json(lesson);
