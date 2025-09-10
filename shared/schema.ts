@@ -1143,6 +1143,26 @@ export type InsertHurdleWallPrayer = z.infer<typeof insertHurdleWallPrayerSchema
 export type UserPrayerStats = typeof userPrayerStats.$inferSelect;
 export type InsertUserPrayerStats = z.infer<typeof insertUserPrayerStatsSchema>;
 
+// Tier pricing configuration table
+export const tierPricing = pgTable("tier_pricing", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tier: varchar("tier").notNull().unique(), // premium, vip
+  monthlyPrice: decimal("monthly_price", { precision: 10, scale: 2 }).notNull(),
+  yearlyPrice: decimal("yearly_price", { precision: 10, scale: 2 }),
+  features: text("features").array().default(sql`'{}'::text[]`), // Array of feature descriptions
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTierPricingSchema = createInsertSchema(tierPricing).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Purchase types
 export type UserPurchase = typeof userPurchases.$inferSelect;
 export type InsertUserPurchase = z.infer<typeof insertUserPurchaseSchema>;
+export type TierPricing = typeof tierPricing.$inferSelect;
+export type InsertTierPricing = z.infer<typeof insertTierPricingSchema>;

@@ -119,6 +119,8 @@ import {
   type InsertUserPrayerStats,
   type UserPurchase,
   type InsertUserPurchase,
+  type TierPricing,
+  type InsertTierPricing,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt } from "drizzle-orm";
@@ -142,6 +144,11 @@ export interface IStorage {
   checkUserPurchase(userId: string, studyId: string): Promise<boolean>;
   getUserPurchases(userId: string): Promise<UserPurchase[]>;
   createPurchase(purchase: InsertUserPurchase): Promise<UserPurchase>;
+  
+  // Tier pricing operations
+  getTierPricing(): Promise<TierPricing[]>;
+  getTierPricingByTier(tier: string): Promise<TierPricing | undefined>;
+  updateTierPricing(tier: string, pricing: Partial<InsertTierPricing>): Promise<TierPricing>;
   
   // Progress operations
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
@@ -712,6 +719,39 @@ export class DatabaseStorage implements IStorage {
       .values(purchase)
       .returning();
     return newPurchase;
+  }
+
+  // Tier pricing operations
+  async getTierPricing(): Promise<TierPricing[]> {
+    return await db
+      .select()
+      .from(schema.tierPricing)
+      .where(eq(schema.tierPricing.isActive, true))
+      .orderBy(asc(schema.tierPricing.tier));
+  }
+
+  async getTierPricingByTier(tier: string): Promise<TierPricing | undefined> {
+    const [pricing] = await db
+      .select()
+      .from(schema.tierPricing)
+      .where(and(
+        eq(schema.tierPricing.tier, tier),
+        eq(schema.tierPricing.isActive, true)
+      ))
+      .limit(1);
+    return pricing;
+  }
+
+  async updateTierPricing(tier: string, pricing: Partial<InsertTierPricing>): Promise<TierPricing> {
+    const [updated] = await db
+      .update(schema.tierPricing)
+      .set({
+        ...pricing,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.tierPricing.tier, tier))
+      .returning();
+    return updated;
   }
 
   // Progress operations
