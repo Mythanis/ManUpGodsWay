@@ -397,22 +397,27 @@ export default function StudyManagement() {
               />
             </div>
 
-            {/* Price field - only show when requiresPurchase is true */}
-            {formData.requiresPurchase && (
-              <div>
-                <Label htmlFor="edit-price">Price ($)</Label>
-                <Input
-                  id="edit-price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="0.00"
-                  data-testid="input-edit-price"
-                />
-              </div>
-            )}
+            {/* Price field - always show for editing */}
+            <div>
+              <Label htmlFor="edit-price">Price ($)</Label>
+              <Input
+                id="edit-price"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                placeholder="0.00"
+                disabled={!formData.requiresPurchase}
+                className={!formData.requiresPurchase ? "opacity-50" : ""}
+                data-testid="input-edit-price"
+              />
+              {!formData.requiresPurchase && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Enable "Requires Purchase" to set a price
+                </p>
+              )}
+            </div>
 
             {/* Tier checkboxes - only show when requiresPurchase is true */}
             {formData.requiresPurchase && (
