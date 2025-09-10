@@ -37,10 +37,17 @@ export function NotificationPreferences() {
     mutationFn: async (updates: Partial<NotificationPreferences>) => {
       const response = await fetch('/api/notification-preferences', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
         body: JSON.stringify(updates),
       });
-      if (!response.ok) throw new Error('Failed to update preferences');
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Update preferences error:', response.status, errorData);
+        throw new Error(`Failed to update preferences: ${response.status}`);
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -164,9 +171,9 @@ export function NotificationPreferences() {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Admin Notification Notice */}
-          <Alert>
-            <Shield className="h-4 w-4" />
-            <AlertDescription>
+          <Alert className="bg-ministry-gold-exact border-ministry-gold">
+            <Shield className="h-4 w-4 text-black" />
+            <AlertDescription className="text-black">
               <strong>Important:</strong> Admin broadcasts and system notifications cannot be disabled and will always be delivered for security and platform updates.
             </AlertDescription>
           </Alert>
