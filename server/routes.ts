@@ -2048,6 +2048,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Stripe webhook to handle subscription events
+  app.post('/api/stripe/webhook', async (req, res) => {
+    try {
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(503).json({ message: "Stripe not configured" });
+      }
+
+      const { default: Stripe } = await import('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: '2023-10-16',
+      });
+
+      const event = req.body;
+
+      // Handle the subscription checkout completion event
+      if (event.type === 'checkout.session.completed') {
+        const session = event.data.object;
+
+        // Only handle subscription checkouts (not one-time payments)
+        if (session.mode === 'subscription') {
+          const { userId, tier } = session.metadata;
+
+          if (userId && tier) {
+            // Update user subscription tier
+            await storage.updateUserSubscription(userId, tier);
+            console.log(`Updated user ${userId} to ${tier} tier via Stripe webhook`);
+
+            // Send real-time notification to user about upgrade success
+            const user = await storage.getUser(userId);
+            if (user) {
+              const notification = await storage.createNotification({
+                userId: user.id,
+                type: 'admin',
+                title: 'Subscription Upgraded!',
+                message: `Your subscription has been upgraded to ${tier.charAt(0).toUpperCase() + tier.slice(1)}. You now have access to exclusive content and features.`,
+                relatedId: null,
+              });
+
+              // Send real-time notification if WebSocket is connected
+              if ((req.app as any).sendRealtimeNotification) {
+                (req.app as any).sendRealtimeNotification(user.id, notification);
+              }
+            }
+          }
+        }
+      }
+
+      res.status(200).json({ received: true });
+    } catch (error) {
+      console.error("Stripe webhook error:", error);
+      res.status(400).json({ message: "Webhook error" });
+    }
+  });
+
   // Video Management API Routes
   app.get('/api/admin/videos', isAuthenticated, async (req: any, res) => {
     try {

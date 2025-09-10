@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 import { NotificationPanel } from "@/components/notification-panel";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { FeedbackDialog } from "@/components/feedback-dialog";
@@ -34,6 +35,39 @@ export default function Profile() {
   const { user } = useAuth();
   const { theme, setTheme, effectiveTheme } = useTheme();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Handle successful subscription upgrade
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const upgradeStatus = urlParams.get('upgrade');
+    const tier = urlParams.get('tier');
+
+    if (upgradeStatus === 'success' && tier) {
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Invalidate auth cache to refresh user data
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+      
+      // Show success message
+      toast({
+        title: "Subscription Upgraded!",
+        description: `Welcome to ${tier.charAt(0).toUpperCase() + tier.slice(1)}! You now have access to exclusive content.`,
+        variant: "default",
+      });
+    } else if (upgradeStatus === 'cancelled') {
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      toast({
+        title: "Upgrade Cancelled",
+        description: "Your subscription upgrade was cancelled. You can try again anytime.",
+        variant: "destructive",
+      });
+    }
+  }, [queryClient, toast]);
 
   const { data: progress = [] } = useQuery<any[]>({
     queryKey: ["/api/progress"],
