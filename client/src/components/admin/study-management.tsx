@@ -229,6 +229,11 @@ export default function StudyManagement() {
                       <span className="text-xs text-muted-foreground">
                         {study.duration} min
                       </span>
+                      {study.requiresPurchase && study.price && (
+                        <Badge className="text-xs bg-ministry-gold text-black">
+                          ${parseFloat(study.price).toFixed(2)}
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-2">
                       {study.description}
