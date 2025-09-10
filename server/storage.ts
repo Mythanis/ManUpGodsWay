@@ -33,6 +33,7 @@ import {
   hurdleWallPosts,
   hurdleWallReplies,
   hurdleWallPrayers,
+  tierPricing,
   userPrayerStats,
   userPurchases,
   type User,
@@ -734,18 +735,18 @@ export class DatabaseStorage implements IStorage {
   async getTierPricing(): Promise<TierPricing[]> {
     return await db
       .select()
-      .from(schema.tierPricing)
-      .where(eq(schema.tierPricing.isActive, true))
-      .orderBy(asc(schema.tierPricing.tier));
+      .from(tierPricing)
+      .where(eq(tierPricing.isActive, true))
+      .orderBy(asc(tierPricing.tier));
   }
 
   async getTierPricingByTier(tier: string): Promise<TierPricing | undefined> {
     const [pricing] = await db
       .select()
-      .from(schema.tierPricing)
+      .from(tierPricing)
       .where(and(
-        eq(schema.tierPricing.tier, tier),
-        eq(schema.tierPricing.isActive, true)
+        eq(tierPricing.tier, tier),
+        eq(tierPricing.isActive, true)
       ))
       .limit(1);
     return pricing;
@@ -753,12 +754,12 @@ export class DatabaseStorage implements IStorage {
 
   async updateTierPricing(tier: string, pricing: Partial<InsertTierPricing>): Promise<TierPricing> {
     const [updated] = await db
-      .update(schema.tierPricing)
+      .update(tierPricing)
       .set({
         ...pricing,
         updatedAt: new Date(),
       })
-      .where(eq(schema.tierPricing.tier, tier))
+      .where(eq(tierPricing.tier, tier))
       .returning();
     return updated;
   }
