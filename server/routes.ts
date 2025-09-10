@@ -299,6 +299,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid study ID or amount" });
       }
 
+      if (amount < 0.50) {
+        return res.status(400).json({ message: "Amount must be at least $0.50 USD" });
+      }
+
       // Verify study exists and has a price
       const study = await storage.getStudy(studyId);
       if (!study) {

@@ -913,10 +913,10 @@ export default function Admin() {
                   id="edit-price"
                   type="number"
                   step="0.01"
-                  min="0"
+                  min="0.50"
                   value={formData.price || ""}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="0.00"
+                  placeholder="0.50 (minimum)"
                   className="border-ministry-steel focus:border-ministry-gold"
                   data-testid="input-edit-price"
                 />

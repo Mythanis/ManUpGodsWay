@@ -107,11 +107,21 @@ const PurchaseForm = ({ amount, description, studyId, studyTitle, onSuccess, onC
         
         onSuccess();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment error:', error);
+      
+      // Extract better error message if available
+      let errorMessage = "An unexpected error occurred. Please try again.";
+      
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Payment Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
