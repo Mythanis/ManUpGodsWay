@@ -246,12 +246,12 @@ export default function Fitness() {
         <div className="flex flex-col space-y-4 mb-6">
           <h2 className="text-xl font-bold text-white">Previous Challenges</h2>
           
-          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Category Filter */}
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col space-y-2">
               <span className="text-sm font-medium text-white">Category:</span>
               <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-full">
                   <div className="flex items-center">
                     <Filter className="w-4 h-4 mr-2" />
                     <SelectValue placeholder="All Categories" />
@@ -269,10 +269,10 @@ export default function Fitness() {
             </div>
 
             {/* Difficulty Filter */}
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col space-y-2">
               <span className="text-sm font-medium text-white">Difficulty:</span>
               <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-full">
                   <div className="flex items-center">
                     <Zap className="w-4 h-4 mr-2" />
                     <SelectValue placeholder="All Levels" />
@@ -290,13 +290,13 @@ export default function Fitness() {
             </div>
 
             {/* Sort Controls */}
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col space-y-2">
               <span className="text-sm font-medium text-white">Sort by:</span>
               <Button
                 variant="default"
                 size="sm"
                 onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-                className="flex items-center space-x-1 bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                className="flex items-center justify-center space-x-1 bg-ministry-gold hover:bg-ministry-gold/90 text-black w-full"
               >
                 {sortOrder === 'desc' ? (
                   <>
