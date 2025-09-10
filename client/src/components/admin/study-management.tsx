@@ -383,7 +383,7 @@ export default function StudyManagement() {
               />
             </div>
 
-            {/* Purchase Options Section */}
+            {/* Purchase Options Section - Moved up for better visibility */}
             <div className="space-y-4 rounded-lg border p-4 bg-gray-50 dark:bg-gray-800">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
