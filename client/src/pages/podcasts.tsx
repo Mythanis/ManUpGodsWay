@@ -277,8 +277,8 @@ export default function Podcasts() {
     return (
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Star className="w-4 h-4 mr-1" />
+          <Button variant="outline" size="sm" className="w-full text-xs px-2 py-1 h-auto">
+            <Star className="w-3 h-3 mr-1" />
             Rate
           </Button>
         </DialogTrigger>
@@ -496,7 +496,7 @@ export default function Podcasts() {
                       )}
 
                       {/* Stats and Actions */}
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="flex flex-col gap-3">
                         <div className="flex items-center space-x-3 text-xs sm:text-sm text-ministry-slate">
                           <div className="flex items-center">
                             {renderStars(Math.round(parseFloat(podcast.rating)))}
@@ -510,17 +510,21 @@ export default function Podcasts() {
                           </div>
                         </div>
 
-                        <div className="flex items-center space-x-1 flex-shrink-0">
-                          <RatingDialog podcast={podcast} />
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handlePodcastView(podcast.id)}
-                            className="text-xs px-2 py-1 h-auto whitespace-nowrap"
-                          >
-                            <MessageSquare className="w-3 h-3 mr-1" />
-                            Reviews
-                          </Button>
+                        <div className="flex items-center space-x-2 w-full">
+                          <div className="flex-1">
+                            <RatingDialog podcast={podcast} />
+                          </div>
+                          <div className="flex-1">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handlePodcastView(podcast.id)}
+                              className="text-xs px-2 py-1 h-auto w-full"
+                            >
+                              <MessageSquare className="w-3 h-3 mr-1" />
+                              Reviews
+                            </Button>
+                          </div>
                         </div>
                       </div>
 
