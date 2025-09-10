@@ -23,8 +23,9 @@ import PodcastManagement from "@/components/admin/podcast-management";
 import ChallengeManagement from "@/components/admin/challenge-management";
 import FitnessManagement from "@/components/admin/fitness-management";
 import EventManagement from "@/components/admin/event-management";
+import TierPricingManagement from "@/components/admin/tier-pricing-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign } from "lucide-react";
 
 interface Study {
   id: string;
@@ -57,6 +58,7 @@ const adminTabs = [
   { id: "events", label: "Events", icon: Calendar },
   { id: "devotionals", label: "Devotionals", icon: Calendar },
   { id: "logo", label: "Logo", icon: Image },
+  { id: "tiers", label: "Tiers", icon: DollarSign },
   { id: "settings", label: "Settings", icon: Settings },
   { id: "users", label: "Users", icon: Users },
 ];
@@ -712,6 +714,13 @@ export default function Admin() {
           {activeTab === "settings" && (
             <div>
               <SystemSettings />
+            </div>
+          )}
+
+          {activeTab === "tiers" && (
+            <div>
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Tier Pricing Configuration</h2>
+              <TierPricingManagement />
             </div>
           )}
 

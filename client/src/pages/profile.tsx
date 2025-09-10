@@ -13,6 +13,7 @@ import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { FeedbackDialog } from "@/components/feedback-dialog";
 import { SilencedUsersButton } from "@/components/silenced-users-button";
 import { TestimonyForm } from "@/components/testimony-form";
+import UpgradeModal from "@/components/upgrade-modal";
 import { 
   User, 
   Bell, 
@@ -29,6 +30,7 @@ import {
 
 export default function Profile() {
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { user } = useAuth();
   const { theme, setTheme, effectiveTheme } = useTheme();
   const [, setLocation] = useLocation();
@@ -139,6 +141,12 @@ export default function Profile() {
                   variant="ghost"
                   className="text-ministry-steel font-medium text-sm hover:text-ministry-navy"
                   data-testid="button-manage-subscription"
+                  onClick={() => {
+                    if (user?.subscriptionTier === 'free') {
+                      setShowUpgradeModal(true);
+                    }
+                    // TODO: Add manage subscription logic for premium/VIP users
+                  }}
                 >
                   {user?.subscriptionTier === 'free' ? 'Upgrade' : 'Manage'}
                 </Button>
@@ -352,6 +360,11 @@ export default function Profile() {
       <FeedbackDialog 
         isOpen={showFeedbackDialog} 
         onClose={() => setShowFeedbackDialog(false)} 
+      />
+      
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
       />
     </div>
   );

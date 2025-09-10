@@ -1923,6 +1923,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Tier Pricing Management API Routes
+  app.get('/api/admin/tier-pricing', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const pricing = await storage.getTierPricing();
+      res.json(pricing);
+    } catch (error) {
+      console.error("Error fetching tier pricing:", error);
+      res.status(500).json({ message: "Failed to fetch tier pricing" });
+    }
+  });
+
+  app.put('/api/admin/tier-pricing/:tier', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { tier } = req.params;
+      const { monthlyPrice, yearlyPrice, features } = req.body;
+
+      if (!monthlyPrice || isNaN(parseFloat(monthlyPrice))) {
+        return res.status(400).json({ message: "Valid monthly price is required" });
+      }
+
+      const pricingData = {
+        monthlyPrice: parseFloat(monthlyPrice).toFixed(2),
+        ...(yearlyPrice && { yearlyPrice: parseFloat(yearlyPrice).toFixed(2) }),
+        ...(features && { features }),
+      };
+
+      const updated = await storage.updateTierPricing(tier, pricingData);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating tier pricing:", error);
+      res.status(500).json({ message: "Failed to update tier pricing" });
+    }
+  });
+
+  // Public tier pricing route for upgrade modal
+  app.get('/api/tier-pricing', async (req: any, res) => {
+    try {
+      const pricing = await storage.getTierPricing();
+      res.json(pricing);
+    } catch (error) {
+      console.error("Error fetching tier pricing:", error);
+      res.status(500).json({ message: "Failed to fetch tier pricing" });
+    }
+  });
+
+  // Create subscription checkout session
+  app.post('/api/create-subscription-checkout', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const { tier, billingCycle } = req.body;
+
+      if (!tier || !['premium', 'vip'].includes(tier)) {
+        return res.status(400).json({ message: "Invalid tier" });
+      }
+
+      if (!billingCycle || !['monthly', 'yearly'].includes(billingCycle)) {
+        return res.status(400).json({ message: "Invalid billing cycle" });
+      }
+
+      // Get tier pricing
+      const tierPricing = await storage.getTierPricingByTier(tier);
+      if (!tierPricing) {
+        return res.status(404).json({ message: "Tier pricing not found" });
+      }
+
+      const price = billingCycle === 'yearly' && tierPricing.yearlyPrice 
+        ? tierPricing.yearlyPrice 
+        : tierPricing.monthlyPrice;
+
+      // Create Stripe checkout session
+      const { default: Stripe } = await import('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+        apiVersion: '2023-10-16',
+      });
+      
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        mode: 'subscription',
+        customer_email: user.email,
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `${tier.charAt(0).toUpperCase() + tier.slice(1)} Subscription`,
+                description: tierPricing.features.join(', '),
+              },
+              unit_amount: Math.round(parseFloat(price) * 100), // Convert to cents
+              recurring: {
+                interval: billingCycle === 'yearly' ? 'year' : 'month',
+              },
+            },
+            quantity: 1,
+          },
+        ],
+        metadata: {
+          userId: user.id,
+          tier: tier,
+          billingCycle: billingCycle,
+        },
+        success_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile?upgrade=success&tier=${tier}`,
+        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile?upgrade=cancelled`,
+      });
+
+      res.json({ checkoutUrl: session.url });
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      res.status(500).json({ message: "Failed to create checkout session" });
+    }
+  });
+
   // Video Management API Routes
   app.get('/api/admin/videos', isAuthenticated, async (req: any, res) => {
     try {
