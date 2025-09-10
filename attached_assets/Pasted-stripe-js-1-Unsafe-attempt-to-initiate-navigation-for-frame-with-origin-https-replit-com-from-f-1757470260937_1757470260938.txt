@@ -1,0 +1,56 @@
+stripe.js:1  Unsafe attempt to initiate navigation for frame with origin 'https://replit.com' from frame with URL 'https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/purchase/d8969a87-a9ff-4dd6-aba5-cc11e3a75410'. The frame attempting navigation of the top-level window is sandboxed, but the flag of 'allow-top-navigation' or 'allow-top-navigation-by-user-activation' is not set.
+
+(anonymous) @ stripe.js:1
+o @ stripe.js:1
+(anonymous) @ stripe.js:1
+Promise.then
+(anonymous) @ stripe.js:1
+Promise.then
+(anonymous) @ stripe.js:1
+Promise.then
+(anonymous) @ stripe.js:1
+(anonymous) @ stripe.js:1
+(anonymous) @ stripe.js:1
+handleSubmit @ purchase.tsx:54
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61  Payment error: SecurityError: Failed to set a named property 'href' on 'Location': The current window does not have permission to navigate the target frame to 'https://29904a8c-3de8-4bb4-a2db-b714ce765950-00-1ftarjb35diwz.picard.replit.dev/studies/d8969a87-a9ff-4dd6-aba5-cc11e3a75410?purchased=true&payment_intent=pi_3S5dTtKkhtMPdYzd173tFp3C&payment_intent_client_secret=pi_3S5dTtKkhtMPdYzd173tFp3C_secret_hZDv8Xyp9UgAGu26hN42O70GK&redirect_status=succeeded'.
+    at new Promise (<anonymous>)
+    at o (stripe.js:1:88020)
+    at stripe.js:1:647226
+Mt.forEach.n.<computed> @ Console.js:61
+handleSubmit @ purchase.tsx:116
+await in handleSubmit
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+web-client-content-script.js:2  Uncaught TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at HTMLIFrameElement.<anonymous> (web-client-content-script.js:2:534973)
+(anonymous) @ web-client-content-script.js:2
+web-client-content-script.js:2  Uncaught TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.
+    at HTMLIFrameElement.<anonymous> (web-client-content-script.js:2:534973)

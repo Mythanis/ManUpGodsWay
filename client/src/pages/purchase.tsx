@@ -51,13 +51,12 @@ const PurchaseForm = ({ amount, description, studyId, studyTitle, onSuccess, onC
     setIsProcessing(true);
 
     try {
-      const { error } = await stripe.confirmPayment({
+      const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: studyId 
-            ? `${window.location.origin}/studies/${studyId}?purchased=true`
-            : `${window.location.origin}/purchase?success=true`,
+          // Remove return_url to avoid iframe navigation issues
         },
+        redirect: 'if_required'
       });
 
       if (error) {
@@ -66,16 +65,13 @@ const PurchaseForm = ({ amount, description, studyId, studyTitle, onSuccess, onC
           description: error.message || "An unknown error occurred",
           variant: "destructive",
         });
-      } else {
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
         // Payment succeeded, now complete the purchase on the backend
         try {
-          const urlParams = new URLSearchParams(window.location.search);
-          const paymentIntentId = urlParams.get('payment_intent');
-          
-          if (paymentIntentId && studyId) {
-            // Complete the study purchase
+          if (paymentIntent.id && studyId) {
+            // Complete the study purchase using paymentIntent directly
             const response = await apiRequest("POST", "/api/purchases/complete", {
-              paymentIntentId
+              paymentIntentId: paymentIntent.id
             });
             
             if (response.ok) {
@@ -88,6 +84,11 @@ const PurchaseForm = ({ amount, description, studyId, studyTitle, onSuccess, onC
                 title: "Purchase Complete",
                 description: "Study purchased successfully! You now have access.",
               });
+              
+              // Navigate back to study page to show access
+              setTimeout(() => {
+                onSuccess();
+              }, 1000);
             } else {
               const data = await response.json();
               console.warn("Purchase completion warning:", data.message);
@@ -95,12 +96,14 @@ const PurchaseForm = ({ amount, description, studyId, studyTitle, onSuccess, onC
                 title: "Payment Successful",
                 description: "Your payment was processed. If you don't see access, please contact support.",
               });
+              onSuccess();
             }
           } else {
             toast({
               title: "Payment Successful",
               description: "Thank you for your purchase!",
             });
+            onSuccess();
           }
         } catch (error) {
           console.error("Error completing purchase:", error);
@@ -108,8 +111,14 @@ const PurchaseForm = ({ amount, description, studyId, studyTitle, onSuccess, onC
             title: "Payment Successful",
             description: "Your payment was processed. If you don't see access, please contact support.",
           });
+          onSuccess();
         }
-        
+      } else {
+        // Payment may still be processing
+        toast({
+          title: "Payment Processing",
+          description: "Your payment is being processed. Please wait...",
+        });
         onSuccess();
       }
     } catch (error: any) {
