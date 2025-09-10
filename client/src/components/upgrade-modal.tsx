@@ -105,7 +105,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
       case 'premium':
         return 'border-ministry-gold bg-ministry-gold/10 hover:bg-ministry-gold/20';
       case 'vip':
-        return 'border-ministry-gold bg-ministry-gold text-black hover:bg-ministry-gold/90';
+        return 'border-ministry-gold bg-ministry-gold/10 hover:bg-ministry-gold/20';
       default:
         return 'border-gray-200 bg-gray-50';
     }
@@ -116,7 +116,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
       case 'premium':
         return 'border-ministry-gold bg-ministry-gold/20 ring-2 ring-ministry-gold';
       case 'vip':
-        return 'border-ministry-gold bg-ministry-gold text-black ring-2 ring-ministry-gold';
+        return 'border-ministry-gold bg-ministry-gold/20 ring-2 ring-ministry-gold';
       default:
         return 'border-gray-500 bg-gray-100';
     }
