@@ -85,6 +85,9 @@ export default function Admin() {
     author: "",
     tags: "",
     lessons: "",
+    requiresPurchase: false,
+    price: "",
+    purchaseRequiredTiers: [],
   });
   const [videoInputType, setVideoInputType] = useState<'manual' | 'uploaded'>('manual');
 
@@ -236,6 +239,9 @@ export default function Admin() {
       author: study.author,
       tags: study.tags?.join(", ") || "",
       lessons: JSON.stringify(study.lessons, null, 2),
+      requiresPurchase: study.requiresPurchase || false,
+      price: study.price || "",
+      purchaseRequiredTiers: study.purchaseRequiredTiers || [],
     });
     setShowEditDialog(true);
   };
@@ -254,6 +260,9 @@ export default function Admin() {
         author: formData.author,
         tags: formData.tags.split(",").map(tag => tag.trim()).filter(Boolean),
         lessons: formData.lessons ? JSON.parse(formData.lessons) : [],
+        requiresPurchase: formData.requiresPurchase,
+        price: formData.requiresPurchase ? formData.price : null,
+        purchaseRequiredTiers: formData.requiresPurchase ? formData.purchaseRequiredTiers : [],
       };
 
       console.log("Updating study with data:", updates);
@@ -871,6 +880,98 @@ export default function Admin() {
                 )}
               </div>
             </div>
+
+            {/* Purchase Options Section - HIGHLY VISIBLE */}
+            <div className="flex items-center justify-between rounded-lg border-4 border-red-500 p-6 bg-red-100">
+              <div className="space-y-0.5">
+                <Label className="text-xl font-bold text-red-900">🔴 REQUIRES PURCHASE - TEST VISIBILITY</Label>
+                <div className="text-lg font-bold text-red-900">
+                  Make this study available for purchase
+                </div>
+              </div>
+              <Switch
+                checked={formData.requiresPurchase || false}
+                onCheckedChange={(checked) => setFormData({ ...formData, requiresPurchase: checked, price: checked ? formData.price : "" })}
+                data-testid="switch-edit-requires-purchase"
+              />
+            </div>
+
+            {/* Price field - only show when requiresPurchase is true */}
+            {formData.requiresPurchase && (
+              <div>
+                <Label htmlFor="edit-price" className="text-lg font-bold text-red-900">💵 Price ($)</Label>
+                <Input
+                  id="edit-price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price || ""}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="0.00"
+                  className="border-4 border-red-500 text-lg font-bold"
+                  data-testid="input-edit-price"
+                />
+              </div>
+            )}
+
+            {/* Tier checkboxes - only show when requiresPurchase is true */}
+            {formData.requiresPurchase && (
+              <div>
+                <Label className="text-lg font-bold text-red-900">Purchase Required For</Label>
+                <div className="space-y-2">
+                  {/* All selection checkbox */}
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="edit-all-tiers"
+                      checked={(formData.purchaseRequiredTiers || []).length === 3}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({ ...formData, purchaseRequiredTiers: ['free', 'premium', 'vip'] });
+                        } else {
+                          setFormData({ ...formData, purchaseRequiredTiers: [] });
+                        }
+                      }}
+                      className="rounded border-4 border-red-500"
+                      data-testid="checkbox-edit-all-tiers"
+                    />
+                    <label htmlFor="edit-all-tiers" className="text-sm font-bold text-red-900">
+                      All Tiers
+                    </label>
+                  </div>
+                  
+                  {/* Individual tier checkboxes */}
+                  {[{ id: 'free', label: 'Free' }, { id: 'premium', label: 'Premium' }, { id: 'vip', label: 'VIP' }].map((tier) => (
+                    <div key={tier.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`edit-tier-${tier.id}`}
+                        checked={(formData.purchaseRequiredTiers || []).includes(tier.id)}
+                        onChange={(e) => {
+                          const currentTiers = [...(formData.purchaseRequiredTiers || [])];
+                          if (e.target.checked) {
+                            if (!currentTiers.includes(tier.id)) {
+                              currentTiers.push(tier.id);
+                            }
+                          } else {
+                            const index = currentTiers.indexOf(tier.id);
+                            if (index > -1) {
+                              currentTiers.splice(index, 1);
+                            }
+                          }
+                          setFormData({ ...formData, purchaseRequiredTiers: currentTiers });
+                        }}
+                        className="rounded border-4 border-red-500"
+                        data-testid={`checkbox-edit-tier-${tier.id}`}
+                      />
+                      <label htmlFor={`edit-tier-${tier.id}`} className="text-sm font-bold text-red-900">
+                        {tier.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="edit-tags">Tags (comma-separated)</Label>

@@ -383,11 +383,11 @@ export default function StudyManagement() {
               />
             </div>
 
-            {/* Purchase Options Section - Match Upload Form Style */}
-            <div className="flex items-center justify-between rounded-lg border p-4">
+            {/* Purchase Options Section - HIGHLY VISIBLE */}
+            <div className="flex items-center justify-between rounded-lg border-4 border-red-500 p-6 bg-red-100">
               <div className="space-y-0.5">
-                <Label className="text-base">Requires Purchase</Label>
-                <div className="text-sm text-muted-foreground">
+                <Label className="text-xl font-bold text-red-900">🔴 REQUIRES PURCHASE - TEST VISIBILITY</Label>
+                <div className="text-lg font-bold text-red-900">
                   Make this study available for purchase
                 </div>
               </div>
