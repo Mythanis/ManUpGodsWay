@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,6 +72,7 @@ export default function StudyManagement() {
     queryKey: ["/api/studies"],
     retry: false,
   });
+
 
   // Update study mutation
   const updateStudyMutation = useMutation({
@@ -231,7 +232,7 @@ export default function StudyManagement() {
                       </span>
                       {study.requiresPurchase && study.price && (
                         <Badge className="text-xs bg-ministry-gold text-black">
-                          ${parseFloat(study.price).toFixed(2)}
+                          ${parseFloat(String(study.price)).toFixed(2)}
                         </Badge>
                       )}
                     </div>
