@@ -279,12 +279,12 @@ export default function HurdleWall() {
 
   const renderUserName = (user: HurdleWallPost['user'], isAnonymous: boolean) => {
     if (isAnonymous) {
-      return <span className="text-white font-medium">Anonymous</span>;
+      return <span className="text-black font-medium">Anonymous</span>;
     }
     
     return (
       <Link href={`/users/${user.id}`}>
-        <span className="text-white font-medium hover:text-yellow-400 cursor-pointer transition-colors">
+        <span className="text-black font-medium hover:text-ministry-gold cursor-pointer transition-colors">
           {user.firstName} {user.lastName}
         </span>
       </Link>
@@ -297,13 +297,19 @@ export default function HurdleWall() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black text-white p-4">
-        <div className="max-w-2xl mx-auto">
+      <div className="pb-20">
+        <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+          <div className="max-w-2xl mx-auto">
+            <h1 className="text-2xl font-bold mb-2">Hurdle Wall</h1>
+            <p className="text-blue-200 text-sm">Share your struggles and prayer requests anonymously</p>
+          </div>
+        </div>
+        <div className="max-w-2xl mx-auto p-4">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-800 rounded"></div>
-            <div className="h-32 bg-gray-800 rounded"></div>
-            <div className="h-24 bg-gray-800 rounded"></div>
-            <div className="h-24 bg-gray-800 rounded"></div>
+            <div className="h-8 bg-ministry-gold-exact/20 rounded"></div>
+            <div className="h-32 bg-ministry-gold-exact/20 rounded"></div>
+            <div className="h-24 bg-ministry-gold-exact/20 rounded"></div>
+            <div className="h-24 bg-ministry-gold-exact/20 rounded"></div>
           </div>
         </div>
       </div>
@@ -311,28 +317,31 @@ export default function HurdleWall() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="max-w-2xl mx-auto p-4 pb-20 space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-white">Hurdle Wall</h1>
-          <p className="text-gray-400">Share your struggles and prayer requests anonymously</p>
+    <div className="pb-20">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-2xl font-bold mb-2">Hurdle Wall</h1>
+          <p className="text-blue-200 text-sm">Share your struggles and prayer requests anonymously</p>
         </div>
+      </div>
+      
+      <div className="max-w-2xl mx-auto p-4 space-y-6">
         
         {/* Search and Filter Controls */}
         <div className="flex flex-col sm:flex-row gap-4 items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-ministry-slate" />
             <Input
               placeholder="Search posts..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+              className="pl-10 border-white"
             />
           </div>
           <div className="flex gap-2">
             <Select value={filterType} onValueChange={(value: any) => setFilterType(value)}>
-              <SelectTrigger className="w-40 bg-gray-800 border-gray-600 text-white">
+              <SelectTrigger className="w-40 border-white">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -343,7 +352,7 @@ export default function HurdleWall() {
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-              <SelectTrigger className="w-36 bg-gray-800 border-gray-600 text-white">
+              <SelectTrigger className="w-36 border-white">
                 <SortDesc className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -356,20 +365,20 @@ export default function HurdleWall() {
         </div>
 
         {/* New Post Form */}
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-ministry-gold-exact/20">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-black flex items-center gap-2">
               <Plus className="h-5 w-5" />
               Share Your Heart
             </CardTitle>
-            <CardDescription className="text-gray-400">
+            <CardDescription className="text-black">
               Share your thoughts, struggles, or prayer requests with the community
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Post Type Selection */}
             <div className="space-y-3">
-              <Label className="text-white">Post Type</Label>
+              <Label className="text-black">Post Type</Label>
               <RadioGroup 
                 value={newPostType} 
                 onValueChange={(value: 'discussion' | 'prayer_request') => setNewPostType(value)}
@@ -377,18 +386,18 @@ export default function HurdleWall() {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="discussion" id="discussion" />
-                  <Label htmlFor="discussion" className="text-white">Open Discussion</Label>
+                  <Label htmlFor="discussion" className="text-black">Open Discussion</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="prayer_request" id="prayer_request" />
-                  <Label htmlFor="prayer_request" className="text-white">Prayer Request</Label>
+                  <Label htmlFor="prayer_request" className="text-black">Prayer Request</Label>
                 </div>
               </RadioGroup>
             </div>
 
             {/* Content */}
             <div className="space-y-2">
-              <Label htmlFor="content" className="text-white">
+              <Label htmlFor="content" className="text-black">
                 {newPostType === 'prayer_request' ? 'Prayer Request' : 'Discussion Topic'}
               </Label>
               <Textarea
@@ -400,7 +409,7 @@ export default function HurdleWall() {
                 }
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
-                className="min-h-[100px] bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                className="min-h-[100px]"
               />
             </div>
 
@@ -408,7 +417,7 @@ export default function HurdleWall() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 {newPostAnonymous ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                <Label htmlFor="anonymous" className="text-white">
+                <Label htmlFor="anonymous" className="text-black">
                   {newPostAnonymous ? 'Posting Anonymously' : 'Posting with Name'}
                 </Label>
               </div>
@@ -422,7 +431,7 @@ export default function HurdleWall() {
             <Button 
               onClick={handleCreatePost}
               disabled={createPostMutation.isPending || !newPostContent.trim()}
-              className="w-full bg-yellow-600 hover:bg-yellow-700 text-black font-medium"
+              className="w-full bg-ministry-navy hover:bg-ministry-charcoal text-white font-medium"
             >
               {createPostMutation.isPending ? 'Posting...' : 'Share Post'}
             </Button>
@@ -432,15 +441,15 @@ export default function HurdleWall() {
         {/* Posts List */}
         <div className="space-y-4">
           {posts.length === 0 ? (
-            <Card className="bg-gray-900 border-gray-700">
+            <Card className="bg-ministry-gold-exact/20">
               <CardContent className="text-center py-12">
-                <MessageSquare className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No posts yet. Be the first to share!</p>
+                <MessageSquare className="h-12 w-12 text-ministry-steel mx-auto mb-4" />
+                <p className="text-black">No posts yet. Be the first to share!</p>
               </CardContent>
             </Card>
           ) : (
             posts.map((post) => (
-              <Card key={post.id} className="bg-gray-900 border-gray-700">
+              <Card key={post.id} className="bg-ministry-gold-exact/20">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
@@ -456,7 +465,7 @@ export default function HurdleWall() {
                           {post.postType === 'prayer_request' ? 'Prayer Request' : 'Discussion'}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-400">{formatTimeAgo(post.createdAt)}</p>
+                      <p className="text-sm text-ministry-slate">{formatTimeAgo(post.createdAt)}</p>
                     </div>
                     {currentUser?.id === post.userId && (
                       <Button
@@ -472,9 +481,9 @@ export default function HurdleWall() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-white leading-relaxed">{post.content}</p>
+                  <p className="text-black leading-relaxed">{post.content}</p>
                   
-                  <Separator className="bg-gray-700" />
+                  <Separator className="bg-ministry-steel/30" />
                   
                   <div className="flex items-center gap-4">
                     {post.postType === 'prayer_request' ? (
@@ -497,7 +506,7 @@ export default function HurdleWall() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
-                        className="flex items-center gap-2 text-gray-400 hover:text-white"
+                        className="flex items-center gap-2 text-ministry-slate hover:text-black"
                       >
                         <MessageSquare className="h-4 w-4" />
                         {post.replyCount} {post.replyCount === 1 ? 'Reply' : 'Replies'}
@@ -507,19 +516,19 @@ export default function HurdleWall() {
 
                   {/* Reply Section for Discussions */}
                   {post.postType === 'discussion' && expandedPost === post.id && (
-                    <div className="space-y-4 pt-4 border-t border-gray-700">
+                    <div className="space-y-4 pt-4 border-t border-ministry-steel/30">
                       {/* Existing Replies */}
                       {post.replies && post.replies.length > 0 && (
                         <div className="space-y-3">
-                          <h4 className="text-white font-medium">Replies</h4>
+                          <h4 className="text-black font-medium">Replies</h4>
                           {post.replies.map((reply) => (
-                            <div key={reply.id} className="bg-gray-800 rounded-lg p-3 border-l-2 border-yellow-600">
+                            <div key={reply.id} className="bg-ministry-gold-exact/10 rounded-lg p-3 border-l-2 border-ministry-gold">
                               <div className="flex items-start justify-between mb-2">
                                 <span className="text-sm">
                                   {renderUserName(reply.user, reply.isAnonymous)}
                                 </span>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-gray-400 text-xs">
+                                  <span className="text-ministry-slate text-xs">
                                     {formatTimeAgo(reply.createdAt)}
                                   </span>
                                   {currentUser?.id === reply.userId && (
@@ -535,7 +544,7 @@ export default function HurdleWall() {
                                   )}
                                 </div>
                               </div>
-                              <p className="text-gray-200 text-sm leading-relaxed">{reply.content}</p>
+                              <p className="text-black text-sm leading-relaxed">{reply.content}</p>
                             </div>
                           ))}
                         </div>
@@ -550,13 +559,13 @@ export default function HurdleWall() {
                             ...prev,
                             [post.id]: e.target.value
                           }))}
-                          className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                          className=""
                         />
                         <Button
                           onClick={() => handleCreateReply(post.id)}
                           disabled={createReplyMutation.isPending || !replyContent[post.id]?.trim()}
                           size="sm"
-                          className="bg-yellow-600 hover:bg-yellow-700 text-black"
+                          className="bg-ministry-navy hover:bg-ministry-charcoal text-white"
                         >
                           <Send className="h-4 w-4 mr-2" />
                           Reply
