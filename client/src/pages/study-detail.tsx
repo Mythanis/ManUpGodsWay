@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertStudyRatingSchema, type Study, type UserProgress, type Discussion } from "@shared/schema";
-import { ArrowLeft, Play, Clock, Users, Star, MessageCircle, Send } from "lucide-react";
+import { ArrowLeft, Play, Clock, Users, Star, MessageCircle, Send, Lock } from "lucide-react";
 import { Link } from "wouter";
 import { z } from "zod";
 import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
@@ -292,8 +292,34 @@ export default function StudyDetail() {
            (study.requiredTier === 'premium' && ['premium', 'vip'].includes(user?.subscriptionTier || '')) ||
            (study.requiredTier === 'vip' && user?.subscriptionTier === 'vip');
   };
+
+  // Check if user has preview access (can access study but with limited lessons)
+  const hasPreviewAccess = () => {
+    if (!study) return false;
+    const userTier = user?.subscriptionTier || 'free';
+    
+    // Free users can preview premium/VIP studies if they have free lessons available
+    return userTier === 'free' && 
+           (study.requiredTier === 'premium' || study.requiredTier === 'vip') && 
+           (study.freeLessonCount || 0) > 0;
+  };
+
+  // Check if user can access a specific lesson number
+  const canAccessLesson = (lessonNumber: number) => {
+    if (!study) return false;
+    
+    // Full access users can access all lessons
+    if (canAccess()) return true;
+    
+    // Preview users can only access free lessons (first N lessons)
+    if (hasPreviewAccess()) {
+      return lessonNumber <= (study.freeLessonCount || 0);
+    }
+    
+    return false;
+  };
   
-  const hasAccess = canAccess();
+  const hasAccess = canAccess() || hasPreviewAccess();
 
   return (
     <div className="pb-20">
@@ -605,34 +631,72 @@ export default function StudyDetail() {
                   <>
                     <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Study Lessons</h2>
                     <div className="space-y-3">
-                      {lessons.map((lesson: any) => (
-                        <div key={lesson.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-ministry-charcoal dark:text-white">
-                                Lesson {lesson.lessonNumber}: {lesson.title}
-                              </h3>
-                              <div className="flex items-center space-x-4 mt-2 text-sm text-ministry-slate">
-                                <span className="flex items-center">
-                                  <Clock className="w-4 h-4 mr-1" />
-                                  {lesson.estimatedMinutes} minutes
-                                </span>
-                                {lesson.videoId && (
+                      {lessons.map((lesson: any) => {
+                        const canAccessThisLesson = canAccessLesson(lesson.lessonNumber);
+                        const isFreeLessonForPreview = hasPreviewAccess() && lesson.lessonNumber <= (study.freeLessonCount || 0);
+                        
+                        return (
+                          <div key={lesson.id} className={`border rounded-lg p-4 transition-colors ${
+                            canAccessThisLesson 
+                              ? 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800' 
+                              : 'border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-900/20'
+                          }`}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2">
+                                  <h3 className={`font-semibold ${
+                                    canAccessThisLesson 
+                                      ? 'text-ministry-charcoal dark:text-white' 
+                                      : 'text-red-600 dark:text-red-400'
+                                  }`}>
+                                    Lesson {lesson.lessonNumber}: {lesson.title}
+                                  </h3>
+                                  {isFreeLessonForPreview && (
+                                    <Badge className="bg-ministry-gold text-black text-xs">
+                                      Free Preview
+                                    </Badge>
+                                  )}
+                                  {!canAccessThisLesson && (
+                                    <Badge variant="destructive" className="text-xs">
+                                      <Lock className="w-3 h-3 mr-1" />
+                                      Locked
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center space-x-4 mt-2 text-sm text-ministry-slate">
                                   <span className="flex items-center">
-                                    <Play className="w-4 h-4 mr-1" />
-                                    Video included
+                                    <Clock className="w-4 h-4 mr-1" />
+                                    {lesson.estimatedMinutes} minutes
                                   </span>
-                                )}
+                                  {lesson.videoId && (
+                                    <span className="flex items-center">
+                                      <Play className="w-4 h-4 mr-1" />
+                                      Video included
+                                    </span>
+                                  )}
+                                </div>
                               </div>
+                              {canAccessThisLesson ? (
+                                <Link href={`/study/${id}/lesson/${lesson.lessonNumber}`}>
+                                  <Button variant="outline" size="sm">
+                                    Start Lesson
+                                  </Button>
+                                </Link>
+                              ) : (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  disabled 
+                                  className="opacity-50 cursor-not-allowed"
+                                >
+                                  <Lock className="w-4 h-4 mr-1" />
+                                  Locked
+                                </Button>
+                              )}
                             </div>
-                            <Link href={`/study/${id}/lesson/${lesson.lessonNumber}`}>
-                              <Button variant="outline" size="sm">
-                                Start Lesson
-                              </Button>
-                            </Link>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </>
                 ) : (
