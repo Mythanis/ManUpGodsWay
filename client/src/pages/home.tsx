@@ -306,7 +306,7 @@ export default function Home() {
                 alt={`${user?.firstName} ${user?.lastName}`}
                 className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
               />
-              <div className="bg-ministry-gold text-ministry-navy px-3 py-1 rounded-full text-sm font-bold">
+              <div className="bg-ministry-gold text-black px-3 py-1 rounded-full text-sm font-bold">
                 {(weeklyCompletions as any)?.count || 0} studies this week
               </div>
             </div>
@@ -330,8 +330,8 @@ export default function Home() {
           <div className="bg-ministry-gold/90 text-ministry-navy rounded-xl p-4 mb-4" data-testid="banner-subscription">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-sm">Upgrade to Premium</h3>
-                <p className="text-xs opacity-80">Unlock all studies & community features</p>
+                <h3 className="font-bold text-sm text-black">Upgrade to Premium</h3>
+                <p className="text-xs text-black">Unlock all studies & community features</p>
               </div>
               <Button 
                 className="bg-ministry-navy text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-ministry-charcoal"
