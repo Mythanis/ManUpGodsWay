@@ -79,6 +79,11 @@ const PurchaseForm = ({ amount, description, studyId, studyTitle, onSuccess, onC
             });
             
             if (response.ok) {
+              // Invalidate purchase cache so access is updated immediately
+              const { queryClient } = await import("@/lib/queryClient");
+              queryClient.invalidateQueries({ queryKey: ["/api/purchases/check", studyId] });
+              queryClient.invalidateQueries({ queryKey: ["/api/purchases"] });
+              
               toast({
                 title: "Purchase Complete",
                 description: "Study purchased successfully! You now have access.",

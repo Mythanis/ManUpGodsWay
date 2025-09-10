@@ -4247,8 +4247,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           studyId: metadata.studyId,
           amount: (paymentIntent.amount / 100).toString(),
           status: 'completed',
-          paymentIntentId,
-          purchasedAt: new Date()
+          stripePaymentIntentId: paymentIntentId,
+          currency: 'usd'
         });
 
         res.json({ 
