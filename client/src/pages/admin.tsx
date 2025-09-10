@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import UploadStudyForm from "@/components/admin/upload-study-form";
 import UserManagement from "@/components/admin/user-management";
 import DevotionalManagement from "@/components/admin/devotional-management";
@@ -39,6 +40,9 @@ interface Study {
   isActive: boolean;
   isPublished: boolean;
   isFeatured: boolean;
+  requiresPurchase?: boolean;
+  price?: string;
+  purchaseRequiredTiers?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -87,7 +91,7 @@ export default function Admin() {
     lessons: "",
     requiresPurchase: false,
     price: "",
-    purchaseRequiredTiers: [],
+    purchaseRequiredTiers: [] as string[],
   });
   const [videoInputType, setVideoInputType] = useState<'manual' | 'uploaded'>('manual');
 
@@ -261,7 +265,7 @@ export default function Admin() {
         tags: formData.tags.split(",").map(tag => tag.trim()).filter(Boolean),
         lessons: formData.lessons ? JSON.parse(formData.lessons) : [],
         requiresPurchase: formData.requiresPurchase,
-        price: formData.requiresPurchase ? formData.price : null,
+        price: formData.requiresPurchase ? formData.price : undefined,
         purchaseRequiredTiers: formData.requiresPurchase ? formData.purchaseRequiredTiers : [],
       };
 
