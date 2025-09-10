@@ -123,7 +123,7 @@ import {
   type InsertTierPricing,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt } from "drizzle-orm";
+import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -209,6 +209,15 @@ export interface IStorage {
   getAllUsers(limit?: number): Promise<User[]>;
   updateUserRole(userId: string, role: string): Promise<User>;
   updateUserSubscription(userId: string, subscriptionTier: string): Promise<User>;
+  updateUserSubscriptionDetails(userId: string, details: {
+    subscriptionTier?: string;
+    subscriptionStatus?: string;
+    subscriptionExpiresAt?: Date;
+    stripeCustomerId?: string;
+    stripeSubscriptionId?: string;
+  }): Promise<User>;
+  cancelUserSubscription(userId: string): Promise<User>;
+  checkExpiredSubscriptions(): Promise<User[]>;
   banUser(userId: string, reason: string): Promise<User>;
   unbanUser(userId: string): Promise<User>;
   getSystemStats(): Promise<{
@@ -1510,6 +1519,71 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId))
       .returning();
     return updatedUser;
+  }
+
+  async updateUserSubscriptionDetails(userId: string, details: {
+    subscriptionTier?: string;
+    subscriptionStatus?: string;
+    subscriptionExpiresAt?: Date;
+    stripeCustomerId?: string;
+    stripeSubscriptionId?: string;
+  }): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        ...details,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  async cancelUserSubscription(userId: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        subscriptionStatus: 'cancelled',
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  async checkExpiredSubscriptions(): Promise<User[]> {
+    const now = new Date();
+    const expiredUsers = await db
+      .select()
+      .from(users)
+      .where(
+        and(
+          eq(users.subscriptionStatus, 'cancelled'),
+          lt(users.subscriptionExpiresAt, now),
+          ne(users.subscriptionTier, 'free')
+        )
+      );
+
+    // Update expired users to free tier
+    if (expiredUsers.length > 0) {
+      await db
+        .update(users)
+        .set({ 
+          subscriptionTier: 'free',
+          subscriptionStatus: 'active',
+          subscriptionExpiresAt: null,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(users.subscriptionStatus, 'cancelled'),
+            lt(users.subscriptionExpiresAt, now),
+            ne(users.subscriptionTier, 'free')
+          )
+        );
+    }
+
+    return expiredUsers;
   }
 
   async banUser(userId: string, reason: string): Promise<User> {

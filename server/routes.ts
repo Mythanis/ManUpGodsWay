@@ -2002,9 +2002,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Tier pricing not found" });
       }
 
-      const price = billingCycle === 'yearly' && tierPricing.yearlyPrice 
-        ? tierPricing.yearlyPrice 
-        : tierPricing.monthlyPrice;
+      // Calculate yearly pricing with new discount structure
+      let price = tierPricing.monthlyPrice;
+      if (billingCycle === 'yearly') {
+        const monthlyPrice = parseFloat(tierPricing.monthlyPrice);
+        const discountPercent = tier === 'premium' ? 5 : tier === 'vip' ? 10 : 0;
+        const yearlyPrice = (monthlyPrice * 12 * (1 - discountPercent / 100)).toFixed(2);
+        price = yearlyPrice;
+      }
 
       // Create Stripe checkout session
       const { default: Stripe } = await import('stripe');
@@ -2068,12 +2073,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Only handle subscription checkouts (not one-time payments)
         if (session.mode === 'subscription') {
-          const { userId, tier } = session.metadata;
+          const { userId, tier, billingCycle } = session.metadata;
 
           if (userId && tier) {
-            // Update user subscription tier
-            await storage.updateUserSubscription(userId, tier);
-            console.log(`Updated user ${userId} to ${tier} tier via Stripe webhook`);
+            // Calculate subscription expiration date
+            const now = new Date();
+            const expirationDate = new Date(now);
+            if (billingCycle === 'yearly') {
+              expirationDate.setFullYear(now.getFullYear() + 1);
+            } else {
+              expirationDate.setMonth(now.getMonth() + 1);
+            }
+
+            // Get subscription from Stripe to store subscription ID
+            const subscription = await stripe.subscriptions.list({
+              customer: session.customer,
+              limit: 1,
+            });
+
+            // Update user subscription with full details
+            await storage.updateUserSubscriptionDetails(userId, {
+              subscriptionTier: tier,
+              subscriptionStatus: 'active',
+              subscriptionExpiresAt: expirationDate,
+              stripeCustomerId: session.customer,
+              stripeSubscriptionId: subscription.data[0]?.id,
+            });
+
+            console.log(`Updated user ${userId} to ${tier} tier via Stripe webhook (expires: ${expirationDate.toISOString()})`);
 
             // Send real-time notification to user about upgrade success
             const user = await storage.getUser(userId);
@@ -2090,6 +2117,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
               if ((req.app as any).sendRealtimeNotification) {
                 (req.app as any).sendRealtimeNotification(user.id, notification);
               }
+            }
+          }
+        }
+      }
+
+      // Handle subscription cancellations
+      if (event.type === 'customer.subscription.updated') {
+        const subscription = event.data.object;
+        
+        if (subscription.cancel_at_period_end) {
+          // User has cancelled but subscription continues until period end
+          const user = await storage.getUser(subscription.metadata?.userId);
+          if (user && user.stripeSubscriptionId === subscription.id) {
+            await storage.cancelUserSubscription(user.id);
+            
+            // Send notification about cancellation
+            const notification = await storage.createNotification({
+              userId: user.id,
+              type: 'admin',
+              title: 'Subscription Cancelled',
+              message: `Your subscription has been cancelled and will continue until ${new Date(subscription.current_period_end * 1000).toLocaleDateString()}. You can reactivate it anytime before then.`,
+              relatedId: null,
+            });
+
+            if ((req.app as any).sendRealtimeNotification) {
+              (req.app as any).sendRealtimeNotification(user.id, notification);
             }
           }
         }

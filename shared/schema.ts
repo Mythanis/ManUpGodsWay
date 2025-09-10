@@ -36,6 +36,10 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   role: varchar("role").default("user"), // user, admin, owner
   subscriptionTier: varchar("subscription_tier").default("free"), // free, premium, vip
+  subscriptionStatus: varchar("subscription_status").default("active"), // active, cancelled, expired
+  subscriptionExpiresAt: timestamp("subscription_expires_at"),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
   streakDays: integer("streak_days").default(0),
   lastActiveDate: timestamp("last_active_date"),
   allowDirectMessages: boolean("allow_direct_messages").default(true),

@@ -194,7 +194,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
             {/* Tier Cards */}
             <div className="grid md:grid-cols-2 gap-6">
-              {tierPricing.map((tier: TierPricing) => {
+              {(tierPricing as TierPricing[]).map((tier: TierPricing) => {
                 const isSelected = selectedTier === tier.tier;
                 const yearlyPrice = calculateYearlyPrice(tier);
                 const price = billingCycle === "yearly" ? yearlyPrice : tier.monthlyPrice;

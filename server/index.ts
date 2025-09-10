@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { devotionalNotificationService } from "./devotionalNotificationService";
+import { subscriptionExpirationService } from "./subscriptionExpirationService";
 
 const app = express();
 app.use(express.json());
@@ -71,5 +72,8 @@ app.use((req, res, next) => {
     
     // Start the devotional notification service
     devotionalNotificationService.start();
+    
+    // Start the subscription expiration service
+    subscriptionExpirationService.start();
   });
 })();
