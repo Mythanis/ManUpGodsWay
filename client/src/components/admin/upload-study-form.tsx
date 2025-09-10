@@ -93,6 +93,7 @@ export default function UploadStudyForm() {
       difficulty: 'beginner',
       estimatedHours: 1,
       lessonCount: 1,
+      freeLessonCount: 0,
       thumbnailUrl: '',
       videoUrl: '',
       videoId: 'none',
@@ -499,13 +500,21 @@ export default function UploadStudyForm() {
                 name="lessonCount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lessons</FormLabel>
+                    <FormLabel>Total Lessons</FormLabel>
                     <FormControl>
                       <Input 
                         type="number"
                         min="1"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        onChange={(e) => {
+                          const newCount = parseInt(e.target.value) || 1;
+                          field.onChange(newCount);
+                          // Reset free lessons if it exceeds new total
+                          const currentFree = form.getValues('freeLessonCount');
+                          if (currentFree > newCount) {
+                            form.setValue('freeLessonCount', newCount);
+                          }
+                        }}
                         data-testid="input-lesson-count"
                       />
                     </FormControl>
@@ -534,6 +543,34 @@ export default function UploadStudyForm() {
                 )}
               />
             </div>
+
+            {/* Free Lesson Count - only show for premium/VIP studies */}
+            {(form.watch('requiredTier') === 'premium' || form.watch('requiredTier') === 'vip') && (
+              <FormField
+                control={form.control}
+                name="freeLessonCount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Free Preview Lessons</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number"
+                        min="0"
+                        max={form.watch('lessonCount')}
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        placeholder="Number of free lessons for preview"
+                        data-testid="input-free-lesson-count"
+                      />
+                    </FormControl>
+                    <div className="text-xs text-ministry-slate">
+                      Allow free users to preview the first {form.watch('freeLessonCount')} lessons
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
