@@ -127,6 +127,23 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
     return monthlyTotal - yearlyPrice;
   };
 
+  const getSavingsPercentage = (tier: string) => {
+    switch (tier) {
+      case 'premium':
+        return 5;
+      case 'vip':
+        return 10;
+      default:
+        return 0;
+    }
+  };
+
+  const calculateYearlyPrice = (tier: TierPricing) => {
+    const monthlyPrice = parseFloat(tier.monthlyPrice);
+    const savingsPercent = getSavingsPercentage(tier.tier);
+    return (monthlyPrice * 12 * (1 - savingsPercent / 100)).toFixed(2);
+  };
+
   const currentTier = user?.subscriptionTier || 'free';
 
   return (
@@ -170,7 +187,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                   className={billingCycle === "yearly" ? "bg-white shadow-sm" : ""}
                 >
                   Yearly
-                  <Badge className="ml-2 bg-green-500 text-white text-xs">Save up to 20%</Badge>
+                  <Badge className="ml-2 bg-green-500 text-white text-xs">Save up to 10%</Badge>
                 </Button>
               </div>
             </div>
@@ -179,11 +196,13 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             <div className="grid md:grid-cols-2 gap-6">
               {tierPricing.map((tier: TierPricing) => {
                 const isSelected = selectedTier === tier.tier;
-                const price = billingCycle === "yearly" && tier.yearlyPrice ? tier.yearlyPrice : tier.monthlyPrice;
-                const displayPrice = billingCycle === "yearly" && tier.yearlyPrice 
-                  ? `$${parseFloat(tier.yearlyPrice).toFixed(2)}/year` 
+                const yearlyPrice = calculateYearlyPrice(tier);
+                const price = billingCycle === "yearly" ? yearlyPrice : tier.monthlyPrice;
+                const displayPrice = billingCycle === "yearly" 
+                  ? `$${yearlyPrice}/year` 
                   : `$${parseFloat(tier.monthlyPrice).toFixed(2)}/month`;
-                const savings = calculateSavings(tier);
+                const savingsPercent = getSavingsPercentage(tier.tier);
+                const savingsAmount = parseFloat(tier.monthlyPrice) * 12 * (savingsPercent / 100);
 
                 return (
                   <Card
@@ -208,9 +227,9 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                       <div className="text-3xl font-bold">
                         {displayPrice}
                       </div>
-                      {billingCycle === "yearly" && tier.yearlyPrice && savings > 0 && (
+                      {billingCycle === "yearly" && savingsPercent > 0 && (
                         <div className="text-green-600 text-sm">
-                          Save ${savings.toFixed(2)} per year
+                          Save {savingsPercent}% (${savingsAmount.toFixed(2)} per year)
                         </div>
                       )}
                     </CardHeader>
@@ -251,7 +270,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             {/* Security Note */}
             <div className="text-center text-sm text-gray-500">
               <p>🔒 Secure payment powered by Stripe</p>
-              <p>Cancel anytime • No hidden fees • 30-day money-back guarantee</p>
+              <p>Cancel anytime • No hidden fees • Subscription continues until expiration</p>
             </div>
           </div>
         )}
