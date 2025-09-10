@@ -187,8 +187,11 @@ export default function Purchase() {
   const studyId = currentPath.includes('/purchase/') ? currentPath.split('/purchase/')[1] : null;
   
   // Fetch study details if study ID is provided
-  const { data: study, isLoading: studyLoading } = useQuery({
-    queryKey: ["/api/studies", studyId],
+  const { data: study, isLoading: studyLoading } = useQuery<any>({
+    queryKey: studyId ? ["/api/studies", studyId] : ["/api/studies"],
+    queryFn: studyId 
+      ? () => fetch(`/api/studies/${studyId}`).then(res => res.json())
+      : undefined,
     enabled: !!studyId,
     retry: false,
   });
@@ -416,7 +419,7 @@ export default function Purchase() {
               </Button>
               <Button
                 onClick={createPaymentIntent}
-                disabled={isCreatingIntent || !amount || !stripePromise || (studyId && studyLoading)}
+                disabled={isCreatingIntent || !amount || !stripePromise || (!!studyId && studyLoading)}
                 className="flex-1 bg-ministry-gold text-black hover:bg-ministry-gold-exact/90"
                 data-testid="button-continue-purchase"
               >
