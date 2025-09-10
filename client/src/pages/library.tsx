@@ -314,8 +314,17 @@ export default function Library() {
             const requiresPurchase = study.requiresPurchase && 
               study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free');
             
+            // Check if study has free lessons available for preview
+            const hasFreeLessons = study.freeLessonCount > 0;
+            
+            // For premium/VIP studies with free lessons, allow access for free users to preview
+            const allowPreviewAccess = hasFreeLessons && 
+              (study.requiredTier === 'premium' || study.requiredTier === 'vip') && 
+              user?.subscriptionTier === 'free';
+            
             // Hide tier badge if study requires purchase for current user's tier and they haven't purchased it
-            const shouldHideTierBadge = requiresPurchase && !hasPurchased;
+            // OR if study allows preview access (since they can enter but with limited access)
+            const shouldHideTierBadge = (requiresPurchase && !hasPurchased) || allowPreviewAccess;
             
             // Handle purchase action
             const handlePurchase = () => {
@@ -332,6 +341,7 @@ export default function Library() {
                 hideTierBadge={shouldHideTierBadge}
                 requiresPurchase={requiresPurchase}
                 hasPurchased={hasPurchased}
+                allowPreviewAccess={allowPreviewAccess}
                 onPurchase={handlePurchase}
                 data-testid={`study-card-${study.id}`}
               />
