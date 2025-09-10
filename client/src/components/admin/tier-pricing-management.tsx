@@ -232,13 +232,13 @@ export default function TierPricingManagement() {
                     <div className="space-y-3">
                       <Label>Yearly Pricing <span className="text-gray-500">(optional)</span></Label>
                       
-                      <div className="flex gap-2">
+                      <div className="flex gap-1">
                         <Button
                           type="button"
                           size="sm"
                           variant={formData.yearlyPricingType === 'discount' ? 'default' : 'outline'}
                           onClick={() => setFormData({ ...formData, yearlyPricingType: 'discount' })}
-                          className={formData.yearlyPricingType === 'discount' ? 'bg-ministry-gold text-black hover:bg-ministry-gold/90' : ''}
+                          className={`text-xs px-2 py-1 h-7 flex-1 ${formData.yearlyPricingType === 'discount' ? 'bg-ministry-gold text-black hover:bg-ministry-gold/90' : ''}`}
                         >
                           Discount %
                         </Button>
@@ -247,7 +247,7 @@ export default function TierPricingManagement() {
                           size="sm"
                           variant={formData.yearlyPricingType === 'fixed' ? 'default' : 'outline'}
                           onClick={() => setFormData({ ...formData, yearlyPricingType: 'fixed' })}
-                          className={formData.yearlyPricingType === 'fixed' ? 'bg-ministry-gold text-black hover:bg-ministry-gold/90' : ''}
+                          className={`text-xs px-2 py-1 h-7 flex-1 ${formData.yearlyPricingType === 'fixed' ? 'bg-ministry-gold text-black hover:bg-ministry-gold/90' : ''}`}
                         >
                           Set Price
                         </Button>
