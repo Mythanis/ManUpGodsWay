@@ -639,7 +639,7 @@ export default function StudyDetail() {
                           <div key={lesson.id} className={`border rounded-lg p-4 transition-colors ${
                             canAccessThisLesson 
                               ? 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800' 
-                              : 'border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-900/20'
+                              : 'border-ministry-gold bg-ministry-gold/10 dark:border-ministry-gold dark:bg-ministry-gold/5'
                           }`}>
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
@@ -647,7 +647,7 @@ export default function StudyDetail() {
                                   <h3 className={`font-semibold ${
                                     canAccessThisLesson 
                                       ? 'text-ministry-charcoal dark:text-white' 
-                                      : 'text-red-600 dark:text-red-400'
+                                      : 'text-ministry-gold dark:text-ministry-gold'
                                   }`}>
                                     Lesson {lesson.lessonNumber}: {lesson.title}
                                   </h3>
