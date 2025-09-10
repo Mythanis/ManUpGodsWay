@@ -142,45 +142,47 @@ export default function TierPricingManagement() {
       <div className="grid gap-6 md:grid-cols-2">
         {tierPricing.map((tier: TierPricing) => (
           <Card key={tier.id} className="border-border">
-            <CardHeader className="pb-3">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-lg">{getTierDisplayName(tier.tier)}</CardTitle>
-                  <Badge className={`text-xs ${getTierBadgeColor(tier.tier)}`}>
+            <CardHeader className="pb-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <CardTitle className="text-base font-semibold">{getTierDisplayName(tier.tier)}</CardTitle>
+                  <Badge className={`text-xs shrink-0 ${getTierBadgeColor(tier.tier)}`}>
                     {tier.tier.toUpperCase()}
                   </Badge>
                 </div>
-                {editingTier === tier.tier ? (
-                  <div className="flex items-center gap-2 self-start sm:self-center">
-                    <Button
-                      size="sm"
-                      onClick={handleSave}
-                      disabled={updateTierMutation.isPending}
-                      className="bg-ministry-gold text-black hover:bg-ministry-gold/90 text-xs px-3"
-                    >
-                      <Save className="w-3 h-3 mr-1" />
-                      Save
-                    </Button>
+                <div className="flex items-center gap-1 shrink-0">
+                  {editingTier === tier.tier ? (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={handleSave}
+                        disabled={updateTierMutation.isPending}
+                        className="bg-ministry-gold text-black hover:bg-ministry-gold/90 text-xs px-2 py-1 h-7"
+                      >
+                        <Save className="w-3 h-3 mr-1" />
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCancel}
+                        disabled={updateTierMutation.isPending}
+                        className="text-xs px-2 py-1 h-7"
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={handleCancel}
-                      disabled={updateTierMutation.isPending}
-                      className="text-xs px-3"
+                      onClick={() => handleEdit(tier)}
+                      className="border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10 text-xs px-2 py-1 h-7 shrink-0"
                     >
-                      Cancel
+                      Edit
                     </Button>
-                  </div>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(tier)}
-                    className="border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10 text-xs px-3 self-start sm:self-center"
-                  >
-                    Edit
-                  </Button>
-                )}
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -229,17 +231,17 @@ export default function TierPricingManagement() {
               ) : (
                 <>
                   <div className="space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="space-y-2">
+                      <div className="bg-gray-50 p-2 rounded">
                         <Label className="text-xs font-medium text-gray-600 block mb-1">Monthly Price</Label>
-                        <div className="text-lg font-bold text-ministry-charcoal">
+                        <div className="text-base font-bold text-ministry-charcoal">
                           ${parseFloat(tier.monthlyPrice).toFixed(2)}
                         </div>
                       </div>
                       {tier.yearlyPrice && (
-                        <div className="bg-gray-50 p-3 rounded-lg">
+                        <div className="bg-gray-50 p-2 rounded">
                           <Label className="text-xs font-medium text-gray-600 block mb-1">Yearly Price</Label>
-                          <div className="text-lg font-bold text-ministry-charcoal">
+                          <div className="text-base font-bold text-ministry-charcoal">
                             ${parseFloat(tier.yearlyPrice).toFixed(2)}
                           </div>
                           <div className="text-xs text-green-600 mt-1">
