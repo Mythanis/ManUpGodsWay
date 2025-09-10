@@ -84,6 +84,7 @@ export const studies = pgTable("studies", {
   difficulty: varchar("difficulty").default("beginner"), // beginner, intermediate, advanced
   estimatedHours: integer("estimated_hours").default(1),
   lessonCount: integer("lesson_count").default(1),
+  freeLessonCount: integer("free_lesson_count").default(0), // Number of lessons accessible to free users for premium/VIP studies
   thumbnailUrl: varchar("thumbnail_url"),
   videoId: varchar("video_id").references(() => videos.id), // Reference to videos table
   videoUrl: varchar("video_url"), // Keep for backward compatibility with external URLs
@@ -545,6 +546,7 @@ export const insertStudySchema = createInsertSchema(studies, {
   difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
   estimatedHours: z.number().int().min(1).default(1),
   lessonCount: z.number().int().min(1).default(1),
+  freeLessonCount: z.number().int().min(0).default(0),
   requiredTier: z.enum(["free", "premium", "vip"]).default("free"),
   requiresPurchase: z.boolean().default(false),
   price: z.string().nullable().optional(),
