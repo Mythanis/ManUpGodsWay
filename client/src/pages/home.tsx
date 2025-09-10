@@ -12,6 +12,7 @@ import ProgressCard from "@/components/progress-card";
 import { NotificationPanel } from "@/components/notification-panel";
 import { LiveStreamBanner } from "@/components/live-stream-banner";
 import BrotherhoodRequests from "@/components/brotherhood-requests";
+import UpgradeModal from "@/components/upgrade-modal";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart } from "lucide-react";
@@ -34,6 +35,7 @@ export default function Home() {
   const [showProgressDialog, setShowProgressDialog] = useState(false);
   const [showChallengeDialog, setShowChallengeDialog] = useState(false);
   const [showHurdleWallDialog, setShowHurdleWallDialog] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -334,6 +336,7 @@ export default function Home() {
               <Button 
                 className="bg-ministry-navy text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-ministry-charcoal"
                 data-testid="button-upgrade"
+                onClick={() => setShowUpgradeModal(true)}
               >
                 Upgrade
               </Button>
@@ -1110,6 +1113,12 @@ export default function Home() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+      />
     </div>
   );
 }
