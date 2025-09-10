@@ -38,10 +38,12 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   const [selectedTier, setSelectedTier] = useState<string>("");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
-  // Fetch tier pricing data
+  // Fetch tier pricing data - using same query key as admin panel for real-time updates
   const { data: tierPricing = [], isLoading } = useQuery({
-    queryKey: ["/api/tier-pricing"],
+    queryKey: ["/api/admin/tier-pricing"],
     enabled: isOpen,
+    refetchInterval: 5000, // Poll every 5 seconds for real-time updates
+    refetchIntervalInBackground: true,
   });
 
   // Create subscription checkout mutation
@@ -121,27 +123,35 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   };
 
   const calculateSavings = (tier: TierPricing) => {
-    if (!tier.yearlyPrice) return 0;
+    if (!tier.yearlyPrice) return { amount: 0, percentage: 0 };
     const monthlyTotal = parseFloat(tier.monthlyPrice) * 12;
     const yearlyPrice = parseFloat(tier.yearlyPrice);
-    return monthlyTotal - yearlyPrice;
+    const savingsAmount = monthlyTotal - yearlyPrice;
+    const savingsPercentage = ((savingsAmount / monthlyTotal) * 100);
+    return { amount: savingsAmount, percentage: Math.round(savingsPercentage) };
   };
 
-  const getSavingsPercentage = (tier: string) => {
-    switch (tier) {
-      case 'premium':
-        return 5;
-      case 'vip':
-        return 10;
-      default:
-        return 0;
-    }
+  const getHighestSavingsPercentage = () => {
+    let highestPercentage = 0;
+    tierPricing.forEach((tier: TierPricing) => {
+      if (tier.yearlyPrice) {
+        const savings = calculateSavings(tier);
+        if (savings.percentage > highestPercentage) {
+          highestPercentage = savings.percentage;
+        }
+      }
+    });
+    return highestPercentage;
   };
 
   const calculateYearlyPrice = (tier: TierPricing) => {
-    const monthlyPrice = parseFloat(tier.monthlyPrice);
-    const savingsPercent = getSavingsPercentage(tier.tier);
-    return (monthlyPrice * 12 * (1 - savingsPercent / 100)).toFixed(2);
+    if (!tier.yearlyPrice) {
+      // Fallback to default percentages if no yearly price set
+      const monthlyPrice = parseFloat(tier.monthlyPrice);
+      const defaultPercent = tier.tier === 'vip' ? 10 : 5;
+      return (monthlyPrice * 12 * (1 - defaultPercent / 100)).toFixed(2);
+    }
+    return tier.yearlyPrice;
   };
 
   const currentTier = user?.subscriptionTier || 'free';
@@ -187,7 +197,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                   className={billingCycle === "yearly" ? "bg-white shadow-sm" : ""}
                 >
                   Yearly
-                  <Badge className="ml-2 bg-green-500 text-white text-xs">Save up to 10%</Badge>
+                  <Badge className="ml-2 bg-green-500 text-white text-xs">Save up to {getHighestSavingsPercentage()}%</Badge>
                 </Button>
               </div>
             </div>
@@ -201,8 +211,9 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 const displayPrice = billingCycle === "yearly" 
                   ? `$${yearlyPrice}/year` 
                   : `$${parseFloat(tier.monthlyPrice).toFixed(2)}/month`;
-                const savingsPercent = getSavingsPercentage(tier.tier);
-                const savingsAmount = parseFloat(tier.monthlyPrice) * 12 * (savingsPercent / 100);
+                const savings = calculateSavings(tier);
+                const savingsPercent = savings.percentage;
+                const savingsAmount = savings.amount;
 
                 return (
                   <Card
@@ -227,7 +238,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                       <div className="text-3xl font-bold">
                         {displayPrice}
                       </div>
-                      {billingCycle === "yearly" && savingsPercent > 0 && (
+                      {billingCycle === "yearly" && tier.yearlyPrice && savingsPercent > 0 && (
                         <div className="text-green-600 text-sm">
                           Save {savingsPercent}% (${savingsAmount.toFixed(2)} per year)
                         </div>
