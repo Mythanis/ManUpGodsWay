@@ -885,11 +885,11 @@ export default function Admin() {
               </div>
             </div>
 
-            {/* Purchase Options Section - HIGHLY VISIBLE */}
-            <div className="flex items-center justify-between rounded-lg border-4 border-red-500 p-6 bg-red-100">
+            {/* Purchase Options Section */}
+            <div className="flex items-center justify-between rounded-lg border border-ministry-steel p-4 bg-ministry-steel/5">
               <div className="space-y-0.5">
-                <Label className="text-xl font-bold text-red-900">🔴 REQUIRES PURCHASE - TEST VISIBILITY</Label>
-                <div className="text-lg font-bold text-red-900">
+                <Label className="text-base font-semibold text-ministry-charcoal">Requires Purchase</Label>
+                <div className="text-sm text-ministry-slate">
                   Make this study available for purchase
                 </div>
               </div>
@@ -903,7 +903,7 @@ export default function Admin() {
             {/* Price field - only show when requiresPurchase is true */}
             {formData.requiresPurchase && (
               <div>
-                <Label htmlFor="edit-price" className="text-lg font-bold text-red-900">💵 Price ($)</Label>
+                <Label htmlFor="edit-price" className="text-base font-semibold text-ministry-charcoal">Price ($)</Label>
                 <Input
                   id="edit-price"
                   type="number"
@@ -912,7 +912,7 @@ export default function Admin() {
                   value={formData.price || ""}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   placeholder="0.00"
-                  className="border-4 border-red-500 text-lg font-bold"
+                  className="border-ministry-steel focus:border-ministry-gold"
                   data-testid="input-edit-price"
                 />
               </div>
@@ -921,7 +921,7 @@ export default function Admin() {
             {/* Tier checkboxes - only show when requiresPurchase is true */}
             {formData.requiresPurchase && (
               <div>
-                <Label className="text-lg font-bold text-red-900">Purchase Required For</Label>
+                <Label className="text-base font-semibold text-ministry-charcoal">Purchase Required For</Label>
                 <div className="space-y-2">
                   {/* All selection checkbox */}
                   <div className="flex items-center space-x-2">
@@ -936,10 +936,10 @@ export default function Admin() {
                           setFormData({ ...formData, purchaseRequiredTiers: [] });
                         }
                       }}
-                      className="rounded border-4 border-red-500"
+                      className="rounded border-ministry-steel text-ministry-gold focus:ring-ministry-gold"
                       data-testid="checkbox-edit-all-tiers"
                     />
-                    <label htmlFor="edit-all-tiers" className="text-sm font-bold text-red-900">
+                    <label htmlFor="edit-all-tiers" className="text-sm text-ministry-charcoal">
                       All Tiers
                     </label>
                   </div>
@@ -965,10 +965,10 @@ export default function Admin() {
                           }
                           setFormData({ ...formData, purchaseRequiredTiers: currentTiers });
                         }}
-                        className="rounded border-4 border-red-500"
+                        className="rounded border-ministry-steel text-ministry-gold focus:ring-ministry-gold"
                         data-testid={`checkbox-edit-tier-${tier.id}`}
                       />
-                      <label htmlFor={`edit-tier-${tier.id}`} className="text-sm font-bold text-red-900">
+                      <label htmlFor={`edit-tier-${tier.id}`} className="text-sm text-ministry-charcoal">
                         {tier.label}
                       </label>
                     </div>
