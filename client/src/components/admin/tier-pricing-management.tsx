@@ -143,16 +143,10 @@ export default function TierPricingManagement() {
         {tierPricing.map((tier: TierPricing) => (
           <Card key={tier.id} className="border-border">
             <CardHeader className="pb-2">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <CardTitle className="text-base font-semibold">{getTierDisplayName(tier.tier)}</CardTitle>
-                  <Badge className={`text-xs shrink-0 ${getTierBadgeColor(tier.tier)}`}>
-                    {tier.tier.toUpperCase()}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
+              <div className="space-y-2">
+                <div className="flex justify-end">
                   {editingTier === tier.tier ? (
-                    <>
+                    <div className="flex items-center gap-1">
                       <Button
                         size="sm"
                         onClick={handleSave}
@@ -171,17 +165,23 @@ export default function TierPricingManagement() {
                       >
                         Cancel
                       </Button>
-                    </>
+                    </div>
                   ) : (
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleEdit(tier)}
-                      className="border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10 text-xs px-2 py-1 h-7 shrink-0"
+                      className="border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10 text-xs px-2 py-1 h-7"
                     >
                       Edit
                     </Button>
                   )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-base font-semibold">{getTierDisplayName(tier.tier)}</CardTitle>
+                  <Badge className={`text-xs ${getTierBadgeColor(tier.tier)}`}>
+                    {tier.tier.toUpperCase()}
+                  </Badge>
                 </div>
               </div>
             </CardHeader>
