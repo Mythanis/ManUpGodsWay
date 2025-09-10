@@ -383,40 +383,78 @@ export default function StudyManagement() {
             </div>
 
             {/* Purchase Options Section */}
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <Label className="text-base">Requires Purchase</Label>
-                <div className="text-sm text-muted-foreground">
-                  Make this study available for purchase
+            <div className="space-y-4 rounded-lg border p-4 bg-gray-50 dark:bg-gray-800">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-base font-semibold">Study Pricing</Label>
+                  <div className="text-sm text-muted-foreground">
+                    Control if this study requires payment or is free for users
+                  </div>
                 </div>
+                <Switch
+                  checked={formData.requiresPurchase}
+                  onCheckedChange={(checked) => setFormData({ ...formData, requiresPurchase: checked, price: checked ? formData.price : "" })}
+                  data-testid="switch-edit-requires-purchase"
+                />
               </div>
-              <Switch
-                checked={formData.requiresPurchase}
-                onCheckedChange={(checked) => setFormData({ ...formData, requiresPurchase: checked })}
-                data-testid="switch-edit-requires-purchase"
-              />
-            </div>
+              
+              {/* Quick Action Buttons */}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, requiresPurchase: false, price: "" })}
+                  className={!formData.requiresPurchase ? "bg-green-100 border-green-500 text-green-700" : ""}
+                  data-testid="button-make-free"
+                >
+                  Make Free
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, requiresPurchase: true, price: formData.price || "9.99" })}
+                  className={formData.requiresPurchase ? "bg-blue-100 border-blue-500 text-blue-700" : ""}
+                  data-testid="button-make-paid"
+                >
+                  Make Paid
+                </Button>
+              </div>
 
-            {/* Price field - always show for editing */}
-            <div>
-              <Label htmlFor="edit-price">Price ($)</Label>
-              <Input
-                id="edit-price"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                placeholder="0.00"
-                disabled={!formData.requiresPurchase}
-                className={!formData.requiresPurchase ? "opacity-50" : ""}
-                data-testid="input-edit-price"
-              />
-              {!formData.requiresPurchase && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Enable "Requires Purchase" to set a price
-                </p>
-              )}
+              {/* Price field */}
+              <div>
+                <Label htmlFor="edit-price" className="flex items-center gap-2">
+                  Price ($)
+                  {formData.requiresPurchase ? (
+                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">PAID STUDY</span>
+                  ) : (
+                    <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">FREE STUDY</span>
+                  )}
+                </Label>
+                <Input
+                  id="edit-price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="0.00"
+                  disabled={!formData.requiresPurchase}
+                  className={!formData.requiresPurchase ? "opacity-50" : ""}
+                  data-testid="input-edit-price"
+                />
+                {!formData.requiresPurchase && (
+                  <p className="text-xs text-green-600 mt-1">
+                    ✓ This study is currently FREE for all users
+                  </p>
+                )}
+                {formData.requiresPurchase && formData.price && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    Users will pay ${parseFloat(formData.price).toFixed(2)} to access this study
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Tier checkboxes - only show when requiresPurchase is true */}
