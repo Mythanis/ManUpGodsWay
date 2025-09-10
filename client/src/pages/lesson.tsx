@@ -28,7 +28,7 @@ export default function Lesson() {
     retry: false,
   });
 
-  // Fetch study data for the discussion
+  // Fetch study data for access control and discussion
   const { data: study } = useQuery({
     queryKey: ["/api/studies", studyId],
     retry: false,
@@ -49,12 +49,87 @@ export default function Lesson() {
     setShowDiscussionDialog(true);
   };
 
+  // Access control logic
+  const canAccess = () => {
+    if (!study) return false;
+    
+    // Normal tier-based access for non-purchasable studies
+    const userTier = user?.subscriptionTier || 'free';
+    return study.requiredTier === 'free' || 
+           (study.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
+           (study.requiredTier === 'vip' && userTier === 'vip');
+  };
+
+  // Check if user has preview access (can access study but with limited lessons)
+  const hasPreviewAccess = () => {
+    if (!study) return false;
+    const userTier = user?.subscriptionTier || 'free';
+    
+    // Free users can preview premium/VIP studies if they have free lessons available
+    return userTier === 'free' && 
+           (study.requiredTier === 'premium' || study.requiredTier === 'vip') && 
+           (study.freeLessonCount || 0) > 0;
+  };
+
+  // Check if user can access this specific lesson number
+  const canAccessThisLesson = () => {
+    if (!study || !lesson) return false;
+    
+    // Full access users can access all lessons
+    if (canAccess()) return true;
+    
+    // Preview users can only access free lessons (first N lessons)
+    if (hasPreviewAccess()) {
+      return lesson.lessonNumber <= (study.freeLessonCount || 0);
+    }
+    
+    return false;
+  };
+
   if (lessonLoading || !lesson) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-navy mx-auto mb-4"></div>
           <p className="text-ministry-slate">Loading lesson...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user has access to this lesson
+  if (study && !canAccessThisLesson()) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold text-ministry-charcoal dark:text-white mb-4">
+            Lesson Locked
+          </h1>
+          <p className="text-ministry-slate mb-6">
+            This lesson is part of a {study.requiredTier} study. 
+            {hasPreviewAccess() 
+              ? `You can access the first ${study.freeLessonCount} lesson${study.freeLessonCount === 1 ? '' : 's'} for free.`
+              : 'Upgrade your subscription to access this content.'
+            }
+          </p>
+          <div className="space-y-3">
+            <Button
+              onClick={handleClose}
+              className="w-full bg-ministry-charcoal hover:bg-ministry-charcoal/90 text-white"
+            >
+              Back to Study
+            </Button>
+            {!hasPreviewAccess() && (
+              <Button
+                variant="outline"
+                onClick={() => setLocation('/profile')}
+                className="w-full"
+              >
+                Upgrade Subscription
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );
