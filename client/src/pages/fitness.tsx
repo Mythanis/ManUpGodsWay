@@ -884,7 +884,7 @@ export default function Fitness() {
                       value={newPlanName}
                       onChange={(e) => setNewPlanName(e.target.value)}
                       placeholder="Enter plan name..."
-                      className="bg-white border-ministry-steel"
+                      className="bg-white border-ministry-steel text-black"
                       data-testid="input-plan-name"
                     />
                   </div>
@@ -894,7 +894,7 @@ export default function Fitness() {
                       value={newPlanDescription}
                       onChange={(e) => setNewPlanDescription(e.target.value)}
                       placeholder="Enter plan description..."
-                      className="bg-white border-ministry-steel"
+                      className="bg-white border-ministry-steel text-black"
                       data-testid="input-plan-description"
                     />
                   </div>
