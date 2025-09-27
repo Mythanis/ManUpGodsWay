@@ -902,7 +902,7 @@ export default function Fitness() {
                     <Button
                       onClick={handleCreatePlan}
                       disabled={createPlanMutation.isPending}
-                      className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                      className="bg-ministry-gold hover:bg-ministry-gold/90 text-black border-2 border-black"
                       data-testid="button-save-plan"
                     >
                       {createPlanMutation.isPending ? 'Creating...' : 'Create Plan'}
@@ -914,7 +914,7 @@ export default function Fitness() {
                         setNewPlanDescription('');
                       }}
                       variant="outline"
-                      className="border-ministry-steel text-black"
+                      className="border-ministry-steel text-white"
                       data-testid="button-cancel-plan"
                     >
                       Cancel
