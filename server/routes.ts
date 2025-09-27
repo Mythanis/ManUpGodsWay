@@ -22,6 +22,9 @@ import {
   insertContentFlagSchema,
   insertTestimonySchema,
   insertFitnessChallengeSchema,
+  insertFavoriteExerciseSchema,
+  insertFitnessPlanSchema,
+  insertFitnessPlanExerciseSchema,
   insertEventSchema,
   insertEventRegistrationSchema
 } from "@shared/schema";
@@ -3975,6 +3978,359 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(challenge);
     } catch (error) {
       console.error('Error publishing fitness challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Favorite exercises routes
+  // Get user's favorite exercises
+  app.get('/api/favorite-exercises', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const favorites = await storage.getFavoriteExercises(user.id);
+      res.json(favorites);
+    } catch (error) {
+      console.error('Error fetching favorite exercises:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Add exercise to favorites
+  app.post('/api/favorite-exercises', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const exerciseData = insertFavoriteExerciseSchema.parse({
+        ...req.body,
+        userId: user.id
+      });
+      
+      const favorite = await storage.addFavoriteExercise(exerciseData);
+      res.status(201).json(favorite);
+    } catch (error) {
+      console.error('Error adding favorite exercise:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid exercise data", errors: error.errors });
+      }
+      // Handle duplicate favorite error
+      if (error instanceof Error && error.message.includes("duplicate")) {
+        return res.status(409).json({ message: "Exercise already in favorites" });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Remove exercise from favorites
+  app.delete('/api/favorite-exercises/:exerciseId', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      await storage.removeFavoriteExercise(user.id, req.params.exerciseId);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error removing favorite exercise:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Check if exercise is favorited
+  app.get('/api/favorite-exercises/:exerciseId/check', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const isFavorite = await storage.isFavoriteExercise(user.id, req.params.exerciseId);
+      res.json({ isFavorite });
+    } catch (error) {
+      console.error('Error checking favorite exercise:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Fitness plans routes
+  // Get user's fitness plans
+  app.get('/api/fitness-plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const plans = await storage.getFitnessPlans(user.id);
+      res.json(plans);
+    } catch (error) {
+      console.error('Error fetching fitness plans:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get fitness plan by ID with exercises
+  app.get('/api/fitness-plans/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const plan = await storage.getFitnessPlanWithExercises(req.params.id);
+      if (!plan) {
+        return res.status(404).json({ message: 'Fitness plan not found' });
+      }
+      
+      // Check if user owns this plan or if it's public
+      if (plan.userId !== user.id && !plan.isPublic) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      console.error('Error fetching fitness plan:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Create fitness plan
+  app.post('/api/fitness-plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const planData = insertFitnessPlanSchema.parse({
+        ...req.body,
+        userId: user.id
+      });
+      
+      const plan = await storage.createFitnessPlan(planData);
+      res.status(201).json(plan);
+    } catch (error) {
+      console.error('Error creating fitness plan:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid plan data", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Update fitness plan
+  app.put('/api/fitness-plans/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Check ownership
+      const existingPlan = await storage.getFitnessPlan(req.params.id);
+      if (!existingPlan) {
+        return res.status(404).json({ message: 'Fitness plan not found' });
+      }
+      
+      if (existingPlan.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const updateData = insertFitnessPlanSchema.partial().parse(req.body);
+      const plan = await storage.updateFitnessPlan(req.params.id, updateData);
+      res.json(plan);
+    } catch (error) {
+      console.error('Error updating fitness plan:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid plan data", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Delete fitness plan
+  app.delete('/api/fitness-plans/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Check ownership
+      const existingPlan = await storage.getFitnessPlan(req.params.id);
+      if (!existingPlan) {
+        return res.status(404).json({ message: 'Fitness plan not found' });
+      }
+      
+      if (existingPlan.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      await storage.deleteFitnessPlan(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting fitness plan:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Fitness plan exercises routes
+  // Get exercises for a fitness plan
+  app.get('/api/fitness-plans/:planId/exercises', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Check access to plan
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) {
+        return res.status(404).json({ message: 'Fitness plan not found' });
+      }
+      
+      if (plan.userId !== user.id && !plan.isPublic) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const exercises = await storage.getFitnessPlanExercises(req.params.planId);
+      res.json(exercises);
+    } catch (error) {
+      console.error('Error fetching plan exercises:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Add exercise to fitness plan
+  app.post('/api/fitness-plans/:planId/exercises', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Check ownership of plan
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) {
+        return res.status(404).json({ message: 'Fitness plan not found' });
+      }
+      
+      if (plan.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const exerciseData = insertFitnessPlanExerciseSchema.parse({
+        ...req.body,
+        planId: req.params.planId
+      });
+      
+      const exercise = await storage.addExerciseToPlan(exerciseData);
+      res.status(201).json(exercise);
+    } catch (error) {
+      console.error('Error adding exercise to plan:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid exercise data", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Update exercise in fitness plan
+  app.put('/api/fitness-plan-exercises/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Get the exercise to check plan ownership
+      const exercises = await storage.getFitnessPlanExercises(''); // This is a bit inefficient but works with current interface
+      const exercise = exercises.find(ex => ex.id === req.params.id);
+      
+      if (!exercise) {
+        return res.status(404).json({ message: 'Exercise not found' });
+      }
+      
+      const plan = await storage.getFitnessPlan(exercise.planId);
+      if (!plan || plan.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const updateData = insertFitnessPlanExerciseSchema.partial().parse(req.body);
+      const updatedExercise = await storage.updatePlanExercise(req.params.id, updateData);
+      res.json(updatedExercise);
+    } catch (error) {
+      console.error('Error updating plan exercise:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid exercise data", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Remove exercise from fitness plan
+  app.delete('/api/fitness-plan-exercises/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Similar ownership check as update
+      const exercises = await storage.getFitnessPlanExercises('');
+      const exercise = exercises.find(ex => ex.id === req.params.id);
+      
+      if (!exercise) {
+        return res.status(404).json({ message: 'Exercise not found' });
+      }
+      
+      const plan = await storage.getFitnessPlan(exercise.planId);
+      if (!plan || plan.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      await storage.removePlanExercise(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error removing plan exercise:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Reorder exercises in fitness plan
+  app.put('/api/fitness-plans/:planId/exercises/reorder', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Check ownership of plan
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) {
+        return res.status(404).json({ message: 'Fitness plan not found' });
+      }
+      
+      if (plan.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const { exerciseOrders } = req.body;
+      if (!Array.isArray(exerciseOrders)) {
+        return res.status(400).json({ message: 'exerciseOrders must be an array' });
+      }
+      
+      await storage.reorderPlanExercises(req.params.planId, exerciseOrders);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error reordering plan exercises:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

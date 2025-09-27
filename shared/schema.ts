@@ -251,6 +251,54 @@ export const fitnessChallenge = pgTable("fitness_challenges", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// User favorite exercises from ExerciseDB API
+export const favoriteExercises = pgTable("favorite_exercises", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  exerciseId: varchar("exercise_id").notNull(), // ExerciseDB API exercise ID
+  exerciseName: varchar("exercise_name").notNull(),
+  bodyPart: varchar("body_part"),
+  targetMuscle: varchar("target_muscle"),
+  equipment: varchar("equipment"),
+  imageUrl: varchar("image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.exerciseId), // Prevent duplicate favorites
+]);
+
+// User fitness plans
+export const fitnessPlans = pgTable("fitness_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  category: varchar("category").default("general"), // strength, cardio, flexibility, general
+  difficulty: varchar("difficulty").default("beginner"), // beginner, intermediate, advanced
+  estimatedDuration: integer("estimated_duration").default(60), // in minutes
+  isPublic: boolean("is_public").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Exercises within fitness plans
+export const fitnessPlanExercises = pgTable("fitness_plan_exercises", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  planId: varchar("plan_id").notNull().references(() => fitnessPlans.id, { onDelete: 'cascade' }),
+  exerciseId: varchar("exercise_id").notNull(), // ExerciseDB API exercise ID
+  exerciseName: varchar("exercise_name").notNull(),
+  bodyPart: varchar("body_part"),
+  targetMuscle: varchar("target_muscle"),
+  equipment: varchar("equipment"),
+  imageUrl: varchar("image_url"),
+  sets: integer("sets").default(3),
+  reps: varchar("reps").default("10"), // Can be "10" or "10-12" or "30 seconds"
+  weight: varchar("weight"), // Optional weight specification
+  restTime: integer("rest_time").default(60), // Rest time in seconds
+  notes: text("notes"), // Additional exercise notes
+  orderIndex: integer("order_index").notNull().default(0), // Order within the plan
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertTestimonySchema = createInsertSchema(testimonies).omit({
   id: true,
   createdAt: true,
@@ -279,6 +327,49 @@ export const insertFitnessChallengeSchema = createInsertSchema(fitnessChallenge,
 
 export type FitnessChallenge = typeof fitnessChallenge.$inferSelect;
 export type InsertFitnessChallenge = z.infer<typeof insertFitnessChallengeSchema>;
+
+// Favorite exercises schema
+export const insertFavoriteExerciseSchema = createInsertSchema(favoriteExercises, {
+  exerciseId: z.string().min(1, "Exercise ID is required"),
+  exerciseName: z.string().min(1, "Exercise name is required"),
+}).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type FavoriteExercise = typeof favoriteExercises.$inferSelect;
+export type InsertFavoriteExercise = z.infer<typeof insertFavoriteExerciseSchema>;
+
+// Fitness plans schema
+export const insertFitnessPlanSchema = createInsertSchema(fitnessPlans, {
+  name: z.string().min(1, "Plan name is required"),
+  category: z.enum(["strength", "cardio", "flexibility", "general"]).default("general"),
+  difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
+  estimatedDuration: z.number().int().min(1).default(60),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type FitnessPlan = typeof fitnessPlans.$inferSelect;
+export type InsertFitnessPlan = z.infer<typeof insertFitnessPlanSchema>;
+
+// Fitness plan exercises schema
+export const insertFitnessPlanExerciseSchema = createInsertSchema(fitnessPlanExercises, {
+  exerciseId: z.string().min(1, "Exercise ID is required"),
+  exerciseName: z.string().min(1, "Exercise name is required"),
+  sets: z.number().int().min(1).default(3),
+  reps: z.string().min(1, "Reps is required").default("10"),
+  restTime: z.number().int().min(0).default(60),
+  orderIndex: z.number().int().min(0).default(0),
+}).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type FitnessPlanExercise = typeof fitnessPlanExercises.$inferSelect;
+export type InsertFitnessPlanExercise = z.infer<typeof insertFitnessPlanExerciseSchema>;
 
 // User notification preferences
 export const notificationPreferences = pgTable("notification_preferences", {
@@ -414,6 +505,19 @@ export const videosRelations = relations(videos, ({ one, many }) => ({
 export const fitnessChallengeRelations = relations(fitnessChallenge, ({ one }) => ({
   creator: one(users, { fields: [fitnessChallenge.createdBy], references: [users.id] }),
   video: one(videos, { fields: [fitnessChallenge.videoId], references: [videos.id] }),
+}));
+
+export const favoriteExercisesRelations = relations(favoriteExercises, ({ one }) => ({
+  user: one(users, { fields: [favoriteExercises.userId], references: [users.id] }),
+}));
+
+export const fitnessPlansRelations = relations(fitnessPlans, ({ one, many }) => ({
+  user: one(users, { fields: [fitnessPlans.userId], references: [users.id] }),
+  exercises: many(fitnessPlanExercises),
+}));
+
+export const fitnessPlanExercisesRelations = relations(fitnessPlanExercises, ({ one }) => ({
+  plan: one(fitnessPlans, { fields: [fitnessPlanExercises.planId], references: [fitnessPlans.id] }),
 }));
 
 export const studiesRelations = relations(studies, ({ one, many }) => ({

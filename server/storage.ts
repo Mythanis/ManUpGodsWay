@@ -106,6 +106,12 @@ import {
   type InsertBrotherhoodDenial,
   type FitnessChallenge,
   type InsertFitnessChallenge,
+  type FavoriteExercise,
+  type InsertFavoriteExercise,
+  type FitnessPlan,
+  type InsertFitnessPlan,
+  type FitnessPlanExercise,
+  type InsertFitnessPlanExercise,
   type Event,
   type InsertEvent,
   type EventRegistration,
@@ -389,6 +395,27 @@ export interface IStorage {
   deleteFitnessChallenge(id: string): Promise<void>;
   publishFitnessChallenge(id: string): Promise<FitnessChallenge>;
   getTodaysFitnessChallenge(): Promise<FitnessChallenge | null>;
+
+  // Favorite exercises operations
+  getFavoriteExercises(userId: string): Promise<FavoriteExercise[]>;
+  addFavoriteExercise(exercise: InsertFavoriteExercise): Promise<FavoriteExercise>;
+  removeFavoriteExercise(userId: string, exerciseId: string): Promise<void>;
+  isFavoriteExercise(userId: string, exerciseId: string): Promise<boolean>;
+
+  // Fitness plans operations
+  getFitnessPlans(userId: string): Promise<FitnessPlan[]>;
+  getFitnessPlan(id: string): Promise<FitnessPlan | undefined>;
+  createFitnessPlan(plan: InsertFitnessPlan): Promise<FitnessPlan>;
+  updateFitnessPlan(id: string, updates: Partial<InsertFitnessPlan>): Promise<FitnessPlan>;
+  deleteFitnessPlan(id: string): Promise<void>;
+  getFitnessPlanWithExercises(id: string): Promise<(FitnessPlan & { exercises: FitnessPlanExercise[] }) | undefined>;
+
+  // Fitness plan exercises operations
+  getFitnessPlanExercises(planId: string): Promise<FitnessPlanExercise[]>;
+  addExerciseToPlan(exercise: InsertFitnessPlanExercise): Promise<FitnessPlanExercise>;
+  updatePlanExercise(id: string, updates: Partial<InsertFitnessPlanExercise>): Promise<FitnessPlanExercise>;
+  removePlanExercise(id: string): Promise<void>;
+  reorderPlanExercises(planId: string, exerciseOrders: { id: string; orderIndex: number }[]): Promise<void>;
 
   // Events operations
   getEvents(): Promise<Event[]>;
@@ -4124,6 +4151,145 @@ export class DatabaseStorage implements IStorage {
       );
     
     return challenge || null;
+  }
+
+  // Favorite exercises implementation methods
+  async getFavoriteExercises(userId: string): Promise<FavoriteExercise[]> {
+    return await db
+      .select()
+      .from(favoriteExercises)
+      .where(eq(favoriteExercises.userId, userId))
+      .orderBy(desc(favoriteExercises.createdAt));
+  }
+
+  async addFavoriteExercise(exercise: InsertFavoriteExercise): Promise<FavoriteExercise> {
+    const [favorite] = await db
+      .insert(favoriteExercises)
+      .values(exercise)
+      .returning();
+    return favorite;
+  }
+
+  async removeFavoriteExercise(userId: string, exerciseId: string): Promise<void> {
+    await db
+      .delete(favoriteExercises)
+      .where(
+        and(
+          eq(favoriteExercises.userId, userId),
+          eq(favoriteExercises.exerciseId, exerciseId)
+        )
+      );
+  }
+
+  async isFavoriteExercise(userId: string, exerciseId: string): Promise<boolean> {
+    const [favorite] = await db
+      .select()
+      .from(favoriteExercises)
+      .where(
+        and(
+          eq(favoriteExercises.userId, userId),
+          eq(favoriteExercises.exerciseId, exerciseId)
+        )
+      )
+      .limit(1);
+    return !!favorite;
+  }
+
+  // Fitness plans implementation methods
+  async getFitnessPlans(userId: string): Promise<FitnessPlan[]> {
+    return await db
+      .select()
+      .from(fitnessPlans)
+      .where(eq(fitnessPlans.userId, userId))
+      .orderBy(desc(fitnessPlans.createdAt));
+  }
+
+  async getFitnessPlan(id: string): Promise<FitnessPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(fitnessPlans)
+      .where(eq(fitnessPlans.id, id));
+    return plan;
+  }
+
+  async createFitnessPlan(plan: InsertFitnessPlan): Promise<FitnessPlan> {
+    const [newPlan] = await db
+      .insert(fitnessPlans)
+      .values(plan)
+      .returning();
+    return newPlan;
+  }
+
+  async updateFitnessPlan(id: string, updates: Partial<InsertFitnessPlan>): Promise<FitnessPlan> {
+    const [plan] = await db
+      .update(fitnessPlans)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(fitnessPlans.id, id))
+      .returning();
+    return plan;
+  }
+
+  async deleteFitnessPlan(id: string): Promise<void> {
+    await db
+      .delete(fitnessPlans)
+      .where(eq(fitnessPlans.id, id));
+  }
+
+  async getFitnessPlanWithExercises(id: string): Promise<(FitnessPlan & { exercises: FitnessPlanExercise[] }) | undefined> {
+    const plan = await this.getFitnessPlan(id);
+    if (!plan) return undefined;
+    
+    const exercises = await this.getFitnessPlanExercises(id);
+    return { ...plan, exercises };
+  }
+
+  // Fitness plan exercises implementation methods
+  async getFitnessPlanExercises(planId: string): Promise<FitnessPlanExercise[]> {
+    return await db
+      .select()
+      .from(fitnessPlanExercises)
+      .where(eq(fitnessPlanExercises.planId, planId))
+      .orderBy(asc(fitnessPlanExercises.orderIndex));
+  }
+
+  async addExerciseToPlan(exercise: InsertFitnessPlanExercise): Promise<FitnessPlanExercise> {
+    const [planExercise] = await db
+      .insert(fitnessPlanExercises)
+      .values(exercise)
+      .returning();
+    return planExercise;
+  }
+
+  async updatePlanExercise(id: string, updates: Partial<InsertFitnessPlanExercise>): Promise<FitnessPlanExercise> {
+    const [exercise] = await db
+      .update(fitnessPlanExercises)
+      .set(updates)
+      .where(eq(fitnessPlanExercises.id, id))
+      .returning();
+    return exercise;
+  }
+
+  async removePlanExercise(id: string): Promise<void> {
+    await db
+      .delete(fitnessPlanExercises)
+      .where(eq(fitnessPlanExercises.id, id));
+  }
+
+  async reorderPlanExercises(planId: string, exerciseOrders: { id: string; orderIndex: number }[]): Promise<void> {
+    // Use a transaction to ensure all updates happen atomically
+    await db.transaction(async (tx) => {
+      for (const { id, orderIndex } of exerciseOrders) {
+        await tx
+          .update(fitnessPlanExercises)
+          .set({ orderIndex })
+          .where(
+            and(
+              eq(fitnessPlanExercises.id, id),
+              eq(fitnessPlanExercises.planId, planId)
+            )
+          );
+      }
+    });
   }
 
   // Hurdle Wall implementation methods
