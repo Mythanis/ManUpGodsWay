@@ -175,10 +175,34 @@ export default function Fitness() {
     },
   });
 
+  // Define muscle group mappings
+  const muscleGroupMappings = {
+    'Legs': ['waist', 'lower legs', 'upper legs'],
+    'Back': ['back'],
+    'Abs': ['waist'],
+    'Arms': ['lower arms', 'upper arms'],
+    'Upper Body': ['shoulders', 'upper arms', 'lower arms', 'chest'],
+    'Chest': ['chest']
+  };
+
   // Get exercise filter options from exercises data
-  const uniqueBodyParts: string[] = Array.from(new Set((exercises as Exercise[]).map(ex => ex.bodyPart))).sort();
   const uniqueEquipment: string[] = Array.from(new Set((exercises as Exercise[]).map(ex => ex.equipment))).sort();
   const uniqueTargets: string[] = Array.from(new Set((exercises as Exercise[]).map(ex => ex.target))).sort();
+
+  // Filter exercises based on selected muscle group
+  const filteredExercises = exercises.filter((exercise: Exercise) => {
+    const matchesSearch = searchQuery === '' || 
+      exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      exercise.target.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesBodyPart = selectedBodyPart === 'all' || 
+      (muscleGroupMappings[selectedBodyPart as keyof typeof muscleGroupMappings]?.includes(exercise.bodyPart) ?? false);
+    
+    const matchesEquipment = selectedEquipment === 'all' || exercise.equipment === selectedEquipment;
+    const matchesTarget = selectedTarget === 'all' || exercise.target === selectedTarget;
+    
+    return matchesSearch && matchesBodyPart && matchesEquipment && matchesTarget;
+  });
 
   // Add/remove favorite exercise mutations
   const addFavoriteMutation = useMutation({
@@ -756,11 +780,12 @@ export default function Fitness() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Body Parts</SelectItem>
-                    {uniqueBodyParts.map((part) => (
-                      <SelectItem key={part} value={part}>
-                        {part ? part.charAt(0).toUpperCase() + part.slice(1) : part}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="Legs">Legs</SelectItem>
+                    <SelectItem value="Back">Back</SelectItem>
+                    <SelectItem value="Abs">Abs</SelectItem>
+                    <SelectItem value="Arms">Arms</SelectItem>
+                    <SelectItem value="Upper Body">Upper Body</SelectItem>
+                    <SelectItem value="Chest">Chest</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -799,7 +824,7 @@ export default function Fitness() {
               <div className="flex items-center justify-center py-20">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ministry-gold"></div>
               </div>
-            ) : exercises.length === 0 ? (
+            ) : filteredExercises.length === 0 ? (
               <Card className="text-center py-12 bg-ministry-gold-exact/20">
                 <CardContent>
                   <Search className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
@@ -809,10 +834,10 @@ export default function Fitness() {
               </Card>
             ) : (
               <div className="space-y-4">
-                {exercises.slice(0, 20).map((exercise: Exercise) => (
+                {filteredExercises.slice(0, 20).map((exercise: Exercise) => (
                   <ExerciseCard key={exercise.id} exercise={exercise} />
                 ))}
-                {exercises.length > 20 && (
+                {filteredExercises.length > 20 && (
                   <div className="text-center py-4">
                     <p className="text-white">Showing first 20 exercises. Use filters to narrow results.</p>
                   </div>
