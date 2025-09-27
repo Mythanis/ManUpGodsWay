@@ -879,7 +879,7 @@ export default function Fitness() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-black mb-2">Plan Name</label>
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'black' }}>Plan Name</label>
                     <Input
                       value={newPlanName}
                       onChange={(e) => setNewPlanName(e.target.value)}
@@ -889,7 +889,7 @@ export default function Fitness() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-black mb-2">Description (optional)</label>
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'black' }}>Description (optional)</label>
                     <Input
                       value={newPlanDescription}
                       onChange={(e) => setNewPlanDescription(e.target.value)}
