@@ -758,7 +758,7 @@ export default function Fitness() {
                     <SelectItem value="all">All Body Parts</SelectItem>
                     {uniqueBodyParts.map((part) => (
                       <SelectItem key={part} value={part}>
-                        {part.charAt(0).toUpperCase() + part.slice(1)}
+                        {part ? part.charAt(0).toUpperCase() + part.slice(1) : part}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -772,7 +772,7 @@ export default function Fitness() {
                     <SelectItem value="all">All Equipment</SelectItem>
                     {uniqueEquipment.map((equipment) => (
                       <SelectItem key={equipment} value={equipment}>
-                        {equipment.charAt(0).toUpperCase() + equipment.slice(1)}
+                        {equipment ? equipment.charAt(0).toUpperCase() + equipment.slice(1) : equipment}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -786,7 +786,7 @@ export default function Fitness() {
                     <SelectItem value="all">All Targets</SelectItem>
                     {uniqueTargets.map((target) => (
                       <SelectItem key={target} value={target}>
-                        {target.charAt(0).toUpperCase() + target.slice(1)}
+                        {target ? target.charAt(0).toUpperCase() + target.slice(1) : target}
                       </SelectItem>
                     ))}
                   </SelectContent>
