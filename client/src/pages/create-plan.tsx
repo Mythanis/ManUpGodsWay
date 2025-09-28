@@ -486,7 +486,7 @@ export default function CreatePlan() {
                         </Button>
                       </div>
                       
-                      <div className="flex flex-wrap gap-2 text-sm text-muted-foreground mb-2">
+                      <div className="flex flex-wrap gap-2 text-sm text-black mb-2">
                         {selected.sets && <span>Sets: {selected.sets}</span>}
                         {selected.reps && <span>Reps: {selected.reps}</span>}
                         {selected.minutes && <span>Minutes: {selected.minutes}</span>}
