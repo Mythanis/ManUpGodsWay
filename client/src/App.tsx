@@ -16,6 +16,7 @@ import Challenges from "@/pages/challenges";
 import Fitness from "@/pages/fitness";
 import CreatePlan from "@/pages/create-plan";
 import EditPlan from "@/pages/edit-plan";
+import ViewPlan from "@/pages/view-plan";
 import Events from "@/pages/events";
 import Community from "@/pages/community";
 import Brothers from "@/pages/brothers";
@@ -99,6 +100,7 @@ function Router() {
             <Route path="/podcasts" component={Podcasts} />
             <Route path="/challenges" component={Challenges} />
             <Route path="/fitness" component={Fitness} />
+            <Route path="/fitness/plans/:planId" component={ViewPlan} />
             <Route path="/create-plan" component={CreatePlan} />
             <Route path="/edit-plan/:planId" component={EditPlan} />
             <Route path="/events" component={Events} />
