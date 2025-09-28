@@ -408,6 +408,7 @@ export default function CreatePlan() {
                   value={planName}
                   onChange={(e) => setPlanName(e.target.value)}
                   placeholder="Enter plan name"
+                  className="text-white placeholder:text-white/70"
                   data-testid="input-plan-name"
                 />
               </div>
@@ -418,6 +419,7 @@ export default function CreatePlan() {
                   value={planDescription}
                   onChange={(e) => setPlanDescription(e.target.value)}
                   placeholder="Describe your fitness plan"
+                  className="text-white placeholder:text-white/70"
                   data-testid="input-plan-description"
                 />
               </div>
@@ -465,7 +467,7 @@ export default function CreatePlan() {
             </CardHeader>
             <CardContent>
               {selectedExercises.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">
+                <p className="text-white text-center py-4">
                   No exercises selected yet. Choose exercises from the right panel.
                 </p>
               ) : (
@@ -602,7 +604,7 @@ export default function CreatePlan() {
               {/* Filters */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
-                  <SelectTrigger data-testid="select-body-part">
+                  <SelectTrigger className="text-white" data-testid="select-body-part">
                     <SelectValue placeholder="Body Part" />
                   </SelectTrigger>
                   <SelectContent>
@@ -616,7 +618,7 @@ export default function CreatePlan() {
                 </Select>
 
                 <Select value={selectedEquipment} onValueChange={setSelectedEquipment}>
-                  <SelectTrigger data-testid="select-equipment">
+                  <SelectTrigger className="text-white" data-testid="select-equipment">
                     <SelectValue placeholder="Equipment" />
                   </SelectTrigger>
                   <SelectContent>
@@ -630,7 +632,7 @@ export default function CreatePlan() {
                 </Select>
 
                 <Select value={selectedTarget} onValueChange={setSelectedTarget}>
-                  <SelectTrigger data-testid="select-target-muscle">
+                  <SelectTrigger className="text-white" data-testid="select-target-muscle">
                     <SelectValue placeholder="Target Muscle" />
                   </SelectTrigger>
                   <SelectContent>
@@ -650,7 +652,7 @@ export default function CreatePlan() {
                     onCheckedChange={(checked) => setShowFavoritesOnly(checked === true)}
                     data-testid="checkbox-favorites-only"
                   />
-                  <label htmlFor="favorites" className="text-sm font-medium">
+                  <label htmlFor="favorites" className="text-sm font-medium text-white">
                     Favorites Only
                   </label>
                 </div>
