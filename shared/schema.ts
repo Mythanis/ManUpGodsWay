@@ -292,10 +292,23 @@ export const fitnessPlanExercises = pgTable("fitness_plan_exercises", {
   imageUrl: varchar("image_url"),
   sets: integer("sets").default(3),
   reps: varchar("reps").default("10"), // Can be "10" or "10-12" or "30 seconds"
+  minutes: integer("minutes"), // Optional minutes for cardio/time-based exercises
   weight: varchar("weight"), // Optional weight specification
   restTime: integer("rest_time").default(60), // Rest time in seconds
   notes: text("notes"), // Additional exercise notes
+  daysOfWeek: text("days_of_week").array(), // Array of days: ['monday', 'tuesday', etc.]
   orderIndex: integer("order_index").notNull().default(0), // Order within the plan
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Fitness plan reminders
+export const fitnessPlanReminders = pgTable("fitness_plan_reminders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  planId: varchar("plan_id").notNull().references(() => fitnessPlans.id, { onDelete: 'cascade' }),
+  dayOfWeek: varchar("day_of_week").notNull(), // 'monday', 'tuesday', etc.
+  time: varchar("time").notNull(), // '08:00' format
+  isActive: boolean("is_active").default(true),
+  lastSent: timestamp("last_sent"), // Track when reminder was last sent
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -361,15 +374,30 @@ export const insertFitnessPlanExerciseSchema = createInsertSchema(fitnessPlanExe
   exerciseName: z.string().min(1, "Exercise name is required"),
   sets: z.number().int().min(1).default(3),
   reps: z.string().min(1, "Reps is required").default("10"),
+  minutes: z.number().int().min(1).optional(),
   restTime: z.number().int().min(0).default(60),
+  daysOfWeek: z.array(z.enum(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"])).default([]),
   orderIndex: z.number().int().min(0).default(0),
 }).omit({
   id: true,
   createdAt: true,
 });
 
+// Fitness plan reminders schema
+export const insertFitnessPlanReminderSchema = createInsertSchema(fitnessPlanReminders, {
+  dayOfWeek: z.enum(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]),
+  time: z.string().regex(/^([01]?\d|2[0-3]):[0-5]\d$/, "Time must be in HH:MM format"),
+}).omit({
+  id: true,
+  createdAt: true,
+  lastSent: true,
+});
+
 export type FitnessPlanExercise = typeof fitnessPlanExercises.$inferSelect;
 export type InsertFitnessPlanExercise = z.infer<typeof insertFitnessPlanExerciseSchema>;
+
+export type FitnessPlanReminder = typeof fitnessPlanReminders.$inferSelect;
+export type InsertFitnessPlanReminder = z.infer<typeof insertFitnessPlanReminderSchema>;
 
 // User notification preferences
 export const notificationPreferences = pgTable("notification_preferences", {
