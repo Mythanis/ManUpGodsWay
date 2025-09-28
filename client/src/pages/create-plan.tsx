@@ -704,7 +704,7 @@ export default function CreatePlan() {
                             <Badge key={part} variant="secondary">{part}</Badge>
                           ))}
                           {exercise.equipments?.map((eq: string) => (
-                            <Badge key={eq} variant="outline">{eq}</Badge>
+                            <Badge key={eq} variant="outline" className="bg-black text-white border-black">{eq}</Badge>
                           ))}
                         </div>
                       </div>
