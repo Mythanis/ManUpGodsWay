@@ -487,7 +487,7 @@ export default function CreatePlan() {
                       </div>
                       
                       <div className="flex flex-wrap gap-2 text-sm text-black mb-2">
-                        {selected.sets && <span>Sets: {selected.sets}</span>}
+                        {selected.sets && selected.sets > 0 && <span>Sets: {selected.sets}</span>}
                         {selected.reps && <span>Reps: {selected.reps}</span>}
                         {selected.minutes && <span>Minutes: {selected.minutes}</span>}
                       </div>
