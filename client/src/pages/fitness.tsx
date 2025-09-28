@@ -139,48 +139,61 @@ export default function Fitness() {
   const { data: exercises = [], isLoading: isLoadingExercises } = useQuery({
     queryKey: ['exercises'],
     queryFn: async () => {
+      console.log('Fetching exercises from ExerciseDB API...');
       const response = await fetch('https://exercisedb-api.vercel.app/api/v1/exercises');
       if (!response.ok) throw new Error('Failed to fetch exercises');
       const data = await response.json();
+      console.log('Exercise data received:', data.data?.length, 'exercises');
       return data.data || [];
     },
-    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+    staleTime: 0, // No cache to force fresh data
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   // Fetch muscles for filtering
   const { data: muscles = [] } = useQuery({
     queryKey: ['muscles'],
     queryFn: async () => {
+      console.log('Fetching muscles from ExerciseDB API...');
       const response = await fetch('https://exercisedb-api.vercel.app/api/v1/muscles');
       if (!response.ok) throw new Error('Failed to fetch muscles');
       const data = await response.json();
+      console.log('Muscles data received:', data.data?.length, 'muscles');
       return data.data || [];
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 0, // No cache to force fresh data
+    refetchOnMount: true,
   });
 
   // Fetch equipment for filtering
   const { data: equipments = [] } = useQuery({
     queryKey: ['equipments'],
     queryFn: async () => {
+      console.log('Fetching equipments from ExerciseDB API...');
       const response = await fetch('https://exercisedb-api.vercel.app/api/v1/equipments');
       if (!response.ok) throw new Error('Failed to fetch equipments');
       const data = await response.json();
+      console.log('Equipments data received:', data.data?.length, 'equipments');
       return data.data || [];
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 0, // No cache to force fresh data
+    refetchOnMount: true,
   });
 
   // Fetch bodyparts for filtering
   const { data: bodyParts = [] } = useQuery({
     queryKey: ['bodyparts'],
     queryFn: async () => {
+      console.log('Fetching bodyparts from ExerciseDB API...');
       const response = await fetch('https://exercisedb-api.vercel.app/api/v1/bodyparts');
       if (!response.ok) throw new Error('Failed to fetch bodyparts');
       const data = await response.json();
+      console.log('Bodyparts data received:', data.data?.length, 'bodyparts');
       return data.data || [];
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 0, // No cache to force fresh data
+    refetchOnMount: true,
   });
 
   // Fetch user's favorite exercises
@@ -212,15 +225,19 @@ export default function Fitness() {
   const filteredExercises = exercises.filter((exercise: Exercise) => {
     const matchesSearch = searchQuery === '' || 
       exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (exercise.targetMuscles || [exercise.target]).some(target => target?.toLowerCase().includes(searchQuery.toLowerCase()));
+      (exercise.targetMuscles || []).some(target => target?.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesBodyPart = selectedBodyPart === 'all' || 
-      (exercise.bodyParts || [exercise.bodyPart]).some(part => part === selectedBodyPart);
+      (exercise.bodyParts || []).some(part => part === selectedBodyPart) ||
+      exercise.bodyPart === selectedBodyPart;
     
     const matchesEquipment = selectedEquipment === 'all' || 
-      (exercise.equipments || [exercise.equipment]).some(eq => eq === selectedEquipment);
+      (exercise.equipments || []).some(eq => eq === selectedEquipment) ||
+      exercise.equipment === selectedEquipment;
+      
     const matchesTarget = selectedTarget === 'all' || 
-      (exercise.targetMuscles || [exercise.target]).some(target => target === selectedTarget);
+      (exercise.targetMuscles || []).some(target => target === selectedTarget) ||
+      exercise.target === selectedTarget;
     
     return matchesSearch && matchesBodyPart && matchesEquipment && matchesTarget;
   });
