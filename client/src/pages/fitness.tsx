@@ -27,7 +27,9 @@ import {
   List,
   BookOpen,
   Edit,
-  Trash2
+  Trash2,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { format, isToday, isPast, isFuture } from "date-fns";
 
@@ -113,6 +115,8 @@ export default function Fitness() {
   const [selectedBodyPart, setSelectedBodyPart] = useState('all');
   const [selectedEquipment, setSelectedEquipment] = useState('all');
   const [selectedTarget, setSelectedTarget] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 25;
   
   // Fitness plan state
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
@@ -135,68 +139,82 @@ export default function Fitness() {
     refetchInterval: 8000, // Poll every 8 seconds for real-time updates
   });
 
-  // Fetch all exercises from ExerciseDB API
-  const { data: exercises = [], isLoading: isLoadingExercises } = useQuery({
-    queryKey: ['exercises', 'all'],
+  // Fetch exercises from ExerciseDB API V2 with pagination
+  const { data: exerciseResponse, isLoading: isLoadingExercises } = useQuery({
+    queryKey: ['exercises', currentPage, selectedBodyPart, selectedEquipment, selectedTarget],
     queryFn: async () => {
-      console.log('Fetching ALL exercises from ExerciseDB API (V1 - no limit param)...');
-      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/exercises');
+      const offset = (currentPage - 1) * itemsPerPage;
+      console.log(`Fetching exercises page ${currentPage} (offset=${offset}, limit=${itemsPerPage})...`);
+      
+      let url = `https://v2.exercisedb.io/exercises?limit=${itemsPerPage}&offset=${offset}`;
+      
+      // Add filters if selected
+      if (selectedBodyPart !== 'all') {
+        url += `&bodyPart=${encodeURIComponent(selectedBodyPart)}`;
+      }
+      if (selectedEquipment !== 'all') {
+        url += `&equipment=${encodeURIComponent(selectedEquipment)}`;
+      }
+      if (selectedTarget !== 'all') {
+        url += `&target=${encodeURIComponent(selectedTarget)}`;
+      }
+      
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch exercises');
       const data = await response.json();
-      console.log('Exercise data received:', data.data?.length, 'exercises');
+      console.log('Exercise data received:', data.data?.length, 'exercises, total:', data.totalCount);
       if (data.data?.length > 0) {
         console.log('Sample exercise:', data.data[0]);
       }
-      return data.data || [];
+      return data;
     },
-    staleTime: 0, // No cache to force fresh data
-    refetchOnMount: true,
-    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000,
   });
+  
+  const exercises = exerciseResponse?.data || [];
+  const totalCount = exerciseResponse?.totalCount || 0;
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
 
-  // Fetch muscles for filtering
+  // Fetch muscles for filtering from V2 API
   const { data: muscles = [] } = useQuery({
     queryKey: ['muscles'],
     queryFn: async () => {
-      console.log('Fetching muscles from ExerciseDB API...');
-      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/muscles');
+      console.log('Fetching muscles from ExerciseDB API V2...');
+      const response = await fetch('https://v2.exercisedb.io/exercises/targetList');
       if (!response.ok) throw new Error('Failed to fetch muscles');
       const data = await response.json();
-      console.log('Muscles data received:', data.data?.length, 'muscles');
-      return data.data || [];
+      console.log('Muscles data received:', data?.length, 'muscles');
+      return data || [];
     },
-    staleTime: 0, // No cache to force fresh data
-    refetchOnMount: true,
+    staleTime: 60 * 60 * 1000, // Cache for 1 hour
   });
 
-  // Fetch equipment for filtering
+  // Fetch equipment for filtering from V2 API
   const { data: equipments = [] } = useQuery({
     queryKey: ['equipments'],
     queryFn: async () => {
-      console.log('Fetching equipments from ExerciseDB API...');
-      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/equipments');
+      console.log('Fetching equipments from ExerciseDB API V2...');
+      const response = await fetch('https://v2.exercisedb.io/exercises/equipmentList');
       if (!response.ok) throw new Error('Failed to fetch equipments');
       const data = await response.json();
-      console.log('Equipments data received:', data.data?.length, 'equipments');
-      return data.data || [];
+      console.log('Equipments data received:', data?.length, 'equipments');
+      return data || [];
     },
-    staleTime: 0, // No cache to force fresh data
-    refetchOnMount: true,
+    staleTime: 60 * 60 * 1000, // Cache for 1 hour
   });
 
-  // Fetch bodyparts for filtering
+  // Fetch bodyparts for filtering from V2 API
   const { data: bodyParts = [] } = useQuery({
     queryKey: ['bodyparts'],
     queryFn: async () => {
-      console.log('Fetching bodyparts from ExerciseDB API...');
-      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/bodyparts');
-      if (!response.ok) throw new Error('Failed to fetch bodyparts');
+      console.log('Fetching bodyparts from ExerciseDB API V2...');
+      const response = await fetch('https://v2.exercisedb.io/exercises/bodyPartList');
+      if (!response.ok) throw new Error('Failed to fetch body parts');
       const data = await response.json();
-      console.log('Bodyparts data received:', data.data?.length, 'bodyparts');
-      return data.data || [];
+      console.log('Bodyparts data received:', data?.length, 'bodyparts');
+      return data || [];
     },
-    staleTime: 0, // No cache to force fresh data
-    refetchOnMount: true,
+    staleTime: 60 * 60 * 1000, // Cache for 1 hour
   });
 
   // Fetch user's favorite exercises
@@ -219,43 +237,79 @@ export default function Fitness() {
     },
   });
 
-  // Get filter options from API data
-  const uniqueBodyParts = bodyParts.map((bp: any) => bp.name).sort();
-  const uniqueEquipment = equipments.map((eq: any) => eq.name).sort();
-  const uniqueTargets = muscles.map((muscle: any) => muscle.name).sort();
+  // Get filter options from API data (V2 API returns arrays of strings)
+  const uniqueBodyParts = Array.isArray(bodyParts) ? bodyParts.sort() : [];
+  const uniqueEquipment = Array.isArray(equipments) ? equipments.sort() : [];
+  const uniqueTargets = Array.isArray(muscles) ? muscles.sort() : [];
   
   console.log('Filter options:', {
-    bodyParts: uniqueBodyParts,
+    bodyParts: uniqueBodyParts.slice(0, 5),
     equipment: uniqueEquipment.slice(0, 5),
     targets: uniqueTargets.slice(0, 5),
-    totalExercises: exercises.length
+    totalExercises: exercises.length,
+    totalCount: totalCount,
+    currentPage: currentPage,
+    totalPages: totalPages
   });
 
-  // Filter exercises based on selected filters
+  // Filter exercises based on search query (other filters are handled by API)
   const filteredExercises = exercises.filter((exercise: Exercise) => {
     const matchesSearch = searchQuery === '' || 
       exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (exercise.targetMuscles || []).some(target => target?.toLowerCase().includes(searchQuery.toLowerCase()));
+      (exercise.target && exercise.target.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    // Body part filtering - check both array and string fields
-    const matchesBodyPart = selectedBodyPart === 'all' || 
-      (exercise.bodyParts && exercise.bodyParts.includes(selectedBodyPart)) ||
-      (exercise.bodyPart === selectedBodyPart);
-    
-    // Equipment filtering - check both array and string fields  
-    const matchesEquipment = selectedEquipment === 'all' || 
-      (exercise.equipments && exercise.equipments.includes(selectedEquipment)) ||
-      (exercise.equipment === selectedEquipment);
-      
-    // Target muscle filtering - check both array and string fields
-    const matchesTarget = selectedTarget === 'all' || 
-      (exercise.targetMuscles && exercise.targetMuscles.includes(selectedTarget)) ||
-      (exercise.target === selectedTarget);
-    
-    return matchesSearch && matchesBodyPart && matchesEquipment && matchesTarget;
+    return matchesSearch;
   });
   
-  console.log(`Filtering: ${selectedBodyPart}/${selectedEquipment}/${selectedTarget} -> ${filteredExercises.length} results`);
+  console.log(`Page ${currentPage}/${totalPages}: ${filteredExercises.length} exercises shown (${totalCount} total)`);
+  
+  // Handle filter changes - reset to page 1
+  const handleFilterChange = (filterType: string, value: string) => {
+    setCurrentPage(1);
+    switch (filterType) {
+      case 'bodyPart':
+        setSelectedBodyPart(value);
+        break;
+      case 'equipment':
+        setSelectedEquipment(value);
+        break;
+      case 'target':
+        setSelectedTarget(value);
+        break;
+    }
+  };
+  
+  // Handle page navigation
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      const halfVisible = Math.floor(maxVisiblePages / 2);
+      let startPage = Math.max(1, currentPage - halfVisible);
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(i);
+      }
+    }
+    
+    return pageNumbers;
+  };
 
   // Add/remove favorite exercise mutations
   const addFavoriteMutation = useMutation({
@@ -818,6 +872,7 @@ export default function Fitness() {
                     setSelectedBodyPart('all');
                     setSelectedEquipment('all');
                     setSelectedTarget('all');
+                    setCurrentPage(1);
                   }}
                   variant="outline"
                   className="border-ministry-gold text-ministry-gold hover:bg-ministry-gold hover:text-black"
@@ -828,7 +883,7 @@ export default function Fitness() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
+                <Select value={selectedBodyPart} onValueChange={(value) => handleFilterChange('bodyPart', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Body Part" />
                   </SelectTrigger>
@@ -842,7 +897,7 @@ export default function Fitness() {
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedEquipment} onValueChange={setSelectedEquipment}>
+                <Select value={selectedEquipment} onValueChange={(value) => handleFilterChange('equipment', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Equipment" />
                   </SelectTrigger>
@@ -856,7 +911,7 @@ export default function Fitness() {
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedTarget} onValueChange={setSelectedTarget}>
+                <Select value={selectedTarget} onValueChange={(value) => handleFilterChange('target', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Target Muscle" />
                   </SelectTrigger>
@@ -886,11 +941,66 @@ export default function Fitness() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                {filteredExercises.map((exercise: Exercise) => (
-                  <ExerciseCard key={exercise.exerciseId || exercise.id} exercise={exercise} />
-                ))}
-              </div>
+              <>
+                <div className="space-y-4">
+                  {filteredExercises.map((exercise: Exercise) => (
+                    <ExerciseCard key={exercise.exerciseId || exercise.id} exercise={exercise} />
+                  ))}
+                </div>
+                
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center space-x-2 mt-8">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="border-ministry-gold text-ministry-gold hover:bg-ministry-gold hover:text-black"
+                      data-testid="pagination-prev"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    
+                    {getPageNumbers().map((pageNum) => (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(pageNum)}
+                        className={currentPage === pageNum 
+                          ? "bg-[rgb(251,208,0)] text-black hover:bg-[rgb(251,208,0)]/80" 
+                          : "border-ministry-gold text-ministry-gold hover:bg-ministry-gold hover:text-black"
+                        }
+                        data-testid={`pagination-page-${pageNum}`}
+                      >
+                        {pageNum}
+                      </Button>
+                    ))}
+                    
+                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                      <span className="px-2 text-gray-500">...</span>
+                    )}
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="border-ministry-gold text-ministry-gold hover:bg-ministry-gold hover:text-black"
+                      data-testid="pagination-next"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    
+                    <div className="ml-4 text-sm text-gray-500 dark:text-gray-400">
+                      Page {currentPage} of {totalPages} ({totalCount} exercises)
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
 
