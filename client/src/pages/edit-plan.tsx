@@ -259,7 +259,7 @@ export default function EditPlan() {
       // Add updated exercises to the plan
       for (let i = 0; i < selectedExercises.length; i++) {
         const selectedExercise = selectedExercises[i];
-        const exerciseData = {
+        const exerciseData: any = {
           exerciseId: selectedExercise.exercise.exerciseId,
           exerciseName: selectedExercise.exercise.name,
           bodyPart: selectedExercise.exercise.bodyParts?.[0] || '',
@@ -268,11 +268,15 @@ export default function EditPlan() {
           imageUrl: selectedExercise.exercise.gifUrl,
           sets: selectedExercise.sets || 3,
           reps: selectedExercise.reps || '10',
-          minutes: selectedExercise.minutes,
           daysOfWeek: selectedExercise.daysOfWeek,
           notes: selectedExercise.notes || '',
           orderIndex: i
         };
+
+        // Only include minutes if it's a valid number
+        if (selectedExercise.minutes && typeof selectedExercise.minutes === 'number' && selectedExercise.minutes > 0) {
+          exerciseData.minutes = selectedExercise.minutes;
+        }
 
         await apiRequest('POST', `/api/fitness-plans/${planId}/exercises`, exerciseData);
       }
