@@ -49,7 +49,7 @@ interface FitnessChallenge {
 }
 
 interface Exercise {
-  id: string;
+  exerciseId: string;
   name: string;
   gifUrl: string;
   targetMuscles: string[];
@@ -58,6 +58,7 @@ interface Exercise {
   secondaryMuscles: string[];
   instructions: string[];
   // Legacy fields for backward compatibility
+  id?: string;
   target?: string;
   bodyPart?: string;
   equipment?: string;
@@ -331,19 +332,6 @@ export default function Fitness() {
     },
   });
 
-  // Helper functions
-  const isFavorite = (exerciseId: string) => {
-    return favoriteExercises.some((fav: FavoriteExercise) => fav.exerciseId === exerciseId);
-  };
-
-  const handleToggleFavorite = (exercise: Exercise) => {
-    if (isFavorite(exercise.id)) {
-      removeFavoriteMutation.mutate(exercise.id);
-    } else {
-      addFavoriteMutation.mutate(exercise);
-    }
-  };
-
   const handleCreatePlan = () => {
     if (!newPlanName.trim()) {
       toast({ 
@@ -498,6 +486,21 @@ export default function Fitness() {
       </CardContent>
     </Card>
   );
+
+  // Helper function to check if exercise is favorited
+  const isFavorite = (exerciseId: string) => {
+    return favoriteExercises.some((fav: FavoriteExercise) => fav.exerciseId === exerciseId);
+  };
+
+  // Handle toggling favorite status
+  const handleToggleFavorite = (exercise: Exercise) => {
+    const id = exercise.exerciseId || exercise.id || '';
+    if (isFavorite(id)) {
+      removeFavoriteMutation.mutate(id);
+    } else {
+      addFavoriteMutation.mutate(exercise);
+    }
+  };
 
   const ExerciseCard = ({ exercise }: { exercise: Exercise }) => (
     <Card className="hover:shadow-md transition-shadow bg-ministry-gold-exact/20">
