@@ -137,13 +137,16 @@ export default function Fitness() {
 
   // Fetch all exercises from ExerciseDB API
   const { data: exercises = [], isLoading: isLoadingExercises } = useQuery({
-    queryKey: ['exercises'],
+    queryKey: ['exercises', 'all'],
     queryFn: async () => {
-      console.log('Fetching exercises from ExerciseDB API...');
-      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/exercises');
+      console.log('Fetching ALL exercises from ExerciseDB API with limit=1500...');
+      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/exercises?limit=1500');
       if (!response.ok) throw new Error('Failed to fetch exercises');
       const data = await response.json();
       console.log('Exercise data received:', data.data?.length, 'exercises');
+      if (data.data?.length > 0) {
+        console.log('Sample exercise:', data.data[0]);
+      }
       return data.data || [];
     },
     staleTime: 0, // No cache to force fresh data
@@ -220,6 +223,13 @@ export default function Fitness() {
   const uniqueBodyParts = bodyParts.map((bp: any) => bp.name).sort();
   const uniqueEquipment = equipments.map((eq: any) => eq.name).sort();
   const uniqueTargets = muscles.map((muscle: any) => muscle.name).sort();
+  
+  console.log('Filter options:', {
+    bodyParts: uniqueBodyParts,
+    equipment: uniqueEquipment.slice(0, 5),
+    targets: uniqueTargets.slice(0, 5),
+    totalExercises: exercises.length
+  });
 
   // Filter exercises based on selected filters
   const filteredExercises = exercises.filter((exercise: Exercise) => {
@@ -227,20 +237,25 @@ export default function Fitness() {
       exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (exercise.targetMuscles || []).some(target => target?.toLowerCase().includes(searchQuery.toLowerCase()));
     
+    // Body part filtering - check both array and string fields
     const matchesBodyPart = selectedBodyPart === 'all' || 
-      (exercise.bodyParts || []).some(part => part === selectedBodyPart) ||
-      exercise.bodyPart === selectedBodyPart;
+      (exercise.bodyParts && exercise.bodyParts.includes(selectedBodyPart)) ||
+      (exercise.bodyPart === selectedBodyPart);
     
+    // Equipment filtering - check both array and string fields  
     const matchesEquipment = selectedEquipment === 'all' || 
-      (exercise.equipments || []).some(eq => eq === selectedEquipment) ||
-      exercise.equipment === selectedEquipment;
+      (exercise.equipments && exercise.equipments.includes(selectedEquipment)) ||
+      (exercise.equipment === selectedEquipment);
       
+    // Target muscle filtering - check both array and string fields
     const matchesTarget = selectedTarget === 'all' || 
-      (exercise.targetMuscles || []).some(target => target === selectedTarget) ||
-      exercise.target === selectedTarget;
+      (exercise.targetMuscles && exercise.targetMuscles.includes(selectedTarget)) ||
+      (exercise.target === selectedTarget);
     
     return matchesSearch && matchesBodyPart && matchesEquipment && matchesTarget;
   });
+  
+  console.log(`Filtering: ${selectedBodyPart}/${selectedEquipment}/${selectedTarget} -> ${filteredExercises.length} results`);
 
   // Add/remove favorite exercise mutations
   const addFavoriteMutation = useMutation({
