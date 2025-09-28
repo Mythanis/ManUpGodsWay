@@ -428,7 +428,7 @@ export default function CreatePlan() {
                 <div>
                   <label className="text-sm font-medium mb-2 block">Category</label>
                   <Select value={planCategory} onValueChange={setPlanCategory}>
-                    <SelectTrigger data-testid="select-plan-category">
+                    <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-plan-category">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -443,7 +443,7 @@ export default function CreatePlan() {
                 <div>
                   <label className="text-sm font-medium mb-2 block">Difficulty</label>
                   <Select value={planDifficulty} onValueChange={setPlanDifficulty}>
-                    <SelectTrigger data-testid="select-plan-difficulty">
+                    <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-plan-difficulty">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -596,7 +596,7 @@ export default function CreatePlan() {
                   placeholder="Search exercises..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 text-white placeholder:text-white/70"
                   data-testid="input-exercise-search"
                 />
               </div>
@@ -661,7 +661,7 @@ export default function CreatePlan() {
           </Card>
 
           {/* Exercise Results */}
-          <Card>
+          <Card className="bg-ministry-gold text-black">
             <CardHeader>
               <CardTitle>
                 Exercise Results ({filteredExercises.length} shown)
@@ -669,9 +669,9 @@ export default function CreatePlan() {
             </CardHeader>
             <CardContent>
               {isLoadingExercises ? (
-                <div className="text-center py-8">Loading exercises...</div>
+                <div className="text-center py-8 text-white">Loading exercises...</div>
               ) : filteredExercises.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-white">
                   No exercises found. Try adjusting your filters.
                 </div>
               ) : (
@@ -726,7 +726,7 @@ export default function CreatePlan() {
                     Previous
                   </Button>
                   
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-white">
                     Page {currentPage} of {totalPages}
                   </span>
                   
