@@ -392,11 +392,9 @@ export default function CreatePlan() {
         <h1 className="text-2xl font-bold">Create Fitness Plan</h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column - Plan Configuration */}
-        <div className="space-y-6">
-          {/* Plan Details */}
-          <Card>
+      <div className="space-y-6">
+        {/* Plan Details */}
+        <Card className="bg-ministry-gold text-black">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Dumbbell className="h-5 w-5" />
@@ -457,8 +455,8 @@ export default function CreatePlan() {
             </CardContent>
           </Card>
 
-          {/* Selected Exercises */}
-          <Card>
+        {/* Selected Exercises */}
+        <Card className="bg-ministry-gold text-black">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckSquare className="h-5 w-5" />
@@ -512,8 +510,8 @@ export default function CreatePlan() {
             </CardContent>
           </Card>
 
-          {/* Reminders */}
-          <Card>
+        {/* Reminders */}
+        <Card className="bg-ministry-gold text-black">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5" />
@@ -579,12 +577,9 @@ export default function CreatePlan() {
           >
             {createPlanMutation.isPending ? 'Creating Plan...' : 'Create Plan'}
           </Button>
-        </div>
 
-        {/* Right Column - Exercise Search & Selection */}
-        <div className="space-y-6">
-          {/* Search and Filters */}
-          <Card>
+        {/* Exercise Search & Selection */}
+        <Card className="bg-ministry-gold text-black">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Search className="h-5 w-5" />
@@ -746,7 +741,6 @@ export default function CreatePlan() {
               )}
             </CardContent>
           </Card>
-        </div>
       </div>
 
       {/* Exercise Configuration Modal */}
