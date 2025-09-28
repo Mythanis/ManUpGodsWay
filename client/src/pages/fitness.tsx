@@ -144,7 +144,7 @@ export default function Fitness() {
       const data = await response.json();
       return data.data || [];
     },
-    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
   });
 
   // Fetch muscles for filtering
@@ -156,7 +156,7 @@ export default function Fitness() {
       const data = await response.json();
       return data.data || [];
     },
-    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   // Fetch equipment for filtering
@@ -168,7 +168,7 @@ export default function Fitness() {
       const data = await response.json();
       return data.data || [];
     },
-    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   // Fetch bodyparts for filtering
@@ -180,7 +180,7 @@ export default function Fitness() {
       const data = await response.json();
       return data.data || [];
     },
-    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   // Fetch user's favorite exercises
@@ -338,7 +338,7 @@ export default function Fitness() {
   };
 
   const handleToggleFavorite = (exercise: Exercise) => {
-    const id = exercise.exerciseId || exercise.id;
+    const id = exercise.exerciseId || exercise.id || '';
     if (isFavorite(id)) {
       removeFavoriteMutation.mutate(id);
     } else {
@@ -534,16 +534,16 @@ export default function Fitness() {
             <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
-                variant={isFavorite(exercise.id) ? "default" : "outline"}
+                variant={isFavorite(exercise.exerciseId || exercise.id || '') ? "default" : "outline"}
                 onClick={() => handleToggleFavorite(exercise)}
-                className={`${isFavorite(exercise.id) 
+                className={`${isFavorite(exercise.exerciseId || exercise.id || '') 
                   ? 'bg-ministry-gold hover:bg-ministry-gold/90 text-black' 
                   : 'border-ministry-gold text-ministry-gold hover:bg-ministry-gold hover:text-black'
                 }`}
-                data-testid={`button-favorite-${exercise.id}`}
+                data-testid={`button-favorite-${exercise.exerciseId || exercise.id || ''}`}
               >
-                <Heart className={`w-4 h-4 mr-1 ${isFavorite(exercise.id) ? 'fill-current' : ''}`} />
-                {isFavorite(exercise.id) ? 'Favorited' : 'Favorite'}
+                <Heart className={`w-4 h-4 mr-1 ${isFavorite(exercise.exerciseId || exercise.id || '') ? 'fill-current' : ''}`} />
+                {isFavorite(exercise.exerciseId || exercise.id || '') ? 'Favorited' : 'Favorite'}
               </Button>
               
               {fitnessPlans.length > 0 && (
@@ -854,15 +854,10 @@ export default function Fitness() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
-                {filteredExercises.slice(0, 50).map((exercise: Exercise) => (
-                  <ExerciseCard key={exercise.id} exercise={exercise} />
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                {filteredExercises.map((exercise: Exercise) => (
+                  <ExerciseCard key={exercise.exerciseId || exercise.id} exercise={exercise} />
                 ))}
-                {filteredExercises.length > 50 && (
-                  <div className="text-center py-4">
-                    <p className="text-white">Showing first 50 exercises of {filteredExercises.length} results. Use filters to narrow results.</p>
-                  </div>
-                )}
               </div>
             )}
           </TabsContent>
@@ -888,7 +883,7 @@ export default function Fitness() {
               <div className="space-y-4">
                 {favoriteExercises.map((favorite: FavoriteExercise) => {
                   const exercise: Exercise = {
-                    id: favorite.exerciseId,
+                    exerciseId: favorite.exerciseId,
                     name: favorite.exerciseName,
                     gifUrl: favorite.exerciseGifUrl,
                     targetMuscles: [favorite.exerciseTarget],
@@ -897,6 +892,7 @@ export default function Fitness() {
                     secondaryMuscles: [],
                     instructions: [],
                     // Backward compatibility
+                    id: favorite.exerciseId,
                     target: favorite.exerciseTarget,
                     bodyPart: favorite.exerciseBodyPart,
                     equipment: favorite.exerciseEquipment
