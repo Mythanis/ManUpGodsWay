@@ -231,9 +231,9 @@ export default function Fitness() {
         exerciseId: exercise.id,
         exerciseName: exercise.name,
         exerciseGifUrl: exercise.gifUrl,
-        exerciseTarget: exercise.target,
-        exerciseBodyPart: exercise.bodyPart,
-        exerciseEquipment: exercise.equipment,
+        exerciseTarget: exercise.targetMuscles?.[0] || exercise.target || '',
+        exerciseBodyPart: exercise.bodyParts?.[0] || exercise.bodyPart || '',
+        exerciseEquipment: exercise.equipments?.[0] || exercise.equipment || '',
       });
     },
     onSuccess: () => {
