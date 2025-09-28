@@ -527,7 +527,7 @@ export default function CreatePlan() {
                     value={reminder.dayOfWeek} 
                     onValueChange={(value) => updateReminder(index, 'dayOfWeek', value)}
                   >
-                    <SelectTrigger className="flex-1" data-testid={`select-reminder-day-${index}`}>
+                    <SelectTrigger className="flex-1 text-white [&>span]:text-white" data-testid={`select-reminder-day-${index}`}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -543,7 +543,7 @@ export default function CreatePlan() {
                     type="time"
                     value={reminder.time}
                     onChange={(e) => updateReminder(index, 'time', e.target.value)}
-                    className="w-32"
+                    className="w-32 text-white"
                     data-testid={`input-reminder-time-${index}`}
                   />
                   
@@ -561,7 +561,7 @@ export default function CreatePlan() {
               <Button 
                 variant="outline" 
                 onClick={addReminder}
-                className="w-full"
+                className="w-full text-white border-white hover:bg-white hover:text-black"
                 data-testid="button-add-reminder"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -604,7 +604,7 @@ export default function CreatePlan() {
               {/* Filters */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
-                  <SelectTrigger className="text-white" data-testid="select-body-part">
+                  <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-body-part">
                     <SelectValue placeholder="Body Part" />
                   </SelectTrigger>
                   <SelectContent>
@@ -618,7 +618,7 @@ export default function CreatePlan() {
                 </Select>
 
                 <Select value={selectedEquipment} onValueChange={setSelectedEquipment}>
-                  <SelectTrigger className="text-white" data-testid="select-equipment">
+                  <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-equipment">
                     <SelectValue placeholder="Equipment" />
                   </SelectTrigger>
                   <SelectContent>
@@ -632,7 +632,7 @@ export default function CreatePlan() {
                 </Select>
 
                 <Select value={selectedTarget} onValueChange={setSelectedTarget}>
-                  <SelectTrigger className="text-white" data-testid="select-target-muscle">
+                  <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-target-muscle">
                     <SelectValue placeholder="Target Muscle" />
                   </SelectTrigger>
                   <SelectContent>
