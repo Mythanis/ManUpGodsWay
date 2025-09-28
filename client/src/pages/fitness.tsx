@@ -169,8 +169,8 @@ export default function Fitness() {
     refetchOnWindowFocus: false,
   });
 
-  // Fetch muscles for filtering
-  const { data: muscles = [] } = useQuery({
+  // Fetch muscles for filtering and filter out unused ones
+  const { data: allMuscles = [] } = useQuery({
     queryKey: ['muscles'],
     queryFn: async () => {
       console.log('Fetching muscles from ExerciseDB API...');
@@ -182,6 +182,39 @@ export default function Fitness() {
     },
     staleTime: 0,
     refetchOnMount: true,
+  });
+  
+  // Filter muscles to only include those with exercises
+  const { data: usedMuscles = [] } = useQuery({
+    queryKey: ['used-muscles'],
+    queryFn: async () => {
+      console.log('Checking which muscles have exercises...');
+      const usedMuscleNames = new Set<string>();
+      
+      // Get first 500 exercises to extract used muscles
+      for (let offset = 0; offset < 500; offset += 100) {
+        const response = await fetch(`https://www.exercisedb.dev/api/v1/exercises/filter?offset=${offset}&limit=100`);
+        if (!response.ok) break;
+        const data = await response.json();
+        
+        data.data?.forEach((exercise: any) => {
+          exercise.targetMuscles?.forEach((muscle: string) => {
+            usedMuscleNames.add(muscle);
+          });
+        });
+        
+        if (data.data?.length < 100) break; // No more data
+      }
+      
+      const filteredMuscles = allMuscles.filter((muscle: any) => 
+        usedMuscleNames.has(muscle.name)
+      );
+      
+      console.log('Filtered muscles:', filteredMuscles.length, 'out of', allMuscles.length);
+      return filteredMuscles;
+    },
+    enabled: allMuscles.length > 0,
+    staleTime: 300000, // Cache for 5 minutes
   });
 
   // Fetch equipment for filtering
@@ -242,7 +275,7 @@ export default function Fitness() {
   // Get filter options from API data
   const uniqueBodyParts = bodyParts.map((bp: any) => bp.name).sort();
   const uniqueEquipment = equipments.map((eq: any) => eq.name).sort();
-  const uniqueTargets = muscles.map((muscle: any) => muscle.name).sort();
+  const uniqueTargets = (usedMuscles || allMuscles).map((muscle: any) => muscle.name).sort();
   
   console.log('Filter options:', {
     bodyParts: uniqueBodyParts.slice(0, 5),
@@ -877,7 +910,7 @@ export default function Fitness() {
                     <SelectValue placeholder="Target Muscle" />
                   </SelectTrigger>
                   <SelectContent className="max-h-60 overflow-y-auto">
-                    <SelectItem value="all">All Targets</SelectItem>
+                    <SelectItem value="all">All Muscles</SelectItem>
                     {uniqueTargets.map((target: string) => (
                       <SelectItem key={target} value={target}>
                         {target ? target.charAt(0).toUpperCase() + target.slice(1) : target}
