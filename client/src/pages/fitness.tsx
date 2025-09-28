@@ -228,8 +228,8 @@ export default function Fitness() {
   // Add/remove favorite exercise mutations
   const addFavoriteMutation = useMutation({
     mutationFn: async (exercise: Exercise) => {
-      return apiRequest('/api/favorite-exercises', 'POST', {
-        exerciseId: exercise.id,
+      return apiRequest('POST', '/api/favorite-exercises', {
+        exerciseId: exercise.exerciseId || exercise.id,
         exerciseName: exercise.name,
         exerciseGifUrl: exercise.gifUrl,
         exerciseTarget: exercise.targetMuscles?.[0] || exercise.target || '',
@@ -252,7 +252,7 @@ export default function Fitness() {
 
   const removeFavoriteMutation = useMutation({
     mutationFn: async (exerciseId: string) => {
-      return apiRequest(`/api/favorite-exercises/${exerciseId}`, 'DELETE');
+      return apiRequest('DELETE', `/api/favorite-exercises/${exerciseId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['api', 'favorite-exercises'] });
@@ -270,7 +270,7 @@ export default function Fitness() {
   // Create fitness plan mutation
   const createPlanMutation = useMutation({
     mutationFn: async (planData: { name: string; description?: string; isPublic: boolean }) => {
-      return apiRequest('/api/fitness-plans', 'POST', planData);
+      return apiRequest('POST', '/api/fitness-plans', planData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['api', 'fitness-plans'] });
@@ -291,7 +291,7 @@ export default function Fitness() {
   // Delete fitness plan mutation
   const deletePlanMutation = useMutation({
     mutationFn: async (planId: string) => {
-      return apiRequest(`/api/fitness-plans/${planId}`, 'DELETE');
+      return apiRequest('DELETE', `/api/fitness-plans/${planId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['api', 'fitness-plans'] });
@@ -309,8 +309,8 @@ export default function Fitness() {
   // Add exercise to plan mutation
   const addToPlanMutation = useMutation({
     mutationFn: async ({ planId, exercise }: { planId: string; exercise: Exercise }) => {
-      return apiRequest(`/api/fitness-plans/${planId}/exercises`, 'POST', {
-        exerciseId: exercise.id,
+      return apiRequest('POST', `/api/fitness-plans/${planId}/exercises`, {
+        exerciseId: exercise.exerciseId || exercise.id,
         exerciseName: exercise.name,
         exerciseGifUrl: exercise.gifUrl,
         exerciseTarget: exercise.targetMuscles?.[0] || exercise.target || '',
@@ -331,6 +331,20 @@ export default function Fitness() {
       });
     },
   });
+
+  // Helper functions
+  const isFavorite = (exerciseId: string) => {
+    return favoriteExercises.some((fav: FavoriteExercise) => fav.exerciseId === exerciseId);
+  };
+
+  const handleToggleFavorite = (exercise: Exercise) => {
+    const id = exercise.exerciseId || exercise.id;
+    if (isFavorite(id)) {
+      removeFavoriteMutation.mutate(id);
+    } else {
+      addFavoriteMutation.mutate(exercise);
+    }
+  };
 
   const handleCreatePlan = () => {
     if (!newPlanName.trim()) {
