@@ -1159,12 +1159,23 @@ export default function Fitness() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-ministry-steel text-black hover:bg-ministry-steel hover:text-white"
+                            className="border-ministry-steel text-white hover:bg-ministry-steel hover:text-white"
                             data-testid={`button-view-plan-${plan.id}`}
                           >
                             <BookOpen className="w-4 h-4 mr-1" />
                             View
                           </Button>
+                          <Link href={`/edit-plan/${plan.id}`}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-ministry-gold text-ministry-gold hover:bg-ministry-gold hover:text-black"
+                              data-testid={`button-edit-plan-${plan.id}`}
+                            >
+                              <Edit className="w-4 h-4 mr-1" />
+                              Edit
+                            </Button>
+                          </Link>
                           <Button
                             size="sm"
                             variant="outline"

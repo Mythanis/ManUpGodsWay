@@ -276,6 +276,9 @@ export const fitnessPlans = pgTable("fitness_plans", {
   difficulty: varchar("difficulty").default("beginner"), // beginner, intermediate, advanced
   estimatedDuration: integer("estimated_duration").default(60), // in minutes
   isPublic: boolean("is_public").default(false),
+  repeatType: varchar("repeat_type").default("never"), // never, daily, weekly, monthly
+  repeatFrequency: integer("repeat_frequency").default(1), // every X days/weeks/months
+  repeatEndDate: timestamp("repeat_end_date"), // optional end date for repetition
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

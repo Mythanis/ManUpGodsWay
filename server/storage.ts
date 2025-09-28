@@ -409,7 +409,7 @@ export interface IStorage {
   isFavoriteExercise(userId: string, exerciseId: string): Promise<boolean>;
 
   // Fitness plans operations
-  getFitnessPlans(userId: string): Promise<FitnessPlan[]>;
+  getFitnessPlans(userId: string): Promise<(FitnessPlan & { exercises: FitnessPlanExercise[] })[]>;
   getFitnessPlan(id: string): Promise<FitnessPlan | undefined>;
   createFitnessPlan(plan: InsertFitnessPlan): Promise<FitnessPlan>;
   updateFitnessPlan(id: string, updates: Partial<InsertFitnessPlan>): Promise<FitnessPlan>;
@@ -4212,12 +4212,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Fitness plans implementation methods
-  async getFitnessPlans(userId: string): Promise<FitnessPlan[]> {
-    return await db
+  async getFitnessPlans(userId: string): Promise<(FitnessPlan & { exercises: FitnessPlanExercise[] })[]> {
+    const plans = await db
       .select()
       .from(fitnessPlans)
       .where(eq(fitnessPlans.userId, userId))
       .orderBy(desc(fitnessPlans.createdAt));
+    
+    // Fetch exercises for each plan
+    const plansWithExercises = await Promise.all(
+      plans.map(async (plan) => {
+        const exercises = await this.getFitnessPlanExercises(plan.id);
+        return { ...plan, exercises };
+      })
+    );
+    
+    return plansWithExercises;
   }
 
   async getFitnessPlan(id: string): Promise<FitnessPlan | undefined> {

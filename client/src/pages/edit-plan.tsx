@@ -77,10 +77,14 @@ const daysOfWeek = [
   { value: "sunday", label: "Sunday" }
 ];
 
-export default function CreatePlan() {
+export default function EditPlan() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Get plan ID from URL
+  const [location] = useLocation();
+  const planId = location.split('/')[2]; // /edit-plan/{planId}
 
   // Plan details
   const [planName, setPlanName] = useState('');
@@ -118,6 +122,55 @@ export default function CreatePlan() {
   const [tempDaysOfWeek, setTempDaysOfWeek] = useState<string[]>([]);
   const [tempNotes, setTempNotes] = useState('');
 
+  // Fetch existing plan data
+  const { data: existingPlan, isLoading: planLoading } = useQuery({
+    queryKey: ['api', 'fitness-plans', planId],
+    queryFn: async () => {
+      const response = await fetch(`/api/fitness-plans/${planId}`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch plan');
+      return response.json();
+    },
+    enabled: !!planId,
+  });
+
+  // Load existing plan data into state
+  useEffect(() => {
+    if (existingPlan) {
+      setPlanName(existingPlan.name || '');
+      setPlanDescription(existingPlan.description || '');
+      setPlanCategory(existingPlan.category || 'general');
+      setPlanDifficulty(existingPlan.difficulty || 'beginner');
+      setRepeatType(existingPlan.repeatType || 'never');
+      setRepeatFrequency(existingPlan.repeatFrequency || 1);
+      setRepeatEndDate(existingPlan.repeatEndDate ? existingPlan.repeatEndDate.split('T')[0] : '');
+      
+      // Convert exercises to SelectedExercise format
+      if (existingPlan.exercises) {
+        const convertedExercises = existingPlan.exercises.map((ex: any) => ({
+          exercise: {
+            exerciseId: ex.exerciseId,
+            name: ex.exerciseName,
+            gifUrl: ex.imageUrl || ex.exerciseGifUrl || '',
+            targetMuscles: [ex.targetMuscle || ex.exerciseTarget || ''],
+            bodyParts: [ex.bodyPart || ex.exerciseBodyPart || ''],
+            equipments: [ex.equipment || ex.exerciseEquipment || ''],
+            secondaryMuscles: [],
+            instructions: [],
+            target: ex.targetMuscle || ex.exerciseTarget,
+            bodyPart: ex.bodyPart || ex.exerciseBodyPart,
+            equipment: ex.equipment || ex.exerciseEquipment
+          },
+          sets: ex.sets || 3,
+          reps: ex.reps || '10',
+          minutes: ex.minutes,
+          daysOfWeek: ex.daysOfWeek || [],
+          notes: ex.notes || ''
+        }));
+        setSelectedExercises(convertedExercises);
+      }
+    }
+  }, [existingPlan]);
+
   // Fetch favorite exercises
   const { data: favoriteExercises = [] } = useQuery({
     queryKey: ['api', 'favorite-exercises'],
@@ -137,61 +190,6 @@ export default function CreatePlan() {
       const data = await response.json();
       return data.data || [];
     },
-    staleTime: 300000,
-  });
-
-  // Fetch equipment for filtering
-  const { data: equipments = [] } = useQuery({
-    queryKey: ['equipments'],
-    queryFn: async () => {
-      const response = await fetch('https://www.exercisedb.dev/api/v1/equipment');
-      if (!response.ok) throw new Error('Failed to fetch equipment');
-      const data = await response.json();
-      return data.data || [];
-    },
-    staleTime: 300000,
-  });
-
-  // Fetch muscles for filtering and filter out unused ones
-  const { data: allMuscles = [] } = useQuery({
-    queryKey: ['muscles'],
-    queryFn: async () => {
-      const response = await fetch('https://www.exercisedb.dev/api/v1/muscles');
-      if (!response.ok) throw new Error('Failed to fetch muscles');
-      const data = await response.json();
-      return data.data || [];
-    },
-    staleTime: 300000,
-  });
-  
-  // Filter muscles to only include those with exercises
-  const { data: usedMuscles = [] } = useQuery({
-    queryKey: ['used-muscles'],
-    queryFn: async () => {
-      const usedMuscleNames = new Set<string>();
-      
-      // Get first 500 exercises to extract used muscles
-      for (let offset = 0; offset < 500; offset += 100) {
-        const response = await fetch(`https://www.exercisedb.dev/api/v1/exercises/filter?offset=${offset}&limit=100`);
-        if (!response.ok) break;
-        const data = await response.json();
-        
-        data.data?.forEach((exercise: any) => {
-          exercise.targetMuscles?.forEach((muscle: string) => {
-            usedMuscleNames.add(muscle);
-          });
-        });
-        
-        if (data.data?.length < 100) break; // No more data
-      }
-      
-      const filteredMuscles = allMuscles.filter((muscle: any) => 
-        usedMuscleNames.has(muscle.name)
-      );
-      
-      return filteredMuscles;
-    },
-    enabled: allMuscles.length > 0,
     staleTime: 300000,
   });
 
@@ -219,53 +217,106 @@ export default function CreatePlan() {
     },
     staleTime: 0,
     refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
-  // Get filter options from API data
-  const uniqueBodyParts = bodyParts.map((bp: any) => bp.name).sort();
-  const uniqueEquipment = equipments.map((eq: any) => eq.name).sort();
-  const uniqueTargets = (usedMuscles || allMuscles).map((muscle: any) => muscle.name).sort();
+  // Fetch equipment for filtering
+  const { data: equipments = [] } = useQuery({
+    queryKey: ['equipments'],
+    queryFn: async () => {
+      const response = await fetch('https://www.exercisedb.dev/api/v1/equipments');
+      if (!response.ok) throw new Error('Failed to fetch equipments');
+      const data = await response.json();
+      return data.data || [];
+    },
+    staleTime: 300000,
+  });
 
-  // Extract exercise data with proper pagination info
-  const exercises = exerciseResponse?.data || [];
-  const totalExercises = exerciseResponse?.metadata?.totalExercises || 0;
-  const totalPages = exerciseResponse?.metadata?.totalPages || 0;
+  // Fetch muscles for filtering
+  const { data: allMuscles = [] } = useQuery({
+    queryKey: ['muscles'],
+    queryFn: async () => {
+      const response = await fetch('https://www.exercisedb.dev/api/v1/muscles');
+      if (!response.ok) throw new Error('Failed to fetch muscles');
+      const data = await response.json();
+      return data.data || [];
+    },
+    staleTime: 300000,
+  });
 
-  // Filter exercises to show only favorites if selected
-  const filteredExercises = showFavoritesOnly 
-    ? exercises.filter((exercise: Exercise) => 
-        favoriteExercises.some((fav: FavoriteExercise) => fav.exerciseId === exercise.exerciseId)
-      )
-    : exercises;
+  // Update plan mutation
+  const updatePlanMutation = useMutation({
+    mutationFn: async () => {
+      // Update the plan details
+      const planData = {
+        name: planName,
+        description: planDescription,
+        category: planCategory,
+        difficulty: planDifficulty,
+        repeatType,
+        repeatFrequency,
+        repeatEndDate: repeatEndDate || undefined
+      };
 
-  // Helper functions
-  const isFavorite = (exerciseId: string) => {
-    return favoriteExercises.some((fav: FavoriteExercise) => fav.exerciseId === exerciseId);
+      await apiRequest('PUT', `/api/fitness-plans/${planId}`, planData);
+      
+      // Remove all existing exercises
+      if (existingPlan?.exercises) {
+        for (const exercise of existingPlan.exercises) {
+          await apiRequest('DELETE', `/api/fitness-plans/${planId}/exercises/${exercise.id}`);
+        }
+      }
+      
+      // Add updated exercises to the plan
+      for (let i = 0; i < selectedExercises.length; i++) {
+        const selectedExercise = selectedExercises[i];
+        const exerciseData = {
+          exerciseId: selectedExercise.exercise.exerciseId,
+          exerciseName: selectedExercise.exercise.name,
+          bodyPart: selectedExercise.exercise.bodyParts?.[0] || '',
+          targetMuscle: selectedExercise.exercise.targetMuscles?.[0] || '',
+          equipment: selectedExercise.exercise.equipments?.[0] || '',
+          imageUrl: selectedExercise.exercise.gifUrl,
+          sets: selectedExercise.sets || 3,
+          reps: selectedExercise.reps || '10',
+          minutes: selectedExercise.minutes,
+          daysOfWeek: selectedExercise.daysOfWeek,
+          notes: selectedExercise.notes || '',
+          orderIndex: i
+        };
+
+        await apiRequest('POST', `/api/fitness-plans/${planId}/exercises`, exerciseData);
+      }
+
+      return { id: planId };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['api', 'fitness-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'fitness-plans', planId] });
+      toast({ title: "Fitness plan updated successfully!" });
+      setLocation('/fitness');
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update plan",
+        variant: "destructive"
+      });
+    },
+  });
+
+  // Handle adding exercise to plan
+  const handleAddExercise = (exercise: Exercise) => {
+    setCurrentExercise(exercise);
+    setTempSets(3);
+    setTempReps('10');
+    setTempMinutes(undefined);
+    setTempDaysOfWeek([]);
+    setTempNotes('');
+    setShowExerciseConfig(true);
   };
 
-  const isExerciseSelected = (exerciseId: string) => {
-    return selectedExercises.some(selected => selected.exercise.exerciseId === exerciseId);
-  };
-
-  // Exercise configuration handlers
-  const handleExerciseSelect = (exercise: Exercise) => {
-    if (isExerciseSelected(exercise.exerciseId)) {
-      // Remove from selected exercises
-      setSelectedExercises(prev => 
-        prev.filter(selected => selected.exercise.exerciseId !== exercise.exerciseId)
-      );
-    } else {
-      // Open configuration modal
-      setCurrentExercise(exercise);
-      setTempSets(3);
-      setTempReps('10');
-      setTempMinutes(undefined);
-      setTempDaysOfWeek([]);
-      setTempNotes('');
-      setShowExerciseConfig(true);
-    }
-  };
-
+  // Save exercise configuration
   const handleSaveExerciseConfig = () => {
     if (!currentExercise) return;
 
@@ -283,89 +334,13 @@ export default function CreatePlan() {
     setCurrentExercise(null);
   };
 
-  const handleRemoveExercise = (exerciseId: string) => {
-    setSelectedExercises(prev => 
-      prev.filter(selected => selected.exercise.exerciseId !== exerciseId)
-    );
+  // Remove exercise from plan
+  const handleRemoveExercise = (index: number) => {
+    setSelectedExercises(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Reminder handlers
-  const addReminder = () => {
-    setReminders(prev => [...prev, { dayOfWeek: 'monday', time: '09:00' }]);
-  };
-
-  const updateReminder = (index: number, field: 'dayOfWeek' | 'time', value: string) => {
-    setReminders(prev => 
-      prev.map((reminder, i) => 
-        i === index ? { ...reminder, [field]: value } : reminder
-      )
-    );
-  };
-
-  const removeReminder = (index: number) => {
-    setReminders(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // Create plan mutation
-  const createPlanMutation = useMutation({
-    mutationFn: async () => {
-      // First create the plan
-      const planData = {
-        name: planName,
-        description: planDescription,
-        category: planCategory,
-        difficulty: planDifficulty,
-        isPublic: false,
-        repeatType,
-        repeatFrequency,
-        repeatEndDate: repeatEndDate || undefined
-      };
-
-      const plan = await apiRequest('POST', '/api/fitness-plans', planData);
-      
-      // Add exercises to the plan
-      for (let i = 0; i < selectedExercises.length; i++) {
-        const selectedExercise = selectedExercises[i];
-        const exerciseData = {
-          exerciseId: selectedExercise.exercise.exerciseId,
-          exerciseName: selectedExercise.exercise.name,
-          bodyPart: selectedExercise.exercise.bodyParts?.[0] || '',
-          targetMuscle: selectedExercise.exercise.targetMuscles?.[0] || '',
-          equipment: selectedExercise.exercise.equipments?.[0] || '',
-          imageUrl: selectedExercise.exercise.gifUrl,
-          sets: selectedExercise.sets || 3,
-          reps: selectedExercise.reps || '10',
-          minutes: selectedExercise.minutes,
-          daysOfWeek: selectedExercise.daysOfWeek,
-          notes: selectedExercise.notes,
-          orderIndex: i
-        };
-
-        await apiRequest('POST', `/api/fitness-plans/${plan.id}/exercises`, exerciseData);
-      }
-
-      // Add reminders
-      for (const reminder of reminders) {
-        await apiRequest('POST', `/api/fitness-plans/${plan.id}/reminders`, reminder);
-      }
-
-      return plan;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['api', 'fitness-plans'] });
-      toast({ title: "Fitness plan created successfully!" });
-      setLocation('/fitness');
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: "Error", 
-        description: error.message || "Failed to create plan",
-        variant: "destructive" 
-      });
-    },
-  });
-
-  const handleCreatePlan = () => {
+  // Handle form submission
+  const handleUpdatePlan = () => {
     if (!planName.trim()) {
       toast({
         title: "Error",
@@ -384,8 +359,59 @@ export default function CreatePlan() {
       return;
     }
 
-    createPlanMutation.mutate();
+    updatePlanMutation.mutate();
   };
+
+  // Extract data from exercise response
+  const exercises = exerciseResponse?.data || [];
+  const totalCount = exerciseResponse?.metadata?.totalExercises || 0;
+  const totalPages = exerciseResponse?.metadata?.totalPages || Math.ceil(totalCount / limit);
+
+  // Get filter options
+  const uniqueBodyParts = bodyParts.map((bp: any) => bp.name).sort();
+  const uniqueEquipment = equipments.map((eq: any) => eq.name).sort();
+  const uniqueTargets = allMuscles.map((muscle: any) => muscle.name).sort();
+
+  // Reset to page 1 when filters change
+  const handleFilterChange = (filterType: string, value: string) => {
+    setCurrentPage(1);
+    if (filterType === 'bodyPart') setSelectedBodyPart(value);
+    if (filterType === 'equipment') setSelectedEquipment(value);
+    if (filterType === 'target') setSelectedTarget(value);
+  };
+  
+  const handleSearchChange = (value: string) => {
+    setCurrentPage(1);
+    setSearchQuery(value);
+  };
+
+  // Check if exercise is favorite
+  const isFavorite = (exerciseId: string) => {
+    return favoriteExercises.some((fav: FavoriteExercise) => fav.exerciseId === exerciseId);
+  };
+
+  if (planLoading) {
+    return (
+      <div className="p-4 max-w-6xl mx-auto">
+        <div className="text-center py-12">
+          <div className="text-xl">Loading plan...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!existingPlan) {
+    return (
+      <div className="p-4 max-w-6xl mx-auto">
+        <div className="text-center py-12">
+          <div className="text-xl">Plan not found</div>
+          <Link href="/fitness">
+            <Button className="mt-4">Back to Fitness</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 max-w-6xl mx-auto space-y-6">
@@ -397,7 +423,7 @@ export default function CreatePlan() {
             Back to Fitness
           </Button>
         </Link>
-        <h1 className="text-2xl font-bold">Create Fitness Plan</h1>
+        <h1 className="text-2xl font-bold">Edit Fitness Plan</h1>
       </div>
 
       <div className="space-y-6">
@@ -523,280 +549,225 @@ export default function CreatePlan() {
                 Selected Exercises ({selectedExercises.length})
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               {selectedExercises.length === 0 ? (
-                <p className="text-white text-center py-4">
-                  No exercises selected yet. Choose exercises from the right panel.
-                </p>
+                <p className="text-center py-8 text-black">No exercises selected. Add exercises below.</p>
               ) : (
-                <div className="space-y-3">
-                  {selectedExercises.map((selected, index) => (
-                    <div key={selected.exercise.exerciseId} className="border rounded-lg p-3">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium">{selected.exercise.name}</h4>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveExercise(selected.exercise.exerciseId)}
-                          data-testid={`button-remove-exercise-${index}`}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-2 text-sm text-black mb-2">
-                        {selected.sets && selected.sets > 0 && <span>Sets: {selected.sets}</span>}
-                        {selected.reps && <span>Reps: {selected.reps}</span>}
-                        {selected.minutes && <span>Minutes: {selected.minutes}</span>}
-                      </div>
-
-                      {selected.daysOfWeek.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {selected.daysOfWeek.map(day => (
-                            <Badge key={day} variant="secondary" className="text-xs">
-                              {day.charAt(0).toUpperCase() + day.slice(1)}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-
-                      {selected.notes && (
-                        <p className="text-sm text-muted-foreground italic">{selected.notes}</p>
-                      )}
+                selectedExercises.map((selected, index) => (
+                  <div key={index} className="p-4 border border-black/20 rounded-lg">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-medium text-lg capitalize">
+                        {selected.exercise.name.replace(/_/g, ' ')}
+                      </h4>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleRemoveExercise(index)}
+                        className="border-red-300 text-red-600 hover:bg-red-50"
+                        data-testid={`button-remove-exercise-${index}`}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
-                  ))}
-                </div>
+                    
+                    <div className="flex flex-wrap gap-2 text-sm text-black mb-2">
+                      {selected.sets && selected.sets > 0 && <span>Sets: {selected.sets}</span>}
+                      {selected.reps && <span>Reps: {selected.reps}</span>}
+                      {selected.minutes && <span>Minutes: {selected.minutes}</span>}
+                    </div>
+
+                    {selected.daysOfWeek.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {selected.daysOfWeek.map(day => (
+                          <Badge key={day} variant="secondary" className="text-xs">
+                            {day}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {selected.notes && (
+                      <p className="text-sm text-black italic">{selected.notes}</p>
+                    )}
+                  </div>
+                ))
               )}
             </CardContent>
           </Card>
 
-        {/* Reminders */}
-        <Card className="bg-ministry-gold text-black">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Workout Reminders
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {reminders.map((reminder, index) => (
-                <div key={index} className="flex gap-2 items-center">
-                  <Select 
-                    value={reminder.dayOfWeek} 
-                    onValueChange={(value) => updateReminder(index, 'dayOfWeek', value)}
-                  >
-                    <SelectTrigger className="flex-1 text-white [&>span]:text-white" data-testid={`select-reminder-day-${index}`}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {daysOfWeek.map(day => (
-                        <SelectItem key={day.value} value={day.value}>
-                          {day.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  <Input
-                    type="time"
-                    value={reminder.time}
-                    onChange={(e) => updateReminder(index, 'time', e.target.value)}
-                    className="w-32 text-white"
-                    data-testid={`input-reminder-time-${index}`}
-                  />
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeReminder(index)}
-                    data-testid={`button-remove-reminder-${index}`}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              
-              <Button 
-                variant="outline" 
-                onClick={addReminder}
-                className="w-full text-white border-white hover:bg-white hover:text-black"
-                data-testid="button-add-reminder"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Reminder
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Create Plan Button */}
-          <Button
-            onClick={handleCreatePlan}
-            disabled={createPlanMutation.isPending}
-            className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-black"
-            data-testid="button-create-plan"
-          >
-            {createPlanMutation.isPending ? 'Creating Plan...' : 'Create Plan'}
-          </Button>
+        {/* Update Plan Button */}
+        <Button
+          onClick={handleUpdatePlan}
+          disabled={updatePlanMutation.isPending}
+          className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+          data-testid="button-update-plan"
+        >
+          {updatePlanMutation.isPending ? 'Updating Plan...' : 'Update Plan'}
+        </Button>
 
         {/* Exercise Search & Selection */}
         <Card className="bg-ministry-gold text-black">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Search className="h-5 w-5" />
-                Find Exercises
+                Add More Exercises
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search exercises..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 text-white placeholder:text-white/70"
-                  data-testid="input-exercise-search"
-                />
-              </div>
-
-              {/* Filters */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
-                  <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-body-part">
-                    <SelectValue placeholder="Body Part" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Body Parts</SelectItem>
-                    {uniqueBodyParts.map((bodyPart: string) => (
-                      <SelectItem key={bodyPart} value={bodyPart}>
-                        {bodyPart.charAt(0).toUpperCase() + bodyPart.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={selectedEquipment} onValueChange={setSelectedEquipment}>
-                  <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-equipment">
-                    <SelectValue placeholder="Equipment" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Equipment</SelectItem>
-                    {uniqueEquipment.map((equipment: string) => (
-                      <SelectItem key={equipment} value={equipment}>
-                        {equipment.charAt(0).toUpperCase() + equipment.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={selectedTarget} onValueChange={setSelectedTarget}>
-                  <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-target-muscle">
-                    <SelectValue placeholder="Target Muscle" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Muscles</SelectItem>
-                    {uniqueTargets.map((target: string) => (
-                      <SelectItem key={target} value={target}>
-                        {target.charAt(0).toUpperCase() + target.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="favorites"
-                    checked={showFavoritesOnly}
-                    onCheckedChange={(checked) => setShowFavoritesOnly(checked === true)}
-                    data-testid="checkbox-favorites-only"
+              {/* Search and filters UI - same as create-plan */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Search</label>
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    placeholder="Search exercises..."
+                    className="text-white placeholder:text-white/70"
+                    data-testid="input-search"
                   />
-                  <label htmlFor="favorites" className="text-sm font-medium text-white">
-                    Favorites Only
-                  </label>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Body Part</label>
+                  <Select value={selectedBodyPart} onValueChange={(value) => handleFilterChange('bodyPart', value)}>
+                    <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-body-part">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Body Parts</SelectItem>
+                      {uniqueBodyParts.map(part => (
+                        <SelectItem key={part} value={part}>{part}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Equipment</label>
+                  <Select value={selectedEquipment} onValueChange={(value) => handleFilterChange('equipment', value)}>
+                    <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-equipment">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Equipment</SelectItem>
+                      {uniqueEquipment.map(eq => (
+                        <SelectItem key={eq} value={eq}>{eq}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Target Muscle</label>
+                  <Select value={selectedTarget} onValueChange={(value) => handleFilterChange('target', value)}>
+                    <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-target">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Muscles</SelectItem>
+                      {uniqueTargets.map(target => (
+                        <SelectItem key={target} value={target}>{target}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Exercise Results */}
-          <Card className="bg-ministry-gold text-black">
-            <CardHeader>
-              <CardTitle>
-                Exercise Results ({filteredExercises.length} shown)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+              {/* Exercise Results */}
               {isLoadingExercises ? (
-                <div className="text-center py-8 text-white">Loading exercises...</div>
-              ) : filteredExercises.length === 0 ? (
-                <div className="text-center py-8 text-white">
-                  No exercises found. Try adjusting your filters.
-                </div>
+                <div className="text-center py-8">Loading exercises...</div>
               ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {filteredExercises.map((exercise: Exercise) => {
-                    const isSelected = isExerciseSelected(exercise.exerciseId);
-                    const isFav = isFavorite(exercise.exerciseId);
-                    
-                    return (
-                      <div
-                        key={exercise.exerciseId}
-                        className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                          isSelected 
-                            ? 'border-ministry-gold bg-ministry-gold/10' 
-                            : 'hover:border-ministry-steel'
-                        }`}
-                        onClick={() => handleExerciseSelect(exercise)}
-                        data-testid={`exercise-card-${exercise.exerciseId}`}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium">{exercise.name}</h4>
-                          <div className="flex gap-1">
-                            {isFav && <Heart className="h-4 w-4 text-red-500 fill-red-500" />}
-                            {isSelected && <CheckSquare className="h-4 w-4 text-ministry-gold" />}
+                <div className="space-y-4">
+                  {exercises.map((exercise: Exercise) => (
+                    <div key={exercise.exerciseId || exercise.id} className="p-4 border border-black/20 rounded-lg flex items-start justify-between">
+                      <div className="flex items-start gap-4 flex-1">
+                        <img 
+                          src={exercise.gifUrl} 
+                          alt={exercise.name}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <h4 className="font-medium capitalize mb-1">
+                            {exercise.name.replace(/_/g, ' ')}
+                          </h4>
+                          <div className="flex flex-wrap gap-1 text-xs">
+                            {exercise.bodyParts?.map((part: string) => (
+                              <Badge key={part} variant="secondary">{part}</Badge>
+                            ))}
+                            {exercise.equipments?.map((eq: string) => (
+                              <Badge key={eq} variant="outline" className="bg-black text-white border-black">{eq}</Badge>
+                            ))}
                           </div>
                         </div>
-                        
-                        <div className="flex flex-wrap gap-1 text-xs">
-                          {exercise.bodyParts?.map((part: string) => (
-                            <Badge key={part} variant="secondary">{part}</Badge>
-                          ))}
-                          {exercise.equipments?.map((eq: string) => (
-                            <Badge key={eq} variant="outline" className="bg-black text-white border-black">{eq}</Badge>
-                          ))}
-                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                      <div className="flex gap-2">
+                        {isFavorite(exercise.exerciseId || exercise.id || '') && (
+                          <Badge className="bg-ministry-gold text-black">
+                            <Heart className="w-3 h-3 mr-1 fill-current" />
+                            Favorite
+                          </Badge>
+                        )}
+                        <Button
+                          size="sm"
+                          onClick={() => handleAddExercise(exercise)}
+                          className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                          data-testid={`button-add-exercise-${exercise.exerciseId || exercise.id}`}
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-4 mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    data-testid="button-prev-page"
-                  >
-                    Previous
-                  </Button>
-                  
-                  <span className="text-sm text-white">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                    data-testid="button-next-page"
-                  >
-                    Next
-                  </Button>
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="border-ministry-gold text-ministry-gold hover:bg-ministry-gold hover:text-black"
+                        data-testid="button-prev-page"
+                      >
+                        Previous
+                      </Button>
+                      
+                      <div className="flex items-center space-x-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          const page = currentPage <= 3 ? i + 1 : currentPage - 2 + i;
+                          if (page > totalPages) return null;
+                          return (
+                            <Button
+                              key={page}
+                              variant={page === currentPage ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCurrentPage(page)}
+                              className={page === currentPage 
+                                ? 'bg-ministry-gold text-black hover:bg-ministry-gold/90' 
+                                : 'border-ministry-gold text-ministry-gold hover:bg-ministry-gold hover:text-black'
+                              }
+                              data-testid={`button-page-${page}`}
+                            >
+                              {page}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="border-ministry-gold text-ministry-gold hover:bg-ministry-gold hover:text-black"
+                        data-testid="button-next-page"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -806,20 +777,10 @@ export default function CreatePlan() {
       {/* Exercise Configuration Modal */}
       {showExerciseConfig && currentExercise && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md">
+          <Card className="bg-ministry-gold text-black w-full max-w-md">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                Configure Exercise
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowExerciseConfig(false)}
-                  data-testid="button-close-config"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">{currentExercise.name}</p>
+              <CardTitle>Configure Exercise</CardTitle>
+              <p className="text-sm capitalize">{currentExercise.name.replace(/_/g, ' ')}</p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
@@ -827,9 +788,10 @@ export default function CreatePlan() {
                   <label className="text-sm font-medium mb-2 block">Sets</label>
                   <Input
                     type="number"
-                    value={tempSets}
-                    onChange={(e) => setTempSets(parseInt(e.target.value) || 0)}
-                    min="1"
+                    value={tempSets || ''}
+                    onChange={(e) => setTempSets(e.target.value ? parseInt(e.target.value) : 0)}
+                    min="0"
+                    placeholder="3"
                     data-testid="input-sets"
                   />
                 </div>
