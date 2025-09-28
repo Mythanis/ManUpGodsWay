@@ -179,58 +179,19 @@ export default function Fitness() {
     },
   });
 
-  // Define muscle group mappings using targetMuscles and bodyParts
-  const muscleGroupMappings = {
-    'Legs': {
-      targetMuscles: ['glutes', 'quadriceps', 'hamstrings', 'calves', 'hip flexors', 'abductors', 'adductors'],
-      bodyParts: ['upper legs', 'lower legs', 'waist']
-    },
-    'Back': {
-      targetMuscles: ['lats', 'rhomboids', 'middle trapezius', 'lower trapezius', 'upper back', 'erector spinae'],
-      bodyParts: ['back']
-    },
-    'Abs': {
-      targetMuscles: ['abs', 'obliques', 'transverse abdominis', 'hip flexors'],
-      bodyParts: ['waist']
-    },
-    'Arms': {
-      targetMuscles: ['biceps', 'triceps', 'forearms'],
-      bodyParts: ['upper arms', 'lower arms']
-    },
-    'Upper Body': {
-      targetMuscles: ['pectorals', 'front deltoids', 'side deltoids', 'rear deltoids', 'biceps', 'triceps', 'upper trapezius'],
-      bodyParts: ['chest', 'shoulders', 'upper arms', 'lower arms']
-    },
-    'Chest': {
-      targetMuscles: ['pectorals'],
-      bodyParts: ['chest']
-    }
-  };
-
-  // Get exercise filter options from exercises data
+  // Get all unique bodyParts, equipment, and targets from exercises data
+  const uniqueBodyParts: string[] = Array.from(new Set((exercises as Exercise[]).flatMap(ex => ex.bodyParts || [ex.bodyPart].filter(Boolean)))).sort();
   const uniqueEquipment: string[] = Array.from(new Set((exercises as Exercise[]).flatMap(ex => ex.equipments || [ex.equipment].filter(Boolean)))).sort();
   const uniqueTargets: string[] = Array.from(new Set((exercises as Exercise[]).flatMap(ex => ex.targetMuscles || [ex.target].filter(Boolean)))).sort();
 
-  // Filter exercises based on selected muscle group
+  // Filter exercises based on selected filters
   const filteredExercises = exercises.filter((exercise: Exercise) => {
     const matchesSearch = searchQuery === '' || 
       exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (exercise.targetMuscles || [exercise.target]).some(target => target?.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    const matchesBodyPart = selectedBodyPart === 'all' || (() => {
-      if (selectedBodyPart in muscleGroupMappings) {
-        const mapping = muscleGroupMappings[selectedBodyPart as keyof typeof muscleGroupMappings];
-        const exerciseTargets = exercise.targetMuscles || [exercise.target].filter(Boolean);
-        const exerciseBodyParts = exercise.bodyParts || [exercise.bodyPart].filter(Boolean);
-        
-        return mapping.targetMuscles.some(target => 
-          exerciseTargets.some(et => et?.toLowerCase().includes(target.toLowerCase()))
-        ) || mapping.bodyParts.some(part => 
-          exerciseBodyParts.some(bp => bp?.toLowerCase().includes(part.toLowerCase()))
-        );
-      }
-      return false;
-    })();
+    const matchesBodyPart = selectedBodyPart === 'all' || 
+      (exercise.bodyParts || [exercise.bodyPart]).some(part => part === selectedBodyPart);
     
     const matchesEquipment = selectedEquipment === 'all' || 
       (exercise.equipments || [exercise.equipment]).some(eq => eq === selectedEquipment);
@@ -814,14 +775,13 @@ export default function Fitness() {
                   <SelectTrigger>
                     <SelectValue placeholder="Body Part" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-60 overflow-y-auto">
                     <SelectItem value="all">All Body Parts</SelectItem>
-                    <SelectItem value="Legs">Legs</SelectItem>
-                    <SelectItem value="Back">Back</SelectItem>
-                    <SelectItem value="Abs">Abs</SelectItem>
-                    <SelectItem value="Arms">Arms</SelectItem>
-                    <SelectItem value="Upper Body">Upper Body</SelectItem>
-                    <SelectItem value="Chest">Chest</SelectItem>
+                    {uniqueBodyParts.map((part) => (
+                      <SelectItem key={part} value={part}>
+                        {part.charAt(0).toUpperCase() + part.slice(1)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
@@ -829,7 +789,7 @@ export default function Fitness() {
                   <SelectTrigger>
                     <SelectValue placeholder="Equipment" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-60 overflow-y-auto">
                     <SelectItem value="all">All Equipment</SelectItem>
                     {uniqueEquipment.map((equipment) => (
                       <SelectItem key={equipment} value={equipment}>
@@ -843,7 +803,7 @@ export default function Fitness() {
                   <SelectTrigger>
                     <SelectValue placeholder="Target Muscle" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-60 overflow-y-auto">
                     <SelectItem value="all">All Targets</SelectItem>
                     {uniqueTargets.map((target) => (
                       <SelectItem key={target} value={target}>
