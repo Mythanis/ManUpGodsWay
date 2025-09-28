@@ -25,6 +25,7 @@ import {
   insertFavoriteExerciseSchema,
   insertFitnessPlanSchema,
   insertFitnessPlanExerciseSchema,
+  insertFitnessPlanReminderSchema,
   insertEventSchema,
   insertEventRegistrationSchema
 } from "@shared/schema";
@@ -4331,6 +4332,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       console.error('Error reordering plan exercises:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Fitness plan reminders routes
+  // Get reminders for a fitness plan
+  app.get('/api/fitness-plans/:planId/reminders', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Check ownership of plan
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) {
+        return res.status(404).json({ message: 'Fitness plan not found' });
+      }
+      
+      if (plan.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const reminders = await storage.getFitnessPlanReminders(req.params.planId);
+      res.json(reminders);
+    } catch (error) {
+      console.error('Error fetching plan reminders:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Add reminder to fitness plan
+  app.post('/api/fitness-plans/:planId/reminders', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Check ownership of plan
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) {
+        return res.status(404).json({ message: 'Fitness plan not found' });
+      }
+      
+      if (plan.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const reminderData = insertFitnessPlanReminderSchema.parse({
+        ...req.body,
+        planId: req.params.planId
+      });
+      
+      const reminder = await storage.addReminderToPlan(reminderData);
+      res.status(201).json(reminder);
+    } catch (error) {
+      console.error('Error adding reminder to plan:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid reminder data", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Update reminder in fitness plan
+  app.put('/api/fitness-plan-reminders/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Get the reminder to check ownership
+      const reminders = await storage.getFitnessPlanReminders('');
+      const reminder = reminders.find(r => r.id === req.params.id);
+      
+      if (!reminder) {
+        return res.status(404).json({ message: 'Reminder not found' });
+      }
+      
+      const plan = await storage.getFitnessPlan(reminder.planId);
+      if (!plan || plan.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const updateData = insertFitnessPlanReminderSchema.partial().parse(req.body);
+      const updatedReminder = await storage.updatePlanReminder(req.params.id, updateData);
+      res.json(updatedReminder);
+    } catch (error) {
+      console.error('Error updating plan reminder:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid reminder data", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Remove reminder from fitness plan
+  app.delete('/api/fitness-plan-reminders/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Get the reminder to check ownership
+      const reminders = await storage.getFitnessPlanReminders('');
+      const reminder = reminders.find(r => r.id === req.params.id);
+      
+      if (!reminder) {
+        return res.status(404).json({ message: 'Reminder not found' });
+      }
+      
+      const plan = await storage.getFitnessPlan(reminder.planId);
+      if (!plan || plan.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      await storage.removePlanReminder(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error removing plan reminder:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

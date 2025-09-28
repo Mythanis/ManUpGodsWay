@@ -31,6 +31,7 @@ import {
   favoriteExercises,
   fitnessPlans,
   fitnessPlanExercises,
+  fitnessPlanReminders,
   events,
   eventRegistrations,
   hurdleWallPosts,
@@ -115,6 +116,8 @@ import {
   type InsertFitnessPlan,
   type FitnessPlanExercise,
   type InsertFitnessPlanExercise,
+  type FitnessPlanReminder,
+  type InsertFitnessPlanReminder,
   type Event,
   type InsertEvent,
   type EventRegistration,
@@ -419,6 +422,13 @@ export interface IStorage {
   updatePlanExercise(id: string, updates: Partial<InsertFitnessPlanExercise>): Promise<FitnessPlanExercise>;
   removePlanExercise(id: string): Promise<void>;
   reorderPlanExercises(planId: string, exerciseOrders: { id: string; orderIndex: number }[]): Promise<void>;
+
+  // Fitness plan reminders operations
+  getFitnessPlanReminders(planId: string): Promise<FitnessPlanReminder[]>;
+  addReminderToPlan(reminder: InsertFitnessPlanReminder): Promise<FitnessPlanReminder>;
+  updatePlanReminder(id: string, updates: Partial<InsertFitnessPlanReminder>): Promise<FitnessPlanReminder>;
+  removePlanReminder(id: string): Promise<void>;
+  getActiveReminders(): Promise<(FitnessPlanReminder & { plan: { name: string; userId: string } })[]>;
 
   // Events operations
   getEvents(): Promise<Event[]>;
@@ -4293,6 +4303,58 @@ export class DatabaseStorage implements IStorage {
           );
       }
     });
+  }
+
+  // Fitness plan reminders implementation methods
+  async getFitnessPlanReminders(planId: string): Promise<FitnessPlanReminder[]> {
+    return await db
+      .select()
+      .from(fitnessPlanReminders)
+      .where(eq(fitnessPlanReminders.planId, planId))
+      .orderBy(asc(fitnessPlanReminders.dayOfWeek), asc(fitnessPlanReminders.time));
+  }
+
+  async addReminderToPlan(reminder: InsertFitnessPlanReminder): Promise<FitnessPlanReminder> {
+    const [planReminder] = await db
+      .insert(fitnessPlanReminders)
+      .values(reminder)
+      .returning();
+    return planReminder;
+  }
+
+  async updatePlanReminder(id: string, updates: Partial<InsertFitnessPlanReminder>): Promise<FitnessPlanReminder> {
+    const [reminder] = await db
+      .update(fitnessPlanReminders)
+      .set(updates)
+      .where(eq(fitnessPlanReminders.id, id))
+      .returning();
+    return reminder;
+  }
+
+  async removePlanReminder(id: string): Promise<void> {
+    await db
+      .delete(fitnessPlanReminders)
+      .where(eq(fitnessPlanReminders.id, id));
+  }
+
+  async getActiveReminders(): Promise<(FitnessPlanReminder & { plan: { name: string; userId: string } })[]> {
+    return await db
+      .select({
+        id: fitnessPlanReminders.id,
+        planId: fitnessPlanReminders.planId,
+        dayOfWeek: fitnessPlanReminders.dayOfWeek,
+        time: fitnessPlanReminders.time,
+        isActive: fitnessPlanReminders.isActive,
+        lastSent: fitnessPlanReminders.lastSent,
+        createdAt: fitnessPlanReminders.createdAt,
+        plan: {
+          name: fitnessPlans.name,
+          userId: fitnessPlans.userId,
+        }
+      })
+      .from(fitnessPlanReminders)
+      .innerJoin(fitnessPlans, eq(fitnessPlanReminders.planId, fitnessPlans.id))
+      .where(eq(fitnessPlanReminders.isActive, true));
   }
 
   // Hurdle Wall implementation methods
