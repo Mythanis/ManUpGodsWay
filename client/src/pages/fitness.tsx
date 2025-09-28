@@ -27,9 +27,11 @@ import {
   List,
   BookOpen,
   Edit,
-  Trash2
+  Trash2,
+  Settings
 } from "lucide-react";
 import { format, isToday, isPast, isFuture } from "date-fns";
+import { Link } from "wouter";
 
 interface FitnessChallenge {
   id: string;
@@ -1055,14 +1057,15 @@ export default function Fitness() {
           <TabsContent value="plans" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">My Fitness Plans</h2>
-              <Button
-                onClick={() => setShowCreatePlan(true)}
-                className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
-                data-testid="button-create-plan"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Plan
-              </Button>
+              <Link href="/create-plan">
+                <Button
+                  className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                  data-testid="button-create-plan"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Create Enhanced Plan
+                </Button>
+              </Link>
             </div>
 
             {/* Create Plan Modal */}
