@@ -501,21 +501,6 @@ export default function Fitness() {
     </Card>
   );
 
-  // Helper function to check if exercise is favorited
-  const isFavorite = (exerciseId: string) => {
-    return favoriteExercises.some((fav: FavoriteExercise) => fav.exerciseId === exerciseId);
-  };
-
-  // Handle toggling favorite status
-  const handleToggleFavorite = (exercise: Exercise) => {
-    const id = exercise.exerciseId || exercise.id || '';
-    if (isFavorite(id)) {
-      removeFavoriteMutation.mutate(id);
-    } else {
-      addFavoriteMutation.mutate(exercise);
-    }
-  };
-
   const ExerciseCard = ({ exercise }: { exercise: Exercise }) => (
     <Card className="hover:shadow-md transition-shadow bg-ministry-gold-exact/20">
       <CardContent className="p-4">
