@@ -161,7 +161,7 @@ export default function Fitness() {
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch exercises');
       const data = await response.json();
-      console.log('Exercise data received:', data.data?.length, 'exercises', 'total:', data.totalCount);
+      console.log('Exercise data received:', data.data?.length, 'exercises', 'total:', data.metadata?.totalExercises);
       return data;
     },
     staleTime: 0,
@@ -236,8 +236,8 @@ export default function Fitness() {
 
   // Extract data from response
   const exercises = exerciseResponse?.data || [];
-  const totalCount = exerciseResponse?.totalCount || 0;
-  const totalPages = Math.ceil(totalCount / limit);
+  const totalCount = exerciseResponse?.metadata?.totalExercises || 0;
+  const totalPages = exerciseResponse?.metadata?.totalPages || Math.ceil(totalCount / limit);
 
   // Get filter options from API data
   const uniqueBodyParts = bodyParts.map((bp: any) => bp.name).sort();
