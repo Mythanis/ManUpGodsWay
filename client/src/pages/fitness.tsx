@@ -134,29 +134,52 @@ export default function Fitness() {
     refetchInterval: 8000, // Poll every 8 seconds for real-time updates
   });
 
-  // Fetch exercises from ExerciseDB API
+  // Fetch all exercises from ExerciseDB API
   const { data: exercises = [], isLoading: isLoadingExercises } = useQuery({
-    queryKey: ['exercises', searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
+    queryKey: ['exercises'],
     queryFn: async () => {
-      let url = 'https://exercisedb-api.vercel.app/api/v1/exercises';
-      const params = new URLSearchParams();
-      
-      if (searchQuery) params.append('search', searchQuery);
-      if (selectedBodyPart !== 'all') params.append('bodyPart', selectedBodyPart);
-      if (selectedEquipment !== 'all') params.append('equipment', selectedEquipment);
-      if (selectedTarget !== 'all') params.append('target', selectedTarget);
-      
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-      
-      const response = await fetch(url);
+      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/exercises');
       if (!response.ok) throw new Error('Failed to fetch exercises');
       const data = await response.json();
       return data.data || [];
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    enabled: true, // Always fetch exercises
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
+  });
+
+  // Fetch muscles for filtering
+  const { data: muscles = [] } = useQuery({
+    queryKey: ['muscles'],
+    queryFn: async () => {
+      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/muscles');
+      if (!response.ok) throw new Error('Failed to fetch muscles');
+      const data = await response.json();
+      return data.data || [];
+    },
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+  });
+
+  // Fetch equipment for filtering
+  const { data: equipments = [] } = useQuery({
+    queryKey: ['equipments'],
+    queryFn: async () => {
+      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/equipments');
+      if (!response.ok) throw new Error('Failed to fetch equipments');
+      const data = await response.json();
+      return data.data || [];
+    },
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+  });
+
+  // Fetch bodyparts for filtering
+  const { data: bodyParts = [] } = useQuery({
+    queryKey: ['bodyparts'],
+    queryFn: async () => {
+      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/bodyparts');
+      if (!response.ok) throw new Error('Failed to fetch bodyparts');
+      const data = await response.json();
+      return data.data || [];
+    },
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
   });
 
   // Fetch user's favorite exercises
@@ -179,10 +202,10 @@ export default function Fitness() {
     },
   });
 
-  // Get all unique bodyParts, equipment, and targets from exercises data
-  const uniqueBodyParts: string[] = Array.from(new Set((exercises as Exercise[]).flatMap(ex => ex.bodyParts || [ex.bodyPart].filter(Boolean)))).sort();
-  const uniqueEquipment: string[] = Array.from(new Set((exercises as Exercise[]).flatMap(ex => ex.equipments || [ex.equipment].filter(Boolean)))).sort();
-  const uniqueTargets: string[] = Array.from(new Set((exercises as Exercise[]).flatMap(ex => ex.targetMuscles || [ex.target].filter(Boolean)))).sort();
+  // Get filter options from API data
+  const uniqueBodyParts = bodyParts.map((bp: any) => bp.name).sort();
+  const uniqueEquipment = equipments.map((eq: any) => eq.name).sort();
+  const uniqueTargets = muscles.map((muscle: any) => muscle.name).sort();
 
   // Filter exercises based on selected filters
   const filteredExercises = exercises.filter((exercise: Exercise) => {
@@ -289,9 +312,9 @@ export default function Fitness() {
         exerciseId: exercise.id,
         exerciseName: exercise.name,
         exerciseGifUrl: exercise.gifUrl,
-        exerciseTarget: exercise.target,
-        exerciseBodyPart: exercise.bodyPart,
-        exerciseEquipment: exercise.equipment,
+        exerciseTarget: exercise.targetMuscles?.[0] || exercise.target || '',
+        exerciseBodyPart: exercise.bodyParts?.[0] || exercise.bodyPart || '',
+        exerciseEquipment: exercise.equipments?.[0] || exercise.equipment || '',
         orderIndex: 0, // Will be set by backend
       });
     },
@@ -777,7 +800,7 @@ export default function Fitness() {
                   </SelectTrigger>
                   <SelectContent className="max-h-60 overflow-y-auto">
                     <SelectItem value="all">All Body Parts</SelectItem>
-                    {uniqueBodyParts.map((part) => (
+                    {uniqueBodyParts.map((part: string) => (
                       <SelectItem key={part} value={part}>
                         {part.charAt(0).toUpperCase() + part.slice(1)}
                       </SelectItem>
@@ -791,7 +814,7 @@ export default function Fitness() {
                   </SelectTrigger>
                   <SelectContent className="max-h-60 overflow-y-auto">
                     <SelectItem value="all">All Equipment</SelectItem>
-                    {uniqueEquipment.map((equipment) => (
+                    {uniqueEquipment.map((equipment: string) => (
                       <SelectItem key={equipment} value={equipment}>
                         {equipment ? equipment.charAt(0).toUpperCase() + equipment.slice(1) : equipment}
                       </SelectItem>
@@ -805,7 +828,7 @@ export default function Fitness() {
                   </SelectTrigger>
                   <SelectContent className="max-h-60 overflow-y-auto">
                     <SelectItem value="all">All Targets</SelectItem>
-                    {uniqueTargets.map((target) => (
+                    {uniqueTargets.map((target: string) => (
                       <SelectItem key={target} value={target}>
                         {target ? target.charAt(0).toUpperCase() + target.slice(1) : target}
                       </SelectItem>
@@ -830,12 +853,12 @@ export default function Fitness() {
               </Card>
             ) : (
               <div className="space-y-4">
-                {filteredExercises.slice(0, 20).map((exercise: Exercise) => (
+                {filteredExercises.slice(0, 50).map((exercise: Exercise) => (
                   <ExerciseCard key={exercise.id} exercise={exercise} />
                 ))}
-                {filteredExercises.length > 20 && (
+                {filteredExercises.length > 50 && (
                   <div className="text-center py-4">
-                    <p className="text-white">Showing first 20 exercises. Use filters to narrow results.</p>
+                    <p className="text-white">Showing first 50 exercises of {filteredExercises.length} results. Use filters to narrow results.</p>
                   </div>
                 )}
               </div>
