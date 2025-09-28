@@ -91,11 +91,6 @@ export default function EditPlan() {
   const [planDescription, setPlanDescription] = useState('');
   const [planCategory, setPlanCategory] = useState('general');
   const [planDifficulty, setPlanDifficulty] = useState('beginner');
-  
-  // Plan repetition/scheduling
-  const [repeatType, setRepeatType] = useState('never');
-  const [repeatFrequency, setRepeatFrequency] = useState(1);
-  const [repeatEndDate, setRepeatEndDate] = useState('');
 
   // Exercise search and filtering
   const [searchQuery, setSearchQuery] = useState('');
@@ -140,9 +135,6 @@ export default function EditPlan() {
       setPlanDescription(existingPlan.description || '');
       setPlanCategory(existingPlan.category || 'general');
       setPlanDifficulty(existingPlan.difficulty || 'beginner');
-      setRepeatType(existingPlan.repeatType || 'never');
-      setRepeatFrequency(existingPlan.repeatFrequency || 1);
-      setRepeatEndDate(existingPlan.repeatEndDate ? existingPlan.repeatEndDate.split('T')[0] : '');
       
       // Convert exercises to SelectedExercise format
       if (existingPlan.exercises) {
@@ -252,10 +244,7 @@ export default function EditPlan() {
         name: planName,
         description: planDescription,
         category: planCategory,
-        difficulty: planDifficulty,
-        repeatType,
-        repeatFrequency,
-        repeatEndDate: repeatEndDate || undefined
+        difficulty: planDifficulty
       };
 
       await apiRequest('PUT', `/api/fitness-plans/${planId}`, planData);
@@ -487,56 +476,6 @@ export default function EditPlan() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              {/* Plan Repetition/Scheduling */}
-              <div className="space-y-4 pt-4 border-t border-black/20">
-                <h3 className="font-semibold text-lg">Plan Repetition</h3>
-                
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Repeat Frequency</label>
-                  <Select value={repeatType} onValueChange={setRepeatType}>
-                    <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-repeat-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="never">Never (One-time)</SelectItem>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {repeatType !== 'never' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">
-                        Every {repeatType === 'daily' ? 'day(s)' : repeatType === 'weekly' ? 'week(s)' : 'month(s)'}
-                      </label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max="365"
-                        value={repeatFrequency}
-                        onChange={(e) => setRepeatFrequency(parseInt(e.target.value) || 1)}
-                        className="text-white placeholder:text-white/70"
-                        data-testid="input-repeat-frequency"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">End Date (Optional)</label>
-                      <Input
-                        type="date"
-                        value={repeatEndDate}
-                        onChange={(e) => setRepeatEndDate(e.target.value)}
-                        className="text-white placeholder:text-white/70"
-                        data-testid="input-repeat-end-date"
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
