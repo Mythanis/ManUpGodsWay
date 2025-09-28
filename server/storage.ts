@@ -429,6 +429,9 @@ export interface IStorage {
   updatePlanReminder(id: string, updates: Partial<InsertFitnessPlanReminder>): Promise<FitnessPlanReminder>;
   removePlanReminder(id: string): Promise<void>;
   getActiveReminders(): Promise<(FitnessPlanReminder & { plan: { name: string; userId: string } })[]>;
+  getDueFitnessReminders(dayOfWeek: number, currentTime: string): Promise<Array<FitnessPlanReminder & { plan: FitnessPlan }>>;
+  getTodayFitnessPlanExercises(planId: string, dayOfWeek: number): Promise<FitnessPlanExercise[]>;
+  markFitnessReminderSent(reminderId: string): Promise<void>;
 
   // Events operations
   getEvents(): Promise<Event[]>;
@@ -4355,6 +4358,66 @@ export class DatabaseStorage implements IStorage {
       .from(fitnessPlanReminders)
       .innerJoin(fitnessPlans, eq(fitnessPlanReminders.planId, fitnessPlans.id))
       .where(eq(fitnessPlanReminders.isActive, true));
+  }
+
+  async getDueFitnessReminders(dayOfWeek: number, currentTime: string): Promise<Array<FitnessPlanReminder & { plan: FitnessPlan }>> {
+    const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+    
+    return await db
+      .select({
+        id: fitnessPlanReminders.id,
+        planId: fitnessPlanReminders.planId,
+        dayOfWeek: fitnessPlanReminders.dayOfWeek,
+        time: fitnessPlanReminders.time,
+        isActive: fitnessPlanReminders.isActive,
+        lastSent: fitnessPlanReminders.lastSent,
+        createdAt: fitnessPlanReminders.createdAt,
+        plan: {
+          id: fitnessPlans.id,
+          name: fitnessPlans.name,
+          description: fitnessPlans.description,
+          userId: fitnessPlans.userId,
+          visibility: fitnessPlans.visibility,
+          tags: fitnessPlans.tags,
+          createdAt: fitnessPlans.createdAt,
+          updatedAt: fitnessPlans.updatedAt
+        }
+      })
+      .from(fitnessPlanReminders)
+      .innerJoin(fitnessPlans, eq(fitnessPlanReminders.planId, fitnessPlans.id))
+      .where(
+        and(
+          eq(fitnessPlanReminders.isActive, true),
+          eq(fitnessPlanReminders.dayOfWeek, dayOfWeek),
+          eq(fitnessPlanReminders.time, currentTime),
+          or(
+            isNull(fitnessPlanReminders.lastSent),
+            ne(fitnessPlanReminders.lastSent, today)
+          )
+        )
+      );
+  }
+
+  async getTodayFitnessPlanExercises(planId: string, dayOfWeek: number): Promise<FitnessPlanExercise[]> {
+    return await db
+      .select()
+      .from(fitnessPlanExercises)
+      .where(
+        and(
+          eq(fitnessPlanExercises.planId, planId),
+          like(fitnessPlanExercises.daysOfWeek, `%${dayOfWeek}%`)
+        )
+      )
+      .orderBy(asc(fitnessPlanExercises.orderIndex));
+  }
+
+  async markFitnessReminderSent(reminderId: string): Promise<void> {
+    const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+    
+    await db
+      .update(fitnessPlanReminders)
+      .set({ lastSent: today })
+      .where(eq(fitnessPlanReminders.id, reminderId));
   }
 
   // Hurdle Wall implementation methods

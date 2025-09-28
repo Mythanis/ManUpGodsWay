@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { devotionalNotificationService } from "./devotionalNotificationService";
 import { subscriptionExpirationService } from "./subscriptionExpirationService";
+import { fitnessReminderService } from "./fitnessReminderService";
 
 const app = express();
 app.use(express.json());
@@ -75,5 +76,8 @@ app.use((req, res, next) => {
     
     // Start the subscription expiration service
     subscriptionExpirationService.start();
+    
+    // Start the fitness reminder service
+    fitnessReminderService.start();
   });
 })();
