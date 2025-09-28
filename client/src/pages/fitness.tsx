@@ -52,11 +52,15 @@ interface Exercise {
   id: string;
   name: string;
   gifUrl: string;
-  target: string;
-  bodyPart: string;
-  equipment: string;
+  targetMuscles: string[];
+  bodyParts: string[];
+  equipments: string[];
   secondaryMuscles: string[];
   instructions: string[];
+  // Legacy fields for backward compatibility
+  target?: string;
+  bodyPart?: string;
+  equipment?: string;
 }
 
 interface FavoriteExercise {
@@ -175,31 +179,63 @@ export default function Fitness() {
     },
   });
 
-  // Define muscle group mappings
+  // Define muscle group mappings using targetMuscles and bodyParts
   const muscleGroupMappings = {
-    'Legs': ['waist', 'lower legs', 'upper legs'],
-    'Back': ['back'],
-    'Abs': ['waist'],
-    'Arms': ['lower arms', 'upper arms'],
-    'Upper Body': ['shoulders', 'upper arms', 'lower arms', 'chest'],
-    'Chest': ['chest']
+    'Legs': {
+      targetMuscles: ['glutes', 'quadriceps', 'hamstrings', 'calves', 'hip flexors', 'abductors', 'adductors'],
+      bodyParts: ['upper legs', 'lower legs', 'waist']
+    },
+    'Back': {
+      targetMuscles: ['lats', 'rhomboids', 'middle trapezius', 'lower trapezius', 'upper back', 'erector spinae'],
+      bodyParts: ['back']
+    },
+    'Abs': {
+      targetMuscles: ['abs', 'obliques', 'transverse abdominis', 'hip flexors'],
+      bodyParts: ['waist']
+    },
+    'Arms': {
+      targetMuscles: ['biceps', 'triceps', 'forearms'],
+      bodyParts: ['upper arms', 'lower arms']
+    },
+    'Upper Body': {
+      targetMuscles: ['pectorals', 'front deltoids', 'side deltoids', 'rear deltoids', 'biceps', 'triceps', 'upper trapezius'],
+      bodyParts: ['chest', 'shoulders', 'upper arms', 'lower arms']
+    },
+    'Chest': {
+      targetMuscles: ['pectorals'],
+      bodyParts: ['chest']
+    }
   };
 
   // Get exercise filter options from exercises data
-  const uniqueEquipment: string[] = Array.from(new Set((exercises as Exercise[]).map(ex => ex.equipment))).sort();
-  const uniqueTargets: string[] = Array.from(new Set((exercises as Exercise[]).map(ex => ex.target))).sort();
+  const uniqueEquipment: string[] = Array.from(new Set((exercises as Exercise[]).flatMap(ex => ex.equipments || [ex.equipment].filter(Boolean)))).sort();
+  const uniqueTargets: string[] = Array.from(new Set((exercises as Exercise[]).flatMap(ex => ex.targetMuscles || [ex.target].filter(Boolean)))).sort();
 
   // Filter exercises based on selected muscle group
   const filteredExercises = exercises.filter((exercise: Exercise) => {
     const matchesSearch = searchQuery === '' || 
       exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      exercise.target.toLowerCase().includes(searchQuery.toLowerCase());
+      (exercise.targetMuscles || [exercise.target]).some(target => target?.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    const matchesBodyPart = selectedBodyPart === 'all' || 
-      (muscleGroupMappings[selectedBodyPart as keyof typeof muscleGroupMappings]?.includes(exercise.bodyPart) ?? false);
+    const matchesBodyPart = selectedBodyPart === 'all' || (() => {
+      if (selectedBodyPart in muscleGroupMappings) {
+        const mapping = muscleGroupMappings[selectedBodyPart as keyof typeof muscleGroupMappings];
+        const exerciseTargets = exercise.targetMuscles || [exercise.target].filter(Boolean);
+        const exerciseBodyParts = exercise.bodyParts || [exercise.bodyPart].filter(Boolean);
+        
+        return mapping.targetMuscles.some(target => 
+          exerciseTargets.some(et => et?.toLowerCase().includes(target.toLowerCase()))
+        ) || mapping.bodyParts.some(part => 
+          exerciseBodyParts.some(bp => bp?.toLowerCase().includes(part.toLowerCase()))
+        );
+      }
+      return false;
+    })();
     
-    const matchesEquipment = selectedEquipment === 'all' || exercise.equipment === selectedEquipment;
-    const matchesTarget = selectedTarget === 'all' || exercise.target === selectedTarget;
+    const matchesEquipment = selectedEquipment === 'all' || 
+      (exercise.equipments || [exercise.equipment]).some(eq => eq === selectedEquipment);
+    const matchesTarget = selectedTarget === 'all' || 
+      (exercise.targetMuscles || [exercise.target]).some(target => target === selectedTarget);
     
     return matchesSearch && matchesBodyPart && matchesEquipment && matchesTarget;
   });
@@ -870,11 +906,15 @@ export default function Fitness() {
                     id: favorite.exerciseId,
                     name: favorite.exerciseName,
                     gifUrl: favorite.exerciseGifUrl,
+                    targetMuscles: [favorite.exerciseTarget],
+                    bodyParts: [favorite.exerciseBodyPart],
+                    equipments: [favorite.exerciseEquipment],
+                    secondaryMuscles: [],
+                    instructions: [],
+                    // Backward compatibility
                     target: favorite.exerciseTarget,
                     bodyPart: favorite.exerciseBodyPart,
-                    equipment: favorite.exerciseEquipment,
-                    secondaryMuscles: [],
-                    instructions: []
+                    equipment: favorite.exerciseEquipment
                   };
                   return <ExerciseCard key={favorite.id} exercise={exercise} />;
                 })}
