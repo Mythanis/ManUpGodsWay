@@ -139,8 +139,8 @@ export default function Fitness() {
   const { data: exercises = [], isLoading: isLoadingExercises } = useQuery({
     queryKey: ['exercises', 'all'],
     queryFn: async () => {
-      console.log('Fetching ALL exercises from ExerciseDB API with limit=1500...');
-      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/exercises?limit=1500');
+      console.log('Fetching ALL exercises from ExerciseDB API (V1 - no limit param)...');
+      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/exercises');
       if (!response.ok) throw new Error('Failed to fetch exercises');
       const data = await response.json();
       console.log('Exercise data received:', data.data?.length, 'exercises');
