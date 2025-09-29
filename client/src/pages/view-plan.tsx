@@ -105,10 +105,11 @@ export default function ViewPlan() {
     },
   });
 
-  // Helper function to parse week number from exercise notes
-  const parseWeekFromNotes = (notes: string): number => {
-    const weekMatch = notes?.match(/Week(\d+)/i);
-    return weekMatch ? parseInt(weekMatch[1]) : 1;
+  // Helper function to determine exercise week based on order (distribute evenly across 4 weeks)
+  const getExerciseWeek = (exercises: FitnessPlanExercise[], exerciseIndex: number): number => {
+    const totalExercises = exercises.length;
+    const exercisesPerWeek = Math.ceil(totalExercises / 4);
+    return Math.min(4, Math.floor(exerciseIndex / exercisesPerWeek) + 1);
   };
 
   // Helper function to determine current week based on plan start date and completion
@@ -122,10 +123,11 @@ export default function ViewPlan() {
     const daysSinceStart = Math.floor((currentDate.getTime() - planStartDate.getTime()) / (1000 * 60 * 60 * 24));
     const weeksSinceStart = Math.ceil(daysSinceStart / 7);
     
-    // Group exercises by week
+    // Group exercises by week based on order
     const exercisesByWeek: { [week: number]: FitnessPlanExercise[] } = {};
-    exercises.forEach(exercise => {
-      const week = parseWeekFromNotes(exercise.notes || '');
+    const sortedExercises = exercises.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+    sortedExercises.forEach((exercise, index) => {
+      const week = getExerciseWeek(exercises, index);
       if (!exercisesByWeek[week]) exercisesByWeek[week] = [];
       exercisesByWeek[week].push(exercise);
     });
@@ -166,9 +168,10 @@ export default function ViewPlan() {
 
   // Get current week and filter exercises
   const currentWeek = plan && plan.exercises ? getCurrentWeek(plan, plan.exercises, completions) : 1;
-  const currentWeekExercises = plan?.exercises?.filter(exercise => 
-    parseWeekFromNotes(exercise.notes || '') === currentWeek
-  ) || [];
+  const sortedAllExercises = (plan?.exercises || []).sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+  const currentWeekExercises = sortedAllExercises.filter((exercise, index) => 
+    getExerciseWeek(sortedAllExercises, index) === currentWeek
+  );
 
   const totalWeeks = 4;
   const completedWeeksCount = Math.max(0, currentWeek - 1);
@@ -283,7 +286,7 @@ export default function ViewPlan() {
             
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">{getCategoryIcon(plan.category)}</span>
+                <span className="text-2xl">{getCategoryIcon(plan.category || '')}</span>
                 <div>
                   <p className="text-sm font-medium">Category</p>
                   <p className="capitalize">{plan.category}</p>
@@ -294,7 +297,7 @@ export default function ViewPlan() {
                 <Target className="w-5 h-5" />
                 <div>
                   <p className="text-sm font-medium">Difficulty</p>
-                  <Badge className={getDifficultyColor(plan.difficulty)}>
+                  <Badge className={getDifficultyColor(plan.difficulty || '')}>
                     {plan.difficulty}
                   </Badge>
                 </div>
@@ -413,9 +416,9 @@ export default function ViewPlan() {
                                 {daysOfWeek.map((day) => (
                                   <Badge
                                     key={day.value}
-                                    variant={exercise.daysOfWeek.includes(day.value) ? "default" : "outline"}
+                                    variant={exercise.daysOfWeek?.includes(day.value) ? "default" : "outline"}
                                     className={`text-xs ${
-                                      exercise.daysOfWeek.includes(day.value) 
+                                      exercise.daysOfWeek?.includes(day.value) 
                                         ? "bg-ministry-gold text-black" 
                                         : "text-muted-foreground"
                                     }`}
