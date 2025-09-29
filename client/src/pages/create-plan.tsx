@@ -647,21 +647,43 @@ export default function CreatePlan() {
                         onClick={() => handleExerciseSelect(exercise)}
                         data-testid={`exercise-card-${exercise.exerciseId}`}
                       >
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium">{exercise.name}</h4>
-                          <div className="flex gap-1">
-                            {isFav && <Heart className="h-4 w-4 text-red-500 fill-red-500" />}
-                            {isSelected && <CheckSquare className="h-4 w-4 text-ministry-gold" />}
+                        <div className="flex items-start gap-3">
+                          <div className="w-12 h-12 flex-shrink-0 bg-ministry-steel/20 rounded flex items-center justify-center relative">
+                            <img 
+                              src={exercise.gifUrl} 
+                              alt={exercise.name}
+                              className="w-12 h-12 object-cover rounded"
+                              onError={(e) => {
+                                console.log('Image failed to load:', exercise.gifUrl);
+                                e.currentTarget.style.display = 'none';
+                                const fallbackIcon = e.currentTarget.nextElementSibling as HTMLElement;
+                                if (fallbackIcon) fallbackIcon.style.display = 'block';
+                              }}
+                              onLoad={(e) => {
+                                const fallbackIcon = e.currentTarget.nextElementSibling as HTMLElement;
+                                if (fallbackIcon) fallbackIcon.style.display = 'none';
+                              }}
+                            />
+                            <Dumbbell className="w-6 h-6 text-ministry-steel" style={{ display: 'none' }} />
                           </div>
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-1 text-xs">
-                          {exercise.bodyParts?.map((part: string) => (
-                            <Badge key={part} variant="secondary">{part}</Badge>
-                          ))}
-                          {exercise.equipments?.map((eq: string) => (
-                            <Badge key={eq} variant="outline" className="bg-black text-white border-black">{eq}</Badge>
-                          ))}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start mb-2">
+                              <h4 className="font-medium truncate">{exercise.name}</h4>
+                              <div className="flex gap-1 flex-shrink-0 ml-2">
+                                {isFav && <Heart className="h-4 w-4 text-red-500 fill-red-500" />}
+                                {isSelected && <CheckSquare className="h-4 w-4 text-ministry-gold" />}
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-1 text-xs">
+                              {exercise.bodyParts?.map((part: string) => (
+                                <Badge key={part} variant="secondary">{part}</Badge>
+                              ))}
+                              {exercise.equipments?.map((eq: string) => (
+                                <Badge key={eq} variant="outline" className="bg-black text-white border-black">{eq}</Badge>
+                              ))}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     );

@@ -634,11 +634,24 @@ export default function EditPlan() {
                   {exercises.map((exercise: Exercise) => (
                     <div key={exercise.exerciseId || exercise.id} className="p-4 border border-black/20 rounded-lg flex items-start justify-between">
                       <div className="flex items-start gap-4 flex-1">
-                        <img 
-                          src={exercise.gifUrl} 
-                          alt={exercise.name}
-                          className="w-16 h-16 object-cover rounded"
-                        />
+                        <div className="w-16 h-16 flex-shrink-0 bg-ministry-steel/20 rounded flex items-center justify-center relative">
+                          <img 
+                            src={exercise.gifUrl} 
+                            alt={exercise.name}
+                            className="w-16 h-16 object-cover rounded"
+                            onError={(e) => {
+                              console.log('Image failed to load:', exercise.gifUrl);
+                              e.currentTarget.style.display = 'none';
+                              const fallbackIcon = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (fallbackIcon) fallbackIcon.style.display = 'block';
+                            }}
+                            onLoad={(e) => {
+                              const fallbackIcon = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (fallbackIcon) fallbackIcon.style.display = 'none';
+                            }}
+                          />
+                          <Dumbbell className="w-8 h-8 text-ministry-steel" style={{ display: 'none' }} />
+                        </div>
                         <div className="flex-1">
                           <h4 className="font-medium capitalize mb-1">
                             {exercise.name.replace(/_/g, ' ')}
