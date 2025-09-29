@@ -165,7 +165,7 @@ export default function Fitness() {
   
   // Pre-built Plans state
   const [selectedLevel, setSelectedLevel] = useState<string>('');
-  const [selectedPlanEquipment, setSelectedPlanEquipment] = useState<string>('');
+  const [selectedPlanEquipment, setSelectedPlanEquipment] = useState<string[]>([]);
   const [selectedStartDay, setSelectedStartDay] = useState<string>('');
   const [selectedWorkoutDuration, setSelectedWorkoutDuration] = useState<string>('');
   const [selectedFrequency, setSelectedFrequency] = useState<string>('');
@@ -181,7 +181,7 @@ export default function Fitness() {
 
   // Effect to generate plans when filters change
   useEffect(() => {
-    if (selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedDays.length > 0 && selectedGoal) {
+    if (selectedLevel && selectedPlanEquipment.length > 0 && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedDays.length > 0 && selectedGoal) {
       // Validate that selected days match frequency
       const frequencyNum = parseInt(selectedFrequency);
       if (selectedDays.length !== frequencyNum) {
@@ -204,7 +204,7 @@ export default function Fitness() {
       )
         .then(plans => {
           if (plans.length === 0) {
-            setPlanGenerationError(`Unable to generate plans for ${selectedPlanEquipment}. Try selecting a different equipment type like "body weight" or "dumbbell".`);
+            setPlanGenerationError(`Unable to generate plans for ${selectedPlanEquipment.join(', ')}. Try selecting different equipment types like "body weight" or "dumbbell".`);
           } else {
             setPlanGenerationError('');
           }
@@ -860,7 +860,7 @@ export default function Fitness() {
   // Dynamic plan generation using ExerciseDB API
   const generatePreBuiltPlans = async (
     level: string, 
-    equipment: string, 
+    equipmentList: string[], 
     startDay: string, 
     duration: string, 
     frequency: string,
@@ -868,17 +868,17 @@ export default function Fitness() {
     goal: string
   ): Promise<PreBuiltPlan[]> => {
     try {
-      console.log('Generating plans with params:', { level, equipment, startDay, duration, frequency, workoutDays, goal });
+      console.log('Generating plans with params:', { level, equipmentList, startDay, duration, frequency, workoutDays, goal });
       
-      const exercises = await getExercisesForEquipment(equipment);
-      console.log(`Found ${exercises.length} exercises for ${equipment}`);
+      const exercises = await getExercisesForEquipment(equipmentList);
+      console.log(`Found ${exercises.length} exercises for equipment: ${equipmentList.join(', ')}`);
       
       if (exercises.length < 5) {
-        console.warn(`Not enough exercises for equipment: ${equipment}. Found: ${exercises.length}`);
+        console.warn(`Not enough exercises for equipment: ${equipmentList.join(', ')}. Found: ${exercises.length}`);
         // Fallback to body weight exercises if selected equipment has too few
-        if (equipment !== 'body weight') {
+        if (!equipmentList.includes('body weight')) {
           console.log('Attempting fallback to body weight exercises...');
-          const bodyweightExercises = await getExercisesForEquipment('body weight');
+          const bodyweightExercises = await getExercisesForEquipment(['body weight']);
           if (bodyweightExercises.length >= 5) {
             console.log('Falling back to bodyweight exercises');
             const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced", 'body weight');
@@ -889,12 +889,13 @@ export default function Fitness() {
         return [];
       }
 
-      const weeklyPlan = generateDynamicPlan(exercises, level as "Beginner"|"Intermediate"|"Advanced", equipment);
+      const equipmentLabel = equipmentList.length > 1 ? equipmentList.join(' + ') : equipmentList[0];
+      const weeklyPlan = generateDynamicPlan(exercises, level as "Beginner"|"Intermediate"|"Advanced", equipmentLabel);
       const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay);
       
       // Customize plan based on additional parameters
-      preBuiltPlan.name = `${level.charAt(0).toUpperCase() + level.slice(1)} ${equipment} Program (${duration}min)`;
-      preBuiltPlan.description = `${goal.charAt(0).toUpperCase() + goal.slice(1).replace('-', ' ')} focused ${level} program using ${equipment}. ${frequency} days per week, ${duration} minutes per session.`;
+      preBuiltPlan.name = `${level.charAt(0).toUpperCase() + level.slice(1)} ${equipmentLabel} Program (${duration}min)`;
+      preBuiltPlan.description = `${goal.charAt(0).toUpperCase() + goal.slice(1).replace('-', ' ')} focused ${level} program using ${equipmentLabel}. ${frequency} days per week, ${duration} minutes per session.`;
       preBuiltPlan.workoutsPerWeek = parseInt(frequency);
       
       // Use the user's selected workout days for the schedule
@@ -951,61 +952,44 @@ export default function Fitness() {
   }
 
   async function getEquipments(): Promise<string[]> {
-    const resp = await fetchJSON('https://www.exercisedb.dev/api/v1/equipments');
+    const resp = await fetchJSON('https://exercisedb-api.vercel.app/api/v1/equipments');
     return resp.data.map((e: any) => e.name);
   }
 
-  async function getExercisesForEquipment(equipment: string): Promise<APIExercise[]> {
-    const limit = 100;
-    const maxExercises = 200; // Only fetch first 200 exercises max for performance
-    let offset = 0;
-    let all: APIExercise[] = [];
+  async function getExercisesForEquipment(equipmentList: string[]): Promise<APIExercise[]> {
+    let allExercises: APIExercise[] = [];
     
     try {
-      while (offset < maxExercises) {
-        // Use the equipment-specific endpoint instead of filter
-        const url = `https://www.exercisedb.dev/api/v1/exercises/equipment/${encodeURIComponent(equipment)}?offset=${offset}&limit=${limit}`;
+      // Fetch exercises for each selected equipment type
+      for (const equipment of equipmentList) {
+        const url = `https://exercisedb-api.vercel.app/exercises/equipment/${encodeURIComponent(equipment)}`;
         
         try {
           const resp = await fetchJSON(url);
-          const batch: any[] = resp.data;
-          if (!batch || batch.length === 0) break;
+          const exercises: any[] = Array.isArray(resp) ? resp : resp.data || [];
           
-          const mapped: APIExercise[] = batch.map((ex: any) => ({
+          const mapped: APIExercise[] = exercises.map((ex: any) => ({
             id: ex.exerciseId || ex.id,
             name: ex.name,
             bodyPart: ex.bodyParts?.[0] || ex.bodyPart || 'unknown',
             equipment: ex.equipments?.[0] || ex.equipment || equipment,
             targetMuscles: ex.targetMuscles || [],
-            gifUrl: ex.gifUrl
+            gifUrl: ex.imageUrl || ex.gifUrl
           }));
-          all = all.concat(mapped);
           
-          // If we got fewer results than requested, we've reached the end
-          if (batch.length < limit) break;
+          allExercises = allExercises.concat(mapped);
+          console.log(`Fetched ${mapped.length} exercises for ${equipment}`);
           
-          offset += limit;
-          
-          // If we have enough exercises for plan generation, we can stop
-          if (all.length >= 50) break;
-          
-        } catch (batchError) {
-          console.warn(`Failed to fetch batch at offset ${offset} for ${equipment}:`, batchError);
-          // If we already have some exercises, we can continue with what we have
-          if (all.length >= 10) {
-            console.log(`Using ${all.length} exercises despite batch failure`);
-            break;
-          }
-          // If this is the first batch and it failed, re-throw the error
-          if (offset === 0) throw batchError;
-          break;
+        } catch (equipmentError) {
+          console.warn(`Failed to fetch exercises for ${equipment}:`, equipmentError);
+          // Continue with other equipment types
         }
       }
       
-      console.log(`Successfully fetched ${all.length} exercises for ${equipment}`);
-      return all;
+      console.log(`Successfully fetched ${allExercises.length} total exercises from ${equipmentList.length} equipment type(s)`);
+      return allExercises;
     } catch (error) {
-      console.error(`Error fetching exercises for ${equipment}:`, error);
+      console.error(`Error fetching exercises:`, error);
       throw error;
     }
   }
@@ -1721,23 +1705,46 @@ export default function Fitness() {
               {/* Equipment Selection */}
               <Card className="bg-ministry-gold-exact/20">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-black text-sm">Available Equipment</CardTitle>
+                  <CardTitle className="text-black text-sm">Available Equipment (Select Multiple)</CardTitle>
+                  {selectedPlanEquipment.length > 0 && (
+                    <p className="text-xs text-ministry-charcoal mt-1">
+                      Selected: {selectedPlanEquipment.length} equipment type{selectedPlanEquipment.length !== 1 ? 's' : ''}
+                    </p>
+                  )}
                 </CardHeader>
                 <CardContent>
-                  <Select value={selectedPlanEquipment} onValueChange={setSelectedPlanEquipment}>
-                    <SelectTrigger className="w-full" data-testid="select-plan-equipment">
-                      <SelectValue placeholder="Select equipment" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="body weight">Bodyweight Only</SelectItem>
-                      <SelectItem value="dumbbell">Dumbbells</SelectItem>
-                      <SelectItem value="barbell">Barbell & Weights</SelectItem>
-                      <SelectItem value="cable">Cable Machine</SelectItem>
-                      <SelectItem value="smith machine">Smith Machine</SelectItem>
-                      <SelectItem value="kettlebell">Kettlebells</SelectItem>
-                      <SelectItem value="resistance band">Resistance Bands</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    {[
+                      { value: 'body weight', label: 'Bodyweight Only' },
+                      { value: 'dumbbell', label: 'Dumbbells' },
+                      { value: 'barbell', label: 'Barbell & Weights' },
+                      { value: 'cable', label: 'Cable Machine' },
+                      { value: 'smith machine', label: 'Smith Machine' },
+                      { value: 'kettlebell', label: 'Kettlebells' },
+                      { value: 'resistance band', label: 'Resistance Bands' }
+                    ].map(({ value, label }) => (
+                      <div key={value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`equipment-${value}`}
+                          checked={selectedPlanEquipment.includes(value)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedPlanEquipment([...selectedPlanEquipment, value]);
+                            } else {
+                              setSelectedPlanEquipment(selectedPlanEquipment.filter(e => e !== value));
+                            }
+                          }}
+                          data-testid={`checkbox-equipment-${value}`}
+                        />
+                        <label
+                          htmlFor={`equipment-${value}`}
+                          className="text-sm font-medium text-black leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          {label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
 
@@ -1987,7 +1994,7 @@ export default function Fitness() {
                       <span>Fitness Level</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${selectedPlanEquipment ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <div className={`w-2 h-2 rounded-full ${selectedPlanEquipment.length > 0 ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                       <span>Available Equipment</span>
                     </div>
                     <div className="flex items-center gap-2">
