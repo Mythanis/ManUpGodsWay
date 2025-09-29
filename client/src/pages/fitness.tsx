@@ -97,6 +97,7 @@ interface FitnessPlanExercise {
   exerciseId: string;
   exerciseName: string;
   exerciseGifUrl: string;
+  imageUrl?: string; // Fallback property for exercise images
   exerciseTarget: string;
   exerciseBodyPart: string;
   exerciseEquipment: string;
@@ -795,9 +796,9 @@ export default function Fitness() {
                         <div className="flex gap-6">
                           {/* Exercise Image - Larger for better exercise demonstration */}
                           <div className="flex-shrink-0">
-                            {exercise.exerciseGifUrl ? (
+                            {(exercise.exerciseGifUrl || exercise.imageUrl) ? (
                               <img
-                                src={exercise.exerciseGifUrl}
+                                src={exercise.exerciseGifUrl || exercise.imageUrl}
                                 alt={`How to perform ${exercise.exerciseName}`}
                                 className="w-32 h-32 rounded-lg object-cover border-2 border-ministry-gold/30"
                                 data-testid={`img-workout-exercise-${exercise.exerciseId}`}
