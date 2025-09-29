@@ -370,96 +370,137 @@ export default function Fitness() {
   filterParams.set('sortBy', 'name');
   filterParams.set('sortOrder', 'asc');
 
-  // Fetch exercises with server-side filtering
+  // Use fallback exercises instead of external API
   const { data: exerciseResponse, isLoading: isLoadingExercises } = useQuery({
     queryKey: ['exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
     queryFn: async () => {
-      console.log(`Fetching exercises page ${currentPage} (offset=${offset}, limit=${limit})...`);
-      const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${filterParams.toString()}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch exercises');
-      const data = await response.json();
-      console.log('Exercise data received:', data.data?.length, 'exercises', 'total:', data.metadata?.totalExercises);
-      return data;
+      console.log(`Loading exercises page ${currentPage} (offset=${offset}, limit=${limit}) from fallback database...`);
+      
+      // Start with all fallback exercises
+      let filteredExercises = [...fallbackExercises];
+      
+      // Apply search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        filteredExercises = filteredExercises.filter(ex => 
+          ex.name.toLowerCase().includes(query) ||
+          ex.targetMuscles.some(muscle => muscle.toLowerCase().includes(query)) ||
+          ex.bodyParts.some(part => part.toLowerCase().includes(query))
+        );
+      }
+      
+      // Apply body part filter
+      if (selectedBodyPart !== 'all') {
+        filteredExercises = filteredExercises.filter(ex =>
+          ex.bodyParts.some(part => part.toLowerCase() === selectedBodyPart.toLowerCase())
+        );
+      }
+      
+      // Apply equipment filter
+      if (selectedEquipment !== 'all') {
+        filteredExercises = filteredExercises.filter(ex =>
+          ex.equipments.some(eq => eq.toLowerCase() === selectedEquipment.toLowerCase())
+        );
+      }
+      
+      // Apply target muscle filter
+      if (selectedTarget !== 'all') {
+        filteredExercises = filteredExercises.filter(ex =>
+          ex.targetMuscles.some(muscle => muscle.toLowerCase() === selectedTarget.toLowerCase())
+        );
+      }
+      
+      // Calculate pagination
+      const totalCount = filteredExercises.length;
+      const startIndex = offset;
+      const endIndex = Math.min(startIndex + limit, totalCount);
+      const paginatedExercises = filteredExercises.slice(startIndex, endIndex);
+      
+      // Convert to expected Exercise interface format
+      const exerciseData = paginatedExercises.map(ex => ({
+        exerciseId: ex.exerciseId,
+        name: ex.name,
+        gifUrl: ex.gifUrl,
+        targetMuscles: ex.targetMuscles,
+        bodyParts: ex.bodyParts,
+        equipments: ex.equipments,
+        secondaryMuscles: ex.secondaryMuscles || [],
+        instructions: ex.instructions || []
+      }));
+      
+      console.log(`Loaded ${exerciseData.length} exercises from fallback database (${totalCount} total after filtering)`);
+      
+      return {
+        data: exerciseData,
+        metadata: {
+          totalExercises: totalCount,
+          currentPage,
+          totalPages: Math.ceil(totalCount / limit)
+        }
+      };
     },
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
   });
 
-  // Fetch muscles for filtering and filter out unused ones
+  // Get muscles from fallback exercises
   const { data: allMuscles = [] } = useQuery({
     queryKey: ['muscles'],
     queryFn: async () => {
-      console.log('Fetching muscles from ExerciseDB API...');
-      const response = await fetch('https://www.exercisedb.dev/api/v1/muscles');
-      if (!response.ok) throw new Error('Failed to fetch muscles');
-      const data = await response.json();
-      console.log('Muscles data received:', data.data?.length, 'muscles');
-      return data.data || [];
+      console.log('Loading muscles from fallback exercise database...');
+      const muscleSet = new Set<string>();
+      fallbackExercises.forEach(ex => {
+        ex.targetMuscles.forEach(muscle => muscleSet.add(muscle));
+      });
+      const muscles = Array.from(muscleSet).map(name => ({ name }));
+      console.log('Muscles loaded from fallback:', muscles.length, 'muscles');
+      return muscles;
     },
     staleTime: 0,
     refetchOnMount: true,
   });
   
-  // Filter muscles to only include those with exercises
+  // All muscles from fallback are already filtered to only used ones
   const { data: usedMuscles = [] } = useQuery({
     queryKey: ['used-muscles'],
     queryFn: async () => {
-      console.log('Checking which muscles have exercises...');
-      const usedMuscleNames = new Set<string>();
-      
-      // Get first 500 exercises to extract used muscles
-      for (let offset = 0; offset < 500; offset += 100) {
-        const response = await fetch(`https://www.exercisedb.dev/api/v1/exercises/filter?offset=${offset}&limit=100`);
-        if (!response.ok) break;
-        const data = await response.json();
-        
-        data.data?.forEach((exercise: any) => {
-          exercise.targetMuscles?.forEach((muscle: string) => {
-            usedMuscleNames.add(muscle);
-          });
-        });
-        
-        if (data.data?.length < 100) break; // No more data
-      }
-      
-      const filteredMuscles = allMuscles.filter((muscle: any) => 
-        usedMuscleNames.has(muscle.name)
-      );
-      
-      console.log('Filtered muscles:', filteredMuscles.length, 'out of', allMuscles.length);
-      return filteredMuscles;
+      console.log('Using all muscles from fallback database (already filtered to used muscles only)...');
+      return allMuscles;
     },
     enabled: allMuscles.length > 0,
     staleTime: 300000, // Cache for 5 minutes
   });
 
-  // Fetch equipment for filtering
+  // Get equipment from fallback exercises
   const { data: equipments = [] } = useQuery({
     queryKey: ['equipments'],
     queryFn: async () => {
-      console.log('Fetching equipments from ExerciseDB API...');
-      const response = await fetch('https://www.exercisedb.dev/api/v1/equipments');
-      if (!response.ok) throw new Error('Failed to fetch equipments');
-      const data = await response.json();
-      console.log('Equipments data received:', data.data?.length, 'equipments');
-      return data.data || [];
+      console.log('Loading equipment from fallback exercise database...');
+      const equipmentSet = new Set<string>();
+      fallbackExercises.forEach(ex => {
+        ex.equipments.forEach(equipment => equipmentSet.add(equipment));
+      });
+      const equipmentList = Array.from(equipmentSet).map(name => ({ name }));
+      console.log('Equipment loaded from fallback:', equipmentList.length, 'equipment types');
+      return equipmentList;
     },
     staleTime: 0,
     refetchOnMount: true,
   });
 
-  // Fetch bodyparts for filtering
+  // Get body parts from fallback exercises
   const { data: bodyParts = [] } = useQuery({
     queryKey: ['bodyparts'],
     queryFn: async () => {
-      console.log('Fetching bodyparts from ExerciseDB API...');
-      const response = await fetch('https://www.exercisedb.dev/api/v1/bodyparts');
-      if (!response.ok) throw new Error('Failed to fetch bodyparts');
-      const data = await response.json();
-      console.log('Bodyparts data received:', data.data?.length, 'bodyparts');
-      return data.data || [];
+      console.log('Loading bodyparts from fallback exercise database...');
+      const bodyPartSet = new Set<string>();
+      fallbackExercises.forEach(ex => {
+        ex.bodyParts.forEach(part => bodyPartSet.add(part));
+      });
+      const bodyPartList = Array.from(bodyPartSet).map(name => ({ name }));
+      console.log('Body parts loaded from fallback:', bodyPartList.length, 'body parts');
+      return bodyPartList;
     },
     staleTime: 0,
     refetchOnMount: true,
