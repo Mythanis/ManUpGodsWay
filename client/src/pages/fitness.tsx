@@ -130,6 +130,7 @@ interface PreBuiltExercise {
   day: string;
   equipment: string[];
   bodyPart: string;
+  gifUrl?: string;
   notes?: string;
 }
 
@@ -853,6 +854,7 @@ export default function Fitness() {
     bodyPart: string;
     equipment: string;
     targetMuscles: string[];
+    gifUrl?: string;
   }
 
   interface PlanExercise {
@@ -918,7 +920,8 @@ export default function Fitness() {
             name: ex.name,
             bodyPart: ex.bodyParts?.[0] || ex.bodyPart || 'unknown',
             equipment: ex.equipments?.[0] || ex.equipment || equipment,
-            targetMuscles: ex.targetMuscles || []
+            targetMuscles: ex.targetMuscles || [],
+            gifUrl: ex.gifUrl
           }));
           all = all.concat(mapped);
           
@@ -1075,7 +1078,8 @@ export default function Fitness() {
             rest: restTime,
             day: `Week${weekIndex + 1}-${day.name}`,
             bodyPart: planExercise.exercise.bodyPart,
-            equipment: [planExercise.exercise.equipment]
+            equipment: [planExercise.exercise.equipment],
+            gifUrl: planExercise.exercise.gifUrl
           });
         });
       });
@@ -2180,6 +2184,18 @@ export default function Fitness() {
                     <Card key={index} className="border border-border">
                       <CardContent className="p-4">
                         <div className="flex gap-4">
+                          {/* Exercise GIF */}
+                          {exercise.gifUrl && (
+                            <div className="flex-shrink-0">
+                              <img
+                                src={exercise.gifUrl}
+                                alt={`${exercise.name} demonstration`}
+                                className="w-32 h-24 object-cover rounded-lg border border-ministry-gold/30"
+                                loading="lazy"
+                              />
+                            </div>
+                          )}
+                          
                           {/* Exercise Details */}
                           <div className="flex-grow">
                             <h5 className="font-medium text-base mb-2">
