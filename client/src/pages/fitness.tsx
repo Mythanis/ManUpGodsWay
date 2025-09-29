@@ -224,14 +224,55 @@ export default function Fitness() {
     setShowPlanModal(true);
   };
 
-  // Get today's exercises from a plan (deduplicated)
+  // Helper function to determine exercise week based on order (distribute evenly across 4 weeks)
+  const getExerciseWeek = (exercises: FitnessPlanExercise[], exerciseIndex: number): number => {
+    const totalExercises = exercises.length;
+    const exercisesPerWeek = Math.ceil(totalExercises / 4);
+    return Math.min(4, Math.floor(exerciseIndex / exercisesPerWeek) + 1);
+  };
+
+  // Helper function to get exercise day based on order (fallback if no daysOfWeek specified)
+  const getExerciseDay = (currentWeekExercises: FitnessPlanExercise[], exerciseIndex: number): string => {
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const dayIndex = exerciseIndex % 7;
+    return days[dayIndex];
+  };
+
+  // Helper function to determine current week based on plan start date and completion
+  const getCurrentWeek = (plan: FitnessPlan, exercises: FitnessPlanExercise[]): number => {
+    if (!plan || !exercises || exercises.length === 0) return 1;
+    
+    const planStartDate = new Date(plan.createdAt);
+    const now = new Date();
+    const daysSinceStart = Math.floor((now.getTime() - planStartDate.getTime()) / (1000 * 60 * 60 * 24));
+    const weeksSinceStart = Math.floor(daysSinceStart / 7);
+    
+    // Return current week (1-4)
+    return Math.min(4, Math.max(1, weeksSinceStart + 1));
+  };
+
+  // Get today's exercises from a plan (filtered by current week and current day)
   const getTodaysExercises = (plan: FitnessPlan) => {
     const today = getCurrentDayOfWeek();
     if (!plan.exercises) return [];
     
-    const todaysExercises = plan.exercises.filter(exercise => 
-      exercise.daysOfWeek && exercise.daysOfWeek.includes(today)
+    // Get current week and filter exercises
+    const currentWeek = getCurrentWeek(plan, plan.exercises);
+    const sortedAllExercises = (plan.exercises || []).sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+    const currentWeekExercises = sortedAllExercises.filter((exercise, index) => 
+      getExerciseWeek(sortedAllExercises, index) === currentWeek
     );
+    
+    // Filter to today's exercises only
+    const todaysExercises = currentWeekExercises.filter((exercise, index) => {
+      // If exercise has specific days assigned, use those
+      if (exercise.daysOfWeek && exercise.daysOfWeek.length > 0) {
+        return exercise.daysOfWeek.includes(today);
+      }
+      // Fallback: distribute exercises across days based on order
+      const exerciseDay = getExerciseDay(currentWeekExercises, index);
+      return exerciseDay === today;
+    });
     
     // Remove duplicates based on exerciseId
     const seenExerciseIds = new Set<string>();
