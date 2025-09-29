@@ -169,6 +169,7 @@ export default function Fitness() {
   const [selectedStartDay, setSelectedStartDay] = useState<string>('');
   const [selectedWorkoutDuration, setSelectedWorkoutDuration] = useState<string>('');
   const [selectedFrequency, setSelectedFrequency] = useState<string>('');
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [selectedGoal, setSelectedGoal] = useState<string>('');
   const [selectedPlanForPreview, setSelectedPlanForPreview] = useState<PreBuiltPlan | null>(null);
   const [generatedPlans, setGeneratedPlans] = useState<PreBuiltPlan[]>([]);
@@ -180,7 +181,16 @@ export default function Fitness() {
 
   // Effect to generate plans when filters change
   useEffect(() => {
-    if (selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedGoal) {
+    if (selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedDays.length > 0 && selectedGoal) {
+      // Validate that selected days match frequency
+      const frequencyNum = parseInt(selectedFrequency);
+      if (selectedDays.length !== frequencyNum) {
+        setPlanGenerationError(`Please select exactly ${frequencyNum} workout days to match your training frequency.`);
+        setGeneratedPlans([]);
+        setPlansLoading(false);
+        return;
+      }
+
       setPlansLoading(true);
       setPlanGenerationError('');
       generatePreBuiltPlans(
@@ -188,7 +198,8 @@ export default function Fitness() {
         selectedPlanEquipment, 
         selectedStartDay, 
         selectedWorkoutDuration, 
-        selectedFrequency, 
+        selectedFrequency,
+        selectedDays,
         selectedGoal
       )
         .then(plans => {
@@ -210,7 +221,12 @@ export default function Fitness() {
       setGeneratedPlans([]);
       setPlanGenerationError('');
     }
-  }, [selectedLevel, selectedPlanEquipment, selectedStartDay, selectedWorkoutDuration, selectedFrequency, selectedGoal]);
+  }, [selectedLevel, selectedPlanEquipment, selectedStartDay, selectedWorkoutDuration, selectedFrequency, selectedDays, selectedGoal]);
+
+  // Clear selected days when frequency changes
+  useEffect(() => {
+    setSelectedDays([]);
+  }, [selectedFrequency]);
 
   // Get current day of the week
   const getCurrentDayOfWeek = () => {
@@ -847,11 +863,12 @@ export default function Fitness() {
     equipment: string, 
     startDay: string, 
     duration: string, 
-    frequency: string, 
+    frequency: string,
+    workoutDays: string[],
     goal: string
   ): Promise<PreBuiltPlan[]> => {
     try {
-      console.log('Generating plans with params:', { level, equipment, startDay, duration, frequency, goal });
+      console.log('Generating plans with params:', { level, equipment, startDay, duration, frequency, workoutDays, goal });
       
       const exercises = await getExercisesForEquipment(equipment);
       console.log(`Found ${exercises.length} exercises for ${equipment}`);
@@ -880,21 +897,11 @@ export default function Fitness() {
       preBuiltPlan.description = `${goal.charAt(0).toUpperCase() + goal.slice(1).replace('-', ' ')} focused ${level} program using ${equipment}. ${frequency} days per week, ${duration} minutes per session.`;
       preBuiltPlan.workoutsPerWeek = parseInt(frequency);
       
-      // Update schedule to match the user's selected frequency
-      const frequencyNumber = parseInt(frequency);
-      const allWeekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-      const startDayIndex = allWeekdays.indexOf(startDay.toLowerCase());
-      
-      // Create a schedule that matches the frequency, starting from the selected start day
-      const updatedSchedule: string[] = [];
-      for (let i = 0; i < frequencyNumber && i < 7; i++) {
-        const dayIndex = (startDayIndex + i * Math.ceil(7 / frequencyNumber)) % 7;
-        updatedSchedule.push(allWeekdays[dayIndex]);
-      }
-      preBuiltPlan.schedule = updatedSchedule;
+      // Use the user's selected workout days for the schedule
+      preBuiltPlan.schedule = workoutDays.map(day => day.toLowerCase());
       
       console.log('Successfully generated plan:', preBuiltPlan.name);
-      console.log('Plan schedule updated to:', updatedSchedule);
+      console.log('Plan schedule updated to user-selected days:', workoutDays);
       return [preBuiltPlan];
     } catch (error) {
       console.error('Error generating dynamic plans:', error);
@@ -1803,6 +1810,62 @@ export default function Fitness() {
                 </CardContent>
               </Card>
 
+              {/* Workout Days Selection */}
+              {selectedFrequency && (
+                <Card className="bg-ministry-gold-exact/20">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-black text-sm">
+                      Workout Days (Select {selectedFrequency})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { value: 'monday', label: 'Monday' },
+                        { value: 'tuesday', label: 'Tuesday' },
+                        { value: 'wednesday', label: 'Wednesday' },
+                        { value: 'thursday', label: 'Thursday' },
+                        { value: 'friday', label: 'Friday' },
+                        { value: 'saturday', label: 'Saturday' },
+                        { value: 'sunday', label: 'Sunday' }
+                      ].map(day => (
+                        <div key={day.value} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`day-${day.value}`}
+                            checked={selectedDays.includes(day.value)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                const frequencyNum = parseInt(selectedFrequency);
+                                if (selectedDays.length < frequencyNum) {
+                                  setSelectedDays(prev => [...prev, day.value]);
+                                } else {
+                                  toast({
+                                    title: "Maximum Days Reached",
+                                    description: `You can only select ${frequencyNum} workout days.`,
+                                    variant: "default"
+                                  });
+                                }
+                              } else {
+                                setSelectedDays(prev => prev.filter(d => d !== day.value));
+                              }
+                            }}
+                            data-testid={`checkbox-workout-day-${day.value}`}
+                          />
+                          <label htmlFor={`day-${day.value}`} className="text-sm text-black cursor-pointer">
+                            {day.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    {selectedDays.length > 0 && (
+                      <div className="mt-3 text-xs text-black">
+                        Selected: {selectedDays.length} of {selectedFrequency} days
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Goal Selection */}
               <Card className="bg-ministry-gold-exact/20">
                 <CardHeader className="pb-3">
@@ -1826,7 +1889,7 @@ export default function Fitness() {
             </div>
 
             {/* Available Plans */}
-            {selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedGoal && (
+            {selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedDays.length > 0 && selectedGoal && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-black">
                   Recommended {selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1)} Plans
@@ -1916,7 +1979,7 @@ export default function Fitness() {
               </div>
             )}
 
-            {(!selectedLevel || !selectedPlanEquipment || !selectedStartDay || !selectedWorkoutDuration || !selectedFrequency || !selectedGoal) && (
+            {(!selectedLevel || !selectedPlanEquipment || !selectedStartDay || !selectedWorkoutDuration || !selectedFrequency || selectedDays.length === 0 || !selectedGoal) && (
               <Card className="bg-ministry-gold-exact/20">
                 <CardContent className="py-8 text-center">
                   <BookOpen className="w-12 h-12 mx-auto text-ministry-gold mb-4" />
@@ -1944,6 +2007,10 @@ export default function Fitness() {
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${selectedFrequency ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                       <span>Training Frequency</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${selectedFrequency && selectedDays.length === parseInt(selectedFrequency) ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <span>Workout Days ({selectedFrequency ? `${selectedDays.length}/${selectedFrequency}` : '0'})</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${selectedGoal ? 'bg-green-500' : 'bg-gray-400'}`}></div>
