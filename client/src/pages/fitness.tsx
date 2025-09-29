@@ -168,7 +168,7 @@ export default function Fitness() {
   const [selectedPlanEquipment, setSelectedPlanEquipment] = useState<string>('');
   const [selectedStartDay, setSelectedStartDay] = useState<string>('');
   const [selectedWorkoutDuration, setSelectedWorkoutDuration] = useState<string>('');
-  const [selectedFrequency, setSelectedFrequency] = useState<string>('');
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [selectedGoal, setSelectedGoal] = useState<string>('');
   const [selectedPlanForPreview, setSelectedPlanForPreview] = useState<PreBuiltPlan | null>(null);
   const [generatedPlans, setGeneratedPlans] = useState<PreBuiltPlan[]>([]);
@@ -180,7 +180,7 @@ export default function Fitness() {
 
   // Effect to generate plans when filters change
   useEffect(() => {
-    if (selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedGoal) {
+    if (selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedDays.length > 0 && selectedGoal) {
       setPlansLoading(true);
       setPlanGenerationError('');
       generatePreBuiltPlans(
@@ -188,8 +188,9 @@ export default function Fitness() {
         selectedPlanEquipment, 
         selectedStartDay, 
         selectedWorkoutDuration, 
-        selectedFrequency, 
-        selectedGoal
+        selectedDays.length.toString(), 
+        selectedGoal,
+        selectedDays
       )
         .then(plans => {
           if (plans.length === 0) {
@@ -210,7 +211,7 @@ export default function Fitness() {
       setGeneratedPlans([]);
       setPlanGenerationError('');
     }
-  }, [selectedLevel, selectedPlanEquipment, selectedStartDay, selectedWorkoutDuration, selectedFrequency, selectedGoal]);
+  }, [selectedLevel, selectedPlanEquipment, selectedStartDay, selectedWorkoutDuration, selectedDays, selectedGoal]);
 
   // Get current day of the week
   const getCurrentDayOfWeek = () => {
@@ -841,17 +842,18 @@ export default function Fitness() {
     </Card>
   );
 
-  // Dynamic plan generation using ExerciseDB API
+  // Dynamic plan generation using ExerciseDB API  
   const generatePreBuiltPlans = async (
     level: string, 
     equipment: string, 
     startDay: string, 
     duration: string, 
     frequency: string, 
-    goal: string
+    goal: string,
+    selectedDaysParam?: string[]
   ): Promise<PreBuiltPlan[]> => {
     try {
-      console.log('Generating plans with params:', { level, equipment, startDay, duration, frequency, goal });
+      console.log('Generating plans with params:', { level, equipment, startDay, duration, frequency, goal, selectedDays: selectedDaysParam });
       
       const exercises = await getExercisesForEquipment(equipment);
       console.log(`Found ${exercises.length} exercises for ${equipment}`);
@@ -880,21 +882,11 @@ export default function Fitness() {
       preBuiltPlan.description = `${goal.charAt(0).toUpperCase() + goal.slice(1).replace('-', ' ')} focused ${level} program using ${equipment}. ${frequency} days per week, ${duration} minutes per session.`;
       preBuiltPlan.workoutsPerWeek = parseInt(frequency);
       
-      // Update schedule to match the user's selected frequency
-      const frequencyNumber = parseInt(frequency);
-      const allWeekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-      const startDayIndex = allWeekdays.indexOf(startDay.toLowerCase());
-      
-      // Create a schedule that matches the frequency, starting from the selected start day
-      const updatedSchedule: string[] = [];
-      for (let i = 0; i < frequencyNumber && i < 7; i++) {
-        const dayIndex = (startDayIndex + i * Math.ceil(7 / frequencyNumber)) % 7;
-        updatedSchedule.push(allWeekdays[dayIndex]);
-      }
-      preBuiltPlan.schedule = updatedSchedule;
+      // Use the selected days directly as the schedule
+      preBuiltPlan.schedule = selectedDaysParam || [startDay.toLowerCase()];
       
       console.log('Successfully generated plan:', preBuiltPlan.name);
-      console.log('Plan schedule updated to:', updatedSchedule);
+      console.log('Plan schedule updated to:', preBuiltPlan.schedule);
       return [preBuiltPlan];
     } catch (error) {
       console.error('Error generating dynamic plans:', error);
