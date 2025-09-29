@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
@@ -133,6 +134,9 @@ export default function Fitness() {
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [selectedPlanForView, setSelectedPlanForView] = useState<FitnessPlan | null>(null);
   
+  // Exercise completion tracking
+  const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -156,6 +160,38 @@ export default function Fitness() {
     return plan.exercises.filter(exercise => 
       exercise.daysOfWeek && exercise.daysOfWeek.includes(today)
     );
+  };
+
+  // Get all today's exercises from all user plans
+  const getAllTodaysExercises = () => {
+    if (!fitnessPlans) return [];
+    
+    const allExercises: Array<FitnessPlanExercise & { planName: string }> = [];
+    
+    fitnessPlans.forEach((plan: FitnessPlan) => {
+      const todaysExercises = getTodaysExercises(plan);
+      todaysExercises.forEach(exercise => {
+        allExercises.push({
+          ...exercise,
+          planName: plan.name
+        });
+      });
+    });
+    
+    return allExercises;
+  };
+
+  // Handle exercise completion toggle
+  const toggleExerciseCompletion = (exerciseId: string) => {
+    setCompletedExercises(prev => {
+      const newCompleted = new Set(prev);
+      if (newCompleted.has(exerciseId)) {
+        newCompleted.delete(exerciseId);
+      } else {
+        newCompleted.add(exerciseId);
+      }
+      return newCompleted;
+    });
   };
 
   // Fetch all published fitness challenges
@@ -703,11 +739,11 @@ export default function Fitness() {
         </div>
 
         {/* Tab Navigation */}
-        <Tabs defaultValue="challenges" className="w-full">
+        <Tabs defaultValue="workout" className="w-full">
           <TabsList className="grid w-full grid-cols-4 bg-ministry-gold-exact/20">
-            <TabsTrigger value="challenges" className="flex items-center gap-2 data-[state=active]:bg-ministry-gold data-[state=active]:text-black">
-              <Target className="w-4 h-4" />
-              Challenges
+            <TabsTrigger value="workout" className="flex items-center gap-2 data-[state=active]:bg-ministry-gold data-[state=active]:text-black">
+              <Dumbbell className="w-4 h-4" />
+              Workout
             </TabsTrigger>
             <TabsTrigger value="exercises" className="flex items-center gap-2 data-[state=active]:bg-ministry-gold data-[state=active]:text-black">
               <Search className="w-4 h-4" />
@@ -723,157 +759,147 @@ export default function Fitness() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Daily Challenges Tab */}
-          <TabsContent value="challenges" className="space-y-6">
-            {/* Today's Challenge */}
-            {todaysChallenge ? (
-              <div className="mb-8">
-                <div className="flex items-center mb-4">
-                  <Target className="w-6 h-6 text-ministry-gold mr-2" />
-                  <h2 className="text-xl font-bold text-white">Today's Challenge</h2>
-                </div>
-                <FitnessChallengeCard challenge={todaysChallenge} isToday={true} />
+          {/* Daily Workout Tab */}
+          <TabsContent value="workout" className="space-y-6">
+            {/* Today's Workout Header */}
+            <div className="flex items-center mb-6">
+              <Dumbbell className="w-6 h-6 text-ministry-gold mr-2" />
+              <h2 className="text-xl font-bold text-white">Today's Workout</h2>
+              <div className="ml-auto text-sm text-ministry-gold">
+                {getCurrentDayOfWeek().charAt(0).toUpperCase() + getCurrentDayOfWeek().slice(1)}
               </div>
-            ) : (
-              <div className="mb-8">
-                <div className="flex items-center mb-4">
-                  <Target className="w-6 h-6 text-ministry-gold mr-2" />
-                  <h2 className="text-xl font-bold text-white">Today's Challenge</h2>
-                </div>
-                <Card className="text-center py-12 bg-ministry-gold-exact/20">
-                  <CardContent>
-                    <Clock className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
-                    <h3 className="text-lg font-medium text-black mb-2">No Challenge Today</h3>
-                    <p className="text-black">Check back for today's fitness challenge!</p>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* Previous Challenges Header & Controls */}
-            <div className="flex flex-col space-y-4 mb-6">
-              <h2 className="text-xl font-bold text-white">Previous Challenges</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Category Filter */}
-                <div className="flex flex-col space-y-2">
-                  <span className="text-sm font-medium text-white">Category:</span>
-                  <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger className="w-full">
-                      <div className="flex items-center">
-                        <Filter className="w-4 h-4 mr-2" />
-                        <SelectValue placeholder="All Categories" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {uniqueCategories.map((category) => (
-                        <SelectItem key={category as string} value={category as string}>
-                          {(category as string).charAt(0).toUpperCase() + (category as string).slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Difficulty Filter */}
-                <div className="flex flex-col space-y-2">
-                  <span className="text-sm font-medium text-white">Difficulty:</span>
-                  <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
-                    <SelectTrigger className="w-full">
-                      <div className="flex items-center">
-                        <Zap className="w-4 h-4 mr-2" />
-                        <SelectValue placeholder="All Levels" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Levels</SelectItem>
-                      {uniqueDifficulties.map((difficulty) => (
-                        <SelectItem key={difficulty as string} value={difficulty as string}>
-                          {(difficulty as string).charAt(0).toUpperCase() + (difficulty as string).slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Sort Controls */}
-                <div className="flex flex-col space-y-2">
-                  <span className="text-sm font-medium text-white">Sort by:</span>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-                    className="flex items-center justify-center space-x-1 bg-ministry-gold hover:bg-ministry-gold/90 text-black w-full"
-                  >
-                    {sortOrder === 'desc' ? (
-                      <>
-                        <ArrowDown className="w-4 h-4" />
-                        <span className="text-xs">Newest First</span>
-                      </>
-                    ) : (
-                      <>
-                        <ArrowUp className="w-4 h-4" />
-                        <span className="text-xs">Oldest First</span>
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Active Filters Display */}
-              {(filterCategory !== 'all' || filterDifficulty !== 'all') && (
-                <div className="flex items-center space-x-2 flex-wrap">
-                  <span className="text-sm text-black">Showing:</span>
-                  {filterCategory !== 'all' && (
-                    <Badge variant="outline" className="capitalize">
-                      {filterCategory} category
-                    </Badge>
-                  )}
-                  {filterDifficulty !== 'all' && (
-                    <Badge variant="outline" className="capitalize">
-                      {filterDifficulty} difficulty
-                    </Badge>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setFilterCategory('all');
-                      setFilterDifficulty('all');
-                    }}
-                    className="text-xs text-ministry-slate hover:text-ministry-charcoal"
-                  >
-                    Clear filters
-                  </Button>
-                </div>
-              )}
             </div>
 
-            {/* Previous Challenges List */}
-            {processedChallenges.length === 0 ? (
-              <Card className="text-center py-12 bg-ministry-gold-exact/20">
-                <CardContent>
-                  <Dumbbell className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
-                  <h3 className="text-lg font-medium text-black mb-2">
-                    {filterCategory !== 'all' || filterDifficulty !== 'all' 
-                      ? 'No challenges found with current filters' 
-                      : 'No previous challenges yet'}
-                  </h3>
-                  <p className="text-black">
-                    {filterCategory !== 'all' || filterDifficulty !== 'all' 
-                      ? 'Try adjusting your filters or clear them to see all challenges' 
-                      : 'Check back as more fitness challenges are added!'}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {processedChallenges.map((challenge: FitnessChallenge) => (
-                  <FitnessChallengeCard key={challenge.id} challenge={challenge} />
-                ))}
-              </div>
-            )}
+            {(() => {
+              const todaysExercises = getAllTodaysExercises();
+              
+              if (todaysExercises.length === 0) {
+                return (
+                  <Card className="text-center py-12 bg-ministry-gold-exact/20">
+                    <CardContent>
+                      <Calendar className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
+                      <h3 className="text-lg font-medium text-black mb-2">No Workout Today</h3>
+                      <p className="text-black">
+                        You have no exercises scheduled for today. Create a fitness plan to get started!
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              }
+
+              return (
+                <div className="space-y-4">
+                  {todaysExercises.map((exercise, index) => (
+                    <Card key={`${exercise.planId}-${exercise.exerciseId}`} className="border border-border bg-ministry-gold-exact/10">
+                      <CardContent className="p-4">
+                        <div className="flex gap-4">
+                          {/* Exercise Image */}
+                          <div className="flex-shrink-0">
+                            {exercise.exerciseGifUrl ? (
+                              <img
+                                src={exercise.exerciseGifUrl}
+                                alt={exercise.exerciseName}
+                                className="w-20 h-20 rounded-lg object-cover"
+                                data-testid={`img-workout-exercise-${exercise.exerciseId}`}
+                              />
+                            ) : (
+                              <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center">
+                                <Dumbbell className="w-8 h-8 text-muted-foreground" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Exercise Details */}
+                          <div className="flex-grow">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-medium text-white mb-1" data-testid={`text-workout-exercise-name-${exercise.exerciseId}`}>
+                                  {exercise.exerciseName}
+                                </h4>
+                                <p className="text-xs text-ministry-gold">
+                                  From: {exercise.planName}
+                                </p>
+                              </div>
+                              
+                              {/* Completion Checkbox */}
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`exercise-${exercise.exerciseId}`}
+                                  checked={completedExercises.has(exercise.exerciseId)}
+                                  onCheckedChange={() => toggleExerciseCompletion(exercise.exerciseId)}
+                                  className="data-[state=checked]:bg-ministry-gold data-[state=checked]:border-ministry-gold"
+                                  data-testid={`checkbox-complete-${exercise.exerciseId}`}
+                                />
+                                <label 
+                                  htmlFor={`exercise-${exercise.exerciseId}`} 
+                                  className="text-sm text-white cursor-pointer"
+                                >
+                                  {completedExercises.has(exercise.exerciseId) ? 'Completed' : 'Complete'}
+                                </label>
+                              </div>
+                            </div>
+                            
+                            {/* Exercise Parameters */}
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-white">Sets:</span>
+                                <span className="text-ministry-gold" data-testid={`text-workout-sets-${exercise.exerciseId}`}>
+                                  {exercise.sets}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-white">Reps:</span>
+                                <span className="text-ministry-gold" data-testid={`text-workout-reps-${exercise.exerciseId}`}>
+                                  {exercise.reps}
+                                </span>
+                              </div>
+                              {exercise.duration && (
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-white" />
+                                  <span className="font-medium text-white">Time:</span>
+                                  <span className="text-ministry-gold" data-testid={`text-workout-duration-${exercise.exerciseId}`}>
+                                    {exercise.duration} min
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Notes */}
+                            {exercise.notes && (
+                              <div className="mt-3 p-2 bg-ministry-gold-exact/20 rounded">
+                                <p className="text-sm text-white">
+                                  <strong>Notes:</strong> {exercise.notes}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  
+                  {/* Workout Summary */}
+                  <Card className="bg-ministry-gold text-black mt-6">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">Today's Progress</h4>
+                          <p className="text-sm">
+                            {completedExercises.size} of {todaysExercises.length} exercises completed
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold">
+                            {todaysExercises.length > 0 ? Math.round((completedExercises.size / todaysExercises.length) * 100) : 0}%
+                          </div>
+                          <div className="text-xs">Complete</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              );
+            })()}
           </TabsContent>
 
           {/* Exercise Discovery Tab */}

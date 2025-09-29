@@ -594,7 +594,7 @@ export default function EditPlan() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Body Parts</SelectItem>
-                      {uniqueBodyParts.map(part => (
+                      {uniqueBodyParts.map((part: string) => (
                         <SelectItem key={part} value={part}>{part}</SelectItem>
                       ))}
                     </SelectContent>
@@ -606,7 +606,7 @@ export default function EditPlan() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Equipment</SelectItem>
-                      {uniqueEquipment.map(eq => (
+                      {uniqueEquipment.map((eq: string) => (
                         <SelectItem key={eq} value={eq}>{eq}</SelectItem>
                       ))}
                     </SelectContent>
@@ -618,7 +618,7 @@ export default function EditPlan() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Muscles</SelectItem>
-                      {uniqueTargets.map(target => (
+                      {uniqueTargets.map((target: string) => (
                         <SelectItem key={target} value={target}>{target}</SelectItem>
                       ))}
                     </SelectContent>
