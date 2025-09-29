@@ -30,7 +30,8 @@ import {
   BookOpen,
   Edit,
   Trash2,
-  Settings
+  Settings,
+  X
 } from "lucide-react";
 import { format, isToday, isPast, isFuture } from "date-fns";
 import { Link } from "wouter";
@@ -791,7 +792,7 @@ export default function Fitness() {
     </Card>
   );
 
-  const ExerciseCard = ({ exercise }: { exercise: Exercise }) => (
+  const ExerciseCard = ({ exercise, showRemove = false }: { exercise: Exercise; showRemove?: boolean }) => (
     <Card className="hover:shadow-md transition-shadow bg-ministry-gold-exact/20">
       <CardContent className="p-4">
         <div className="flex items-start space-x-4">
@@ -824,16 +825,25 @@ export default function Fitness() {
             <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
-                variant={isFavorite(exercise.exerciseId || exercise.id || '') ? "default" : "outline"}
+                variant={showRemove ? "destructive" : (isFavorite(exercise.exerciseId || exercise.id || '') ? "default" : "outline")}
                 onClick={() => handleToggleFavorite(exercise)}
-                className={`${isFavorite(exercise.exerciseId || exercise.id || '') 
+                className={showRemove ? 'bg-red-600 hover:bg-red-700 text-white' : `${isFavorite(exercise.exerciseId || exercise.id || '') 
                   ? 'bg-ministry-gold hover:bg-ministry-gold/90 text-black' 
                   : 'border-ministry-gold text-ministry-gold hover:bg-ministry-gold hover:text-black'
                 }`}
                 data-testid={`button-favorite-${exercise.exerciseId || exercise.id || ''}`}
               >
-                <Heart className={`w-4 h-4 mr-1 ${isFavorite(exercise.exerciseId || exercise.id || '') ? 'fill-current' : ''}`} />
-                {isFavorite(exercise.exerciseId || exercise.id || '') ? 'Favorited' : 'Favorite'}
+                {showRemove ? (
+                  <>
+                    <X className="w-4 h-4 mr-1" />
+                    Remove
+                  </>
+                ) : (
+                  <>
+                    <Heart className={`w-4 h-4 mr-1 ${isFavorite(exercise.exerciseId || exercise.id || '') ? 'fill-current' : ''}`} />
+                    {isFavorite(exercise.exerciseId || exercise.id || '') ? 'Favorited' : 'Favorite'}
+                  </>
+                )}
               </Button>
               
               {fitnessPlans.length > 0 && (
@@ -1669,7 +1679,7 @@ export default function Fitness() {
                     bodyPart: favorite.exerciseBodyPart,
                     equipment: favorite.exerciseEquipment
                   };
-                  return <ExerciseCard key={favorite.id} exercise={exercise} />;
+                  return <ExerciseCard key={favorite.id} exercise={exercise} showRemove={true} />;
                 })}
               </div>
             )}
