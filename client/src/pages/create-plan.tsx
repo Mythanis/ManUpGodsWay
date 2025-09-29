@@ -593,62 +593,81 @@ export default function CreatePlan() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search exercises..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 text-white placeholder:text-white/70"
-                  data-testid="input-exercise-search"
-                />
-              </div>
+              {/* Search and filters UI - matching Find Exercises layout */}
+              <div className="space-y-4">
+                {/* Search on top */}
+                <div className="flex items-center space-x-4">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Search exercises..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="text-white placeholder:text-white/70"
+                      data-testid="input-exercise-search"
+                    />
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedBodyPart('all');
+                      setSelectedEquipment('all');
+                      setSelectedTarget('all');
+                      setCurrentPage(1);
+                    }}
+                    variant="outline"
+                    className="border-ministry-charcoal text-ministry-charcoal hover:bg-ministry-charcoal hover:text-white"
+                    data-testid="button-clear-filters"
+                  >
+                    Clear
+                  </Button>
+                </div>
 
-              {/* Filters */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
-                  <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-body-part">
-                    <SelectValue placeholder="Body Part" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Body Parts</SelectItem>
-                    {uniqueBodyParts.map((bodyPart: string) => (
-                      <SelectItem key={bodyPart} value={bodyPart}>
-                        {bodyPart.charAt(0).toUpperCase() + bodyPart.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {/* Filters below */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
+                    <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-body-part">
+                      <SelectValue placeholder="Body Part" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Body Parts</SelectItem>
+                      {uniqueBodyParts.map((bodyPart: string) => (
+                        <SelectItem key={bodyPart} value={bodyPart}>
+                          {bodyPart.charAt(0).toUpperCase() + bodyPart.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-                <Select value={selectedEquipment} onValueChange={setSelectedEquipment}>
-                  <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-equipment">
-                    <SelectValue placeholder="Equipment" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Equipment</SelectItem>
-                    {uniqueEquipment.map((equipment: string) => (
-                      <SelectItem key={equipment} value={equipment}>
-                        {equipment.charAt(0).toUpperCase() + equipment.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <Select value={selectedEquipment} onValueChange={setSelectedEquipment}>
+                    <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-equipment">
+                      <SelectValue placeholder="Equipment" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Equipment</SelectItem>
+                      {uniqueEquipment.map((equipment: string) => (
+                        <SelectItem key={equipment} value={equipment}>
+                          {equipment.charAt(0).toUpperCase() + equipment.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-                <Select value={selectedTarget} onValueChange={setSelectedTarget}>
-                  <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-target-muscle">
-                    <SelectValue placeholder="Target Muscle" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Muscles</SelectItem>
-                    {uniqueTargets.map((target: string) => (
-                      <SelectItem key={target} value={target}>
-                        {target.charAt(0).toUpperCase() + target.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <Select value={selectedTarget} onValueChange={setSelectedTarget}>
+                    <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-target-muscle">
+                      <SelectValue placeholder="Target Muscle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Muscles</SelectItem>
+                      {uniqueTargets.map((target: string) => (
+                        <SelectItem key={target} value={target}>
+                          {target.charAt(0).toUpperCase() + target.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
+                {/* Favorites Only checkbox */}
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="favorites"

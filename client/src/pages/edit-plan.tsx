@@ -557,24 +557,40 @@ export default function EditPlan() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Search and filters UI - same as create-plan */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Search</label>
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    placeholder="Search exercises..."
-                    className="text-white placeholder:text-white/70"
-                    data-testid="input-search"
-                  />
+              {/* Search and filters UI - matching Find Exercises layout */}
+              <div className="space-y-4">
+                {/* Search on top */}
+                <div className="flex items-center space-x-4">
+                  <div className="flex-1">
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      placeholder="Search exercises..."
+                      className="text-white placeholder:text-white/70"
+                      data-testid="input-search"
+                    />
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedBodyPart('all');
+                      setSelectedEquipment('all');
+                      setSelectedTarget('all');
+                      setCurrentPage(1);
+                    }}
+                    variant="outline"
+                    className="border-ministry-charcoal text-ministry-charcoal hover:bg-ministry-charcoal hover:text-white"
+                    data-testid="button-clear-filters"
+                  >
+                    Clear
+                  </Button>
                 </div>
-                
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Body Part</label>
+
+                {/* Filters below */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Select value={selectedBodyPart} onValueChange={(value) => handleFilterChange('bodyPart', value)}>
                     <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-body-part">
-                      <SelectValue />
+                      <SelectValue placeholder="Body Part" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Body Parts</SelectItem>
@@ -583,13 +599,10 @@ export default function EditPlan() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Equipment</label>
                   <Select value={selectedEquipment} onValueChange={(value) => handleFilterChange('equipment', value)}>
                     <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-equipment">
-                      <SelectValue />
+                      <SelectValue placeholder="Equipment" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Equipment</SelectItem>
@@ -598,13 +611,10 @@ export default function EditPlan() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Target Muscle</label>
                   <Select value={selectedTarget} onValueChange={(value) => handleFilterChange('target', value)}>
                     <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-target">
-                      <SelectValue />
+                      <SelectValue placeholder="Target Muscle" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Muscles</SelectItem>
