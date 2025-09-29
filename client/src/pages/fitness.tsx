@@ -182,7 +182,14 @@ export default function Fitness() {
     if (selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedGoal) {
       setPlansLoading(true);
       setPlanGenerationError('');
-      generatePreBuiltPlans(selectedLevel, selectedPlanEquipment, selectedStartDay)
+      generatePreBuiltPlans(
+        selectedLevel, 
+        selectedPlanEquipment, 
+        selectedStartDay, 
+        selectedWorkoutDuration, 
+        selectedFrequency, 
+        selectedGoal
+      )
         .then(plans => {
           if (plans.length === 0) {
             setPlanGenerationError(`Unable to generate plans for ${selectedPlanEquipment}. Try selecting a different equipment type like "body weight" or "dumbbell".`);
@@ -793,13 +800,25 @@ export default function Fitness() {
   );
 
   // Dynamic plan generation using ExerciseDB API
-  const generatePreBuiltPlans = async (level: string, equipment: string, startDay: string): Promise<PreBuiltPlan[]> => {
+  const generatePreBuiltPlans = async (
+    level: string, 
+    equipment: string, 
+    startDay: string, 
+    duration: string, 
+    frequency: string, 
+    goal: string
+  ): Promise<PreBuiltPlan[]> => {
     try {
+      console.log('Generating plans with params:', { level, equipment, startDay, duration, frequency, goal });
+      
       const exercises = await getExercisesForEquipment(equipment);
+      console.log(`Found ${exercises.length} exercises for ${equipment}`);
+      
       if (exercises.length < 5) {
         console.warn(`Not enough exercises for equipment: ${equipment}. Found: ${exercises.length}`);
         // Fallback to body weight exercises if selected equipment has too few
         if (equipment !== 'body weight') {
+          console.log('Attempting fallback to body weight exercises...');
           const bodyweightExercises = await getExercisesForEquipment('body weight');
           if (bodyweightExercises.length >= 5) {
             console.log('Falling back to bodyweight exercises');
@@ -815,10 +834,11 @@ export default function Fitness() {
       const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay);
       
       // Customize plan based on additional parameters
-      preBuiltPlan.name = `${level.charAt(0).toUpperCase() + level.slice(1)} ${equipment} Program (${selectedWorkoutDuration}min)`;
-      preBuiltPlan.description = `${selectedGoal.charAt(0).toUpperCase() + selectedGoal.slice(1).replace('-', ' ')} focused ${level} program using ${equipment}. ${selectedFrequency} days per week, ${selectedWorkoutDuration} minutes per session.`;
-      preBuiltPlan.workoutsPerWeek = parseInt(selectedFrequency);
+      preBuiltPlan.name = `${level.charAt(0).toUpperCase() + level.slice(1)} ${equipment} Program (${duration}min)`;
+      preBuiltPlan.description = `${goal.charAt(0).toUpperCase() + goal.slice(1).replace('-', ' ')} focused ${level} program using ${equipment}. ${frequency} days per week, ${duration} minutes per session.`;
+      preBuiltPlan.workoutsPerWeek = parseInt(frequency);
       
+      console.log('Successfully generated plan:', preBuiltPlan.name);
       return [preBuiltPlan];
     } catch (error) {
       console.error('Error generating dynamic plans:', error);
@@ -855,9 +875,15 @@ export default function Fitness() {
 
   // Helper to fetch data from ExerciseDB API
   async function fetchJSON(url: string): Promise<any> {
+    console.log('Fetching from:', url);
     const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`Fetch failed: ${resp.statusText}`);
-    return await resp.json();
+    if (!resp.ok) {
+      console.error(`Fetch failed for ${url}: ${resp.status} ${resp.statusText}`);
+      throw new Error(`Fetch failed: ${resp.status} ${resp.statusText}`);
+    }
+    const data = await resp.json();
+    console.log('API Response:', data);
+    return data;
   }
 
   async function getEquipments(): Promise<string[]> {
