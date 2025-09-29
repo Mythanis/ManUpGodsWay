@@ -906,11 +906,11 @@ export default function Fitness() {
           bodyPart: exercise.bodyPart,
           equipment: exercise.equipment.join(', '),
           sets: exercise.sets,
-          reps: exercise.reps.toString(),
+          reps: String(exercise.reps), // Convert to string regardless of type
           minutes: exercise.duration,
           restTime: parseInt(exercise.rest.replace(/[^0-9]/g, '')) || 60,
           notes: `${exercise.rest} rest - Training Day: ${exercise.day}`,
-          daysOfWeek: [exercise.day],
+          daysOfWeek: [convertTrainingDayToWeekday(exercise.day)], // Convert training day to valid weekday
           orderIndex: i
         };
         
@@ -943,6 +943,20 @@ export default function Fitness() {
       console.error('Plan creation error:', error);
     },
   });
+
+  // Helper function to convert training day letters to weekday names
+  const convertTrainingDayToWeekday = (day: string) => {
+    const dayMap: { [key: string]: string } = {
+      'A': 'monday',
+      'B': 'tuesday', 
+      'C': 'wednesday',
+      'D': 'thursday',
+      'E': 'friday',
+      'F': 'saturday',
+      'G': 'sunday'
+    };
+    return dayMap[day] || 'monday'; // Default to monday if invalid
+  };
 
   // Helper function to get exercise GIF URLs (since no ExerciseDB integration available)
   const getExerciseGifUrl = (exerciseName: string): string => {
