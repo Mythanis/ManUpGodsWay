@@ -4,7 +4,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-001",
     name: "push ups",
-    gifUrl: "user-icon", // Will be replaced with proper icon in component
+    gifUrl: "https://static.exercisedb.dev/media/1pxMLPkfqLpNpJrQfB.gif",
     iconName: "user", // Icon to represent push-ups
     targetMuscles: ["pectorals"],
     bodyParts: ["chest"],
@@ -15,7 +15,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-002", 
     name: "chest dips",
-    gifUrl: "muscle-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1SqxVYOCTGGgf9PBkEGpEK.gif",
     iconName: "triangle", // Icon to represent dips
     targetMuscles: ["pectorals"],
     bodyParts: ["chest"],
@@ -26,7 +26,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-003",
     name: "barbell bench press",
-    gifUrl: "barbell-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1CKpMYOCTGGgf9PBkEGpEK.gif",
     iconName: "minus", // Icon to represent barbell
     targetMuscles: ["pectorals"],
     bodyParts: ["chest"],
@@ -39,7 +39,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-004",
     name: "pull ups",
-    gifUrl: "pullup-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1LoIAMLxoHrLJhvBVK.gif",
     iconName: "arrow-up", // Icon to represent pulling up
     targetMuscles: ["latissimus dorsi"],
     bodyParts: ["back"],
@@ -50,7 +50,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-005",
     name: "barbell rows",
-    gifUrl: "row-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1GhsGY2x5o4oGE-vP8Nh8i.gif",
     iconName: "arrow-left-right", // Icon to represent rowing motion
     targetMuscles: ["latissimus dorsi"],
     bodyParts: ["back"],
@@ -63,7 +63,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-006",
     name: "bodyweight squats",
-    gifUrl: "squat-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1vTKMYgpNs7kEMg4JJjJzH.gif",
     iconName: "move-down", // Icon to represent squatting down
     targetMuscles: ["quadriceps"],
     bodyParts: ["upper legs"],
@@ -74,7 +74,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-007", 
     name: "barbell squats",
-    gifUrl: "barbell-squat-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1sPYAgTCjVvUQrZg3Eu6kj.gif",
     iconName: "move-vertical", // Icon to represent up/down movement
     targetMuscles: ["quadriceps"],
     bodyParts: ["upper legs"],
@@ -85,7 +85,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-008",
     name: "lunges",
-    gifUrl: "lunge-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1QeHXBKlgNJhEyf7PkJvjk.gif",
     iconName: "footprints", // Icon to represent stepping forward
     targetMuscles: ["quadriceps"],
     bodyParts: ["upper legs"],
@@ -96,7 +96,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-009",
     name: "deadlifts",
-    gifUrl: "deadlift-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1rWVqcGqrxdCkwYPVLYE2L.gif",
     iconName: "activity", // Icon to represent lifting motion
     targetMuscles: ["hamstrings"],
     bodyParts: ["upper legs"],
@@ -109,7 +109,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-010",
     name: "plank",
-    gifUrl: "plank-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1ZWA8F7g3RDK9NfC3JJWGZ.gif",
     iconName: "clock", // Icon to represent time-based hold
     targetMuscles: ["abdominals"],
     bodyParts: ["waist"],
@@ -120,7 +120,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-011",
     name: "crunches",
-    gifUrl: "crunch-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1YkGgTRJpSqrULp7Ng1YtK.gif",
     iconName: "rotate-cw", // Icon to represent curling motion
     targetMuscles: ["abdominals"],
     bodyParts: ["waist"],
@@ -133,7 +133,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-012",
     name: "barbell curls",
-    gifUrl: "curl-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1EQoYgTCjVvUQrZg3Eu6kj.gif",
     iconName: "rotate-3d", // Icon to represent curling motion
     targetMuscles: ["biceps brachii"],
     bodyParts: ["upper arms"],
@@ -146,7 +146,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-013",
     name: "tricep dips",
-    gifUrl: "tricep-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1YfHVvOCTGGgf9PBkEGpEK.gif",
     iconName: "move-down", // Icon to represent dipping motion
     targetMuscles: ["triceps brachii"],
     bodyParts: ["upper arms"],
@@ -159,7 +159,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-014",
     name: "shoulder press",
-    gifUrl: "shoulder-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1LYvJG5CkJuSGp6E8LLqTW.gif",
     iconName: "arrow-up-circle", // Icon to represent pressing up
     targetMuscles: ["anterior deltoid"],
     bodyParts: ["shoulders"],
@@ -172,7 +172,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-015",
     name: "jumping jacks",
-    gifUrl: "jumping-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1QfHAvOCTGGgf9PBkEGpEK.gif",
     iconName: "zap", // Icon to represent high energy/cardio
     targetMuscles: ["cardiovascular system"],
     bodyParts: ["cardio"],
@@ -183,7 +183,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-016",
     name: "burpees",
-    gifUrl: "burpee-icon",
+    gifUrl: "https://static.exercisedb.dev/media/1QaKAvOCTGGgf9PBkEGpEK.gif",
     iconName: "flame", // Icon to represent intense cardio
     targetMuscles: ["cardiovascular system"],
     bodyParts: ["cardio"],
