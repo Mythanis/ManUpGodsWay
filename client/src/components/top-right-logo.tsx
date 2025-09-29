@@ -17,10 +17,9 @@ export function TopRightLogo() {
         className="h-12 w-auto object-contain"
         style={{ 
           opacity: 1,
-          imageRendering: 'crisp-edges',
-          WebkitImageRendering: '-webkit-optimize-contrast',
-          msInterpolationMode: 'nearest-neighbor'
-        } as React.CSSProperties}
+          maxWidth: '200px',
+          height: '48px'
+        }}
         loading="eager"
         decoding="sync"
         data-testid="app-logo"

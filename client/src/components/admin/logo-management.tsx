@@ -151,12 +151,52 @@ export default function LogoManagement() {
         return;
       }
 
+      // Check for optimal formats
+      if (file.type === 'image/svg+xml') {
+        toast({
+          title: "Excellent Choice!",
+          description: "SVG logos provide the best quality at all sizes.",
+        });
+      } else if (file.type === 'image/png') {
+        toast({
+          title: "Good Quality Format",
+          description: "PNG files work well for logos. For best results, use high resolution (at least 512x512px).",
+        });
+      } else if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
+        toast({
+          title: "Consider PNG or SVG",
+          description: "JPEG can appear pixelated. PNG or SVG formats provide better logo quality.",
+          variant: "default",
+        });
+      }
+
       setSelectedFile(file);
       
-      // Create preview
+      // Create preview and check resolution for non-SVG files
       const reader = new FileReader();
       reader.onload = (e) => {
-        setPreviewUrl(e.target?.result as string);
+        const result = e.target?.result as string;
+        setPreviewUrl(result);
+        
+        // For raster images, check resolution
+        if (file.type !== 'image/svg+xml') {
+          const img = new Image();
+          img.onload = () => {
+            if (img.width < 256 || img.height < 256) {
+              toast({
+                title: "Low Resolution Warning",
+                description: `Image is ${img.width}x${img.height}px. For crisp display, use at least 512x512px.`,
+                variant: "default",
+              });
+            } else if (img.width >= 512 && img.height >= 512) {
+              toast({
+                title: "Great Resolution!",
+                description: `High resolution image (${img.width}x${img.height}px) will display crispy and clear.`,
+              });
+            }
+          };
+          img.src = result;
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -236,10 +276,9 @@ export default function LogoManagement() {
                   alt="Current Logo"
                   className="max-w-xs max-h-32 object-contain rounded-lg border"
                   style={{
-                    imageRendering: 'crisp-edges',
-                    WebkitImageRendering: '-webkit-optimize-contrast',
-                    msInterpolationMode: 'nearest-neighbor'
-                  } as React.CSSProperties}
+                    maxWidth: '320px',
+                    maxHeight: '128px'
+                  }}
                   loading="eager"
                   decoding="sync"
                 />
@@ -281,12 +320,16 @@ export default function LogoManagement() {
             <Input
               id="logo-upload"
               type="file"
-              accept="image/*"
+              accept="image/svg+xml,image/png,image/webp,image/jpeg"
               onChange={handleFileSelect}
               className="mt-1"
             />
             <p className="text-sm text-ministry-slate mt-1">
-              Supported formats: JPG, PNG, GIF, WebP. Max size: 5MB.
+              <strong>Recommended:</strong> SVG or high-resolution PNG for best quality. 
+              <br />
+              Supported formats: SVG, PNG, WebP, JPG. Max size: 5MB.
+              <br />
+              <span className="text-ministry-gold">💡 For crisp logos, use SVG or PNG files at least 512x512px</span>
             </p>
           </div>
 
@@ -299,10 +342,9 @@ export default function LogoManagement() {
                   alt="Logo Preview"
                   className="max-w-xs max-h-32 object-contain rounded-lg border"
                   style={{
-                    imageRendering: 'crisp-edges',
-                    WebkitImageRendering: '-webkit-optimize-contrast',
-                    msInterpolationMode: 'nearest-neighbor'
-                  } as React.CSSProperties}
+                    maxWidth: '320px',
+                    maxHeight: '128px'
+                  }}
                   loading="eager"
                   decoding="sync"
                 />
@@ -487,10 +529,9 @@ export default function LogoManagement() {
                 className="max-w-xs max-h-64 object-contain animate-fade-in"
                 style={{
                   animation: 'fadeIn 0.6s ease-in-out',
-                  imageRendering: 'crisp-edges',
-                  WebkitImageRendering: '-webkit-optimize-contrast',
-                  msInterpolationMode: 'nearest-neighbor'
-                } as React.CSSProperties}
+                  maxWidth: '320px',
+                  maxHeight: '256px'
+                }}
                 loading="eager"
                 decoding="sync"
               />
