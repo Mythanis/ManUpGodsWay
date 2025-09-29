@@ -1127,7 +1127,7 @@ export default function Fitness() {
         const exerciseData = {
           exerciseId: `prebuilt-${Date.now()}-${i}`,
           exerciseName: exercise.name,
-          imageUrl: getExerciseGifUrl(exercise.name),
+          imageUrl: exercise.gifUrl || null, // Use actual GIF URL from ExerciseDB API
           targetMuscle: exercise.bodyPart,
           bodyPart: exercise.bodyPart,
           equipment: exercise.equipment.join(', '),
