@@ -4,48 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Dumbbell, Clock, Target, Calendar } from "lucide-react";
 import { useLocation, Link } from "wouter";
+import type { FitnessPlan, FitnessPlanExercise } from "@shared/schema";
 
-interface Exercise {
-  exerciseId: string;
-  name: string;
-  gifUrl: string;
-  targetMuscles: string[];
-  bodyParts: string[];
-  equipments: string[];
-  secondaryMuscles: string[];
-  instructions: string[];
-}
-
-interface PlanExercise {
-  id: string;
-  exerciseId: string;
-  exerciseName: string;
-  bodyPart: string;
-  targetMuscle: string;
-  equipment: string;
-  imageUrl: string;
-  sets: number;
-  reps: string;
-  minutes?: number;
-  weight?: string;
-  restTime: number;
-  notes?: string;
-  daysOfWeek: string[];
-  orderIndex: number;
-}
-
-interface FitnessPlan {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  difficulty: string;
-  estimatedDuration: number;
-  isPublic: boolean;
-  exercises: PlanExercise[];
-  createdAt: string;
-  updatedAt: string;
-}
+// Type for plan with exercises included
+type FitnessPlanWithExercises = FitnessPlan & { exercises: FitnessPlanExercise[] };
 
 const daysOfWeek = [
   { value: "monday", label: "Mon" },
@@ -81,7 +43,7 @@ export default function ViewPlan() {
   const planId = location.split('/')[3]; // /fitness/plans/{planId}
 
   // Fetch plan data
-  const { data: plan, isLoading, error } = useQuery<FitnessPlan>({
+  const { data: plan, isLoading, error } = useQuery<FitnessPlanWithExercises>({
     queryKey: ['api', 'fitness-plans', planId],
     queryFn: async () => {
       const response = await fetch(`/api/fitness-plans/${planId}`, { credentials: 'include' });

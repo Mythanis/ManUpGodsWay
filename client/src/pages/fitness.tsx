@@ -891,11 +891,8 @@ export default function Fitness() {
       });
 
       // Add exercises to the plan directly (using fallback approach since no ExerciseDB integration available)
-      console.log(`Adding ${preBuiltPlan.exercises.length} exercises to plan:`, planResponse.id);
-      
       for (let i = 0; i < preBuiltPlan.exercises.length; i++) {
         const exercise = preBuiltPlan.exercises[i];
-        console.log(`Adding exercise ${i + 1}:`, exercise.name);
         
         // Create exercise entry directly with comprehensive data
         const exerciseData = {
@@ -914,15 +911,7 @@ export default function Fitness() {
           orderIndex: i
         };
         
-        console.log('Sending exercise data:', exerciseData);
-        
-        try {
-          const result = await apiRequest('POST', `/api/fitness-plans/${planResponse.id}/exercises`, exerciseData);
-          console.log(`Exercise ${i + 1} added successfully:`, result);
-        } catch (error) {
-          console.error(`Error adding exercise ${i + 1}:`, error);
-          throw error;
-        }
+        await apiRequest('POST', `/api/fitness-plans/${planResponse.id}/exercises`, exerciseData);
       }
 
       return planResponse;
