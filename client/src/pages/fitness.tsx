@@ -219,6 +219,28 @@ export default function Fitness() {
     return days[new Date().getDay()];
   };
 
+  // Helper function to handle day selection
+  const handleDayToggle = (day: string) => {
+    setSelectedDays(prev => {
+      if (prev.includes(day)) {
+        return prev.filter(d => d !== day);
+      } else {
+        return [...prev, day];
+      }
+    });
+  };
+
+  // Days of the week for selection
+  const daysOfWeek = [
+    { value: 'monday', label: 'Monday' },
+    { value: 'tuesday', label: 'Tuesday' },
+    { value: 'wednesday', label: 'Wednesday' },
+    { value: 'thursday', label: 'Thursday' },
+    { value: 'friday', label: 'Friday' },
+    { value: 'saturday', label: 'Saturday' },
+    { value: 'sunday', label: 'Sunday' }
+  ];
+
   // Handle viewing plan modal
   const handleViewPlan = (plan: FitnessPlan) => {
     setSelectedPlanForView(plan);
@@ -1906,23 +1928,38 @@ export default function Fitness() {
                 </CardContent>
               </Card>
 
-              {/* Frequency Selection */}
+              {/* Days Selection */}
               <Card className="bg-ministry-gold-exact/20">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-black text-sm">Training Frequency</CardTitle>
+                  <CardTitle className="text-black text-sm">Workout Days</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Select value={selectedFrequency} onValueChange={setSelectedFrequency}>
-                    <SelectTrigger className="w-full" data-testid="select-frequency">
-                      <SelectValue placeholder="Workouts per week" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="3">3 days per week</SelectItem>
-                      <SelectItem value="4">4 days per week</SelectItem>
-                      <SelectItem value="5">5 days per week</SelectItem>
-                      <SelectItem value="6">6 days per week</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="grid grid-cols-2 gap-3">
+                    {daysOfWeek.map((day) => (
+                      <div
+                        key={day.value}
+                        className="flex items-center space-x-2"
+                      >
+                        <Checkbox
+                          id={`day-${day.value}`}
+                          checked={selectedDays.includes(day.value)}
+                          onCheckedChange={() => handleDayToggle(day.value)}
+                          data-testid={`checkbox-${day.value}`}
+                        />
+                        <label
+                          htmlFor={`day-${day.value}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-black cursor-pointer"
+                        >
+                          {day.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  {selectedDays.length > 0 && (
+                    <div className="mt-2 text-xs text-black">
+                      Selected {selectedDays.length} day{selectedDays.length !== 1 ? 's' : ''} per week
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -1949,7 +1986,7 @@ export default function Fitness() {
             </div>
 
             {/* Available Plans */}
-            {selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedGoal && (
+            {selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedDays.length > 0 && selectedGoal && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-black">
                   Recommended {selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1)} Plans
@@ -2039,7 +2076,7 @@ export default function Fitness() {
               </div>
             )}
 
-            {(!selectedLevel || !selectedPlanEquipment || !selectedStartDay || !selectedWorkoutDuration || !selectedFrequency || !selectedGoal) && (
+            {(!selectedLevel || !selectedPlanEquipment || !selectedStartDay || !selectedWorkoutDuration || selectedDays.length === 0 || !selectedGoal) && (
               <Card className="bg-ministry-gold-exact/20">
                 <CardContent className="py-8 text-center">
                   <BookOpen className="w-12 h-12 mx-auto text-ministry-gold mb-4" />
@@ -2065,8 +2102,8 @@ export default function Fitness() {
                       <span>Workout Duration</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${selectedFrequency ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                      <span>Training Frequency</span>
+                      <div className={`w-2 h-2 rounded-full ${selectedDays.length > 0 ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <span>Workout Days</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${selectedGoal ? 'bg-green-500' : 'bg-gray-400'}`}></div>
