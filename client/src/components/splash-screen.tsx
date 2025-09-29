@@ -92,8 +92,13 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           alt="Logo"
           className="max-w-xs max-h-64 object-contain animate-fade-in"
           style={{
-            animation: 'fadeIn 0.6s ease-in-out'
-          }}
+            animation: 'fadeIn 0.6s ease-in-out',
+            imageRendering: 'crisp-edges',
+            WebkitImageRendering: '-webkit-optimize-contrast',
+            msInterpolationMode: 'nearest-neighbor'
+          } as React.CSSProperties}
+          loading="eager"
+          decoding="sync"
         />
       </div>
       

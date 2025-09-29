@@ -235,6 +235,13 @@ export default function LogoManagement() {
                   src={logoSettings.logoUrl}
                   alt="Current Logo"
                   className="max-w-xs max-h-32 object-contain rounded-lg border"
+                  style={{
+                    imageRendering: 'crisp-edges',
+                    WebkitImageRendering: '-webkit-optimize-contrast',
+                    msInterpolationMode: 'nearest-neighbor'
+                  } as React.CSSProperties}
+                  loading="eager"
+                  decoding="sync"
                 />
               </div>
               <div className="text-sm text-ministry-slate text-center space-y-2">
@@ -291,6 +298,13 @@ export default function LogoManagement() {
                   src={previewUrl}
                   alt="Logo Preview"
                   className="max-w-xs max-h-32 object-contain rounded-lg border"
+                  style={{
+                    imageRendering: 'crisp-edges',
+                    WebkitImageRendering: '-webkit-optimize-contrast',
+                    msInterpolationMode: 'nearest-neighbor'
+                  } as React.CSSProperties}
+                  loading="eager"
+                  decoding="sync"
                 />
               </div>
             </div>
@@ -472,8 +486,13 @@ export default function LogoManagement() {
                 alt="Logo Preview"
                 className="max-w-xs max-h-64 object-contain animate-fade-in"
                 style={{
-                  animation: 'fadeIn 0.6s ease-in-out'
-                }}
+                  animation: 'fadeIn 0.6s ease-in-out',
+                  imageRendering: 'crisp-edges',
+                  WebkitImageRendering: '-webkit-optimize-contrast',
+                  msInterpolationMode: 'nearest-neighbor'
+                } as React.CSSProperties}
+                loading="eager"
+                decoding="sync"
               />
               <div className="mt-8 text-center space-y-2">
                 <p className="text-ministry-slate text-sm">

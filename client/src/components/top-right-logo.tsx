@@ -15,7 +15,14 @@ export function TopRightLogo() {
         src={displayLogo} 
         alt="Man Up God's Way Logo" 
         className="h-12 w-auto object-contain"
-        style={{ opacity: 1 }}
+        style={{ 
+          opacity: 1,
+          imageRendering: 'crisp-edges',
+          WebkitImageRendering: '-webkit-optimize-contrast',
+          msInterpolationMode: 'nearest-neighbor'
+        } as React.CSSProperties}
+        loading="eager"
+        decoding="sync"
         data-testid="app-logo"
       />
     </div>
