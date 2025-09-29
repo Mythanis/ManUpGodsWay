@@ -949,64 +949,195 @@ export default function Fitness() {
   }
 
   async function getExercisesForEquipment(equipment: string): Promise<APIExercise[]> {
-    const limit = 100;
-    const maxExercises = 200; // Only fetch first 200 exercises max for performance
-    let offset = 0;
-    let all: APIExercise[] = [];
-    
-    try {
-      while (offset < maxExercises) {
-        const params = new URLSearchParams();
-        params.set('offset', offset.toString());
-        params.set('limit', limit.toString());
-        params.set('equipment', equipment);
-        params.set('sortBy', 'name');
-        params.set('sortOrder', 'asc');
-        
-        const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${params.toString()}`;
-        
-        try {
-          const resp = await fetchJSON(url);
-          const batch: any[] = resp.data;
-          if (!batch || batch.length === 0) break;
-          
-          const mapped: APIExercise[] = batch.map((ex: any) => ({
-            id: ex.exerciseId || ex.id,
-            name: ex.name,
-            bodyPart: ex.bodyParts?.[0] || ex.bodyPart || 'unknown',
-            equipment: ex.equipments?.[0] || ex.equipment || equipment,
-            targetMuscles: ex.targetMuscles || [],
-            gifUrl: ex.gifUrl
-          }));
-          all = all.concat(mapped);
-          
-          // If we got fewer results than requested, we've reached the end
-          if (batch.length < limit) break;
-          
-          offset += limit;
-          
-          // If we have enough exercises for plan generation, we can stop
-          if (all.length >= 50) break;
-          
-        } catch (batchError) {
-          console.warn(`Failed to fetch batch at offset ${offset} for ${equipment}:`, batchError);
-          // If we already have some exercises, we can continue with what we have
-          if (all.length >= 10) {
-            console.log(`Using ${all.length} exercises despite batch failure`);
-            break;
-          }
-          // If this is the first batch and it failed, re-throw the error
-          if (offset === 0) throw batchError;
-          break;
-        }
+    // Use fallback exercise database instead of external API
+    const fallbackExercises = [
+      {
+        exerciseId: "0001",
+        name: "3/4 sit-up",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["abs"],
+        bodyParts: ["waist"],
+        equipments: ["body weight"],
+        secondaryMuscles: ["hip flexors"]
+      },
+      {
+        exerciseId: "0002",
+        name: "45° side bend",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["obliques"],
+        bodyParts: ["waist"],
+        equipments: ["body weight"],
+        secondaryMuscles: ["quadratus lumborum"]
+      },
+      {
+        exerciseId: "0003",
+        name: "air bike",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["abs"],
+        bodyParts: ["waist"],
+        equipments: ["body weight"],
+        secondaryMuscles: ["hip flexors", "obliques"]
+      },
+      {
+        exerciseId: "0006",
+        name: "barbell bench press",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["pectorals"],
+        bodyParts: ["chest"],
+        equipments: ["barbell"],
+        secondaryMuscles: ["triceps", "anterior deltoid"]
+      },
+      {
+        exerciseId: "0007",
+        name: "barbell squat",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["quadriceps"],
+        bodyParts: ["upper legs"],
+        equipments: ["barbell"],
+        secondaryMuscles: ["glutes", "hamstrings"]
+      },
+      {
+        exerciseId: "0008",
+        name: "barbell deadlift",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["hamstrings"],
+        bodyParts: ["upper legs"],
+        equipments: ["barbell"],
+        secondaryMuscles: ["glutes", "erector spinae"]
+      },
+      {
+        exerciseId: "0009",
+        name: "push-ups",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["pectorals"],
+        bodyParts: ["chest"],
+        equipments: ["body weight"],
+        secondaryMuscles: ["triceps", "anterior deltoid"]
+      },
+      {
+        exerciseId: "0010",
+        name: "pull-ups",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["latissimus dorsi"],
+        bodyParts: ["back"],
+        equipments: ["pull-up bar"],
+        secondaryMuscles: ["biceps", "posterior deltoid"]
+      },
+      {
+        exerciseId: "0011",
+        name: "dumbbell bicep curl",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["biceps brachii"],
+        bodyParts: ["upper arms"],
+        equipments: ["dumbbell"],
+        secondaryMuscles: ["forearms"]
+      },
+      {
+        exerciseId: "0012",
+        name: "plank",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["abs"],
+        bodyParts: ["waist"],
+        equipments: ["body weight"],
+        secondaryMuscles: ["shoulders", "glutes"]
+      },
+      {
+        exerciseId: "0013",
+        name: "jumping jacks",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["cardiovascular system"],
+        bodyParts: ["cardio"],
+        equipments: ["body weight"],
+        secondaryMuscles: ["calves", "shoulders"]
+      },
+      {
+        exerciseId: "0014",
+        name: "mountain climbers",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["abs"],
+        bodyParts: ["waist"],
+        equipments: ["body weight"],
+        secondaryMuscles: ["shoulders", "hip flexors"]
+      },
+      {
+        exerciseId: "0015",
+        name: "burpees",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["full body"],
+        bodyParts: ["cardio"],
+        equipments: ["body weight"],
+        secondaryMuscles: ["chest", "legs", "shoulders"]
+      },
+      {
+        exerciseId: "0016",
+        name: "lunges",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["quadriceps"],
+        bodyParts: ["upper legs"],
+        equipments: ["body weight"],
+        secondaryMuscles: ["glutes", "hamstrings"]
+      },
+      {
+        exerciseId: "0017",
+        name: "dumbbell shoulder press",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["anterior deltoid"],
+        bodyParts: ["shoulders"],
+        equipments: ["dumbbell"],
+        secondaryMuscles: ["triceps", "lateral deltoid"]
+      },
+      {
+        exerciseId: "0018",
+        name: "dumbbell rows",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["latissimus dorsi"],
+        bodyParts: ["back"],
+        equipments: ["dumbbell"],
+        secondaryMuscles: ["biceps", "posterior deltoid"]
+      },
+      {
+        exerciseId: "0019",
+        name: "dumbbell chest press",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["pectorals"],
+        bodyParts: ["chest"],
+        equipments: ["dumbbell"],
+        secondaryMuscles: ["triceps", "anterior deltoid"]
+      },
+      {
+        exerciseId: "0020",
+        name: "dumbbell squats",
+        gifUrl: "https://static.exercisedb.dev/media/4x5Okof.gif",
+        targetMuscles: ["quadriceps"],
+        bodyParts: ["upper legs"],
+        equipments: ["dumbbell"],
+        secondaryMuscles: ["glutes", "hamstrings"]
       }
-      
-      console.log(`Successfully fetched ${all.length} exercises for ${equipment}`);
-      return all;
-    } catch (error) {
-      console.error(`Error fetching exercises for ${equipment}:`, error);
-      throw error;
+    ];
+
+    // Filter exercises by equipment
+    let filteredExercises = fallbackExercises.filter(ex =>
+      ex.equipments.some(eq => eq.toLowerCase() === equipment.toLowerCase())
+    );
+
+    // If no exact matches found, return all exercises for better plan generation
+    if (filteredExercises.length < 5 && equipment !== 'all') {
+      console.log(`Only found ${filteredExercises.length} exercises for ${equipment}, including all exercises`);
+      filteredExercises = fallbackExercises;
     }
+
+    // Map to APIExercise format
+    const apiExercises: APIExercise[] = filteredExercises.map(ex => ({
+      id: ex.exerciseId,
+      name: ex.name,
+      bodyPart: ex.bodyParts[0] || 'unknown',
+      equipment: ex.equipments[0] || equipment,
+      targetMuscles: ex.targetMuscles,
+      gifUrl: ex.gifUrl
+    }));
+
+    console.log(`Successfully fetched ${apiExercises.length} exercises for ${equipment} from fallback database`);
+    return apiExercises;
   }
 
   // Helper to pick exercises by body part
