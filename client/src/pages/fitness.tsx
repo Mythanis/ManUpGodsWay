@@ -963,14 +963,8 @@ export default function Fitness() {
     
     try {
       while (offset < maxExercises) {
-        const params = new URLSearchParams();
-        params.set('offset', offset.toString());
-        params.set('limit', limit.toString());
-        params.set('equipment', equipment);
-        params.set('sortBy', 'name');
-        params.set('sortOrder', 'asc');
-        
-        const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${params.toString()}`;
+        // Use the equipment-specific endpoint instead of filter
+        const url = `https://www.exercisedb.dev/api/v1/exercises/equipment/${encodeURIComponent(equipment)}?offset=${offset}&limit=${limit}`;
         
         try {
           const resp = await fetchJSON(url);
