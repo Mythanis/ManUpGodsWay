@@ -1379,7 +1379,7 @@ export default function Fitness() {
               {/* Level Selection */}
               <Card className="bg-ministry-gold-exact/20">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-white text-sm">Fitness Level</CardTitle>
+                  <CardTitle className="text-black text-sm">Fitness Level</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Select value={selectedLevel} onValueChange={setSelectedLevel}>
@@ -1398,7 +1398,7 @@ export default function Fitness() {
               {/* Equipment Selection */}
               <Card className="bg-ministry-gold-exact/20">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-white text-sm">Available Equipment</CardTitle>
+                  <CardTitle className="text-black text-sm">Available Equipment</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Select value={selectedPlanEquipment} onValueChange={setSelectedPlanEquipment}>
@@ -1418,7 +1418,7 @@ export default function Fitness() {
               {/* Start Day Selection */}
               <Card className="bg-ministry-gold-exact/20">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-white text-sm">Start Day</CardTitle>
+                  <CardTitle className="text-black text-sm">Start Day</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Select value={selectedStartDay} onValueChange={setSelectedStartDay}>
@@ -1442,7 +1442,7 @@ export default function Fitness() {
             {/* Available Plans */}
             {selectedLevel && selectedPlanEquipment && selectedStartDay && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold text-black">
                   Recommended {selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1)} Plans
                 </h3>
                 
@@ -1451,11 +1451,11 @@ export default function Fitness() {
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div>
-                          <CardTitle className="text-white flex items-center gap-2">
+                          <CardTitle className="text-black flex items-center gap-2">
                             <BookOpen className="w-5 h-5 text-ministry-gold" />
                             {plan.name}
                           </CardTitle>
-                          <p className="text-sm text-gray-300 mt-1">{plan.description}</p>
+                          <p className="text-sm text-black mt-1">{plan.description}</p>
                         </div>
                         <Badge variant="outline" className="border-ministry-gold text-ministry-gold">
                           {plan.duration}
@@ -1466,19 +1466,19 @@ export default function Fitness() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
                         <div>
                           <span className="font-medium text-ministry-gold">Level:</span>
-                          <p className="text-white capitalize">{plan.level}</p>
+                          <p className="text-black capitalize">{plan.level}</p>
                         </div>
                         <div>
                           <span className="font-medium text-ministry-gold">Workouts/Week:</span>
-                          <p className="text-white">{plan.workoutsPerWeek}</p>
+                          <p className="text-black">{plan.workoutsPerWeek}</p>
                         </div>
                         <div>
                           <span className="font-medium text-ministry-gold">Equipment:</span>
-                          <p className="text-white capitalize">{plan.equipment}</p>
+                          <p className="text-black capitalize">{plan.equipment}</p>
                         </div>
                         <div>
                           <span className="font-medium text-ministry-gold">Start Day:</span>
-                          <p className="text-white capitalize">{plan.startDay}</p>
+                          <p className="text-black capitalize">{plan.startDay}</p>
                         </div>
                       </div>
                       
@@ -1486,7 +1486,7 @@ export default function Fitness() {
                         <h4 className="font-medium text-ministry-gold mb-2">Weekly Schedule:</h4>
                         <div className="flex flex-wrap gap-2">
                           {plan.schedule.map((day, dayIndex) => (
-                            <Badge key={dayIndex} variant="secondary" className="bg-ministry-gold/20 text-white">
+                            <Badge key={dayIndex} variant="secondary" className="bg-ministry-gold/20 text-black">
                               {day}
                             </Badge>
                           ))}
@@ -1521,8 +1521,8 @@ export default function Fitness() {
               <Card className="bg-ministry-gold-exact/20">
                 <CardContent className="py-8 text-center">
                   <BookOpen className="w-12 h-12 mx-auto text-ministry-gold mb-4" />
-                  <h3 className="text-lg font-semibold text-white mb-2">Choose Your Plan Settings</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-lg font-semibold text-black mb-2">Choose Your Plan Settings</h3>
+                  <p className="text-black">
                     Select your fitness level, available equipment, and preferred start day to see recommended workout plans.
                   </p>
                 </CardContent>
