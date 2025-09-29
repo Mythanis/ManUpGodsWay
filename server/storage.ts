@@ -4379,7 +4379,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDueFitnessReminders(dayOfWeek: number, currentTime: string): Promise<Array<FitnessPlanReminder & { plan: FitnessPlan }>> {
-    const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+    const today = new Date();
     
     return await db
       .select({
@@ -4395,8 +4395,6 @@ export class DatabaseStorage implements IStorage {
           name: fitnessPlans.name,
           description: fitnessPlans.description,
           userId: fitnessPlans.userId,
-          visibility: fitnessPlans.visibility,
-          tags: fitnessPlans.tags,
           createdAt: fitnessPlans.createdAt,
           updatedAt: fitnessPlans.updatedAt
         }
@@ -4406,7 +4404,7 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(fitnessPlanReminders.isActive, true),
-          eq(fitnessPlanReminders.dayOfWeek, dayOfWeek),
+          eq(fitnessPlanReminders.dayOfWeek, String(dayOfWeek)),
           eq(fitnessPlanReminders.time, currentTime),
           or(
             isNull(fitnessPlanReminders.lastSent),
@@ -4423,14 +4421,14 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(fitnessPlanExercises.planId, planId),
-          like(fitnessPlanExercises.daysOfWeek, `%${dayOfWeek}%`)
+          sql`${fitnessPlanExercises.daysOfWeek} LIKE ${'%' + dayOfWeek + '%'}`
         )
       )
       .orderBy(asc(fitnessPlanExercises.orderIndex));
   }
 
   async markFitnessReminderSent(reminderId: string): Promise<void> {
-    const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+    const today = new Date();
     
     await db
       .update(fitnessPlanReminders)
