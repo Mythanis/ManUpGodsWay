@@ -251,11 +251,25 @@ export const fitnessChallenge = pgTable("fitness_challenges", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Complete exercises database from ExerciseDB API
+export const exercises = pgTable("exercises", {
+  id: varchar("id").primaryKey(), // ExerciseDB exercise ID (e.g., "0001", "0002")
+  name: varchar("name").notNull(),
+  gifUrl: varchar("gif_url").notNull(),
+  bodyPart: varchar("body_part").notNull(),
+  equipment: varchar("equipment").notNull(),
+  target: varchar("target").notNull(), // Primary target muscle
+  secondaryMuscles: text("secondary_muscles").array(), // Array of secondary muscles
+  instructions: text("instructions").array(), // Array of instruction steps
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // User favorite exercises from ExerciseDB API
 export const favoriteExercises = pgTable("favorite_exercises", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  exerciseId: varchar("exercise_id").notNull(), // ExerciseDB API exercise ID
+  exerciseId: varchar("exercise_id").notNull().references(() => exercises.id), // Reference to exercises table
   exerciseName: varchar("exercise_name").notNull(),
   bodyPart: varchar("body_part"),
   targetMuscle: varchar("target_muscle"),
@@ -332,6 +346,22 @@ export const insertTestimonySchema = createInsertSchema(testimonies).omit({
 
 export type Testimony = typeof testimonies.$inferSelect;
 export type InsertTestimony = z.infer<typeof insertTestimonySchema>;
+
+// Exercises schema
+export const insertExerciseSchema = createInsertSchema(exercises, {
+  id: z.string().min(1, "Exercise ID is required"),
+  name: z.string().min(1, "Exercise name is required"),
+  gifUrl: z.string().min(1, "GIF URL is required"),
+  bodyPart: z.string().min(1, "Body part is required"),
+  equipment: z.string().min(1, "Equipment is required"),
+  target: z.string().min(1, "Target muscle is required"),
+}).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Exercise = typeof exercises.$inferSelect;
+export type InsertExercise = z.infer<typeof insertExerciseSchema>;
 
 export const insertFitnessChallengeSchema = createInsertSchema(fitnessChallenge, {
   title: z.string().min(1, "Title is required"),
