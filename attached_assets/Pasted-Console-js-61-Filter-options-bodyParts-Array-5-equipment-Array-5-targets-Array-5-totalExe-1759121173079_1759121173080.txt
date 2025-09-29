@@ -1,0 +1,1926 @@
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Generating plans with params: {level: 'beginner', equipment: 'barbell', startDay: 'sunday', duration: '45', frequency: '6', …}
+Console.js:61 Fetching from: https://www.exercisedb.dev/api/v1/exercises/filter?offset=0&limit=100&equipment=barbell&sortBy=name&sortOrder=asc
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 API Response: {success: true, metadata: {…}, data: Array(100)}
+Console.js:61 Successfully fetched 100 exercises for barbell
+Console.js:61 Found 100 exercises for barbell
+Console.js:61 Successfully generated plan: Beginner barbell Program (45min)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again
+Console.js:61  Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+Mt.forEach.n.<computed> @ Console.js:61
+(anonymous) @ dialog.tsx:542
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+workspace_iframe.html?initialPath=%2Ffitness&id=%3Ar6o6%3A:1 [Intervention] Images loaded lazily and replaced with placeholders. Load events are deferred. See https://go.microsoft.com/fwlink/?linkid=2048113
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Plan details: {startDay: 'sunday', schedule: undefined, exerciseCount: 60}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 0, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 0: barbell bench press assigned to monday
+Console.js:61 Creating exercise 0: {exerciseId: 'prebuilt-1759121026903-0', exerciseName: 'barbell bench press', imageUrl: 'https://static.exercisedb.dev/media/EIeI8Vf.gif', targetMuscle: 'chest', bodyPart: 'chest', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 1, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 1: barbell front raise assigned to monday
+Console.js:61 Creating exercise 1: {exerciseId: 'prebuilt-1759121027608-1', exerciseName: 'barbell front raise', imageUrl: 'https://static.exercisedb.dev/media/b2Uoz54.gif', targetMuscle: 'shoulders', bodyPart: 'shoulders', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 2, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 2: barbell alternate biceps curl assigned to monday
+Console.js:61 Creating exercise 2: {exerciseId: 'prebuilt-1759121028309-2', exerciseName: 'barbell alternate biceps curl', imageUrl: 'https://static.exercisedb.dev/media/Yza7XrQ.gif', targetMuscle: 'upper arms', bodyPart: 'upper arms', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 3, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 3: barbell bench front squat assigned to monday
+Console.js:61 Creating exercise 3: {exerciseId: 'prebuilt-1759121029015-3', exerciseName: 'barbell bench front squat', imageUrl: 'https://static.exercisedb.dev/media/Y7YcmIJ.gif', targetMuscle: 'upper legs', bodyPart: 'upper legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 4, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 4: barbell floor calf raise assigned to monday
+Console.js:61 Creating exercise 4: {exerciseId: 'prebuilt-1759121029719-4', exerciseName: 'barbell floor calf raise', imageUrl: 'https://static.exercisedb.dev/media/2IHEa2T.gif', targetMuscle: 'lower legs', bodyPart: 'lower legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 5, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 5: barbell bench front squat assigned to monday
+Console.js:61 Creating exercise 5: {exerciseId: 'prebuilt-1759121030429-5', exerciseName: 'barbell bench front squat', imageUrl: 'https://static.exercisedb.dev/media/Y7YcmIJ.gif', targetMuscle: 'upper legs', bodyPart: 'upper legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 6, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 6: barbell bent arm pullover assigned to monday
+Console.js:61 Creating exercise 6: {exerciseId: 'prebuilt-1759121031136-6', exerciseName: 'barbell bent arm pullover', imageUrl: 'https://static.exercisedb.dev/media/cA9FuWG.gif', targetMuscle: 'back', bodyPart: 'back', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 7, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 7: barbell alternate biceps curl assigned to monday
+Console.js:61 Creating exercise 7: {exerciseId: 'prebuilt-1759121031838-7', exerciseName: 'barbell alternate biceps curl', imageUrl: 'https://static.exercisedb.dev/media/Yza7XrQ.gif', targetMuscle: 'upper arms', bodyPart: 'upper arms', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 8, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 8: barbell press sit-up assigned to monday
+Console.js:61 Creating exercise 8: {exerciseId: 'prebuilt-1759121032542-8', exerciseName: 'barbell press sit-up', imageUrl: 'https://static.exercisedb.dev/media/wnEscH8.gif', targetMuscle: 'waist', bodyPart: 'waist', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 9, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 9: barbell press sit-up assigned to monday
+Console.js:61 Creating exercise 9: {exerciseId: 'prebuilt-1759121033251-9', exerciseName: 'barbell press sit-up', imageUrl: 'https://static.exercisedb.dev/media/wnEscH8.gif', targetMuscle: 'waist', bodyPart: 'waist', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 10, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 10: barbell bench press assigned to monday
+Console.js:61 Creating exercise 10: {exerciseId: 'prebuilt-1759121033955-10', exerciseName: 'barbell bench press', imageUrl: 'https://static.exercisedb.dev/media/EIeI8Vf.gif', targetMuscle: 'chest', bodyPart: 'chest', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 11, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 11: barbell bent arm pullover assigned to monday
+Console.js:61 Creating exercise 11: {exerciseId: 'prebuilt-1759121034661-11', exerciseName: 'barbell bent arm pullover', imageUrl: 'https://static.exercisedb.dev/media/cA9FuWG.gif', targetMuscle: 'back', bodyPart: 'back', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 12, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 12: barbell bench front squat assigned to monday
+Console.js:61 Creating exercise 12: {exerciseId: 'prebuilt-1759121035371-12', exerciseName: 'barbell bench front squat', imageUrl: 'https://static.exercisedb.dev/media/Y7YcmIJ.gif', targetMuscle: 'upper legs', bodyPart: 'upper legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 13, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 13: barbell front raise assigned to monday
+Console.js:61 Creating exercise 13: {exerciseId: 'prebuilt-1759121036077-13', exerciseName: 'barbell front raise', imageUrl: 'https://static.exercisedb.dev/media/b2Uoz54.gif', targetMuscle: 'shoulders', bodyPart: 'shoulders', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 14, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 14: barbell press sit-up assigned to monday
+Console.js:61 Creating exercise 14: {exerciseId: 'prebuilt-1759121036780-14', exerciseName: 'barbell press sit-up', imageUrl: 'https://static.exercisedb.dev/media/wnEscH8.gif', targetMuscle: 'waist', bodyPart: 'waist', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 15, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 15: barbell bench press assigned to monday
+Console.js:61 Creating exercise 15: {exerciseId: 'prebuilt-1759121037495-15', exerciseName: 'barbell bench press', imageUrl: 'https://static.exercisedb.dev/media/EIeI8Vf.gif', targetMuscle: 'chest', bodyPart: 'chest', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 16, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 16: barbell front raise assigned to monday
+Console.js:61 Creating exercise 16: {exerciseId: 'prebuilt-1759121038207-16', exerciseName: 'barbell front raise', imageUrl: 'https://static.exercisedb.dev/media/b2Uoz54.gif', targetMuscle: 'shoulders', bodyPart: 'shoulders', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 17, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 17: barbell alternate biceps curl assigned to monday
+Console.js:61 Creating exercise 17: {exerciseId: 'prebuilt-1759121038910-17', exerciseName: 'barbell alternate biceps curl', imageUrl: 'https://static.exercisedb.dev/media/Yza7XrQ.gif', targetMuscle: 'upper arms', bodyPart: 'upper arms', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 18, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 18: barbell bench front squat assigned to monday
+Console.js:61 Creating exercise 18: {exerciseId: 'prebuilt-1759121039616-18', exerciseName: 'barbell bench front squat', imageUrl: 'https://static.exercisedb.dev/media/Y7YcmIJ.gif', targetMuscle: 'upper legs', bodyPart: 'upper legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 19, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 19: barbell floor calf raise assigned to monday
+Console.js:61 Creating exercise 19: {exerciseId: 'prebuilt-1759121040318-19', exerciseName: 'barbell floor calf raise', imageUrl: 'https://static.exercisedb.dev/media/2IHEa2T.gif', targetMuscle: 'lower legs', bodyPart: 'lower legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 20, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 20: barbell bench front squat assigned to monday
+Console.js:61 Creating exercise 20: {exerciseId: 'prebuilt-1759121041024-20', exerciseName: 'barbell bench front squat', imageUrl: 'https://static.exercisedb.dev/media/Y7YcmIJ.gif', targetMuscle: 'upper legs', bodyPart: 'upper legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 21, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 21: barbell bent arm pullover assigned to monday
+Console.js:61 Creating exercise 21: {exerciseId: 'prebuilt-1759121041726-21', exerciseName: 'barbell bent arm pullover', imageUrl: 'https://static.exercisedb.dev/media/cA9FuWG.gif', targetMuscle: 'back', bodyPart: 'back', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 22, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 22: barbell alternate biceps curl assigned to monday
+Console.js:61 Creating exercise 22: {exerciseId: 'prebuilt-1759121042430-22', exerciseName: 'barbell alternate biceps curl', imageUrl: 'https://static.exercisedb.dev/media/Yza7XrQ.gif', targetMuscle: 'upper arms', bodyPart: 'upper arms', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 23, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 23: barbell press sit-up assigned to monday
+Console.js:61 Creating exercise 23: {exerciseId: 'prebuilt-1759121043141-23', exerciseName: 'barbell press sit-up', imageUrl: 'https://static.exercisedb.dev/media/wnEscH8.gif', targetMuscle: 'waist', bodyPart: 'waist', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 24, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 24: barbell press sit-up assigned to monday
+Console.js:61 Creating exercise 24: {exerciseId: 'prebuilt-1759121043848-24', exerciseName: 'barbell press sit-up', imageUrl: 'https://static.exercisedb.dev/media/wnEscH8.gif', targetMuscle: 'waist', bodyPart: 'waist', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 25, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 25: barbell bench press assigned to monday
+Console.js:61 Creating exercise 25: {exerciseId: 'prebuilt-1759121044629-25', exerciseName: 'barbell bench press', imageUrl: 'https://static.exercisedb.dev/media/EIeI8Vf.gif', targetMuscle: 'chest', bodyPart: 'chest', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 26, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 26: barbell bent arm pullover assigned to monday
+Console.js:61 Creating exercise 26: {exerciseId: 'prebuilt-1759121045335-26', exerciseName: 'barbell bent arm pullover', imageUrl: 'https://static.exercisedb.dev/media/cA9FuWG.gif', targetMuscle: 'back', bodyPart: 'back', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 27, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 27: barbell bench front squat assigned to monday
+Console.js:61 Creating exercise 27: {exerciseId: 'prebuilt-1759121046038-27', exerciseName: 'barbell bench front squat', imageUrl: 'https://static.exercisedb.dev/media/Y7YcmIJ.gif', targetMuscle: 'upper legs', bodyPart: 'upper legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 28, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 28: barbell front raise assigned to monday
+Console.js:61 Creating exercise 28: {exerciseId: 'prebuilt-1759121046744-28', exerciseName: 'barbell front raise', imageUrl: 'https://static.exercisedb.dev/media/b2Uoz54.gif', targetMuscle: 'shoulders', bodyPart: 'shoulders', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 29, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 29: barbell press sit-up assigned to monday
+Console.js:61 Creating exercise 29: {exerciseId: 'prebuilt-1759121047454-29', exerciseName: 'barbell press sit-up', imageUrl: 'https://static.exercisedb.dev/media/wnEscH8.gif', targetMuscle: 'waist', bodyPart: 'waist', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 30, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 30: barbell bench press assigned to monday
+Console.js:61 Creating exercise 30: {exerciseId: 'prebuilt-1759121048161-30', exerciseName: 'barbell bench press', imageUrl: 'https://static.exercisedb.dev/media/EIeI8Vf.gif', targetMuscle: 'chest', bodyPart: 'chest', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 31, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 31: barbell front raise assigned to monday
+Console.js:61 Creating exercise 31: {exerciseId: 'prebuilt-1759121048867-31', exerciseName: 'barbell front raise', imageUrl: 'https://static.exercisedb.dev/media/b2Uoz54.gif', targetMuscle: 'shoulders', bodyPart: 'shoulders', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 32, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 32: barbell alternate biceps curl assigned to monday
+Console.js:61 Creating exercise 32: {exerciseId: 'prebuilt-1759121049575-32', exerciseName: 'barbell alternate biceps curl', imageUrl: 'https://static.exercisedb.dev/media/Yza7XrQ.gif', targetMuscle: 'upper arms', bodyPart: 'upper arms', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 33, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 33: barbell bench front squat assigned to monday
+Console.js:61 Creating exercise 33: {exerciseId: 'prebuilt-1759121050279-33', exerciseName: 'barbell bench front squat', imageUrl: 'https://static.exercisedb.dev/media/Y7YcmIJ.gif', targetMuscle: 'upper legs', bodyPart: 'upper legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 34, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 34: barbell floor calf raise assigned to monday
+Console.js:61 Creating exercise 34: {exerciseId: 'prebuilt-1759121050982-34', exerciseName: 'barbell floor calf raise', imageUrl: 'https://static.exercisedb.dev/media/2IHEa2T.gif', targetMuscle: 'lower legs', bodyPart: 'lower legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 35, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 35: barbell bench front squat assigned to monday
+Console.js:61 Creating exercise 35: {exerciseId: 'prebuilt-1759121051686-35', exerciseName: 'barbell bench front squat', imageUrl: 'https://static.exercisedb.dev/media/Y7YcmIJ.gif', targetMuscle: 'upper legs', bodyPart: 'upper legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 36, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 36: barbell bent arm pullover assigned to monday
+Console.js:61 Creating exercise 36: {exerciseId: 'prebuilt-1759121052399-36', exerciseName: 'barbell bent arm pullover', imageUrl: 'https://static.exercisedb.dev/media/cA9FuWG.gif', targetMuscle: 'back', bodyPart: 'back', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 37, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 37: barbell alternate biceps curl assigned to monday
+Console.js:61 Creating exercise 37: {exerciseId: 'prebuilt-1759121053108-37', exerciseName: 'barbell alternate biceps curl', imageUrl: 'https://static.exercisedb.dev/media/Yza7XrQ.gif', targetMuscle: 'upper arms', bodyPart: 'upper arms', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 38, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 38: barbell press sit-up assigned to monday
+Console.js:61 Creating exercise 38: {exerciseId: 'prebuilt-1759121053810-38', exerciseName: 'barbell press sit-up', imageUrl: 'https://static.exercisedb.dev/media/wnEscH8.gif', targetMuscle: 'waist', bodyPart: 'waist', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 39, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 39: barbell press sit-up assigned to monday
+Console.js:61 Creating exercise 39: {exerciseId: 'prebuilt-1759121054515-39', exerciseName: 'barbell press sit-up', imageUrl: 'https://static.exercisedb.dev/media/wnEscH8.gif', targetMuscle: 'waist', bodyPart: 'waist', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 40, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 40: barbell bench press assigned to monday
+Console.js:61 Creating exercise 40: {exerciseId: 'prebuilt-1759121055218-40', exerciseName: 'barbell bench press', imageUrl: 'https://static.exercisedb.dev/media/EIeI8Vf.gif', targetMuscle: 'chest', bodyPart: 'chest', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 41, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 41: barbell bent arm pullover assigned to monday
+Console.js:61 Creating exercise 41: {exerciseId: 'prebuilt-1759121056602-41', exerciseName: 'barbell bent arm pullover', imageUrl: 'https://static.exercisedb.dev/media/cA9FuWG.gif', targetMuscle: 'back', bodyPart: 'back', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 42, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 42: barbell bench front squat assigned to monday
+Console.js:61 Creating exercise 42: {exerciseId: 'prebuilt-1759121057310-42', exerciseName: 'barbell bench front squat', imageUrl: 'https://static.exercisedb.dev/media/Y7YcmIJ.gif', targetMuscle: 'upper legs', bodyPart: 'upper legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 43, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 43: barbell front raise assigned to monday
+Console.js:61 Creating exercise 43: {exerciseId: 'prebuilt-1759121058086-43', exerciseName: 'barbell front raise', imageUrl: 'https://static.exercisedb.dev/media/b2Uoz54.gif', targetMuscle: 'shoulders', bodyPart: 'shoulders', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 44, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 44: barbell press sit-up assigned to monday
+Console.js:61 Creating exercise 44: {exerciseId: 'prebuilt-1759121058792-44', exerciseName: 'barbell press sit-up', imageUrl: 'https://static.exercisedb.dev/media/wnEscH8.gif', targetMuscle: 'waist', bodyPart: 'waist', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 45, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 45: barbell bench press assigned to monday
+Console.js:61 Creating exercise 45: {exerciseId: 'prebuilt-1759121059499-45', exerciseName: 'barbell bench press', imageUrl: 'https://static.exercisedb.dev/media/EIeI8Vf.gif', targetMuscle: 'chest', bodyPart: 'chest', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 46, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 46: barbell front raise assigned to monday
+Console.js:61 Creating exercise 46: {exerciseId: 'prebuilt-1759121060202-46', exerciseName: 'barbell front raise', imageUrl: 'https://static.exercisedb.dev/media/b2Uoz54.gif', targetMuscle: 'shoulders', bodyPart: 'shoulders', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 47, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 47: barbell alternate biceps curl assigned to monday
+Console.js:61 Creating exercise 47: {exerciseId: 'prebuilt-1759121060905-47', exerciseName: 'barbell alternate biceps curl', imageUrl: 'https://static.exercisedb.dev/media/Yza7XrQ.gif', targetMuscle: 'upper arms', bodyPart: 'upper arms', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 48, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 48: barbell bench front squat assigned to monday
+Console.js:61 Creating exercise 48: {exerciseId: 'prebuilt-1759121061610-48', exerciseName: 'barbell bench front squat', imageUrl: 'https://static.exercisedb.dev/media/Y7YcmIJ.gif', targetMuscle: 'upper legs', bodyPart: 'upper legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 49, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 49: barbell floor calf raise assigned to monday
+Console.js:61 Creating exercise 49: {exerciseId: 'prebuilt-1759121062312-49', exerciseName: 'barbell floor calf raise', imageUrl: 'https://static.exercisedb.dev/media/2IHEa2T.gif', targetMuscle: 'lower legs', bodyPart: 'lower legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 50, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 50: barbell bench front squat assigned to monday
+Console.js:61 Creating exercise 50: {exerciseId: 'prebuilt-1759121063019-50', exerciseName: 'barbell bench front squat', imageUrl: 'https://static.exercisedb.dev/media/Y7YcmIJ.gif', targetMuscle: 'upper legs', bodyPart: 'upper legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 51, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 51: barbell bent arm pullover assigned to monday
+Console.js:61 Creating exercise 51: {exerciseId: 'prebuilt-1759121063755-51', exerciseName: 'barbell bent arm pullover', imageUrl: 'https://static.exercisedb.dev/media/cA9FuWG.gif', targetMuscle: 'back', bodyPart: 'back', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 52, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 52: barbell alternate biceps curl assigned to monday
+Console.js:61 Creating exercise 52: {exerciseId: 'prebuilt-1759121064459-52', exerciseName: 'barbell alternate biceps curl', imageUrl: 'https://static.exercisedb.dev/media/Yza7XrQ.gif', targetMuscle: 'upper arms', bodyPart: 'upper arms', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 53, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 53: barbell press sit-up assigned to monday
+Console.js:61 Creating exercise 53: {exerciseId: 'prebuilt-1759121065165-53', exerciseName: 'barbell press sit-up', imageUrl: 'https://static.exercisedb.dev/media/wnEscH8.gif', targetMuscle: 'waist', bodyPart: 'waist', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 54, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 54: barbell press sit-up assigned to monday
+Console.js:61 Creating exercise 54: {exerciseId: 'prebuilt-1759121065870-54', exerciseName: 'barbell press sit-up', imageUrl: 'https://static.exercisedb.dev/media/wnEscH8.gif', targetMuscle: 'waist', bodyPart: 'waist', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 55, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 55: barbell bench press assigned to monday
+Console.js:61 Creating exercise 55: {exerciseId: 'prebuilt-1759121066598-55', exerciseName: 'barbell bench press', imageUrl: 'https://static.exercisedb.dev/media/EIeI8Vf.gif', targetMuscle: 'chest', bodyPart: 'chest', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 56, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 56: barbell bent arm pullover assigned to monday
+Console.js:61 Creating exercise 56: {exerciseId: 'prebuilt-1759121067305-56', exerciseName: 'barbell bent arm pullover', imageUrl: 'https://static.exercisedb.dev/media/cA9FuWG.gif', targetMuscle: 'back', bodyPart: 'back', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 57, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 57: barbell bench front squat assigned to monday
+Console.js:61 Creating exercise 57: {exerciseId: 'prebuilt-1759121068008-57', exerciseName: 'barbell bench front squat', imageUrl: 'https://static.exercisedb.dev/media/Y7YcmIJ.gif', targetMuscle: 'upper legs', bodyPart: 'upper legs', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 58, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 58: barbell front raise assigned to monday
+Console.js:61 Creating exercise 58: {exerciseId: 'prebuilt-1759121068723-58', exerciseName: 'barbell front raise', imageUrl: 'https://static.exercisedb.dev/media/b2Uoz54.gif', targetMuscle: 'shoulders', bodyPart: 'shoulders', …}
+Console.js:61  Invalid inputs to getExerciseTrainingDay: {exerciseIndex: 59, startDay: 'sunday', schedule: undefined}
+Mt.forEach.n.<computed> @ Console.js:61
+getExerciseTrainingDay @ fitness.tsx:1186
+mutationFn @ fitness.tsx:1133
+await in mutationFn
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+handleCreatePlanFromPrebuilt @ fitness.tsx:1247
+onClick @ fitness.tsx:2318
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+Console.js:61 Exercise 59: barbell press sit-up assigned to monday
+Console.js:61 Creating exercise 59: {exerciseId: 'prebuilt-1759121069425-59', exerciseName: 'barbell press sit-up', imageUrl: 'https://static.exercisedb.dev/media/wnEscH8.gif', targetMuscle: 'waist', bodyPart: 'waist', …}
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)
+Console.js:61 Filter options: {bodyParts: Array(5), equipment: Array(5), targets: Array(5), totalExercises: 25, totalCount: 1500, …}
+Console.js:61 Page 1/60: 25 exercises shown (1500 total)

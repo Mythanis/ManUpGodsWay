@@ -839,7 +839,21 @@ export default function Fitness() {
       preBuiltPlan.description = `${goal.charAt(0).toUpperCase() + goal.slice(1).replace('-', ' ')} focused ${level} program using ${equipment}. ${frequency} days per week, ${duration} minutes per session.`;
       preBuiltPlan.workoutsPerWeek = parseInt(frequency);
       
+      // Update schedule to match the user's selected frequency
+      const frequencyNumber = parseInt(frequency);
+      const allWeekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const startDayIndex = allWeekdays.indexOf(startDay.toLowerCase());
+      
+      // Create a schedule that matches the frequency, starting from the selected start day
+      const updatedSchedule: string[] = [];
+      for (let i = 0; i < frequencyNumber && i < 7; i++) {
+        const dayIndex = (startDayIndex + i * Math.ceil(7 / frequencyNumber)) % 7;
+        updatedSchedule.push(allWeekdays[dayIndex]);
+      }
+      preBuiltPlan.schedule = updatedSchedule;
+      
       console.log('Successfully generated plan:', preBuiltPlan.name);
+      console.log('Plan schedule updated to:', updatedSchedule);
       return [preBuiltPlan];
     } catch (error) {
       console.error('Error generating dynamic plans:', error);
@@ -1120,18 +1134,11 @@ export default function Fitness() {
       });
 
       // Add exercises to the plan directly (using fallback approach since no ExerciseDB integration available)
-      console.log('Plan details:', {
-        startDay: preBuiltPlan.startDay,
-        schedule: preBuiltPlan.schedule,
-        exerciseCount: preBuiltPlan.exercises.length
-      });
-
       for (let i = 0; i < preBuiltPlan.exercises.length; i++) {
         const exercise = preBuiltPlan.exercises[i];
         
         // Get the training day for this exercise
         const trainingDay = getExerciseTrainingDay(i, preBuiltPlan.startDay, preBuiltPlan.schedule);
-        console.log(`Exercise ${i}: ${exercise.name} assigned to ${trainingDay}`);
         
         // Create exercise entry directly with comprehensive data
         const exerciseData = {
@@ -1150,7 +1157,6 @@ export default function Fitness() {
           orderIndex: i
         };
         
-        console.log(`Creating exercise ${i}:`, exerciseData);
         await apiRequest('POST', `/api/fitness-plans/${planResponse.id}/exercises`, exerciseData);
       }
 
@@ -1170,11 +1176,6 @@ export default function Fitness() {
         variant: "destructive",
       });
       console.error('Plan creation error:', error);
-      console.error('Full error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
     },
   });
 
