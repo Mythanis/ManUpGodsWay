@@ -756,7 +756,7 @@ export default function Fitness() {
 
         {/* Tab Navigation */}
         <Tabs defaultValue="workout" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-ministry-gold-exact/20">
+          <TabsList className="grid w-full grid-cols-5 bg-ministry-gold-exact/20">
             <TabsTrigger value="workout" className="flex items-center gap-2 data-[state=active]:bg-ministry-gold data-[state=active]:text-black">
               <Dumbbell className="w-4 h-4" />
               Workout
@@ -769,7 +769,11 @@ export default function Fitness() {
               <Heart className="w-4 h-4" />
               Favorites
             </TabsTrigger>
-            <TabsTrigger value="plans" className="flex items-center gap-2 data-[state=active]:bg-ministry-gold data-[state=active]:text-black">
+            <TabsTrigger value="pre-built-plans" className="flex items-center gap-2 data-[state=active]:bg-ministry-gold data-[state=active]:text-black">
+              <BookOpen className="w-4 h-4" />
+              Plans
+            </TabsTrigger>
+            <TabsTrigger value="my-plans" className="flex items-center gap-2 data-[state=active]:bg-ministry-gold data-[state=active]:text-black">
               <List className="w-4 h-4" />
               My Plans
             </TabsTrigger>
@@ -1126,8 +1130,170 @@ export default function Fitness() {
             )}
           </TabsContent>
 
-          {/* Fitness Plans Tab */}
-          <TabsContent value="plans" className="space-y-6">
+          {/* Pre-built Plans Tab */}
+          <TabsContent value="pre-built-plans" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">Pre-built Workout Plans</h2>
+            </div>
+            
+            {/* Plan Selection Options */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {/* Level Selection */}
+              <Card className="bg-ministry-gold-exact/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-white text-sm">Fitness Level</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                    <SelectTrigger className="w-full" data-testid="select-fitness-level">
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="beginner">Beginner</SelectItem>
+                      <SelectItem value="intermediate">Intermediate</SelectItem>
+                      <SelectItem value="advanced">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+
+              {/* Equipment Selection */}
+              <Card className="bg-ministry-gold-exact/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-white text-sm">Available Equipment</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select value={selectedPlanEquipment} onValueChange={setSelectedPlanEquipment}>
+                    <SelectTrigger className="w-full" data-testid="select-plan-equipment">
+                      <SelectValue placeholder="Select equipment" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bodyweight">Bodyweight Only</SelectItem>
+                      <SelectItem value="dumbbells">Dumbbells</SelectItem>
+                      <SelectItem value="barbell">Barbell & Weights</SelectItem>
+                      <SelectItem value="gym">Full Gym Access</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+
+              {/* Start Day Selection */}
+              <Card className="bg-ministry-gold-exact/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-white text-sm">Start Day</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select value={selectedStartDay} onValueChange={setSelectedStartDay}>
+                    <SelectTrigger className="w-full" data-testid="select-start-day">
+                      <SelectValue placeholder="Select start day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monday">Monday</SelectItem>
+                      <SelectItem value="tuesday">Tuesday</SelectItem>
+                      <SelectItem value="wednesday">Wednesday</SelectItem>
+                      <SelectItem value="thursday">Thursday</SelectItem>
+                      <SelectItem value="friday">Friday</SelectItem>
+                      <SelectItem value="saturday">Saturday</SelectItem>
+                      <SelectItem value="sunday">Sunday</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Available Plans */}
+            {selectedLevel && selectedPlanEquipment && selectedStartDay && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white">
+                  Recommended {selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1)} Plans
+                </h3>
+                
+                {generatePreBuiltPlans(selectedLevel, selectedPlanEquipment, selectedStartDay).map((plan, index) => (
+                  <Card key={index} className="bg-ministry-gold-exact/20 border border-ministry-gold/30">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle className="text-white flex items-center gap-2">
+                            <BookOpen className="w-5 h-5 text-ministry-gold" />
+                            {plan.name}
+                          </CardTitle>
+                          <p className="text-sm text-gray-300 mt-1">{plan.description}</p>
+                        </div>
+                        <Badge variant="outline" className="border-ministry-gold text-ministry-gold">
+                          {plan.duration}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
+                        <div>
+                          <span className="font-medium text-ministry-gold">Level:</span>
+                          <p className="text-white capitalize">{plan.level}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-ministry-gold">Workouts/Week:</span>
+                          <p className="text-white">{plan.workoutsPerWeek}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-ministry-gold">Equipment:</span>
+                          <p className="text-white capitalize">{plan.equipment}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-ministry-gold">Start Day:</span>
+                          <p className="text-white capitalize">{plan.startDay}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-4">
+                        <h4 className="font-medium text-ministry-gold mb-2">Weekly Schedule:</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {plan.schedule.map((day, dayIndex) => (
+                            <Badge key={dayIndex} variant="secondary" className="bg-ministry-gold/20 text-white">
+                              {day}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleCreatePlanFromPrebuilt(plan)}
+                          disabled={createPrebuiltPlanMutation.isPending}
+                          className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                          data-testid={`button-create-prebuilt-plan-${index}`}
+                        >
+                          {createPrebuiltPlanMutation.isPending ? "Creating..." : "Create This Plan"}
+                        </Button>
+                        <Button
+                          onClick={() => setSelectedPlanForPreview(plan)}
+                          variant="outline"
+                          className="border-ministry-gold text-ministry-gold hover:bg-ministry-gold/10"
+                          data-testid={`button-preview-plan-${index}`}
+                        >
+                          Preview Exercises
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {(!selectedLevel || !selectedPlanEquipment || !selectedStartDay) && (
+              <Card className="bg-ministry-gold-exact/20">
+                <CardContent className="py-8 text-center">
+                  <BookOpen className="w-12 h-12 mx-auto text-ministry-gold mb-4" />
+                  <h3 className="text-lg font-semibold text-white mb-2">Choose Your Plan Settings</h3>
+                  <p className="text-gray-300">
+                    Select your fitness level, available equipment, and preferred start day to see recommended workout plans.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* My Fitness Plans Tab */}
+          <TabsContent value="my-plans" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">My Fitness Plans</h2>
               <Link href="/create-plan">

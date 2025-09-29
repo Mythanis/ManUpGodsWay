@@ -1,0 +1,340 @@
+1) Categorized exercise list (by equipment → body part)
+
+Below I give representative exercises you’ll commonly find in ExerciseDB (organized by equipment). This covers the major equipment types and body-parts so it’s easy to filter/exchange with actual API entries later.
+
+Equipment: Bodyweight (no extra equip)
+
+Chest: Push-ups (standard, incline, decline)
+
+Back: Inverted rows (or bodyweight rows), Superman
+
+Legs: Bodyweight squats, Lunges (walking/static), Bulgarian split squat (bodyweight)
+
+Shoulders: Pike push-ups, Handstand holds (progressions)
+
+Biceps: Chin-ups (bodyweight vertical pulling), Bodyweight biceps curl progressions
+
+Triceps: Diamond push-ups, Bench dips (bodyweight)
+
+Core: Plank, Side plank, Hollow hold, Mountain climbers
+
+Calves: Single-leg calf raises
+
+Full body / conditioning: Burpees, Jump squats
+
+Equipment: Dumbbell
+
+Chest: Dumbbell bench press (flat/incline), Dumbbell fly
+
+Back: Single-arm dumbbell row, Dumbbell pullover
+
+Legs: Goblet squat, Dumbbell Romanian deadlift, Dumbbell lunges
+
+Shoulders: Dumbbell shoulder press, Lateral raise, Front raise
+
+Biceps: Dumbbell curl (hammer, supinated)
+
+Triceps: Dumbbell overhead extension, Triceps kickback
+
+Core: Russian twists (DB), DB suitcase carry
+
+Calves: DB standing calf raise (holding DB)
+
+Equipment: Barbell
+
+Chest: Barbell bench press, Incline bench press
+
+Back: Barbell bent-over row, Deadlift (conventional or Romanian)
+
+Legs: Back squat, Front squat, Barbell lunges
+
+Shoulders: Push press, Overhead press (standing)
+
+Full body: Clean variations (if advanced)
+
+Equipment: Kettlebell
+
+Chest/back/hips: Kettlebell swing (hip hinge, conditioning)
+
+Shoulders: Kettlebell press, Turkish get-up (full body)
+
+Legs: Goblet squat (KB), KB lunges
+
+Core: Suitcase carry, Windmill
+
+Equipment: Cable / Machine
+
+Chest: Cable fly, Machine chest press
+
+Back: Lat pulldown, Seated cable row
+
+Shoulders: Cable lateral, Machine shoulder press
+
+Legs: Leg press, Leg curl, Leg extension
+
+Arms: Cable triceps pushdown, Cable biceps curl
+
+Equipment: Resistance band
+
+Chest: Band push-apart, Band push-up assistance
+
+Back: Band pull-apart, Banded rows
+
+Legs: Banded glute bridges, Banded monster walks
+
+Shoulders/arms: Band shoulder press, banded curls/triceps
+
+Equipment: Pull-up/Chin-up bar
+
+Back: Pull-up, Chin-up, Neutral grip pull-up
+
+Biceps: Chin-up emphasis
+
+Core: Hanging knee raises, Toes-to-bar (advanced)
+
+Equipment: Medicine Ball / Slam ball
+
+Full body: MB slams, MB throws, MB sit-ups
+
+2) 30-day whole-body workout plans (Beginner / Intermediate / Advanced)
+
+General notes before the plans:
+
+30 days = 4 full weeks + 2 days (I lay out a 4-week scheme and map days across 30 calendar days).
+
+Warm up 5–10 minutes before each workout (dynamic mobility, light cardio). Cool down + stretching 5–10 minutes after.
+
+Rest between sets: Beginner 60–90s, Intermediate 45–75s, Advanced 30–60s (noted per plan).
+
+Progression: increase weight or reps week-to-week or do an extra set on week 3–4.
+
+If you lack a piece of equipment substitute with a bodyweight or dumbbell alternative from the categories above.
+
+Plan structure summary
+
+Beginner: 3 full-body workouts per week (Mon/Wed/Fri), active recovery or light cardio other days. Focus on learning movement, moderate volume.
+
+Intermediate: 4 workouts per week (Upper/Lower/Full/Conditioning) — more volume and intensity.
+
+Advanced: 5 workouts per week — split into push/pull/legs/full/conditioning with higher sets and some interval cardio.
+
+A) Beginner — 30-day plan (3× week full-body — weeks 1–4)
+
+Frequency: Week pattern Mon / Wed / Fri = Workout A / B / C repeated. Two light active recovery days (walk, mobility) and one rest day.
+
+Workout A (Push + Legs + Core)
+
+Bodyweight squat — 3 sets × 10–12 reps (tempo: 2s down / 1s up) — rest 60–90s
+
+Incline push-ups (hands elevated to reduce load) — 3 × 8–12 — rest 60–90s
+
+Dumbbell Romanian deadlift (light) — 3 × 10 — rest 60–90s
+
+Dumbbell shoulder press (seated or standing) — 3 × 8–10 — rest 60–90s
+
+Plank — 3 × 20–40 sec — rest 45–60s
+
+Workout B (Pull + Legs + Core)
+
+Assisted chin-up / negative chin-up or inverted row — 3 × 6–10 — rest 60–90s
+
+Goblet squat (DB) — 3 × 10–12 — rest 60–90s
+
+Dumbbell single-arm row — 3 × 8–10 per side — rest 60–90s
+
+Glute bridge — 3 × 12–15 — rest 45–60s
+
+Dead bug — 3 × 8–12 per side (controlled) — rest 45–60s
+
+Workout C (Full body + conditioning)
+
+Dumbbell bench press (flat) — 3 × 8–10 — rest 60–90s
+
+Dumbbell reverse lunge — 3 × 8–10 per leg — rest 60–90s
+
+KB or DB swing or light medicine-ball squat-to-press — 3 × 12–15 — rest 60s
+
+Standing DB curl — 2 × 10–12 — rest 45–60s
+
+Farmer carry (DB) — 3 × 30–60 seconds (distance) — rest 60s
+
+Light cardio finisher: brisk walk or easy bike 12–20 minutes (steady)
+
+Weekly progression (beginner): Weeks 1–2 focus on form; weeks 3–4 add 1 set to big lifts or +1–2 reps per set.
+
+B) Intermediate — 30-day plan (4× week split)
+
+Frequency: Mon (Upper A), Tue (Lower A), Thu (Upper B), Fri (Lower B). Weekend active rest / optional conditioning.
+
+Upper A (Push emphasis)
+
+Barbell or DB bench press — 4 × 6–8 — rest 60–90s
+
+Seated DB shoulder press — 3 × 8–10 — rest 60s
+
+Incline dumbbell fly or cable fly — 3 × 10–12 — rest 60s
+
+Triceps rope pushdown (or DB overhead extension) — 3 × 10–12 — rest 45–60s
+
+Plank with shoulder taps — 3 × 30–45s — rest 45s
+
+Lower A (Heavy)
+
+Back squat (barbell) or goblet if no bar — 4 × 6–8 — rest 90–120s
+
+Romanian deadlift (barbell or DB) — 3 × 8–10 — rest 90s
+
+Bulgarian split squat — 3 × 8–10 per leg — rest 60–90s
+
+Standing calf raises — 3 × 12–15 — rest 45–60s
+
+Upper B (Pull emphasis)
+
+Pull-ups or Lat pulldown — 4 × 6–8 — rest 60–90s
+
+Barbell bent-over row or single-arm DB row — 4 × 6–8 — rest 60–90s
+
+Face pulls or rear delt fly (cable/DB) — 3 × 12–15 — rest 45–60s
+
+Biceps curl (barbell or DB) — 3 × 10–12 — rest 45–60s
+
+Lower B (Hypertrophy & conditioning)
+
+Deadlift (Romanian or conventional) — 3 × 5–6 (if conventional) or 4 × 6–8 (RDL) — rest 90–120s
+
+Leg press or front squat — 3 × 10–12 — rest 60–90s
+
+Walking lunges — 3 × 12–16 steps total — rest 60s
+
+Core circuit (Russian twists 30s + plank 30s) × 3 rounds — rest 60s between rounds
+
+Weekly progression (intermediate): Add weight when you can complete top of rep range with good form; alternate a heavier week with slightly reduced volume every 4th week.
+
+C) Advanced — 30-day plan (5× week split)
+
+Frequency: Push / Pull / Legs / Full / Conditioning or accessory. Higher volume and intensity, includes variations, tempo and short intervals.
+
+Day 1 — Push (heavy)
+
+Barbell bench press — 5 × 5 — rest 90s
+
+Overhead press (barbell) — 4 × 5–6 — rest 90s
+
+Incline DB press — 3 × 8–10 — rest 60s
+
+Weighted dips or triceps heavy — 3 × 6–8 — rest 60–90s
+
+Lateral raise supersets: 3 × 12 + 3 × 15 (rear delt) — rest 45s
+
+Day 2 — Pull (heavy)
+
+Deadlift or rack pulls — 4 × 3–5 — rest 120s
+
+Weighted pull-ups — 4 × 6–8 — rest 90s
+
+Barbell row (Pendlay or bent) — 4 × 6–8 — rest 60–90s
+
+Hammer curls / incline curls — 3 × 8–10 — rest 45–60s
+
+Face pulls 3 × 15 — rest 45s
+
+Day 3 — Legs (heavy + plyo)
+
+Back squat — 5 × 5 — rest 120s
+
+Front squat or Bulgarian split — 4 × 6–8 — rest 90s
+
+Romanian deadlift heavy — 4 × 6–8 — rest 90s
+
+Plyo finisher: Box jumps 3 × 6–8 (or jump lunges 3×10) — rest 60s
+
+Calf heavy sets 4 × 10–15 — rest 45–60s
+
+Day 4 — Full body / Hypertrophy
+
+Incline DB press — 4 × 8–10 — rest 60s
+
+Single-arm DB row — 4 × 8–10 — rest 60s
+
+KB swings — 3 × 15 — rest 45–60s
+
+Walking lunges — 3 × 12 per leg — rest 60s
+
+Core superset: Hanging leg raises 3 × 12 + Pallof press 3 × 12 per side — rest 45–60s
+
+Day 5 — Conditioning / Weakness work
+
+HIIT bike or rowing intervals: 10–12 rounds of 20s all-out / 40s easy (total ~12–18 min)
+
+Accessory: rotator cuff work, mobility, and band pull-aparts 3 × 15
+
+Sets / reps / rest (advanced): Shorter rest on auxiliary lifts, heavier loads on compound lifts. Track intensity % if possible.
+
+3) Exact rep/set/time templates & sample day-by-day mapping (30 days)
+
+Below I provide a full day-by-day mapping for the first 14 days (so you can see the exact daily layout) and then a weekly template to repeat/advance for days 15–30. If you want, I can expand and print every single day separately for all 30 days; for concision I give full templates and clear instructions for progressive increases.
+
+Example: Beginner — 30-day calendar (concrete)
+
+Week 1 (Days 1–7)
+
+Day 1 (Mon): Workout A — as listed (BW squat 3×10–12; incline push-up 3×8–12; DB RDL 3×10; DB shoulder press 3×8–10; Plank 3×30s)
+
+Day 2 (Tue): Active recovery: 20–30 min walk + mobility
+
+Day 3 (Wed): Workout B — (Assisted chin-up 3×6–10; goblet squat 3×10–12; DB single arm row 3×8–10; glute bridge 3×12–15; dead bug 3×10 each)
+
+Day 4 (Thu): Light cardio 20 mins (bike/walk) + mobility
+
+Day 5 (Fri): Workout C — (DB bench press 3×8–10; DB reverse lunge 3×8 per leg; KB swing 3×12; DB curl 2×10–12; farmer carry 3×40s; easy cardio 12–15 mins)
+
+Day 6 (Sat): Optional light activity (swim/walk) or rest
+
+Day 7 (Sun): Rest
+
+Repeat and progress: Weeks 2–4 repeat same pattern. On week 3 add +1 set to major lifts or +2 reps each set.
+
+Example numbers for each exercise (to copy into a tracker)
+
+Bodyweight squat — 3 × 10–12 — tempo 2s down/1s up — rest 60–90s.
+
+Incline push-ups — 3 × 8–12 — rest 60–90s.
+
+Dumbbell Romanian deadlift — 3 × 10 — rest 60–90s.
+
+Plank — 3 × 20–40s — rest 45–60s.
+
+Cardio day: 20 minutes steady brisk walk or bike (or 12–15 min easy jog).
+
+(Intermediate and advanced day-by-day mapping follows the weekly templates above: repeat weekly with incremental weight/repetition increases; swap in variation exercises on week 3 for variety.)
+
+4) How to map these names back to ExerciseDB entries later
+
+When you (or I) are able to fetch the API dataset we can:
+
+Query the API by exercise name (or by bodyPart / equipment) and pull the full metadata (images, instructions, video, IDs).
+
+Replace any exercise in the plan with an alternative from the same equipment/body-part as needed.
+
+The GitHub docs confirm the V2 structure includes fields like exerciseId, name, equipments, bodyParts, exerciseType, targetMuscles, instructions, and media URLs — so mapping is straightforward. 
+GitHub
+
+5) Safety, scaling, and final suggestions
+
+If you’re new to resistance training, run the Beginner plan for 6–8 weeks before moving to Intermediate.
+
+Advanced lifters should program deload weeks every 4–8 weeks.
+
+If you have injuries or medical issues, run the plan by a clinician or physical therapist.
+
+If you want exact daily files (CSV, spreadsheet) with each day enumerated, I can create and provide that now.
+
+Quick next steps I can do now (pick one)
+
+Create a full 30-day printable spreadsheet for any of the three levels (I can generate a downloadable CSV/XLSX).
+
+Attempt again to fetch the complete ExerciseDB JSON data and replace each exercise name with the exact API entry (if you want me to try fetching a particular endpoint URL, paste it).
+
+Tailor the 30-day program to specific constraints (equipment you have, days/week availability, injuries, goals like fat loss vs strength).
+
+Which would you like? (If you want the full API dump mapped into this plan, paste the exact API endpoint you prefer and I’ll pull it and map entries.)
