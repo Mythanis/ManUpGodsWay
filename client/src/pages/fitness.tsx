@@ -163,19 +163,24 @@ export default function Fitness() {
     );
   };
 
-  // Get all today's exercises from all user plans
+  // Get all today's exercises from all user plans (deduplicated)
   const getAllTodaysExercises = () => {
     if (!fitnessPlans) return [];
     
     const allExercises: Array<FitnessPlanExercise & { planName: string }> = [];
+    const seenExerciseIds = new Set<string>();
     
     fitnessPlans.forEach((plan: FitnessPlan) => {
       const todaysExercises = getTodaysExercises(plan);
       todaysExercises.forEach(exercise => {
-        allExercises.push({
-          ...exercise,
-          planName: plan.name
-        });
+        // Only add if we haven't seen this exercise ID before
+        if (!seenExerciseIds.has(exercise.exerciseId)) {
+          seenExerciseIds.add(exercise.exerciseId);
+          allExercises.push({
+            ...exercise,
+            planName: plan.name
+          });
+        }
       });
     });
     
