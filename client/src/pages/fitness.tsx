@@ -1801,6 +1801,143 @@ export default function Fitness() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Pre-built Plan Preview Modal */}
+      <Dialog open={!!selectedPlanForPreview} onOpenChange={() => setSelectedPlanForPreview(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BookOpen className="w-5 h-5" />
+              {selectedPlanForPreview?.name || 'Plan Preview'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedPlanForPreview && (
+            <div className="space-y-4">
+              {/* Plan Overview */}
+              <div className="p-4 bg-ministry-gold/20 rounded-lg">
+                <h3 className="font-semibold text-lg mb-2">{selectedPlanForPreview.name}</h3>
+                <p className="text-sm text-muted-foreground mb-3">{selectedPlanForPreview.description}</p>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-ministry-gold">Level:</span>
+                    <p className="capitalize">{selectedPlanForPreview.level}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-ministry-gold">Duration:</span>
+                    <p>{selectedPlanForPreview.duration}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-ministry-gold">Equipment:</span>
+                    <p className="capitalize">{selectedPlanForPreview.equipment}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-ministry-gold">Workouts/Week:</span>
+                    <p>{selectedPlanForPreview.workoutsPerWeek}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Exercises List */}
+              <div>
+                <h4 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <Dumbbell className="w-5 h-5 text-ministry-gold" />
+                  All Exercises ({selectedPlanForPreview.exercises.length})
+                </h4>
+                
+                <div className="space-y-3">
+                  {selectedPlanForPreview.exercises.map((exercise, index) => (
+                    <Card key={index} className="border border-border">
+                      <CardContent className="p-4">
+                        <div className="flex gap-4">
+                          {/* Exercise Details */}
+                          <div className="flex-grow">
+                            <h5 className="font-medium text-base mb-2">
+                              {index + 1}. {exercise.name}
+                            </h5>
+                            
+                            {/* Sets, Reps, Duration */}
+                            <div className="grid grid-cols-3 gap-3 text-sm mb-2">
+                              <div className="flex items-center gap-1">
+                                <span className="font-medium">Sets:</span>
+                                <span className="text-ministry-gold">{exercise.sets}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="font-medium">Reps:</span>
+                                <span className="text-ministry-gold">{exercise.reps}</span>
+                              </div>
+                              {exercise.duration && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-4 h-4" />
+                                  <span className="font-medium">Time:</span>
+                                  <span className="text-ministry-gold">{exercise.duration}s</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Training Day */}
+                            <div className="mb-2">
+                              <span className="text-sm font-medium">Training Day: </span>
+                              <Badge variant="outline" className="text-xs">
+                                {exercise.day}
+                              </Badge>
+                            </div>
+
+                            {/* Rest Period */}
+                            <div className="mb-2">
+                              <span className="text-sm font-medium">Rest: </span>
+                              <span className="text-sm text-ministry-gold">{exercise.rest}</span>
+                            </div>
+
+                            {/* Body Part and Equipment */}
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              <Badge variant="secondary" className="text-xs capitalize">
+                                {exercise.bodyPart}
+                              </Badge>
+                              {exercise.equipment.map((eq, eqIndex) => (
+                                <Badge key={eqIndex} variant="outline" className="text-xs capitalize">
+                                  {eq}
+                                </Badge>
+                              ))}
+                            </div>
+
+                            {/* Notes */}
+                            {exercise.notes && (
+                              <div className="p-2 bg-ministry-gold/10 rounded text-sm">
+                                <span className="font-medium">Notes: </span>
+                                {exercise.notes}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-4 border-t">
+                <Button
+                  onClick={() => handleCreatePlanFromPrebuilt(selectedPlanForPreview)}
+                  disabled={createPrebuiltPlanMutation.isPending}
+                  className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                >
+                  {createPrebuiltPlanMutation.isPending ? "Creating..." : "Create This Plan"}
+                </Button>
+                <Button
+                  onClick={() => setSelectedPlanForPreview(null)}
+                  variant="outline"
+                  className="border-ministry-gold text-ministry-gold hover:bg-ministry-gold/10"
+                >
+                  Close Preview
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
