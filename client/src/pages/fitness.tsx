@@ -1271,13 +1271,13 @@ export default function Fitness() {
         </Tabs>
       </div>
 
-      {/* Today's Exercises Modal */}
+      {/* Plan Exercises Modal */}
       <Dialog open={showPlanModal} onOpenChange={setShowPlanModal}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Today's Exercises
+              <Dumbbell className="w-5 h-5" />
+              Plan Exercises
             </DialogTitle>
           </DialogHeader>
           
@@ -1285,23 +1285,33 @@ export default function Fitness() {
             <div className="space-y-4">
               <div className="text-center p-4 bg-ministry-gold/20 rounded-lg">
                 <h3 className="font-semibold text-lg">{selectedPlanForView.name}</h3>
-                <p className="text-sm text-muted-foreground capitalize">
-                  {getCurrentDayOfWeek()}
+                <p className="text-sm text-muted-foreground">
+                  {selectedPlanForView.exercises?.length || 0} exercises in this plan
                 </p>
               </div>
 
               {(() => {
-                const todaysExercises = getTodaysExercises(selectedPlanForView);
+                const allExercises = selectedPlanForView.exercises || [];
                 
-                if (todaysExercises.length === 0) {
+                // Remove duplicates based on exerciseId
+                const seenExerciseIds = new Set<string>();
+                const uniqueExercises = allExercises.filter(exercise => {
+                  if (seenExerciseIds.has(exercise.exerciseId)) {
+                    return false;
+                  }
+                  seenExerciseIds.add(exercise.exerciseId);
+                  return true;
+                });
+                
+                if (uniqueExercises.length === 0) {
                   return (
                     <div className="text-center py-8">
-                      <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
+                      <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
                       <p className="text-muted-foreground">
-                        No exercises scheduled for today
+                        No exercises in this plan
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Rest day or check your plan schedule
+                        Edit the plan to add exercises
                       </p>
                     </div>
                   );
@@ -1309,55 +1319,71 @@ export default function Fitness() {
 
                 return (
                   <div className="space-y-3">
-                    {todaysExercises.map((exercise, index) => (
+                    {uniqueExercises.map((exercise, index) => (
                       <Card key={exercise.id} className="border border-border">
                         <CardContent className="p-4">
-                          <div className="flex gap-3">
+                          <div className="flex gap-4">
                             {/* Exercise Image */}
                             <div className="flex-shrink-0">
-                              {exercise.exerciseGifUrl ? (
+                              {(exercise.exerciseGifUrl || exercise.imageUrl) ? (
                                 <img
-                                  src={exercise.exerciseGifUrl}
+                                  src={exercise.exerciseGifUrl || exercise.imageUrl}
                                   alt={exercise.exerciseName}
-                                  className="w-16 h-16 rounded-lg object-cover"
+                                  className="w-20 h-20 rounded-lg object-cover"
                                   data-testid={`img-modal-exercise-${exercise.exerciseId}`}
                                 />
                               ) : (
-                                <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
-                                  <Dumbbell className="w-6 h-6 text-muted-foreground" />
+                                <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center">
+                                  <Dumbbell className="w-8 h-8 text-muted-foreground" />
                                 </div>
                               )}
                             </div>
 
                             {/* Exercise Details */}
                             <div className="flex-grow">
-                              <h4 className="font-medium text-sm mb-1" data-testid={`text-modal-exercise-name-${exercise.exerciseId}`}>
+                              <h4 className="font-medium text-base mb-2" data-testid={`text-modal-exercise-name-${exercise.exerciseId}`}>
                                 {index + 1}. {exercise.exerciseName}
                               </h4>
                               
-                              <div className="grid grid-cols-2 gap-2 text-xs">
+                              {/* Sets, Reps, and Time */}
+                              <div className="grid grid-cols-3 gap-3 text-sm mb-2">
                                 <div className="flex items-center gap-1">
                                   <span className="font-medium">Sets:</span>
-                                  <span data-testid={`text-modal-sets-${exercise.exerciseId}`}>{exercise.sets}</span>
+                                  <span className="text-ministry-gold" data-testid={`text-modal-sets-${exercise.exerciseId}`}>{exercise.sets}</span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <span className="font-medium">Reps:</span>
-                                  <span data-testid={`text-modal-reps-${exercise.exerciseId}`}>{exercise.reps}</span>
+                                  <span className="text-ministry-gold" data-testid={`text-modal-reps-${exercise.exerciseId}`}>{exercise.reps}</span>
                                 </div>
+                                {exercise.duration && (
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="w-4 h-4" />
+                                    <span className="font-medium">Time:</span>
+                                    <span className="text-ministry-gold" data-testid={`text-modal-minutes-${exercise.exerciseId}`}>{exercise.duration} min</span>
+                                  </div>
+                                )}
                               </div>
 
-                              {exercise.duration && (
-                                <div className="flex items-center gap-1 text-xs mt-1">
-                                  <Clock className="w-3 h-3" />
-                                  <span className="font-medium">Time:</span>
-                                  <span data-testid={`text-modal-minutes-${exercise.exerciseId}`}>{exercise.duration} min</span>
+                              {/* Scheduled Days */}
+                              {exercise.daysOfWeek && exercise.daysOfWeek.length > 0 && (
+                                <div className="mb-2">
+                                  <span className="text-sm font-medium">Scheduled: </span>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {exercise.daysOfWeek.map((day: string) => (
+                                      <Badge key={day} variant="outline" className="text-xs capitalize">
+                                        {day}
+                                      </Badge>
+                                    ))}
+                                  </div>
                                 </div>
                               )}
 
+                              {/* Notes */}
                               {exercise.notes && (
-                                <p className="text-xs text-muted-foreground mt-1">
+                                <div className="p-2 bg-ministry-gold/10 rounded text-sm">
+                                  <span className="font-medium">Notes: </span>
                                   {exercise.notes}
-                                </p>
+                                </div>
                               )}
                             </div>
                           </div>
