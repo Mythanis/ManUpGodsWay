@@ -1,10 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Dumbbell, Clock, Target, Calendar } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, Dumbbell, Clock, Target, Calendar, CheckCircle } from "lucide-react";
 import { useLocation, Link } from "wouter";
-import type { FitnessPlan, FitnessPlanExercise } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import type { FitnessPlan, FitnessPlanExercise, ExerciseCompletion } from "@shared/schema";
 
 // Type for plan with exercises included
 type FitnessPlanWithExercises = FitnessPlan & { exercises: FitnessPlanExercise[] };
@@ -41,6 +44,8 @@ const getDifficultyColor = (difficulty: string) => {
 export default function ViewPlan() {
   const [location] = useLocation();
   const planId = location.split('/')[3]; // /fitness/plans/{planId}
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Fetch plan data
   const { data: plan, isLoading, error } = useQuery<FitnessPlanWithExercises>({
@@ -52,6 +57,121 @@ export default function ViewPlan() {
     },
     enabled: !!planId,
   });
+
+  // Fetch exercise completions
+  const { data: completions = [] } = useQuery<ExerciseCompletion[]>({
+    queryKey: ['api', 'fitness-plans', planId, 'completions'],
+    queryFn: async () => {
+      const response = await fetch(`/api/fitness-plans/${planId}/completions`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch completions');
+      return response.json();
+    },
+    enabled: !!planId,
+  });
+
+  // Mark exercise complete mutation
+  const markCompleteMutation = useMutation({
+    mutationFn: async (exerciseId: string) => {
+      return apiRequest('POST', `/api/fitness-plans/${planId}/exercises/${exerciseId}/complete`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['api', 'fitness-plans', planId, 'completions'] });
+      toast({ title: "Exercise marked complete!" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to mark exercise complete",
+        variant: "destructive"
+      });
+    },
+  });
+
+  // Unmark exercise complete mutation
+  const unmarkCompleteMutation = useMutation({
+    mutationFn: async (exerciseId: string) => {
+      return apiRequest('DELETE', `/api/fitness-plans/${planId}/exercises/${exerciseId}/complete`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['api', 'fitness-plans', planId, 'completions'] });
+      toast({ title: "Exercise unmarked" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error", 
+        description: error.message || "Failed to unmark exercise",
+        variant: "destructive"
+      });
+    },
+  });
+
+  // Helper function to parse week number from exercise notes
+  const parseWeekFromNotes = (notes: string): number => {
+    const weekMatch = notes?.match(/Week(\d+)/i);
+    return weekMatch ? parseInt(weekMatch[1]) : 1;
+  };
+
+  // Helper function to determine current week based on plan start date and completion
+  const getCurrentWeek = (plan: FitnessPlan, exercises: FitnessPlanExercise[], completions: ExerciseCompletion[]): number => {
+    if (!plan || !exercises || exercises.length === 0) return 1;
+
+    const planStartDate = new Date(plan.createdAt || Date.now());
+    const currentDate = new Date();
+    
+    // Calculate weeks passed since plan start
+    const daysSinceStart = Math.floor((currentDate.getTime() - planStartDate.getTime()) / (1000 * 60 * 60 * 24));
+    const weeksSinceStart = Math.ceil(daysSinceStart / 7);
+    
+    // Group exercises by week
+    const exercisesByWeek: { [week: number]: FitnessPlanExercise[] } = {};
+    exercises.forEach(exercise => {
+      const week = parseWeekFromNotes(exercise.notes || '');
+      if (!exercisesByWeek[week]) exercisesByWeek[week] = [];
+      exercisesByWeek[week].push(exercise);
+    });
+
+    // Check completion status for each week
+    for (let week = 1; week <= 4; week++) {
+      const weekExercises = exercisesByWeek[week] || [];
+      if (weekExercises.length === 0) continue;
+
+      // Count completed exercises for this week
+      const completedInWeek = weekExercises.filter(exercise => 
+        completions.some(completion => completion.exerciseId === exercise.id)
+      ).length;
+
+      // If this week is not fully completed, this is the current week
+      if (completedInWeek < weekExercises.length) {
+        return week;
+      }
+    }
+
+    // If all weeks are complete, show week 4 
+    return Math.min(4, weeksSinceStart);
+  };
+
+  // Check if exercise is completed
+  const isExerciseCompleted = (exerciseId: string): boolean => {
+    return completions.some(completion => completion.exerciseId === exerciseId);
+  };
+
+  // Handle exercise completion toggle
+  const handleExerciseComplete = (exerciseId: string, isCompleted: boolean) => {
+    if (isCompleted) {
+      unmarkCompleteMutation.mutate(exerciseId);
+    } else {
+      markCompleteMutation.mutate(exerciseId);
+    }
+  };
+
+  // Get current week and filter exercises
+  const currentWeek = plan && plan.exercises ? getCurrentWeek(plan, plan.exercises, completions) : 1;
+  const currentWeekExercises = plan?.exercises?.filter(exercise => 
+    parseWeekFromNotes(exercise.notes || '') === currentWeek
+  ) || [];
+
+  const totalWeeks = 4;
+  const completedWeeksCount = Math.max(0, currentWeek - 1);
 
   if (isLoading) {
     return (
@@ -114,6 +234,37 @@ export default function ViewPlan() {
       </div>
 
       <div className="p-4 space-y-6">
+        {/* Weekly Progress */}
+        <Card className="bg-ministry-charcoal border-ministry-steel">
+          <CardHeader>
+            <CardTitle className="text-ministry-gold flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Week {currentWeek} of {totalWeeks}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-white space-y-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex-1">
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Progress</span>
+                  <span>{completedWeeksCount} of {totalWeeks} weeks completed</span>
+                </div>
+                <div className="w-full bg-ministry-steel rounded-full h-2">
+                  <div 
+                    className="bg-ministry-gold h-2 rounded-full transition-all duration-300" 
+                    style={{ width: `${(completedWeeksCount / totalWeeks) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+            <p className="text-ministry-steel text-sm">
+              {currentWeek === 1 ? "Starting your fitness journey!" : 
+               currentWeek === totalWeeks ? "Final week - finish strong!" :
+               `Keep going! Week ${currentWeek} exercises below.`}
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Plan Details */}
         <Card className="bg-ministry-gold border-ministry-gold">
           <CardHeader>
@@ -160,22 +311,33 @@ export default function ViewPlan() {
           </CardContent>
         </Card>
 
-        {/* Exercises */}
+        {/* Current Week Exercises */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5" />
-              Exercises ({plan.exercises?.length || 0})
+              Week {currentWeek} Exercises ({currentWeekExercises.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {plan.exercises && plan.exercises.length > 0 ? (
-              plan.exercises
+            {currentWeekExercises && currentWeekExercises.length > 0 ? (
+              currentWeekExercises
                 .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0))
-                .map((exercise, index) => (
-                  <Card key={exercise.id} className="border border-border">
+                .map((exercise, index) => {
+                  const isCompleted = isExerciseCompleted(exercise.id);
+                  return (
+                  <Card key={exercise.id} className={`border border-border ${isCompleted ? 'bg-green-50 dark:bg-green-950' : ''}`}>
                     <CardContent className="p-4">
                       <div className="flex gap-4">
+                        {/* Completion Checkbox */}
+                        <div className="flex-shrink-0 pt-2">
+                          <Checkbox
+                            checked={isCompleted}
+                            onCheckedChange={() => handleExerciseComplete(exercise.id, isCompleted)}
+                            className="w-5 h-5"
+                            data-testid={`checkbox-exercise-${exercise.exerciseId}`}
+                          />
+                        </div>
                         {/* Exercise Image/GIF */}
                         <div className="flex-shrink-0">
                           {exercise.imageUrl ? (
@@ -276,7 +438,8 @@ export default function ViewPlan() {
                       </div>
                     </CardContent>
                   </Card>
-                ))
+                  );
+                })
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <Dumbbell className="w-12 h-12 mx-auto mb-2" />
