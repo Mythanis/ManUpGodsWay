@@ -3983,6 +3983,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Exercise database routes
+  
+  // Get distinct body parts (must come before /api/exercises/:id)
+  app.get('/api/exercises/metadata/body-parts', async (req, res) => {
+    try {
+      const bodyParts = await storage.getDistinctBodyParts();
+      res.json(bodyParts);
+    } catch (error) {
+      console.error('Error fetching body parts:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get distinct equipment (must come before /api/exercises/:id)
+  app.get('/api/exercises/metadata/equipment', async (req, res) => {
+    try {
+      const equipment = await storage.getDistinctEquipment();
+      res.json(equipment);
+    } catch (error) {
+      console.error('Error fetching equipment:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get distinct targets (must come before /api/exercises/:id)
+  app.get('/api/exercises/metadata/targets', async (req, res) => {
+    try {
+      const targets = await storage.getDistinctTargets();
+      res.json(targets);
+    } catch (error) {
+      console.error('Error fetching targets:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get all exercises with optional filtering
+  app.get('/api/exercises', async (req, res) => {
+    try {
+      const { bodyPart, equipment, target, search, limit = '50', offset = '0' } = req.query;
+      
+      const result = await storage.getAllExercises({
+        bodyPart: bodyPart as string,
+        equipment: equipment as string,
+        target: target as string,
+        search: search as string,
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string),
+      });
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching exercises:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get exercise by ID
+  app.get('/api/exercises/:id', async (req, res) => {
+    try {
+      const exercise = await storage.getExerciseById(req.params.id);
+      if (!exercise) {
+        return res.status(404).json({ message: 'Exercise not found' });
+      }
+      res.json(exercise);
+    } catch (error) {
+      console.error('Error fetching exercise:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Favorite exercises routes
   // Get user's favorite exercises
   app.get('/api/favorite-exercises', isAuthenticated, async (req: any, res) => {
