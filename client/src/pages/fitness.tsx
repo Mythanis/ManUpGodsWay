@@ -1136,7 +1136,7 @@ export default function Fitness() {
           minutes: exercise.duration,
           restTime: parseInt(exercise.rest.replace(/[^0-9]/g, '')) || 60,
           notes: `${exercise.rest} rest - Training Day: ${exercise.day}`,
-          daysOfWeek: [convertTrainingDayToWeekday(exercise.day)], // Convert training day to valid weekday
+          daysOfWeek: [getExerciseTrainingDay(i, preBuiltPlan.startDay, preBuiltPlan.schedule)], // Properly distribute across selected days
           orderIndex: i
         };
         
@@ -1162,18 +1162,39 @@ export default function Fitness() {
     },
   });
 
-  // Helper function to convert training day letters to weekday names
-  const convertTrainingDayToWeekday = (day: string) => {
-    const dayMap: { [key: string]: string } = {
-      'A': 'monday',
-      'B': 'tuesday', 
-      'C': 'wednesday',
-      'D': 'thursday',
-      'E': 'friday',
-      'F': 'saturday',
-      'G': 'sunday'
+  // Helper function to distribute exercises across selected training days
+  const getExerciseTrainingDay = (exerciseIndex: number, startDay: string, schedule: string[]) => {
+    // Convert user's selected start day to weekday index (0 = sunday, 1 = monday, etc.)
+    const dayToIndex: { [key: string]: number } = {
+      'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3, 
+      'thursday': 4, 'friday': 5, 'saturday': 6
     };
-    return dayMap[day] || 'monday'; // Default to monday if invalid
+    
+    const indexToDay: { [key: number]: string } = {
+      0: 'sunday', 1: 'monday', 2: 'tuesday', 3: 'wednesday',
+      4: 'thursday', 5: 'friday', 6: 'saturday'
+    };
+    
+    const startIndex = dayToIndex[startDay.toLowerCase()] || 1; // Default to monday
+    
+    // Calculate which day this exercise should be on based on the training schedule
+    const dayOffset = exerciseIndex % schedule.length;
+    
+    // Map schedule days to actual weekdays starting from selected start day
+    const scheduleDayToWeekday = (scheduleIndex: number) => {
+      const scheduleDay = schedule[scheduleIndex].toLowerCase();
+      
+      // If schedule uses actual weekday names, use them directly
+      if (dayToIndex.hasOwnProperty(scheduleDay)) {
+        return scheduleDay;
+      }
+      
+      // Otherwise distribute across training frequency starting from start day
+      const weekdayIndex = (startIndex + scheduleIndex * 2) % 7; // Space out by 2 days
+      return indexToDay[weekdayIndex];
+    };
+    
+    return scheduleDayToWeekday(dayOffset);
   };
 
   // Helper function to get exercise GIF URLs (since no ExerciseDB integration available)
