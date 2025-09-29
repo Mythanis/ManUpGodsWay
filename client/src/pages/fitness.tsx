@@ -1787,7 +1787,7 @@ export default function Fitness() {
                       <div className="mb-4">
                         <h4 className="font-medium text-ministry-gold mb-2">Weekly Schedule:</h4>
                         <div className="flex flex-wrap gap-2">
-                          {plan.schedule.map((day, dayIndex) => (
+                          {(plan.schedule || []).map((day, dayIndex) => (
                             <Badge key={dayIndex} variant="secondary" className="bg-ministry-gold/20 text-black">
                               {day}
                             </Badge>
