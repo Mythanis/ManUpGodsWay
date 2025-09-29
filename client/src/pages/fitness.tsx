@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
@@ -102,6 +103,7 @@ interface FitnessPlanExercise {
   reps?: number;
   duration?: number;
   notes?: string;
+  daysOfWeek?: string[];
   orderIndex: number;
 }
 
@@ -127,8 +129,34 @@ export default function Fitness() {
   const [newPlanName, setNewPlanName] = useState('');
   const [newPlanDescription, setNewPlanDescription] = useState('');
   
+  // Modal state for viewing today's exercises
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [selectedPlanForView, setSelectedPlanForView] = useState<FitnessPlan | null>(null);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Get current day of the week
+  const getCurrentDayOfWeek = () => {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    return days[new Date().getDay()];
+  };
+
+  // Handle viewing plan modal
+  const handleViewPlan = (plan: FitnessPlan) => {
+    setSelectedPlanForView(plan);
+    setShowPlanModal(true);
+  };
+
+  // Get today's exercises from a plan
+  const getTodaysExercises = (plan: FitnessPlan) => {
+    const today = getCurrentDayOfWeek();
+    if (!plan.exercises) return [];
+    
+    return plan.exercises.filter(exercise => 
+      exercise.daysOfWeek && exercise.daysOfWeek.includes(today)
+    );
+  };
 
   // Fetch all published fitness challenges
   const { data: challenges = [], isLoading } = useQuery({
@@ -1159,6 +1187,7 @@ export default function Fitness() {
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => handleViewPlan(plan)}
                             className="border-ministry-steel text-white hover:bg-ministry-steel hover:text-white"
                             data-testid={`button-view-plan-${plan.id}`}
                           >
@@ -1196,6 +1225,107 @@ export default function Fitness() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Today's Exercises Modal */}
+      <Dialog open={showPlanModal} onOpenChange={setShowPlanModal}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Today's Exercises
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedPlanForView && (
+            <div className="space-y-4">
+              <div className="text-center p-4 bg-ministry-gold/20 rounded-lg">
+                <h3 className="font-semibold text-lg">{selectedPlanForView.name}</h3>
+                <p className="text-sm text-muted-foreground capitalize">
+                  {getCurrentDayOfWeek()}
+                </p>
+              </div>
+
+              {(() => {
+                const todaysExercises = getTodaysExercises(selectedPlanForView);
+                
+                if (todaysExercises.length === 0) {
+                  return (
+                    <div className="text-center py-8">
+                      <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground">
+                        No exercises scheduled for today
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Rest day or check your plan schedule
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-3">
+                    {todaysExercises.map((exercise, index) => (
+                      <Card key={exercise.id} className="border border-border">
+                        <CardContent className="p-4">
+                          <div className="flex gap-3">
+                            {/* Exercise Image */}
+                            <div className="flex-shrink-0">
+                              {exercise.exerciseGifUrl ? (
+                                <img
+                                  src={exercise.exerciseGifUrl}
+                                  alt={exercise.exerciseName}
+                                  className="w-16 h-16 rounded-lg object-cover"
+                                  data-testid={`img-modal-exercise-${exercise.exerciseId}`}
+                                />
+                              ) : (
+                                <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
+                                  <Dumbbell className="w-6 h-6 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Exercise Details */}
+                            <div className="flex-grow">
+                              <h4 className="font-medium text-sm mb-1" data-testid={`text-modal-exercise-name-${exercise.exerciseId}`}>
+                                {index + 1}. {exercise.exerciseName}
+                              </h4>
+                              
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div className="flex items-center gap-1">
+                                  <span className="font-medium">Sets:</span>
+                                  <span data-testid={`text-modal-sets-${exercise.exerciseId}`}>{exercise.sets}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <span className="font-medium">Reps:</span>
+                                  <span data-testid={`text-modal-reps-${exercise.exerciseId}`}>{exercise.reps}</span>
+                                </div>
+                              </div>
+
+                              {exercise.duration && (
+                                <div className="flex items-center gap-1 text-xs mt-1">
+                                  <Clock className="w-3 h-3" />
+                                  <span className="font-medium">Time:</span>
+                                  <span data-testid={`text-modal-minutes-${exercise.exerciseId}`}>{exercise.duration} min</span>
+                                </div>
+                              )}
+
+                              {exercise.notes && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {exercise.notes}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
