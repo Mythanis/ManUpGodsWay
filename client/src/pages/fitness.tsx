@@ -109,6 +109,30 @@ interface FitnessPlanExercise {
   orderIndex: number;
 }
 
+interface PreBuiltPlan {
+  name: string;
+  description: string;
+  level: 'beginner' | 'intermediate' | 'advanced';
+  equipment: string;
+  duration: string;
+  workoutsPerWeek: number;
+  startDay: string;
+  schedule: string[];
+  exercises: PreBuiltExercise[];
+}
+
+interface PreBuiltExercise {
+  name: string;
+  sets: number;
+  reps: number;
+  duration?: number;
+  rest: string;
+  day: string;
+  equipment: string[];
+  bodyPart: string;
+  notes?: string;
+}
+
 export default function Fitness() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterCategory, setFilterCategory] = useState<string>('all');
@@ -137,6 +161,12 @@ export default function Fitness() {
   
   // Exercise completion tracking
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
+  
+  // Pre-built Plans state
+  const [selectedLevel, setSelectedLevel] = useState<string>('');
+  const [selectedPlanEquipment, setSelectedPlanEquipment] = useState<string>('');
+  const [selectedStartDay, setSelectedStartDay] = useState<string>('');
+  const [selectedPlanForPreview, setSelectedPlanForPreview] = useState<PreBuiltPlan | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -728,6 +758,214 @@ export default function Fitness() {
       </CardContent>
     </Card>
   );
+
+  // Generate pre-built plans based on user selections
+  const generatePreBuiltPlans = (level: string, equipment: string, startDay: string): PreBuiltPlan[] => {
+    const plans: PreBuiltPlan[] = [];
+
+    if (level === 'beginner') {
+      plans.push({
+        name: "Beginner Full Body 3-Day",
+        description: "Perfect for newcomers to fitness. Focus on learning proper form and building base strength with 3 full-body workouts per week.",
+        level: 'beginner',
+        equipment,
+        duration: "4 weeks",
+        workoutsPerWeek: 3,
+        startDay,
+        schedule: getWorkoutSchedule(startDay, 3, ['Monday', 'Wednesday', 'Friday']),
+        exercises: getBeginnerExercises(equipment)
+      });
+    }
+
+    if (level === 'intermediate') {
+      plans.push({
+        name: "Intermediate Upper/Lower Split",
+        description: "4-day split focusing on upper and lower body development. Ideal for those with 3-6 months of experience.",
+        level: 'intermediate',
+        equipment,
+        duration: "4 weeks",
+        workoutsPerWeek: 4,
+        startDay,
+        schedule: getWorkoutSchedule(startDay, 4, ['Monday', 'Tuesday', 'Thursday', 'Friday']),
+        exercises: getIntermediateExercises(equipment)
+      });
+    }
+
+    if (level === 'advanced') {
+      plans.push({
+        name: "Advanced Push/Pull/Legs",
+        description: "5-day intensive program for experienced lifters. High volume and intensity training with proper recovery.",
+        level: 'advanced',
+        equipment,
+        duration: "4 weeks", 
+        workoutsPerWeek: 5,
+        startDay,
+        schedule: getWorkoutSchedule(startDay, 5, ['Monday', 'Tuesday', 'Wednesday', 'Friday', 'Saturday']),
+        exercises: getAdvancedExercises(equipment)
+      });
+    }
+
+    return plans;
+  };
+
+  const getWorkoutSchedule = (startDay: string, workoutsPerWeek: number, defaultDays: string[]): string[] => {
+    return defaultDays.slice(0, workoutsPerWeek);
+  };
+
+  const getBeginnerExercises = (equipment: string): PreBuiltExercise[] => {
+    const baseExercises = [
+      { name: "Bodyweight Squat", sets: 3, reps: 12, rest: "60-90s", day: "A", bodyPart: "legs", equipment: ["body weight"] },
+      { name: "Incline Push-up", sets: 3, reps: 10, rest: "60-90s", day: "A", bodyPart: "chest", equipment: ["body weight"] },
+      { name: "Plank", sets: 3, reps: 30, duration: 30, rest: "45-60s", day: "A", bodyPart: "core", equipment: ["body weight"] },
+      { name: "Glute Bridge", sets: 3, reps: 15, rest: "45-60s", day: "B", bodyPart: "legs", equipment: ["body weight"] },
+      { name: "Modified Push-up", sets: 3, reps: 8, rest: "60-90s", day: "B", bodyPart: "chest", equipment: ["body weight"] },
+      { name: "Dead Bug", sets: 3, reps: 10, rest: "45-60s", day: "B", bodyPart: "core", equipment: ["body weight"] },
+    ];
+
+    if (equipment === 'dumbbells' || equipment === 'gym') {
+      baseExercises.push(
+        { name: "Dumbbell Romanian Deadlift", sets: 3, reps: 10, rest: "60-90s", day: "A", bodyPart: "legs", equipment: ["dumbbell"] },
+        { name: "Dumbbell Shoulder Press", sets: 3, reps: 10, rest: "60-90s", day: "A", bodyPart: "shoulders", equipment: ["dumbbell"] },
+        { name: "Goblet Squat", sets: 3, reps: 12, rest: "60-90s", day: "B", bodyPart: "legs", equipment: ["dumbbell"] },
+        { name: "Single Arm Dumbbell Row", sets: 3, reps: 10, rest: "60-90s", day: "B", bodyPart: "back", equipment: ["dumbbell"] },
+      );
+    }
+
+    return baseExercises;
+  };
+
+  const getIntermediateExercises = (equipment: string): PreBuiltExercise[] => {
+    const baseExercises = [
+      { name: "Push-up", sets: 4, reps: 12, rest: "60-90s", day: "Upper A", bodyPart: "chest", equipment: ["body weight"] },
+      { name: "Pike Push-up", sets: 3, reps: 10, rest: "60s", day: "Upper A", bodyPart: "shoulders", equipment: ["body weight"] },
+      { name: "Bodyweight Squat", sets: 4, reps: 15, rest: "90-120s", day: "Lower A", bodyPart: "legs", equipment: ["body weight"] },
+      { name: "Single Leg Glute Bridge", sets: 3, reps: 12, rest: "60-90s", day: "Lower A", bodyPart: "legs", equipment: ["body weight"] },
+      { name: "Pull-up", sets: 4, reps: 8, rest: "60-90s", day: "Upper B", bodyPart: "back", equipment: ["pull up bar"] },
+      { name: "Diamond Push-up", sets: 3, reps: 10, rest: "45-60s", day: "Upper B", bodyPart: "triceps", equipment: ["body weight"] },
+    ];
+
+    if (equipment === 'dumbbells' || equipment === 'barbell' || equipment === 'gym') {
+      baseExercises.push(
+        { name: "Dumbbell Bench Press", sets: 4, reps: 8, rest: "60-90s", day: "Upper A", bodyPart: "chest", equipment: ["dumbbell"] },
+        { name: "Dumbbell Row", sets: 4, reps: 8, rest: "60-90s", day: "Upper B", bodyPart: "back", equipment: ["dumbbell"] },
+        { name: "Romanian Deadlift", sets: 3, reps: 10, rest: "90s", day: "Lower A", bodyPart: "legs", equipment: ["dumbbell"] },
+        { name: "Bulgarian Split Squat", sets: 3, reps: 10, rest: "60-90s", day: "Lower B", bodyPart: "legs", equipment: ["body weight"] },
+      );
+    }
+
+    return baseExercises;
+  };
+
+  const getAdvancedExercises = (equipment: string): PreBuiltExercise[] => {
+    const baseExercises = [
+      { name: "Push-up", sets: 5, reps: 15, rest: "90s", day: "Push", bodyPart: "chest", equipment: ["body weight"] },
+      { name: "Handstand Push-up", sets: 4, reps: 6, rest: "90s", day: "Push", bodyPart: "shoulders", equipment: ["body weight"] },
+      { name: "Pull-up", sets: 5, reps: 10, rest: "90s", day: "Pull", bodyPart: "back", equipment: ["pull up bar"] },
+      { name: "Muscle-up", sets: 4, reps: 5, rest: "120s", day: "Pull", bodyPart: "back", equipment: ["pull up bar"] },
+      { name: "Pistol Squat", sets: 4, reps: 8, rest: "90-120s", day: "Legs", bodyPart: "legs", equipment: ["body weight"] },
+      { name: "Single Leg Romanian Deadlift", sets: 4, reps: 10, rest: "90s", day: "Legs", bodyPart: "legs", equipment: ["body weight"] },
+    ];
+
+    if (equipment === 'barbell' || equipment === 'gym') {
+      baseExercises.push(
+        { name: "Barbell Bench Press", sets: 5, reps: 5, rest: "90s", day: "Push", bodyPart: "chest", equipment: ["barbell"] },
+        { name: "Overhead Press", sets: 4, reps: 6, rest: "90s", day: "Push", bodyPart: "shoulders", equipment: ["barbell"] },
+        { name: "Deadlift", sets: 4, reps: 5, rest: "120s", day: "Pull", bodyPart: "back", equipment: ["barbell"] },
+        { name: "Barbell Row", sets: 4, reps: 8, rest: "60-90s", day: "Pull", bodyPart: "back", equipment: ["barbell"] },
+        { name: "Back Squat", sets: 5, reps: 5, rest: "120s", day: "Legs", bodyPart: "legs", equipment: ["barbell"] },
+        { name: "Front Squat", sets: 4, reps: 8, rest: "90s", day: "Legs", bodyPart: "legs", equipment: ["barbell"] },
+      );
+    }
+
+    return baseExercises;
+  };
+
+  // Create plan from pre-built template
+  const createPrebuiltPlanMutation = useMutation({
+    mutationFn: async (preBuiltPlan: PreBuiltPlan) => {
+      // First create the plan
+      const planResponse = await apiRequest('POST', '/api/fitness-plans', {
+        name: preBuiltPlan.name,
+        description: preBuiltPlan.description,
+        isPublic: false
+      });
+
+      // Then add exercises to the plan using the ExerciseDB API
+      for (let i = 0; i < preBuiltPlan.exercises.length; i++) {
+        const exercise = preBuiltPlan.exercises[i];
+        
+        // Search for the exercise in ExerciseDB
+        try {
+          const searchResponse = await fetch(`https://exercisedb.p.rapidapi.com/exercises/name/${exercise.name.toLowerCase()}`, {
+            headers: {
+              'x-rapidapi-key': 'YOUR_API_KEY', // This would need to be configured
+              'x-rapidapi-host': 'exercisedb.p.rapidapi.com'
+            }
+          });
+
+          if (searchResponse.ok) {
+            const exerciseData = await searchResponse.json();
+            if (exerciseData && exerciseData.length > 0) {
+              const foundExercise = exerciseData[0];
+              
+              await apiRequest('POST', `/api/fitness-plans/${planResponse.id}/exercises`, {
+                exerciseId: foundExercise.id,
+                exerciseName: foundExercise.name,
+                exerciseGifUrl: foundExercise.gifUrl,
+                exerciseTarget: foundExercise.target,
+                exerciseBodyPart: foundExercise.bodyPart,
+                exerciseEquipment: foundExercise.equipment,
+                sets: exercise.sets,
+                reps: exercise.reps,
+                duration: exercise.duration,
+                notes: `${exercise.rest} rest - ${exercise.day}`,
+                daysOfWeek: [exercise.day],
+                orderIndex: i
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error finding exercise:', error);
+          // Create a fallback entry if API fails
+          await apiRequest('POST', `/api/fitness-plans/${planResponse.id}/exercises`, {
+            exerciseId: `fallback-${i}`,
+            exerciseName: exercise.name,
+            exerciseGifUrl: '/placeholder-exercise.gif',
+            exerciseTarget: exercise.bodyPart,
+            exerciseBodyPart: exercise.bodyPart,
+            exerciseEquipment: exercise.equipment.join(', '),
+            sets: exercise.sets,
+            reps: exercise.reps,
+            duration: exercise.duration,
+            notes: `${exercise.rest} rest - ${exercise.day}`,
+            daysOfWeek: [exercise.day],
+            orderIndex: i
+          });
+        }
+      }
+
+      return planResponse;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['api', 'fitness-plans'] });
+      toast({
+        title: "Plan Created!",
+        description: "Your pre-built workout plan has been added to My Plans.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create plan. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Plan creation error:', error);
+    },
+  });
+
+  const handleCreatePlanFromPrebuilt = (plan: PreBuiltPlan) => {
+    createPrebuiltPlanMutation.mutate(plan);
+  };
 
   if (isLoading) {
     return (
