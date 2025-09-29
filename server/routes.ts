@@ -4459,6 +4459,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Exercise completion routes for weekly progression
+  
+  // Mark exercise as complete
+  app.post('/api/fitness-plans/:planId/exercises/:exerciseId/complete', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Check ownership of plan
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) {
+        return res.status(404).json({ message: 'Fitness plan not found' });
+      }
+      
+      if (plan.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      // Mark exercise as complete
+      const completion = await storage.markExerciseComplete(user.id, req.params.planId, req.params.exerciseId);
+      res.json(completion);
+    } catch (error) {
+      console.error('Error marking exercise complete:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+  // Unmark exercise as complete
+  app.delete('/api/fitness-plans/:planId/exercises/:exerciseId/complete', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Check ownership of plan
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) {
+        return res.status(404).json({ message: 'Fitness plan not found' });
+      }
+      
+      if (plan.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      // Remove exercise completion
+      await storage.unmarkExerciseComplete(user.id, req.params.exerciseId);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error unmarking exercise complete:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+  // Get completion status for a plan
+  app.get('/api/fitness-plans/:planId/completions', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Check ownership of plan
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) {
+        return res.status(404).json({ message: 'Fitness plan not found' });
+      }
+      
+      if (plan.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      // Get all completions for this plan
+      const completions = await storage.getExerciseCompletions(user.id, req.params.planId);
+      res.json(completions);
+    } catch (error) {
+      console.error('Error fetching exercise completions:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Events routes
   app.get('/api/events', async (req, res) => {
     try {

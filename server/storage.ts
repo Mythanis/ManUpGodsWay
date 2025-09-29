@@ -32,6 +32,7 @@ import {
   fitnessPlans,
   fitnessPlanExercises,
   fitnessPlanReminders,
+  exerciseCompletions,
   events,
   eventRegistrations,
   hurdleWallPosts,
@@ -118,6 +119,8 @@ import {
   type InsertFitnessPlanExercise,
   type FitnessPlanReminder,
   type InsertFitnessPlanReminder,
+  type ExerciseCompletion,
+  type InsertExerciseCompletion,
   type Event,
   type InsertEvent,
   type EventRegistration,
@@ -432,6 +435,11 @@ export interface IStorage {
   getDueFitnessReminders(dayOfWeek: number, currentTime: string): Promise<Array<FitnessPlanReminder & { plan: FitnessPlan }>>;
   getTodayFitnessPlanExercises(planId: string, dayOfWeek: number): Promise<FitnessPlanExercise[]>;
   markFitnessReminderSent(reminderId: string): Promise<void>;
+  
+  // Exercise completion operations for weekly progression
+  markExerciseComplete(userId: string, planId: string, exerciseId: string): Promise<ExerciseCompletion>;
+  unmarkExerciseComplete(userId: string, exerciseId: string): Promise<void>;
+  getExerciseCompletions(userId: string, planId: string): Promise<ExerciseCompletion[]>;
 
   // Events operations
   getEvents(): Promise<Event[]>;
@@ -4428,6 +4436,46 @@ export class DatabaseStorage implements IStorage {
       .update(fitnessPlanReminders)
       .set({ lastSent: today })
       .where(eq(fitnessPlanReminders.id, reminderId));
+  }
+
+  // Exercise completion implementation methods
+  async markExerciseComplete(userId: string, planId: string, exerciseId: string): Promise<ExerciseCompletion> {
+    const [completion] = await db
+      .insert(exerciseCompletions)
+      .values({
+        userId,
+        planId,
+        exerciseId,
+        completedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [exerciseCompletions.userId, exerciseCompletions.exerciseId],
+        set: {
+          completedAt: new Date(),
+        },
+      })
+      .returning();
+    return completion;
+  }
+
+  async unmarkExerciseComplete(userId: string, exerciseId: string): Promise<void> {
+    await db
+      .delete(exerciseCompletions)
+      .where(and(
+        eq(exerciseCompletions.userId, userId),
+        eq(exerciseCompletions.exerciseId, exerciseId)
+      ));
+  }
+
+  async getExerciseCompletions(userId: string, planId: string): Promise<ExerciseCompletion[]> {
+    return await db
+      .select()
+      .from(exerciseCompletions)
+      .where(and(
+        eq(exerciseCompletions.userId, userId),
+        eq(exerciseCompletions.planId, planId)
+      ))
+      .orderBy(desc(exerciseCompletions.completedAt));
   }
 
   // Hurdle Wall implementation methods
