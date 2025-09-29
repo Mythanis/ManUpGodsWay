@@ -1,0 +1,204 @@
+// Type definitions
+interface Exercise {
+  id: string;
+  name: string;
+  bodyPart: string;        // e.g. "chest", "back", etc.
+  equipment: string;       // e.g. "dumbbell"
+  targetMuscles: string[];  // e.g. ["pectoralis major"]
+}
+
+interface PlanExercise {
+  exercise: Exercise;
+  sets: number;
+  reps: number | null;   // if timed, reps null
+  durationSec?: number;  // optional for timed exercises
+}
+
+interface DayPlan {
+  name: string;         // e.g. "Upper Push", etc
+  exercises: PlanExercise[];
+}
+
+interface WeeklyPlan {
+  level: "Beginner" | "Intermediate" | "Advanced";
+  equipment: string;
+  weeks: DayPlan[][];   // array of 4 weeks; each week is array of 5-6 DayPlans
+}
+
+// Helper to fetch
+async function fetchJSON(url: string): Promise<any> {
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Fetch failed: ${resp.statusText}`);
+  return await resp.json();
+}
+
+async function getEquipments(): Promise<string[]> {
+  const resp = await fetchJSON('https://www.exercisedb.dev/api/v1/equipments');
+  // resp.data assumed to be array of { name: string, ... }
+  return resp.data.map((e: any) => e.name);
+}
+
+async function getExercisesForEquipment(equipment: string): Promise<Exercise[]> {
+  const limit = 100;  // adjust as needed
+  let offset = 0;
+  let all: Exercise[] = [];
+  while (true) {
+    const params = new URLSearchParams();
+    params.set('offset', offset.toString());
+    params.set('limit', limit.toString());
+    params.set('equipment', equipment);
+    params.set('sortBy', 'name');
+    params.set('sortOrder', 'asc');
+    
+    const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${params.toString()}`;
+    const resp = await fetchJSON(url);
+    const batch: any[] = resp.data;
+    if (!batch || batch.length === 0) break;
+    // map to Exercise
+    const mapped: Exercise[] = batch.map((ex: any) => ({
+      id: ex.id,
+      name: ex.name,
+      bodyPart: ex.bodyPart,
+      equipment: ex.equipment,
+      targetMuscles: ex.targetMuscles || []
+    }));
+    all = all.concat(mapped);
+    if (batch.length < limit) break;
+    offset += limit;
+  }
+  return all;
+}
+
+// Helper to pick exercises by body part
+function pickByBodyPart(exs: Exercise[], bodyPart: string, count: number): Exercise[] {
+  const filtered = exs.filter(e => e.bodyPart.toLowerCase() === bodyPart.toLowerCase());
+  // if not enough, fallback to any exercise
+  if (filtered.length >= count) {
+    return filtered.slice(0, count);
+  } else {
+    return filtered.concat(
+      exs.filter(e => e.bodyPart.toLowerCase() !== bodyPart.toLowerCase()).slice(0, count - filtered.length)
+    );
+  }
+}
+
+function generatePlan(exercises: Exercise[], level: "Beginner"|"Intermediate"|"Advanced", equipment: string): WeeklyPlan {
+  // Define how many days per week, rest days, template of day roles
+  const weeks: DayPlan[][] = [];
+  for (let w = 0; w < 4; w++) {
+    const week: DayPlan[] = [];
+    // Suppose plan: Day1 Push, Day2 Legs, Day3 Pull, Day4 Core, Day5 FullBody, Day6 Active Rec, Day7 Rest
+    // We'll only build for Days1-5 exercise days
+    // Configure sets/reps per level
+    let config;
+    if (level === "Beginner") config = { sets: 3, restSec: 60, repRange: [10,12] };
+    else if (level === "Intermediate") config = { sets: 4, restSec: 45, repRange: [10,15] };
+    else config = { sets: 5, restSec: 30, repRange: [12,20] };
+    
+    // Define Day1: Push (Chest, Shoulders, Triceps)
+    week.push({
+      name: `Push (Chest/Shoulder/Triceps) ‒ Week ${w+1}`,
+      exercises: [
+        ...pickByBodyPart(exercises, 'chest', 1).map(ex => ({
+          exercise: ex,
+          sets: config.sets,
+          reps: config.repRange[0]  // or midpoint
+        })),
+        ...pickByBodyPart(exercises, 'shoulders', 1).map(ex => ({
+          exercise: ex,
+          sets: config.sets,
+          reps: config.repRange[0]
+        })),
+        ...pickByBodyPart(exercises, 'triceps', 1).map(ex => ({
+          exercise: ex,
+          sets: config.sets,
+          reps: config.repRange[0]
+        }))
+      ]
+    });
+    // Day2: Legs
+    week.push({
+      name: `Legs (Quads/Glutes/Hamstrings/Calves) ‒ Week ${w+1}`,
+      exercises: [
+        ...pickByBodyPart(exercises, 'upper legs', 1),
+        ...pickByBodyPart(exercises, 'lower legs', 1),
+        ...pickByBodyPart(exercises, 'glutes', 1)
+      ].map(ex => ({
+        exercise: ex,
+        sets: config.sets,
+        reps: config.repRange[0]
+      }))
+    });
+    // Day3: Pull (Back/Biceps)
+    week.push({
+      name: `Pull (Back/Biceps) ‒ Week ${w+1}`,
+      exercises: [
+        ...pickByBodyPart(exercises, 'back', 1),
+        ...pickByBodyPart(exercises, 'biceps', 1)
+      ].map(ex => ({
+        exercise: ex,
+        sets: config.sets,
+        reps: config.repRange[0]
+      }))
+    });
+    // Day4: Core
+    week.push({
+      name: `Core & Abs ‒ Week ${w+1}`,
+      exercises: [
+        ...pickByBodyPart(exercises, 'waist', 1),
+        ...pickByBodyPart(exercises, 'lower back', 1),
+        // optionally obliques
+      ].map(ex => ({
+        exercise: ex,
+        sets: config.sets,
+        reps: config.repRange[0]
+      }))
+    });
+    // Day5: Full Body / Conditioning mix
+    week.push({
+      name: `Full Body Circuit ‒ Week ${w+1}`,
+      exercises: [
+        ...pickByBodyPart(exercises, 'chest', 1),
+        ...pickByBodyPart(exercises, 'back', 1),
+        ...pickByBodyPart(exercises, 'upper legs', 1),
+        ...pickByBodyPart(exercises, 'shoulders', 1),
+        ...pickByBodyPart(exercises, 'waist', 1)
+      ].map(ex => ({
+        exercise: ex,
+        sets: config.sets,
+        reps: config.repRange[0]
+      }))
+    });
+    
+    weeks.push(week);
+  }
+  
+  return {
+    level,
+    equipment,
+    weeks
+  };
+}
+
+// Main orchestrator
+async function buildAllPlans() {
+  const equipments = await getEquipments();
+  const allPlans: WeeklyPlan[] = [];
+  
+  for (const eq of equipments) {
+    const exs = await getExercisesForEquipment(eq);
+    if (exs.length < 10) continue;  // skip equipment with too few exercises
+    // build for each level
+    const beginner = generatePlan(exs, "Beginner", eq);
+    const intermediate = generatePlan(exs, "Intermediate", eq);
+    const advanced = generatePlan(exs, "Advanced", eq);
+    allPlans.push(beginner, intermediate, advanced);
+  }
+  
+  return allPlans;
+}
+
+// Example usage
+buildAllPlans().then(plans => {
+  console.log(JSON.stringify(plans, null, 2));
+});

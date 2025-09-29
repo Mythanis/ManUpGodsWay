@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -167,9 +167,30 @@ export default function Fitness() {
   const [selectedPlanEquipment, setSelectedPlanEquipment] = useState<string>('');
   const [selectedStartDay, setSelectedStartDay] = useState<string>('');
   const [selectedPlanForPreview, setSelectedPlanForPreview] = useState<PreBuiltPlan | null>(null);
+  const [generatedPlans, setGeneratedPlans] = useState<PreBuiltPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState<boolean>(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Effect to generate plans when filters change
+  useEffect(() => {
+    if (selectedLevel && selectedPlanEquipment && selectedStartDay) {
+      setPlansLoading(true);
+      generatePreBuiltPlans(selectedLevel, selectedPlanEquipment, selectedStartDay)
+        .then(plans => {
+          setGeneratedPlans(plans);
+          setPlansLoading(false);
+        })
+        .catch(error => {
+          console.error('Error generating plans:', error);
+          setGeneratedPlans([]);
+          setPlansLoading(false);
+        });
+    } else {
+      setGeneratedPlans([]);
+    }
+  }, [selectedLevel, selectedPlanEquipment, selectedStartDay]);
 
   // Get current day of the week
   const getCurrentDayOfWeek = () => {
@@ -759,125 +780,247 @@ export default function Fitness() {
     </Card>
   );
 
-  // Generate pre-built plans based on user selections
-  const generatePreBuiltPlans = (level: string, equipment: string, startDay: string): PreBuiltPlan[] => {
-    const plans: PreBuiltPlan[] = [];
+  // Dynamic plan generation using ExerciseDB API
+  const generatePreBuiltPlans = async (level: string, equipment: string, startDay: string): Promise<PreBuiltPlan[]> => {
+    try {
+      const exercises = await getExercisesForEquipment(equipment);
+      if (exercises.length < 10) {
+        console.warn(`Not enough exercises for equipment: ${equipment}. Found: ${exercises.length}`);
+        return [];
+      }
 
-    if (level === 'beginner') {
-      plans.push({
-        name: "Beginner Full Body 3-Day",
-        description: "Perfect for newcomers to fitness. Focus on learning proper form and building base strength with 3 full-body workouts per week.",
-        level: 'beginner',
-        equipment,
-        duration: "4 weeks",
-        workoutsPerWeek: 3,
-        startDay,
-        schedule: getWorkoutSchedule(startDay, 3, ['Monday', 'Wednesday', 'Friday']),
-        exercises: getBeginnerExercises(equipment)
-      });
+      const weeklyPlan = generateDynamicPlan(exercises, level as "Beginner"|"Intermediate"|"Advanced", equipment);
+      const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay);
+      
+      return [preBuiltPlan];
+    } catch (error) {
+      console.error('Error generating dynamic plans:', error);
+      return [];
     }
-
-    if (level === 'intermediate') {
-      plans.push({
-        name: "Intermediate Upper/Lower Split",
-        description: "4-day split focusing on upper and lower body development. Ideal for those with 3-6 months of experience.",
-        level: 'intermediate',
-        equipment,
-        duration: "4 weeks",
-        workoutsPerWeek: 4,
-        startDay,
-        schedule: getWorkoutSchedule(startDay, 4, ['Monday', 'Tuesday', 'Thursday', 'Friday']),
-        exercises: getIntermediateExercises(equipment)
-      });
-    }
-
-    if (level === 'advanced') {
-      plans.push({
-        name: "Advanced Push/Pull/Legs",
-        description: "5-day intensive program for experienced lifters. High volume and intensity training with proper recovery.",
-        level: 'advanced',
-        equipment,
-        duration: "4 weeks", 
-        workoutsPerWeek: 5,
-        startDay,
-        schedule: getWorkoutSchedule(startDay, 5, ['Monday', 'Tuesday', 'Wednesday', 'Friday', 'Saturday']),
-        exercises: getAdvancedExercises(equipment)
-      });
-    }
-
-    return plans;
   };
+
+  // New dynamic types and helper functions for ExerciseDB API integration
+  interface APIExercise {
+    id: string;
+    name: string;
+    bodyPart: string;
+    equipment: string;
+    targetMuscles: string[];
+  }
+
+  interface PlanExercise {
+    exercise: APIExercise;
+    sets: number;
+    reps: number | null;
+    durationSec?: number;
+  }
+
+  interface DayPlan {
+    name: string;
+    exercises: PlanExercise[];
+  }
+
+  interface WeeklyPlan {
+    level: "Beginner" | "Intermediate" | "Advanced";
+    equipment: string;
+    weeks: DayPlan[][];
+  }
+
+  // Helper to fetch data from ExerciseDB API
+  async function fetchJSON(url: string): Promise<any> {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`Fetch failed: ${resp.statusText}`);
+    return await resp.json();
+  }
+
+  async function getEquipments(): Promise<string[]> {
+    const resp = await fetchJSON('https://www.exercisedb.dev/api/v1/equipments');
+    return resp.data.map((e: any) => e.name);
+  }
+
+  async function getExercisesForEquipment(equipment: string): Promise<APIExercise[]> {
+    const limit = 100;
+    let offset = 0;
+    let all: APIExercise[] = [];
+    while (true) {
+      const params = new URLSearchParams();
+      params.set('offset', offset.toString());
+      params.set('limit', limit.toString());
+      params.set('equipment', equipment);
+      params.set('sortBy', 'name');
+      params.set('sortOrder', 'asc');
+      
+      const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${params.toString()}`;
+      const resp = await fetchJSON(url);
+      const batch: any[] = resp.data;
+      if (!batch || batch.length === 0) break;
+      
+      const mapped: APIExercise[] = batch.map((ex: any) => ({
+        id: ex.id,
+        name: ex.name,
+        bodyPart: ex.bodyPart,
+        equipment: ex.equipment,
+        targetMuscles: ex.targetMuscles || []
+      }));
+      all = all.concat(mapped);
+      if (batch.length < limit) break;
+      offset += limit;
+    }
+    return all;
+  }
+
+  // Helper to pick exercises by body part
+  function pickByBodyPart(exs: APIExercise[], bodyPart: string, count: number): APIExercise[] {
+    const filtered = exs.filter(e => e.bodyPart.toLowerCase() === bodyPart.toLowerCase());
+    if (filtered.length >= count) {
+      return filtered.slice(0, count);
+    } else {
+      return filtered.concat(
+        exs.filter(e => e.bodyPart.toLowerCase() !== bodyPart.toLowerCase()).slice(0, count - filtered.length)
+      );
+    }
+  }
+
+  function generateDynamicPlan(exercises: APIExercise[], level: "Beginner"|"Intermediate"|"Advanced", equipment: string): WeeklyPlan {
+    const weeks: DayPlan[][] = [];
+    for (let w = 0; w < 4; w++) {
+      const week: DayPlan[] = [];
+      
+      let config;
+      if (level === "Beginner") config = { sets: 3, restSec: 60, repRange: [10,12] };
+      else if (level === "Intermediate") config = { sets: 4, restSec: 45, repRange: [10,15] };
+      else config = { sets: 5, restSec: 30, repRange: [12,20] };
+      
+      // Day1: Push (Chest, Shoulders, Triceps)
+      week.push({
+        name: `Push (Chest/Shoulder/Triceps) ‒ Week ${w+1}`,
+        exercises: [
+          ...pickByBodyPart(exercises, 'chest', 1).map(ex => ({
+            exercise: ex,
+            sets: config.sets,
+            reps: config.repRange[0]
+          })),
+          ...pickByBodyPart(exercises, 'shoulders', 1).map(ex => ({
+            exercise: ex,
+            sets: config.sets,
+            reps: config.repRange[0]
+          })),
+          ...pickByBodyPart(exercises, 'upper arms', 1).map(ex => ({
+            exercise: ex,
+            sets: config.sets,
+            reps: config.repRange[0]
+          }))
+        ]
+      });
+      
+      // Day2: Legs
+      week.push({
+        name: `Legs (Quads/Glutes/Hamstrings/Calves) ‒ Week ${w+1}`,
+        exercises: [
+          ...pickByBodyPart(exercises, 'upper legs', 1),
+          ...pickByBodyPart(exercises, 'lower legs', 1),
+          ...pickByBodyPart(exercises, 'upper legs', 1)
+        ].map(ex => ({
+          exercise: ex,
+          sets: config.sets,
+          reps: config.repRange[0]
+        }))
+      });
+      
+      // Day3: Pull (Back/Biceps)
+      week.push({
+        name: `Pull (Back/Biceps) ‒ Week ${w+1}`,
+        exercises: [
+          ...pickByBodyPart(exercises, 'back', 1),
+          ...pickByBodyPart(exercises, 'upper arms', 1)
+        ].map(ex => ({
+          exercise: ex,
+          sets: config.sets,
+          reps: config.repRange[0]
+        }))
+      });
+      
+      // Day4: Core
+      week.push({
+        name: `Core & Abs ‒ Week ${w+1}`,
+        exercises: [
+          ...pickByBodyPart(exercises, 'waist', 1),
+          ...pickByBodyPart(exercises, 'waist', 1)
+        ].map(ex => ({
+          exercise: ex,
+          sets: config.sets,
+          reps: config.repRange[0]
+        }))
+      });
+      
+      // Day5: Full Body
+      week.push({
+        name: `Full Body Circuit ‒ Week ${w+1}`,
+        exercises: [
+          ...pickByBodyPart(exercises, 'chest', 1),
+          ...pickByBodyPart(exercises, 'back', 1),
+          ...pickByBodyPart(exercises, 'upper legs', 1),
+          ...pickByBodyPart(exercises, 'shoulders', 1),
+          ...pickByBodyPart(exercises, 'waist', 1)
+        ].map(ex => ({
+          exercise: ex,
+          sets: config.sets,
+          reps: config.repRange[0]
+        }))
+      });
+      
+      weeks.push(week);
+    }
+    
+    return { level, equipment, weeks };
+  }
+
+  // Convert WeeklyPlan to PreBuiltPlan format for UI compatibility
+  function convertWeeklyPlanToPreBuiltPlan(weeklyPlan: WeeklyPlan, startDay: string): PreBuiltPlan {
+    const allExercises: PreBuiltExercise[] = [];
+    let exerciseIndex = 0;
+    
+    weeklyPlan.weeks.forEach((week, weekIndex) => {
+      week.forEach((day) => {
+        day.exercises.forEach((planExercise) => {
+          const restTime = weeklyPlan.level === "Beginner" ? "60-90s" : 
+                          weeklyPlan.level === "Intermediate" ? "45-60s" : "30-45s";
+          
+          allExercises.push({
+            name: planExercise.exercise.name,
+            sets: planExercise.sets,
+            reps: planExercise.reps || 12,
+            rest: restTime,
+            day: `Week${weekIndex + 1}-${day.name}`,
+            bodyPart: planExercise.exercise.bodyPart,
+            equipment: [planExercise.exercise.equipment]
+          });
+        });
+      });
+    });
+
+    const workoutsPerWeek = weeklyPlan.level === "Beginner" ? 3 : weeklyPlan.level === "Intermediate" ? 4 : 5;
+    const scheduleMap = {
+      "Beginner": ['Monday', 'Wednesday', 'Friday'],
+      "Intermediate": ['Monday', 'Tuesday', 'Thursday', 'Friday'],
+      "Advanced": ['Monday', 'Tuesday', 'Wednesday', 'Friday', 'Saturday']
+    };
+
+    return {
+      name: `${weeklyPlan.level} ${weeklyPlan.equipment} Program`,
+      description: `Dynamic ${weeklyPlan.level.toLowerCase()} program using ${weeklyPlan.equipment}. 4-week structured training plan.`,
+      level: weeklyPlan.level.toLowerCase() as 'beginner' | 'intermediate' | 'advanced',
+      equipment: weeklyPlan.equipment,
+      duration: "4 weeks",
+      workoutsPerWeek: workoutsPerWeek,
+      startDay: startDay,
+      schedule: scheduleMap[weeklyPlan.level],
+      exercises: allExercises
+    };
+  }
 
   const getWorkoutSchedule = (startDay: string, workoutsPerWeek: number, defaultDays: string[]): string[] => {
     return defaultDays.slice(0, workoutsPerWeek);
-  };
-
-  const getBeginnerExercises = (equipment: string): PreBuiltExercise[] => {
-    const baseExercises = [
-      { name: "Bodyweight Squat", sets: 3, reps: 12, rest: "60-90s", day: "A", bodyPart: "legs", equipment: ["body weight"] },
-      { name: "Incline Push-up", sets: 3, reps: 10, rest: "60-90s", day: "A", bodyPart: "chest", equipment: ["body weight"] },
-      { name: "Plank", sets: 3, reps: 30, duration: 30, rest: "45-60s", day: "A", bodyPart: "core", equipment: ["body weight"] },
-      { name: "Glute Bridge", sets: 3, reps: 15, rest: "45-60s", day: "B", bodyPart: "legs", equipment: ["body weight"] },
-      { name: "Modified Push-up", sets: 3, reps: 8, rest: "60-90s", day: "B", bodyPart: "chest", equipment: ["body weight"] },
-      { name: "Dead Bug", sets: 3, reps: 10, rest: "45-60s", day: "B", bodyPart: "core", equipment: ["body weight"] },
-    ];
-
-    if (equipment === 'dumbbells' || equipment === 'gym') {
-      baseExercises.push(
-        { name: "Dumbbell Romanian Deadlift", sets: 3, reps: 10, rest: "60-90s", day: "A", bodyPart: "legs", equipment: ["dumbbell"] },
-        { name: "Dumbbell Shoulder Press", sets: 3, reps: 10, rest: "60-90s", day: "A", bodyPart: "shoulders", equipment: ["dumbbell"] },
-        { name: "Goblet Squat", sets: 3, reps: 12, rest: "60-90s", day: "B", bodyPart: "legs", equipment: ["dumbbell"] },
-        { name: "Single Arm Dumbbell Row", sets: 3, reps: 10, rest: "60-90s", day: "B", bodyPart: "back", equipment: ["dumbbell"] },
-      );
-    }
-
-    return baseExercises;
-  };
-
-  const getIntermediateExercises = (equipment: string): PreBuiltExercise[] => {
-    const baseExercises = [
-      { name: "Push-up", sets: 4, reps: 12, rest: "60-90s", day: "Upper A", bodyPart: "chest", equipment: ["body weight"] },
-      { name: "Pike Push-up", sets: 3, reps: 10, rest: "60s", day: "Upper A", bodyPart: "shoulders", equipment: ["body weight"] },
-      { name: "Bodyweight Squat", sets: 4, reps: 15, rest: "90-120s", day: "Lower A", bodyPart: "legs", equipment: ["body weight"] },
-      { name: "Single Leg Glute Bridge", sets: 3, reps: 12, rest: "60-90s", day: "Lower A", bodyPart: "legs", equipment: ["body weight"] },
-      { name: "Pull-up", sets: 4, reps: 8, rest: "60-90s", day: "Upper B", bodyPart: "back", equipment: ["pull up bar"] },
-      { name: "Diamond Push-up", sets: 3, reps: 10, rest: "45-60s", day: "Upper B", bodyPart: "triceps", equipment: ["body weight"] },
-    ];
-
-    if (equipment === 'dumbbells' || equipment === 'barbell' || equipment === 'gym') {
-      baseExercises.push(
-        { name: "Dumbbell Bench Press", sets: 4, reps: 8, rest: "60-90s", day: "Upper A", bodyPart: "chest", equipment: ["dumbbell"] },
-        { name: "Dumbbell Row", sets: 4, reps: 8, rest: "60-90s", day: "Upper B", bodyPart: "back", equipment: ["dumbbell"] },
-        { name: "Romanian Deadlift", sets: 3, reps: 10, rest: "90s", day: "Lower A", bodyPart: "legs", equipment: ["dumbbell"] },
-        { name: "Bulgarian Split Squat", sets: 3, reps: 10, rest: "60-90s", day: "Lower B", bodyPart: "legs", equipment: ["body weight"] },
-      );
-    }
-
-    return baseExercises;
-  };
-
-  const getAdvancedExercises = (equipment: string): PreBuiltExercise[] => {
-    const baseExercises = [
-      { name: "Push-up", sets: 5, reps: 15, rest: "90s", day: "Push", bodyPart: "chest", equipment: ["body weight"] },
-      { name: "Handstand Push-up", sets: 4, reps: 6, rest: "90s", day: "Push", bodyPart: "shoulders", equipment: ["body weight"] },
-      { name: "Pull-up", sets: 5, reps: 10, rest: "90s", day: "Pull", bodyPart: "back", equipment: ["pull up bar"] },
-      { name: "Muscle-up", sets: 4, reps: 5, rest: "120s", day: "Pull", bodyPart: "back", equipment: ["pull up bar"] },
-      { name: "Pistol Squat", sets: 4, reps: 8, rest: "90-120s", day: "Legs", bodyPart: "legs", equipment: ["body weight"] },
-      { name: "Single Leg Romanian Deadlift", sets: 4, reps: 10, rest: "90s", day: "Legs", bodyPart: "legs", equipment: ["body weight"] },
-    ];
-
-    if (equipment === 'barbell' || equipment === 'gym') {
-      baseExercises.push(
-        { name: "Barbell Bench Press", sets: 5, reps: 5, rest: "90s", day: "Push", bodyPart: "chest", equipment: ["barbell"] },
-        { name: "Overhead Press", sets: 4, reps: 6, rest: "90s", day: "Push", bodyPart: "shoulders", equipment: ["barbell"] },
-        { name: "Deadlift", sets: 4, reps: 5, rest: "120s", day: "Pull", bodyPart: "back", equipment: ["barbell"] },
-        { name: "Barbell Row", sets: 4, reps: 8, rest: "60-90s", day: "Pull", bodyPart: "back", equipment: ["barbell"] },
-        { name: "Back Squat", sets: 5, reps: 5, rest: "120s", day: "Legs", bodyPart: "legs", equipment: ["barbell"] },
-        { name: "Front Squat", sets: 4, reps: 8, rest: "90s", day: "Legs", bodyPart: "legs", equipment: ["barbell"] },
-      );
-    }
-
-    return baseExercises;
   };
 
   // Create plan from pre-built template
@@ -1447,7 +1590,12 @@ export default function Fitness() {
                   Recommended {selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1)} Plans
                 </h3>
                 
-                {generatePreBuiltPlans(selectedLevel, selectedPlanEquipment, selectedStartDay).map((plan, index) => (
+                {plansLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold"></div>
+                  </div>
+                ) : (
+                  generatedPlans.map((plan, index) => (
                   <Card key={index} className="bg-ministry-gold-exact/20 border border-ministry-gold/30">
                     <CardHeader>
                       <div className="flex items-start justify-between">
@@ -1514,7 +1662,8 @@ export default function Fitness() {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                ))
+                )}
               </div>
             )}
 
