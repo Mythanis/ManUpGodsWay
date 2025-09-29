@@ -180,7 +180,7 @@ export default function LogoManagement() {
         
         // For raster images, check resolution
         if (file.type !== 'image/svg+xml') {
-          const img = new Image();
+          const img = document.createElement('img');
           img.onload = () => {
             if (img.width < 256 || img.height < 256) {
               toast({
