@@ -143,7 +143,7 @@ export default function Fitness() {
   // Exercise search state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBodyPart, setSelectedBodyPart] = useState('all');
-  const [selectedEquipment, setSelectedEquipment] = useState('all');
+  const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
   const [selectedTarget, setSelectedTarget] = useState('all');
   
   // Pagination state
@@ -358,7 +358,7 @@ export default function Fitness() {
   
   if (searchQuery) filterParams.set('search', searchQuery);
   if (selectedBodyPart !== 'all') filterParams.set('bodyParts', selectedBodyPart);
-  if (selectedEquipment !== 'all') filterParams.set('equipment', selectedEquipment);
+  if (selectedEquipment.length > 0) filterParams.set('equipment', selectedEquipment.join(','));
   if (selectedTarget !== 'all') filterParams.set('muscles', selectedTarget);
   filterParams.set('sortBy', 'name');
   filterParams.set('sortOrder', 'asc');
@@ -368,7 +368,7 @@ export default function Fitness() {
     queryKey: ['exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
     queryFn: async () => {
       console.log(`Fetching exercises page ${currentPage} (offset=${offset}, limit=${limit})...`);
-      const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${filterParams.toString()}`;
+      const url = `https://exercisedb-api.vercel.app/api/v1/exercises?${filterParams.toString()}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch exercises');
       const data = await response.json();
@@ -385,11 +385,13 @@ export default function Fitness() {
     queryKey: ['muscles'],
     queryFn: async () => {
       console.log('Fetching muscles from ExerciseDB API...');
-      const response = await fetch('https://www.exercisedb.dev/api/v1/muscles');
+      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/muscles');
       if (!response.ok) throw new Error('Failed to fetch muscles');
       const data = await response.json();
-      console.log('Muscles data received:', data.data?.length, 'muscles');
-      return data.data || [];
+      // New API returns array of strings directly
+      const muscles = Array.isArray(data) ? data : (data.data || []);
+      console.log('Muscles data received:', muscles.length, 'muscles');
+      return muscles;
     },
     staleTime: 0,
     refetchOnMount: true,
@@ -404,21 +406,23 @@ export default function Fitness() {
       
       // Get first 500 exercises to extract used muscles
       for (let offset = 0; offset < 500; offset += 100) {
-        const response = await fetch(`https://www.exercisedb.dev/api/v1/exercises/filter?offset=${offset}&limit=100`);
+        const response = await fetch(`https://exercisedb-api.vercel.app/api/v1/exercises?offset=${offset}&limit=100`);
         if (!response.ok) break;
         const data = await response.json();
         
-        data.data?.forEach((exercise: any) => {
+        const exerciseList = Array.isArray(data) ? data : (data.data || []);
+        exerciseList.forEach((exercise: any) => {
           exercise.targetMuscles?.forEach((muscle: string) => {
             usedMuscleNames.add(muscle);
           });
         });
         
-        if (data.data?.length < 100) break; // No more data
+        if (exerciseList.length < 100) break; // No more data
       }
       
-      const filteredMuscles = allMuscles.filter((muscle: any) => 
-        usedMuscleNames.has(muscle.name)
+      // Muscles are now strings, not objects
+      const filteredMuscles = allMuscles.filter((muscle: string) => 
+        usedMuscleNames.has(muscle)
       );
       
       console.log('Filtered muscles:', filteredMuscles.length, 'out of', allMuscles.length);
@@ -433,11 +437,13 @@ export default function Fitness() {
     queryKey: ['equipments'],
     queryFn: async () => {
       console.log('Fetching equipments from ExerciseDB API...');
-      const response = await fetch('https://www.exercisedb.dev/api/v1/equipments');
+      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/equipments');
       if (!response.ok) throw new Error('Failed to fetch equipments');
       const data = await response.json();
-      console.log('Equipments data received:', data.data?.length, 'equipments');
-      return data.data || [];
+      // New API returns array of strings directly
+      const equipments = Array.isArray(data) ? data : (data.data || []);
+      console.log('Equipments data received:', equipments.length, 'equipments');
+      return equipments;
     },
     staleTime: 0,
     refetchOnMount: true,
@@ -448,11 +454,13 @@ export default function Fitness() {
     queryKey: ['bodyparts'],
     queryFn: async () => {
       console.log('Fetching bodyparts from ExerciseDB API...');
-      const response = await fetch('https://www.exercisedb.dev/api/v1/bodyparts');
+      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/bodyparts');
       if (!response.ok) throw new Error('Failed to fetch bodyparts');
       const data = await response.json();
-      console.log('Bodyparts data received:', data.data?.length, 'bodyparts');
-      return data.data || [];
+      // New API returns array of strings directly
+      const bodyParts = Array.isArray(data) ? data : (data.data || []);
+      console.log('Bodyparts data received:', bodyParts.length, 'bodyparts');
+      return bodyParts;
     },
     staleTime: 0,
     refetchOnMount: true,
@@ -479,8 +487,9 @@ export default function Fitness() {
   });
 
   // Extract data from response
-  const exercises = exerciseResponse?.data || [];
-  const totalCount = exerciseResponse?.metadata?.totalExercises || 0;
+  // New API returns array directly or {data, metadata} wrapper
+  const exercises = Array.isArray(exerciseResponse) ? exerciseResponse : (exerciseResponse?.data || []);
+  const totalCount = exerciseResponse?.metadata?.totalExercises || exercises.length;
   const totalPages = exerciseResponse?.metadata?.totalPages || Math.ceil(totalCount / limit);
 
   // Get filter options from API data
@@ -507,7 +516,6 @@ export default function Fitness() {
   const handleFilterChange = (filterType: string, value: string) => {
     setCurrentPage(1);
     if (filterType === 'bodyPart') setSelectedBodyPart(value);
-    if (filterType === 'equipment') setSelectedEquipment(value);
     if (filterType === 'target') setSelectedTarget(value);
   };
   
@@ -963,7 +971,8 @@ export default function Fitness() {
 
   async function getEquipments(): Promise<string[]> {
     const resp = await fetchJSON('https://exercisedb-api.vercel.app/api/v1/equipments');
-    return resp.data.map((e: any) => e.name);
+    // New API returns array of strings directly
+    return Array.isArray(resp) ? resp : (resp.data?.map((e: any) => e.name) || []);
   }
 
   async function getExercisesForEquipment(equipmentList: string[]): Promise<APIExercise[]> {
@@ -972,11 +981,11 @@ export default function Fitness() {
     try {
       // Fetch exercises for each selected equipment type
       for (const equipment of equipmentList) {
-        const url = `https://exercisedb-api.vercel.app/exercises/equipment/${encodeURIComponent(equipment)}`;
+        const url = `https://exercisedb-api.vercel.app/api/v1/exercises/equipment/${encodeURIComponent(equipment)}`;
         
         try {
           const resp = await fetchJSON(url);
-          const exercises: any[] = Array.isArray(resp) ? resp : resp.data || [];
+          const exercises: any[] = Array.isArray(resp) ? resp : (resp.data || []);
           
           const mapped: APIExercise[] = exercises.map((ex: any) => ({
             id: ex.exerciseId || ex.id,
@@ -1498,7 +1507,7 @@ export default function Fitness() {
                   onClick={() => {
                     setSearchQuery('');
                     setSelectedBodyPart('all');
-                    setSelectedEquipment('all');
+                    setSelectedEquipment([]);
                     setSelectedTarget('all');
                     setCurrentPage(1);
                   }}
@@ -1525,19 +1534,41 @@ export default function Fitness() {
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedEquipment} onValueChange={(value) => handleFilterChange('equipment', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Equipment" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 overflow-y-auto">
-                    <SelectItem value="all">All Equipment</SelectItem>
+                <div className="border rounded-md p-3 bg-ministry-gold-exact/20">
+                  <div className="mb-2 text-sm font-medium text-white">
+                    Equipment
+                    {selectedEquipment.length > 0 && (
+                      <span className="ml-2 text-xs text-ministry-gold">
+                        ({selectedEquipment.length} selected)
+                      </span>
+                    )}
+                  </div>
+                  <div className="max-h-48 overflow-y-auto space-y-2">
                     {uniqueEquipment.map((equipment: string) => (
-                      <SelectItem key={equipment} value={equipment}>
-                        {equipment ? equipment.charAt(0).toUpperCase() + equipment.slice(1) : equipment}
-                      </SelectItem>
+                      <div key={equipment} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`filter-equipment-${equipment}`}
+                          checked={selectedEquipment.includes(equipment)}
+                          onCheckedChange={(checked) => {
+                            setCurrentPage(1);
+                            if (checked) {
+                              setSelectedEquipment([...selectedEquipment, equipment]);
+                            } else {
+                              setSelectedEquipment(selectedEquipment.filter(e => e !== equipment));
+                            }
+                          }}
+                          data-testid={`checkbox-filter-equipment-${equipment}`}
+                        />
+                        <label
+                          htmlFor={`filter-equipment-${equipment}`}
+                          className="text-sm text-white leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer capitalize"
+                        >
+                          {equipment || 'None'}
+                        </label>
+                      </div>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                </div>
 
                 <Select value={selectedTarget} onValueChange={(value) => handleFilterChange('target', value)}>
                   <SelectTrigger>
@@ -1574,7 +1605,7 @@ export default function Fitness() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-sm text-white">
                     Showing {exercises.length} of {totalCount} exercises
-                    {(searchQuery || selectedBodyPart !== 'all' || selectedEquipment !== 'all' || selectedTarget !== 'all') && (
+                    {(searchQuery || selectedBodyPart !== 'all' || selectedEquipment.length > 0 || selectedTarget !== 'all') && (
                       <span className="ml-2 text-ministry-gold">
                         (filtered)
                       </span>
