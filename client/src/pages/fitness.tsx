@@ -2172,11 +2172,11 @@ export default function Fitness() {
               <div>
                 <h4 className="font-semibold text-lg mb-3 flex items-center gap-2">
                   <Dumbbell className="w-5 h-5 text-ministry-gold" />
-                  All Exercises ({selectedPlanForPreview.exercises.length})
+                  All Exercises ({selectedPlanForPreview.exercises?.length || 0})
                 </h4>
                 
                 <div className="space-y-3">
-                  {selectedPlanForPreview.exercises.map((exercise, index) => (
+                  {(selectedPlanForPreview.exercises || []).map((exercise, index) => (
                     <Card key={index} className="border border-border">
                       <CardContent className="p-4">
                         <div className="flex gap-4">
@@ -2224,7 +2224,7 @@ export default function Fitness() {
                               <Badge variant="secondary" className="text-xs capitalize">
                                 {exercise.bodyPart}
                               </Badge>
-                              {exercise.equipment.map((eq, eqIndex) => (
+                              {(exercise.equipment || []).map((eq, eqIndex) => (
                                 <Badge key={eqIndex} variant="outline" className="text-xs capitalize">
                                   {eq}
                                 </Badge>
