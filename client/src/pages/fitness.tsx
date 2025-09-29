@@ -891,24 +891,38 @@ export default function Fitness() {
       });
 
       // Add exercises to the plan directly (using fallback approach since no ExerciseDB integration available)
+      console.log(`Adding ${preBuiltPlan.exercises.length} exercises to plan:`, planResponse.id);
+      
       for (let i = 0; i < preBuiltPlan.exercises.length; i++) {
         const exercise = preBuiltPlan.exercises[i];
+        console.log(`Adding exercise ${i + 1}:`, exercise.name);
         
         // Create exercise entry directly with comprehensive data
-        await apiRequest('POST', `/api/fitness-plans/${planResponse.id}/exercises`, {
+        const exerciseData = {
           exerciseId: `prebuilt-${Date.now()}-${i}`,
           exerciseName: exercise.name,
-          exerciseGifUrl: getExerciseGifUrl(exercise.name),
-          exerciseTarget: exercise.bodyPart,
-          exerciseBodyPart: exercise.bodyPart,
-          exerciseEquipment: exercise.equipment.join(', '),
+          imageUrl: getExerciseGifUrl(exercise.name),
+          targetMuscle: exercise.bodyPart,
+          bodyPart: exercise.bodyPart,
+          equipment: exercise.equipment.join(', '),
           sets: exercise.sets,
-          reps: exercise.reps,
-          duration: exercise.duration,
+          reps: exercise.reps.toString(),
+          minutes: exercise.duration,
+          restTime: parseInt(exercise.rest.replace(/[^0-9]/g, '')) || 60,
           notes: `${exercise.rest} rest - Training Day: ${exercise.day}`,
           daysOfWeek: [exercise.day],
           orderIndex: i
-        });
+        };
+        
+        console.log('Sending exercise data:', exerciseData);
+        
+        try {
+          const result = await apiRequest('POST', `/api/fitness-plans/${planResponse.id}/exercises`, exerciseData);
+          console.log(`Exercise ${i + 1} added successfully:`, result);
+        } catch (error) {
+          console.error(`Error adding exercise ${i + 1}:`, error);
+          throw error;
+        }
       }
 
       return planResponse;
