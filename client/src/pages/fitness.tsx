@@ -1120,8 +1120,18 @@ export default function Fitness() {
       });
 
       // Add exercises to the plan directly (using fallback approach since no ExerciseDB integration available)
+      console.log('Plan details:', {
+        startDay: preBuiltPlan.startDay,
+        schedule: preBuiltPlan.schedule,
+        exerciseCount: preBuiltPlan.exercises.length
+      });
+
       for (let i = 0; i < preBuiltPlan.exercises.length; i++) {
         const exercise = preBuiltPlan.exercises[i];
+        
+        // Get the training day for this exercise
+        const trainingDay = getExerciseTrainingDay(i, preBuiltPlan.startDay, preBuiltPlan.schedule);
+        console.log(`Exercise ${i}: ${exercise.name} assigned to ${trainingDay}`);
         
         // Create exercise entry directly with comprehensive data
         const exerciseData = {
@@ -1136,10 +1146,11 @@ export default function Fitness() {
           minutes: exercise.duration,
           restTime: parseInt(exercise.rest.replace(/[^0-9]/g, '')) || 60,
           notes: `${exercise.rest} rest - Training Day: ${exercise.day}`,
-          daysOfWeek: [getExerciseTrainingDay(i, preBuiltPlan.startDay, preBuiltPlan.schedule)], // Properly distribute across selected days
+          daysOfWeek: [trainingDay], // Properly distribute across selected days
           orderIndex: i
         };
         
+        console.log(`Creating exercise ${i}:`, exerciseData);
         await apiRequest('POST', `/api/fitness-plans/${planResponse.id}/exercises`, exerciseData);
       }
 
@@ -1159,42 +1170,60 @@ export default function Fitness() {
         variant: "destructive",
       });
       console.error('Plan creation error:', error);
+      console.error('Full error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
     },
   });
 
   // Helper function to distribute exercises across selected training days
   const getExerciseTrainingDay = (exerciseIndex: number, startDay: string, schedule: string[]) => {
-    // Convert user's selected start day to weekday index (0 = sunday, 1 = monday, etc.)
-    const dayToIndex: { [key: string]: number } = {
-      'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3, 
-      'thursday': 4, 'friday': 5, 'saturday': 6
-    };
-    
-    const indexToDay: { [key: number]: string } = {
-      0: 'sunday', 1: 'monday', 2: 'tuesday', 3: 'wednesday',
-      4: 'thursday', 5: 'friday', 6: 'saturday'
-    };
-    
-    const startIndex = dayToIndex[startDay.toLowerCase()] || 1; // Default to monday
-    
-    // Calculate which day this exercise should be on based on the training schedule
-    const dayOffset = exerciseIndex % schedule.length;
-    
-    // Map schedule days to actual weekdays starting from selected start day
-    const scheduleDayToWeekday = (scheduleIndex: number) => {
-      const scheduleDay = schedule[scheduleIndex].toLowerCase();
-      
-      // If schedule uses actual weekday names, use them directly
-      if (dayToIndex.hasOwnProperty(scheduleDay)) {
-        return scheduleDay;
+    try {
+      // Validate inputs
+      if (!startDay || !schedule || !Array.isArray(schedule) || schedule.length === 0) {
+        console.error('Invalid inputs to getExerciseTrainingDay:', { exerciseIndex, startDay, schedule });
+        return 'monday'; // Safe fallback
       }
+
+      // Convert user's selected start day to weekday index (0 = sunday, 1 = monday, etc.)
+      const dayToIndex: { [key: string]: number } = {
+        'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3, 
+        'thursday': 4, 'friday': 5, 'saturday': 6
+      };
       
-      // Otherwise distribute across training frequency starting from start day
-      const weekdayIndex = (startIndex + scheduleIndex * 2) % 7; // Space out by 2 days
-      return indexToDay[weekdayIndex];
-    };
-    
-    return scheduleDayToWeekday(dayOffset);
+      const indexToDay: { [key: number]: string } = {
+        0: 'sunday', 1: 'monday', 2: 'tuesday', 3: 'wednesday',
+        4: 'thursday', 5: 'friday', 6: 'saturday'
+      };
+      
+      const startIndex = dayToIndex[startDay.toLowerCase()] || 1; // Default to monday
+      
+      // Calculate which day this exercise should be on based on the training schedule
+      const dayOffset = exerciseIndex % schedule.length;
+      
+      // Map schedule days to actual weekdays starting from selected start day
+      const scheduleDayToWeekday = (scheduleIndex: number) => {
+        if (scheduleIndex >= schedule.length) return indexToDay[1]; // Monday fallback
+        
+        const scheduleDay = schedule[scheduleIndex]?.toLowerCase() || '';
+        
+        // If schedule uses actual weekday names, use them directly
+        if (dayToIndex.hasOwnProperty(scheduleDay)) {
+          return scheduleDay;
+        }
+        
+        // Otherwise distribute across training frequency starting from start day
+        const weekdayIndex = (startIndex + scheduleIndex * 2) % 7; // Space out by 2 days
+        return indexToDay[weekdayIndex] || 'monday';
+      };
+      
+      return scheduleDayToWeekday(dayOffset);
+    } catch (error) {
+      console.error('Error in getExerciseTrainingDay:', error);
+      return 'monday'; // Safe fallback
+    }
   };
 
   // Helper function to get exercise GIF URLs (since no ExerciseDB integration available)
