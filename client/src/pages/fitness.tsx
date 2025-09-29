@@ -792,21 +792,24 @@ export default function Fitness() {
                   {todaysExercises.map((exercise, index) => (
                     <Card key={`${exercise.planId}-${exercise.exerciseId}`} className="border border-border bg-ministry-gold-exact/10">
                       <CardContent className="p-4">
-                        <div className="flex gap-4">
-                          {/* Exercise Image */}
+                        <div className="flex gap-6">
+                          {/* Exercise Image - Larger for better exercise demonstration */}
                           <div className="flex-shrink-0">
                             {exercise.exerciseGifUrl ? (
                               <img
                                 src={exercise.exerciseGifUrl}
-                                alt={exercise.exerciseName}
-                                className="w-20 h-20 rounded-lg object-cover"
+                                alt={`How to perform ${exercise.exerciseName}`}
+                                className="w-32 h-32 rounded-lg object-cover border-2 border-ministry-gold/30"
                                 data-testid={`img-workout-exercise-${exercise.exerciseId}`}
+                                loading="lazy"
                               />
                             ) : (
-                              <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center">
-                                <Dumbbell className="w-8 h-8 text-muted-foreground" />
+                              <div className="w-32 h-32 rounded-lg bg-muted flex items-center justify-center border-2 border-ministry-steel/30">
+                                <Dumbbell className="w-12 h-12 text-muted-foreground" />
                               </div>
                             )}
+                            {/* Exercise demonstration label */}
+                            <p className="text-xs text-ministry-gold mt-1 text-center">Exercise Demo</p>
                           </div>
 
                           {/* Exercise Details */}
