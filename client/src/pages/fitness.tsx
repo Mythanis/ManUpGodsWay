@@ -168,7 +168,7 @@ export default function Fitness() {
   const [selectedPlanEquipment, setSelectedPlanEquipment] = useState<string>('');
   const [selectedStartDay, setSelectedStartDay] = useState<string>('');
   const [selectedWorkoutDuration, setSelectedWorkoutDuration] = useState<string>('');
-  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [selectedFrequency, setSelectedFrequency] = useState<string>('');
   const [selectedGoal, setSelectedGoal] = useState<string>('');
   const [selectedPlanForPreview, setSelectedPlanForPreview] = useState<PreBuiltPlan | null>(null);
   const [generatedPlans, setGeneratedPlans] = useState<PreBuiltPlan[]>([]);
@@ -180,7 +180,7 @@ export default function Fitness() {
 
   // Effect to generate plans when filters change
   useEffect(() => {
-    if (selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedDays.length > 0 && selectedGoal) {
+    if (selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedGoal) {
       setPlansLoading(true);
       setPlanGenerationError('');
       generatePreBuiltPlans(
@@ -188,13 +188,12 @@ export default function Fitness() {
         selectedPlanEquipment, 
         selectedStartDay, 
         selectedWorkoutDuration, 
-        selectedDays.length.toString(), 
-        selectedGoal,
-        selectedDays
+        selectedFrequency, 
+        selectedGoal
       )
         .then(plans => {
           if (plans.length === 0) {
-            setPlanGenerationError(`Unable to generate plans for ${selectedPlanEquipment}. Try selecting a different equipment type like "body only" or "dumbbell".`);
+            setPlanGenerationError(`Unable to generate plans for ${selectedPlanEquipment}. Try selecting a different equipment type like "body weight" or "dumbbell".`);
           } else {
             setPlanGenerationError('');
           }
@@ -211,35 +210,13 @@ export default function Fitness() {
       setGeneratedPlans([]);
       setPlanGenerationError('');
     }
-  }, [selectedLevel, selectedPlanEquipment, selectedStartDay, selectedWorkoutDuration, selectedDays, selectedGoal]);
+  }, [selectedLevel, selectedPlanEquipment, selectedStartDay, selectedWorkoutDuration, selectedFrequency, selectedGoal]);
 
   // Get current day of the week
   const getCurrentDayOfWeek = () => {
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     return days[new Date().getDay()];
   };
-
-  // Helper function to handle day selection
-  const handleDayToggle = (day: string) => {
-    setSelectedDays(prev => {
-      if (prev.includes(day)) {
-        return prev.filter(d => d !== day);
-      } else {
-        return [...prev, day];
-      }
-    });
-  };
-
-  // Days of the week for selection
-  const daysOfWeek = [
-    { value: 'monday', label: 'Monday' },
-    { value: 'tuesday', label: 'Tuesday' },
-    { value: 'wednesday', label: 'Wednesday' },
-    { value: 'thursday', label: 'Thursday' },
-    { value: 'friday', label: 'Friday' },
-    { value: 'saturday', label: 'Saturday' },
-    { value: 'sunday', label: 'Sunday' }
-  ];
 
   // Handle viewing plan modal
   const handleViewPlan = (plan: FitnessPlan) => {
@@ -369,108 +346,99 @@ export default function Fitness() {
   filterParams.set('sortBy', 'name');
   filterParams.set('sortOrder', 'asc');
 
-  // Fetch exercises from local database API
+  // Fetch exercises with server-side filtering
   const { data: exerciseResponse, isLoading: isLoadingExercises } = useQuery({
     queryKey: ['exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      params.set('offset', offset.toString());
-      params.set('limit', limit.toString());
-      
-      if (searchQuery.trim()) {
-        params.set('search', searchQuery);
-      }
-      
-      if (selectedBodyPart !== 'all') {
-        params.set('bodyPart', selectedBodyPart);
-      }
-      
-      if (selectedEquipment !== 'all') {
-        params.set('equipment', selectedEquipment);
-      }
-      
-      if (selectedTarget !== 'all') {
-        params.set('target', selectedTarget);
-      }
-      
-      const response = await fetch(`/api/exercises?${params.toString()}`);
+      console.log(`Fetching exercises page ${currentPage} (offset=${offset}, limit=${limit})...`);
+      const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${filterParams.toString()}`;
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch exercises');
-      
-      const result = await response.json();
-      
-      // Transform database format to frontend format
-      const exerciseData = result.exercises.map((ex: any) => ({
-        exerciseId: ex.id,
-        name: ex.name,
-        gifUrl: ex.gifUrl,
-        targetMuscles: [ex.target, ...(ex.secondaryMuscles || [])].filter(Boolean),
-        bodyParts: [ex.bodyPart],
-        equipments: [ex.equipment],
-        secondaryMuscles: ex.secondaryMuscles || [],
-        instructions: ex.instructions || []
-      }));
-      
-      return {
-        data: exerciseData,
-        metadata: {
-          totalExercises: result.total,
-          currentPage,
-          totalPages: Math.ceil(result.total / limit)
-        }
-      };
+      const data = await response.json();
+      console.log('Exercise data received:', data.data?.length, 'exercises', 'total:', data.metadata?.totalExercises);
+      return data;
     },
-    staleTime: 60000,
-    refetchOnMount: false,
+    staleTime: 0,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
   });
 
-  // Get muscles from database API
+  // Fetch muscles for filtering and filter out unused ones
   const { data: allMuscles = [] } = useQuery({
     queryKey: ['muscles'],
     queryFn: async () => {
-      const response = await fetch('/api/exercises/metadata/targets');
-      if (!response.ok) throw new Error('Failed to fetch targets');
-      const targets = await response.json();
-      return targets.map((name: string) => ({ name }));
+      console.log('Fetching muscles from ExerciseDB API...');
+      const response = await fetch('https://www.exercisedb.dev/api/v1/muscles');
+      if (!response.ok) throw new Error('Failed to fetch muscles');
+      const data = await response.json();
+      console.log('Muscles data received:', data.data?.length, 'muscles');
+      return data.data || [];
     },
-    staleTime: Infinity,
-    refetchOnMount: false,
+    staleTime: 0,
+    refetchOnMount: true,
   });
   
-  // All muscles from database are already filtered to only used ones
+  // Filter muscles to only include those with exercises
   const { data: usedMuscles = [] } = useQuery({
     queryKey: ['used-muscles'],
     queryFn: async () => {
-      return allMuscles;
+      console.log('Checking which muscles have exercises...');
+      const usedMuscleNames = new Set<string>();
+      
+      // Get first 500 exercises to extract used muscles
+      for (let offset = 0; offset < 500; offset += 100) {
+        const response = await fetch(`https://www.exercisedb.dev/api/v1/exercises/filter?offset=${offset}&limit=100`);
+        if (!response.ok) break;
+        const data = await response.json();
+        
+        data.data?.forEach((exercise: any) => {
+          exercise.targetMuscles?.forEach((muscle: string) => {
+            usedMuscleNames.add(muscle);
+          });
+        });
+        
+        if (data.data?.length < 100) break; // No more data
+      }
+      
+      const filteredMuscles = allMuscles.filter((muscle: any) => 
+        usedMuscleNames.has(muscle.name)
+      );
+      
+      console.log('Filtered muscles:', filteredMuscles.length, 'out of', allMuscles.length);
+      return filteredMuscles;
     },
     enabled: allMuscles.length > 0,
-    staleTime: 300000,
+    staleTime: 300000, // Cache for 5 minutes
   });
 
-  // Get equipment from database API
+  // Fetch equipment for filtering
   const { data: equipments = [] } = useQuery({
     queryKey: ['equipments'],
     queryFn: async () => {
-      const response = await fetch('/api/exercises/metadata/equipment');
-      if (!response.ok) throw new Error('Failed to fetch equipment');
-      const equipmentList = await response.json();
-      return equipmentList.map((name: string) => ({ name }));
+      console.log('Fetching equipments from ExerciseDB API...');
+      const response = await fetch('https://www.exercisedb.dev/api/v1/equipments');
+      if (!response.ok) throw new Error('Failed to fetch equipments');
+      const data = await response.json();
+      console.log('Equipments data received:', data.data?.length, 'equipments');
+      return data.data || [];
     },
-    staleTime: Infinity,
-    refetchOnMount: false,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
-  // Get body parts from database API
+  // Fetch bodyparts for filtering
   const { data: bodyParts = [] } = useQuery({
     queryKey: ['bodyparts'],
     queryFn: async () => {
-      const response = await fetch('/api/exercises/metadata/body-parts');
-      if (!response.ok) throw new Error('Failed to fetch body parts');
-      const bodyPartList = await response.json();
-      return bodyPartList.map((name: string) => ({ name }));
+      console.log('Fetching bodyparts from ExerciseDB API...');
+      const response = await fetch('https://www.exercisedb.dev/api/v1/bodyparts');
+      if (!response.ok) throw new Error('Failed to fetch bodyparts');
+      const data = await response.json();
+      console.log('Bodyparts data received:', data.data?.length, 'bodyparts');
+      return data.data || [];
     },
-    staleTime: Infinity,
-    refetchOnMount: false,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   // Fetch user's favorite exercises
@@ -873,31 +841,30 @@ export default function Fitness() {
     </Card>
   );
 
-  // Dynamic plan generation using ExerciseDB API  
+  // Dynamic plan generation using ExerciseDB API
   const generatePreBuiltPlans = async (
     level: string, 
     equipment: string, 
     startDay: string, 
     duration: string, 
     frequency: string, 
-    goal: string,
-    selectedDaysParam?: string[]
+    goal: string
   ): Promise<PreBuiltPlan[]> => {
     try {
-      console.log('Generating plans with params:', { level, equipment, startDay, duration, frequency, goal, selectedDays: selectedDaysParam });
+      console.log('Generating plans with params:', { level, equipment, startDay, duration, frequency, goal });
       
       const exercises = await getExercisesForEquipment(equipment);
       console.log(`Found ${exercises.length} exercises for ${equipment}`);
       
       if (exercises.length < 5) {
         console.warn(`Not enough exercises for equipment: ${equipment}. Found: ${exercises.length}`);
-        // Fallback to bodyweight exercises if selected equipment has too few
-        if (equipment !== 'body only') {
-          console.log('Attempting fallback to bodyweight exercises...');
-          const bodyweightExercises = await getExercisesForEquipment('body only');
+        // Fallback to body weight exercises if selected equipment has too few
+        if (equipment !== 'body weight') {
+          console.log('Attempting fallback to body weight exercises...');
+          const bodyweightExercises = await getExercisesForEquipment('body weight');
           if (bodyweightExercises.length >= 5) {
             console.log('Falling back to bodyweight exercises');
-            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced", 'body only');
+            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced", 'body weight');
             const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay);
             return [preBuiltPlan];
           }
@@ -913,11 +880,21 @@ export default function Fitness() {
       preBuiltPlan.description = `${goal.charAt(0).toUpperCase() + goal.slice(1).replace('-', ' ')} focused ${level} program using ${equipment}. ${frequency} days per week, ${duration} minutes per session.`;
       preBuiltPlan.workoutsPerWeek = parseInt(frequency);
       
-      // Use the selected days directly as the schedule
-      preBuiltPlan.schedule = selectedDaysParam || [startDay.toLowerCase()];
+      // Update schedule to match the user's selected frequency
+      const frequencyNumber = parseInt(frequency);
+      const allWeekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const startDayIndex = allWeekdays.indexOf(startDay.toLowerCase());
+      
+      // Create a schedule that matches the frequency, starting from the selected start day
+      const updatedSchedule: string[] = [];
+      for (let i = 0; i < frequencyNumber && i < 7; i++) {
+        const dayIndex = (startDayIndex + i * Math.ceil(7 / frequencyNumber)) % 7;
+        updatedSchedule.push(allWeekdays[dayIndex]);
+      }
+      preBuiltPlan.schedule = updatedSchedule;
       
       console.log('Successfully generated plan:', preBuiltPlan.name);
-      console.log('Plan schedule updated to:', preBuiltPlan.schedule);
+      console.log('Plan schedule updated to:', updatedSchedule);
       return [preBuiltPlan];
     } catch (error) {
       console.error('Error generating dynamic plans:', error);
@@ -972,30 +949,64 @@ export default function Fitness() {
   }
 
   async function getExercisesForEquipment(equipment: string): Promise<APIExercise[]> {
-    const params = new URLSearchParams();
-    params.set('limit', '100'); // Get more exercises for plan generation
+    const limit = 100;
+    const maxExercises = 200; // Only fetch first 200 exercises max for performance
+    let offset = 0;
+    let all: APIExercise[] = [];
     
-    if (equipment !== 'all') {
-      params.set('equipment', equipment);
+    try {
+      while (offset < maxExercises) {
+        const params = new URLSearchParams();
+        params.set('offset', offset.toString());
+        params.set('limit', limit.toString());
+        params.set('equipment', equipment);
+        params.set('sortBy', 'name');
+        params.set('sortOrder', 'asc');
+        
+        const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${params.toString()}`;
+        
+        try {
+          const resp = await fetchJSON(url);
+          const batch: any[] = resp.data;
+          if (!batch || batch.length === 0) break;
+          
+          const mapped: APIExercise[] = batch.map((ex: any) => ({
+            id: ex.exerciseId || ex.id,
+            name: ex.name,
+            bodyPart: ex.bodyParts?.[0] || ex.bodyPart || 'unknown',
+            equipment: ex.equipments?.[0] || ex.equipment || equipment,
+            targetMuscles: ex.targetMuscles || [],
+            gifUrl: ex.gifUrl
+          }));
+          all = all.concat(mapped);
+          
+          // If we got fewer results than requested, we've reached the end
+          if (batch.length < limit) break;
+          
+          offset += limit;
+          
+          // If we have enough exercises for plan generation, we can stop
+          if (all.length >= 50) break;
+          
+        } catch (batchError) {
+          console.warn(`Failed to fetch batch at offset ${offset} for ${equipment}:`, batchError);
+          // If we already have some exercises, we can continue with what we have
+          if (all.length >= 10) {
+            console.log(`Using ${all.length} exercises despite batch failure`);
+            break;
+          }
+          // If this is the first batch and it failed, re-throw the error
+          if (offset === 0) throw batchError;
+          break;
+        }
+      }
+      
+      console.log(`Successfully fetched ${all.length} exercises for ${equipment}`);
+      return all;
+    } catch (error) {
+      console.error(`Error fetching exercises for ${equipment}:`, error);
+      throw error;
     }
-
-    const response = await fetch(`/api/exercises?${params.toString()}`);
-    if (!response.ok) throw new Error('Failed to fetch exercises');
-    
-    const result = await response.json();
-    
-    // Map to APIExercise format
-    const apiExercises: APIExercise[] = result.exercises.map((ex: any) => ({
-      id: ex.id,
-      name: ex.name,
-      bodyPart: ex.bodyPart || 'unknown',
-      equipment: ex.equipment || equipment,
-      targetMuscles: [ex.target, ...(ex.secondaryMuscles || [])].filter(Boolean),
-      gifUrl: ex.gifUrl
-    }));
-
-    console.log(`Successfully fetched ${apiExercises.length} exercises for ${equipment} from fallback database`);
-    return apiExercises;
   }
 
   // Helper to pick exercises by body part
@@ -1717,7 +1728,7 @@ export default function Fitness() {
                       <SelectValue placeholder="Select equipment" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="body only">Bodyweight Only</SelectItem>
+                      <SelectItem value="body weight">Bodyweight Only</SelectItem>
                       <SelectItem value="dumbbell">Dumbbells</SelectItem>
                       <SelectItem value="barbell">Barbell & Weights</SelectItem>
                       <SelectItem value="cable">Cable Machine</SelectItem>
@@ -1772,38 +1783,23 @@ export default function Fitness() {
                 </CardContent>
               </Card>
 
-              {/* Days Selection */}
+              {/* Frequency Selection */}
               <Card className="bg-ministry-gold-exact/20">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-black text-sm">Workout Days</CardTitle>
+                  <CardTitle className="text-black text-sm">Training Frequency</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-3">
-                    {daysOfWeek.map((day) => (
-                      <div
-                        key={day.value}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox
-                          id={`day-${day.value}`}
-                          checked={selectedDays.includes(day.value)}
-                          onCheckedChange={() => handleDayToggle(day.value)}
-                          data-testid={`checkbox-${day.value}`}
-                        />
-                        <label
-                          htmlFor={`day-${day.value}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-black cursor-pointer"
-                        >
-                          {day.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  {selectedDays.length > 0 && (
-                    <div className="mt-2 text-xs text-black">
-                      Selected {selectedDays.length} day{selectedDays.length !== 1 ? 's' : ''} per week
-                    </div>
-                  )}
+                  <Select value={selectedFrequency} onValueChange={setSelectedFrequency}>
+                    <SelectTrigger className="w-full" data-testid="select-frequency">
+                      <SelectValue placeholder="Workouts per week" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3">3 days per week</SelectItem>
+                      <SelectItem value="4">4 days per week</SelectItem>
+                      <SelectItem value="5">5 days per week</SelectItem>
+                      <SelectItem value="6">6 days per week</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </CardContent>
               </Card>
 
@@ -1830,7 +1826,7 @@ export default function Fitness() {
             </div>
 
             {/* Available Plans */}
-            {selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedDays.length > 0 && selectedGoal && (
+            {selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedGoal && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-black">
                   Recommended {selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1)} Plans
@@ -1920,7 +1916,7 @@ export default function Fitness() {
               </div>
             )}
 
-            {(!selectedLevel || !selectedPlanEquipment || !selectedStartDay || !selectedWorkoutDuration || selectedDays.length === 0 || !selectedGoal) && (
+            {(!selectedLevel || !selectedPlanEquipment || !selectedStartDay || !selectedWorkoutDuration || !selectedFrequency || !selectedGoal) && (
               <Card className="bg-ministry-gold-exact/20">
                 <CardContent className="py-8 text-center">
                   <BookOpen className="w-12 h-12 mx-auto text-ministry-gold mb-4" />
@@ -1946,8 +1942,8 @@ export default function Fitness() {
                       <span>Workout Duration</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${selectedDays.length > 0 ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                      <span>Workout Days</span>
+                      <div className={`w-2 h-2 rounded-full ${selectedFrequency ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <span>Training Frequency</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${selectedGoal ? 'bg-green-500' : 'bg-gray-400'}`}></div>

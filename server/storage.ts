@@ -28,7 +28,6 @@ import {
   brotherhoodDenialHistory,
   brotherhoods,
   fitnessChallenge,
-  exercises,
   favoriteExercises,
   fitnessPlans,
   fitnessPlanExercises,
@@ -74,8 +73,6 @@ import {
   type InsertNotification,
   type NotificationPreferences,
   type InsertNotificationPreferences,
-  type Exercise,
-  type InsertExercise,
   type UserReport,
   type InsertUserReport,
   type UserSilence,
@@ -407,13 +404,6 @@ export interface IStorage {
   deleteFitnessChallenge(id: string): Promise<void>;
   publishFitnessChallenge(id: string): Promise<FitnessChallenge>;
   getTodaysFitnessChallenge(): Promise<FitnessChallenge | null>;
-
-  // Exercise database operations
-  getAllExercises(filters?: { bodyPart?: string; equipment?: string; target?: string; search?: string; limit?: number; offset?: number }): Promise<{ exercises: Exercise[]; total: number }>;
-  getExerciseById(id: string): Promise<Exercise | undefined>;
-  getDistinctBodyParts(): Promise<string[]>;
-  getDistinctEquipment(): Promise<string[]>;
-  getDistinctTargets(): Promise<string[]>;
 
   // Favorite exercises operations
   getFavoriteExercises(userId: string): Promise<FavoriteExercise[]>;
@@ -4187,84 +4177,6 @@ export class DatabaseStorage implements IStorage {
     return challenge || null;
   }
 
-  // Exercise database implementation methods
-  async getAllExercises(filters?: { bodyPart?: string; equipment?: string; target?: string; search?: string; limit?: number; offset?: number }): Promise<{ exercises: Exercise[]; total: number }> {
-    const { bodyPart, equipment, target, search, limit = 50, offset = 0 } = filters || {};
-    
-    const conditions = [];
-    
-    if (bodyPart && bodyPart !== 'all') {
-      conditions.push(eq(exercises.bodyPart, bodyPart));
-    }
-    
-    if (equipment && equipment !== 'all') {
-      conditions.push(eq(exercises.equipment, equipment));
-    }
-    
-    if (target && target !== 'all') {
-      conditions.push(eq(exercises.target, target));
-    }
-    
-    if (search) {
-      conditions.push(ilike(exercises.name, `%${search}%`));
-    }
-    
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-    
-    // Get total count
-    const [{ count: totalCount }] = await db
-      .select({ count: count() })
-      .from(exercises)
-      .where(whereClause);
-    
-    // Get exercises
-    const exercisesList = await db
-      .select()
-      .from(exercises)
-      .where(whereClause)
-      .orderBy(asc(exercises.name))
-      .limit(limit)
-      .offset(offset);
-    
-    return {
-      exercises: exercisesList,
-      total: Number(totalCount),
-    };
-  }
-
-  async getExerciseById(id: string): Promise<Exercise | undefined> {
-    const [exercise] = await db
-      .select()
-      .from(exercises)
-      .where(eq(exercises.id, id))
-      .limit(1);
-    return exercise;
-  }
-
-  async getDistinctBodyParts(): Promise<string[]> {
-    const results = await db
-      .selectDistinct({ bodyPart: exercises.bodyPart })
-      .from(exercises)
-      .orderBy(asc(exercises.bodyPart));
-    return results.map(r => r.bodyPart);
-  }
-
-  async getDistinctEquipment(): Promise<string[]> {
-    const results = await db
-      .selectDistinct({ equipment: exercises.equipment })
-      .from(exercises)
-      .orderBy(asc(exercises.equipment));
-    return results.map(r => r.equipment);
-  }
-
-  async getDistinctTargets(): Promise<string[]> {
-    const results = await db
-      .selectDistinct({ target: exercises.target })
-      .from(exercises)
-      .orderBy(asc(exercises.target));
-    return results.map(r => r.target);
-  }
-
   // Favorite exercises implementation methods
   async getFavoriteExercises(userId: string): Promise<FavoriteExercise[]> {
     return await db
@@ -4467,7 +4379,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDueFitnessReminders(dayOfWeek: number, currentTime: string): Promise<Array<FitnessPlanReminder & { plan: FitnessPlan }>> {
-    const today = new Date();
+    const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
     
     return await db
       .select({
@@ -4483,6 +4395,8 @@ export class DatabaseStorage implements IStorage {
           name: fitnessPlans.name,
           description: fitnessPlans.description,
           userId: fitnessPlans.userId,
+          visibility: fitnessPlans.visibility,
+          tags: fitnessPlans.tags,
           createdAt: fitnessPlans.createdAt,
           updatedAt: fitnessPlans.updatedAt
         }
@@ -4492,7 +4406,7 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(fitnessPlanReminders.isActive, true),
-          eq(fitnessPlanReminders.dayOfWeek, String(dayOfWeek)),
+          eq(fitnessPlanReminders.dayOfWeek, dayOfWeek),
           eq(fitnessPlanReminders.time, currentTime),
           or(
             isNull(fitnessPlanReminders.lastSent),
@@ -4509,14 +4423,14 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(fitnessPlanExercises.planId, planId),
-          sql`${fitnessPlanExercises.daysOfWeek} LIKE ${'%' + dayOfWeek + '%'}`
+          like(fitnessPlanExercises.daysOfWeek, `%${dayOfWeek}%`)
         )
       )
       .orderBy(asc(fitnessPlanExercises.orderIndex));
   }
 
   async markFitnessReminderSent(reminderId: string): Promise<void> {
-    const today = new Date();
+    const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
     
     await db
       .update(fitnessPlanReminders)

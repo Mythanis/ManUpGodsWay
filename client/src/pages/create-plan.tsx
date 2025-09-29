@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { fetchExercises, fetchBodyParts, fetchEquipments, fetchTargets, type Exercise } from "@/utils/exercise-api";
 import { 
   Dumbbell, 
   Search, 
@@ -26,6 +25,21 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation, Link } from "wouter";
 
+interface Exercise {
+  exerciseId: string;
+  name: string;
+  gifUrl: string;
+  targetMuscles: string[];
+  bodyParts: string[];
+  equipments: string[];
+  secondaryMuscles: string[];
+  instructions: string[];
+  // Legacy fields for backward compatibility
+  id?: string;
+  target?: string;
+  bodyPart?: string;
+  equipment?: string;
+}
 
 interface FavoriteExercise {
   id: string;
@@ -112,38 +126,91 @@ export default function CreatePlan() {
   // Fetch body parts for filtering
   const { data: bodyParts = [] } = useQuery({
     queryKey: ['bodyparts'],
-    queryFn: fetchBodyParts,
+    queryFn: async () => {
+      const response = await fetch('https://www.exercisedb.dev/api/v1/bodyparts');
+      if (!response.ok) throw new Error('Failed to fetch body parts');
+      const data = await response.json();
+      return data.data || [];
+    },
     staleTime: 300000,
   });
 
   // Fetch equipment for filtering
   const { data: equipments = [] } = useQuery({
     queryKey: ['equipments'],
-    queryFn: fetchEquipments,
+    queryFn: async () => {
+      const response = await fetch('https://www.exercisedb.dev/api/v1/equipment');
+      if (!response.ok) throw new Error('Failed to fetch equipment');
+      const data = await response.json();
+      return data.data || [];
+    },
     staleTime: 300000,
   });
 
-  // Fetch target muscles for filtering
+  // Fetch muscles for filtering and filter out unused ones
   const { data: allMuscles = [] } = useQuery({
     queryKey: ['muscles'],
-    queryFn: fetchTargets,
+    queryFn: async () => {
+      const response = await fetch('https://www.exercisedb.dev/api/v1/muscles');
+      if (!response.ok) throw new Error('Failed to fetch muscles');
+      const data = await response.json();
+      return data.data || [];
+    },
+    staleTime: 300000,
+  });
+  
+  // Filter muscles to only include those with exercises
+  const { data: usedMuscles = [] } = useQuery({
+    queryKey: ['used-muscles'],
+    queryFn: async () => {
+      const usedMuscleNames = new Set<string>();
+      
+      // Get first 500 exercises to extract used muscles
+      for (let offset = 0; offset < 500; offset += 100) {
+        const response = await fetch(`https://www.exercisedb.dev/api/v1/exercises/filter?offset=${offset}&limit=100`);
+        if (!response.ok) break;
+        const data = await response.json();
+        
+        data.data?.forEach((exercise: any) => {
+          exercise.targetMuscles?.forEach((muscle: string) => {
+            usedMuscleNames.add(muscle);
+          });
+        });
+        
+        if (data.data?.length < 100) break; // No more data
+      }
+      
+      const filteredMuscles = allMuscles.filter((muscle: any) => 
+        usedMuscleNames.has(muscle.name)
+      );
+      
+      return filteredMuscles;
+    },
+    enabled: allMuscles.length > 0,
     staleTime: 300000,
   });
 
-  // Fetch exercises with server-side filtering using the new utility
+  // Build filter params for API
+  const filterParams = new URLSearchParams();
+  filterParams.set('offset', offset.toString());
+  filterParams.set('limit', limit.toString());
+  
+  if (searchQuery) filterParams.set('search', searchQuery);
+  if (selectedBodyPart !== 'all') filterParams.set('bodyParts', selectedBodyPart);
+  if (selectedEquipment !== 'all') filterParams.set('equipment', selectedEquipment);
+  if (selectedTarget !== 'all') filterParams.set('muscles', selectedTarget);
+  filterParams.set('sortBy', 'name');
+  filterParams.set('sortOrder', 'asc');
+
+  // Fetch exercises with server-side filtering
   const { data: exerciseResponse, isLoading: isLoadingExercises } = useQuery({
     queryKey: ['exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
     queryFn: async () => {
-      return await fetchExercises({
-        offset,
-        limit,
-        search: searchQuery || undefined,
-        bodyParts: selectedBodyPart !== 'all' ? selectedBodyPart : undefined,
-        equipment: selectedEquipment !== 'all' ? selectedEquipment : undefined,
-        muscles: selectedTarget !== 'all' ? selectedTarget : undefined,
-        sortBy: 'name',
-        sortOrder: 'asc'
-      });
+      const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${filterParams.toString()}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch exercises');
+      const data = await response.json();
+      return data;
     },
     staleTime: 0,
     refetchOnMount: true,
@@ -152,7 +219,7 @@ export default function CreatePlan() {
   // Get filter options from API data
   const uniqueBodyParts = bodyParts.map((bp: any) => bp.name).sort();
   const uniqueEquipment = equipments.map((eq: any) => eq.name).sort();
-  const uniqueTargets = allMuscles.map((muscle: any) => muscle.name).sort();
+  const uniqueTargets = (usedMuscles || allMuscles).map((muscle: any) => muscle.name).sort();
 
   // Extract exercise data with proper pagination info
   const exercises = exerciseResponse?.data || [];
@@ -647,43 +714,21 @@ export default function CreatePlan() {
                         onClick={() => handleExerciseSelect(exercise)}
                         data-testid={`exercise-card-${exercise.exerciseId}`}
                       >
-                        <div className="flex items-start gap-3">
-                          <div className="w-12 h-12 flex-shrink-0 bg-ministry-steel/20 rounded flex items-center justify-center relative">
-                            <img 
-                              src={exercise.gifUrl} 
-                              alt={exercise.name}
-                              className="w-12 h-12 object-cover rounded"
-                              onError={(e) => {
-                                console.log('Image failed to load:', exercise.gifUrl);
-                                e.currentTarget.style.display = 'none';
-                                const fallbackIcon = e.currentTarget.nextElementSibling as HTMLElement;
-                                if (fallbackIcon) fallbackIcon.style.display = 'block';
-                              }}
-                              onLoad={(e) => {
-                                const fallbackIcon = e.currentTarget.nextElementSibling as HTMLElement;
-                                if (fallbackIcon) fallbackIcon.style.display = 'none';
-                              }}
-                            />
-                            <Dumbbell className="w-6 h-6 text-ministry-steel" style={{ display: 'none' }} />
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium">{exercise.name}</h4>
+                          <div className="flex gap-1">
+                            {isFav && <Heart className="h-4 w-4 text-red-500 fill-red-500" />}
+                            {isSelected && <CheckSquare className="h-4 w-4 text-ministry-gold" />}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-start mb-2">
-                              <h4 className="font-medium truncate">{exercise.name}</h4>
-                              <div className="flex gap-1 flex-shrink-0 ml-2">
-                                {isFav && <Heart className="h-4 w-4 text-red-500 fill-red-500" />}
-                                {isSelected && <CheckSquare className="h-4 w-4 text-ministry-gold" />}
-                              </div>
-                            </div>
-                            
-                            <div className="flex flex-wrap gap-1 text-xs">
-                              {exercise.bodyParts?.map((part: string) => (
-                                <Badge key={part} variant="secondary">{part}</Badge>
-                              ))}
-                              {exercise.equipments?.map((eq: string) => (
-                                <Badge key={eq} variant="outline" className="bg-black text-white border-black">{eq}</Badge>
-                              ))}
-                            </div>
-                          </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-1 text-xs">
+                          {exercise.bodyParts?.map((part: string) => (
+                            <Badge key={part} variant="secondary">{part}</Badge>
+                          ))}
+                          {exercise.equipments?.map((eq: string) => (
+                            <Badge key={eq} variant="outline" className="bg-black text-white border-black">{eq}</Badge>
+                          ))}
                         </div>
                       </div>
                     );
