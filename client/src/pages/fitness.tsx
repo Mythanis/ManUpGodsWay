@@ -224,14 +224,55 @@ export default function Fitness() {
     setShowPlanModal(true);
   };
 
-  // Get today's exercises from a plan (deduplicated)
+  // Helper function to determine exercise week based on order (distribute evenly across 4 weeks)
+  const getExerciseWeek = (exercises: FitnessPlanExercise[], exerciseIndex: number): number => {
+    const totalExercises = exercises.length;
+    const exercisesPerWeek = Math.ceil(totalExercises / 4);
+    return Math.min(4, Math.floor(exerciseIndex / exercisesPerWeek) + 1);
+  };
+
+  // Helper function to get exercise day based on order (fallback if no daysOfWeek specified)
+  const getExerciseDay = (currentWeekExercises: FitnessPlanExercise[], exerciseIndex: number): string => {
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const dayIndex = exerciseIndex % 7;
+    return days[dayIndex];
+  };
+
+  // Helper function to determine current week based on plan start date and completion
+  const getCurrentWeek = (plan: FitnessPlan, exercises: FitnessPlanExercise[]): number => {
+    if (!plan || !exercises || exercises.length === 0) return 1;
+    
+    const planStartDate = new Date(plan.createdAt);
+    const now = new Date();
+    const daysSinceStart = Math.floor((now.getTime() - planStartDate.getTime()) / (1000 * 60 * 60 * 24));
+    const weeksSinceStart = Math.floor(daysSinceStart / 7);
+    
+    // Return current week (1-4)
+    return Math.min(4, Math.max(1, weeksSinceStart + 1));
+  };
+
+  // Get today's exercises from a plan (filtered by current week and current day)
   const getTodaysExercises = (plan: FitnessPlan) => {
     const today = getCurrentDayOfWeek();
     if (!plan.exercises) return [];
     
-    const todaysExercises = plan.exercises.filter(exercise => 
-      exercise.daysOfWeek && exercise.daysOfWeek.includes(today)
+    // Get current week and filter exercises
+    const currentWeek = getCurrentWeek(plan, plan.exercises);
+    const sortedAllExercises = (plan.exercises || []).sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+    const currentWeekExercises = sortedAllExercises.filter((exercise, index) => 
+      getExerciseWeek(sortedAllExercises, index) === currentWeek
     );
+    
+    // Filter to today's exercises only
+    const todaysExercises = currentWeekExercises.filter((exercise, index) => {
+      // If exercise has specific days assigned, use those
+      if (exercise.daysOfWeek && exercise.daysOfWeek.length > 0) {
+        return exercise.daysOfWeek.includes(today);
+      }
+      // Fallback: distribute exercises across days based on order
+      const exerciseDay = getExerciseDay(currentWeekExercises, index);
+      return exerciseDay === today;
+    });
     
     // Remove duplicates based on exerciseId
     const seenExerciseIds = new Set<string>();
@@ -2065,7 +2106,7 @@ export default function Fitness() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Dumbbell className="w-5 h-5" />
-              Plan Exercises
+              Today's Workout
             </DialogTitle>
           </DialogHeader>
           
@@ -2074,12 +2115,13 @@ export default function Fitness() {
               <div className="text-center p-4 bg-ministry-gold/20 rounded-lg">
                 <h3 className="font-semibold text-lg">{selectedPlanForView.name}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {selectedPlanForView.exercises?.length || 0} exercises in this plan
+                  Week {getCurrentWeek(selectedPlanForView, selectedPlanForView.exercises || [])} • {getCurrentDayOfWeek().charAt(0).toUpperCase() + getCurrentDayOfWeek().slice(1)}
                 </p>
               </div>
 
               {(() => {
-                const allExercises = selectedPlanForView.exercises || [];
+                const todaysFilteredExercises = getTodaysExercises(selectedPlanForView);
+                const allExercises = todaysFilteredExercises;
                 
                 // Remove duplicates based on exerciseId
                 const seenExerciseIds = new Set<string>();
@@ -2094,12 +2136,12 @@ export default function Fitness() {
                 if (uniqueExercises.length === 0) {
                   return (
                     <div className="text-center py-8">
-                      <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
+                      <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
                       <p className="text-muted-foreground">
-                        No exercises in this plan
+                        Rest Day - No exercises scheduled for {getCurrentDayOfWeek().charAt(0).toUpperCase() + getCurrentDayOfWeek().slice(1)}
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Edit the plan to add exercises
+                        Enjoy your recovery day!
                       </p>
                     </div>
                   );
