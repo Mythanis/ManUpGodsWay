@@ -893,33 +893,62 @@ export default function Fitness() {
 
   async function getExercisesForEquipment(equipment: string): Promise<APIExercise[]> {
     const limit = 100;
+    const maxExercises = 200; // Only fetch first 200 exercises max for performance
     let offset = 0;
     let all: APIExercise[] = [];
-    while (true) {
-      const params = new URLSearchParams();
-      params.set('offset', offset.toString());
-      params.set('limit', limit.toString());
-      params.set('equipment', equipment);
-      params.set('sortBy', 'name');
-      params.set('sortOrder', 'asc');
+    
+    try {
+      while (offset < maxExercises) {
+        const params = new URLSearchParams();
+        params.set('offset', offset.toString());
+        params.set('limit', limit.toString());
+        params.set('equipment', equipment);
+        params.set('sortBy', 'name');
+        params.set('sortOrder', 'asc');
+        
+        const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${params.toString()}`;
+        
+        try {
+          const resp = await fetchJSON(url);
+          const batch: any[] = resp.data;
+          if (!batch || batch.length === 0) break;
+          
+          const mapped: APIExercise[] = batch.map((ex: any) => ({
+            id: ex.exerciseId || ex.id,
+            name: ex.name,
+            bodyPart: ex.bodyParts?.[0] || ex.bodyPart || 'unknown',
+            equipment: ex.equipments?.[0] || ex.equipment || equipment,
+            targetMuscles: ex.targetMuscles || []
+          }));
+          all = all.concat(mapped);
+          
+          // If we got fewer results than requested, we've reached the end
+          if (batch.length < limit) break;
+          
+          offset += limit;
+          
+          // If we have enough exercises for plan generation, we can stop
+          if (all.length >= 50) break;
+          
+        } catch (batchError) {
+          console.warn(`Failed to fetch batch at offset ${offset} for ${equipment}:`, batchError);
+          // If we already have some exercises, we can continue with what we have
+          if (all.length >= 10) {
+            console.log(`Using ${all.length} exercises despite batch failure`);
+            break;
+          }
+          // If this is the first batch and it failed, re-throw the error
+          if (offset === 0) throw batchError;
+          break;
+        }
+      }
       
-      const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${params.toString()}`;
-      const resp = await fetchJSON(url);
-      const batch: any[] = resp.data;
-      if (!batch || batch.length === 0) break;
-      
-      const mapped: APIExercise[] = batch.map((ex: any) => ({
-        id: ex.id,
-        name: ex.name,
-        bodyPart: ex.bodyPart,
-        equipment: ex.equipment,
-        targetMuscles: ex.targetMuscles || []
-      }));
-      all = all.concat(mapped);
-      if (batch.length < limit) break;
-      offset += limit;
+      console.log(`Successfully fetched ${all.length} exercises for ${equipment}`);
+      return all;
+    } catch (error) {
+      console.error(`Error fetching exercises for ${equipment}:`, error);
+      throw error;
     }
-    return all;
   }
 
   // Helper to pick exercises by body part
