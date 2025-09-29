@@ -890,58 +890,25 @@ export default function Fitness() {
         isPublic: false
       });
 
-      // Then add exercises to the plan using the ExerciseDB API
+      // Add exercises to the plan directly (using fallback approach since no ExerciseDB integration available)
       for (let i = 0; i < preBuiltPlan.exercises.length; i++) {
         const exercise = preBuiltPlan.exercises[i];
         
-        // Search for the exercise in ExerciseDB
-        try {
-          const searchResponse = await fetch(`https://exercisedb.p.rapidapi.com/exercises/name/${exercise.name.toLowerCase()}`, {
-            headers: {
-              'x-rapidapi-key': 'YOUR_API_KEY', // This would need to be configured
-              'x-rapidapi-host': 'exercisedb.p.rapidapi.com'
-            }
-          });
-
-          if (searchResponse.ok) {
-            const exerciseData = await searchResponse.json();
-            if (exerciseData && exerciseData.length > 0) {
-              const foundExercise = exerciseData[0];
-              
-              await apiRequest('POST', `/api/fitness-plans/${planResponse.id}/exercises`, {
-                exerciseId: foundExercise.id,
-                exerciseName: foundExercise.name,
-                exerciseGifUrl: foundExercise.gifUrl,
-                exerciseTarget: foundExercise.target,
-                exerciseBodyPart: foundExercise.bodyPart,
-                exerciseEquipment: foundExercise.equipment,
-                sets: exercise.sets,
-                reps: exercise.reps,
-                duration: exercise.duration,
-                notes: `${exercise.rest} rest - ${exercise.day}`,
-                daysOfWeek: [exercise.day],
-                orderIndex: i
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Error finding exercise:', error);
-          // Create a fallback entry if API fails
-          await apiRequest('POST', `/api/fitness-plans/${planResponse.id}/exercises`, {
-            exerciseId: `fallback-${i}`,
-            exerciseName: exercise.name,
-            exerciseGifUrl: '/placeholder-exercise.gif',
-            exerciseTarget: exercise.bodyPart,
-            exerciseBodyPart: exercise.bodyPart,
-            exerciseEquipment: exercise.equipment.join(', '),
-            sets: exercise.sets,
-            reps: exercise.reps,
-            duration: exercise.duration,
-            notes: `${exercise.rest} rest - ${exercise.day}`,
-            daysOfWeek: [exercise.day],
-            orderIndex: i
-          });
-        }
+        // Create exercise entry directly with comprehensive data
+        await apiRequest('POST', `/api/fitness-plans/${planResponse.id}/exercises`, {
+          exerciseId: `prebuilt-${Date.now()}-${i}`,
+          exerciseName: exercise.name,
+          exerciseGifUrl: getExerciseGifUrl(exercise.name),
+          exerciseTarget: exercise.bodyPart,
+          exerciseBodyPart: exercise.bodyPart,
+          exerciseEquipment: exercise.equipment.join(', '),
+          sets: exercise.sets,
+          reps: exercise.reps,
+          duration: exercise.duration,
+          notes: `${exercise.rest} rest - Training Day: ${exercise.day}`,
+          daysOfWeek: [exercise.day],
+          orderIndex: i
+        });
       }
 
       return planResponse;
@@ -962,6 +929,23 @@ export default function Fitness() {
       console.error('Plan creation error:', error);
     },
   });
+
+  // Helper function to get exercise GIF URLs (since no ExerciseDB integration available)
+  const getExerciseGifUrl = (exerciseName: string): string => {
+    // Map common exercise names to placeholder or default GIF URLs
+    const exerciseGifMap: Record<string, string> = {
+      'push-up': '/api/placeholder-exercise.gif',
+      'bodyweight squat': '/api/placeholder-exercise.gif',
+      'plank': '/api/placeholder-exercise.gif',
+      'pull-up': '/api/placeholder-exercise.gif',
+      'dumbbell curl': '/api/placeholder-exercise.gif',
+      'deadlift': '/api/placeholder-exercise.gif',
+      'bench press': '/api/placeholder-exercise.gif'
+    };
+    
+    // Return specific URL if available, otherwise return generic placeholder
+    return exerciseGifMap[exerciseName.toLowerCase()] || '/api/placeholder-exercise.gif';
+  };
 
   const handleCreatePlanFromPrebuilt = (plan: PreBuiltPlan) => {
     createPrebuiltPlanMutation.mutate(plan);
