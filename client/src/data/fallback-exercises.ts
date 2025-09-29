@@ -4,7 +4,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-001",
     name: "push ups",
-    gifUrl: "https://media.giphy.com/media/l2JhOVyjSzOUXMXUQ/giphy.gif",
+    gifUrl: "user-icon", // Will be replaced with proper icon in component
+    iconName: "user", // Icon to represent push-ups
     targetMuscles: ["pectorals"],
     bodyParts: ["chest"],
     equipments: ["body weight"],
@@ -14,7 +15,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-002", 
     name: "chest dips",
-    gifUrl: "https://media.giphy.com/media/l2SpZ0D1M1blKF0C8/giphy.gif",
+    gifUrl: "muscle-icon",
+    iconName: "triangle", // Icon to represent dips
     targetMuscles: ["pectorals"],
     bodyParts: ["chest"],
     equipments: ["parallel bars"],
@@ -24,7 +26,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-003",
     name: "barbell bench press",
-    gifUrl: "https://media.giphy.com/media/l2SpOYP9yse4bMOKQ/giphy.gif",
+    gifUrl: "barbell-icon",
+    iconName: "minus", // Icon to represent barbell
     targetMuscles: ["pectorals"],
     bodyParts: ["chest"],
     equipments: ["barbell"],
@@ -36,7 +39,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-004",
     name: "pull ups",
-    gifUrl: "https://media.giphy.com/media/l2SpM4hHJvJXaFJbq/giphy.gif",
+    gifUrl: "pullup-icon",
+    iconName: "arrow-up", // Icon to represent pulling up
     targetMuscles: ["latissimus dorsi"],
     bodyParts: ["back"],
     equipments: ["pull up bar"],
@@ -46,7 +50,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-005",
     name: "barbell rows",
-    gifUrl: "https://media.giphy.com/media/l2SpKjO20hPyhr2HS/giphy.gif",
+    gifUrl: "row-icon",
+    iconName: "arrow-left-right", // Icon to represent rowing motion
     targetMuscles: ["latissimus dorsi"],
     bodyParts: ["back"],
     equipments: ["barbell"],
@@ -58,7 +63,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-006",
     name: "bodyweight squats",
-    gifUrl: "https://media.giphy.com/media/l2SpNtl4rbJ4yyPTO/giphy.gif",
+    gifUrl: "squat-icon",
+    iconName: "move-down", // Icon to represent squatting down
     targetMuscles: ["quadriceps"],
     bodyParts: ["upper legs"],
     equipments: ["body weight"],
@@ -68,7 +74,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-007", 
     name: "barbell squats",
-    gifUrl: "https://media.giphy.com/media/l2SpOQPBpIMJOTFao/giphy.gif",
+    gifUrl: "barbell-squat-icon",
+    iconName: "move-vertical", // Icon to represent up/down movement
     targetMuscles: ["quadriceps"],
     bodyParts: ["upper legs"],
     equipments: ["barbell"],
@@ -78,7 +85,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-008",
     name: "lunges",
-    gifUrl: "https://media.giphy.com/media/l2SpMHFGb6fNE6rWw/giphy.gif",
+    gifUrl: "lunge-icon",
+    iconName: "footprints", // Icon to represent stepping forward
     targetMuscles: ["quadriceps"],
     bodyParts: ["upper legs"],
     equipments: ["body weight"],
@@ -88,7 +96,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-009",
     name: "deadlifts",
-    gifUrl: "https://media.giphy.com/media/l2SpKjZpOcRsOwBOw/giphy.gif",
+    gifUrl: "deadlift-icon",
+    iconName: "activity", // Icon to represent lifting motion
     targetMuscles: ["hamstrings"],
     bodyParts: ["upper legs"],
     equipments: ["barbell"],
@@ -100,7 +109,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-010",
     name: "plank",
-    gifUrl: "https://media.giphy.com/media/l2SpMFP8VmhFQ1sJO/giphy.gif",
+    gifUrl: "plank-icon",
+    iconName: "clock", // Icon to represent time-based hold
     targetMuscles: ["abdominals"],
     bodyParts: ["waist"],
     equipments: ["body weight"],
@@ -110,7 +120,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-011",
     name: "crunches",
-    gifUrl: "https://media.giphy.com/media/l2SpJ4lM8JOGLDiSI/giphy.gif",
+    gifUrl: "crunch-icon",
+    iconName: "rotate-cw", // Icon to represent curling motion
     targetMuscles: ["abdominals"],
     bodyParts: ["waist"],
     equipments: ["body weight"],
@@ -122,7 +133,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-012",
     name: "barbell curls",
-    gifUrl: "https://media.giphy.com/media/l2SpP8FIjD5CaLKdG/giphy.gif",
+    gifUrl: "curl-icon",
+    iconName: "rotate-3d", // Icon to represent curling motion
     targetMuscles: ["biceps brachii"],
     bodyParts: ["upper arms"],
     equipments: ["barbell"],
@@ -134,7 +146,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-013",
     name: "tricep dips",
-    gifUrl: "https://media.giphy.com/media/l2SpKjP4sZmYoJqZq/giphy.gif",
+    gifUrl: "tricep-icon",
+    iconName: "move-down", // Icon to represent dipping motion
     targetMuscles: ["triceps brachii"],
     bodyParts: ["upper arms"],
     equipments: ["body weight"],
@@ -146,7 +159,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-014",
     name: "shoulder press",
-    gifUrl: "https://media.giphy.com/media/l2SpKjQ4GiEkT6rKM/giphy.gif",
+    gifUrl: "shoulder-icon",
+    iconName: "arrow-up-circle", // Icon to represent pressing up
     targetMuscles: ["anterior deltoid"],
     bodyParts: ["shoulders"],
     equipments: ["dumbbell"],
@@ -158,7 +172,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-015",
     name: "jumping jacks",
-    gifUrl: "https://media.giphy.com/media/l2SpSO3zwMCFTCXf2/giphy.gif",
+    gifUrl: "jumping-icon",
+    iconName: "zap", // Icon to represent high energy/cardio
     targetMuscles: ["cardiovascular system"],
     bodyParts: ["cardio"],
     equipments: ["body weight"],
@@ -168,7 +183,8 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-016",
     name: "burpees",
-    gifUrl: "https://media.giphy.com/media/l2SpMUCKEgUH8n8LC/giphy.gif",
+    gifUrl: "burpee-icon",
+    iconName: "flame", // Icon to represent intense cardio
     targetMuscles: ["cardiovascular system"],
     bodyParts: ["cardio"],
     equipments: ["body weight"],

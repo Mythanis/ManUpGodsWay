@@ -21,11 +21,73 @@ import {
   CheckSquare,
   Calendar,
   Bell,
-  Timer
+  Timer,
+  User,
+  Triangle,
+  Minus,
+  ArrowUp,
+  ArrowLeftRight,
+  MoveDown,
+  MoveVertical,
+  Footprints,
+  Activity,
+  RotateCw,
+  Rotate3d,
+  ArrowUpCircle,
+  Zap,
+  Flame
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation, Link } from "wouter";
 
+// Helper function to get exercise icon based on iconName
+const getExerciseIcon = (iconName: string, className: string = "w-6 h-6") => {
+  const iconMap = {
+    'user': User,
+    'triangle': Triangle,
+    'minus': Minus,
+    'arrow-up': ArrowUp,
+    'arrow-left-right': ArrowLeftRight,
+    'move-down': MoveDown,
+    'move-vertical': MoveVertical,
+    'footprints': Footprints,
+    'activity': Activity,
+    'clock': Clock,
+    'rotate-cw': RotateCw,
+    'rotate-3d': Rotate3d,
+    'arrow-up-circle': ArrowUpCircle,
+    'zap': Zap,
+    'flame': Flame
+  };
+  
+  const IconComponent = iconMap[iconName as keyof typeof iconMap] || Dumbbell;
+  return <IconComponent className={className} />;
+};
+
+// Helper function to check if a URL is an icon identifier
+const isIconUrl = (url: string): boolean => {
+  return Boolean(url && (url.endsWith('-icon') || url.includes('icon')));
+};
+
+// Helper function to get icon name from exercise
+const getIconNameFromExercise = (exercise: Exercise): string => {
+  // Check if exercise has iconName property (from fallback exercises)
+  if ('iconName' in exercise && exercise.iconName) {
+    return exercise.iconName as string;
+  }
+  
+  // Fallback based on exercise name or body part
+  const name = exercise.name.toLowerCase();
+  if (name.includes('push') || name.includes('chest')) return 'user';
+  if (name.includes('pull') || name.includes('row')) return 'arrow-up';
+  if (name.includes('squat')) return 'move-down';
+  if (name.includes('curl')) return 'rotate-3d';
+  if (name.includes('press')) return 'arrow-up-circle';
+  if (name.includes('cardio') || name.includes('jack') || name.includes('jump')) return 'zap';
+  if (name.includes('burpee')) return 'flame';
+  
+  return 'activity'; // Default icon
+};
 
 interface FavoriteExercise {
   id: string;
@@ -635,22 +697,34 @@ export default function EditPlan() {
                     <div key={exercise.exerciseId || exercise.id} className="p-4 border border-black/20 rounded-lg flex items-start justify-between">
                       <div className="flex items-start gap-4 flex-1">
                         <div className="w-16 h-16 flex-shrink-0 bg-ministry-steel/20 rounded flex items-center justify-center relative">
-                          <img 
-                            src={exercise.gifUrl} 
-                            alt={exercise.name}
-                            className="w-16 h-16 object-cover rounded"
-                            onError={(e) => {
-                              console.log('Image failed to load:', exercise.gifUrl);
-                              e.currentTarget.style.display = 'none';
-                              const fallbackIcon = e.currentTarget.nextElementSibling as HTMLElement;
-                              if (fallbackIcon) fallbackIcon.style.display = 'block';
-                            }}
-                            onLoad={(e) => {
-                              const fallbackIcon = e.currentTarget.nextElementSibling as HTMLElement;
-                              if (fallbackIcon) fallbackIcon.style.display = 'none';
-                            }}
-                          />
-                          <Dumbbell className="w-8 h-8 text-ministry-steel" style={{ display: 'none' }} />
+                          {isIconUrl(exercise.gifUrl) ? (
+                            // Show icon directly for fallback exercises
+                            <div className="text-ministry-charcoal">
+                              {getExerciseIcon(getIconNameFromExercise(exercise), "w-8 h-8")}
+                            </div>
+                          ) : (
+                            // Try to load image with icon fallback
+                            <>
+                              <img 
+                                src={exercise.gifUrl} 
+                                alt={exercise.name}
+                                className="w-16 h-16 object-cover rounded"
+                                onError={(e) => {
+                                  console.log('Image failed to load:', exercise.gifUrl);
+                                  e.currentTarget.style.display = 'none';
+                                  const fallbackIcon = e.currentTarget.nextElementSibling as HTMLElement;
+                                  if (fallbackIcon) fallbackIcon.style.display = 'block';
+                                }}
+                                onLoad={(e) => {
+                                  const fallbackIcon = e.currentTarget.nextElementSibling as HTMLElement;
+                                  if (fallbackIcon) fallbackIcon.style.display = 'none';
+                                }}
+                              />
+                              <div className="text-ministry-charcoal" style={{ display: 'none' }}>
+                                {getExerciseIcon(getIconNameFromExercise(exercise), "w-8 h-8")}
+                              </div>
+                            </>
+                          )}
                         </div>
                         <div className="flex-1">
                           <h4 className="font-medium capitalize mb-1">
