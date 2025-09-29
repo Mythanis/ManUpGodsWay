@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { fetchExercises, fetchBodyParts, fetchEquipments, fetchTargets, type Exercise } from "@/utils/exercise-api";
 import { 
   Dumbbell, 
   Search, 
@@ -25,21 +26,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation, Link } from "wouter";
 
-interface Exercise {
-  exerciseId: string;
-  name: string;
-  gifUrl: string;
-  targetMuscles: string[];
-  bodyParts: string[];
-  equipments: string[];
-  secondaryMuscles: string[];
-  instructions: string[];
-  // Legacy fields for backward compatibility
-  id?: string;
-  target?: string;
-  bodyPart?: string;
-  equipment?: string;
-}
 
 interface FavoriteExercise {
   id: string;
@@ -126,91 +112,38 @@ export default function CreatePlan() {
   // Fetch body parts for filtering
   const { data: bodyParts = [] } = useQuery({
     queryKey: ['bodyparts'],
-    queryFn: async () => {
-      const response = await fetch('https://www.exercisedb.dev/api/v1/bodyparts');
-      if (!response.ok) throw new Error('Failed to fetch body parts');
-      const data = await response.json();
-      return data.data || [];
-    },
+    queryFn: fetchBodyParts,
     staleTime: 300000,
   });
 
   // Fetch equipment for filtering
   const { data: equipments = [] } = useQuery({
     queryKey: ['equipments'],
-    queryFn: async () => {
-      const response = await fetch('https://www.exercisedb.dev/api/v1/equipment');
-      if (!response.ok) throw new Error('Failed to fetch equipment');
-      const data = await response.json();
-      return data.data || [];
-    },
+    queryFn: fetchEquipments,
     staleTime: 300000,
   });
 
-  // Fetch muscles for filtering and filter out unused ones
+  // Fetch target muscles for filtering
   const { data: allMuscles = [] } = useQuery({
     queryKey: ['muscles'],
-    queryFn: async () => {
-      const response = await fetch('https://www.exercisedb.dev/api/v1/muscles');
-      if (!response.ok) throw new Error('Failed to fetch muscles');
-      const data = await response.json();
-      return data.data || [];
-    },
-    staleTime: 300000,
-  });
-  
-  // Filter muscles to only include those with exercises
-  const { data: usedMuscles = [] } = useQuery({
-    queryKey: ['used-muscles'],
-    queryFn: async () => {
-      const usedMuscleNames = new Set<string>();
-      
-      // Get first 500 exercises to extract used muscles
-      for (let offset = 0; offset < 500; offset += 100) {
-        const response = await fetch(`https://www.exercisedb.dev/api/v1/exercises/filter?offset=${offset}&limit=100`);
-        if (!response.ok) break;
-        const data = await response.json();
-        
-        data.data?.forEach((exercise: any) => {
-          exercise.targetMuscles?.forEach((muscle: string) => {
-            usedMuscleNames.add(muscle);
-          });
-        });
-        
-        if (data.data?.length < 100) break; // No more data
-      }
-      
-      const filteredMuscles = allMuscles.filter((muscle: any) => 
-        usedMuscleNames.has(muscle.name)
-      );
-      
-      return filteredMuscles;
-    },
-    enabled: allMuscles.length > 0,
+    queryFn: fetchTargets,
     staleTime: 300000,
   });
 
-  // Build filter params for API
-  const filterParams = new URLSearchParams();
-  filterParams.set('offset', offset.toString());
-  filterParams.set('limit', limit.toString());
-  
-  if (searchQuery) filterParams.set('search', searchQuery);
-  if (selectedBodyPart !== 'all') filterParams.set('bodyParts', selectedBodyPart);
-  if (selectedEquipment !== 'all') filterParams.set('equipment', selectedEquipment);
-  if (selectedTarget !== 'all') filterParams.set('muscles', selectedTarget);
-  filterParams.set('sortBy', 'name');
-  filterParams.set('sortOrder', 'asc');
-
-  // Fetch exercises with server-side filtering
+  // Fetch exercises with server-side filtering using the new utility
   const { data: exerciseResponse, isLoading: isLoadingExercises } = useQuery({
     queryKey: ['exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
     queryFn: async () => {
-      const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${filterParams.toString()}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch exercises');
-      const data = await response.json();
-      return data;
+      return await fetchExercises({
+        offset,
+        limit,
+        search: searchQuery || undefined,
+        bodyParts: selectedBodyPart !== 'all' ? selectedBodyPart : undefined,
+        equipment: selectedEquipment !== 'all' ? selectedEquipment : undefined,
+        muscles: selectedTarget !== 'all' ? selectedTarget : undefined,
+        sortBy: 'name',
+        sortOrder: 'asc'
+      });
     },
     staleTime: 0,
     refetchOnMount: true,
@@ -219,7 +152,7 @@ export default function CreatePlan() {
   // Get filter options from API data
   const uniqueBodyParts = bodyParts.map((bp: any) => bp.name).sort();
   const uniqueEquipment = equipments.map((eq: any) => eq.name).sort();
-  const uniqueTargets = (usedMuscles || allMuscles).map((muscle: any) => muscle.name).sort();
+  const uniqueTargets = allMuscles.map((muscle: any) => muscle.name).sort();
 
   // Extract exercise data with proper pagination info
   const exercises = exerciseResponse?.data || [];

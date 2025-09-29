@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { fetchExercises, fetchBodyParts, fetchEquipments, fetchTargets, type Exercise } from "@/utils/exercise-api";
 import { 
   Dumbbell, 
   Search, 
@@ -25,21 +26,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation, Link } from "wouter";
 
-interface Exercise {
-  exerciseId: string;
-  name: string;
-  gifUrl: string;
-  targetMuscles: string[];
-  bodyParts: string[];
-  equipments: string[];
-  secondaryMuscles: string[];
-  instructions: string[];
-  // Legacy fields for backward compatibility
-  id?: string;
-  target?: string;
-  bodyPart?: string;
-  equipment?: string;
-}
 
 interface FavoriteExercise {
   id: string;
@@ -192,64 +178,42 @@ export default function EditPlan() {
   // Fetch body parts for filtering
   const { data: bodyParts = [] } = useQuery({
     queryKey: ['bodyparts'],
-    queryFn: async () => {
-      const response = await fetch('https://www.exercisedb.dev/api/v1/bodyparts');
-      if (!response.ok) throw new Error('Failed to fetch body parts');
-      const data = await response.json();
-      return data.data || [];
-    },
+    queryFn: fetchBodyParts,
     staleTime: 300000,
-  });
-
-  // Build filter params for API
-  const filterParams = new URLSearchParams();
-  filterParams.set('offset', offset.toString());
-  filterParams.set('limit', limit.toString());
-  
-  if (searchQuery) filterParams.set('search', searchQuery);
-  if (selectedBodyPart !== 'all') filterParams.set('bodyParts', selectedBodyPart);
-  if (selectedEquipment !== 'all') filterParams.set('equipment', selectedEquipment);
-  if (selectedTarget !== 'all') filterParams.set('muscles', selectedTarget);
-  filterParams.set('sortBy', 'name');
-  filterParams.set('sortOrder', 'asc');
-
-  // Fetch exercises with server-side filtering
-  const { data: exerciseResponse, isLoading: isLoadingExercises } = useQuery({
-    queryKey: ['exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
-    queryFn: async () => {
-      const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${filterParams.toString()}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch exercises');
-      const data = await response.json();
-      return data;
-    },
-    staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: false,
   });
 
   // Fetch equipment for filtering
   const { data: equipments = [] } = useQuery({
     queryKey: ['equipments'],
-    queryFn: async () => {
-      const response = await fetch('https://www.exercisedb.dev/api/v1/equipments');
-      if (!response.ok) throw new Error('Failed to fetch equipments');
-      const data = await response.json();
-      return data.data || [];
-    },
+    queryFn: fetchEquipments,
     staleTime: 300000,
   });
 
-  // Fetch muscles for filtering
+  // Fetch target muscles for filtering
   const { data: allMuscles = [] } = useQuery({
     queryKey: ['muscles'],
-    queryFn: async () => {
-      const response = await fetch('https://www.exercisedb.dev/api/v1/muscles');
-      if (!response.ok) throw new Error('Failed to fetch muscles');
-      const data = await response.json();
-      return data.data || [];
-    },
+    queryFn: fetchTargets,
     staleTime: 300000,
+  });
+
+  // Fetch exercises with server-side filtering using the new utility
+  const { data: exerciseResponse, isLoading: isLoadingExercises } = useQuery({
+    queryKey: ['exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
+    queryFn: async () => {
+      return await fetchExercises({
+        offset,
+        limit,
+        search: searchQuery || undefined,
+        bodyParts: selectedBodyPart !== 'all' ? selectedBodyPart : undefined,
+        equipment: selectedEquipment !== 'all' ? selectedEquipment : undefined,
+        muscles: selectedTarget !== 'all' ? selectedTarget : undefined,
+        sortBy: 'name',
+        sortOrder: 'asc'
+      });
+    },
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   // Update plan mutation
