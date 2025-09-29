@@ -166,31 +166,43 @@ export default function Fitness() {
   const [selectedLevel, setSelectedLevel] = useState<string>('');
   const [selectedPlanEquipment, setSelectedPlanEquipment] = useState<string>('');
   const [selectedStartDay, setSelectedStartDay] = useState<string>('');
+  const [selectedWorkoutDuration, setSelectedWorkoutDuration] = useState<string>('');
+  const [selectedFrequency, setSelectedFrequency] = useState<string>('');
+  const [selectedGoal, setSelectedGoal] = useState<string>('');
   const [selectedPlanForPreview, setSelectedPlanForPreview] = useState<PreBuiltPlan | null>(null);
   const [generatedPlans, setGeneratedPlans] = useState<PreBuiltPlan[]>([]);
   const [plansLoading, setPlansLoading] = useState<boolean>(false);
+  const [planGenerationError, setPlanGenerationError] = useState<string>('');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Effect to generate plans when filters change
   useEffect(() => {
-    if (selectedLevel && selectedPlanEquipment && selectedStartDay) {
+    if (selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedGoal) {
       setPlansLoading(true);
+      setPlanGenerationError('');
       generatePreBuiltPlans(selectedLevel, selectedPlanEquipment, selectedStartDay)
         .then(plans => {
+          if (plans.length === 0) {
+            setPlanGenerationError(`Unable to generate plans for ${selectedPlanEquipment}. Try selecting a different equipment type like "body weight" or "dumbbell".`);
+          } else {
+            setPlanGenerationError('');
+          }
           setGeneratedPlans(plans);
           setPlansLoading(false);
         })
         .catch(error => {
           console.error('Error generating plans:', error);
+          setPlanGenerationError('Failed to connect to exercise database. Please check your internet connection and try again.');
           setGeneratedPlans([]);
           setPlansLoading(false);
         });
     } else {
       setGeneratedPlans([]);
+      setPlanGenerationError('');
     }
-  }, [selectedLevel, selectedPlanEquipment, selectedStartDay]);
+  }, [selectedLevel, selectedPlanEquipment, selectedStartDay, selectedWorkoutDuration, selectedFrequency, selectedGoal]);
 
   // Get current day of the week
   const getCurrentDayOfWeek = () => {
@@ -784,13 +796,28 @@ export default function Fitness() {
   const generatePreBuiltPlans = async (level: string, equipment: string, startDay: string): Promise<PreBuiltPlan[]> => {
     try {
       const exercises = await getExercisesForEquipment(equipment);
-      if (exercises.length < 10) {
+      if (exercises.length < 5) {
         console.warn(`Not enough exercises for equipment: ${equipment}. Found: ${exercises.length}`);
+        // Fallback to body weight exercises if selected equipment has too few
+        if (equipment !== 'body weight') {
+          const bodyweightExercises = await getExercisesForEquipment('body weight');
+          if (bodyweightExercises.length >= 5) {
+            console.log('Falling back to bodyweight exercises');
+            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced", 'body weight');
+            const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay);
+            return [preBuiltPlan];
+          }
+        }
         return [];
       }
 
       const weeklyPlan = generateDynamicPlan(exercises, level as "Beginner"|"Intermediate"|"Advanced", equipment);
       const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay);
+      
+      // Customize plan based on additional parameters
+      preBuiltPlan.name = `${level.charAt(0).toUpperCase() + level.slice(1)} ${equipment} Program (${selectedWorkoutDuration}min)`;
+      preBuiltPlan.description = `${selectedGoal.charAt(0).toUpperCase() + selectedGoal.slice(1).replace('-', ' ')} focused ${level} program using ${equipment}. ${selectedFrequency} days per week, ${selectedWorkoutDuration} minutes per session.`;
+      preBuiltPlan.workoutsPerWeek = parseInt(selectedFrequency);
       
       return [preBuiltPlan];
     } catch (error) {
@@ -1519,7 +1546,7 @@ export default function Fitness() {
             </div>
             
             {/* Plan Selection Options */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               {/* Level Selection */}
               <Card className="bg-ministry-gold-exact/20">
                 <CardHeader className="pb-3">
@@ -1550,10 +1577,13 @@ export default function Fitness() {
                       <SelectValue placeholder="Select equipment" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="bodyweight">Bodyweight Only</SelectItem>
-                      <SelectItem value="dumbbells">Dumbbells</SelectItem>
+                      <SelectItem value="body weight">Bodyweight Only</SelectItem>
+                      <SelectItem value="dumbbell">Dumbbells</SelectItem>
                       <SelectItem value="barbell">Barbell & Weights</SelectItem>
-                      <SelectItem value="gym">Full Gym Access</SelectItem>
+                      <SelectItem value="cable">Cable Machine</SelectItem>
+                      <SelectItem value="smith machine">Smith Machine</SelectItem>
+                      <SelectItem value="kettlebell">Kettlebells</SelectItem>
+                      <SelectItem value="resistance band">Resistance Bands</SelectItem>
                     </SelectContent>
                   </Select>
                 </CardContent>
@@ -1581,10 +1611,71 @@ export default function Fitness() {
                   </Select>
                 </CardContent>
               </Card>
+
+              {/* Workout Duration Selection */}
+              <Card className="bg-ministry-gold-exact/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-black text-sm">Workout Duration</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select value={selectedWorkoutDuration} onValueChange={setSelectedWorkoutDuration}>
+                    <SelectTrigger className="w-full" data-testid="select-workout-duration">
+                      <SelectValue placeholder="Select duration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="30">30 minutes</SelectItem>
+                      <SelectItem value="45">45 minutes</SelectItem>
+                      <SelectItem value="60">60 minutes</SelectItem>
+                      <SelectItem value="90">90 minutes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+
+              {/* Frequency Selection */}
+              <Card className="bg-ministry-gold-exact/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-black text-sm">Training Frequency</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select value={selectedFrequency} onValueChange={setSelectedFrequency}>
+                    <SelectTrigger className="w-full" data-testid="select-frequency">
+                      <SelectValue placeholder="Workouts per week" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3">3 days per week</SelectItem>
+                      <SelectItem value="4">4 days per week</SelectItem>
+                      <SelectItem value="5">5 days per week</SelectItem>
+                      <SelectItem value="6">6 days per week</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+
+              {/* Goal Selection */}
+              <Card className="bg-ministry-gold-exact/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-black text-sm">Primary Goal</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select value={selectedGoal} onValueChange={setSelectedGoal}>
+                    <SelectTrigger className="w-full" data-testid="select-goal">
+                      <SelectValue placeholder="Select your goal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="strength">Build Strength</SelectItem>
+                      <SelectItem value="muscle">Build Muscle</SelectItem>
+                      <SelectItem value="endurance">Improve Endurance</SelectItem>
+                      <SelectItem value="weight-loss">Weight Loss</SelectItem>
+                      <SelectItem value="general">General Fitness</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Available Plans */}
-            {selectedLevel && selectedPlanEquipment && selectedStartDay && (
+            {selectedLevel && selectedPlanEquipment && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedGoal && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-black">
                   Recommended {selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1)} Plans
@@ -1594,6 +1685,13 @@ export default function Fitness() {
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold"></div>
                   </div>
+                ) : planGenerationError ? (
+                  <Card className="bg-red-100 border-red-300">
+                    <CardContent className="py-6 text-center">
+                      <div className="text-red-600 mb-2">⚠️ Plan Generation Failed</div>
+                      <p className="text-red-800">{planGenerationError}</p>
+                    </CardContent>
+                  </Card>
                 ) : (
                   generatedPlans.map((plan, index) => (
                   <Card key={index} className="bg-ministry-gold-exact/20 border border-ministry-gold/30">
@@ -1667,14 +1765,40 @@ export default function Fitness() {
               </div>
             )}
 
-            {(!selectedLevel || !selectedPlanEquipment || !selectedStartDay) && (
+            {(!selectedLevel || !selectedPlanEquipment || !selectedStartDay || !selectedWorkoutDuration || !selectedFrequency || !selectedGoal) && (
               <Card className="bg-ministry-gold-exact/20">
                 <CardContent className="py-8 text-center">
                   <BookOpen className="w-12 h-12 mx-auto text-ministry-gold mb-4" />
-                  <h3 className="text-lg font-semibold text-black mb-2">Choose Your Plan Settings</h3>
-                  <p className="text-black">
-                    Select your fitness level, available equipment, and preferred start day to see recommended workout plans.
+                  <h3 className="text-lg font-semibold text-black mb-2">Complete Your Plan Preferences</h3>
+                  <p className="text-black mb-4">
+                    Fill out all the fields above to generate personalized workout plans tailored to your needs:
                   </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-black max-w-md mx-auto">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${selectedLevel ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <span>Fitness Level</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${selectedPlanEquipment ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <span>Available Equipment</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${selectedStartDay ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <span>Start Day</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${selectedWorkoutDuration ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <span>Workout Duration</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${selectedFrequency ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <span>Training Frequency</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${selectedGoal ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <span>Primary Goal</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             )}
