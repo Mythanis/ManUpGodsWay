@@ -112,6 +112,19 @@ export default function ViewPlan() {
     return Math.min(4, Math.floor(exerciseIndex / exercisesPerWeek) + 1);
   };
 
+  // Helper function to get current day of the week
+  const getCurrentDayOfWeek = (): string => {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    return days[new Date().getDay()];
+  };
+
+  // Helper function to get exercise day based on order (fallback if no daysOfWeek specified)
+  const getExerciseDay = (currentWeekExercises: FitnessPlanExercise[], exerciseIndex: number): string => {
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const dayIndex = exerciseIndex % 7;
+    return days[dayIndex];
+  };
+
   // Helper function to determine current week based on plan start date and completion
   const getCurrentWeek = (plan: FitnessPlan, exercises: FitnessPlanExercise[], completions: ExerciseCompletion[]): number => {
     if (!plan || !exercises || exercises.length === 0) return 1;
@@ -168,10 +181,22 @@ export default function ViewPlan() {
 
   // Get current week and filter exercises
   const currentWeek = plan && plan.exercises ? getCurrentWeek(plan, plan.exercises, completions) : 1;
+  const currentDay = getCurrentDayOfWeek();
   const sortedAllExercises = (plan?.exercises || []).sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
   const currentWeekExercises = sortedAllExercises.filter((exercise, index) => 
     getExerciseWeek(sortedAllExercises, index) === currentWeek
   );
+  
+  // Filter to today's exercises only
+  const todaysExercises = currentWeekExercises.filter((exercise, index) => {
+    // If exercise has specific days assigned, use those
+    if (exercise.daysOfWeek && exercise.daysOfWeek.length > 0) {
+      return exercise.daysOfWeek.includes(currentDay);
+    }
+    // Fallback: distribute exercises across days based on order
+    const exerciseDay = getExerciseDay(currentWeekExercises, index);
+    return exerciseDay === currentDay;
+  });
 
   const totalWeeks = 4;
   const completedWeeksCount = Math.max(0, currentWeek - 1);
@@ -237,19 +262,19 @@ export default function ViewPlan() {
       </div>
 
       <div className="p-4 space-y-6">
-        {/* Weekly Progress */}
+        {/* Today's Workout Progress */}
         <Card className="bg-ministry-charcoal border-ministry-steel">
           <CardHeader>
             <CardTitle className="text-ministry-gold flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              Week {currentWeek} of {totalWeeks}
+              Today's Workout - Week {currentWeek}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-white space-y-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="flex-1">
                 <div className="flex justify-between text-sm mb-1">
-                  <span>Progress</span>
+                  <span>Weekly Progress</span>
                   <span>{completedWeeksCount} of {totalWeeks} weeks completed</span>
                 </div>
                 <div className="w-full bg-ministry-steel rounded-full h-2">
@@ -261,9 +286,10 @@ export default function ViewPlan() {
               </div>
             </div>
             <p className="text-ministry-steel text-sm">
-              {currentWeek === 1 ? "Starting your fitness journey!" : 
-               currentWeek === totalWeeks ? "Final week - finish strong!" :
-               `Keep going! Week ${currentWeek} exercises below.`}
+              {todaysExercises.length === 0 
+                ? `No exercises scheduled for ${currentDay.charAt(0).toUpperCase() + currentDay.slice(1)}. Rest day!`
+                : `${todaysExercises.length} exercises scheduled for ${currentDay.charAt(0).toUpperCase() + currentDay.slice(1)}`
+              }
             </p>
           </CardContent>
         </Card>
@@ -314,17 +340,20 @@ export default function ViewPlan() {
           </CardContent>
         </Card>
 
-        {/* Current Week Exercises */}
+        {/* Today's Exercises */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5" />
-              Week {currentWeek} Exercises ({currentWeekExercises.length})
+              {todaysExercises.length > 0 
+                ? `Today's Exercises (${todaysExercises.length})`
+                : `Rest Day - ${currentDay.charAt(0).toUpperCase() + currentDay.slice(1)}`
+              }
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {currentWeekExercises && currentWeekExercises.length > 0 ? (
-              currentWeekExercises
+            {todaysExercises && todaysExercises.length > 0 ? (
+              todaysExercises
                 .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0))
                 .map((exercise, index) => {
                   const isCompleted = isExerciseCompleted(exercise.id);
@@ -445,8 +474,9 @@ export default function ViewPlan() {
                 })
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                <Dumbbell className="w-12 h-12 mx-auto mb-2" />
-                <p>No exercises in this plan yet</p>
+                <Calendar className="w-12 h-12 mx-auto mb-2" />
+                <p>Rest Day - No exercises scheduled for {currentDay.charAt(0).toUpperCase() + currentDay.slice(1)}</p>
+                <p className="text-sm mt-2">Enjoy your recovery day!</p>
               </div>
             )}
           </CardContent>
