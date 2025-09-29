@@ -312,6 +312,18 @@ export const fitnessPlanReminders = pgTable("fitness_plan_reminders", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Exercise completion tracking for weekly progression
+export const exerciseCompletions = pgTable("exercise_completions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  planId: varchar("plan_id").notNull().references(() => fitnessPlans.id, { onDelete: 'cascade' }),
+  exerciseId: varchar("exercise_id").notNull().references(() => fitnessPlanExercises.id, { onDelete: 'cascade' }),
+  completedAt: timestamp("completed_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.exerciseId), // Prevent duplicate completions
+]);
+
 export const insertTestimonySchema = createInsertSchema(testimonies).omit({
   id: true,
   createdAt: true,
@@ -398,6 +410,13 @@ export type InsertFitnessPlanExercise = z.infer<typeof insertFitnessPlanExercise
 
 export type FitnessPlanReminder = typeof fitnessPlanReminders.$inferSelect;
 export type InsertFitnessPlanReminder = z.infer<typeof insertFitnessPlanReminderSchema>;
+
+export type ExerciseCompletion = typeof exerciseCompletions.$inferSelect;
+export const insertExerciseCompletionSchema = createInsertSchema(exerciseCompletions).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertExerciseCompletion = z.infer<typeof insertExerciseCompletionSchema>;
 
 // User notification preferences
 export const notificationPreferences = pgTable("notification_preferences", {
