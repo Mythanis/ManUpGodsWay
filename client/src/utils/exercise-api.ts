@@ -135,7 +135,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0001",
       name: "3/4 sit-up",
-      gifUrl: "https://v2.exercisedb.io/image/WqzqjTni8Me5Q9",
+      gifUrl: "https://static.exercisedb.dev/media/3GWgaU1.gif",
       targetMuscles: ["abs"],
       bodyParts: ["waist"],
       equipments: ["body weight"],
@@ -151,7 +151,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0002",
       name: "45° side bend",
-      gifUrl: "https://v2.exercisedb.io/image/VDYZUufDRRdXIz",
+      gifUrl: "https://static.exercisedb.dev/media/VBIi7Ca.gif",
       targetMuscles: ["obliques"],
       bodyParts: ["waist"],
       equipments: ["body weight"],
@@ -166,7 +166,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0003",
       name: "air bike",
-      gifUrl: "https://v2.exercisedb.io/image/xqNJAVH5kYOXkI",
+      gifUrl: "https://static.exercisedb.dev/media/xqNJAVH.gif",
       targetMuscles: ["abs"],
       bodyParts: ["waist"],
       equipments: ["body weight"],
@@ -182,7 +182,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0004",
       name: "all fours squad stretch",
-      gifUrl: "https://v2.exercisedb.io/image/xqbq8wCGcKMFyF",
+      gifUrl: "https://static.exercisedb.dev/media/xqbq8wC.gif",
       targetMuscles: ["glutes"],
       bodyParts: ["upper legs"],
       equipments: ["body weight"],
@@ -197,7 +197,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0005",
       name: "alternate heel touches",
-      gifUrl: "https://v2.exercisedb.io/image/k9ghqwS4yNJtAs",
+      gifUrl: "https://static.exercisedb.dev/media/k9ghqwS.gif",
       targetMuscles: ["abs"],
       bodyParts: ["waist"],
       equipments: ["body weight"],
@@ -213,7 +213,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0006",
       name: "barbell bench press",
-      gifUrl: "https://v2.exercisedb.io/image/HjFMzKHTM9cMks",
+      gifUrl: "https://static.exercisedb.dev/media/HjFMzKH.gif",
       targetMuscles: ["pectorals"],
       bodyParts: ["chest"],
       equipments: ["barbell"],
@@ -229,7 +229,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0007",
       name: "barbell squat",
-      gifUrl: "https://v2.exercisedb.io/image/doAC5VRB-sk8te",
+      gifUrl: "https://static.exercisedb.dev/media/doAC5VR.gif",
       targetMuscles: ["quadriceps"],
       bodyParts: ["upper legs"],
       equipments: ["barbell"],
@@ -245,7 +245,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0008",
       name: "barbell deadlift",
-      gifUrl: "https://v2.exercisedb.io/image/vG6nZh0t0UNe6x",
+      gifUrl: "https://static.exercisedb.dev/media/vG6nZh0.gif",
       targetMuscles: ["hamstrings"],
       bodyParts: ["upper legs"],
       equipments: ["barbell"],
@@ -261,7 +261,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0009",
       name: "push-ups",
-      gifUrl: "https://v2.exercisedb.io/image/6PzAsM9tSbpEPE",
+      gifUrl: "https://static.exercisedb.dev/media/6PzAsM9.gif",
       targetMuscles: ["pectorals"],
       bodyParts: ["chest"],
       equipments: ["body weight"],
@@ -277,7 +277,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0010",
       name: "pull-ups",
-      gifUrl: "https://v2.exercisedb.io/image/OYNIAOOlq1c7tM",
+      gifUrl: "https://static.exercisedb.dev/media/OYNIAOOl.gif",
       targetMuscles: ["latissimus dorsi"],
       bodyParts: ["back"],
       equipments: ["pull-up bar"],
@@ -292,7 +292,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0011",
       name: "dumbbell bicep curl",
-      gifUrl: "https://v2.exercisedb.io/image/TlMFCr5e9wgGhN",
+      gifUrl: "https://static.exercisedb.dev/media/TlMFCr5.gif",
       targetMuscles: ["biceps brachii"],
       bodyParts: ["upper arms"],
       equipments: ["dumbbell"],
@@ -308,7 +308,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0012",
       name: "plank",
-      gifUrl: "https://v2.exercisedb.io/image/1iAtc9OD0x8oDh",
+      gifUrl: "https://static.exercisedb.dev/media/1iAtc9OD.gif",
       targetMuscles: ["abs"],
       bodyParts: ["waist"],
       equipments: ["body weight"],
@@ -324,7 +324,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0013",
       name: "jumping jacks",
-      gifUrl: "https://v2.exercisedb.io/image/8mnm1cDibsNJgT",
+      gifUrl: "https://static.exercisedb.dev/media/8mnm1cD.gif",
       targetMuscles: ["cardiovascular system"],
       bodyParts: ["cardio"],
       equipments: ["body weight"],
@@ -340,7 +340,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0014",
       name: "mountain climbers",
-      gifUrl: "https://v2.exercisedb.io/image/QE3MHZJdKVjxGt",
+      gifUrl: "https://static.exercisedb.dev/media/QE3MHZ.gif",
       targetMuscles: ["abs"],
       bodyParts: ["waist"],
       equipments: ["body weight"],
@@ -356,7 +356,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0015",
       name: "burpees",
-      gifUrl: "https://v2.exercisedb.io/image/2XZAyfhBNJJHDF",
+      gifUrl: "https://static.exercisedb.dev/media/2XZAyfh.gif",
       targetMuscles: ["full body"],
       bodyParts: ["cardio"],
       equipments: ["body weight"],
@@ -372,7 +372,7 @@ async function fetchFromOpenSource(filterParams: FilterParams): Promise<Exercise
     {
       exerciseId: "0016",
       name: "lunges",
-      gifUrl: "https://v2.exercisedb.io/image/QLGXLp0cpQTqQN",
+      gifUrl: "https://static.exercisedb.dev/media/QLGXLp0.gif",
       targetMuscles: ["quadriceps"],
       bodyParts: ["upper legs"],
       equipments: ["body weight"],
