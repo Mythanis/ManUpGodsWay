@@ -153,14 +153,24 @@ export default function Fitness() {
     setShowPlanModal(true);
   };
 
-  // Get today's exercises from a plan
+  // Get today's exercises from a plan (deduplicated)
   const getTodaysExercises = (plan: FitnessPlan) => {
     const today = getCurrentDayOfWeek();
     if (!plan.exercises) return [];
     
-    return plan.exercises.filter(exercise => 
+    const todaysExercises = plan.exercises.filter(exercise => 
       exercise.daysOfWeek && exercise.daysOfWeek.includes(today)
     );
+    
+    // Remove duplicates based on exerciseId
+    const seenExerciseIds = new Set<string>();
+    return todaysExercises.filter(exercise => {
+      if (seenExerciseIds.has(exercise.exerciseId)) {
+        return false;
+      }
+      seenExerciseIds.add(exercise.exerciseId);
+      return true;
+    });
   };
 
   // Get all today's exercises from all user plans (deduplicated)
