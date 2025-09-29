@@ -108,6 +108,22 @@ export default function EditPlan() {
   // Reminders
   const [reminders, setReminders] = useState<PlanReminder[]>([]);
 
+  // Helper function to determine exercise week based on order (distribute evenly across 4 weeks)
+  const getExerciseWeek = (exercises: SelectedExercise[], exerciseIndex: number): number => {
+    const totalExercises = exercises.length;
+    const exercisesPerWeek = Math.ceil(totalExercises / 4);
+    return Math.min(4, Math.floor(exerciseIndex / exercisesPerWeek) + 1);
+  };
+
+  // Helper function to determine current week based on plan start date and completion
+  const getCurrentWeek = (exercises: SelectedExercise[]): number => {
+    if (!exercises || exercises.length === 0) return 1;
+    
+    // For editing, we'll start with Week 1 and let users see the distribution
+    // In a real app, this would consider completion status and time progression
+    return 1; // Always show Week 1 when editing for simplicity
+  };
+
   // Exercise configuration modal
   const [showExerciseConfig, setShowExerciseConfig] = useState(false);
   const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
@@ -484,20 +500,40 @@ export default function EditPlan() {
             </CardContent>
           </Card>
 
+        {/* Weekly Exercise Distribution */}
+        {selectedExercises.length > 0 && (
+          <Card className="bg-ministry-charcoal border-ministry-steel">
+            <CardHeader>
+              <CardTitle className="text-ministry-gold flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Week {getCurrentWeek(selectedExercises)} of 4
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-white">
+              <p className="text-ministry-steel text-sm">
+                Exercises are distributed evenly across 4 weeks. Currently showing Week {getCurrentWeek(selectedExercises)} exercises.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Selected Exercises */}
         <Card className="bg-ministry-gold text-black">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckSquare className="h-5 w-5" />
-                Selected Exercises ({selectedExercises.length})
+                Week {getCurrentWeek(selectedExercises)} Exercises ({selectedExercises.filter((selected, index) => getExerciseWeek(selectedExercises, index) === getCurrentWeek(selectedExercises)).length})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {selectedExercises.length === 0 ? (
                 <p className="text-center py-8 text-black">No exercises selected. Add exercises below.</p>
               ) : (
-                selectedExercises.map((selected, index) => (
-                  <div key={index} className="p-4 border border-black/20 rounded-lg">
+                selectedExercises
+                  .map((selected, index) => ({ ...selected, originalIndex: index }))
+                  .filter((selected) => getExerciseWeek(selectedExercises, selected.originalIndex) === getCurrentWeek(selectedExercises))
+                  .map((selected) => (
+                  <div key={selected.originalIndex} className="p-4 border border-black/20 rounded-lg">
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-medium text-lg capitalize">
                         {selected.exercise.name.replace(/_/g, ' ')}
@@ -505,9 +541,9 @@ export default function EditPlan() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleRemoveExercise(index)}
+                        onClick={() => handleRemoveExercise(selected.originalIndex)}
                         className="border-red-300 text-red-600 hover:bg-red-50"
-                        data-testid={`button-remove-exercise-${index}`}
+                        data-testid={`button-remove-exercise-${selected.originalIndex}`}
                       >
                         <X className="h-4 w-4" />
                       </Button>
