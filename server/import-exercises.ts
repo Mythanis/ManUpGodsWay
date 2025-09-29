@@ -3,8 +3,22 @@ import { exercises } from '../shared/schema';
 import { log } from './vite';
 import { sql } from 'drizzle-orm';
 
-// ExerciseDB v1 API endpoint
-const EXERCISEDB_API_BASE = 'https://v1.exercisedb.dev';
+// Free public exercise database from GitHub
+const EXERCISES_JSON_URL = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json';
+
+interface GitHubExercise {
+  id: string;
+  name: string;
+  force: string;
+  level: string;
+  mechanic: string | null;
+  equipment: string | null;
+  primaryMuscles: string[];
+  secondaryMuscles: string[];
+  instructions: string[];
+  category: string;
+  images: string[];
+}
 
 interface ExerciseDBExercise {
   id: string;
@@ -17,20 +31,74 @@ interface ExerciseDBExercise {
   instructions: string[];
 }
 
+// Map equipment to standard body part categories
+function mapToBodyPart(primaryMuscles: string[]): string {
+  const muscle = primaryMuscles[0]?.toLowerCase() || 'other';
+  
+  const bodyPartMap: Record<string, string> = {
+    'abdominals': 'waist',
+    'abs': 'waist',
+    'obliques': 'waist',
+    'biceps': 'upper arms',
+    'triceps': 'upper arms',
+    'forearms': 'lower arms',
+    'chest': 'chest',
+    'pectorals': 'chest',
+    'lats': 'back',
+    'lower back': 'back',
+    'middle back': 'back',
+    'traps': 'back',
+    'shoulders': 'shoulders',
+    'deltoids': 'shoulders',
+    'quadriceps': 'upper legs',
+    'quads': 'upper legs',
+    'hamstrings': 'upper legs',
+    'glutes': 'upper legs',
+    'adductors': 'upper legs',
+    'abductors': 'upper legs',
+    'calves': 'lower legs',
+    'neck': 'neck',
+  };
+  
+  return bodyPartMap[muscle] || 'other';
+}
+
+// Generate GIF URL from exercise ID (using exercisedb.io CDN for GIFs)
+function generateGifUrl(exerciseId: string): string {
+  // Convert ID to slug format for GIF URL
+  const slug = exerciseId.toLowerCase().replace(/_/g, ' ');
+  return `https://v2.exercisedb.io/image/${exerciseId}`;
+}
+
 async function fetchAllExercises(): Promise<ExerciseDBExercise[]> {
   try {
-    log('Fetching all exercises from ExerciseDB v1 API...');
-    const response = await fetch(`${EXERCISEDB_API_BASE}/exercises`);
+    log('Fetching all exercises from GitHub free exercise database...');
+    
+    const response = await fetch(EXERCISES_JSON_URL);
     
     if (!response.ok) {
-      throw new Error(`ExerciseDB API error: ${response.status} ${response.statusText}`);
+      throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
     }
     
-    const data = await response.json();
-    log(`Successfully fetched ${data.length} exercises from ExerciseDB`);
-    return data;
+    const githubExercises: GitHubExercise[] = await response.json();
+    log(`Successfully fetched ${githubExercises.length} exercises from GitHub`);
+    
+    // Convert GitHub format to our ExerciseDB format
+    const exercises: ExerciseDBExercise[] = githubExercises.map(ex => ({
+      id: ex.id,
+      name: ex.name,
+      gifUrl: generateGifUrl(ex.id),
+      bodyPart: mapToBodyPart(ex.primaryMuscles),
+      equipment: ex.equipment || 'body only',
+      target: ex.primaryMuscles[0] || 'general',
+      secondaryMuscles: ex.secondaryMuscles,
+      instructions: ex.instructions,
+    }));
+    
+    log(`Converted ${exercises.length} exercises to database format`);
+    return exercises;
   } catch (error) {
-    log(`Error fetching exercises from ExerciseDB: ${error}`);
+    log(`Error fetching exercises: ${error}`);
     throw error;
   }
 }
