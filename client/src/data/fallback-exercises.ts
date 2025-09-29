@@ -4,7 +4,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-001",
     name: "push ups",
-    gifUrl: "https://v2.exercisedb.io/image/8mnm1cDibsNJgT",
+    gifUrl: "https://media.giphy.com/media/l2JhOVyjSzOUXMXUQ/giphy.gif",
     targetMuscles: ["pectorals"],
     bodyParts: ["chest"],
     equipments: ["body weight"],
@@ -14,7 +14,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-002", 
     name: "chest dips",
-    gifUrl: "https://v2.exercisedb.io/image/WqzqjTni8Me5Q9",
+    gifUrl: "https://media.giphy.com/media/l2SpZ0D1M1blKF0C8/giphy.gif",
     targetMuscles: ["pectorals"],
     bodyParts: ["chest"],
     equipments: ["parallel bars"],
@@ -24,7 +24,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-003",
     name: "barbell bench press",
-    gifUrl: "https://v2.exercisedb.io/image/k9ghqwS4yNJtAs",
+    gifUrl: "https://media.giphy.com/media/l2SpOYP9yse4bMOKQ/giphy.gif",
     targetMuscles: ["pectorals"],
     bodyParts: ["chest"],
     equipments: ["barbell"],
@@ -36,7 +36,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-004",
     name: "pull ups",
-    gifUrl: "https://v2.exercisedb.io/image/doAC5VRB-sk8te",
+    gifUrl: "https://media.giphy.com/media/l2SpM4hHJvJXaFJbq/giphy.gif",
     targetMuscles: ["latissimus dorsi"],
     bodyParts: ["back"],
     equipments: ["pull up bar"],
@@ -46,7 +46,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-005",
     name: "barbell rows",
-    gifUrl: "https://v2.exercisedb.io/image/xqNJAVH5kYOXkI",
+    gifUrl: "https://media.giphy.com/media/l2SpKjO20hPyhr2HS/giphy.gif",
     targetMuscles: ["latissimus dorsi"],
     bodyParts: ["back"],
     equipments: ["barbell"],
@@ -58,7 +58,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-006",
     name: "bodyweight squats",
-    gifUrl: "https://v2.exercisedb.io/image/OYNIAOOlq1c7tM",
+    gifUrl: "https://media.giphy.com/media/l2SpNtl4rbJ4yyPTO/giphy.gif",
     targetMuscles: ["quadriceps"],
     bodyParts: ["upper legs"],
     equipments: ["body weight"],
@@ -68,7 +68,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-007", 
     name: "barbell squats",
-    gifUrl: "https://v2.exercisedb.io/image/VDYZUufDRRdXIz",
+    gifUrl: "https://media.giphy.com/media/l2SpOQPBpIMJOTFao/giphy.gif",
     targetMuscles: ["quadriceps"],
     bodyParts: ["upper legs"],
     equipments: ["barbell"],
@@ -78,7 +78,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-008",
     name: "lunges",
-    gifUrl: "https://v2.exercisedb.io/image/QLGXLp0cpQTqQN",
+    gifUrl: "https://media.giphy.com/media/l2SpMHFGb6fNE6rWw/giphy.gif",
     targetMuscles: ["quadriceps"],
     bodyParts: ["upper legs"],
     equipments: ["body weight"],
@@ -88,7 +88,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-009",
     name: "deadlifts",
-    gifUrl: "https://v2.exercisedb.io/image/1iAtc9OD0x8oDh",
+    gifUrl: "https://media.giphy.com/media/l2SpKjZpOcRsOwBOw/giphy.gif",
     targetMuscles: ["hamstrings"],
     bodyParts: ["upper legs"],
     equipments: ["barbell"],
@@ -100,7 +100,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-010",
     name: "plank",
-    gifUrl: "https://v2.exercisedb.io/image/QE3MHZJdKVjxGt",
+    gifUrl: "https://media.giphy.com/media/l2SpMFP8VmhFQ1sJO/giphy.gif",
     targetMuscles: ["abdominals"],
     bodyParts: ["waist"],
     equipments: ["body weight"],
@@ -110,7 +110,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-011",
     name: "crunches",
-    gifUrl: "https://v2.exercisedb.io/image/6PzAsM9tSbpEPE",
+    gifUrl: "https://media.giphy.com/media/l2SpJ4lM8JOGLDiSI/giphy.gif",
     targetMuscles: ["abdominals"],
     bodyParts: ["waist"],
     equipments: ["body weight"],
@@ -122,7 +122,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-012",
     name: "barbell curls",
-    gifUrl: "https://v2.exercisedb.io/image/TlMFCr5e9wgGhN",
+    gifUrl: "https://media.giphy.com/media/l2SpP8FIjD5CaLKdG/giphy.gif",
     targetMuscles: ["biceps brachii"],
     bodyParts: ["upper arms"],
     equipments: ["barbell"],
@@ -134,7 +134,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-013",
     name: "tricep dips",
-    gifUrl: "https://v2.exercisedb.io/image/vG6nZh0t0UNe6x",
+    gifUrl: "https://media.giphy.com/media/l2SpKjP4sZmYoJqZq/giphy.gif",
     targetMuscles: ["triceps brachii"],
     bodyParts: ["upper arms"],
     equipments: ["body weight"],
@@ -146,7 +146,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-014",
     name: "shoulder press",
-    gifUrl: "https://v2.exercisedb.io/image/xqbq8wCGcKMFyF",
+    gifUrl: "https://media.giphy.com/media/l2SpKjQ4GiEkT6rKM/giphy.gif",
     targetMuscles: ["anterior deltoid"],
     bodyParts: ["shoulders"],
     equipments: ["dumbbell"],
@@ -158,7 +158,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-015",
     name: "jumping jacks",
-    gifUrl: "https://v2.exercisedb.io/image/2XZAyfhBNJJHDF",
+    gifUrl: "https://media.giphy.com/media/l2SpSO3zwMCFTCXf2/giphy.gif",
     targetMuscles: ["cardiovascular system"],
     bodyParts: ["cardio"],
     equipments: ["body weight"],
@@ -168,7 +168,7 @@ export const fallbackExercises = [
   {
     exerciseId: "fallback-016",
     name: "burpees",
-    gifUrl: "https://v2.exercisedb.io/image/HjFMzKHTM9cMks",
+    gifUrl: "https://media.giphy.com/media/l2SpMUCKEgUH8n8LC/giphy.gif",
     targetMuscles: ["cardiovascular system"],
     bodyParts: ["cardio"],
     equipments: ["body weight"],
