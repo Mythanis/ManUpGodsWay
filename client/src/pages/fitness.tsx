@@ -194,7 +194,7 @@ export default function Fitness() {
       )
         .then(plans => {
           if (plans.length === 0) {
-            setPlanGenerationError(`Unable to generate plans for ${selectedPlanEquipment}. Try selecting a different equipment type like "body weight" or "dumbbell".`);
+            setPlanGenerationError(`Unable to generate plans for ${selectedPlanEquipment}. Try selecting a different equipment type like "body only" or "dumbbell".`);
           } else {
             setPlanGenerationError('');
           }
@@ -891,13 +891,13 @@ export default function Fitness() {
       
       if (exercises.length < 5) {
         console.warn(`Not enough exercises for equipment: ${equipment}. Found: ${exercises.length}`);
-        // Fallback to body weight exercises if selected equipment has too few
-        if (equipment !== 'body weight') {
-          console.log('Attempting fallback to body weight exercises...');
-          const bodyweightExercises = await getExercisesForEquipment('body weight');
+        // Fallback to bodyweight exercises if selected equipment has too few
+        if (equipment !== 'body only') {
+          console.log('Attempting fallback to bodyweight exercises...');
+          const bodyweightExercises = await getExercisesForEquipment('body only');
           if (bodyweightExercises.length >= 5) {
             console.log('Falling back to bodyweight exercises');
-            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced", 'body weight');
+            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced", 'body only');
             const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay);
             return [preBuiltPlan];
           }
@@ -1717,7 +1717,7 @@ export default function Fitness() {
                       <SelectValue placeholder="Select equipment" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="body weight">Bodyweight Only</SelectItem>
+                      <SelectItem value="body only">Bodyweight Only</SelectItem>
                       <SelectItem value="dumbbell">Dumbbells</SelectItem>
                       <SelectItem value="barbell">Barbell & Weights</SelectItem>
                       <SelectItem value="cable">Cable Machine</SelectItem>
