@@ -144,7 +144,6 @@ export default function Fitness() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBodyPart, setSelectedBodyPart] = useState('all');
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
-  const [selectedTarget, setSelectedTarget] = useState('all');
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -359,21 +358,17 @@ export default function Fitness() {
   if (searchQuery) filterParams.set('search', searchQuery);
   if (selectedBodyPart !== 'all') filterParams.set('bodyParts', selectedBodyPart);
   if (selectedEquipment.length > 0) filterParams.set('equipment', selectedEquipment.join(','));
-  if (selectedTarget !== 'all') filterParams.set('muscles', selectedTarget);
   filterParams.set('sortBy', 'name');
   filterParams.set('sortOrder', 'asc');
 
   // Fetch exercises from local database
   const { data: exerciseResponse, isLoading: isLoadingExercises } = useQuery({
-    queryKey: ['api', 'exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
+    queryKey: ['api', 'exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment],
     queryFn: async () => {
       console.log(`Fetching exercises page ${currentPage} from local database...`);
       const params = new URLSearchParams();
       if (searchQuery) params.set('search', searchQuery);
-      // Use target if set, otherwise use bodyPart (both map to same field in DB)
-      if (selectedTarget !== 'all') {
-        params.set('bodyPart', selectedTarget);
-      } else if (selectedBodyPart !== 'all') {
+      if (selectedBodyPart !== 'all') {
         params.set('bodyPart', selectedBodyPart);
       }
       if (selectedEquipment.length > 0 && !selectedEquipment.includes('all')) {
@@ -480,7 +475,6 @@ export default function Fitness() {
   const handleFilterChange = (filterType: string, value: string) => {
     setCurrentPage(1);
     if (filterType === 'bodyPart') setSelectedBodyPart(value);
-    if (filterType === 'target') setSelectedTarget(value);
   };
   
   const handleSearchChange = (value: string) => {
@@ -767,16 +761,7 @@ export default function Fitness() {
   const ExerciseCard = ({ exercise, showRemove = false }: { exercise: Exercise; showRemove?: boolean }) => (
     <Card className="hover:shadow-md transition-shadow bg-ministry-gold-exact/20">
       <CardContent className="p-4">
-        <div className="flex items-start space-x-4">
-          <div className="flex-shrink-0">
-            <img 
-              src={exercise.gifUrl} 
-              alt={exercise.name}
-              className="w-20 h-20 object-cover rounded-lg"
-              loading="lazy"
-            />
-          </div>
-          
+        <div className="flex items-start">
           <div className="flex-1">
             <h3 className="font-semibold text-lg mb-2 text-black capitalize">
               {exercise.name.replace(/_/g, ' ')}
@@ -1473,7 +1458,6 @@ export default function Fitness() {
                     setSearchQuery('');
                     setSelectedBodyPart('all');
                     setSelectedEquipment([]);
-                    setSelectedTarget('all');
                     setCurrentPage(1);
                   }}
                   variant="outline"
@@ -1534,20 +1518,6 @@ export default function Fitness() {
                     ))}
                   </div>
                 </div>
-
-                <Select value={selectedTarget} onValueChange={(value) => handleFilterChange('target', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Target Muscle" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 overflow-y-auto">
-                    <SelectItem value="all">All Muscles</SelectItem>
-                    {uniqueTargets.map((target: string) => (
-                      <SelectItem key={target} value={target}>
-                        {target ? target.charAt(0).toUpperCase() + target.slice(1) : target}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </div>
 
@@ -1570,7 +1540,7 @@ export default function Fitness() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-sm text-white">
                     Showing {exercises.length} of {totalCount} exercises
-                    {(searchQuery || selectedBodyPart !== 'all' || selectedEquipment.length > 0 || selectedTarget !== 'all') && (
+                    {(searchQuery || selectedBodyPart !== 'all' || selectedEquipment.length > 0) && (
                       <span className="ml-2 text-ministry-gold">
                         (filtered)
                       </span>
