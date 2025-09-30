@@ -4108,6 +4108,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Import exercises from local JSON file (admin only)
+  app.post('/api/exercises/import-from-file', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      
+      const filePath = path.join(process.cwd(), 'attached_assets', 'exercises_db_330_short_1759200371273.json');
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      const exercises = JSON.parse(fileContent);
+
+      await db.delete(schema.exercises); // Clear existing exercises
+      
+      for (const exercise of exercises) {
+        await db.insert(schema.exercises).values({
+          id: exercise.id,
+          name: exercise.name,
+          bodyPart: exercise.body_part,
+          equipment: exercise.equipment,
+          level: exercise.level,
+          instructions: exercise.instructions,
+          mediaFile: exercise.media_file,
+          shortInstructions: exercise.short_instructions
+        });
+      }
+
+      res.json({ message: 'Exercises imported successfully from file', count: exercises.length });
+    } catch (error) {
+      console.error('Error importing exercises from file:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Get all exercises with filtering
   app.get('/api/exercises', async (req: any, res) => {
     try {

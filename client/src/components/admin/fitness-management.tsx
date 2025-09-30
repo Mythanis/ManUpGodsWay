@@ -57,8 +57,41 @@ export default function FitnessManagement() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState<FitnessChallenge | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Import exercises from JSON file
+  const importExercises = async () => {
+    try {
+      setIsImporting(true);
+      const response = await fetch('/api/exercises/import-from-file', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to import exercises');
+      }
+
+      const data = await response.json();
+      toast({
+        title: "Success",
+        description: data.message || `${data.count} exercises imported successfully`,
+      });
+      
+      // Invalidate exercises queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['api', 'exercises'] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to import exercises",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   const [formData, setFormData] = useState<FitnessChallengeFormData>({
     title: '',
@@ -303,6 +336,39 @@ export default function FitnessManagement() {
 
   return (
     <div className="space-y-6">
+      {/* Exercise Database Import */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Upload className="w-5 h-5" />
+            Exercise Database
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-ministry-slate mb-4">
+            Import the exercise database from the JSON file. This will replace all existing exercises with the data from the file.
+          </p>
+          <Button
+            onClick={importExercises}
+            disabled={isImporting}
+            className="bg-ministry-charcoal hover:bg-ministry-charcoal/90 text-white"
+            data-testid="button-import-exercises"
+          >
+            {isImporting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Importing...
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4 mr-2" />
+                Import Exercises from File
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
