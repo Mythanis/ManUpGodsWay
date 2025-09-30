@@ -62,6 +62,7 @@ interface Exercise {
   equipments: string[];
   secondaryMuscles: string[];
   instructions: string[];
+  level?: string;
   // Legacy fields for backward compatibility
   id?: string;
   target?: string;
@@ -144,6 +145,7 @@ export default function Fitness() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBodyPart, setSelectedBodyPart] = useState('all');
   const [selectedEquipment, setSelectedEquipment] = useState('all');
+  const [selectedExerciseLevel, setSelectedExerciseLevel] = useState('all');
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -358,12 +360,13 @@ export default function Fitness() {
   if (searchQuery) filterParams.set('search', searchQuery);
   if (selectedBodyPart !== 'all') filterParams.set('bodyParts', selectedBodyPart);
   if (selectedEquipment !== 'all') filterParams.set('equipment', selectedEquipment);
+  if (selectedExerciseLevel !== 'all') filterParams.set('level', selectedExerciseLevel);
   filterParams.set('sortBy', 'name');
   filterParams.set('sortOrder', 'asc');
 
   // Fetch exercises from local database
   const { data: exerciseResponse, isLoading: isLoadingExercises } = useQuery({
-    queryKey: ['api', 'exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment],
+    queryKey: ['api', 'exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedExerciseLevel],
     queryFn: async () => {
       console.log(`Fetching exercises page ${currentPage} from local database...`);
       const params = new URLSearchParams();
@@ -373,6 +376,9 @@ export default function Fitness() {
       }
       if (selectedEquipment !== 'all') {
         params.set('equipment', selectedEquipment);
+      }
+      if (selectedExerciseLevel !== 'all') {
+        params.set('level', selectedExerciseLevel);
       }
       params.set('offset', offset.toString());
       params.set('limit', limit.toString());
@@ -475,6 +481,7 @@ export default function Fitness() {
     setCurrentPage(1);
     if (filterType === 'bodyPart') setSelectedBodyPart(value);
     if (filterType === 'equipment') setSelectedEquipment(value);
+    if (filterType === 'level') setSelectedExerciseLevel(value);
   };
   
   const handleSearchChange = (value: string) => {
@@ -772,7 +779,7 @@ export default function Fitness() {
                 {exercise.bodyPart}
               </Badge>
               <Badge className="text-xs capitalize bg-green-100 text-green-800 border-green-200">
-                {exercise.target}
+                {exercise.level || 'Beginner'}
               </Badge>
               <Badge className="text-xs capitalize bg-purple-100 text-purple-800 border-purple-200">
                 {exercise.equipment}
@@ -1458,6 +1465,7 @@ export default function Fitness() {
                     setSearchQuery('');
                     setSelectedBodyPart('all');
                     setSelectedEquipment('all');
+                    setSelectedExerciseLevel('all');
                     setCurrentPage(1);
                   }}
                   variant="outline"
@@ -1468,7 +1476,7 @@ export default function Fitness() {
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Select value={selectedBodyPart} onValueChange={(value) => handleFilterChange('bodyPart', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Body Part" />
@@ -1496,6 +1504,18 @@ export default function Fitness() {
                     ))}
                   </SelectContent>
                 </Select>
+
+                <Select value={selectedExerciseLevel} onValueChange={(value) => handleFilterChange('level', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Levels</SelectItem>
+                    <SelectItem value="beginner">Beginner</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -1518,7 +1538,7 @@ export default function Fitness() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-sm text-white">
                     Showing {exercises.length} of {totalCount} exercises
-                    {(searchQuery || selectedBodyPart !== 'all' || selectedEquipment !== 'all') && (
+                    {(searchQuery || selectedBodyPart !== 'all' || selectedEquipment !== 'all' || selectedExerciseLevel !== 'all') && (
                       <span className="ml-2 text-ministry-gold">
                         (filtered)
                       </span>
