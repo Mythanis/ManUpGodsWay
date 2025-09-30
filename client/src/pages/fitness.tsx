@@ -363,108 +363,67 @@ export default function Fitness() {
   filterParams.set('sortBy', 'name');
   filterParams.set('sortOrder', 'asc');
 
-  // Fetch exercises with server-side filtering
+  // Fetch exercises from local database
   const { data: exerciseResponse, isLoading: isLoadingExercises } = useQuery({
-    queryKey: ['exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
+    queryKey: ['api', 'exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
     queryFn: async () => {
-      console.log(`Fetching exercises page ${currentPage} (offset=${offset}, limit=${limit})...`);
-      const url = `https://exercisedb-api.vercel.app/api/v1/exercises?${filterParams.toString()}`;
+      console.log(`Fetching exercises page ${currentPage} from local database...`);
+      const params = new URLSearchParams();
+      if (searchQuery) params.set('search', searchQuery);
+      if (selectedBodyPart !== 'all') params.set('bodyPart', selectedBodyPart);
+      if (selectedEquipment.length > 0 && !selectedEquipment.includes('all')) {
+        // For local DB, filter by first selected equipment or handle multiple
+        params.set('equipment', selectedEquipment[0]);
+      }
+      if (selectedTarget !== 'all') params.set('bodyPart', selectedTarget); // Use bodyPart for muscles
+      
+      const url = `/api/exercises${params.toString() ? '?' + params.toString() : ''}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch exercises');
-      const data = await response.json();
-      console.log('Exercise data received:', data.data?.length, 'exercises', 'total:', data.metadata?.totalExercises);
-      return data;
+      const exercises = await response.json();
+      console.log('Exercise data received from local database:', exercises.length, 'exercises');
+      return exercises;
     },
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
   });
 
-  // Fetch muscles for filtering and filter out unused ones
+  // Fetch body parts for filtering from local database
   const { data: allMuscles = [] } = useQuery({
-    queryKey: ['muscles'],
+    queryKey: ['api', 'exercises', 'body-parts'],
     queryFn: async () => {
-      console.log('Fetching muscles from ExerciseDB API...');
-      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/muscles');
-      if (!response.ok) throw new Error('Failed to fetch muscles');
-      const data = await response.json();
-      // New API returns array of strings directly
-      const muscles = Array.isArray(data) ? data : (data.data || []);
-      console.log('Muscles data received:', muscles.length, 'muscles');
-      return muscles;
-    },
-    staleTime: 0,
-    refetchOnMount: true,
-  });
-  
-  // Filter muscles to only include those with exercises
-  const { data: usedMuscles = [] } = useQuery({
-    queryKey: ['used-muscles'],
-    queryFn: async () => {
-      console.log('Checking which muscles have exercises...');
-      const usedMuscleNames = new Set<string>();
-      
-      // Get first 500 exercises to extract used muscles
-      for (let offset = 0; offset < 500; offset += 100) {
-        const response = await fetch(`https://exercisedb-api.vercel.app/api/v1/exercises?offset=${offset}&limit=100`);
-        if (!response.ok) break;
-        const data = await response.json();
-        
-        const exerciseList = Array.isArray(data) ? data : (data.data || []);
-        exerciseList.forEach((exercise: any) => {
-          exercise.targetMuscles?.forEach((muscle: string) => {
-            usedMuscleNames.add(muscle);
-          });
-        });
-        
-        if (exerciseList.length < 100) break; // No more data
-      }
-      
-      // Muscles are now strings, not objects
-      const filteredMuscles = allMuscles.filter((muscle: string) => 
-        usedMuscleNames.has(muscle)
-      );
-      
-      console.log('Filtered muscles:', filteredMuscles.length, 'out of', allMuscles.length);
-      return filteredMuscles;
-    },
-    enabled: allMuscles.length > 0,
-    staleTime: 300000, // Cache for 5 minutes
-  });
-
-  // Fetch equipment for filtering
-  const { data: equipments = [] } = useQuery({
-    queryKey: ['equipments'],
-    queryFn: async () => {
-      console.log('Fetching equipments from ExerciseDB API...');
-      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/equipments');
-      if (!response.ok) throw new Error('Failed to fetch equipments');
-      const data = await response.json();
-      // New API returns array of strings directly
-      const equipments = Array.isArray(data) ? data : (data.data || []);
-      console.log('Equipments data received:', equipments.length, 'equipments');
-      return equipments;
-    },
-    staleTime: 0,
-    refetchOnMount: true,
-  });
-
-  // Fetch bodyparts for filtering
-  const { data: bodyParts = [] } = useQuery({
-    queryKey: ['bodyparts'],
-    queryFn: async () => {
-      console.log('Fetching bodyparts from ExerciseDB API...');
-      const response = await fetch('https://exercisedb-api.vercel.app/api/v1/bodyparts');
-      if (!response.ok) throw new Error('Failed to fetch bodyparts');
-      const data = await response.json();
-      // New API returns array of strings directly
-      const bodyParts = Array.isArray(data) ? data : (data.data || []);
-      console.log('Bodyparts data received:', bodyParts.length, 'bodyparts');
+      console.log('Fetching body parts from local database...');
+      const response = await fetch('/api/exercises/body-parts');
+      if (!response.ok) throw new Error('Failed to fetch body parts');
+      const bodyParts = await response.json();
+      console.log('Body parts data received from local database:', bodyParts.length, 'body parts');
       return bodyParts;
     },
     staleTime: 0,
     refetchOnMount: true,
   });
+  
+  // Use all body parts from database (no filtering needed)
+  const usedMuscles = allMuscles;
+
+  // Fetch equipment for filtering from local database
+  const { data: equipments = [] } = useQuery({
+    queryKey: ['api', 'exercises', 'equipment-types'],
+    queryFn: async () => {
+      console.log('Fetching equipment types from local database...');
+      const response = await fetch('/api/exercises/equipment-types');
+      if (!response.ok) throw new Error('Failed to fetch equipment types');
+      const equipment = await response.json();
+      console.log('Equipment types data received from local database:', equipment.length, 'types');
+      return equipment;
+    },
+    staleTime: 0,
+    refetchOnMount: true,
+  });
+
+  // Fetch body parts for filtering from local database (duplicate removed, using allMuscles above)
+  const bodyParts = allMuscles; // Use same body parts data
 
   // Fetch user's favorite exercises
   const { data: favoriteExercises = [] } = useQuery({
@@ -486,10 +445,9 @@ export default function Fitness() {
     },
   });
 
-  // Extract data from response
-  // New API returns array directly or {data, metadata} wrapper
-  const exercises = Array.isArray(exerciseResponse) ? exerciseResponse : (exerciseResponse?.data || []);
-  const totalCount = exerciseResponse?.metadata?.totalExercises || exercises.length;
+  // Extract data from local database response (returns array directly)
+  const exercises = exerciseResponse || [];
+  const totalCount = exercises.length;
   const totalPages = exerciseResponse?.metadata?.totalPages || Math.ceil(totalCount / limit);
 
   // Get filter options from API data
@@ -970,30 +928,31 @@ export default function Fitness() {
   }
 
   async function getEquipments(): Promise<string[]> {
-    const resp = await fetchJSON('https://exercisedb-api.vercel.app/api/v1/equipments');
-    // New API returns array of strings directly
-    return Array.isArray(resp) ? resp : (resp.data?.map((e: any) => e.name) || []);
+    const resp = await fetch('/api/exercises/equipment-types');
+    if (!resp.ok) throw new Error('Failed to fetch equipment types');
+    return await resp.json();
   }
 
   async function getExercisesForEquipment(equipmentList: string[]): Promise<APIExercise[]> {
     let allExercises: APIExercise[] = [];
     
     try {
-      // Fetch exercises for each selected equipment type
+      // Fetch exercises for each selected equipment type from local database
       for (const equipment of equipmentList) {
-        const url = `https://exercisedb-api.vercel.app/api/v1/exercises/equipment/${encodeURIComponent(equipment)}`;
+        const url = `/api/exercises?equipment=${encodeURIComponent(equipment)}`;
         
         try {
-          const resp = await fetchJSON(url);
-          const exercises: any[] = Array.isArray(resp) ? resp : (resp.data || []);
+          const resp = await fetch(url);
+          if (!resp.ok) throw new Error('Failed to fetch exercises');
+          const exercises: any[] = await resp.json();
           
           const mapped: APIExercise[] = exercises.map((ex: any) => ({
-            id: ex.exerciseId || ex.id,
+            id: ex.id.toString(),
             name: ex.name,
-            bodyPart: ex.bodyParts?.[0] || ex.bodyPart || 'unknown',
-            equipment: ex.equipments?.[0] || ex.equipment || equipment,
-            targetMuscles: ex.targetMuscles || [],
-            gifUrl: ex.imageUrl || ex.gifUrl
+            bodyPart: ex.bodyPart || 'unknown',
+            equipment: ex.equipment || equipment,
+            targetMuscles: [ex.bodyPart] || [],
+            gifUrl: ex.mediaFile || ''
           }));
           
           allExercises = allExercises.concat(mapped);
