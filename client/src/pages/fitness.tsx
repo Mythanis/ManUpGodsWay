@@ -370,12 +370,18 @@ export default function Fitness() {
       console.log(`Fetching exercises page ${currentPage} from local database...`);
       const params = new URLSearchParams();
       if (searchQuery) params.set('search', searchQuery);
-      if (selectedBodyPart !== 'all') params.set('bodyPart', selectedBodyPart);
+      // Use target if set, otherwise use bodyPart (both map to same field in DB)
+      if (selectedTarget !== 'all') {
+        params.set('bodyPart', selectedTarget);
+      } else if (selectedBodyPart !== 'all') {
+        params.set('bodyPart', selectedBodyPart);
+      }
       if (selectedEquipment.length > 0 && !selectedEquipment.includes('all')) {
         // For local DB, filter by first selected equipment or handle multiple
         params.set('equipment', selectedEquipment[0]);
       }
-      if (selectedTarget !== 'all') params.set('bodyPart', selectedTarget); // Use bodyPart for muscles
+      params.set('offset', offset.toString());
+      params.set('limit', limit.toString());
       
       const url = `/api/exercises${params.toString() ? '?' + params.toString() : ''}`;
       const response = await fetch(url);

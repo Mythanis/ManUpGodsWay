@@ -206,25 +206,36 @@ export default function CreatePlan() {
   const { data: exerciseResponse, isLoading: isLoadingExercises } = useQuery({
     queryKey: ['exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
     queryFn: async () => {
-      const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${filterParams.toString()}`;
+      const params = new URLSearchParams();
+      if (searchQuery) params.set('search', searchQuery);
+      // Use target if set, otherwise use bodyPart (both map to same field in DB)
+      if (selectedTarget !== 'all') {
+        params.set('bodyPart', selectedTarget);
+      } else if (selectedBodyPart !== 'all') {
+        params.set('bodyPart', selectedBodyPart);
+      }
+      if (selectedEquipment !== 'all') params.set('equipment', selectedEquipment);
+      params.set('offset', offset.toString());
+      params.set('limit', limit.toString());
+      
+      const url = `/api/exercises${params.toString() ? '?' + params.toString() : ''}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch exercises');
-      const data = await response.json();
-      return data;
+      return await response.json();
     },
     staleTime: 0,
     refetchOnMount: true,
   });
 
-  // Get filter options from API data
-  const uniqueBodyParts = bodyParts.map((bp: any) => bp.name).sort();
-  const uniqueEquipment = equipments.map((eq: any) => eq.name).sort();
-  const uniqueTargets = (usedMuscles || allMuscles).map((muscle: any) => muscle.name).sort();
+  // Get filter options from local database (already arrays of strings)
+  const uniqueBodyParts = (bodyParts || []).sort();
+  const uniqueEquipment = (equipments || []).sort();
+  const uniqueTargets = (usedMuscles || allMuscles || []).sort();
 
-  // Extract exercise data with proper pagination info
-  const exercises = exerciseResponse?.data || [];
-  const totalExercises = exerciseResponse?.metadata?.totalExercises || 0;
-  const totalPages = exerciseResponse?.metadata?.totalPages || 0;
+  // Extract exercise data from local database (returns array directly)
+  const exercises = exerciseResponse || [];
+  const totalExercises = exercises.length;
+  const totalPages = Math.ceil(totalExercises / limit);
 
   // Filter exercises to show only favorites if selected
   const filteredExercises = showFavoritesOnly 

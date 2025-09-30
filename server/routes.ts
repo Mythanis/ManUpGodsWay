@@ -4140,11 +4140,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all exercises with filtering
+  // Get all exercises with filtering and pagination
   app.get('/api/exercises', async (req: any, res) => {
     try {
       // Apply filters
-      const { bodyPart, equipment, level, search } = req.query;
+      const { bodyPart, equipment, level, search, offset, limit } = req.query;
       const conditions = [];
       
       if (bodyPart) conditions.push(eq(schema.exercises.bodyPart, bodyPart));
@@ -4152,13 +4152,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (level) conditions.push(eq(schema.exercises.level, level));
       if (search) conditions.push(sql`${schema.exercises.name} ILIKE ${'%' + search + '%'}`);
       
-      let exercises;
+      let query = db.select().from(schema.exercises);
+      
       if (conditions.length > 0) {
-        exercises = await db.select().from(schema.exercises).where(and(...conditions));
-      } else {
-        exercises = await db.select().from(schema.exercises);
+        query = query.where(and(...conditions)) as any;
       }
       
+      // Apply pagination if provided
+      if (offset !== undefined) {
+        query = query.offset(parseInt(offset)) as any;
+      }
+      if (limit !== undefined) {
+        query = query.limit(parseInt(limit)) as any;
+      }
+      
+      const exercises = await query;
       res.json(exercises);
     } catch (error) {
       console.error('Error fetching exercises:', error);
