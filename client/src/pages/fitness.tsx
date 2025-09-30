@@ -143,7 +143,7 @@ export default function Fitness() {
   // Exercise search state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBodyPart, setSelectedBodyPart] = useState('all');
-  const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
+  const [selectedEquipment, setSelectedEquipment] = useState('all');
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -357,7 +357,7 @@ export default function Fitness() {
   
   if (searchQuery) filterParams.set('search', searchQuery);
   if (selectedBodyPart !== 'all') filterParams.set('bodyParts', selectedBodyPart);
-  if (selectedEquipment.length > 0) filterParams.set('equipment', selectedEquipment.join(','));
+  if (selectedEquipment !== 'all') filterParams.set('equipment', selectedEquipment);
   filterParams.set('sortBy', 'name');
   filterParams.set('sortOrder', 'asc');
 
@@ -371,9 +371,8 @@ export default function Fitness() {
       if (selectedBodyPart !== 'all') {
         params.set('bodyPart', selectedBodyPart);
       }
-      if (selectedEquipment.length > 0 && !selectedEquipment.includes('all')) {
-        // For local DB, filter by first selected equipment or handle multiple
-        params.set('equipment', selectedEquipment[0]);
+      if (selectedEquipment !== 'all') {
+        params.set('equipment', selectedEquipment);
       }
       params.set('offset', offset.toString());
       params.set('limit', limit.toString());
@@ -475,6 +474,7 @@ export default function Fitness() {
   const handleFilterChange = (filterType: string, value: string) => {
     setCurrentPage(1);
     if (filterType === 'bodyPart') setSelectedBodyPart(value);
+    if (filterType === 'equipment') setSelectedEquipment(value);
   };
   
   const handleSearchChange = (value: string) => {
@@ -1457,7 +1457,7 @@ export default function Fitness() {
                   onClick={() => {
                     setSearchQuery('');
                     setSelectedBodyPart('all');
-                    setSelectedEquipment([]);
+                    setSelectedEquipment('all');
                     setCurrentPage(1);
                   }}
                   variant="outline"
@@ -1483,41 +1483,19 @@ export default function Fitness() {
                   </SelectContent>
                 </Select>
 
-                <div className="border rounded-md p-3 bg-ministry-gold-exact/20">
-                  <div className="mb-2 text-sm font-medium text-white">
-                    Equipment
-                    {selectedEquipment.length > 0 && (
-                      <span className="ml-2 text-xs text-ministry-gold">
-                        ({selectedEquipment.length} selected)
-                      </span>
-                    )}
-                  </div>
-                  <div className="max-h-48 overflow-y-auto space-y-2">
+                <Select value={selectedEquipment} onValueChange={(value) => handleFilterChange('equipment', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Equipment" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60 overflow-y-auto">
+                    <SelectItem value="all">All Equipment</SelectItem>
                     {uniqueEquipment.map((equipment: string) => (
-                      <div key={equipment} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`filter-equipment-${equipment}`}
-                          checked={selectedEquipment.includes(equipment)}
-                          onCheckedChange={(checked) => {
-                            setCurrentPage(1);
-                            if (checked) {
-                              setSelectedEquipment([...selectedEquipment, equipment]);
-                            } else {
-                              setSelectedEquipment(selectedEquipment.filter(e => e !== equipment));
-                            }
-                          }}
-                          data-testid={`checkbox-filter-equipment-${equipment}`}
-                        />
-                        <label
-                          htmlFor={`filter-equipment-${equipment}`}
-                          className="text-sm text-white leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer capitalize"
-                        >
-                          {equipment || 'None'}
-                        </label>
-                      </div>
+                      <SelectItem key={equipment} value={equipment}>
+                        {equipment ? equipment.charAt(0).toUpperCase() + equipment.slice(1) : equipment}
+                      </SelectItem>
                     ))}
-                  </div>
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -1540,7 +1518,7 @@ export default function Fitness() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-sm text-white">
                     Showing {exercises.length} of {totalCount} exercises
-                    {(searchQuery || selectedBodyPart !== 'all' || selectedEquipment.length > 0) && (
+                    {(searchQuery || selectedBodyPart !== 'all' || selectedEquipment !== 'all') && (
                       <span className="ml-2 text-ministry-gold">
                         (filtered)
                       </span>
