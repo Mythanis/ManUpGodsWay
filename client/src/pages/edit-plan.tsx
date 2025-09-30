@@ -96,7 +96,6 @@ export default function EditPlan() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBodyPart, setSelectedBodyPart] = useState('all');
   const [selectedEquipment, setSelectedEquipment] = useState('all');
-  const [selectedTarget, setSelectedTarget] = useState('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 25;
@@ -208,19 +207,16 @@ export default function EditPlan() {
   if (searchQuery) filterParams.set('search', searchQuery);
   if (selectedBodyPart !== 'all') filterParams.set('bodyParts', selectedBodyPart);
   if (selectedEquipment !== 'all') filterParams.set('equipment', selectedEquipment);
-  if (selectedTarget !== 'all') filterParams.set('muscles', selectedTarget);
   filterParams.set('sortBy', 'name');
   filterParams.set('sortOrder', 'asc');
 
   // Fetch exercises with server-side filtering
   const { data: exerciseResponse, isLoading: isLoadingExercises } = useQuery({
-    queryKey: ['exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
+    queryKey: ['exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchQuery) params.set('search', searchQuery);
-      if (selectedTarget !== 'all') {
-        params.set('bodyPart', selectedTarget);
-      } else if (selectedBodyPart !== 'all') {
+      if (selectedBodyPart !== 'all') {
         params.set('bodyPart', selectedBodyPart);
       }
       if (selectedEquipment !== 'all') params.set('equipment', selectedEquipment);
@@ -393,7 +389,6 @@ export default function EditPlan() {
     setCurrentPage(1);
     if (filterType === 'bodyPart') setSelectedBodyPart(value);
     if (filterType === 'equipment') setSelectedEquipment(value);
-    if (filterType === 'target') setSelectedTarget(value);
   };
   
   const handleSearchChange = (value: string) => {
@@ -618,7 +613,6 @@ export default function EditPlan() {
                       setSearchQuery('');
                       setSelectedBodyPart('all');
                       setSelectedEquipment('all');
-                      setSelectedTarget('all');
                       setCurrentPage(1);
                     }}
                     variant="outline"
@@ -651,18 +645,6 @@ export default function EditPlan() {
                       <SelectItem value="all">All Equipment</SelectItem>
                       {uniqueEquipment.map((eq: string) => (
                         <SelectItem key={eq} value={eq}>{eq}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={selectedTarget} onValueChange={(value) => handleFilterChange('target', value)}>
-                    <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-target">
-                      <SelectValue placeholder="Target Muscle" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Muscles</SelectItem>
-                      {uniqueTargets.map((target: string) => (
-                        <SelectItem key={target} value={target}>{target}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

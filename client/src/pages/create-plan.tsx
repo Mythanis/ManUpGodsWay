@@ -92,7 +92,6 @@ export default function CreatePlan() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBodyPart, setSelectedBodyPart] = useState('all');
   const [selectedEquipment, setSelectedEquipment] = useState('all');
-  const [selectedTarget, setSelectedTarget] = useState('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 25;
@@ -167,20 +166,16 @@ export default function CreatePlan() {
   if (searchQuery) filterParams.set('search', searchQuery);
   if (selectedBodyPart !== 'all') filterParams.set('bodyParts', selectedBodyPart);
   if (selectedEquipment !== 'all') filterParams.set('equipment', selectedEquipment);
-  if (selectedTarget !== 'all') filterParams.set('muscles', selectedTarget);
   filterParams.set('sortBy', 'name');
   filterParams.set('sortOrder', 'asc');
 
   // Fetch exercises with server-side filtering
   const { data: exerciseResponse, isLoading: isLoadingExercises } = useQuery({
-    queryKey: ['exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
+    queryKey: ['exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchQuery) params.set('search', searchQuery);
-      // Use target if set, otherwise use bodyPart (both map to same field in DB)
-      if (selectedTarget !== 'all') {
-        params.set('bodyPart', selectedTarget);
-      } else if (selectedBodyPart !== 'all') {
+      if (selectedBodyPart !== 'all') {
         params.set('bodyPart', selectedBodyPart);
       }
       if (selectedEquipment !== 'all') params.set('equipment', selectedEquipment);
@@ -591,7 +586,6 @@ export default function CreatePlan() {
                       setSearchQuery('');
                       setSelectedBodyPart('all');
                       setSelectedEquipment('all');
-                      setSelectedTarget('all');
                       setCurrentPage(1);
                     }}
                     variant="outline"
@@ -627,20 +621,6 @@ export default function CreatePlan() {
                       {uniqueEquipment.map((equipment: string) => (
                         <SelectItem key={equipment} value={equipment}>
                           {equipment.charAt(0).toUpperCase() + equipment.slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={selectedTarget} onValueChange={setSelectedTarget}>
-                    <SelectTrigger className="text-white [&>span]:text-white" data-testid="select-target-muscle">
-                      <SelectValue placeholder="Target Muscle" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Muscles</SelectItem>
-                      {uniqueTargets.map((target: string) => (
-                        <SelectItem key={target} value={target}>
-                          {target.charAt(0).toUpperCase() + target.slice(1)}
                         </SelectItem>
                       ))}
                     </SelectContent>
