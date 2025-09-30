@@ -96,9 +96,20 @@ class FitnessReminderService {
       // Send notifications to each user
       for (const [userId, userReminders] of Array.from(remindersByUser.entries())) {
         try {
+          // Validate user reminders
+          if (!Array.isArray(userReminders) || userReminders.length === 0) {
+            log(`Skipping user ${userId}: no valid reminders`);
+            continue;
+          }
+
           // Create a consolidated notification for all due workouts
-          const totalExercises = userReminders.reduce((sum: number, plan: {planName: string, exercises: string[]}) => sum + plan.exercises.length, 0);
-          const planNames = userReminders.map((plan: {planName: string, exercises: string[]}) => plan.planName).join(', ');
+          const totalExercises = userReminders.reduce((sum: number, plan: {planName: string, exercises: string[]}) => {
+            return sum + (Array.isArray(plan?.exercises) ? plan.exercises.length : 0);
+          }, 0);
+          const planNames = userReminders
+            .filter(plan => plan && plan.planName)
+            .map((plan: {planName: string, exercises: string[]}) => plan.planName)
+            .join(', ');
           
           let message: string;
           if (userReminders.length === 1) {
