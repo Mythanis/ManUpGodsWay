@@ -5,6 +5,9 @@ import multer from 'multer';
 import path from 'path';
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { db } from "./db";
+import * as schema from "@shared/schema";
+import { eq, and, sql } from "drizzle-orm";
 import { 
   insertStudySchema, 
   insertLessonSchema,
@@ -48,6 +51,20 @@ function hasAdminPrivileges(user: any): boolean {
 function hasOwnerPrivileges(user: any): boolean {
   return isOwner(user);
 }
+
+// Admin middleware
+const requireAdmin = async (req: any, res: any, next: any) => {
+  try {
+    const user = await storage.getUser(req.user.claims.sub);
+    if (!user || !isAdmin(user)) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    next();
+  } catch (error) {
+    console.error('Error in requireAdmin middleware:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 // Feedback schema
 const feedbackSchema = z.object({
@@ -4056,6 +4073,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ isFavorite });
     } catch (error) {
       console.error('Error checking favorite exercise:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Exercises routes (local database)
+  // Import exercises from JSON (admin only)
+  app.post('/api/exercises/import', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const exercises = req.body.exercises;
+      if (!Array.isArray(exercises)) {
+        return res.status(400).json({ message: 'Invalid exercises data' });
+      }
+
+      await db.delete(schema.exercises); // Clear existing exercises
+      
+      for (const exercise of exercises) {
+        await db.insert(schema.exercises).values({
+          id: exercise.id,
+          name: exercise.name,
+          bodyPart: exercise.body_part,
+          equipment: exercise.equipment,
+          level: exercise.level,
+          instructions: exercise.instructions,
+          mediaFile: exercise.media_file,
+          shortInstructions: exercise.short_instructions
+        });
+      }
+
+      res.json({ message: 'Exercises imported successfully', count: exercises.length });
+    } catch (error) {
+      console.error('Error importing exercises:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get all exercises with filtering
+  app.get('/api/exercises', async (req: any, res) => {
+    try {
+      // Apply filters
+      const { bodyPart, equipment, level, search } = req.query;
+      const conditions = [];
+      
+      if (bodyPart) conditions.push(eq(schema.exercises.bodyPart, bodyPart));
+      if (equipment) conditions.push(eq(schema.exercises.equipment, equipment));
+      if (level) conditions.push(eq(schema.exercises.level, level));
+      if (search) conditions.push(sql`${schema.exercises.name} ILIKE ${'%' + search + '%'}`);
+      
+      let exercises;
+      if (conditions.length > 0) {
+        exercises = await db.select().from(schema.exercises).where(and(...conditions));
+      } else {
+        exercises = await db.select().from(schema.exercises);
+      }
+      
+      res.json(exercises);
+    } catch (error) {
+      console.error('Error fetching exercises:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get unique equipment types
+  app.get('/api/exercises/equipment-types', async (req: any, res) => {
+    try {
+      const result = await db.selectDistinct({ equipment: schema.exercises.equipment })
+        .from(schema.exercises);
+      res.json(result.map(r => r.equipment));
+    } catch (error) {
+      console.error('Error fetching equipment types:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get unique fitness levels
+  app.get('/api/exercises/fitness-levels', async (req: any, res) => {
+    try {
+      const result = await db.selectDistinct({ level: schema.exercises.level })
+        .from(schema.exercises);
+      res.json(result.map(r => r.level));
+    } catch (error) {
+      console.error('Error fetching fitness levels:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get unique body parts
+  app.get('/api/exercises/body-parts', async (req: any, res) => {
+    try {
+      const result = await db.selectDistinct({ bodyPart: schema.exercises.bodyPart })
+        .from(schema.exercises);
+      res.json(result.map(r => r.bodyPart));
+    } catch (error) {
+      console.error('Error fetching body parts:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

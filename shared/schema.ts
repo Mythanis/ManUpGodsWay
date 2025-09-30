@@ -1298,6 +1298,28 @@ export type InsertHurdleWallPrayer = z.infer<typeof insertHurdleWallPrayerSchema
 export type UserPrayerStats = typeof userPrayerStats.$inferSelect;
 export type InsertUserPrayerStats = z.infer<typeof insertUserPrayerStatsSchema>;
 
+// Exercises table for fitness center
+export const exercises = pgTable("exercises", {
+  id: integer("id").primaryKey(),
+  name: varchar("name").notNull(),
+  bodyPart: varchar("body_part").notNull(),
+  equipment: varchar("equipment").notNull(),
+  level: varchar("level").notNull(), // Beginner, Intermediate, Advanced
+  instructions: text("instructions").notNull(),
+  mediaFile: varchar("media_file").notNull(),
+  shortInstructions: text("short_instructions"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertExerciseSchema = createInsertSchema(exercises).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Exercise = typeof exercises.$inferSelect;
+export type InsertExercise = z.infer<typeof insertExerciseSchema>;
+
 // Tier pricing configuration table
 export const tierPricing = pgTable("tier_pricing", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
