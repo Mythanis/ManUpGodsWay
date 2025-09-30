@@ -193,10 +193,9 @@ export default function EditPlan() {
   const { data: bodyParts = [] } = useQuery({
     queryKey: ['bodyparts'],
     queryFn: async () => {
-      const response = await fetch('https://www.exercisedb.dev/api/v1/bodyparts');
+      const response = await fetch('/api/exercises/body-parts');
       if (!response.ok) throw new Error('Failed to fetch body parts');
-      const data = await response.json();
-      return data.data || [];
+      return await response.json();
     },
     staleTime: 300000,
   });
@@ -217,11 +216,21 @@ export default function EditPlan() {
   const { data: exerciseResponse, isLoading: isLoadingExercises } = useQuery({
     queryKey: ['exercises', currentPage, searchQuery, selectedBodyPart, selectedEquipment, selectedTarget],
     queryFn: async () => {
-      const url = `https://www.exercisedb.dev/api/v1/exercises/filter?${filterParams.toString()}`;
+      const params = new URLSearchParams();
+      if (searchQuery) params.set('search', searchQuery);
+      if (selectedTarget !== 'all') {
+        params.set('bodyPart', selectedTarget);
+      } else if (selectedBodyPart !== 'all') {
+        params.set('bodyPart', selectedBodyPart);
+      }
+      if (selectedEquipment !== 'all') params.set('equipment', selectedEquipment);
+      params.set('offset', offset.toString());
+      params.set('limit', limit.toString());
+      
+      const url = `/api/exercises${params.toString() ? '?' + params.toString() : ''}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch exercises');
-      const data = await response.json();
-      return data;
+      return await response.json();
     },
     staleTime: 0,
     refetchOnMount: true,
@@ -232,10 +241,9 @@ export default function EditPlan() {
   const { data: equipments = [] } = useQuery({
     queryKey: ['equipments'],
     queryFn: async () => {
-      const response = await fetch('https://www.exercisedb.dev/api/v1/equipments');
+      const response = await fetch('/api/exercises/equipment-types');
       if (!response.ok) throw new Error('Failed to fetch equipments');
-      const data = await response.json();
-      return data.data || [];
+      return await response.json();
     },
     staleTime: 300000,
   });
@@ -244,10 +252,9 @@ export default function EditPlan() {
   const { data: allMuscles = [] } = useQuery({
     queryKey: ['muscles'],
     queryFn: async () => {
-      const response = await fetch('https://www.exercisedb.dev/api/v1/muscles');
+      const response = await fetch('/api/exercises/body-parts');
       if (!response.ok) throw new Error('Failed to fetch muscles');
-      const data = await response.json();
-      return data.data || [];
+      return await response.json();
     },
     staleTime: 300000,
   });
