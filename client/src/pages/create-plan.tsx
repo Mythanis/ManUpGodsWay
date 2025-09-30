@@ -127,10 +127,9 @@ export default function CreatePlan() {
   const { data: bodyParts = [] } = useQuery({
     queryKey: ['bodyparts'],
     queryFn: async () => {
-      const response = await fetch('https://www.exercisedb.dev/api/v1/bodyparts');
+      const response = await fetch('/api/exercises/body-parts');
       if (!response.ok) throw new Error('Failed to fetch body parts');
-      const data = await response.json();
-      return data.data || [];
+      return await response.json();
     },
     staleTime: 300000,
   });
@@ -139,10 +138,9 @@ export default function CreatePlan() {
   const { data: equipments = [] } = useQuery({
     queryKey: ['equipments'],
     queryFn: async () => {
-      const response = await fetch('https://www.exercisedb.dev/api/v1/equipment');
+      const response = await fetch('/api/exercises/equipment-types');
       if (!response.ok) throw new Error('Failed to fetch equipment');
-      const data = await response.json();
-      return data.data || [];
+      return await response.json();
     },
     staleTime: 300000,
   });
@@ -151,44 +149,15 @@ export default function CreatePlan() {
   const { data: allMuscles = [] } = useQuery({
     queryKey: ['muscles'],
     queryFn: async () => {
-      const response = await fetch('https://www.exercisedb.dev/api/v1/muscles');
+      const response = await fetch('/api/exercises/body-parts');
       if (!response.ok) throw new Error('Failed to fetch muscles');
-      const data = await response.json();
-      return data.data || [];
+      return await response.json();
     },
     staleTime: 300000,
   });
   
-  // Filter muscles to only include those with exercises
-  const { data: usedMuscles = [] } = useQuery({
-    queryKey: ['used-muscles'],
-    queryFn: async () => {
-      const usedMuscleNames = new Set<string>();
-      
-      // Get first 500 exercises to extract used muscles
-      for (let offset = 0; offset < 500; offset += 100) {
-        const response = await fetch(`https://www.exercisedb.dev/api/v1/exercises/filter?offset=${offset}&limit=100`);
-        if (!response.ok) break;
-        const data = await response.json();
-        
-        data.data?.forEach((exercise: any) => {
-          exercise.targetMuscles?.forEach((muscle: string) => {
-            usedMuscleNames.add(muscle);
-          });
-        });
-        
-        if (data.data?.length < 100) break; // No more data
-      }
-      
-      const filteredMuscles = allMuscles.filter((muscle: any) => 
-        usedMuscleNames.has(muscle.name)
-      );
-      
-      return filteredMuscles;
-    },
-    enabled: allMuscles.length > 0,
-    staleTime: 300000,
-  });
+  // Use all body parts as target muscles (local database has all available muscles)
+  const usedMuscles = allMuscles;
 
   // Build filter params for API
   const filterParams = new URLSearchParams();
