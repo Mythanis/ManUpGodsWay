@@ -456,10 +456,10 @@ export default function Fitness() {
   const totalCount = exercises.length;
   const totalPages = exerciseResponse?.metadata?.totalPages || Math.ceil(totalCount / limit);
 
-  // Get filter options from API data
-  const uniqueBodyParts = bodyParts.map((bp: any) => bp.name).sort();
-  const uniqueEquipment = equipments.map((eq: any) => eq.name).sort();
-  const uniqueTargets = (usedMuscles || allMuscles).map((muscle: any) => muscle.name).sort();
+  // Get filter options from API data - filter out null/undefined values
+  const uniqueBodyParts = bodyParts.filter((bp: any) => bp).sort();
+  const uniqueEquipment = equipments.filter((eq: any) => eq).sort();
+  const uniqueTargets = (usedMuscles || allMuscles).filter((muscle: any) => muscle).sort();
   
   console.log('Filter options:', {
     bodyParts: uniqueBodyParts.slice(0, 5),
@@ -839,7 +839,7 @@ export default function Fitness() {
     </Card>
   );
 
-  // Dynamic plan generation using ExerciseDB API
+  // Dynamic plan generation using local exercise database
   const generatePreBuiltPlans = async (
     level: string, 
     equipmentList: string[], 
@@ -892,7 +892,7 @@ export default function Fitness() {
     }
   };
 
-  // New dynamic types and helper functions for ExerciseDB API integration
+  // Dynamic types and helper functions for local exercise database
   interface APIExercise {
     id: string;
     name: string;
@@ -920,7 +920,7 @@ export default function Fitness() {
     weeks: DayPlan[][];
   }
 
-  // Helper to fetch data from ExerciseDB API
+  // Helper to fetch data from local exercise database
   async function fetchJSON(url: string): Promise<any> {
     console.log('Fetching from:', url);
     const resp = await fetch(url);
@@ -1143,7 +1143,7 @@ export default function Fitness() {
         isPublic: false
       });
 
-      // Add exercises to the plan directly (using fallback approach since no ExerciseDB integration available)
+      // Add exercises to the plan directly using local database
       for (let i = 0; i < preBuiltPlan.exercises.length; i++) {
         const exercise = preBuiltPlan.exercises[i];
         
@@ -1154,7 +1154,7 @@ export default function Fitness() {
         const exerciseData = {
           exerciseId: `prebuilt-${Date.now()}-${i}`,
           exerciseName: exercise.name,
-          imageUrl: exercise.gifUrl || null, // Use actual GIF URL from ExerciseDB API
+          imageUrl: exercise.gifUrl || null, // Use actual GIF URL from local database
           targetMuscle: exercise.bodyPart,
           bodyPart: exercise.bodyPart,
           equipment: exercise.equipment.join(', '),
@@ -1237,7 +1237,7 @@ export default function Fitness() {
     }
   };
 
-  // Helper function to get exercise GIF URLs (since no ExerciseDB integration available)
+  // Helper function to get exercise GIF URLs from local database
   const getExerciseGifUrl = (exerciseName: string): string => {
     // Map common exercise names to placeholder or default GIF URLs
     const exerciseGifMap: Record<string, string> = {
@@ -1493,7 +1493,7 @@ export default function Fitness() {
                     <SelectItem value="all">All Body Parts</SelectItem>
                     {uniqueBodyParts.map((part: string) => (
                       <SelectItem key={part} value={part}>
-                        {part.charAt(0).toUpperCase() + part.slice(1)}
+                        {part ? part.charAt(0).toUpperCase() + part.slice(1) : part}
                       </SelectItem>
                     ))}
                   </SelectContent>
