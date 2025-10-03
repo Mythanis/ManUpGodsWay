@@ -90,6 +90,17 @@ export const studies = pgTable("studies", {
   lessonCount: integer("lesson_count").default(1),
   freeLessonCount: integer("free_lesson_count").default(0), // Number of lessons accessible to free users for premium/VIP studies
   thumbnailUrl: varchar("thumbnail_url"),
+  thumbnailFilename: varchar("thumbnail_filename"), // Stored thumbnail file
+  thumbnailMimeType: varchar("thumbnail_mime_type"),
+  thumbnailFileSize: integer("thumbnail_file_size"),
+  pdfFilename: varchar("pdf_filename"), // Stored PDF document
+  pdfOriginalName: varchar("pdf_original_name"),
+  pdfMimeType: varchar("pdf_mime_type"),
+  pdfFileSize: integer("pdf_file_size"),
+  wordFilename: varchar("word_filename"), // Stored Word document
+  wordOriginalName: varchar("word_original_name"),
+  wordMimeType: varchar("word_mime_type"),
+  wordFileSize: integer("word_file_size"),
   videoId: varchar("video_id").references(() => videos.id), // Reference to videos table
   videoUrl: varchar("video_url"), // Keep for backward compatibility with external URLs
   requiredTier: varchar("required_tier").default("free"), // free, premium, vip
