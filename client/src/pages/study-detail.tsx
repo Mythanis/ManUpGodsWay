@@ -392,6 +392,66 @@ export default function StudyDetail() {
               {study.description}
             </p>
 
+            {/* Downloadable Study Materials */}
+            {(study.pdfFilename || study.wordFilename) && hasAccess && (
+              <div className="bg-ministry-navy/5 rounded-lg p-4 mb-6 border border-ministry-navy/20">
+                <h3 className="font-semibold text-ministry-charcoal mb-3 flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Study Materials
+                </h3>
+                <div className="space-y-2">
+                  {study.pdfFilename && (
+                    <a
+                      href={`/api/studies/${study.id}/download-pdf`}
+                      download
+                      className="flex items-center justify-between p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+                      data-testid="link-download-pdf"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded bg-red-100 flex items-center justify-center">
+                          <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm text-gray-900">PDF Document</p>
+                          <p className="text-xs text-gray-500">{study.pdfOriginalName}</p>
+                        </div>
+                      </div>
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    </a>
+                  )}
+                  {study.wordFilename && (
+                    <a
+                      href={`/api/studies/${study.id}/download-word`}
+                      download
+                      className="flex items-center justify-between p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+                      data-testid="link-download-word"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded bg-blue-100 flex items-center justify-center">
+                          <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm text-gray-900">Word Document</p>
+                          <p className="text-xs text-gray-500">{study.wordOriginalName}</p>
+                        </div>
+                      </div>
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
             {!hasAccess && study.requiresPurchase && study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free') && (
               <div className="bg-ministry-gold/10 border border-ministry-gold/20 rounded-lg p-4 mb-6" data-testid="purchase-restriction">
                 <h3 className="font-semibold text-ministry-charcoal mb-2">Purchase Required</h3>
