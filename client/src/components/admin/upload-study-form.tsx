@@ -67,6 +67,12 @@ export default function UploadStudyForm() {
     estimatedMinutes: number;
     videoId?: string;
   }>>([]);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [wordFile, setWordFile] = useState<File | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [uploadingWord, setUploadingWord] = useState(false);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const { toast } = useToast();
   const { effectiveTheme } = useTheme();
   const queryClient = useQueryClient();
@@ -164,6 +170,61 @@ export default function UploadStudyForm() {
         }
       }
 
+      // Upload files if any are selected
+      const uploadPromises: Promise<any>[] = [];
+
+      if (thumbnailFile) {
+        setUploadingThumbnail(true);
+        const formData = new FormData();
+        formData.append('thumbnail', thumbnailFile);
+        uploadPromises.push(
+          fetch(`/api/studies/${study.id}/upload-thumbnail`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+          }).finally(() => setUploadingThumbnail(false))
+        );
+      }
+
+      if (pdfFile) {
+        setUploadingPdf(true);
+        const formData = new FormData();
+        formData.append('pdf', pdfFile);
+        uploadPromises.push(
+          fetch(`/api/studies/${study.id}/upload-pdf`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+          }).finally(() => setUploadingPdf(false))
+        );
+      }
+
+      if (wordFile) {
+        setUploadingWord(true);
+        const formData = new FormData();
+        formData.append('word', wordFile);
+        uploadPromises.push(
+          fetch(`/api/studies/${study.id}/upload-word`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+          }).finally(() => setUploadingWord(false))
+        );
+      }
+
+      if (uploadPromises.length > 0) {
+        try {
+          await Promise.all(uploadPromises);
+        } catch (error) {
+          console.error('Error uploading files:', error);
+          toast({
+            title: "Warning",
+            description: "Study created but some files failed to upload. You can upload them later.",
+            variant: "destructive",
+          });
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
       toast({
@@ -175,6 +236,9 @@ export default function UploadStudyForm() {
       setDialogOpen(false);
       form.reset();
       setLessons([]);
+      setPdfFile(null);
+      setWordFile(null);
+      setThumbnailFile(null);
     },
     onError: (error: any) => {
       console.error('Study creation error:', error);
@@ -592,6 +656,55 @@ export default function UploadStudyForm() {
                 </FormItem>
               )}
             />
+
+            <div className="space-y-4 border rounded-lg p-4 bg-muted/10">
+              <h3 className="font-semibold text-sm">File Uploads</h3>
+              
+              <div className="space-y-2">
+                <FormLabel>Thumbnail Image (replaces URL if provided)</FormLabel>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+                  data-testid="input-thumbnail-file"
+                />
+                {thumbnailFile && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {thumbnailFile.name}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <FormLabel>PDF Document (optional)</FormLabel>
+                <Input
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                  data-testid="input-pdf-file"
+                />
+                {pdfFile && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {pdfFile.name}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <FormLabel>Word Document (optional)</FormLabel>
+                <Input
+                  type="file"
+                  accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={(e) => setWordFile(e.target.files?.[0] || null)}
+                  data-testid="input-word-file"
+                />
+                {wordFile && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {wordFile.name}
+                  </p>
+                )}
+              </div>
+            </div>
 
             <FormField
               control={form.control}
