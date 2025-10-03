@@ -102,6 +102,26 @@ const imageUpload = multer({
   }
 });
 
+// Configure multer for document uploads (PDF/Word)
+const documentUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB limit for documents
+  },
+  fileFilter: function (req, file, cb) {
+    const allowedMimeTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF and Word documents are allowed!'));
+    }
+  }
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
@@ -578,6 +598,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting study:", error);
       res.status(500).json({ message: "Failed to delete study" });
+    }
+  });
+
+  // Upload PDF document for study
+  app.post('/api/studies/:id/upload-pdf', isAuthenticated, documentUpload.single('pdf'), async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "PDF file is required" });
+      }
+
+      const filename = `study_pdf_${Date.now()}_${file.originalname}`;
+      const updateData = {
+        pdfFilename: filename,
+        pdfOriginalName: file.originalname,
+        pdfMimeType: file.mimetype,
+        pdfFileSize: file.size,
+      };
+
+      const study = await storage.updateStudy(req.params.id, updateData);
+      res.json(study);
+    } catch (error) {
+      console.error("Error uploading PDF:", error);
+      res.status(500).json({ message: "Failed to upload PDF" });
+    }
+  });
+
+  // Upload Word document for study
+  app.post('/api/studies/:id/upload-word', isAuthenticated, documentUpload.single('word'), async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "Word document is required" });
+      }
+
+      const filename = `study_word_${Date.now()}_${file.originalname}`;
+      const updateData = {
+        wordFilename: filename,
+        wordOriginalName: file.originalname,
+        wordMimeType: file.mimetype,
+        wordFileSize: file.size,
+      };
+
+      const study = await storage.updateStudy(req.params.id, updateData);
+      res.json(study);
+    } catch (error) {
+      console.error("Error uploading Word document:", error);
+      res.status(500).json({ message: "Failed to upload Word document" });
+    }
+  });
+
+  // Upload thumbnail image for study
+  app.post('/api/studies/:id/upload-thumbnail', isAuthenticated, imageUpload.single('thumbnail'), async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "Thumbnail image is required" });
+      }
+
+      const filename = `study_thumbnail_${Date.now()}_${file.originalname}`;
+      const updateData = {
+        thumbnailFilename: filename,
+        thumbnailMimeType: file.mimetype,
+        thumbnailFileSize: file.size,
+      };
+
+      const study = await storage.updateStudy(req.params.id, updateData);
+      res.json(study);
+    } catch (error) {
+      console.error("Error uploading thumbnail:", error);
+      res.status(500).json({ message: "Failed to upload thumbnail" });
+    }
+  });
+
+  // Download PDF document for study
+  app.get('/api/studies/:id/download-pdf', isAuthenticated, async (req: any, res) => {
+    try {
+      const study = await storage.getStudy(req.params.id);
+      if (!study || !study.pdfFilename) {
+        return res.status(404).json({ message: "PDF not found" });
+      }
+
+      // In a real implementation, this would retrieve the file from storage
+      // For now, we'll return file metadata
+      res.json({
+        filename: study.pdfOriginalName,
+        mimeType: study.pdfMimeType,
+        size: study.pdfFileSize,
+        downloadUrl: `/api/studies/${req.params.id}/pdf-file`
+      });
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      res.status(500).json({ message: "Failed to download PDF" });
+    }
+  });
+
+  // Download Word document for study
+  app.get('/api/studies/:id/download-word', isAuthenticated, async (req: any, res) => {
+    try {
+      const study = await storage.getStudy(req.params.id);
+      if (!study || !study.wordFilename) {
+        return res.status(404).json({ message: "Word document not found" });
+      }
+
+      // In a real implementation, this would retrieve the file from storage
+      // For now, we'll return file metadata
+      res.json({
+        filename: study.wordOriginalName,
+        mimeType: study.wordMimeType,
+        size: study.wordFileSize,
+        downloadUrl: `/api/studies/${req.params.id}/word-file`
+      });
+    } catch (error) {
+      console.error("Error downloading Word document:", error);
+      res.status(500).json({ message: "Failed to download Word document" });
+    }
+  });
+
+  // Get thumbnail image for study
+  app.get('/api/studies/:id/thumbnail', async (req: any, res) => {
+    try {
+      const study = await storage.getStudy(req.params.id);
+      if (!study || !study.thumbnailFilename) {
+        return res.status(404).json({ message: "Thumbnail not found" });
+      }
+
+      // In a real implementation, this would retrieve the file from storage
+      // For now, we'll return file metadata
+      res.json({
+        filename: study.thumbnailFilename,
+        mimeType: study.thumbnailMimeType,
+        size: study.thumbnailFileSize,
+        url: `/api/studies/${req.params.id}/thumbnail-file`
+      });
+    } catch (error) {
+      console.error("Error fetching thumbnail:", error);
+      res.status(500).json({ message: "Failed to fetch thumbnail" });
     }
   });
 
