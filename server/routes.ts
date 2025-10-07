@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import pdfParse from 'pdf-parse';
+import * as pdfParse from 'pdf-parse';
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
@@ -918,7 +918,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Read and parse PDF
       const dataBuffer = fs.readFileSync(filePath);
-      const data = await pdfParse(dataBuffer);
+      const data = await (pdfParse as any).default(dataBuffer);
       
       res.json({
         text: data.text,
