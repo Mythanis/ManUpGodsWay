@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import pdfParse from 'pdf-parse';
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
@@ -885,6 +886,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error serving Word document:", error);
       res.status(500).json({ message: "Failed to serve Word document" });
+    }
+  });
+
+  // Extract PDF text content
+  app.get('/api/studies/:id/pdf-text', isAuthenticated, async (req: any, res) => {
+    try {
+      const study = await storage.getStudy(req.params.id);
+      if (!study || !study.pdfFilename) {
+        return res.status(404).json({ message: "PDF not found" });
+      }
+
+      const uploadsDir = path.resolve(process.cwd(), 'uploads', 'documents');
+      const filePath = path.resolve(uploadsDir, study.pdfFilename);
+      
+      // Security: Ensure the resolved path is within the uploads directory
+      const relative = path.relative(uploadsDir, filePath);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Security: Verify the path points to a regular file, not a directory
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "PDF file not found on disk" });
+      }
+      
+      const stats = fs.statSync(filePath);
+      if (!stats.isFile()) {
+        return res.status(403).json({ message: "Invalid file path" });
+      }
+
+      // Read and parse PDF
+      const dataBuffer = fs.readFileSync(filePath);
+      const data = await pdfParse(dataBuffer);
+      
+      res.json({
+        text: data.text,
+        numpages: data.numpages,
+        info: data.info,
+        metadata: data.metadata,
+        version: data.version
+      });
+    } catch (error) {
+      console.error("Error extracting PDF text:", error);
+      res.status(500).json({ message: "Failed to extract PDF text" });
     }
   });
 
