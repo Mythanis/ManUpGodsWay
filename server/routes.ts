@@ -5,6 +5,8 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import * as pdfParse from 'pdf-parse';
+import { createWorker } from 'tesseract.js';
+import { pdfToPng } from 'pdf-to-png-converter';
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
@@ -920,12 +922,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dataBuffer = fs.readFileSync(filePath);
       const data = await (pdfParse as any).default(dataBuffer);
       
+      // Check if text extraction succeeded
+      let extractedText = data.text || '';
+      let extractionMethod = 'text';
+      
+      // If no text was extracted, use OCR on PDF images
+      if (extractedText.trim().length === 0) {
+        console.log('No text found in PDF, attempting OCR extraction...');
+        extractionMethod = 'ocr';
+        
+        try {
+          // Convert PDF pages to PNG images
+          const pngPages = await pdfToPng(filePath, {
+            disableFontFace: false,
+            useSystemFonts: false,
+            viewportScale: 2.0,
+          });
+          
+          // Initialize Tesseract worker
+          const worker = await createWorker('eng');
+          
+          // Process each page with OCR
+          const ocrTexts: string[] = [];
+          for (const page of pngPages) {
+            const { data: { text } } = await worker.recognize(page.content);
+            ocrTexts.push(text);
+          }
+          
+          await worker.terminate();
+          
+          extractedText = ocrTexts.join('\n\n--- Page Break ---\n\n');
+          console.log(`OCR extraction completed: ${extractedText.length} characters extracted`);
+        } catch (ocrError) {
+          console.error('OCR extraction failed:', ocrError);
+          // If OCR fails, return empty text with the original metadata
+        }
+      }
+      
       res.json({
-        text: data.text,
+        text: extractedText,
         numpages: data.numpages,
         info: data.info,
         metadata: data.metadata,
-        version: data.version
+        version: data.version,
+        extractionMethod // Let frontend know if OCR was used
       });
     } catch (error) {
       console.error("Error extracting PDF text:", error);
