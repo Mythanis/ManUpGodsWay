@@ -707,7 +707,7 @@ export const insertVideoSchema = createInsertSchema(videos, {
 export const insertStudySchema = createInsertSchema(studies, {
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
-  content: z.string().min(1, "Content is required"),
+  content: z.string().optional(),
   category: z.string().min(1, "Category is required"),
   difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
   estimatedHours: z.number().int().min(1).default(1),
