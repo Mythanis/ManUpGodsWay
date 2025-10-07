@@ -753,6 +753,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Serve PDF file for inline viewing
+  app.get('/api/studies/:id/pdf-file', isAuthenticated, async (req: any, res) => {
+    try {
+      const study = await storage.getStudy(req.params.id);
+      if (!study || !study.pdfFilename) {
+        return res.status(404).json({ message: "PDF not found" });
+      }
+
+      // In a real implementation, this would retrieve and stream the actual file from storage
+      // For now, we'll return a placeholder response
+      res.setHeader('Content-Type', study.pdfMimeType || 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${study.pdfOriginalName}"`);
+      res.status(200).send('PDF file content would be served here in a production system');
+    } catch (error) {
+      console.error("Error serving PDF:", error);
+      res.status(500).json({ message: "Failed to serve PDF" });
+    }
+  });
+
+  // Serve Word file for inline viewing
+  app.get('/api/studies/:id/word-file', isAuthenticated, async (req: any, res) => {
+    try {
+      const study = await storage.getStudy(req.params.id);
+      if (!study || !study.wordFilename) {
+        return res.status(404).json({ message: "Word document not found" });
+      }
+
+      // In a real implementation, this would retrieve and stream the actual file from storage
+      // For now, we'll return a placeholder response
+      res.setHeader('Content-Type', study.wordMimeType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', `inline; filename="${study.wordOriginalName}"`);
+      res.status(200).send('Word document content would be served here in a production system');
+    } catch (error) {
+      console.error("Error serving Word document:", error);
+      res.status(500).json({ message: "Failed to serve Word document" });
+    }
+  });
+
   // Lessons routes
   app.get('/api/lessons/:studyId/:lessonNumber', isAuthenticated, async (req: any, res) => {
     try {
