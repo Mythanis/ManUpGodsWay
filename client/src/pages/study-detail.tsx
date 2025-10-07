@@ -29,17 +29,22 @@ const replySchema = z.object({
   content: z.string().min(1, "Reply content is required"),
 });
 
-function PDFTextViewer({ studyId, pdfOriginalName }: { studyId: string; pdfOriginalName: string }) {
+function PDFTextViewer({ studyId, studyTitle }: { studyId: string; studyTitle: string }) {
   const [, navigate] = useLocation();
 
   const handleOpenDocument = () => {
     navigate(`/studies/${studyId}/document`);
   };
 
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open(`/api/studies/${studyId}/pdf-file`, '_blank');
+  };
+
   return (
     <button
       onClick={handleOpenDocument}
-      className="w-full flex items-center justify-between p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors border border-gray-200 cursor-pointer"
+      className="w-full flex items-center justify-between p-4 bg-black rounded-lg hover:bg-gray-900 transition-colors border border-gray-800 cursor-pointer"
       data-testid="button-view-pdf"
     >
       <div className="flex items-center space-x-3">
@@ -48,14 +53,19 @@ function PDFTextViewer({ studyId, pdfOriginalName }: { studyId: string; pdfOrigi
             <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
           </svg>
         </div>
-        <div className="text-left">
-          <p className="font-medium text-sm text-gray-900">PDF Document</p>
-          <p className="text-xs text-gray-500">{pdfOriginalName}</p>
+        <div className="text-left flex-1">
+          <p className="font-medium text-white">{studyTitle}</p>
         </div>
       </div>
-      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-      </svg>
+      <button
+        onClick={handleDownload}
+        className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+        data-testid="button-download-pdf-icon"
+      >
+        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+      </button>
     </button>
   );
 }
@@ -434,7 +444,7 @@ export default function StudyDetail() {
                 </h3>
                 <div className="space-y-2">
                   {study.pdfFilename && (
-                    <PDFTextViewer studyId={study.id!} pdfOriginalName={study.pdfOriginalName!} />
+                    <PDFTextViewer studyId={study.id!} studyTitle={study.title} />
                   )}
                   {study.wordFilename && (
                     <Dialog>
