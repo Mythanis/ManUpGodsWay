@@ -29,9 +29,17 @@ const replySchema = z.object({
   content: z.string().min(1, "Reply content is required"),
 });
 
+interface PDFData {
+  text: string;
+  numpages: number;
+  info?: any;
+  metadata?: any;
+  version?: string;
+}
+
 function PDFTextViewer({ studyId, pdfOriginalName }: { studyId: string; pdfOriginalName: string }) {
   const [isOpen, setIsOpen] = useState(false);
-  const { data: pdfData, isLoading } = useQuery({
+  const { data: pdfData, isLoading } = useQuery<PDFData>({
     queryKey: [`/api/studies/${studyId}/pdf-text`],
     enabled: isOpen,
   });
