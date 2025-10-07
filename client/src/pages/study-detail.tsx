@@ -29,6 +29,86 @@ const replySchema = z.object({
   content: z.string().min(1, "Reply content is required"),
 });
 
+function PDFTextViewer({ studyId, pdfOriginalName }: { studyId: string; pdfOriginalName: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const { data: pdfData, isLoading } = useQuery({
+    queryKey: [`/api/studies/${studyId}/pdf-text`],
+    enabled: isOpen,
+  });
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <button
+          className="w-full flex items-center justify-between p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors border border-gray-200 cursor-pointer"
+          data-testid="button-view-pdf"
+        >
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded bg-red-100 flex items-center justify-center">
+              <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+              </svg>
+            </div>
+            <div className="text-left">
+              <p className="font-medium text-sm text-gray-900">PDF Document</p>
+              <p className="text-xs text-gray-500">{pdfOriginalName}</p>
+            </div>
+          </div>
+          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-6xl h-[90vh] p-0" data-testid="dialog-pdf-viewer">
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between p-4 border-b bg-white">
+            <DialogTitle className="text-lg font-semibold text-ministry-charcoal">{pdfOriginalName}</DialogTitle>
+            <a
+              href={`/api/studies/${studyId}/download-pdf`}
+              download
+              className="inline-flex items-center px-3 py-1.5 bg-ministry-charcoal text-white text-sm rounded-md hover:bg-ministry-charcoal/90 transition-colors"
+              data-testid="button-download-pdf"
+            >
+              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download
+            </a>
+          </div>
+          <ScrollArea className="flex-1 bg-gray-50">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ministry-charcoal mx-auto mb-4"></div>
+                  <p className="text-ministry-slate">Extracting document content...</p>
+                </div>
+              </div>
+            ) : pdfData?.text ? (
+              <div className="max-w-4xl mx-auto p-8">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8" data-testid="text-pdf-content">
+                  <pre className="whitespace-pre-wrap font-sans text-base leading-relaxed text-gray-800">
+                    {pdfData.text}
+                  </pre>
+                </div>
+                {pdfData.numpages && (
+                  <div className="mt-4 text-sm text-gray-500 text-center">
+                    {pdfData.numpages} page{pdfData.numpages > 1 ? 's' : ''}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-ministry-slate">Unable to extract text from this PDF.</p>
+              </div>
+            )}
+          </ScrollArea>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function StudyDetail() {
   const { id } = useParams<{ id: string }>();
   const [discussionDialogOpen, setDiscussionDialogOpen] = useState(false);
@@ -403,56 +483,7 @@ export default function StudyDetail() {
                 </h3>
                 <div className="space-y-2">
                   {study.pdfFilename && (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <button
-                          className="w-full flex items-center justify-between p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors border border-gray-200 cursor-pointer"
-                          data-testid="button-view-pdf"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 rounded bg-red-100 flex items-center justify-center">
-                              <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-                              </svg>
-                            </div>
-                            <div className="text-left">
-                              <p className="font-medium text-sm text-gray-900">PDF Document</p>
-                              <p className="text-xs text-gray-500">{study.pdfOriginalName}</p>
-                            </div>
-                          </div>
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-6xl h-[90vh] p-0" data-testid="dialog-pdf-viewer">
-                        <div className="flex flex-col h-full">
-                          <div className="flex items-center justify-between p-4 border-b">
-                            <DialogTitle className="text-lg font-semibold">{study.pdfOriginalName}</DialogTitle>
-                            <a
-                              href={`/api/studies/${study.id}/download-pdf`}
-                              download
-                              className="inline-flex items-center px-3 py-1.5 bg-ministry-charcoal text-white text-sm rounded-md hover:bg-ministry-charcoal/90 transition-colors"
-                              data-testid="button-download-pdf"
-                            >
-                              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                              </svg>
-                              Download
-                            </a>
-                          </div>
-                          <div className="flex-1 overflow-hidden">
-                            <iframe
-                              src={`/api/studies/${study.id}/pdf-file`}
-                              className="w-full h-full border-0"
-                              title="PDF Document Viewer"
-                              data-testid="iframe-pdf-viewer"
-                            />
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                    <PDFTextViewer studyId={study.id!} pdfOriginalName={study.pdfOriginalName!} />
                   )}
                   {study.wordFilename && (
                     <Dialog>
