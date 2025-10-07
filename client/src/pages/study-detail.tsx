@@ -35,6 +35,7 @@ interface PDFData {
   info?: any;
   metadata?: any;
   version?: string;
+  extractionMethod?: 'text' | 'ocr';
 }
 
 function PDFTextViewer({ studyId, pdfOriginalName }: { studyId: string; pdfOriginalName: string }) {
@@ -89,11 +90,24 @@ function PDFTextViewer({ studyId, pdfOriginalName }: { studyId: string; pdfOrigi
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ministry-charcoal mx-auto mb-4"></div>
-                  <p className="text-ministry-slate">Extracting document content...</p>
+                  <p className="text-ministry-slate font-medium">Extracting document content...</p>
+                  <p className="text-ministry-slate text-sm mt-2">This may take a moment for image-based PDFs</p>
                 </div>
               </div>
             ) : pdfData?.text && pdfData.text.trim().length > 0 ? (
               <div className="max-w-4xl mx-auto p-8">
+                {pdfData.extractionMethod === 'ocr' && (
+                  <div className="mb-4 bg-green-50 border-l-4 border-green-400 p-4 rounded">
+                    <div className="flex items-center">
+                      <svg className="h-5 w-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <p className="text-sm text-green-700">
+                        <strong>OCR Extracted:</strong> This text was extracted from an image-based PDF using optical character recognition.
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8" data-testid="text-pdf-content">
                   <pre className="whitespace-pre-wrap font-sans text-base leading-relaxed text-gray-800">
                     {pdfData.text}
@@ -114,7 +128,7 @@ function PDFTextViewer({ studyId, pdfOriginalName }: { studyId: string; pdfOrigi
                     </svg>
                     <div>
                       <p className="text-sm text-blue-700">
-                        This PDF appears to be a scanned document or image-based PDF. Text extraction is not available, but you can view it below or download it.
+                        Text extraction failed for this PDF. You can view it below or download it.
                       </p>
                     </div>
                   </div>

@@ -920,7 +920,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Read and parse PDF
       const dataBuffer = fs.readFileSync(filePath);
-      const data = await (pdfParse as any).default(dataBuffer);
+      const pdfParseFunc = (pdfParse as any).default || pdfParse;
+      const data = await pdfParseFunc(dataBuffer);
       
       // Check if text extraction succeeded
       let extractedText = data.text || '';
