@@ -115,7 +115,20 @@ const documentStorage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `document-${uniqueSuffix}-${file.originalname}`);
+    // Sanitize filename: extract and validate extension
+    // Reject filenames with NUL bytes and whitelist only allowed extensions
+    if (file.originalname.includes('\0')) {
+      return cb(new Error('Invalid filename: contains null byte'));
+    }
+    
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowedExtensions = ['.pdf', '.doc', '.docx'];
+    
+    if (!allowedExtensions.includes(ext)) {
+      return cb(new Error(`Invalid file extension. Allowed: ${allowedExtensions.join(', ')}`));
+    }
+    
+    cb(null, `document-${uniqueSuffix}${ext}`);
   }
 });
 
@@ -709,10 +722,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "PDF not found" });
       }
 
-      const filePath = path.join(process.cwd(), 'uploads', 'documents', study.pdfFilename);
+      const uploadsDir = path.resolve(process.cwd(), 'uploads', 'documents');
+      const filePath = path.resolve(uploadsDir, study.pdfFilename);
       
+      // Security: Ensure the resolved path is within the uploads directory
+      const relative = path.relative(uploadsDir, filePath);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Security: Verify the path points to a regular file, not a directory
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ message: "PDF file not found on disk" });
+      }
+      
+      const stats = fs.statSync(filePath);
+      if (!stats.isFile()) {
+        return res.status(403).json({ message: "Invalid file path" });
       }
 
       res.setHeader('Content-Type', study.pdfMimeType || 'application/pdf');
@@ -734,10 +760,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Word document not found" });
       }
 
-      const filePath = path.join(process.cwd(), 'uploads', 'documents', study.wordFilename);
+      const uploadsDir = path.resolve(process.cwd(), 'uploads', 'documents');
+      const filePath = path.resolve(uploadsDir, study.wordFilename);
       
+      // Security: Ensure the resolved path is within the uploads directory
+      const relative = path.relative(uploadsDir, filePath);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Security: Verify the path points to a regular file, not a directory
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ message: "Word file not found on disk" });
+      }
+      
+      const stats = fs.statSync(filePath);
+      if (!stats.isFile()) {
+        return res.status(403).json({ message: "Invalid file path" });
       }
 
       res.setHeader('Content-Type', study.wordMimeType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
@@ -781,10 +820,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "PDF not found" });
       }
 
-      const filePath = path.join(process.cwd(), 'uploads', 'documents', study.pdfFilename);
+      const uploadsDir = path.resolve(process.cwd(), 'uploads', 'documents');
+      const filePath = path.resolve(uploadsDir, study.pdfFilename);
       
+      // Security: Ensure the resolved path is within the uploads directory
+      const relative = path.relative(uploadsDir, filePath);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Security: Verify the path points to a regular file, not a directory
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ message: "PDF file not found on disk" });
+      }
+      
+      const stats = fs.statSync(filePath);
+      if (!stats.isFile()) {
+        return res.status(403).json({ message: "Invalid file path" });
       }
 
       res.setHeader('Content-Type', study.pdfMimeType || 'application/pdf');
@@ -806,10 +858,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Word document not found" });
       }
 
-      const filePath = path.join(process.cwd(), 'uploads', 'documents', study.wordFilename);
+      const uploadsDir = path.resolve(process.cwd(), 'uploads', 'documents');
+      const filePath = path.resolve(uploadsDir, study.wordFilename);
       
+      // Security: Ensure the resolved path is within the uploads directory
+      const relative = path.relative(uploadsDir, filePath);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Security: Verify the path points to a regular file, not a directory
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ message: "Word file not found on disk" });
+      }
+      
+      const stats = fs.statSync(filePath);
+      if (!stats.isFile()) {
+        return res.status(403).json({ message: "Invalid file path" });
       }
 
       res.setHeader('Content-Type', study.wordMimeType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
