@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -392,7 +392,7 @@ export default function StudyDetail() {
               {study.description}
             </p>
 
-            {/* Study Materials with Inline Viewing */}
+            {/* Study Materials with Modal Viewing */}
             {(study.pdfFilename || study.wordFilename) && hasAccess && (
               <div className="bg-ministry-navy/5 rounded-lg p-4 mb-6 border border-ministry-navy/20">
                 <h3 className="font-semibold text-ministry-charcoal mb-3 flex items-center">
@@ -401,78 +401,110 @@ export default function StudyDetail() {
                   </svg>
                   Study Materials
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-2">
                   {study.pdfFilename && (
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                      <div className="flex items-center justify-between p-3 bg-gray-50 border-b border-gray-200">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded bg-red-100 flex items-center justify-center">
-                            <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-                            </svg>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button
+                          className="w-full flex items-center justify-between p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors border border-gray-200 cursor-pointer"
+                          data-testid="button-view-pdf"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 rounded bg-red-100 flex items-center justify-center">
+                              <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                              </svg>
+                            </div>
+                            <div className="text-left">
+                              <p className="font-medium text-sm text-gray-900">PDF Document</p>
+                              <p className="text-xs text-gray-500">{study.pdfOriginalName}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-sm text-gray-900">PDF Document</p>
-                            <p className="text-xs text-gray-500">{study.pdfOriginalName}</p>
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-6xl h-[90vh] p-0" data-testid="dialog-pdf-viewer">
+                        <div className="flex flex-col h-full">
+                          <div className="flex items-center justify-between p-4 border-b">
+                            <DialogTitle className="text-lg font-semibold">{study.pdfOriginalName}</DialogTitle>
+                            <a
+                              href={`/api/studies/${study.id}/download-pdf`}
+                              download
+                              className="inline-flex items-center px-3 py-1.5 bg-ministry-charcoal text-white text-sm rounded-md hover:bg-ministry-charcoal/90 transition-colors"
+                              data-testid="button-download-pdf"
+                            >
+                              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                              </svg>
+                              Download
+                            </a>
+                          </div>
+                          <div className="flex-1 overflow-hidden">
+                            <iframe
+                              src={`/api/studies/${study.id}/pdf-file`}
+                              className="w-full h-full border-0"
+                              title="PDF Document Viewer"
+                              data-testid="iframe-pdf-viewer"
+                            />
                           </div>
                         </div>
-                        <a
-                          href={`/api/studies/${study.id}/download-pdf`}
-                          download
-                          className="inline-flex items-center px-3 py-1.5 bg-ministry-charcoal text-white text-sm rounded-md hover:bg-ministry-charcoal/90 transition-colors"
-                          data-testid="button-download-pdf"
-                        >
-                          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                          </svg>
-                          Download
-                        </a>
-                      </div>
-                      <div className="p-2">
-                        <iframe
-                          src={`/api/studies/${study.id}/pdf-file`}
-                          className="w-full h-[600px] border-0 rounded"
-                          title="PDF Document Viewer"
-                          data-testid="iframe-pdf-viewer"
-                        />
-                      </div>
-                    </div>
+                      </DialogContent>
+                    </Dialog>
                   )}
                   {study.wordFilename && (
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                      <div className="flex items-center justify-between p-3 bg-gray-50 border-b border-gray-200">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded bg-blue-100 flex items-center justify-center">
-                            <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-                            </svg>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button
+                          className="w-full flex items-center justify-between p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors border border-gray-200 cursor-pointer"
+                          data-testid="button-view-word"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 rounded bg-blue-100 flex items-center justify-center">
+                              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                              </svg>
+                            </div>
+                            <div className="text-left">
+                              <p className="font-medium text-sm text-gray-900">Word Document</p>
+                              <p className="text-xs text-gray-500">{study.wordOriginalName}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-sm text-gray-900">Word Document</p>
-                            <p className="text-xs text-gray-500">{study.wordOriginalName}</p>
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-6xl h-[90vh] p-0" data-testid="dialog-word-viewer">
+                        <div className="flex flex-col h-full">
+                          <div className="flex items-center justify-between p-4 border-b">
+                            <DialogTitle className="text-lg font-semibold">{study.wordOriginalName}</DialogTitle>
+                            <a
+                              href={`/api/studies/${study.id}/download-word`}
+                              download
+                              className="inline-flex items-center px-3 py-1.5 bg-ministry-charcoal text-white text-sm rounded-md hover:bg-ministry-charcoal/90 transition-colors"
+                              data-testid="button-download-word"
+                            >
+                              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                              </svg>
+                              Download
+                            </a>
+                          </div>
+                          <div className="flex-1 overflow-hidden">
+                            <iframe
+                              src={`/api/studies/${study.id}/word-file`}
+                              className="w-full h-full border-0"
+                              title="Word Document Viewer"
+                              data-testid="iframe-word-viewer"
+                            />
                           </div>
                         </div>
-                        <a
-                          href={`/api/studies/${study.id}/download-word`}
-                          download
-                          className="inline-flex items-center px-3 py-1.5 bg-ministry-charcoal text-white text-sm rounded-md hover:bg-ministry-charcoal/90 transition-colors"
-                          data-testid="button-download-word"
-                        >
-                          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                          </svg>
-                          Download
-                        </a>
-                      </div>
-                      <div className="p-2">
-                        <iframe
-                          src={`/api/studies/${study.id}/word-file`}
-                          className="w-full h-[600px] border-0 rounded"
-                          title="Word Document Viewer"
-                          data-testid="iframe-word-viewer"
-                        />
-                      </div>
-                    </div>
+                      </DialogContent>
+                    </Dialog>
                   )}
                 </div>
               </div>
