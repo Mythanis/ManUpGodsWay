@@ -121,15 +121,15 @@ export default function DocumentViewer() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 pb-20">
+    <div className="min-h-screen bg-black pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
+      <div className="sticky top-0 z-10 bg-black border-b border-gray-800 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleBack}
-            className="text-ministry-charcoal hover:text-ministry-gold"
+            className="text-white hover:text-ministry-gold"
             data-testid="button-back"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
@@ -141,7 +141,7 @@ export default function DocumentViewer() {
               variant="outline"
               size="sm"
               onClick={handleDownload}
-              className="text-ministry-charcoal hover:text-ministry-gold"
+              className="bg-ministry-gold text-black border-ministry-gold hover:bg-ministry-gold/90 hover:text-black"
               data-testid="button-download-document"
             >
               <Download className="h-4 w-4 mr-2" />
@@ -156,22 +156,22 @@ export default function DocumentViewer() {
         {isPdfLoading ? (
           <div className="flex flex-col items-center justify-center min-h-[60vh]">
             <Loader2 className="h-12 w-12 animate-spin text-ministry-gold mb-4" />
-            <p className="text-ministry-slate font-medium">Extracting document content...</p>
-            <p className="text-ministry-slate text-sm mt-2">This may take a moment for image-based PDFs</p>
+            <p className="text-white font-medium">Extracting document content...</p>
+            <p className="text-gray-400 text-sm mt-2">This may take a moment for image-based PDFs</p>
           </div>
         ) : pdfData?.text && pdfData.text.trim().length > 0 ? (
           <div>
-            <h1 className="text-3xl font-bold text-ministry-charcoal mb-6" data-testid="text-document-title">
+            <h1 className="text-3xl font-bold text-white mb-6" data-testid="text-document-title">
               {study?.pdfOriginalName || 'Document'}
             </h1>
             
             {pdfData.extractionMethod === 'ocr' && (
-              <div className="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded">
+              <div className="mb-6 bg-ministry-gold/20 border-l-4 border-ministry-gold p-4 rounded">
                 <div className="flex items-center">
-                  <svg className="h-5 w-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="h-5 w-5 text-ministry-gold mr-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <p className="text-sm text-green-700">
+                  <p className="text-sm text-white">
                     <strong>OCR Extracted:</strong> This text was extracted from an image-based PDF using optical character recognition.
                   </p>
                 </div>
@@ -179,39 +179,39 @@ export default function DocumentViewer() {
             )}
             
             <div className="prose prose-lg max-w-none" data-testid="text-document-content">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-                <pre className="whitespace-pre-wrap font-sans text-base leading-relaxed text-gray-800">
+              <div className="bg-black rounded-lg shadow-sm border border-gray-800 p-8">
+                <pre className="whitespace-pre-wrap font-sans text-base leading-relaxed text-white">
                   {pdfData.text}
                 </pre>
               </div>
             </div>
             
             {pdfData.numpages && (
-              <div className="mt-6 text-sm text-gray-500 text-center">
+              <div className="mt-6 text-sm text-gray-400 text-center">
                 {pdfData.numpages} page{pdfData.numpages > 1 ? 's' : ''}
               </div>
             )}
           </div>
         ) : (
           <div>
-            <h1 className="text-3xl font-bold text-ministry-charcoal mb-6">
+            <h1 className="text-3xl font-bold text-white mb-6">
               {study?.pdfOriginalName || 'Document'}
             </h1>
             
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded">
+            <div className="bg-ministry-gold/20 border-l-4 border-ministry-gold p-4 mb-6 rounded">
               <div className="flex">
-                <svg className="h-5 w-5 text-blue-400 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-5 w-5 text-ministry-gold mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
                 <div>
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-white">
                     Text extraction failed for this PDF. You can view it in your browser or download it.
                   </p>
                 </div>
               </div>
             </div>
             
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-black rounded-lg shadow-sm border border-gray-800 overflow-hidden">
               <iframe
                 src={`/api/studies/${id}/pdf-file`}
                 className="w-full"
