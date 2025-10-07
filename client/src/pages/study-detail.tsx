@@ -92,7 +92,7 @@ function PDFTextViewer({ studyId, pdfOriginalName }: { studyId: string; pdfOrigi
                   <p className="text-ministry-slate">Extracting document content...</p>
                 </div>
               </div>
-            ) : pdfData?.text ? (
+            ) : pdfData?.text && pdfData.text.trim().length > 0 ? (
               <div className="max-w-4xl mx-auto p-8">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8" data-testid="text-pdf-content">
                   <pre className="whitespace-pre-wrap font-sans text-base leading-relaxed text-gray-800">
@@ -106,8 +106,27 @@ function PDFTextViewer({ studyId, pdfOriginalName }: { studyId: string; pdfOrigi
                 )}
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-ministry-slate">Unable to extract text from this PDF.</p>
+              <div className="h-full flex flex-col">
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 m-4">
+                  <div className="flex">
+                    <svg className="h-5 w-5 text-blue-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <p className="text-sm text-blue-700">
+                        This PDF appears to be a scanned document or image-based PDF. Text extraction is not available, but you can view it below or download it.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-1 px-4 pb-4">
+                  <iframe
+                    src={`/api/studies/${studyId}/pdf-file`}
+                    className="w-full h-full border border-gray-300 rounded-lg"
+                    title="PDF Document Viewer"
+                    data-testid="iframe-pdf-fallback"
+                  />
+                </div>
               </div>
             )}
           </ScrollArea>
