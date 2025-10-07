@@ -4,7 +4,6 @@ import { WebSocketServer, WebSocket } from 'ws';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import * as pdfParse from 'pdf-parse';
 import { createWorker } from 'tesseract.js';
 import { pdfToPng } from 'pdf-to-png-converter';
 import { storage } from "./storage";
@@ -920,7 +919,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Read and parse PDF
       const dataBuffer = fs.readFileSync(filePath);
-      const pdfParseFunc = (pdfParse as any).default || pdfParse;
+      
+      // Dynamically import pdf-parse (CommonJS module)
+      const pdfParseModule = await import('pdf-parse');
+      const pdfParseFunc = pdfParseModule.default;
       const data = await pdfParseFunc(dataBuffer);
       
       // Check if text extraction succeeded
