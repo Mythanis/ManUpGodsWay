@@ -25,6 +25,7 @@ import Profile from "@/pages/profile";
 import Admin from "@/pages/admin";
 import Owners from "@/pages/owners";
 import StudyDetail from "@/pages/study-detail";
+import DocumentViewer from "@/pages/document-viewer";
 import Lesson from "@/pages/lesson";
 import UserProfile from "@/pages/user-profile";
 import NotificationPreferences from "@/pages/notification-preferences";
@@ -111,6 +112,7 @@ function Router() {
             <Route path="/admin" component={Admin} />
             <Route path="/owners" component={Owners} />
             <Route path="/studies/:id" component={StudyDetail} />
+            <Route path="/studies/:id/document" component={DocumentViewer} />
             <Route path="/study/:studyId/lesson/:lessonNumber" component={Lesson} />
             <Route path="/users/:userId" component={UserProfile} />
             <Route path="/notification-preferences" component={NotificationPreferences} />

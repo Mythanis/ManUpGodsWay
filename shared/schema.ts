@@ -139,6 +139,7 @@ export const userProgress = pgTable("user_progress", {
   currentLesson: integer("current_lesson").default(1),
   completedLessons: integer("completed_lessons").default(0),
   isCompleted: boolean("is_completed").default(false),
+  documentScrollPosition: integer("document_scroll_position").default(0), // Track reading position in document
   lastAccessedAt: timestamp("last_accessed_at").defaultNow(),
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow(),

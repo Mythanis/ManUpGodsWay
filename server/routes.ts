@@ -1185,6 +1185,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update document scroll position
+  app.patch('/api/progress/:studyId/scroll-position', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { studyId } = req.params;
+      const { scrollPosition } = req.body;
+      
+      const progress = await storage.updateProgress(userId, studyId, { 
+        documentScrollPosition: scrollPosition 
+      });
+      res.json(progress);
+    } catch (error) {
+      console.error("Error updating scroll position:", error);
+      res.status(500).json({ message: "Failed to update scroll position" });
+    }
+  });
+
   // Discussion routes
   app.get('/api/discussions', async (req: any, res) => {
     try {
