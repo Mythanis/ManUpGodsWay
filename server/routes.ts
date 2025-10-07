@@ -6,6 +6,8 @@ import path from 'path';
 import fs from 'fs';
 import { createWorker } from 'tesseract.js';
 import { pdfToPng } from 'pdf-to-png-converter';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
@@ -920,10 +922,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Read and parse PDF
       const dataBuffer = fs.readFileSync(filePath);
       
-      // Dynamically import pdf-parse (CommonJS module)
-      const pdfParseModule = await import('pdf-parse');
-      const pdfParseFunc = pdfParseModule.default;
-      const data = await pdfParseFunc(dataBuffer);
+      // Use require for pdf-parse (CommonJS module)
+      const pdfParse = require('pdf-parse');
+      const data = await pdfParse(dataBuffer);
       
       // Check if text extraction succeeded
       let extractedText = data.text || '';
