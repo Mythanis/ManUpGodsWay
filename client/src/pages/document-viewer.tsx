@@ -54,11 +54,7 @@ export default function DocumentViewer() {
   // Mutation to update scroll position
   const updateScrollMutation = useMutation({
     mutationFn: async (scrollPosition: number) => {
-      return apiRequest(`/api/progress/${id}/scroll-position`, {
-        method: 'PATCH',
-        body: JSON.stringify({ scrollPosition }),
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return apiRequest('PATCH', `/api/progress/${id}/scroll-position`, { scrollPosition });
     },
     onError: (error: any) => {
       console.error('Failed to save reading position:', error);
