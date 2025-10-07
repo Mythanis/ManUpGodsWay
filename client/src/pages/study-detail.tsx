@@ -42,7 +42,7 @@ function PDFTextViewer({ studyId, studyTitle }: { studyId: string; studyTitle: s
   };
 
   return (
-    <button
+    <div
       onClick={handleOpenDocument}
       className="w-full flex items-center justify-between p-4 bg-black rounded-lg hover:bg-gray-900 transition-colors border border-gray-800 cursor-pointer"
       data-testid="button-view-pdf"
@@ -57,7 +57,7 @@ function PDFTextViewer({ studyId, studyTitle }: { studyId: string; studyTitle: s
           <p className="font-medium text-white">{studyTitle}</p>
         </div>
       </div>
-      <button
+      <div
         onClick={handleDownload}
         className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
         data-testid="button-download-pdf-icon"
@@ -65,8 +65,8 @@ function PDFTextViewer({ studyId, studyTitle }: { studyId: string; studyTitle: s
         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
         </svg>
-      </button>
-    </button>
+      </div>
+    </div>
   );
 }
 

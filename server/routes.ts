@@ -690,6 +690,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete PDF document for study
+  app.delete('/api/studies/:id/delete-pdf', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const study = await storage.getStudy(req.params.id);
+      if (!study) {
+        return res.status(404).json({ message: "Study not found" });
+      }
+
+      // Delete file from disk if it exists
+      if (study.pdfFilename) {
+        const uploadsDir = path.resolve(process.cwd(), 'uploads', 'documents');
+        const filePath = path.resolve(uploadsDir, study.pdfFilename);
+        
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+
+      // Update database to remove PDF references
+      const updateData = {
+        pdfFilename: null,
+        pdfOriginalName: null,
+        pdfMimeType: null,
+        pdfFileSize: null,
+      };
+
+      const updatedStudy = await storage.updateStudy(req.params.id, updateData);
+      res.json(updatedStudy);
+    } catch (error) {
+      console.error("Error deleting PDF:", error);
+      res.status(500).json({ message: "Failed to delete PDF" });
+    }
+  });
+
+  // Delete Word document for study
+  app.delete('/api/studies/:id/delete-word', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const study = await storage.getStudy(req.params.id);
+      if (!study) {
+        return res.status(404).json({ message: "Study not found" });
+      }
+
+      // Delete file from disk if it exists
+      if (study.wordFilename) {
+        const uploadsDir = path.resolve(process.cwd(), 'uploads', 'documents');
+        const filePath = path.resolve(uploadsDir, study.wordFilename);
+        
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+
+      // Update database to remove Word references
+      const updateData = {
+        wordFilename: null,
+        wordOriginalName: null,
+        wordMimeType: null,
+        wordFileSize: null,
+      };
+
+      const updatedStudy = await storage.updateStudy(req.params.id, updateData);
+      res.json(updatedStudy);
+    } catch (error) {
+      console.error("Error deleting Word document:", error);
+      res.status(500).json({ message: "Failed to delete Word document" });
+    }
+  });
+
   // Upload thumbnail image for study
   app.post('/api/studies/:id/upload-thumbnail', isAuthenticated, imageUpload.single('thumbnail'), async (req: any, res) => {
     try {

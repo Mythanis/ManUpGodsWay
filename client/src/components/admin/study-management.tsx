@@ -56,6 +56,10 @@ export default function StudyManagement() {
   const queryClient = useQueryClient();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingStudy, setEditingStudy] = useState<Study | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [wordFile, setWordFile] = useState<File | null>(null);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [uploadingWord, setUploadingWord] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
@@ -173,6 +177,79 @@ export default function StudyManagement() {
   const handleDelete = (studyId: string) => {
     if (confirm("Are you sure you want to delete this study? This action cannot be undone.")) {
       deleteStudyMutation.mutate(studyId);
+    }
+  };
+
+  const handleFileUpload = async (file: File, type: 'pdf' | 'word') => {
+    if (!editingStudy) return;
+
+    const formData = new FormData();
+    formData.append(type, file);
+
+    const setUploading = type === 'pdf' ? setUploadingPdf : setUploadingWord;
+    
+    try {
+      setUploading(true);
+      const response = await fetch(`/api/studies/${editingStudy.id}/upload-${type}`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to upload ${type} file`);
+      }
+
+      toast({
+        title: "Success",
+        description: `${type.toUpperCase()} file uploaded successfully`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/studies/${editingStudy.id}`] });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || `Failed to upload ${type} file`,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+      if (type === 'pdf') setPdfFile(null);
+      if (type === 'word') setWordFile(null);
+    }
+  };
+
+  const handleFileDelete = async (type: 'pdf' | 'word') => {
+    if (!editingStudy) return;
+
+    if (!confirm(`Are you sure you want to delete this ${type.toUpperCase()} file?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/studies/${editingStudy.id}/delete-${type}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete ${type} file`);
+      }
+
+      toast({
+        title: "Success",
+        description: `${type.toUpperCase()} file deleted successfully`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/studies/${editingStudy.id}`] });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || `Failed to delete ${type} file`,
+        variant: "destructive",
+      });
     }
   };
 
@@ -535,6 +612,96 @@ export default function StudyManagement() {
                 placeholder="tag1, tag2, tag3"
                 data-testid="input-edit-tags"
               />
+            </div>
+
+            {/* PDF File Management */}
+            <div className="space-y-2">
+              <Label>PDF Document</Label>
+              {editingStudy && (editingStudy as any).pdfFilename ? (
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded bg-red-100 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-gray-700">{(editingStudy as any).pdfOriginalName || 'PDF Document'}</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleFileDelete('pdf')}
+                    data-testid="button-delete-pdf"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Input
+                    id="edit-pdf-file"
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                    data-testid="input-edit-pdf"
+                  />
+                  {pdfFile && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleFileUpload(pdfFile, 'pdf')}
+                      disabled={uploadingPdf}
+                      data-testid="button-upload-pdf"
+                    >
+                      {uploadingPdf ? "Uploading..." : "Upload PDF"}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Word File Management */}
+            <div className="space-y-2">
+              <Label>Word Document</Label>
+              {editingStudy && (editingStudy as any).wordFilename ? (
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded bg-blue-100 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-gray-700">{(editingStudy as any).wordOriginalName || 'Word Document'}</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleFileDelete('word')}
+                    data-testid="button-delete-word"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Input
+                    id="edit-word-file"
+                    type="file"
+                    accept=".doc,.docx"
+                    onChange={(e) => setWordFile(e.target.files?.[0] || null)}
+                    data-testid="input-edit-word"
+                  />
+                  {wordFile && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleFileUpload(wordFile, 'word')}
+                      disabled={uploadingWord}
+                      data-testid="button-upload-word"
+                    >
+                      {uploadingWord ? "Uploading..." : "Upload Word Document"}
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
 
             <div>

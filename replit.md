@@ -16,7 +16,7 @@ The backend is an Express.js server in TypeScript, following a RESTful API desig
 PostgreSQL, hosted on Neon Database, is used with Drizzle ORM for type-safe queries and migrations. The schema includes tables for users, studies (with lessons), discussions, devotionals, podcasts, challenges, testimonies, exercises, and various metadata for progress tracking, ratings, and video content.
 
 ## Content Management
-The system supports a tiered content structure (free, premium, VIP) and category-based organization for study materials, videos, and podcasts. Features include progress tracking (lesson completion, study ratings), search, and a comprehensive admin panel for content and user management, video/podcast uploads, tier assignment, and notification broadcasting. It also includes a robust system for managing study documents (PDFs, Word docs) with tier-based access.
+The system supports a tiered content structure (free, premium, VIP) and category-based organization for study materials, videos, and podcasts. Features include progress tracking (lesson completion, study ratings), search, and a comprehensive admin panel for content and user management, video/podcast uploads, tier assignment, and notification broadcasting. It also includes a robust system for managing study documents (PDFs, Word docs) with tier-based access. Admins can upload new PDF/Word documents, delete existing ones, and update study materials through the edit interface.
 
 ## Key Features
 - **Authentication**: Replit Auth integration with session management.
