@@ -414,7 +414,7 @@ export default function PodcastManagement() {
       ) : (
         <div className="space-y-4">
           {podcasts.map((podcast: Podcast) => (
-            <Card key={podcast.id} className="hover:shadow-md transition-shadow">
+            <Card key={podcast.id} className="hover:shadow-md transition-shadow bg-ministry-gold-exact/20">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-4 flex-1">
@@ -422,12 +422,12 @@ export default function PodcastManagement() {
                       <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
                         podcast.type === 'video' 
                           ? 'bg-ministry-steel/20' 
-                          : 'bg-ministry-gold-exact/20'
+                          : 'bg-black'
                       }`}>
                         {podcast.type === 'video' ? (
                           <Video className="w-8 h-8 text-ministry-steel" />
                         ) : (
-                          <Headphones className="w-8 h-8 text-ministry-gold" />
+                          <Headphones className="w-8 h-8 text-white" />
                         )}
                       </div>
                     </div>
