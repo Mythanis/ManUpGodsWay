@@ -4640,7 +4640,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (bodyPart) conditions.push(eq(schema.exercises.bodyPart, bodyPart));
       if (equipment) conditions.push(eq(schema.exercises.equipment, equipment));
-      if (level) conditions.push(eq(schema.exercises.level, level));
+      
+      // Support multiple levels (comma-separated)
+      if (level) {
+        const levels = level.split(',').map((l: string) => l.trim());
+        if (levels.length === 1) {
+          conditions.push(eq(schema.exercises.level, levels[0]));
+        } else {
+          conditions.push(sql`${schema.exercises.level} IN (${sql.join(levels.map((l: string) => sql`${l}`), sql`, `)})`);
+        }
+      }
+      
       if (search) conditions.push(sql`${schema.exercises.name} ILIKE ${'%' + search + '%'}`);
       
       let query = db.select().from(schema.exercises);
