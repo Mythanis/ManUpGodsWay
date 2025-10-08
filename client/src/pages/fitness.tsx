@@ -855,8 +855,8 @@ export default function Fitness() {
           const bodyweightExercises = await getExercisesForEquipment(['bodyweight']);
           if (bodyweightExercises.length >= 5) {
             console.log('Falling back to bodyweight exercises');
-            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced", 'bodyweight');
-            const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay);
+            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced", 'bodyweight', workoutDays.length);
+            const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay, workoutDays);
             return [preBuiltPlan];
           }
         }
@@ -864,8 +864,13 @@ export default function Fitness() {
       }
 
       const equipmentLabel = equipmentList.length > 1 ? equipmentList.join(' + ') : equipmentList[0];
-      const weeklyPlan = generateDynamicPlan(exercises, level as "Beginner"|"Intermediate"|"Advanced", equipmentLabel);
-      const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay);
+      const weeklyPlan = generateDynamicPlan(
+        exercises, 
+        level as "Beginner"|"Intermediate"|"Advanced", 
+        equipmentLabel,
+        workoutDays.length // Use actual number of workout days selected
+      );
+      const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay, workoutDays);
       
       // Customize plan based on additional parameters
       preBuiltPlan.name = `${level.charAt(0).toUpperCase() + level.slice(1)} ${equipmentLabel} Program (${duration}min)`;
@@ -949,7 +954,7 @@ export default function Fitness() {
             name: ex.name,
             bodyPart: ex.bodyPart || 'unknown',
             equipment: ex.equipment || equipment,
-            targetMuscles: [ex.bodyPart] || [],
+            targetMuscles: ex.bodyPart ? [ex.bodyPart] : [],
             gifUrl: ex.mediaFile || ''
           }));
           
@@ -970,105 +975,115 @@ export default function Fitness() {
     }
   }
 
-  // Helper to pick exercises by body part
-  function pickByBodyPart(exs: APIExercise[], bodyPart: string, count: number): APIExercise[] {
-    const filtered = exs.filter(e => e.bodyPart.toLowerCase() === bodyPart.toLowerCase());
-    if (filtered.length >= count) {
-      return filtered.slice(0, count);
-    } else {
-      return filtered.concat(
-        exs.filter(e => e.bodyPart.toLowerCase() !== bodyPart.toLowerCase()).slice(0, count - filtered.length)
-      );
+  // Shuffle array helper
+  function shuffleArray<T>(array: T[]): T[] {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
+    return arr;
   }
 
-  function generateDynamicPlan(exercises: APIExercise[], level: "Beginner"|"Intermediate"|"Advanced", equipment: string): WeeklyPlan {
+  // Pick random exercises by body part, avoiding duplicates
+  function pickRandomByBodyPart(
+    allExercises: APIExercise[], 
+    bodyPart: string, 
+    count: number, 
+    usedIds: Set<string>,
+    preferredEquipment?: string[]
+  ): APIExercise[] {
+    // Filter by body part and exclude already used exercises
+    let filtered = allExercises.filter(
+      e => e.bodyPart.toLowerCase() === bodyPart.toLowerCase() && !usedIds.has(e.id)
+    );
+    
+    // If preferred equipment specified, prioritize those
+    if (preferredEquipment && preferredEquipment.length > 0) {
+      const withPreferredEquipment = filtered.filter(e => 
+        preferredEquipment.includes(e.equipment.toLowerCase())
+      );
+      if (withPreferredEquipment.length >= count) {
+        filtered = withPreferredEquipment;
+      }
+    }
+    
+    // Shuffle and pick
+    const shuffled = shuffleArray(filtered);
+    const picked = shuffled.slice(0, Math.min(count, shuffled.length));
+    
+    // Mark as used
+    picked.forEach(ex => usedIds.add(ex.id));
+    
+    return picked;
+  }
+
+  function generateDynamicPlan(
+    exercises: APIExercise[], 
+    level: "Beginner"|"Intermediate"|"Advanced", 
+    equipment: string,
+    workoutDaysPerWeek: number = 3
+  ): WeeklyPlan {
     const weeks: DayPlan[][] = [];
+    
+    // Get all unique equipment types from the exercises
+    const availableEquipment = [...new Set(exercises.map(e => e.equipment.toLowerCase()))];
+    
+    let config;
+    if (level === "Beginner") config = { sets: 3, restSec: 60, repRange: [10,12], exercisesPerDay: 4 };
+    else if (level === "Intermediate") config = { sets: 4, restSec: 45, repRange: [10,15], exercisesPerDay: 5 };
+    else config = { sets: 5, restSec: 30, repRange: [12,20], exercisesPerDay: 6 };
+    
+    // Define body part groups - each day focuses on 1-2 body parts
+    const allBodyPartSchedules = [
+      { name: 'Chest & Triceps', parts: ['chest', 'triceps'] },
+      { name: 'Back & Biceps', parts: ['back', 'biceps'] },
+      { name: 'Legs & Glutes', parts: ['legs', 'glutes', 'calves'] },
+      { name: 'Shoulders & Core', parts: ['shoulders', 'core'] },
+      { name: 'Full Body', parts: ['chest', 'back', 'legs', 'shoulders'] }
+    ];
+    
+    // Use only the number of days selected by user
+    const bodyPartSchedule = allBodyPartSchedules.slice(0, workoutDaysPerWeek);
+    
     for (let w = 0; w < 4; w++) {
       const week: DayPlan[] = [];
+      const usedExercisesThisWeek = new Set<string>();
       
-      let config;
-      if (level === "Beginner") config = { sets: 3, restSec: 60, repRange: [10,12] };
-      else if (level === "Intermediate") config = { sets: 4, restSec: 45, repRange: [10,15] };
-      else config = { sets: 5, restSec: 30, repRange: [12,20] };
+      // Rotate equipment focus each week to ensure all equipment is used
+      const equipmentRotation = availableEquipment[(w % availableEquipment.length)];
       
-      // Day1: Push (Chest, Shoulders, Triceps)
-      week.push({
-        name: `Push (Chest/Shoulder/Triceps) ‒ Week ${w+1}`,
-        exercises: [
-          ...pickByBodyPart(exercises, 'chest', 1).map(ex => ({
-            exercise: ex,
-            sets: config.sets,
-            reps: config.repRange[0]
-          })),
-          ...pickByBodyPart(exercises, 'shoulders', 1).map(ex => ({
-            exercise: ex,
-            sets: config.sets,
-            reps: config.repRange[0]
-          })),
-          ...pickByBodyPart(exercises, 'upper arms', 1).map(ex => ({
-            exercise: ex,
-            sets: config.sets,
-            reps: config.repRange[0]
-          }))
-        ]
-      });
-      
-      // Day2: Legs
-      week.push({
-        name: `Legs (Quads/Glutes/Hamstrings/Calves) ‒ Week ${w+1}`,
-        exercises: [
-          ...pickByBodyPart(exercises, 'upper legs', 1),
-          ...pickByBodyPart(exercises, 'lower legs', 1),
-          ...pickByBodyPart(exercises, 'upper legs', 1)
-        ].map(ex => ({
-          exercise: ex,
-          sets: config.sets,
-          reps: config.repRange[0]
-        }))
-      });
-      
-      // Day3: Pull (Back/Biceps)
-      week.push({
-        name: `Pull (Back/Biceps) ‒ Week ${w+1}`,
-        exercises: [
-          ...pickByBodyPart(exercises, 'back', 1),
-          ...pickByBodyPart(exercises, 'upper arms', 1)
-        ].map(ex => ({
-          exercise: ex,
-          sets: config.sets,
-          reps: config.repRange[0]
-        }))
-      });
-      
-      // Day4: Core
-      week.push({
-        name: `Core & Abs ‒ Week ${w+1}`,
-        exercises: [
-          ...pickByBodyPart(exercises, 'waist', 1),
-          ...pickByBodyPart(exercises, 'waist', 1)
-        ].map(ex => ({
-          exercise: ex,
-          sets: config.sets,
-          reps: config.repRange[0]
-        }))
-      });
-      
-      // Day5: Full Body
-      week.push({
-        name: `Full Body Circuit ‒ Week ${w+1}`,
-        exercises: [
-          ...pickByBodyPart(exercises, 'chest', 1),
-          ...pickByBodyPart(exercises, 'back', 1),
-          ...pickByBodyPart(exercises, 'upper legs', 1),
-          ...pickByBodyPart(exercises, 'shoulders', 1),
-          ...pickByBodyPart(exercises, 'waist', 1)
-        ].map(ex => ({
-          exercise: ex,
-          sets: config.sets,
-          reps: config.repRange[0]
-        }))
-      });
+      for (let d = 0; d < bodyPartSchedule.length; d++) {
+        const dayPlan = bodyPartSchedule[d];
+        const dayExercises: PlanExercise[] = [];
+        
+        // Distribute exercises across the body parts for this day
+        const exercisesPerBodyPart = Math.ceil(config.exercisesPerDay / dayPlan.parts.length);
+        
+        for (const bodyPart of dayPlan.parts) {
+          const picked = pickRandomByBodyPart(
+            exercises, 
+            bodyPart, 
+            exercisesPerBodyPart,
+            usedExercisesThisWeek,
+            [equipmentRotation] // Prefer current week's equipment
+          );
+          
+          picked.forEach(ex => {
+            dayExercises.push({
+              exercise: ex,
+              sets: config.sets,
+              reps: config.repRange[0] + Math.floor(Math.random() * (config.repRange[1] - config.repRange[0]))
+            });
+          });
+        }
+        
+        // Limit to configured exercises per day
+        week.push({
+          name: `${dayPlan.name} ‒ Week ${w+1}`,
+          exercises: dayExercises.slice(0, config.exercisesPerDay)
+        });
+      }
       
       weeks.push(week);
     }
@@ -1077,12 +1092,16 @@ export default function Fitness() {
   }
 
   // Convert WeeklyPlan to PreBuiltPlan format for UI compatibility
-  function convertWeeklyPlanToPreBuiltPlan(weeklyPlan: WeeklyPlan, startDay: string): PreBuiltPlan {
+  function convertWeeklyPlanToPreBuiltPlan(
+    weeklyPlan: WeeklyPlan, 
+    startDay: string, 
+    workoutDays: string[]
+  ): PreBuiltPlan {
     const allExercises: PreBuiltExercise[] = [];
     let exerciseIndex = 0;
     
     weeklyPlan.weeks.forEach((week, weekIndex) => {
-      week.forEach((day) => {
+      week.forEach((day, dayIndex) => {
         day.exercises.forEach((planExercise) => {
           const restTime = weeklyPlan.level === "Beginner" ? "60-90s" : 
                           weeklyPlan.level === "Intermediate" ? "45-60s" : "30-45s";
@@ -1101,12 +1120,7 @@ export default function Fitness() {
       });
     });
 
-    const workoutsPerWeek = weeklyPlan.level === "Beginner" ? 3 : weeklyPlan.level === "Intermediate" ? 4 : 5;
-    const scheduleMap = {
-      "Beginner": ['Monday', 'Wednesday', 'Friday'],
-      "Intermediate": ['Monday', 'Tuesday', 'Thursday', 'Friday'],
-      "Advanced": ['Monday', 'Tuesday', 'Wednesday', 'Friday', 'Saturday']
-    };
+    const workoutsPerWeek = workoutDays.length;
 
     return {
       name: `${weeklyPlan.level} ${weeklyPlan.equipment} Program`,
@@ -1116,7 +1130,7 @@ export default function Fitness() {
       duration: "4 weeks",
       workoutsPerWeek: workoutsPerWeek,
       startDay: startDay,
-      schedule: scheduleMap[weeklyPlan.level],
+      schedule: workoutDays.map(d => d.toLowerCase()),
       exercises: allExercises
     };
   }
