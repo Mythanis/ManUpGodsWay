@@ -74,6 +74,8 @@ export default function Podcasts() {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [playbackPosition, setPlaybackPosition] = useState<{ [key: string]: number }>({});
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement | HTMLVideoElement }>({});
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  const [selectedVideoPodcast, setSelectedVideoPodcast] = useState<Podcast | null>(null);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -199,6 +201,15 @@ export default function Podcasts() {
   };
 
   const handlePlayPause = (podcast: Podcast) => {
+    // For video podcasts, open dialog instead
+    if (podcast.type === 'video') {
+      setSelectedVideoPodcast(podcast);
+      setVideoDialogOpen(true);
+      trackViewMutation.mutate(podcast.id);
+      return;
+    }
+
+    // For audio podcasts, handle play/pause
     const mediaElement = audioRefs.current[podcast.id];
     
     if (currentlyPlaying === podcast.id && mediaElement) {
@@ -215,7 +226,14 @@ export default function Podcasts() {
       if (mediaElement) {
         const startTime = playbackPosition[podcast.id] || 0;
         mediaElement.currentTime = startTime;
-        mediaElement.play();
+        mediaElement.play().catch(err => {
+          console.error('Error playing audio:', err);
+          toast({
+            title: "Playback Error",
+            description: "Unable to play audio. Please try again.",
+            variant: "destructive"
+          });
+        });
         setCurrentlyPlaying(podcast.id);
         
         // Track view when starting playback
@@ -528,8 +546,8 @@ export default function Podcasts() {
                         </div>
                       </div>
 
-                      {/* Hidden audio/video element */}
-                      {podcast.type === 'audio' ? (
+                      {/* Hidden audio element for audio podcasts only */}
+                      {podcast.type === 'audio' && (
                         <audio
                           ref={(el) => {
                             if (el) audioRefs.current[podcast.id] = el;
@@ -537,17 +555,6 @@ export default function Podcasts() {
                           src={podcast.fileUrl}
                           onTimeUpdate={(e) => handleTimeUpdate(podcast.id, e.currentTarget.currentTime)}
                           onEnded={() => setCurrentlyPlaying(null)}
-                          className="hidden"
-                        />
-                      ) : (
-                        <video
-                          ref={(el) => {
-                            if (el) audioRefs.current[podcast.id] = el;
-                          }}
-                          src={podcast.fileUrl}
-                          onTimeUpdate={(e) => handleTimeUpdate(podcast.id, e.currentTarget.currentTime)}
-                          onEnded={() => setCurrentlyPlaying(null)}
-                          className="hidden"
                         />
                       )}
                     </div>
@@ -558,6 +565,35 @@ export default function Podcasts() {
           </div>
         )}
       </div>
+
+      {/* Video Player Dialog */}
+      <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
+        <DialogContent className="max-w-4xl w-full">
+          <DialogHeader>
+            <DialogTitle>{selectedVideoPodcast?.title}</DialogTitle>
+          </DialogHeader>
+          {selectedVideoPodcast && (
+            <div className="space-y-4">
+              <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+                <video
+                  src={selectedVideoPodcast.fileUrl}
+                  controls
+                  autoPlay
+                  className="absolute top-0 left-0 w-full h-full rounded-lg"
+                  data-testid="video-player"
+                >
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+              {selectedVideoPodcast.description && (
+                <div className="text-sm text-ministry-slate">
+                  <p>{selectedVideoPodcast.description}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
