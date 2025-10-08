@@ -371,7 +371,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-sm text-black">Upgrade to Premium</h3>
-                <p className="text-xs text-black">Unlock all studies & community features</p>
+                <p className="text-xs text-black">Unlock all community features</p>
               </div>
               <Button 
                 className="bg-ministry-navy text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-ministry-charcoal"
