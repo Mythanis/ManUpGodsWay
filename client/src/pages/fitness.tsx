@@ -849,13 +849,13 @@ export default function Fitness() {
       
       if (exercises.length < 5) {
         console.warn(`Not enough exercises for equipment: ${equipmentList.join(', ')}. Found: ${exercises.length}`);
-        // Fallback to body weight exercises if selected equipment has too few
-        if (!equipmentList.includes('body weight')) {
-          console.log('Attempting fallback to body weight exercises...');
-          const bodyweightExercises = await getExercisesForEquipment(['body weight']);
+        // Fallback to bodyweight exercises if selected equipment has too few
+        if (!equipmentList.includes('bodyweight')) {
+          console.log('Attempting fallback to bodyweight exercises...');
+          const bodyweightExercises = await getExercisesForEquipment(['bodyweight']);
           if (bodyweightExercises.length >= 5) {
             console.log('Falling back to bodyweight exercises');
-            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced", 'body weight');
+            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced", 'bodyweight');
             const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay);
             return [preBuiltPlan];
           }
@@ -1688,36 +1688,37 @@ export default function Fitness() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {[
-                      { value: 'body weight', label: 'Bodyweight Only' },
-                      { value: 'dumbbell', label: 'Dumbbells' },
-                      { value: 'barbell', label: 'Barbell & Weights' },
-                      { value: 'cable', label: 'Cable Machine' },
-                      { value: 'smith machine', label: 'Smith Machine' },
-                      { value: 'kettlebell', label: 'Kettlebells' },
-                      { value: 'resistance band', label: 'Resistance Bands' }
-                    ].map(({ value, label }) => (
-                      <div key={value} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`equipment-${value}`}
-                          checked={selectedPlanEquipment.includes(value)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedPlanEquipment([...selectedPlanEquipment, value]);
-                            } else {
-                              setSelectedPlanEquipment(selectedPlanEquipment.filter(e => e !== value));
-                            }
-                          }}
-                          data-testid={`checkbox-equipment-${value}`}
-                        />
-                        <label
-                          htmlFor={`equipment-${value}`}
-                          className="text-sm font-medium text-black leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                        >
-                          {label}
-                        </label>
-                      </div>
-                    ))}
+                    {equipments.map((equipment: string) => {
+                      // Format equipment name for display
+                      const formatLabel = (eq: string) => {
+                        return eq.split(' ').map(word => 
+                          word.charAt(0).toUpperCase() + word.slice(1)
+                        ).join(' ');
+                      };
+                      
+                      return (
+                        <div key={equipment} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`equipment-${equipment}`}
+                            checked={selectedPlanEquipment.includes(equipment)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedPlanEquipment([...selectedPlanEquipment, equipment]);
+                              } else {
+                                setSelectedPlanEquipment(selectedPlanEquipment.filter(e => e !== equipment));
+                              }
+                            }}
+                            data-testid={`checkbox-equipment-${equipment}`}
+                          />
+                          <label
+                            htmlFor={`equipment-${equipment}`}
+                            className="text-sm font-medium text-black leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            {formatLabel(equipment)}
+                          </label>
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
