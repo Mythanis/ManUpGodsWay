@@ -1334,25 +1334,6 @@ export default function Fitness() {
                     <Card key={`${exercise.planId}-${exercise.exerciseId}`} className="border border-border bg-ministry-gold-exact/10">
                       <CardContent className="p-4">
                         <div className="flex gap-6">
-                          {/* Exercise Image - Larger for better exercise demonstration */}
-                          <div className="flex-shrink-0">
-                            {(exercise.exerciseGifUrl || exercise.imageUrl) ? (
-                              <img
-                                src={exercise.exerciseGifUrl || exercise.imageUrl}
-                                alt={`How to perform ${exercise.exerciseName}`}
-                                className="w-32 h-32 rounded-lg object-cover border-2 border-ministry-gold/30"
-                                data-testid={`img-workout-exercise-${exercise.exerciseId}`}
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="w-32 h-32 rounded-lg bg-muted flex items-center justify-center border-2 border-ministry-steel/30">
-                                <Dumbbell className="w-12 h-12 text-muted-foreground" />
-                              </div>
-                            )}
-                            {/* Exercise demonstration label */}
-                            <p className="text-xs text-ministry-gold mt-1 text-center">Exercise Demo</p>
-                          </div>
-
                           {/* Exercise Details */}
                           <div className="flex-grow">
                             <div className="flex items-start justify-between mb-2">
@@ -2195,22 +2176,6 @@ export default function Fitness() {
                       <Card key={exercise.id} className="border border-border">
                         <CardContent className="p-4">
                           <div className="flex gap-4">
-                            {/* Exercise Image */}
-                            <div className="flex-shrink-0">
-                              {(exercise.exerciseGifUrl || exercise.imageUrl) ? (
-                                <img
-                                  src={exercise.exerciseGifUrl || exercise.imageUrl}
-                                  alt={exercise.exerciseName}
-                                  className="w-20 h-20 rounded-lg object-cover"
-                                  data-testid={`img-modal-exercise-${exercise.exerciseId}`}
-                                />
-                              ) : (
-                                <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center">
-                                  <Dumbbell className="w-8 h-8 text-muted-foreground" />
-                                </div>
-                              )}
-                            </div>
-
                             {/* Exercise Details */}
                             <div className="flex-grow">
                               <h4 className="font-medium text-base mb-2" data-testid={`text-modal-exercise-name-${exercise.exerciseId}`}>
@@ -2319,18 +2284,6 @@ export default function Fitness() {
                     <Card key={index} className="border border-border">
                       <CardContent className="p-4">
                         <div className="flex gap-4">
-                          {/* Exercise GIF */}
-                          {exercise.gifUrl && (
-                            <div className="flex-shrink-0">
-                              <img
-                                src={exercise.gifUrl}
-                                alt={`${exercise.name} demonstration`}
-                                className="w-32 h-24 object-cover rounded-lg border border-ministry-gold/30"
-                                loading="lazy"
-                              />
-                            </div>
-                          )}
-                          
                           {/* Exercise Details */}
                           <div className="flex-grow">
                             <h5 className="font-medium text-base mb-2">
