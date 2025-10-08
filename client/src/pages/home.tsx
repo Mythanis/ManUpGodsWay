@@ -36,6 +36,46 @@ export default function Home() {
   const [showChallengeDialog, setShowChallengeDialog] = useState(false);
   const [showHurdleWallDialog, setShowHurdleWallDialog] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [appOpenStreak, setAppOpenStreak] = useState(0);
+
+  // Track app opens and calculate streak
+  useEffect(() => {
+    const calculateAppOpenStreak = () => {
+      const today = new Date().toDateString();
+      const appOpensStr = localStorage.getItem('appOpens');
+      const appOpens: string[] = appOpensStr ? JSON.parse(appOpensStr) : [];
+      
+      // Add today if not already recorded
+      if (!appOpens.includes(today)) {
+        appOpens.push(today);
+        localStorage.setItem('appOpens', JSON.stringify(appOpens));
+      }
+      
+      // Calculate consecutive day streak
+      const sortedDates = appOpens
+        .map(dateStr => new Date(dateStr))
+        .sort((a, b) => b.getTime() - a.getTime()); // Sort descending (newest first)
+      
+      let streak = 0;
+      let currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+      
+      for (const openDate of sortedDates) {
+        openDate.setHours(0, 0, 0, 0);
+        const diffDays = Math.floor((currentDate.getTime() - openDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === streak) {
+          streak++;
+        } else {
+          break; // Streak is broken
+        }
+      }
+      
+      setAppOpenStreak(streak);
+    };
+    
+    calculateAppOpenStreak();
+  }, []);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -678,9 +718,9 @@ export default function Home() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-ministry-charcoal">
-                    {user?.streakDays || 0}-day streak
+                    {appOpenStreak}-day streak
                   </p>
-                  <p className="text-xs text-ministry-slate">Stay consistent in your journey</p>
+                  <p className="text-xs text-ministry-slate">Consecutive days on the app</p>
                 </div>
               </div>
             </CardContent>
@@ -724,11 +764,11 @@ export default function Home() {
                 </div>
                 <div>
                   <p className="font-medium text-orange-800">Current Streak</p>
-                  <p className="text-sm text-orange-600">Consecutive study days</p>
+                  <p className="text-sm text-orange-600">Consecutive days on app</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-orange-800">{user?.streakDays || 0}</p>
+                <p className="text-2xl font-bold text-orange-800">{appOpenStreak}</p>
                 <p className="text-xs text-orange-600">days</p>
               </div>
             </div>
