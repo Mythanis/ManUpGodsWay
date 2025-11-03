@@ -602,7 +602,7 @@ export default function StudyManagement() {
 
             {/* Word File Management */}
             <div className="space-y-2">
-              <Label>Word Document</Label>
+              <Label>Word Document (.doc/.docx)</Label>
               {editingStudy && (editingStudy as any).wordFilename ? (
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex items-center space-x-2">
@@ -631,6 +631,9 @@ export default function StudyManagement() {
                     onChange={(e) => setWordFile(e.target.files?.[0] || null)}
                     data-testid="input-edit-word"
                   />
+                  <p className="text-xs text-gray-500">
+                    .docx files can be viewed in browser. .doc files are download-only.
+                  </p>
                   {wordFile && (
                     <Button
                       size="sm"

@@ -1126,7 +1126,7 @@ export default function Admin() {
 
             {/* Word File Management */}
             <div className="space-y-2">
-              <Label>Word Document (.docx only)</Label>
+              <Label>Word Document (.doc/.docx)</Label>
               {editingStudy && (editingStudy as any).wordFilename ? (
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center space-x-2">
@@ -1151,10 +1151,13 @@ export default function Admin() {
                   <Input
                     id="edit-word-file"
                     type="file"
-                    accept=".docx"
+                    accept=".doc,.docx"
                     onChange={(e) => setWordFile(e.target.files?.[0] || null)}
                     data-testid="input-edit-word"
                   />
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    .docx files can be viewed in browser. .doc files are download-only.
+                  </p>
                   {wordFile && (
                     <Button
                       size="sm"
