@@ -932,7 +932,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve Word file for inline viewing
+  // Serve Word file for download
   app.get('/api/studies/:id/word-file', isAuthenticated, async (req: any, res) => {
     try {
       const study = await storage.getStudy(req.params.id);
@@ -960,13 +960,190 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.setHeader('Content-Type', study.wordMimeType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-      res.setHeader('Content-Disposition', `inline; filename="${study.wordOriginalName}"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${study.wordOriginalName}"`);
       
       const fileStream = fs.createReadStream(filePath);
       fileStream.pipe(res);
     } catch (error) {
       console.error("Error serving Word document:", error);
       res.status(500).json({ message: "Failed to serve Word document" });
+    }
+  });
+
+  // Convert Word document to HTML for viewing
+  app.get('/api/studies/:id/word-html', isAuthenticated, async (req: any, res) => {
+    try {
+      const study = await storage.getStudy(req.params.id);
+      if (!study || !study.wordFilename) {
+        return res.status(404).json({ message: "Word document not found" });
+      }
+
+      const uploadsDir = path.resolve(process.cwd(), 'uploads', 'documents');
+      const filePath = path.resolve(uploadsDir, study.wordFilename);
+      
+      // Security: Ensure the resolved path is within the uploads directory
+      const relative = path.relative(uploadsDir, filePath);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Security: Verify the path points to a regular file, not a directory
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "Word file not found on disk" });
+      }
+      
+      const stats = fs.statSync(filePath);
+      if (!stats.isFile()) {
+        return res.status(403).json({ message: "Invalid file path" });
+      }
+
+      // Convert Word document to HTML using mammoth
+      const mammoth = require('mammoth');
+      const result = await mammoth.convertToHtml(
+        { path: filePath },
+        {
+          styleMap: [
+            // Preserve paragraph styles
+            "p[style-name='Heading 1'] => h1:fresh",
+            "p[style-name='Heading 2'] => h2:fresh",
+            "p[style-name='Heading 3'] => h3:fresh",
+            "p[style-name='Heading 4'] => h4:fresh",
+            "p[style-name='Heading 5'] => h5:fresh",
+            "p[style-name='Heading 6'] => h6:fresh",
+            // Preserve character styles
+            "r[style-name='Strong'] => strong",
+            "r[style-name='Emphasis'] => em",
+          ],
+          convertImage: mammoth.images.imgElement((image: any) => {
+            return image.read("base64").then((imageBuffer: string) => {
+              return {
+                src: `data:${image.contentType};base64,${imageBuffer}`
+              };
+            });
+          })
+        }
+      );
+
+      // Return HTML with embedded styles for proper rendering
+      const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${study.wordOriginalName}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Calibri', 'Arial', sans-serif;
+      line-height: 1.6;
+      padding: 40px;
+      max-width: 8.5in;
+      margin: 0 auto;
+      background: #ffffff;
+      color: #000000;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      line-height: 1.3;
+    }
+    h1 { font-size: 2em; }
+    h2 { font-size: 1.5em; }
+    h3 { font-size: 1.17em; }
+    h4 { font-size: 1em; }
+    h5 { font-size: 0.83em; }
+    h6 { font-size: 0.67em; }
+    p {
+      margin-bottom: 1em;
+      text-align: justify;
+    }
+    strong, b {
+      font-weight: bold;
+    }
+    em, i {
+      font-style: italic;
+    }
+    u {
+      text-decoration: underline;
+    }
+    ul, ol {
+      margin-left: 2em;
+      margin-bottom: 1em;
+    }
+    li {
+      margin-bottom: 0.5em;
+    }
+    table {
+      border-collapse: collapse;
+      margin-bottom: 1em;
+      width: 100%;
+    }
+    td, th {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 1em 0;
+    }
+    a {
+      color: #0563c1;
+      text-decoration: underline;
+    }
+    blockquote {
+      margin: 1em 0;
+      padding-left: 1em;
+      border-left: 3px solid #ccc;
+      font-style: italic;
+    }
+    code {
+      font-family: 'Courier New', monospace;
+      background-color: #f4f4f4;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    pre {
+      background-color: #f4f4f4;
+      padding: 1em;
+      overflow-x: auto;
+      margin-bottom: 1em;
+      border-radius: 3px;
+    }
+    @media print {
+      body {
+        padding: 0;
+      }
+    }
+    @media (max-width: 768px) {
+      body {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  ${result.value}
+</body>
+</html>`;
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(htmlContent);
+    } catch (error) {
+      console.error("Error converting Word document to HTML:", error);
+      res.status(500).json({ message: "Failed to convert Word document" });
     }
   });
 
