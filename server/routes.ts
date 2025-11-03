@@ -125,7 +125,7 @@ const documentStorage = multer.diskStorage({
     }
     
     const ext = path.extname(file.originalname).toLowerCase();
-    const allowedExtensions = ['.pdf', '.doc', '.docx'];
+    const allowedExtensions = ['.pdf', '.docx']; // Only .docx, not .doc (mammoth doesn't support .doc)
     
     if (!allowedExtensions.includes(ext)) {
       return cb(new Error(`Invalid file extension. Allowed: ${allowedExtensions.join(', ')}`));
@@ -143,13 +143,18 @@ const documentUpload = multer({
   fileFilter: function (req, file, cb) {
     const allowedMimeTypes = [
       'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // Only .docx, not .doc
     ];
-    if (allowedMimeTypes.includes(file.mimetype)) {
+    
+    // Also check file extension to prevent .doc files
+    const ext = path.extname(file.originalname).toLowerCase();
+    
+    if (ext === '.doc') {
+      cb(new Error('Only .docx files are supported for Word documents, not .doc. Please convert your file to .docx format.'));
+    } else if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF and Word documents are allowed!'));
+      cb(new Error('Only PDF and .docx Word documents are allowed!'));
     }
   }
 });
@@ -994,6 +999,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = fs.statSync(filePath);
       if (!stats.isFile()) {
         return res.status(403).json({ message: "Invalid file path" });
+      }
+
+      // Check if file is .docx (mammoth only supports .docx, not .doc)
+      const fileExtension = path.extname(filePath).toLowerCase();
+      if (fileExtension !== '.docx') {
+        return res.status(400).json({ 
+          message: "Only .docx files can be viewed in the browser. Please upload a .docx file or download the .doc file to view it.",
+          fileType: fileExtension
+        });
       }
 
       // Convert Word document to HTML using mammoth
