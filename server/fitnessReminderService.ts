@@ -53,7 +53,13 @@ class FitnessReminderService {
       const currentTime = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
       
       // Get all active fitness plan reminders for today
-      const dueReminders = await storage.getDueFitnessReminders(currentDayOfWeek, currentTime);
+      let dueReminders;
+      try {
+        dueReminders = await storage.getDueFitnessReminders(currentDayOfWeek, currentTime);
+      } catch (dbError) {
+        log(`Error fetching fitness reminders from database: ${dbError}`);
+        return;
+      }
       
       if (!dueReminders || dueReminders.length === 0) {
         log('No fitness reminders due at this time');
@@ -94,7 +100,12 @@ class FitnessReminderService {
       }
 
       // Send notifications to each user
-      for (const [userId, userReminders] of Array.from(remindersByUser.entries())) {
+      if (!remindersByUser || remindersByUser.size === 0) {
+        log('No reminders to send after processing');
+        return;
+      }
+
+      for (const [userId, userReminders] of remindersByUser.entries()) {
         try {
           // Validate user reminders
           if (!Array.isArray(userReminders) || userReminders.length === 0) {
