@@ -203,13 +203,6 @@ export default function StudyDetail() {
     enabled: !!id,
   });
 
-  // Fetch lessons for this study
-  const { data: lessons = [] } = useQuery<any[]>({
-    queryKey: ["/api/studies", id, "lessons"],
-    enabled: !!id && !!study,
-    retry: false,
-  });
-
   // Progress data is handled directly from the query
 
   // Determine video URL - use direct stream URL for uploaded videos
@@ -292,9 +285,8 @@ export default function StudyDetail() {
   }
 
   const userProgress = Array.isArray(progress) ? progress[0] : progress;
-  // Only use actual progress data from database, never UI state
-  const actualCompletedLessons = userProgress?.completedLessons || 0;
-  const progressPercent = Math.round((actualCompletedLessons / (study?.lessonCount || 1)) * 100);
+  // Progress is now based on completion status, not lessons
+  const progressPercent = userProgress?.status === 'completed' ? 100 : 0;
 
   const getTierColor = (tier: string) => {
     switch (tier) {
@@ -334,33 +326,7 @@ export default function StudyDetail() {
            (study.requiredTier === 'vip' && user?.subscriptionTier === 'vip');
   };
 
-  // Check if user has preview access (can access study but with limited lessons)
-  const hasPreviewAccess = () => {
-    if (!study) return false;
-    const userTier = user?.subscriptionTier || 'free';
-    
-    // Free users can preview premium/VIP studies if they have free lessons available
-    return userTier === 'free' && 
-           (study.requiredTier === 'premium' || study.requiredTier === 'vip') && 
-           (study.freeLessonCount || 0) > 0;
-  };
-
-  // Check if user can access a specific lesson number
-  const canAccessLesson = (lessonNumber: number) => {
-    if (!study) return false;
-    
-    // Full access users can access all lessons
-    if (canAccess()) return true;
-    
-    // Preview users can only access free lessons (first N lessons)
-    if (hasPreviewAccess()) {
-      return lessonNumber <= (study.freeLessonCount || 0);
-    }
-    
-    return false;
-  };
-  
-  const hasAccess = canAccess() || hasPreviewAccess();
+  const hasAccess = canAccess();
 
   return (
     <div className="pb-20">
@@ -382,7 +348,7 @@ export default function StudyDetail() {
               {study.title}
             </h1>
             <p className="text-blue-200 text-sm" data-testid="text-study-category">
-              {study.category} • {study.lessonCount} lessons
+              {study.category}
             </p>
           </div>
         </div>
@@ -595,23 +561,12 @@ export default function StudyDetail() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-black">Your Progress</h2>
-                  <span className="text-sm text-black font-bold" data-testid="text-progress-fraction">
-                    {actualCompletedLessons}/{study.lessonCount}
+                  <span className="text-sm text-black font-bold" data-testid="text-progress-status">
+                    {progressPercent === 100 ? 'Completed' : 'In Progress'}
                   </span>
                 </div>
                 
                 <Progress value={progressPercent} className="mb-4" data-testid="progress-bar" />
-                
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-black">
-                    <span className="font-medium">
-                      {actualCompletedLessons >= (study.lessonCount || 1) 
-                        ? "All lessons completed" 
-                        : `Currently on: Lesson ${progress?.currentLesson || 1}`
-                      }
-                    </span>
-                  </div>
-                </div>
 
                 {progressPercent === 100 && (
                   <div className="bg-gradient-to-r from-ministry-success/10 to-ministry-gold/10 border border-ministry-success/20 rounded-lg p-4">
@@ -737,90 +692,14 @@ export default function StudyDetail() {
           <div className="px-6 mb-6">
             <Card data-testid="card-content">
               <CardContent className="p-6">
-                {lessons.length > 0 ? (
-                  <>
-                    <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Study Lessons</h2>
-                    <div className="space-y-3">
-                      {lessons.map((lesson: any) => {
-                        const canAccessThisLesson = canAccessLesson(lesson.lessonNumber);
-                        const isFreeLessonForPreview = hasPreviewAccess() && lesson.lessonNumber <= (study.freeLessonCount || 0);
-                        
-                        return (
-                          <div key={lesson.id} className={`border rounded-lg p-4 transition-colors ${
-                            canAccessThisLesson 
-                              ? 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800' 
-                              : 'border-ministry-gold bg-ministry-gold/10 dark:border-ministry-gold dark:bg-ministry-gold/5'
-                          }`}>
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-2">
-                                  <h3 className={`font-semibold ${
-                                    canAccessThisLesson 
-                                      ? 'text-ministry-charcoal dark:text-white' 
-                                      : 'text-ministry-gold dark:text-ministry-gold'
-                                  }`}>
-                                    Lesson {lesson.lessonNumber}: {lesson.title}
-                                  </h3>
-                                  {isFreeLessonForPreview && (
-                                    <Badge className="bg-ministry-gold text-black text-xs">
-                                      Free Preview
-                                    </Badge>
-                                  )}
-                                  {!canAccessThisLesson && (
-                                    <Badge variant="destructive" className="text-xs">
-                                      <Lock className="w-3 h-3 mr-1" />
-                                      Locked
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className="flex items-center space-x-4 mt-2 text-sm text-ministry-slate">
-                                  <span className="flex items-center">
-                                    <Clock className="w-4 h-4 mr-1" />
-                                    {lesson.estimatedMinutes} minutes
-                                  </span>
-                                  {lesson.videoId && (
-                                    <span className="flex items-center">
-                                      <Play className="w-4 h-4 mr-1" />
-                                      Video included
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              {canAccessThisLesson ? (
-                                <Link href={`/study/${id}/lesson/${lesson.lessonNumber}`}>
-                                  <Button variant="outline" size="sm">
-                                    Start Lesson
-                                  </Button>
-                                </Link>
-                              ) : (
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  disabled 
-                                  className="opacity-50 cursor-not-allowed"
-                                >
-                                  <Lock className="w-4 h-4 mr-1" />
-                                  Locked
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Study Content</h2>
-                    <div className="prose prose-sm max-w-none text-ministry-slate" data-testid="text-study-content">
-                      {study.content ? (
-                        <div dangerouslySetInnerHTML={{ __html: study.content.replace(/\n/g, '<br>') }} />
-                      ) : (
-                        <p>No content available for this study.</p>
-                      )}
-                    </div>
-                  </>
-                )}
+                <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Study Content</h2>
+                <div className="prose prose-sm max-w-none text-ministry-slate" data-testid="text-study-content">
+                  {study.content ? (
+                    <div dangerouslySetInnerHTML={{ __html: study.content.replace(/\n/g, '<br>') }} />
+                  ) : (
+                    <p>Study materials are available as downloadable documents above.</p>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>
