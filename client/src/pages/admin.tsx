@@ -81,6 +81,10 @@ export default function Admin() {
     selectedUserIds: [] as string[]
   });
   const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [wordFile, setWordFile] = useState<File | null>(null);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [uploadingWord, setUploadingWord] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -90,7 +94,6 @@ export default function Admin() {
     duration: 0,
     author: "",
     tags: "",
-    lessons: "",
     requiresPurchase: false,
     price: "",
     purchaseRequiredTiers: [] as string[],
@@ -244,7 +247,6 @@ export default function Admin() {
       duration: study.duration,
       author: study.author,
       tags: study.tags?.join(", ") || "",
-      lessons: JSON.stringify(study.lessons, null, 2),
       requiresPurchase: study.requiresPurchase || false,
       price: study.price || "",
       purchaseRequiredTiers: study.purchaseRequiredTiers || [],
@@ -255,29 +257,103 @@ export default function Admin() {
   const handleUpdate = () => {
     if (!editingStudy) return;
 
-    try {
-      const updates = {
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        requiredTier: formData.requiredTier,
-        videoUrl: formData.videoUrl || undefined,
-        duration: formData.duration,
-        author: formData.author,
-        tags: formData.tags.split(",").map(tag => tag.trim()).filter(Boolean),
-        lessons: formData.lessons ? JSON.parse(formData.lessons) : [],
-        requiresPurchase: formData.requiresPurchase,
-        price: formData.requiresPurchase ? formData.price : undefined,
-        purchaseRequiredTiers: formData.requiresPurchase ? formData.purchaseRequiredTiers : [],
-      };
+    const updates = {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      requiredTier: formData.requiredTier,
+      videoUrl: formData.videoUrl || undefined,
+      duration: formData.duration,
+      author: formData.author,
+      tags: formData.tags.split(",").map(tag => tag.trim()).filter(Boolean),
+      requiresPurchase: formData.requiresPurchase,
+      price: formData.requiresPurchase ? formData.price : undefined,
+      purchaseRequiredTiers: formData.requiresPurchase ? formData.purchaseRequiredTiers : [],
+    };
 
-      console.log("Updating study with data:", updates);
-      updateStudyMutation.mutate({ id: editingStudy.id, updates });
-    } catch (error) {
-      console.error("Error preparing update data:", error);
+    console.log("Updating study with data:", updates);
+    updateStudyMutation.mutate({ id: editingStudy.id, updates });
+  };
+
+  const handleFileUpload = async (file: File, type: 'pdf' | 'word') => {
+    if (!editingStudy) return;
+
+    const formData = new FormData();
+    formData.append(type, file);
+
+    const setUploading = type === 'pdf' ? setUploadingPdf : setUploadingWord;
+    
+    try {
+      setUploading(true);
+      const response = await fetch(`/api/studies/${editingStudy.id}/upload-${type}`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to upload ${type} file`);
+      }
+
+      toast({
+        title: "Success",
+        description: `${type.toUpperCase()} document uploaded successfully`,
+      });
+
+      // Refresh the study list
+      queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+      
+      // Update editing study with new file info
+      const updatedStudy = await response.json();
+      setEditingStudy(updatedStudy);
+      
+      // Clear file input
+      if (type === 'pdf') setPdfFile(null);
+      if (type === 'word') setWordFile(null);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Invalid lessons format. Please check your JSON syntax.",
+        description: error.message || `Failed to upload ${type} file`,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileDelete = async (type: 'pdf' | 'word') => {
+    if (!editingStudy) return;
+
+    if (!confirm(`Are you sure you want to delete this ${type.toUpperCase()} document?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/studies/${editingStudy.id}/delete-${type}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete ${type} file`);
+      }
+
+      toast({
+        title: "Success",
+        description: `${type.toUpperCase()} document deleted successfully`,
+      });
+
+      // Refresh the study list
+      queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+      
+      // Update editing study
+      const updatedStudy = await response.json();
+      setEditingStudy(updatedStudy);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || `Failed to delete ${type} file`,
         variant: "destructive",
       });
     }
@@ -1002,17 +1078,96 @@ export default function Admin() {
               />
             </div>
 
-            <div>
-              <Label htmlFor="edit-lessons">Lessons (JSON format)</Label>
-              <Textarea
-                id="edit-lessons"
-                value={formData.lessons}
-                onChange={(e) => setFormData({ ...formData, lessons: e.target.value })}
-                placeholder="JSON array of lessons"
-                rows={8}
-                className="font-mono text-sm"
-                data-testid="input-edit-lessons"
-              />
+            {/* PDF File Management */}
+            <div className="space-y-2">
+              <Label>PDF Document</Label>
+              {editingStudy && (editingStudy as any).pdfFilename ? (
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{(editingStudy as any).pdfOriginalName || 'PDF Document'}</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleFileDelete('pdf')}
+                    data-testid="button-delete-pdf"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Input
+                    id="edit-pdf-file"
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                    data-testid="input-edit-pdf"
+                  />
+                  {pdfFile && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleFileUpload(pdfFile, 'pdf')}
+                      disabled={uploadingPdf}
+                      className="bg-ministry-navy hover:bg-ministry-charcoal"
+                      data-testid="button-upload-pdf"
+                    >
+                      {uploadingPdf ? "Uploading..." : "Upload PDF"}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Word File Management */}
+            <div className="space-y-2">
+              <Label>Word Document (.docx only)</Label>
+              {editingStudy && (editingStudy as any).wordFilename ? (
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{(editingStudy as any).wordOriginalName || 'Word Document'}</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleFileDelete('word')}
+                    data-testid="button-delete-word"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Input
+                    id="edit-word-file"
+                    type="file"
+                    accept=".docx"
+                    onChange={(e) => setWordFile(e.target.files?.[0] || null)}
+                    data-testid="input-edit-word"
+                  />
+                  {wordFile && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleFileUpload(wordFile, 'word')}
+                      disabled={uploadingWord}
+                      className="bg-ministry-navy hover:bg-ministry-charcoal"
+                      data-testid="button-upload-word"
+                    >
+                      {uploadingWord ? "Uploading..." : "Upload Word Document"}
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
