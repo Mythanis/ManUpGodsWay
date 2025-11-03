@@ -139,8 +139,16 @@ export default function StudyManagement() {
     setShowEditDialog(true);
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!editingStudy) return;
+
+    // First, upload any selected files
+    if (pdfFile) {
+      await handleFileUpload(pdfFile, 'pdf');
+    }
+    if (wordFile) {
+      await handleFileUpload(wordFile, 'word');
+    }
 
     const updates = {
       title: formData.title,
@@ -587,14 +595,9 @@ export default function StudyManagement() {
                     data-testid="input-edit-pdf"
                   />
                   {pdfFile && (
-                    <Button
-                      size="sm"
-                      onClick={() => handleFileUpload(pdfFile, 'pdf')}
-                      disabled={uploadingPdf}
-                      data-testid="button-upload-pdf"
-                    >
-                      {uploadingPdf ? "Uploading..." : "Upload PDF"}
-                    </Button>
+                    <p className="text-xs text-green-600">
+                      Selected: {pdfFile.name} - will upload when you save changes
+                    </p>
                   )}
                 </div>
               )}
@@ -635,14 +638,9 @@ export default function StudyManagement() {
                     .docx files can be viewed in browser. .doc files are download-only.
                   </p>
                   {wordFile && (
-                    <Button
-                      size="sm"
-                      onClick={() => handleFileUpload(wordFile, 'word')}
-                      disabled={uploadingWord}
-                      data-testid="button-upload-word"
-                    >
-                      {uploadingWord ? "Uploading..." : "Upload Word Document"}
-                    </Button>
+                    <p className="text-xs text-green-600">
+                      Selected: {wordFile.name} - will upload when you save changes
+                    </p>
                   )}
                 </div>
               )}
