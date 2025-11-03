@@ -1,7 +1,6 @@
 import {
   users,
   studies,
-  lessons,
   discussions,
   discussionReplies,
   discussionSubscriptions,
@@ -45,8 +44,6 @@ import {
   type UpsertUser,
   type Study,
   type InsertStudy,
-  type Lesson,
-  type InsertLesson,
   type Discussion,
   type InsertDiscussion,
   type DiscussionReply,
@@ -169,7 +166,6 @@ export interface IStorage {
   // Progress operations
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
   updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
-  markLessonCompleted(userId: string, studyId: string, lessonNumber: number): Promise<UserProgress>;
   updateUserStreak(userId: string, userLocalDate?: Date): Promise<void>;
   getWeeklyStudyCompletions(userId: string): Promise<number>;
   
@@ -590,41 +586,6 @@ export class DatabaseStorage implements IStorage {
     await db.delete(studies).where(eq(studies.id, id));
   }
 
-  // Lesson operations
-  async getLesson(studyId: string, lessonNumber: number): Promise<Lesson | undefined> {
-    const [lesson] = await db
-      .select()
-      .from(lessons)
-      .where(and(eq(lessons.studyId, studyId), eq(lessons.lessonNumber, lessonNumber)));
-    return lesson;
-  }
-
-  async getLessonsByStudy(studyId: string): Promise<Lesson[]> {
-    return await db
-      .select()
-      .from(lessons)
-      .where(eq(lessons.studyId, studyId))
-      .orderBy(lessons.lessonNumber);
-  }
-
-  async createLesson(lesson: InsertLesson): Promise<Lesson> {
-    const [newLesson] = await db.insert(lessons).values(lesson).returning();
-    return newLesson;
-  }
-
-  async updateLesson(id: string, lesson: Partial<InsertLesson>): Promise<Lesson> {
-    const [updatedLesson] = await db
-      .update(lessons)
-      .set(lesson)
-      .where(eq(lessons.id, id))
-      .returning();
-    return updatedLesson;
-  }
-
-  async deleteLesson(id: string): Promise<void> {
-    await db.delete(lessons).where(eq(lessons.id, id));
-  }
-
   async searchStudies(query: string): Promise<Study[]> {
     return await db
       .select()
@@ -828,9 +789,8 @@ export class DatabaseStorage implements IStorage {
         id: userProgress.id,
         userId: userProgress.userId,
         studyId: userProgress.studyId,
-        currentLesson: userProgress.currentLesson,
-        completedLessons: userProgress.completedLessons,
-        isCompleted: userProgress.isCompleted,
+        status: userProgress.status,
+        documentScrollPosition: userProgress.documentScrollPosition,
         lastAccessedAt: userProgress.lastAccessedAt,
         completedAt: userProgress.completedAt,
         createdAt: userProgress.createdAt,
@@ -866,57 +826,6 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (existing.length > 0) {
-      const [updated] = await db
-        .update(userProgress)
-        .set(updateData)
-        .where(and(eq(userProgress.userId, userId), eq(userProgress.studyId, studyId)))
-        .returning();
-      return updated;
-    } else {
-      const [newProgress] = await db
-        .insert(userProgress)
-        .values({
-          userId,
-          studyId,
-          ...updateData,
-        })
-        .returning();
-      return newProgress;
-    }
-  }
-
-  async markLessonCompleted(userId: string, studyId: string, lessonNumber: number): Promise<UserProgress> {
-    // Get current progress
-    const existingProgress = await db
-      .select()
-      .from(userProgress)
-      .where(and(eq(userProgress.userId, userId), eq(userProgress.studyId, studyId)));
-    
-    // Get total lessons for this study
-    const [study] = await db.select().from(studies).where(eq(studies.id, studyId));
-    if (!study) {
-      throw new Error('Study not found');
-    }
-    
-    const totalLessons = study.lessonCount || 1;
-    const currentProgress = existingProgress[0];
-    const currentCompletedLessons = currentProgress?.completedLessons || 0;
-    const newCompletedLessons = Math.max(currentCompletedLessons, lessonNumber);
-    const newCurrentLesson = Math.min(lessonNumber + 1, totalLessons);
-    const isCompleted = newCompletedLessons >= totalLessons;
-    
-    // Update user streak when they complete a lesson
-    await this.updateUserStreak(userId);
-    
-    const updateData = {
-      currentLesson: newCurrentLesson,
-      completedLessons: newCompletedLessons,
-      isCompleted,
-      lastAccessedAt: new Date(),
-      completedAt: isCompleted ? new Date() : currentProgress?.completedAt || null,
-    };
-    
-    if (existingProgress.length > 0) {
       const [updated] = await db
         .update(userProgress)
         .set(updateData)
@@ -3118,17 +3027,16 @@ export class DatabaseStorage implements IStorage {
     oneWeekAgo.setHours(0, 0, 0, 0);
 
     // Count distinct studies completed in the past 7 days
-    // A study is considered "completed" when progress is 100% (completedLessons >= lessonCount)
+    // A study is considered "completed" when status is "completed"
     const result = await db
       .select({
         count: sql<number>`COUNT(DISTINCT ${userProgress.studyId})`
       })
       .from(userProgress)
-      .innerJoin(studies, eq(userProgress.studyId, studies.id))
       .where(
         and(
           eq(userProgress.userId, userId),
-          sql`${userProgress.completedLessons} >= ${studies.lessonCount}`,
+          eq(userProgress.status, 'completed'),
           sql`${userProgress.lastAccessedAt} >= ${oneWeekAgo.toISOString()}`
         )
       );

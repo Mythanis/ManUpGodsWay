@@ -15,7 +15,6 @@ import * as schema from "@shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { 
   insertStudySchema, 
-  insertLessonSchema,
   insertDiscussionSchema, 
   insertDiscussionReplySchema,
   insertDiscussionSubscriptionSchema,
@@ -1229,156 +1228,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error extracting PDF text:", error);
       res.status(500).json({ message: "Failed to extract PDF text" });
-    }
-  });
-
-  // Lessons routes
-  app.get('/api/lessons/:studyId/:lessonNumber', isAuthenticated, async (req: any, res) => {
-    try {
-      const { studyId, lessonNumber } = req.params;
-      const lesson = await storage.getLesson(studyId, parseInt(lessonNumber));
-      
-      if (!lesson) {
-        return res.status(404).json({ message: "Lesson not found" });
-      }
-
-      // Get the study to check access permissions
-      const study = await storage.getStudy(studyId);
-      if (!study) {
-        return res.status(404).json({ message: "Study not found" });
-      }
-
-      // Get user for permission checking
-      const user = await storage.getUser(req.user.claims.sub);
-      if (!user) {
-        return res.status(401).json({ message: "User not found" });
-      }
-
-      const userTier = user.subscriptionTier || 'free';
-      const lessonNum = parseInt(lessonNumber);
-
-      // Check if user has full access to the study
-      const hasFullAccess = study.requiredTier === 'free' || 
-                           (study.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
-                           (study.requiredTier === 'vip' && userTier === 'vip');
-
-      // Check if user has preview access (free users accessing premium/VIP studies with free lessons)
-      const hasPreviewAccess = userTier === 'free' && 
-                               (study.requiredTier === 'premium' || study.requiredTier === 'vip') && 
-                               (study.freeLessonCount || 0) > 0;
-
-      // Determine if user can access this specific lesson
-      let canAccessLesson = false;
-      
-      if (hasFullAccess) {
-        canAccessLesson = true;
-      } else if (hasPreviewAccess) {
-        // Free users can only access lessons up to the free lesson count
-        canAccessLesson = lessonNum <= (study.freeLessonCount || 0);
-      }
-
-      if (!canAccessLesson) {
-        return res.status(403).json({ 
-          message: "Access denied", 
-          reason: hasPreviewAccess 
-            ? `You can only access the first ${study.freeLessonCount} lesson${study.freeLessonCount === 1 ? '' : 's'} of this ${study.requiredTier} study`
-            : `This lesson requires ${study.requiredTier} subscription to access`
-        });
-      }
-      
-      res.json(lesson);
-    } catch (error) {
-      console.error("Error fetching lesson:", error);
-      res.status(500).json({ message: "Failed to fetch lesson" });
-    }
-  });
-
-  app.get('/api/studies/:studyId/lessons', async (req: any, res) => {
-    try {
-      const { studyId } = req.params;
-      const lessons = await storage.getLessonsByStudy(studyId);
-      res.json(lessons);
-    } catch (error) {
-      console.error("Error fetching lessons:", error);
-      res.status(500).json({ message: "Failed to fetch lessons" });
-    }
-  });
-
-  app.post('/api/studies/:studyId/lessons', isAuthenticated, async (req: any, res) => {
-    try {
-      const user = await storage.getUser(req.user.claims.sub);
-      if (!user || !isAdmin(user)) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-
-      const { studyId } = req.params;
-      const lessonData = insertLessonSchema.parse({
-        ...req.body,
-        studyId
-      });
-      
-      const lesson = await storage.createLesson(lessonData);
-      res.status(201).json(lesson);
-    } catch (error) {
-      console.error("Error creating lesson:", error);
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid lesson data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create lesson" });
-    }
-  });
-
-  app.put('/api/lessons/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const user = await storage.getUser(req.user.claims.sub);
-      if (!user || !isAdmin(user)) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-
-      const lessonData = insertLessonSchema.partial().parse(req.body);
-      const lesson = await storage.updateLesson(req.params.id, lessonData);
-      res.json(lesson);
-    } catch (error) {
-      console.error("Error updating lesson:", error);
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid lesson data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update lesson" });
-    }
-  });
-
-  app.delete('/api/lessons/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const user = await storage.getUser(req.user.claims.sub);
-      if (!user || !isAdmin(user)) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-
-      await storage.deleteLesson(req.params.id);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting lesson:", error);
-      res.status(500).json({ message: "Failed to delete lesson" });
-    }
-  });
-
-  // Mark lesson completed
-  app.post('/api/lessons/:studyId/:lessonNumber/complete', isAuthenticated, async (req: any, res) => {
-    try {
-      const { studyId, lessonNumber } = req.params;
-      const lessonNum = parseInt(lessonNumber);
-      
-      if (isNaN(lessonNum) || lessonNum < 1) {
-        return res.status(400).json({ message: 'Invalid lesson number' });
-      }
-      
-      const userId = req.user.claims.sub;
-      const updatedProgress = await storage.markLessonCompleted(userId, studyId, lessonNum);
-      
-      res.json(updatedProgress);
-    } catch (error) {
-      console.error('Error marking lesson completed:', error);
-      res.status(500).json({ message: 'Failed to mark lesson completed' });
     }
   });
 
@@ -2893,12 +2742,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Video not found" });
       }
 
-      // For lesson context, authentication is handled at the lesson level
-      // So we allow public access to video streaming for lessons
-      const fromLesson = req.query.fromLesson === 'true';
-      
-      if (!fromLesson && req.user) {
-        // Only check tier access for standalone video viewing when authenticated
+      if (req.user) {
+        // Check tier access for authenticated users
         const user = await storage.getUser(req.user.claims.sub);
         if (user) {
           const userTier = user.subscriptionTier || 'free';

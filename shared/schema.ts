@@ -87,8 +87,6 @@ export const studies = pgTable("studies", {
   category: varchar("category").notNull(), // leadership, marriage, fatherhood, character, etc.
   difficulty: varchar("difficulty").default("beginner"), // beginner, intermediate, advanced
   estimatedHours: integer("estimated_hours").default(1),
-  lessonCount: integer("lesson_count").default(1),
-  freeLessonCount: integer("free_lesson_count").default(0), // Number of lessons accessible to free users for premium/VIP studies
   thumbnailUrl: varchar("thumbnail_url"),
   thumbnailFilename: varchar("thumbnail_filename"), // Stored thumbnail file
   thumbnailMimeType: varchar("thumbnail_mime_type"),
@@ -115,30 +113,12 @@ export const studies = pgTable("studies", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Individual lessons within studies
-export const lessons = pgTable("lessons", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  studyId: varchar("study_id").notNull().references(() => studies.id, { onDelete: 'cascade' }),
-  lessonNumber: integer("lesson_number").notNull(),
-  title: varchar("title").notNull(),
-  content: text("content"),
-  videoId: varchar("video_id").references(() => videos.id),
-  videoUrl: varchar("video_url"),
-  estimatedMinutes: integer("estimated_minutes").default(30),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-}, (table) => [
-  unique().on(table.studyId, table.lessonNumber), // Ensure unique lesson numbers per study
-]);
-
 // User progress tracking
 export const userProgress = pgTable("user_progress", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   studyId: varchar("study_id").notNull().references(() => studies.id, { onDelete: 'cascade' }),
-  currentLesson: integer("current_lesson").default(1),
-  completedLessons: integer("completed_lessons").default(0),
-  isCompleted: boolean("is_completed").default(false),
+  status: varchar("status").default("not_started"), // not_started, in_progress, completed
   documentScrollPosition: integer("document_scroll_position").default(0), // Track reading position in document
   lastAccessedAt: timestamp("last_accessed_at").defaultNow(),
   completedAt: timestamp("completed_at"),
@@ -583,13 +563,7 @@ export const studiesRelations = relations(studies, ({ one, many }) => ({
   progress: many(userProgress),
   ratings: many(studyRatings),
   discussions: many(discussions),
-  lessons: many(lessons),
   video: one(videos, { fields: [studies.videoId], references: [videos.id] }),
-}));
-
-export const lessonsRelations = relations(lessons, ({ one }) => ({
-  study: one(studies, { fields: [lessons.studyId], references: [studies.id] }),
-  video: one(videos, { fields: [lessons.videoId], references: [videos.id] }),
 }));
 
 export const discussionsRelations = relations(discussions, ({ one, many }) => ({
@@ -712,8 +686,6 @@ export const insertStudySchema = createInsertSchema(studies, {
   category: z.string().min(1, "Category is required"),
   difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
   estimatedHours: z.number().int().min(1).default(1),
-  lessonCount: z.number().int().min(1).default(1),
-  freeLessonCount: z.number().int().min(0).default(0),
   requiredTier: z.enum(["free", "premium", "vip"]).default("free"),
   requiresPurchase: z.boolean().default(false),
   price: z.string().nullable().optional(),
@@ -726,19 +698,6 @@ export const insertStudySchema = createInsertSchema(studies, {
   ratingCount: true, 
   createdAt: true, 
   updatedAt: true 
-});
-
-export const insertLessonSchema = createInsertSchema(lessons, {
-  title: z.string().min(1, "Lesson title is required"),
-  content: z.string().min(1, "Lesson content is required"),
-  lessonNumber: z.number().int().min(1, "Lesson number must be at least 1"),
-  estimatedMinutes: z.number().int().min(1).default(30),
-  videoId: z.string().optional(),
-  videoUrl: z.string().optional(),
-}).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
 });
 
 export const insertUserPurchaseSchema = createInsertSchema(userPurchases, {
@@ -870,8 +829,6 @@ export type InsertVideo = z.infer<typeof insertVideoSchema>;
 
 export type Study = typeof studies.$inferSelect;
 export type InsertStudy = z.infer<typeof insertStudySchema>;
-export type Lesson = typeof lessons.$inferSelect;
-export type InsertLesson = z.infer<typeof insertLessonSchema>;
 export type Discussion = typeof discussions.$inferSelect;
 export type InsertDiscussion = z.infer<typeof insertDiscussionSchema>;
 export type DiscussionReply = typeof discussionReplies.$inferSelect;
