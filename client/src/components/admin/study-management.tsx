@@ -337,8 +337,6 @@ export default function StudyManagement() {
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <span>By {study.author}</span>
                   <span>•</span>
-                  <span>{study.lessons.length} lessons</span>
-                  <span>•</span>
                   <span>Created {new Date(study.createdAt).toLocaleDateString()}</span>
                   {study.tags.length > 0 && (
                     <>
@@ -645,19 +643,6 @@ export default function StudyManagement() {
                   )}
                 </div>
               )}
-            </div>
-
-            <div>
-              <Label htmlFor="edit-lessons">Lessons (JSON format)</Label>
-              <Textarea
-                id="edit-lessons"
-                value={formData.lessons}
-                onChange={(e) => setFormData({ ...formData, lessons: e.target.value })}
-                placeholder="JSON array of lessons"
-                rows={8}
-                className="font-mono text-sm"
-                data-testid="input-edit-lessons"
-              />
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
