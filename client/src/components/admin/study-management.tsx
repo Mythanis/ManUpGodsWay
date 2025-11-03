@@ -21,9 +21,6 @@ interface Study {
   requiredTier: string;
   videoUrl?: string;
   duration: number;
-  lessonCount?: number;
-  freeLessonCount?: number;
-  lessons: any[];
   tags: string[];
   author: string;
   isActive: boolean;
@@ -41,11 +38,8 @@ interface FormData {
   requiredTier: string;
   videoUrl: string;
   duration: number;
-  lessonCount: number;
-  freeLessonCount: number;
   author: string;
   tags: string;
-  lessons: string;
   requiresPurchase: boolean;
   price: string;
   purchaseRequiredTiers: string[];
@@ -67,11 +61,8 @@ export default function StudyManagement() {
     requiredTier: "free",
     videoUrl: "",
     duration: 0,
-    lessonCount: 1,
-    freeLessonCount: 0,
     author: "",
     tags: "",
-    lessons: "",
     requiresPurchase: false,
     price: "",
     purchaseRequiredTiers: [],
@@ -139,11 +130,8 @@ export default function StudyManagement() {
       requiredTier: study.requiredTier,
       videoUrl: study.videoUrl || "",
       duration: study.duration,
-      lessonCount: study.lessonCount || 1,
-      freeLessonCount: study.freeLessonCount || 0,
       author: study.author,
       tags: study.tags.join(", "),
-      lessons: JSON.stringify(study.lessons, null, 2),
       requiresPurchase: study.requiresPurchase || false,
       price: study.price || "",
       purchaseRequiredTiers: study.purchaseRequiredTiers || [],
@@ -161,11 +149,8 @@ export default function StudyManagement() {
       requiredTier: formData.requiredTier,
       videoUrl: formData.videoUrl || undefined,
       duration: formData.duration,
-      lessonCount: formData.lessonCount,
-      freeLessonCount: formData.freeLessonCount,
       author: formData.author,
       tags: formData.tags.split(",").map(tag => tag.trim()).filter(Boolean),
-      lessons: formData.lessons ? JSON.parse(formData.lessons) : [],
       requiresPurchase: formData.requiresPurchase,
       price: formData.requiresPurchase && formData.price && formData.price.trim() !== '' ? formData.price : null,
       purchaseRequiredTiers: formData.requiresPurchase ? formData.purchaseRequiredTiers : [],
@@ -457,48 +442,6 @@ export default function StudyManagement() {
                   data-testid="input-edit-duration"
                 />
               </div>
-            </div>
-
-            {/* Lesson Count Section */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-lesson-count">Total Lessons</Label>
-                <Input
-                  id="edit-lesson-count"
-                  type="number"
-                  min="1"
-                  value={formData.lessonCount}
-                  onChange={(e) => {
-                    const newCount = parseInt(e.target.value) || 1;
-                    setFormData({ 
-                      ...formData, 
-                      lessonCount: newCount,
-                      // Reset free lessons if it exceeds new total
-                      freeLessonCount: Math.min(formData.freeLessonCount, newCount)
-                    });
-                  }}
-                  placeholder="Total number of lessons"
-                  data-testid="input-edit-lesson-count"
-                />
-              </div>
-              {(formData.requiredTier === 'premium' || formData.requiredTier === 'vip') && (
-                <div>
-                  <Label htmlFor="edit-free-lesson-count">Free Preview Lessons</Label>
-                  <Input
-                    id="edit-free-lesson-count"
-                    type="number"
-                    min="0"
-                    max={formData.lessonCount}
-                    value={formData.freeLessonCount}
-                    onChange={(e) => setFormData({ ...formData, freeLessonCount: parseInt(e.target.value) || 0 })}
-                    placeholder="Number of free lessons for preview"
-                    data-testid="input-edit-free-lesson-count"
-                  />
-                  <p className="text-xs text-ministry-slate mt-1">
-                    Allow free users to preview first {formData.freeLessonCount} lessons
-                  </p>
-                </div>
-              )}
             </div>
 
             <div>

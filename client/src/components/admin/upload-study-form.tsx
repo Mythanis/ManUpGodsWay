@@ -42,7 +42,7 @@ const tiers = [
 const createStudySchema = insertStudySchema.extend({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  content: z.string().optional(), // Content is optional if lessons are provided
+  content: z.string().optional(),
   category: z.string().min(1, "Category is required"),
   videoId: z.string().optional(),
   requiresPurchase: z.boolean().default(false),
@@ -50,23 +50,10 @@ const createStudySchema = insertStudySchema.extend({
   purchaseRequiredTiers: z.array(z.enum(["free", "premium", "vip"])).default([]),
 });
 
-const lessonSchema = z.object({
-  title: z.string().min(1, "Lesson title is required"),
-  content: z.string().min(1, "Lesson content is required"),
-  estimatedMinutes: z.number().min(1).default(30),
-  videoId: z.string().optional(),
-});
-
 export default function UploadStudyForm() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [titleExists, setTitleExists] = useState(false);
   const [checkingTitle, setCheckingTitle] = useState(false);
-  const [lessons, setLessons] = useState<Array<{
-    title: string;
-    content: string;
-    estimatedMinutes: number;
-    videoId?: string;
-  }>>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [wordFile, setWordFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -76,9 +63,6 @@ export default function UploadStudyForm() {
   const { toast } = useToast();
   const { effectiveTheme } = useTheme();
   const queryClient = useQueryClient();
-  
-  // Add debug logging for troubleshooting
-  console.log('UploadStudyForm rendered - lessons:', lessons.length);
 
   const { data: videos = [] } = useQuery<Array<{
     id: string;
@@ -98,8 +82,6 @@ export default function UploadStudyForm() {
       category: '',
       difficulty: 'beginner',
       estimatedHours: 1,
-      lessonCount: 1,
-      freeLessonCount: 0,
       thumbnailUrl: '',
       videoUrl: '',
       videoId: 'none',
@@ -150,26 +132,6 @@ export default function UploadStudyForm() {
       return study;
     },
     onSuccess: async (study) => {
-      // Create lessons if any were defined
-      if (lessons.length > 0) {
-        try {
-          for (let i = 0; i < lessons.length; i++) {
-            const lesson = lessons[i];
-            await apiRequest('POST', `/api/studies/${study.id}/lessons`, {
-              ...lesson,
-              lessonNumber: i + 1,
-            });
-          }
-        } catch (error) {
-          console.error('Error creating lessons:', error);
-          toast({
-            title: "Warning",
-            description: "Study created but some lessons failed to save. Please edit the study to add lessons.",
-            variant: "destructive",
-          });
-        }
-      }
-
       // Upload files if any are selected
       const uploadPromises: Promise<any>[] = [];
 
@@ -229,13 +191,10 @@ export default function UploadStudyForm() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
       toast({
         title: "Success",
-        description: lessons.length > 0 
-          ? `Study with ${lessons.length} lessons created successfully!`
-          : "Study created successfully!",
+        description: "Study created successfully!",
       });
       setDialogOpen(false);
       form.reset();
-      setLessons([]);
       setPdfFile(null);
       setWordFile(null);
       setThumbnailFile(null);
@@ -269,38 +228,20 @@ export default function UploadStudyForm() {
   });
 
   const onSubmit = (data: any) => {
-    // Validate that either content is provided, lessons exist, or documents are uploaded
+    // Validate that either content is provided or documents are uploaded
     const hasDocuments = pdfFile || wordFile;
-    if (lessons.length === 0 && (!data.content || data.content.trim().length < 50) && !hasDocuments) {
+    if ((!data.content || data.content.trim().length < 50) && !hasDocuments) {
       toast({
         title: "Validation Error",
-        description: "Please provide either study content (50+ characters), add at least one lesson, or upload a document (PDF/Word).",
+        description: "Please provide either study content (50+ characters) or upload a document (PDF/Word).",
         variant: "destructive",
       });
       return;
     }
 
-    // Validate lessons if provided
-    if (lessons.length > 0) {
-      const invalidLessons = lessons.filter(lesson => 
-        !lesson.title.trim() || !lesson.content.trim()
-      );
-      if (invalidLessons.length > 0) {
-        toast({
-          title: "Validation Error",
-          description: "All lessons must have a title and content.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    // Update lesson count based on actual lessons
     const submitData = {
       ...data,
-      lessonCount: lessons.length > 0 ? lessons.length : 1,
       videoId: data.videoId === 'none' ? undefined : data.videoId,
-      content: lessons.length > 0 ? data.content || 'See individual lessons for content.' : data.content,
       // Convert price to proper format - null if not required for purchase, or empty/invalid
       price: data.requiresPurchase && data.price && data.price.trim() !== '' ? data.price : null
     };
@@ -561,83 +502,25 @@ export default function UploadStudyForm() {
               />
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="lessonCount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Total Lessons</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number"
-                        min="1"
-                        {...field}
-                        onChange={(e) => {
-                          const newCount = parseInt(e.target.value) || 1;
-                          field.onChange(newCount);
-                          // Reset free lessons if it exceeds new total
-                          const currentFree = form.getValues('freeLessonCount');
-                          if (currentFree > newCount) {
-                            form.setValue('freeLessonCount', newCount);
-                          }
-                        }}
-                        data-testid="input-lesson-count"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="estimatedHours"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Est. Hours</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number"
-                        min="1"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
-                        data-testid="input-estimated-hours"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Free Lesson Count - only show for premium/VIP studies */}
-            {(form.watch('requiredTier') === 'premium' || form.watch('requiredTier') === 'vip') && (
-              <FormField
-                control={form.control}
-                name="freeLessonCount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Free Preview Lessons</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number"
-                        min="0"
-                        max={form.watch('lessonCount')}
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        placeholder="Number of free lessons for preview"
-                        data-testid="input-free-lesson-count"
-                      />
-                    </FormControl>
-                    <div className="text-xs text-ministry-slate">
-                      Allow free users to preview the first {form.watch('freeLessonCount')} lessons
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+            <FormField
+              control={form.control}
+              name="estimatedHours"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Est. Hours</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number"
+                      min="1"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                      data-testid="input-estimated-hours"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
@@ -752,124 +635,24 @@ export default function UploadStudyForm() {
               )}
             />
 
-            {lessons.length === 0 && (
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Study Overview Content</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Overview content (optional if using individual lessons)"
-                        className="min-h-[120px]"
-                        {...field}
-                        data-testid="textarea-study-content"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            {/* Lesson Management Section */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Lessons</h3>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setLessons([...lessons, {
-                      title: `Lesson ${lessons.length + 1}`,
-                      content: '',
-                      estimatedMinutes: 30,
-                    }]);
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Lesson
-                </Button>
-              </div>
-
-              {lessons.map((lesson, index) => (
-                <Card key={index} className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium">Lesson {index + 1}</h4>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setLessons(lessons.filter((_, i) => i !== index));
-                        }}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                    
-                    <Input
-                      placeholder="Lesson title"
-                      value={lesson.title}
-                      onChange={(e) => {
-                        const newLessons = [...lessons];
-                        newLessons[index].title = e.target.value;
-                        setLessons(newLessons);
-                      }}
-                    />
-                    
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Study Overview Content (optional)</FormLabel>
+                  <FormControl>
                     <Textarea
-                      placeholder="Lesson content"
-                      className="min-h-[100px]"
-                      value={lesson.content}
-                      onChange={(e) => {
-                        const newLessons = [...lessons];
-                        newLessons[index].content = e.target.value;
-                        setLessons(newLessons);
-                      }}
+                      placeholder="Overview content (optional if using documents)"
+                      className="min-h-[120px]"
+                      {...field}
+                      data-testid="textarea-study-content"
                     />
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <Input
-                        type="number"
-                        placeholder="Est. minutes"
-                        value={lesson.estimatedMinutes}
-                        onChange={(e) => {
-                          const newLessons = [...lessons];
-                          newLessons[index].estimatedMinutes = parseInt(e.target.value) || 30;
-                          setLessons(newLessons);
-                        }}
-                      />
-                      
-                      <Select
-                        value={lesson.videoId || 'none'}
-                        onValueChange={(value) => {
-                          const newLessons = [...lessons];
-                          newLessons[index].videoId = value === 'none' ? undefined : value;
-                          setLessons(newLessons);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select video" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">No video</SelectItem>
-                          {videos.filter(video => video.processingStatus === 'completed').map((video) => (
-                            <SelectItem key={video.id} value={video.id}>
-                              {video.title}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
@@ -910,14 +693,6 @@ export default function UploadStudyForm() {
                 disabled={createStudy.isPending || titleExists || checkingTitle}
                 className="flex-1 bg-ministry-navy hover:bg-ministry-charcoal disabled:opacity-50"
                 data-testid="button-create-study"
-                onClick={(e) => {
-                  // Debug: log form state
-                  console.log('Form errors:', form.formState.errors);
-                  console.log('Form values:', form.getValues());
-                  console.log('Lessons:', lessons);
-                  console.log('Title exists:', titleExists);
-                  console.log('Checking title:', checkingTitle);
-                }}
               >
                 {createStudy.isPending ? "Creating..." : "Create Study"}
               </Button>
