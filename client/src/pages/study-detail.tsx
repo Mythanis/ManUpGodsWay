@@ -450,18 +450,18 @@ export default function StudyDetail() {
                     <Dialog>
                       <DialogTrigger asChild>
                         <button
-                          className="w-full flex items-center justify-between p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors border border-gray-200 cursor-pointer"
+                          className="w-full flex items-center justify-between p-3 bg-white dark:bg-card rounded-lg hover:bg-gray-50 dark:hover:bg-secondary transition-colors border border-gray-200 dark:border-border cursor-pointer"
                           data-testid="button-view-word"
                         >
                           <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 rounded bg-blue-100 flex items-center justify-center">
-                              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <div className="w-10 h-10 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
                               </svg>
                             </div>
                             <div className="text-left">
-                              <p className="font-medium text-sm text-gray-900">Word Document</p>
-                              <p className="text-xs text-gray-500">{study.wordOriginalName}</p>
+                              <p className="font-medium text-sm text-gray-900 dark:text-white">Word Document</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{study.wordOriginalName}</p>
                             </div>
                           </div>
                           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -472,12 +472,12 @@ export default function StudyDetail() {
                       </DialogTrigger>
                       <DialogContent className="max-w-6xl h-[90vh] p-0" data-testid="dialog-word-viewer">
                         <div className="flex flex-col h-full">
-                          <div className="flex items-center justify-between p-4 border-b">
+                          <div className="flex items-center justify-between p-4 border-b dark:border-border bg-background">
                             <DialogTitle className="text-lg font-semibold">{study.wordOriginalName}</DialogTitle>
                             <a
-                              href={`/api/studies/${study.id}/download-word`}
+                              href={`/api/studies/${study.id}/word-file`}
                               download
-                              className="inline-flex items-center px-3 py-1.5 bg-ministry-charcoal text-white text-sm rounded-md hover:bg-ministry-charcoal/90 transition-colors"
+                              className="inline-flex items-center px-3 py-1.5 bg-primary text-primary-foreground text-sm rounded-md hover:bg-primary/90 transition-colors"
                               data-testid="button-download-word"
                             >
                               <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -486,9 +486,9 @@ export default function StudyDetail() {
                               Download
                             </a>
                           </div>
-                          <div className="flex-1 overflow-hidden">
+                          <div className="flex-1 overflow-auto bg-white">
                             <iframe
-                              src={`/api/studies/${study.id}/word-file`}
+                              src={`/api/studies/${study.id}/word-html`}
                               className="w-full h-full border-0"
                               title="Word Document Viewer"
                               data-testid="iframe-word-viewer"
