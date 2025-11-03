@@ -72,7 +72,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt, hid
                     <Video className="w-3 h-3 text-ministry-steel flex-shrink-0" />
                   )}
                 </div>
-                <div className="text-xs text-ministry-slate" data-testid="text-study-lessons">
+                <div className="text-xs text-ministry-slate" data-testid="text-study-info">
                   {isCompleted && completedAt ? (
                     <p className="text-ministry-gold font-medium mb-1">
                       ✓ Completed {new Date(completedAt).toLocaleDateString('en-US', {
@@ -82,7 +82,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt, hid
                       })}
                     </p>
                   ) : null}
-                  <p>{study.lessonCount} lessons • {study.estimatedHours}h</p>
+                  <p>{study.estimatedHours}h study</p>
                 </div>
               </div>
               {study.rating > 0 && (

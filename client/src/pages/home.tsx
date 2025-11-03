@@ -577,8 +577,7 @@ export default function Home() {
                             <h4 className="font-medium text-ministry-charcoal text-sm mb-1">{study.title}</h4>
                             <p className="text-xs text-ministry-slate mb-2 line-clamp-2">{study.description}</p>
                             <div className="flex items-center space-x-3 text-xs text-ministry-slate mb-2">
-                              <span>{study.lessonCount} lessons</span>
-                              <span>{study.estimatedHours}h</span>
+                              <span>{study.estimatedHours}h study</span>
                               <span className="capitalize">{study.difficulty}</span>
                             </div>
                             <div className="flex items-center space-x-1">

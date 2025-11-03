@@ -9,10 +9,8 @@ interface ProgressCardProps {
 }
 
 export default function ProgressCard({ study, progress }: ProgressCardProps) {
-  const progressPercent = Math.round((progress.completedLessons / (study.lessonCount || 1)) * 100);
-  const actualCompletedLessons = progress.completedLessons || 0;
-  const currentLesson = progress.currentLesson || 1;
-  const isStudyCompleted = actualCompletedLessons >= (study.lessonCount || 1);
+  const progressPercent = progress.status === 'completed' ? 100 : 0;
+  const isStudyCompleted = progress.status === 'completed';
 
   return (
     <Card className="shadow-sm border border-gray-100 bg-ministry-gold-exact/20" data-testid="progress-card">
@@ -23,21 +21,18 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
               {study.title}
             </h3>
             <p className="text-sm text-black" data-testid="text-study-info">
-              {study.lessonCount}-lesson study series
+              {study.estimatedHours}h study
             </p>
             <p className="text-xs text-black mt-1">
               {isStudyCompleted 
-                ? "All lessons completed" 
-                : `Currently on: Lesson ${currentLesson}`
+                ? "Study completed" 
+                : "In progress"
               }
             </p>
           </div>
           <div className="text-right">
-            <p className="text-black font-bold text-lg" data-testid="text-progress-percent">
-              {progressPercent}%
-            </p>
-            <p className="text-xs text-black" data-testid="text-progress-fraction">
-              {actualCompletedLessons} of {study.lessonCount} complete
+            <p className="text-black font-bold text-lg" data-testid="text-progress-status">
+              {isStudyCompleted ? 'Completed' : 'In Progress'}
             </p>
           </div>
         </div>
@@ -51,7 +46,7 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
             className="w-full bg-ministry-charcoal text-white py-3 rounded-xl font-medium hover:bg-ministry-steel"
             data-testid="button-continue-study"
           >
-            Continue Study
+            {isStudyCompleted ? 'Review Study' : 'Continue Study'}
           </Button>
         </Link>
       </CardContent>
