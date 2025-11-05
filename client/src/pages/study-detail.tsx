@@ -70,6 +70,48 @@ function PDFTextViewer({ studyId, studyTitle }: { studyId: string; studyTitle: s
   );
 }
 
+function WordDocumentViewer({ studyId, studyTitle }: { studyId: string; studyTitle: string }) {
+  const [, navigate] = useLocation();
+
+  const handleOpenDocument = () => {
+    navigate(`/studies/${studyId}/word`);
+  };
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open(`/api/studies/${studyId}/word-file`, '_blank');
+  };
+
+  return (
+    <div
+      onClick={handleOpenDocument}
+      className="w-full flex items-center justify-between p-3 bg-white dark:bg-card rounded-lg hover:bg-gray-50 dark:hover:bg-secondary transition-colors border border-gray-200 dark:border-border cursor-pointer"
+      data-testid="button-view-word"
+    >
+      <div className="flex items-center space-x-3">
+        <div className="w-10 h-10 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+          <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+          </svg>
+        </div>
+        <div className="text-left flex-1">
+          <p className="font-medium text-sm text-gray-900 dark:text-white">Word Document</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{studyTitle}</p>
+        </div>
+      </div>
+      <div
+        onClick={handleDownload}
+        className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg transition-colors"
+        data-testid="button-download-word-icon"
+      >
+        <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 export default function StudyDetail() {
   const { id } = useParams<{ id: string }>();
   const [discussionDialogOpen, setDiscussionDialogOpen] = useState(false);
@@ -413,83 +455,7 @@ export default function StudyDetail() {
                     <PDFTextViewer studyId={study.id!} studyTitle={study.title} />
                   )}
                   {study.wordFilename && (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <button
-                          className="w-full flex items-center justify-between p-3 bg-white dark:bg-card rounded-lg hover:bg-gray-50 dark:hover:bg-secondary transition-colors border border-gray-200 dark:border-border cursor-pointer"
-                          data-testid="button-view-word"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-                              </svg>
-                            </div>
-                            <div className="text-left">
-                              <p className="font-medium text-sm text-gray-900 dark:text-white">Word Document</p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">{study.wordOriginalName}</p>
-                            </div>
-                          </div>
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-6xl h-[90vh] p-0" data-testid="dialog-word-viewer">
-                        <div className="flex flex-col h-full">
-                          <div className="flex items-center justify-between p-4 border-b dark:border-border bg-background">
-                            <DialogTitle className="text-lg font-semibold">{study.wordOriginalName}</DialogTitle>
-                            <a
-                              href={`/api/studies/${study.id}/word-file`}
-                              download
-                              className="inline-flex items-center px-3 py-1.5 bg-primary text-primary-foreground text-sm rounded-md hover:bg-primary/90 transition-colors"
-                              data-testid="button-download-word"
-                            >
-                              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                              </svg>
-                              Download
-                            </a>
-                          </div>
-                          <div className="flex-1 overflow-auto bg-white">
-                            {study.wordOriginalName?.toLowerCase().endsWith('.doc') ? (
-                              <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-                                <div className="w-16 h-16 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center mb-4">
-                                  <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                  </svg>
-                                </div>
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                                  Viewer Not Available for .doc Files
-                                </h3>
-                                <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md">
-                                  The in-browser viewer only works with .docx files (newer Word format). 
-                                  Please download this .doc file to view it, or ask the admin to re-upload it as a .docx file.
-                                </p>
-                                <a
-                                  href={`/api/studies/${study.id}/word-file`}
-                                  download
-                                  className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                                >
-                                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                  </svg>
-                                  Download File
-                                </a>
-                              </div>
-                            ) : (
-                              <iframe
-                                src={`/api/studies/${study.id}/word-html`}
-                                className="w-full h-full border-0"
-                                title="Word Document Viewer"
-                                data-testid="iframe-word-viewer"
-                              />
-                            )}
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                    <WordDocumentViewer studyId={study.id!} studyTitle={study.wordOriginalName || study.title} />
                   )}
                 </div>
               </div>

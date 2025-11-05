@@ -26,6 +26,7 @@ import Admin from "@/pages/admin";
 import Owners from "@/pages/owners";
 import StudyDetail from "@/pages/study-detail";
 import DocumentViewer from "@/pages/document-viewer";
+import WordViewer from "@/pages/word-viewer";
 import UserProfile from "@/pages/user-profile";
 import NotificationPreferences from "@/pages/notification-preferences";
 import MoreManUp from "@/pages/more-man-up";
@@ -112,6 +113,7 @@ function Router() {
             <Route path="/owners" component={Owners} />
             <Route path="/studies/:id" component={StudyDetail} />
             <Route path="/studies/:id/document" component={DocumentViewer} />
+            <Route path="/studies/:id/word" component={WordViewer} />
             <Route path="/users/:userId" component={UserProfile} />
             <Route path="/notification-preferences" component={NotificationPreferences} />
             <Route path="/discipleship" component={Discipleship} />
