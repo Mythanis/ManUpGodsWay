@@ -27,6 +27,7 @@ import Owners from "@/pages/owners";
 import StudyDetail from "@/pages/study-detail";
 import DocumentViewer from "@/pages/document-viewer";
 import WordViewer from "@/pages/word-viewer";
+import AdminWordEditor from "@/pages/admin-word-editor";
 import UserProfile from "@/pages/user-profile";
 import NotificationPreferences from "@/pages/notification-preferences";
 import MoreManUp from "@/pages/more-man-up";
@@ -110,6 +111,7 @@ function Router() {
             <Route path="/messages" component={Messages} />
             <Route path="/profile" component={Profile} />
             <Route path="/admin" component={Admin} />
+            <Route path="/admin/studies/:id/edit-word" component={AdminWordEditor} />
             <Route path="/owners" component={Owners} />
             <Route path="/studies/:id" component={StudyDetail} />
             <Route path="/studies/:id/document" component={DocumentViewer} />
