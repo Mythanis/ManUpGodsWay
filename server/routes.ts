@@ -34,9 +34,11 @@ import {
   insertFitnessPlanExerciseSchema,
   insertFitnessPlanReminderSchema,
   insertEventSchema,
-  insertEventRegistrationSchema
+  insertEventRegistrationSchema,
+  insertStudyEditableSectionSchema,
+  insertUserStudyResponseSchema
 } from "@shared/schema";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
 
 // Role checking helper functions
@@ -765,6 +767,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting Word document:", error);
       res.status(500).json({ message: "Failed to delete Word document" });
+    }
+  });
+
+  // ============================================
+  // Interactive Study Sections API Routes
+  // ============================================
+  
+  // Get all editable sections for a study
+  app.get('/api/studies/:id/editable-sections', isAuthenticated, async (req: any, res) => {
+    try {
+      const sections = await storage.getStudyEditableSections(req.params.id);
+      res.json(sections);
+    } catch (error) {
+      console.error("Error fetching editable sections:", error);
+      res.status(500).json({ message: "Failed to fetch editable sections" });
+    }
+  });
+
+  // Create a new editable section (admin only)
+  app.post('/api/studies/:id/editable-sections', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const validatedData = insertStudyEditableSectionSchema.parse({
+        ...req.body,
+        studyId: req.params.id
+      });
+
+      const section = await storage.createEditableSection(validatedData);
+      if (!section) {
+        return res.status(404).json({ message: "Failed to create section" });
+      }
+      res.json(section);
+    } catch (error) {
+      console.error("Error creating editable section:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      if (error instanceof Error && error.message.includes("required")) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Failed to create editable section" });
+    }
+  });
+
+  // Update an editable section (admin only)
+  app.put('/api/editable-sections/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Create update schema that omits immutable fields (id, studyId)
+      const updateSchema = insertStudyEditableSectionSchema.omit({ 
+        id: true,
+        studyId: true 
+      }).partial();
+      
+      const validatedData = updateSchema.parse(req.body);
+
+      const section = await storage.updateEditableSection(req.params.id, validatedData);
+      if (!section) {
+        return res.status(404).json({ message: "Editable section not found" });
+      }
+      res.json(section);
+    } catch (error) {
+      console.error("Error updating editable section:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update editable section" });
+    }
+  });
+
+  // Delete an editable section (admin only)
+  app.delete('/api/editable-sections/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      await storage.deleteEditableSection(req.params.id);
+      res.json({ message: "Editable section deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting editable section:", error);
+      res.status(500).json({ message: "Failed to delete editable section" });
+    }
+  });
+
+  // Get all user responses for a study
+  app.get('/api/studies/:id/user-responses', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const responses = await storage.getUserStudyResponses(userId, req.params.id);
+      res.json(responses);
+    } catch (error) {
+      console.error("Error fetching user responses:", error);
+      res.status(500).json({ message: "Failed to fetch user responses" });
+    }
+  });
+
+  // Save/update a user response (autosave endpoint)
+  app.post('/api/user-responses', isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = insertUserStudyResponseSchema.parse({
+        ...req.body,
+        userId: req.user.claims.sub
+      });
+
+      const response = await storage.saveUserResponse(validatedData);
+      if (!response) {
+        return res.status(404).json({ message: "Failed to save response" });
+      }
+      res.json(response);
+    } catch (error) {
+      console.error("Error saving user response:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to save user response" });
     }
   });
 
