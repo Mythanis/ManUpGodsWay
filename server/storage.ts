@@ -40,6 +40,8 @@ import {
   tierPricing,
   userPrayerStats,
   userPurchases,
+  studyEditableSections,
+  userStudyResponses,
   type User,
   type UpsertUser,
   type Study,
@@ -132,6 +134,10 @@ import {
   type InsertUserPrayerStats,
   type UserPurchase,
   type InsertUserPurchase,
+  type StudyEditableSection,
+  type InsertStudyEditableSection,
+  type UserStudyResponse,
+  type InsertUserStudyResponse,
   type TierPricing,
   type InsertTierPricing,
 } from "@shared/schema";
@@ -157,6 +163,17 @@ export interface IStorage {
   checkUserPurchase(userId: string, studyId: string): Promise<boolean>;
   getUserPurchases(userId: string): Promise<UserPurchase[]>;
   createPurchase(purchase: InsertUserPurchase): Promise<UserPurchase>;
+  
+  // Study editable sections operations
+  getStudyEditableSections(studyId: string): Promise<StudyEditableSection[]>;
+  createEditableSection(section: InsertStudyEditableSection): Promise<StudyEditableSection>;
+  updateEditableSection(id: string, section: Partial<InsertStudyEditableSection>): Promise<StudyEditableSection>;
+  deleteEditableSection(id: string): Promise<void>;
+  
+  // User study responses operations
+  getUserStudyResponses(userId: string, studyId: string): Promise<UserStudyResponse[]>;
+  saveUserResponse(response: InsertUserStudyResponse): Promise<UserStudyResponse>;
+  updateUserResponse(userId: string, sectionId: string, responseText: string): Promise<UserStudyResponse>;
   
   // Tier pricing operations
   getTierPricing(): Promise<TierPricing[]>;
@@ -741,6 +758,89 @@ export class DatabaseStorage implements IStorage {
       .values(purchase)
       .returning();
     return newPurchase;
+  }
+
+  // Study editable sections operations
+  async getStudyEditableSections(studyId: string): Promise<StudyEditableSection[]> {
+    return await db
+      .select()
+      .from(studyEditableSections)
+      .where(eq(studyEditableSections.studyId, studyId))
+      .orderBy(asc(studyEditableSections.displayOrder));
+  }
+
+  async createEditableSection(section: InsertStudyEditableSection): Promise<StudyEditableSection> {
+    // Validate required fields
+    if (!section.anchorKey || section.displayOrder === undefined || section.displayOrder === null) {
+      throw new Error("anchorKey and displayOrder are required");
+    }
+    
+    const [newSection] = await db
+      .insert(studyEditableSections)
+      .values({
+        ...section,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return newSection;
+  }
+
+  async updateEditableSection(id: string, section: Partial<InsertStudyEditableSection>): Promise<StudyEditableSection> {
+    const [updatedSection] = await db
+      .update(studyEditableSections)
+      .set({ ...section, updatedAt: new Date() })
+      .where(eq(studyEditableSections.id, id))
+      .returning();
+    return updatedSection;
+  }
+
+  async deleteEditableSection(id: string): Promise<void> {
+    await db
+      .delete(studyEditableSections)
+      .where(eq(studyEditableSections.id, id));
+  }
+
+  // User study responses operations
+  async getUserStudyResponses(userId: string, studyId: string): Promise<UserStudyResponse[]> {
+    return await db
+      .select()
+      .from(userStudyResponses)
+      .where(and(
+        eq(userStudyResponses.userId, userId),
+        eq(userStudyResponses.studyId, studyId)
+      ));
+  }
+
+  async saveUserResponse(response: InsertUserStudyResponse): Promise<UserStudyResponse> {
+    const [savedResponse] = await db
+      .insert(userStudyResponses)
+      .values({
+        ...response,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .onConflictDoUpdate({
+        target: [userStudyResponses.userId, userStudyResponses.studyId, userStudyResponses.sectionId],
+        set: {
+          responseText: response.responseText,
+          updatedAt: new Date()
+        }
+      })
+      .returning();
+    return savedResponse;
+  }
+
+  async updateUserResponse(userId: string, sectionId: string, responseText: string): Promise<UserStudyResponse> {
+    const [updatedResponse] = await db
+      .update(userStudyResponses)
+      .set({ responseText, updatedAt: new Date() })
+      .where(and(
+        eq(userStudyResponses.userId, userId),
+        eq(userStudyResponses.sectionId, sectionId)
+      ))
+      .returning();
+    return updatedResponse;
   }
 
   // Tier pricing operations

@@ -162,7 +162,7 @@ export const userStudyResponses = pgTable("user_study_responses", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  unique().on(table.userId, table.sectionId), // One response per user per section
+  unique().on(table.userId, table.studyId, table.sectionId), // One response per user per study per section
 ]);
 
 // Community discussions
