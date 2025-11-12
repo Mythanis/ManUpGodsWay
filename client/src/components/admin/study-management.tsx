@@ -626,7 +626,7 @@ export default function StudyManagement() {
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
-                  {!(editingStudy as any).wordOriginalName?.toLowerCase().endsWith('.doc') && (
+                  {(editingStudy as any).wordOriginalName?.toLowerCase().endsWith('.docx') && (
                     <Button
                       variant="default"
                       size="sm"
