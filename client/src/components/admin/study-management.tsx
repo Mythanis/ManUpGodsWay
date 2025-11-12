@@ -675,7 +675,7 @@ export default function StudyManagement() {
               <Button
                 onClick={handleUpdate}
                 disabled={updateStudyMutation.isPending || !formData.title.trim()}
-                className="bg-ministry-navy hover:bg-ministry-charcoal"
+                className="bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal font-semibold"
                 data-testid="button-save-edit"
               >
                 {updateStudyMutation.isPending ? "Saving..." : "Save Changes"}
