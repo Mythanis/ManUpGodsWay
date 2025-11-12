@@ -140,6 +140,31 @@ export const userPurchases = pgTable("user_purchases", {
   unique().on(table.userId, table.studyId), // Prevent duplicate purchases
 ]);
 
+// Study editable sections (admin-defined interactive areas in Word documents)
+export const studyEditableSections = pgTable("study_editable_sections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studyId: varchar("study_id").notNull().references(() => studies.id, { onDelete: 'cascade' }),
+  anchorKey: varchar("anchor_key").notNull(), // Stable identifier for position in HTML (e.g., "heading-1", "para-5")
+  label: varchar("label").notNull(), // Display label for the editable section (e.g., "Reflection Question 1")
+  displayOrder: integer("display_order").notNull(), // Order of sections in the document
+  defaultPrompt: text("default_prompt"), // Optional placeholder text for users
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User responses to editable sections in studies
+export const userStudyResponses = pgTable("user_study_responses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  studyId: varchar("study_id").notNull().references(() => studies.id, { onDelete: 'cascade' }),
+  sectionId: varchar("section_id").notNull().references(() => studyEditableSections.id, { onDelete: 'cascade' }),
+  responseText: text("response_text"), // User's text input
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.sectionId), // One response per user per section
+]);
+
 // Community discussions
 export const discussions = pgTable("discussions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -709,6 +734,29 @@ export const insertUserPurchaseSchema = createInsertSchema(userPurchases, {
   id: true,
   createdAt: true,
   purchasedAt: true,
+});
+
+export const insertStudyEditableSectionSchema = createInsertSchema(studyEditableSections, {
+  studyId: z.string().min(1, "Study ID is required"),
+  anchorKey: z.string().min(1, "Anchor key is required"),
+  label: z.string().min(1, "Label is required"),
+  displayOrder: z.number().int().min(0),
+  defaultPrompt: z.string().optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserStudyResponseSchema = createInsertSchema(userStudyResponses, {
+  userId: z.string().min(1, "User ID is required"),
+  studyId: z.string().min(1, "Study ID is required"),
+  sectionId: z.string().min(1, "Section ID is required"),
+  responseText: z.string().optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const insertDiscussionSchema = createInsertSchema(discussions).omit({
@@ -1310,5 +1358,14 @@ export const insertTierPricingSchema = createInsertSchema(tierPricing).omit({
 // Purchase types
 export type UserPurchase = typeof userPurchases.$inferSelect;
 export type InsertUserPurchase = z.infer<typeof insertUserPurchaseSchema>;
+
+// Study editable sections types
+export type StudyEditableSection = typeof studyEditableSections.$inferSelect;
+export type InsertStudyEditableSection = z.infer<typeof insertStudyEditableSectionSchema>;
+
+// User study responses types
+export type UserStudyResponse = typeof userStudyResponses.$inferSelect;
+export type InsertUserStudyResponse = z.infer<typeof insertUserStudyResponseSchema>;
+
 export type TierPricing = typeof tierPricing.$inferSelect;
 export type InsertTierPricing = z.infer<typeof insertTierPricingSchema>;
