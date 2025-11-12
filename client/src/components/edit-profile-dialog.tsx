@@ -89,8 +89,14 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all queries that might contain user data
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/discussions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
       toast({
         title: "Profile Picture Uploaded",
         description: "Your profile picture has been updated successfully.",
@@ -110,8 +116,14 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
   const deleteProfilePictureMutation = useMutation({
     mutationFn: () => apiRequest('DELETE', '/api/profile/delete-picture', {}),
     onSuccess: () => {
+      // Invalidate all queries that might contain user data
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/discussions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
       toast({
         title: "Profile Picture Deleted",
         description: "Your profile picture has been removed.",
