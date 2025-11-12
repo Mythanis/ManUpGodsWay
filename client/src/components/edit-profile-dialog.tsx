@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, MessageSquare, Users, Save, Eye, EyeOff, Upload, Trash2, Camera } from "lucide-react";
+import { User, MessageSquare, Users, Save, Eye, EyeOff, Trash2, Camera } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface ProfileData {
@@ -34,7 +34,6 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isUploadingPicture, setIsUploadingPicture] = useState(false);
 
   useEffect(() => {
     if (user && open) {
@@ -60,7 +59,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
         title: "Profile Updated",
         description: "Your profile has been updated successfully.",
       });
-      setOpen(false);
+      // Dialog closing is now handled by handleSave
     },
     onError: () => {
       toast({
@@ -178,24 +177,13 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
     event.target.value = '';
   };
 
-  const handleUploadPicture = async () => {
-    if (!selectedFile) return;
-
-    setIsUploadingPicture(true);
-    try {
-      await uploadProfilePictureMutation.mutateAsync(selectedFile);
-    } finally {
-      setIsUploadingPicture(false);
-    }
-  };
-
   const handleDeletePicture = () => {
     if (window.confirm("Are you sure you want to remove your profile picture?")) {
       deleteProfilePictureMutation.mutate();
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!profileData.firstName.trim()) {
       toast({
         title: "First Name Required",
@@ -204,7 +192,22 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
       });
       return;
     }
-    updateProfileMutation.mutate(profileData);
+
+    try {
+      // Upload profile picture first if a new one is selected
+      if (selectedFile) {
+        await uploadProfilePictureMutation.mutateAsync(selectedFile);
+      }
+      
+      // Then update other profile data
+      await updateProfileMutation.mutateAsync(profileData);
+      
+      // Close dialog on success
+      setOpen(false);
+    } catch (error) {
+      // Errors already handled by individual mutations
+      // Just prevent closing the dialog
+    }
   };
 
   return (
@@ -237,111 +240,57 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
               </Avatar>
 
               <div className="flex-1 space-y-2">
-                {!selectedFile && !(user as any)?.profileImageUrl && (
-                  <div>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      id="profile-picture-input"
-                      data-testid="input-profile-picture"
-                    />
-                    <Label htmlFor="profile-picture-input">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="cursor-pointer"
-                        asChild
-                      >
-                        <span data-testid="button-choose-picture">
-                          <Camera className="w-4 h-4 mr-2" />
-                          Choose Picture
-                        </span>
-                      </Button>
-                    </Label>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Upload an image (max 5MB)
-                    </p>
-                  </div>
-                )}
-
+                <div>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id="profile-picture-input"
+                    data-testid="input-profile-picture"
+                  />
+                  <Label htmlFor="profile-picture-input">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="cursor-pointer"
+                      asChild
+                    >
+                      <span data-testid="button-choose-picture">
+                        <Camera className="w-4 h-4 mr-2" />
+                        {selectedFile || (user as any)?.profileImageUrl ? 'Change Picture' : 'Choose Picture'}
+                      </span>
+                    </Button>
+                  </Label>
+                </div>
+                
                 {selectedFile && (
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      Selected: {selectedFile.name}
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleUploadPicture}
-                        disabled={isUploadingPicture}
-                        className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
-                        data-testid="button-upload-picture"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        {isUploadingPicture ? 'Uploading...' : 'Upload'}
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedFile(null);
-                          setPreviewUrl(null);
-                        }}
-                        data-testid="button-cancel-upload"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
+                  <p className="text-sm text-ministry-gold-exact font-medium">
+                    New: {selectedFile.name}
+                  </p>
                 )}
-
-                {!selectedFile && (user as any)?.profileImageUrl && (
-                  <div className="space-y-2">
-                    <div className="flex space-x-2">
-                      <div>
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileSelect}
-                          className="hidden"
-                          id="profile-picture-change"
-                          data-testid="input-change-picture"
-                        />
-                        <Label htmlFor="profile-picture-change">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="cursor-pointer"
-                            asChild
-                          >
-                            <span data-testid="button-change-picture">
-                              <Camera className="w-4 h-4 mr-2" />
-                              Change Picture
-                            </span>
-                          </Button>
-                        </Label>
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={handleDeletePicture}
-                        disabled={deleteProfilePictureMutation.isPending}
-                        className="text-red-600 border-red-500 hover:bg-red-50"
-                        data-testid="button-delete-picture"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Remove
-                      </Button>
-                    </div>
-                  </div>
+                
+                {(user as any)?.profileImageUrl && !selectedFile && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleDeletePicture}
+                    disabled={deleteProfilePictureMutation.isPending}
+                    className="text-red-600 border-red-500 hover:bg-red-50"
+                    data-testid="button-delete-picture"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Remove Picture
+                  </Button>
                 )}
+                
+                <p className="text-xs text-muted-foreground">
+                  {selectedFile 
+                    ? 'Click "Save Changes" below to upload this picture' 
+                    : 'Upload an image (max 5MB)'}
+                </p>
               </div>
             </div>
           </div>
@@ -457,11 +406,16 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
             </Button>
             <Button
               onClick={handleSave}
-              disabled={updateProfileMutation.isPending}
+              disabled={updateProfileMutation.isPending || uploadProfilePictureMutation.isPending}
               className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+              data-testid="button-save-profile"
             >
               <Save className="w-4 h-4 mr-2" />
-              {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+              {uploadProfilePictureMutation.isPending 
+                ? 'Uploading...' 
+                : updateProfileMutation.isPending 
+                  ? 'Saving...' 
+                  : 'Save Changes'}
             </Button>
           </div>
         </div>
