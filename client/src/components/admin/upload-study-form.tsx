@@ -575,13 +575,16 @@ export default function UploadStudyForm() {
               </div>
 
               <div className="space-y-2">
-                <FormLabel>Word Document (optional)</FormLabel>
+                <FormLabel>Word Document (.docx only, optional)</FormLabel>
                 <Input
                   type="file"
-                  accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   onChange={(e) => setWordFile(e.target.files?.[0] || null)}
                   data-testid="input-word-file"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Only .docx files are supported for interactive viewing.
+                </p>
                 {wordFile && (
                   <p className="text-sm text-muted-foreground">
                     Selected: {wordFile.name}
