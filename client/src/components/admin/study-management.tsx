@@ -605,17 +605,17 @@ export default function StudyManagement() {
 
             {/* Word File Management */}
             <div className="space-y-2">
-              <Label>Word Document (.doc/.docx)</Label>
+              <Label>Word Document (.docx only)</Label>
               {editingStudy && (editingStudy as any).wordFilename ? (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 rounded bg-blue-100 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="w-8 h-8 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
                         </svg>
                       </div>
-                      <span className="text-sm text-gray-700">{(editingStudy as any).wordOriginalName || 'Word Document'}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{(editingStudy as any).wordOriginalName || 'Word Document'}</span>
                     </div>
                     <Button
                       size="sm"
@@ -636,7 +636,7 @@ export default function StudyManagement() {
                           window.location.href = `/admin/studies/${editingStudy.id}/edit-word`;
                         }, 100);
                       }}
-                      className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal font-semibold"
+                      className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal font-bold shadow-md"
                       data-testid="button-edit-sections"
                     >
                       📝 Mark Editable Sections
@@ -648,15 +648,15 @@ export default function StudyManagement() {
                   <Input
                     id="edit-word-file"
                     type="file"
-                    accept=".doc,.docx"
+                    accept=".docx"
                     onChange={(e) => setWordFile(e.target.files?.[0] || null)}
                     data-testid="input-edit-word"
                   />
-                  <p className="text-xs text-gray-500">
-                    .docx files can be viewed in browser. .doc files are download-only.
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Only .docx files are supported for interactive viewing.
                   </p>
                   {wordFile && (
-                    <p className="text-xs text-green-600">
+                    <p className="text-xs text-green-600 dark:text-green-400">
                       Selected: {wordFile.name} - will upload when you save changes
                     </p>
                   )}
