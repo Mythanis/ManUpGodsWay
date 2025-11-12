@@ -1,6 +1,6 @@
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import MobileWordViewer from '@/components/MobileWordViewer';
+import UserInteractiveWordViewer from '@/components/UserInteractiveWordViewer';
 
 interface Study {
   id: string;
@@ -37,7 +37,8 @@ export default function WordViewer() {
   const isDocFile = study?.wordOriginalName?.toLowerCase().endsWith('.doc') || false;
 
   return (
-    <MobileWordViewer
+    <UserInteractiveWordViewer
+      studyId={id}
       wordHtmlUrl={`/api/studies/${id}/word-html`}
       wordFileUrl={`/api/studies/${id}/word-file`}
       studyTitle={study?.wordOriginalName || study?.title || 'Document'}
