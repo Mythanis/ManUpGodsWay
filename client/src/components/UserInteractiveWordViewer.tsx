@@ -44,6 +44,7 @@ export default function UserInteractiveWordViewer({
   const [htmlContent, setHtmlContent] = useState('');
   const [responses, setResponses] = useState<Record<string, string>>({});
   const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
+  const handleResponseChangeRef = useRef<(sectionId: string, text: string) => void>();
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -127,6 +128,11 @@ export default function UserInteractiveWordViewer({
     }, 1000);
   }, [saveResponseMutation]);
 
+  // Store latest version of handleResponseChange in ref
+  useEffect(() => {
+    handleResponseChangeRef.current = handleResponseChange;
+  }, [handleResponseChange]);
+
   // Cleanup timers on unmount
   useEffect(() => {
     return () => {
@@ -174,10 +180,12 @@ export default function UserInteractiveWordViewer({
           textarea.setAttribute('data-testid', `textarea-response-${section.displayOrder}`);
           textarea.setAttribute('data-section-id', section.id);
           
-          // Add input handler for autosave
+          // Add input handler for autosave (use ref to get latest function)
           textarea.addEventListener('input', (e) => {
             const target = e.target as HTMLTextAreaElement;
-            handleResponseChange(section.id, target.value);
+            if (handleResponseChangeRef.current) {
+              handleResponseChangeRef.current(section.id, target.value);
+            }
           });
           
           wrapper.appendChild(textarea);
@@ -188,7 +196,7 @@ export default function UserInteractiveWordViewer({
           console.warn('Could not inject textarea for section:', section.anchorKey, err);
         }
       });
-  }, [htmlContent, editableSections, handleResponseChange]);
+  }, [htmlContent, editableSections, responses]);
 
   // Update textarea values when responses load (without recreating textareas)
   useEffect(() => {
