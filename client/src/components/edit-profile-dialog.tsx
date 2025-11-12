@@ -136,6 +136,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
           description: "Please select an image file",
           variant: "destructive",
         });
+        event.target.value = ''; // Reset input for retry
         return;
       }
 
@@ -146,6 +147,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
           description: "Please select an image smaller than 5MB",
           variant: "destructive",
         });
+        event.target.value = ''; // Reset input for retry
         return;
       }
 
@@ -159,6 +161,9 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
       };
       reader.readAsDataURL(file);
     }
+    
+    // Reset input value to allow re-selection of same file
+    event.target.value = '';
   };
 
   const handleUploadPicture = async () => {
@@ -215,7 +220,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
                   alt={user?.firstName || 'Profile'} 
                 />
                 <AvatarFallback className="bg-ministry-gold-exact/20 text-black text-xl">
-                  {user?.firstName?.[0] || user?.email[0].toUpperCase()}
+                  {user?.firstName?.[0] || user?.email?.[0].toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
 
@@ -238,7 +243,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
                         className="cursor-pointer"
                         asChild
                       >
-                        <span>
+                        <span data-testid="button-choose-picture">
                           <Camera className="w-4 h-4 mr-2" />
                           Choose Picture
                         </span>
@@ -303,7 +308,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
                             className="cursor-pointer"
                             asChild
                           >
-                            <span>
+                            <span data-testid="button-change-picture">
                               <Camera className="w-4 h-4 mr-2" />
                               Change Picture
                             </span>
