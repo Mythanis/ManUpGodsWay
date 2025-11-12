@@ -43,6 +43,7 @@ export default function UserInteractiveWordViewer({
   const [isMobile, setIsMobile] = useState(false);
   const [htmlContent, setHtmlContent] = useState('');
   const [responses, setResponses] = useState<Record<string, string>>({});
+  const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -67,6 +68,10 @@ export default function UserInteractiveWordViewer({
         responseText,
       });
     },
+    onSuccess: () => {
+      // Invalidate cache to refresh responses
+      queryClient.invalidateQueries({ queryKey: [`/api/studies/${studyId}/user-responses`] });
+    },
     onError: (error: any) => {
       console.error('Error saving response:', error);
     }
@@ -86,7 +91,7 @@ export default function UserInteractiveWordViewer({
       });
   }, [studyId, wordHtmlUrl, isDocFile]);
 
-  // Load user responses into state
+  // Load user responses into state (only once on mount)
   useEffect(() => {
     const responsesMap: Record<string, string> = {};
     userResponses.forEach(r => {
@@ -105,27 +110,39 @@ export default function UserInteractiveWordViewer({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Debounced save
+  // Debounced save with proper cleanup
   const handleResponseChange = useCallback((sectionId: string, text: string) => {
+    // Update local state immediately for responsive UI
     setResponses(prev => ({ ...prev, [sectionId]: text }));
     
-    // Debounce save - 1 second
-    const timeoutId = setTimeout(() => {
-      saveResponseMutation.mutate({ sectionId, responseText: text });
-    }, 1000);
+    // Clear existing timer for this section
+    if (debounceTimers.current[sectionId]) {
+      clearTimeout(debounceTimers.current[sectionId]);
+    }
     
-    return () => clearTimeout(timeoutId);
+    // Set new timer for debounced save (1 second)
+    debounceTimers.current[sectionId] = setTimeout(() => {
+      saveResponseMutation.mutate({ sectionId, responseText: text });
+      delete debounceTimers.current[sectionId];
+    }, 1000);
   }, [saveResponseMutation]);
 
-  // Inject textareas into HTML
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(debounceTimers.current).forEach(timer => clearTimeout(timer));
+    };
+  }, []);
+
+  // Inject textareas into HTML (only once when sections load)
   useEffect(() => {
     if (!htmlContent || editableSections.length === 0) return;
     
     const container = document.querySelector('[data-testid="interactive-word-content"]');
     if (!container) return;
     
-    // Remove old textareas
-    container.querySelectorAll('.editable-section-wrapper').forEach(el => el.remove());
+    // Check if already injected
+    if (container.querySelector('.editable-section-wrapper')) return;
     
     // Inject textareas for each editable section
     editableSections
@@ -133,7 +150,10 @@ export default function UserInteractiveWordViewer({
       .forEach(section => {
         try {
           const element = container.querySelector(section.anchorKey);
-          if (!element) return;
+          if (!element) {
+            console.warn('Could not find element for anchor:', section.anchorKey);
+            return;
+          }
           
           // Create wrapper for textarea
           const wrapper = document.createElement('div');
@@ -146,39 +166,42 @@ export default function UserInteractiveWordViewer({
           label.textContent = section.label;
           wrapper.appendChild(label);
           
-          // Create textarea container (React will render into this)
-          const textareaContainer = document.createElement('div');
-          textareaContainer.setAttribute('data-textarea-id', section.id);
-          wrapper.appendChild(textareaContainer);
+          // Create textarea element
+          const textarea = document.createElement('textarea');
+          textarea.className = 'w-full min-h-[100px] p-3 border rounded-md bg-white dark:bg-gray-800 text-foreground';
+          textarea.placeholder = section.defaultPrompt || 'Type your response here...';
+          textarea.value = responses[section.id] || ''; // Set initial value from saved responses
+          textarea.setAttribute('data-testid', `textarea-response-${section.displayOrder}`);
+          textarea.setAttribute('data-section-id', section.id);
+          
+          // Add input handler for autosave
+          textarea.addEventListener('input', (e) => {
+            const target = e.target as HTMLTextAreaElement;
+            handleResponseChange(section.id, target.value);
+          });
+          
+          wrapper.appendChild(textarea);
           
           // Insert after the marked element
           element.after(wrapper);
         } catch (err) {
-          console.warn('Could not inject textarea for section:', section.anchorKey);
+          console.warn('Could not inject textarea for section:', section.anchorKey, err);
         }
       });
+  }, [htmlContent, editableSections, handleResponseChange]);
+
+  // Update textarea values when responses load (without recreating textareas)
+  useEffect(() => {
+    if (Object.keys(responses).length === 0) return;
     
-    // Now render textareas using React
-    editableSections.forEach(section => {
-      const container = document.querySelector(`[data-textarea-id="${section.id}"]`);
-      if (!container) return;
-      
-      // Create textarea element
-      const textarea = document.createElement('textarea');
-      textarea.className = 'w-full min-h-[100px] p-3 border rounded-md bg-white dark:bg-gray-800 text-foreground';
-      textarea.placeholder = section.defaultPrompt || 'Type your response here...';
-      textarea.value = responses[section.id] || '';
-      textarea.setAttribute('data-testid', `textarea-response-${section.displayOrder}`);
-      
-      // Add change handler
-      textarea.addEventListener('input', (e) => {
-        const target = e.target as HTMLTextAreaElement;
-        handleResponseChange(section.id, target.value);
-      });
-      
-      container.appendChild(textarea);
+    // Update existing textarea values
+    Object.entries(responses).forEach(([sectionId, text]) => {
+      const textarea = document.querySelector(`textarea[data-section-id="${sectionId}"]`) as HTMLTextAreaElement;
+      if (textarea && textarea.value !== text) {
+        textarea.value = text;
+      }
     });
-  }, [htmlContent, editableSections, responses, handleResponseChange]);
+  }, [responses]);
 
   if (isDocFile) {
     return (
