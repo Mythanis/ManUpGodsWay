@@ -628,7 +628,7 @@ export default function StudyManagement() {
                   </div>
                   {!(editingStudy as any).wordOriginalName?.toLowerCase().endsWith('.doc') && (
                     <Button
-                      variant="outline"
+                      variant="default"
                       size="sm"
                       onClick={() => {
                         setShowEditDialog(false);
@@ -636,10 +636,10 @@ export default function StudyManagement() {
                           window.location.href = `/admin/studies/${editingStudy.id}/edit-word`;
                         }, 100);
                       }}
-                      className="w-full"
+                      className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal font-semibold"
                       data-testid="button-edit-sections"
                     >
-                      Mark Editable Sections
+                      📝 Mark Editable Sections
                     </Button>
                   )}
                 </div>
