@@ -3575,6 +3575,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload profile picture
+  app.post('/api/profile/upload-picture', isAuthenticated, imageUpload.single('profilePicture'), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'Profile picture file is required' });
+      }
+
+      // Convert uploaded file to base64 data URL
+      const base64Data = req.file.buffer.toString('base64');
+      const dataUrl = `data:${req.file.mimetype};base64,${base64Data}`;
+
+      // Update user's profileImageUrl
+      const updatedUser = await storage.updateUserProfile(userId, {
+        profileImageUrl: dataUrl,
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      res.status(500).json({ message: "Failed to upload profile picture" });
+    }
+  });
+
+  // Delete profile picture
+  app.delete('/api/profile/delete-picture', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+
+      // Clear user's profileImageUrl
+      const updatedUser = await storage.updateUserProfile(userId, {
+        profileImageUrl: null,
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error deleting profile picture:", error);
+      res.status(500).json({ message: "Failed to delete profile picture" });
+    }
+  });
+
   // Logo settings routes
   // Get current logo settings
   app.get('/api/logo', async (req, res) => {
