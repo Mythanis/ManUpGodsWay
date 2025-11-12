@@ -1128,37 +1128,55 @@ export default function Admin() {
 
             {/* Word File Management */}
             <div className="space-y-2">
-              <Label>Word Document (.doc/.docx)</Label>
+              <Label>Word Document (.docx only)</Label>
               {editingStudy && (editingStudy as any).wordFilename ? (
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                      <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-                      </svg>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                        </svg>
+                      </div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{(editingStudy as any).wordOriginalName || 'Word Document'}</span>
                     </div>
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{(editingStudy as any).wordOriginalName || 'Word Document'}</span>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleFileDelete('word')}
+                      data-testid="button-delete-word"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleFileDelete('word')}
-                    data-testid="button-delete-word"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  {(editingStudy as any).wordOriginalName?.toLowerCase().endsWith('.docx') && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => {
+                        setShowEditDialog(false);
+                        setTimeout(() => {
+                          window.location.href = `/admin/studies/${editingStudy.id}/edit-word`;
+                        }, 100);
+                      }}
+                      className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal font-bold shadow-md"
+                      data-testid="button-edit-sections"
+                    >
+                      📝 Mark Editable Sections
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-2">
                   <Input
                     id="edit-word-file"
                     type="file"
-                    accept=".doc,.docx"
+                    accept=".docx"
                     onChange={(e) => setWordFile(e.target.files?.[0] || null)}
                     data-testid="input-edit-word"
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    .docx files can be viewed in browser. .doc files are download-only.
+                    Only .docx files are supported for interactive viewing.
                   </p>
                   {wordFile && (
                     <p className="text-xs text-green-600 dark:text-green-400">
@@ -1181,7 +1199,7 @@ export default function Admin() {
               <Button
                 onClick={handleUpdate}
                 disabled={updateStudyMutation.isPending || !formData.title.trim()}
-                className="bg-ministry-navy hover:bg-ministry-charcoal"
+                className="bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal font-semibold"
                 data-testid="button-save-edit"
               >
                 {updateStudyMutation.isPending ? "Saving..." : "Save Changes"}
