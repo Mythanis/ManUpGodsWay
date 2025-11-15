@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { LiveStreamBanner } from "@/components/live-stream-banner";
 import { LiveStreamSetupDialog } from "@/components/live-stream-setup-dialog";
+import { useLocation } from "wouter";
 import { 
   Headphones, 
   Video, 
@@ -67,6 +68,7 @@ export default function Podcasts() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("date");
@@ -76,6 +78,7 @@ export default function Podcasts() {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement | HTMLVideoElement }>({});
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [selectedVideoPodcast, setSelectedVideoPodcast] = useState<Podcast | null>(null);
+  const [fromCarousel, setFromCarousel] = useState(false);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -112,6 +115,7 @@ export default function Podcasts() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const podcastId = params.get('id');
+    const from = params.get('from');
     
     if (podcastId && podcasts.length > 0) {
       const podcast = podcasts.find((p: Podcast) => p.id === podcastId);
@@ -119,15 +123,21 @@ export default function Podcasts() {
         if (podcast.type === 'video') {
           setSelectedVideoPodcast(podcast);
           setVideoDialogOpen(true);
+          setFromCarousel(from === 'carousel');
         } else {
           // For audio podcasts, start playing
           setCurrentlyPlaying(podcast.id);
+          // Audio podcasts don't have dialogs, so navigate back immediately if from carousel
+          if (from === 'carousel') {
+            // Give it a moment to start playing, then navigate back
+            setTimeout(() => setLocation('/home'), 100);
+          }
         }
         // Clear the URL parameter after opening
         window.history.replaceState({}, '', '/podcasts');
       }
     }
-  }, [podcasts]);
+  }, [podcasts, setLocation]);
 
   // Track podcast view
   const trackViewMutation = useMutation({
@@ -219,6 +229,14 @@ export default function Podcasts() {
       return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Handle closing video podcast dialog - navigate back to home if from carousel
+  const handleCloseVideoDialog = (open: boolean) => {
+    setVideoDialogOpen(open);
+    if (!open && fromCarousel) {
+      setLocation('/home');
+    }
   };
 
   const handlePlayPause = (podcast: Podcast) => {
@@ -588,7 +606,7 @@ export default function Podcasts() {
       </div>
 
       {/* Video Player Dialog */}
-      <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
+      <Dialog open={videoDialogOpen} onOpenChange={handleCloseVideoDialog}>
         <DialogContent className="max-w-4xl w-full">
           <DialogHeader>
             <DialogTitle>{selectedVideoPodcast?.title}</DialogTitle>

@@ -36,16 +36,19 @@ export default function HomeCarousel() {
         return item.linkId ? `/studies/${item.linkId}` : "/library";
       case "video":
         // Videos: link to specific video if ID provided, otherwise videos page
-        return item.linkId ? `/videos?id=${item.linkId}` : "/videos";
+        // Add from=carousel to track where user came from
+        return item.linkId ? `/videos?id=${item.linkId}&from=carousel` : "/videos";
       case "podcast":
         // Podcasts: link to specific podcast if ID provided, otherwise podcasts page
-        return item.linkId ? `/podcasts?id=${item.linkId}` : "/podcasts";
+        // Add from=carousel to track where user came from
+        return item.linkId ? `/podcasts?id=${item.linkId}&from=carousel` : "/podcasts";
       case "devotional":
         // Devotionals: link to specific devotional if ID provided, otherwise home
         return item.linkId ? `/home?devotional=${item.linkId}` : "/home";
       case "challenge":
         // Challenges: link to specific challenge if ID provided, otherwise challenges page
-        return item.linkId ? `/challenges?id=${item.linkId}` : "/challenges";
+        // Add from=carousel to track where user came from
+        return item.linkId ? `/challenges?id=${item.linkId}&from=carousel` : "/challenges";
       default:
         return "/home";
     }

@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Search, Star, Filter, Play, Clock, Eye, Crown, Gem, Zap } from "lucide-react";
+import { useLocation } from "wouter";
 
 const categories = [
   { id: 'all', label: 'All Videos' },
@@ -43,6 +44,7 @@ export default function Videos() {
   const { effectiveTheme } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('recent');
@@ -53,6 +55,7 @@ export default function Videos() {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
   const [videoStreamUrl, setVideoStreamUrl] = useState<string | null>(null);
+  const [fromCarousel, setFromCarousel] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Add mouse wheel horizontal scroll support
@@ -117,12 +120,14 @@ export default function Videos() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const videoId = params.get('id');
+    const from = params.get('from');
     
     if (videoId && videos.length > 0) {
       const video = videos.find((v: Video) => v.id === videoId);
       if (video) {
         setSelectedVideo(video);
         setShowVideoDialog(true);
+        setFromCarousel(from === 'carousel');
         // Clear the URL parameter after opening
         window.history.replaceState({}, '', '/videos');
       }
@@ -139,6 +144,14 @@ export default function Videos() {
       setVideoStreamUrl(null);
     }
   }, [selectedVideo, showVideoDialog]);
+
+  // Handle closing video dialog - navigate back to home if from carousel
+  const handleCloseVideoDialog = (open: boolean) => {
+    setShowVideoDialog(open);
+    if (!open && fromCarousel) {
+      setLocation('/home');
+    }
+  };
 
   // Filter videos based on search
   const filteredVideos = videos.filter((video: Video) =>
@@ -418,7 +431,7 @@ export default function Videos() {
       </div>
 
       {/* Video Detail Dialog */}
-      <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
+      <Dialog open={showVideoDialog} onOpenChange={handleCloseVideoDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-3">
