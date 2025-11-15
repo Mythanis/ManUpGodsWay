@@ -923,6 +923,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete thumbnail image for study
+  app.delete('/api/studies/:id/delete-thumbnail', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const study = await storage.getStudy(req.params.id);
+      if (!study) {
+        return res.status(404).json({ message: "Study not found" });
+      }
+
+      // Delete file from disk if it exists
+      if (study.thumbnailFilename) {
+        const uploadsDir = path.resolve(process.cwd(), 'uploads', 'images');
+        const filePath = path.resolve(uploadsDir, study.thumbnailFilename);
+        
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+
+      // Clear thumbnail data in database
+      const updatedStudy = await storage.updateStudy(req.params.id, {
+        thumbnailFilename: null,
+        thumbnailMimeType: null,
+        thumbnailFileSize: null,
+        thumbnailUrl: null
+      });
+
+      res.json(updatedStudy);
+    } catch (error) {
+      console.error("Error deleting thumbnail:", error);
+      res.status(500).json({ message: "Failed to delete thumbnail" });
+    }
+  });
+
   // Download PDF document for study
   app.get('/api/studies/:id/download-pdf', isAuthenticated, async (req: any, res) => {
     try {

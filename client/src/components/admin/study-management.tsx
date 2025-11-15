@@ -52,8 +52,10 @@ export default function StudyManagement() {
   const [editingStudy, setEditingStudy] = useState<Study | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [wordFile, setWordFile] = useState<File | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [uploadingWord, setUploadingWord] = useState(false);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
@@ -143,6 +145,9 @@ export default function StudyManagement() {
     if (!editingStudy) return;
 
     // First, upload any selected files
+    if (thumbnailFile) {
+      await handleThumbnailUpload(thumbnailFile);
+    }
     if (pdfFile) {
       await handleFileUpload(pdfFile, 'pdf');
     }
@@ -160,7 +165,7 @@ export default function StudyManagement() {
       author: formData.author,
       tags: formData.tags.split(",").map(tag => tag.trim()).filter(Boolean),
       requiresPurchase: formData.requiresPurchase,
-      price: formData.requiresPurchase && formData.price && formData.price.trim() !== '' ? formData.price : null,
+      price: formData.requiresPurchase && formData.price && formData.price.trim() !== '' ? formData.price : undefined,
       purchaseRequiredTiers: formData.requiresPurchase ? formData.purchaseRequiredTiers : [],
     };
 
@@ -241,6 +246,76 @@ export default function StudyManagement() {
       toast({
         title: "Error",
         description: error.message || `Failed to delete ${type} file`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleThumbnailUpload = async (file: File) => {
+    if (!editingStudy) return;
+
+    const formData = new FormData();
+    formData.append('thumbnail', file);
+
+    try {
+      setUploadingThumbnail(true);
+      const response = await fetch(`/api/studies/${editingStudy.id}/upload-thumbnail`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload thumbnail');
+      }
+
+      toast({
+        title: "Success",
+        description: "Thumbnail uploaded successfully",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/studies/${editingStudy.id}`] });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to upload thumbnail",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingThumbnail(false);
+      setThumbnailFile(null);
+    }
+  };
+
+  const handleThumbnailDelete = async () => {
+    if (!editingStudy) return;
+
+    if (!confirm('Are you sure you want to delete this thumbnail? The logo will be shown instead.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/studies/${editingStudy.id}/delete-thumbnail`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete thumbnail');
+      }
+
+      toast({
+        title: "Success",
+        description: "Thumbnail deleted successfully. Logo will be shown.",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/studies/${editingStudy.id}`] });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete thumbnail",
         variant: "destructive",
       });
     }
@@ -561,6 +636,56 @@ export default function StudyManagement() {
                 placeholder="tag1, tag2, tag3"
                 data-testid="input-edit-tags"
               />
+            </div>
+
+            {/* Thumbnail Image Management */}
+            <div className="space-y-2">
+              <Label>Thumbnail Image</Label>
+              {editingStudy && (editingStudy as any).thumbnailFilename ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 rounded overflow-hidden bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+                        <img 
+                          src={(editingStudy as any).thumbnailUrl} 
+                          alt="Thumbnail" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Custom Thumbnail</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={handleThumbnailDelete}
+                      data-testid="button-delete-thumbnail"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Delete thumbnail to show logo instead
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Input
+                    id="edit-thumbnail-file"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+                    data-testid="input-edit-thumbnail"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Upload a custom thumbnail or logo will be shown by default
+                  </p>
+                  {thumbnailFile && (
+                    <p className="text-xs text-green-600 dark:text-green-400">
+                      Selected: {thumbnailFile.name} - will upload when you save changes
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* PDF File Management */}
