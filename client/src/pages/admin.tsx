@@ -24,8 +24,9 @@ import ChallengeManagement from "@/components/admin/challenge-management";
 import FitnessManagement from "@/components/admin/fitness-management";
 import EventManagement from "@/components/admin/event-management";
 import TierPricingManagement from "@/components/admin/tier-pricing-management";
+import CarouselManagement from "@/components/admin/carousel-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus } from "lucide-react";
 
 interface Study {
   id: string;
@@ -54,6 +55,7 @@ const adminTabs = [
   { id: "videos", label: "Videos", icon: Video },
   { id: "podcasts", label: "Podcasts", icon: Headphones },
   { id: "challenges", label: "Challenges", icon: Trophy },
+  { id: "carousel", label: "Carousel", icon: ImagePlus },
   { id: "fitness", label: "Fitness", icon: Dumbbell },
   { id: "events", label: "Events", icon: Calendar },
   { id: "devotionals", label: "Devotionals", icon: Calendar },
@@ -780,6 +782,13 @@ export default function Admin() {
           {activeTab === "challenges" && (
             <div>
               <ChallengeManagement />
+            </div>
+          )}
+
+          {activeTab === "carousel" && (
+            <div>
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Homepage Carousel Management</h2>
+              <CarouselManagement />
             </div>
           )}
 
