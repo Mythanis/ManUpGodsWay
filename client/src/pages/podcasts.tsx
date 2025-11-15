@@ -108,6 +108,27 @@ export default function Podcasts() {
     retry: false
   });
 
+  // Check URL parameters to auto-open podcast from carousel
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const podcastId = params.get('id');
+    
+    if (podcastId && podcasts.length > 0) {
+      const podcast = podcasts.find((p: Podcast) => p.id === podcastId);
+      if (podcast) {
+        if (podcast.type === 'video') {
+          setSelectedVideoPodcast(podcast);
+          setVideoDialogOpen(true);
+        } else {
+          // For audio podcasts, start playing
+          setCurrentlyPlaying(podcast.id);
+        }
+        // Clear the URL parameter after opening
+        window.history.replaceState({}, '', '/podcasts');
+      }
+    }
+  }, [podcasts]);
+
   // Track podcast view
   const trackViewMutation = useMutation({
     mutationFn: (podcastId: string) =>

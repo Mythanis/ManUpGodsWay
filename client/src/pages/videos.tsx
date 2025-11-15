@@ -69,17 +69,6 @@ export default function Videos() {
     return () => container.removeEventListener('wheel', handleWheel);
   }, []);
 
-  // Set video stream URL when dialog opens
-  useEffect(() => {
-    if (selectedVideo && showVideoDialog) {
-      // For demo purposes, use the sample video directly
-      // In production, this would be the actual uploaded video file
-      setVideoStreamUrl('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
-    } else {
-      setVideoStreamUrl(null);
-    }
-  }, [selectedVideo, showVideoDialog]);
-
   const { data: videos = [], isLoading } = useQuery({
     queryKey: ["/api/videos", { category: selectedCategory, sortBy }],
     queryFn: async () => {
@@ -123,6 +112,33 @@ export default function Videos() {
     enabled: !!selectedVideo?.id && showVideoDialog,
     retry: false,
   });
+
+  // Check URL parameters to auto-open video from carousel
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const videoId = params.get('id');
+    
+    if (videoId && videos.length > 0) {
+      const video = videos.find((v: Video) => v.id === videoId);
+      if (video) {
+        setSelectedVideo(video);
+        setShowVideoDialog(true);
+        // Clear the URL parameter after opening
+        window.history.replaceState({}, '', '/videos');
+      }
+    }
+  }, [videos]);
+
+  // Set video stream URL when dialog opens
+  useEffect(() => {
+    if (selectedVideo && showVideoDialog) {
+      // For demo purposes, use the sample video directly
+      // In production, this would be the actual uploaded video file
+      setVideoStreamUrl('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
+    } else {
+      setVideoStreamUrl(null);
+    }
+  }, [selectedVideo, showVideoDialog]);
 
   // Filter videos based on search
   const filteredVideos = videos.filter((video: Video) =>

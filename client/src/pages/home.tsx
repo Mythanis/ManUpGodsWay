@@ -150,6 +150,18 @@ export default function Home() {
     retry: false,
   });
 
+  // Check URL parameters to auto-open devotional from carousel
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const devotionalParam = params.get('devotional');
+    
+    if (devotionalParam && devotional) {
+      setShowFullDevotional(true);
+      // Clear the URL parameter after opening
+      window.history.replaceState({}, '', '/home');
+    }
+  }, [devotional]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
