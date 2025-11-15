@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { apiRequest } from "@/lib/queryClient";
-import { Edit, Trash2, Plus, Book, Users, Crown, Gem, List } from "lucide-react";
+import { Edit, Trash2, Plus, Book, Users, Crown, Gem, List, ChevronUp, ChevronDown } from "lucide-react";
 
 interface Study {
   id: string;
@@ -83,6 +83,7 @@ export default function StudyManagement() {
     keyTakeaway: "",
     displayOrder: 1,
     estimatedMinutes: 15,
+    questions: [] as Array<{ id: string; question: string; type: string }>,
   });
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -294,6 +295,7 @@ export default function StudyManagement() {
       keyTakeaway: "",
       displayOrder: nextOrder,
       estimatedMinutes: 15,
+      questions: [],
     });
     setEditingLesson(null);
   };
@@ -308,6 +310,7 @@ export default function StudyManagement() {
       keyTakeaway: lesson.keyTakeaway || "",
       displayOrder: lesson.displayOrder,
       estimatedMinutes: lesson.estimatedMinutes || 15,
+      questions: lesson.questions || [],
     });
   };
 
@@ -354,6 +357,7 @@ export default function StudyManagement() {
       keyTakeaway: lessonFormData.keyTakeaway?.trim() || undefined,
       displayOrder: parseInt(String(lessonFormData.displayOrder)),
       estimatedMinutes: parseInt(String(lessonFormData.estimatedMinutes)),
+      questions: lessonFormData.questions.length > 0 ? lessonFormData.questions : undefined,
     };
 
     if (editingLesson) {
@@ -375,7 +379,75 @@ export default function StudyManagement() {
       keyTakeaway: "",
       displayOrder: 1,
       estimatedMinutes: 15,
+      questions: [],
     });
+  };
+
+  const handleAddQuestion = () => {
+    const newQuestion = {
+      id: `q-${Date.now()}`,
+      question: "",
+      type: "reflection"
+    };
+    setLessonFormData({
+      ...lessonFormData,
+      questions: [...lessonFormData.questions, newQuestion]
+    });
+  };
+
+  const handleUpdateQuestion = (id: string, field: string, value: string) => {
+    setLessonFormData({
+      ...lessonFormData,
+      questions: lessonFormData.questions.map(q => 
+        q.id === id ? { ...q, [field]: value } : q
+      )
+    });
+  };
+
+  const handleDeleteQuestion = (id: string) => {
+    setLessonFormData({
+      ...lessonFormData,
+      questions: lessonFormData.questions.filter(q => q.id !== id)
+    });
+  };
+
+  const handleReorderLesson = async (lessonId: string, direction: 'up' | 'down') => {
+    const currentIndex = lessons.findIndex(l => l.id === lessonId);
+    if (currentIndex === -1) return;
+    
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= lessons.length) return;
+
+    const currentLesson = lessons[currentIndex];
+    const swapLesson = lessons[newIndex];
+
+    try {
+      // Update both lessons' display orders
+      await Promise.all([
+        apiRequest("PATCH", `/api/studies/${managingLessonsStudy?.id}/lessons/${currentLesson.id}`, {
+          displayOrder: swapLesson.displayOrder
+        }),
+        apiRequest("PATCH", `/api/studies/${managingLessonsStudy?.id}/lessons/${swapLesson.id}`, {
+          displayOrder: currentLesson.displayOrder
+        })
+      ]);
+
+      queryClient.invalidateQueries({ queryKey: [`/api/studies/${managingLessonsStudy?.id}/lessons`] });
+      toast({
+        title: "Success",
+        description: "Lesson order updated",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reorder lessons",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const applyFormatting = (command: string, value?: string) => {
+    document.execCommand(command, false, value);
   };
 
   const handleFileUpload = async (file: File, type: 'pdf' | 'word') => {
@@ -1094,14 +1166,85 @@ export default function StudyManagement() {
                     />
                   </div>
                   <div>
-                    <Label>Content *</Label>
-                    <Textarea
-                      value={lessonFormData.content}
-                      onChange={(e) => setLessonFormData({...lessonFormData, content: e.target.value})}
-                      placeholder="Lesson content..."
-                      rows={6}
-                      data-testid="textarea-lesson-content"
-                    />
+                    <Label>Content * (Rich Text)</Label>
+                    <div className="border rounded-md">
+                      <div className="flex flex-wrap gap-1 p-2 border-b bg-gray-50">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => applyFormatting('bold')}
+                          className="h-8 px-2"
+                          data-testid="button-format-bold"
+                        >
+                          <strong>B</strong>
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => applyFormatting('italic')}
+                          className="h-8 px-2"
+                          data-testid="button-format-italic"
+                        >
+                          <em>I</em>
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => applyFormatting('underline')}
+                          className="h-8 px-2"
+                          data-testid="button-format-underline"
+                        >
+                          <u>U</u>
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => applyFormatting('formatBlock', '<h3>')}
+                          className="h-8 px-3"
+                          data-testid="button-format-heading"
+                        >
+                          H3
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => applyFormatting('insertUnorderedList')}
+                          className="h-8 px-2"
+                          data-testid="button-format-list"
+                        >
+                          • List
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => applyFormatting('insertOrderedList')}
+                          className="h-8 px-2"
+                          data-testid="button-format-numbered"
+                        >
+                          1. List
+                        </Button>
+                      </div>
+                      <div
+                        contentEditable
+                        className="min-h-[150px] p-3 focus:outline-none"
+                        dangerouslySetInnerHTML={{ __html: lessonFormData.content }}
+                        onInput={(e) => {
+                          const content = e.currentTarget.innerHTML;
+                          setLessonFormData({...lessonFormData, content});
+                        }}
+                        onBlur={(e) => {
+                          const content = e.currentTarget.innerHTML;
+                          setLessonFormData({...lessonFormData, content});
+                        }}
+                        data-testid="richtext-lesson-content"
+                      />
+                    </div>
                   </div>
                   <div>
                     <Label>Scripture Reference</Label>
@@ -1122,6 +1265,69 @@ export default function StudyManagement() {
                       data-testid="textarea-lesson-takeaway"
                     />
                   </div>
+
+                  {/* Question Builder */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Reflection Questions</Label>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleAddQuestion}
+                        data-testid="button-add-question"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add Question
+                      </Button>
+                    </div>
+                    {lessonFormData.questions.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No questions yet. Click "Add Question" to create reflection questions.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {lessonFormData.questions.map((q, index) => (
+                          <Card key={q.id} className="p-3">
+                            <div className="space-y-2">
+                              <div className="flex items-start gap-2">
+                                <span className="text-xs font-semibold text-muted-foreground mt-2">Q{index + 1}</span>
+                                <div className="flex-1 space-y-2">
+                                  <Input
+                                    value={q.question}
+                                    onChange={(e) => handleUpdateQuestion(q.id, 'question', e.target.value)}
+                                    placeholder="Enter your question..."
+                                    data-testid={`input-question-${index}`}
+                                  />
+                                  <Select
+                                    value={q.type}
+                                    onValueChange={(value) => handleUpdateQuestion(q.id, 'type', value)}
+                                  >
+                                    <SelectTrigger data-testid={`select-question-type-${index}`}>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="reflection">Reflection</SelectItem>
+                                      <SelectItem value="application">Application</SelectItem>
+                                      <SelectItem value="discussion">Discussion</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleDeleteQuestion(q.id)}
+                                  data-testid={`button-delete-question-${index}`}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex gap-2">
                     <Button
                       onClick={handleSaveLesson}
@@ -1162,7 +1368,7 @@ export default function StudyManagement() {
                 </Card>
               ) : (
                 <div className="space-y-2">
-                  {lessons.map((lesson) => (
+                  {lessons.map((lesson, index) => (
                     <Card key={lesson.id} className="border-gray-200">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
@@ -1174,7 +1380,7 @@ export default function StudyManagement() {
                               <h4 className="font-semibold text-sm">{lesson.title}</h4>
                             </div>
                             <p className="text-xs text-muted-foreground line-clamp-2">
-                              {lesson.content}
+                              {lesson.content.replace(/<[^>]*>/g, '')}
                             </p>
                             {lesson.scripture && (
                               <p className="text-xs text-ministry-gold mt-1">
@@ -1182,7 +1388,29 @@ export default function StudyManagement() {
                               </p>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 ml-4">
+                          <div className="flex items-center gap-1 ml-4">
+                            <div className="flex flex-col gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleReorderLesson(lesson.id, 'up')}
+                                disabled={index === 0}
+                                className="h-6 w-6 p-0"
+                                data-testid={`button-reorder-up-${lesson.id}`}
+                              >
+                                <ChevronUp className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleReorderLesson(lesson.id, 'down')}
+                                disabled={index === lessons.length - 1}
+                                className="h-6 w-6 p-0"
+                                data-testid={`button-reorder-down-${lesson.id}`}
+                              >
+                                <ChevronDown className="w-3 h-3" />
+                              </Button>
+                            </div>
                             <Button
                               size="sm"
                               variant="outline"
