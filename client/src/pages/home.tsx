@@ -396,102 +396,50 @@ export default function Home() {
           <HomeCarousel />
         </div>
         
-        <Card className="shadow-lg mb-6" data-testid="card-devotional">
+        <h2 className="text-lg font-bold text-white mb-4">Today's Devotional</h2>
+        <Card className="shadow-sm border border-gray-100 bg-ministry-gold-exact/20 mb-6" data-testid="card-devotional">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-ministry-charcoal">Today's Devotional</h2>
-              <span className="text-xs text-ministry-slate">
-                {formatLocalDate(new Date(), { 
-                  weekday: 'short', 
-                  month: 'short', 
-                  day: 'numeric' 
-                })}
-              </span>
-            </div>
-            
             {devotional ? (
               <>
-                {/* Devotional Image */}
-                <div className="mb-4 rounded-lg overflow-hidden">
-                  <img 
-                    src={getDefaultThumbnail((devotional as any)?.imageUrl)} 
-                    alt={(devotional as any)?.title || 'Daily Devotional'}
-                    className="w-full h-48 object-cover"
-                  />
-                </div>
-                
-                <div className="bg-ministry-steel/10 rounded-lg p-4 mb-4">
-                  <h3 className="text-ministry-navy font-bold text-base mb-2">{(devotional as any)?.title}</h3>
-                  <p className="text-ministry-navy font-semibold text-sm mb-2" data-testid="text-verse">
-                    "{(devotional as any)?.verse}" - {(devotional as any)?.verseReference}
-                  </p>
-                  <p className="text-ministry-slate text-sm leading-relaxed" data-testid="text-devotional-content">
-                    {(devotional as any)?.content?.substring(0, 120)}...
-                  </p>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <Button 
-                    variant="ghost" 
-                    className="text-ministry-steel font-medium text-sm hover:text-ministry-navy"
-                    onClick={() => setShowFullDevotional(true)}
-                    data-testid="button-read-devotional"
-                  >
-                    Read Full Devotional
-                  </Button>
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className={`p-2 rounded-lg transition-colors ${
-                        isLiked 
-                          ? 'bg-red-100 text-red-500 hover:bg-red-200' 
-                          : 'bg-muted hover:bg-muted/80 text-muted-foreground'
-                      }`}
-                      onClick={() => {
-                        setIsLiked(!isLiked);
-                        toast({
-                          title: isLiked ? "Removed from favorites" : "Added to favorites",
-                          description: isLiked ? "Devotional removed from your favorites" : "Devotional saved to your favorites",
-                        });
-                      }}
-                      data-testid="button-like-devotional"
-                    >
-                      <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className="p-2 rounded-lg bg-muted hover:bg-muted/80"
-                      onClick={() => {
-                        const shareText = `${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n${devotional.content}`;
-                        
-                        if (navigator.share) {
-                          navigator.share({
-                            title: devotional.title,
-                            text: shareText,
-                            url: window.location.origin,
-                          }).catch(console.error);
-                        } else {
-                          // Fallback: copy to clipboard
-                          navigator.clipboard.writeText(shareText).then(() => {
-                            toast({
-                              title: "Copied to clipboard",
-                              description: "Devotional text copied to clipboard for sharing",
-                            });
-                          });
-                        }
-                      }}
-                      data-testid="button-share-devotional"
-                    >
-                      <Share2 className="w-4 h-4" />
-                    </Button>
+                <div className="flex items-start gap-4 mb-4">
+                  {/* Small Thumbnail */}
+                  <div className="flex-shrink-0">
+                    <img 
+                      src={getDefaultThumbnail((devotional as any)?.imageUrl)} 
+                      alt={(devotional as any)?.title || 'Daily Devotional'}
+                      className="w-20 h-20 rounded-lg object-cover"
+                    />
+                  </div>
+                  
+                  {/* Title and Verse */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-black text-base mb-1" data-testid="text-devotional-title">
+                      {(devotional as any)?.title}
+                    </h3>
+                    <p className="text-sm text-black mb-1" data-testid="text-verse">
+                      {(devotional as any)?.verseReference}
+                    </p>
+                    <p className="text-xs text-black">
+                      {formatLocalDate(new Date(), { 
+                        weekday: 'long', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </p>
                   </div>
                 </div>
+                
+                <Button 
+                  onClick={() => setShowFullDevotional(true)}
+                  className="w-full bg-ministry-charcoal text-white py-3 rounded-xl font-medium hover:bg-ministry-steel"
+                  data-testid="button-read-devotional"
+                >
+                  Read Today's Devotional
+                </Button>
               </>
             ) : (
               <div className="text-center py-8">
-                <p className="text-ministry-slate">No devotional available for today</p>
+                <p className="text-black">No devotional available for today</p>
               </div>
             )}
           </CardContent>
