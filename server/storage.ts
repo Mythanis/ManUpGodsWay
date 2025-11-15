@@ -866,6 +866,8 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Update user's streak when they complete a lesson
+    // Note: updateUserStreak has a guard clause that prevents multiple updates per day,
+    // so this is safe to call even if the user completes multiple lessons in one day
     await this.updateUserStreak(userId, now);
 
     return result;
