@@ -1887,6 +1887,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mark lesson as complete
+  app.post('/api/studies/:studyId/lessons/:lessonId/complete', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { lessonId } = req.params;
+      const { answers } = req.body;
+
+      const progress = await storage.markLessonComplete(userId, lessonId, answers);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error marking lesson complete:", error);
+      res.status(500).json({ message: "Failed to mark lesson complete" });
+    }
+  });
+
+  // Get user's lesson progress
+  app.get('/api/users/:userId/lesson-progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const requestingUserId = req.user.claims.sub;
+      const { userId } = req.params;
+
+      // Users can only view their own progress
+      if (requestingUserId !== userId) {
+        const user = await storage.getUser(requestingUserId);
+        if (!user || !isAdmin(user)) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+      }
+
+      const progress = await storage.getUserLessonProgress(userId);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching lesson progress:", error);
+      res.status(500).json({ message: "Failed to fetch lesson progress" });
+    }
+  });
+
   // Devotional routes
   app.get('/api/devotionals/today', async (req, res) => {
     try {

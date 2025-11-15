@@ -2,6 +2,7 @@ import {
   users,
   studies,
   studyLessons,
+  userLessonProgress,
   discussions,
   discussionReplies,
   discussionSubscriptions,
@@ -50,6 +51,8 @@ import {
   type InsertStudy,
   type StudyLesson,
   type InsertStudyLesson,
+  type UserLessonProgress,
+  type InsertUserLessonProgress,
   type Discussion,
   type InsertDiscussion,
   type DiscussionReply,
@@ -171,6 +174,10 @@ export interface IStorage {
   createStudyLesson(lesson: InsertStudyLesson): Promise<StudyLesson>;
   updateStudyLesson(id: string, lesson: Partial<InsertStudyLesson>): Promise<StudyLesson>;
   deleteStudyLesson(id: string): Promise<void>;
+  
+  // Lesson progress operations
+  getUserLessonProgress(userId: string, studyId?: string): Promise<UserLessonProgress[]>;
+  markLessonComplete(userId: string, lessonId: string, answers?: Record<string, string>): Promise<UserLessonProgress>;
   
   // Purchase operations
   checkUserPurchase(userId: string, studyId: string): Promise<boolean>;
@@ -779,6 +786,82 @@ export class DatabaseStorage implements IStorage {
 
   async deleteStudyLesson(id: string): Promise<void> {
     await db.delete(studyLessons).where(eq(studyLessons.id, id));
+  }
+
+  // Lesson progress operations
+  async getUserLessonProgress(userId: string, studyId?: string): Promise<UserLessonProgress[]> {
+    const conditions = [eq(userLessonProgress.userId, userId)];
+    
+    if (studyId) {
+      // Filter by studyId through a join with studyLessons
+      const result = await db
+        .select({
+          id: userLessonProgress.id,
+          userId: userLessonProgress.userId,
+          lessonId: userLessonProgress.lessonId,
+          completedAt: userLessonProgress.completedAt,
+          answers: userLessonProgress.answers,
+          createdAt: userLessonProgress.createdAt,
+          updatedAt: userLessonProgress.updatedAt,
+        })
+        .from(userLessonProgress)
+        .innerJoin(studyLessons, eq(userLessonProgress.lessonId, studyLessons.id))
+        .where(and(
+          eq(userLessonProgress.userId, userId),
+          eq(studyLessons.studyId, studyId)
+        ));
+      
+      return result;
+    }
+    
+    return await db
+      .select()
+      .from(userLessonProgress)
+      .where(and(...conditions));
+  }
+
+  async markLessonComplete(userId: string, lessonId: string, answers?: Record<string, string>): Promise<UserLessonProgress> {
+    // Check if progress already exists
+    const [existing] = await db
+      .select()
+      .from(userLessonProgress)
+      .where(and(
+        eq(userLessonProgress.userId, userId),
+        eq(userLessonProgress.lessonId, lessonId)
+      ));
+
+    const now = new Date();
+
+    if (existing) {
+      // Update existing progress
+      const [updated] = await db
+        .update(userLessonProgress)
+        .set({
+          completedAt: now,
+          answers: answers || existing.answers,
+          updatedAt: now,
+        })
+        .where(and(
+          eq(userLessonProgress.userId, userId),
+          eq(userLessonProgress.lessonId, lessonId)
+        ))
+        .returning();
+      
+      return updated;
+    } else {
+      // Create new progress record
+      const [newProgress] = await db
+        .insert(userLessonProgress)
+        .values({
+          userId,
+          lessonId,
+          completedAt: now,
+          answers,
+        })
+        .returning();
+      
+      return newProgress;
+    }
   }
 
   // Purchase operations
