@@ -1,5 +1,5 @@
 # Overview
-"Man Up God's Way" is a full-stack React/Express application providing a faith-based platform for biblical masculinity, leadership development, and spiritual growth. It offers structured learning programs including document-based Bible studies, devotionals, community discussions, and progress tracking to empower men in their faith and character. **Studies are now 100% document-based (PDF/Word) with no lesson structure.** The platform features robust authentication, real-time messaging, video content management with tiered access, admin content and user management, a comprehensive podcasts system, weekly challenges, and a local exercise database for fitness programs. The project aims to provide a centralized hub for spiritual and personal development, fostering a strong, engaged community.
+"Man Up God's Way" is a full-stack React/Express application providing a faith-based platform for biblical masculinity, leadership development, and spiritual growth. It offers structured learning programs including **embedded, day-by-day Bible studies** with progress tracking, devotionals, community discussions, and comprehensive discipleship tools to empower men in their faith and character. **Studies are transitioning from document-based (PDF/Word) to fully embedded structured lessons** with day-by-day navigation, interactive questions, progress tracking, and in-app reading. The platform features robust authentication, real-time messaging, video content management with tiered access, admin content and user management, a comprehensive podcasts system, weekly challenges, and a local exercise database for fitness programs. The project aims to provide a centralized hub for spiritual and personal development, fostering a strong, engaged community.
 
 # User Preferences
 Preferred communication style: Simple, everyday language.
@@ -13,7 +13,13 @@ The frontend is built with React 18 and TypeScript, using Vite for development. 
 The backend is an Express.js server in TypeScript, following a RESTful API design. It utilizes session-based authentication integrated with Replit's OIDC, storing sessions in PostgreSQL. Middleware is used for logging, error handling, and role-based access control (user, admin) with subscription tiers (free, premium, VIP) for content access.
 
 ## Database Design
-PostgreSQL, hosted on Neon Database, is used with Drizzle ORM for type-safe queries and migrations. The schema includes tables for users, studies (with lessons), discussions, devotionals, podcasts, challenges, testimonies, exercises, and various metadata for progress tracking, ratings, and video content.
+PostgreSQL, hosted on Neon Database, is used with Drizzle ORM for type-safe queries and migrations. The schema includes:
+- **studies**: Bible study metadata (title, description, category, tier, totalDays, etc.)
+- **studyLessons**: Individual day/lesson content (dayNumber, title, content, scripture, questions, keyTakeaway)
+- **userProgress**: Overall study progress tracking (currentDay, status, completedAt)
+- **userLessonProgress**: Per-lesson completion tracking (isCompleted, answers, completedAt)
+- **users, discussions, devotionals, podcasts, challenges, testimonies, exercises**: Additional core tables
+- Various metadata tables for ratings, video content, and user engagement
 
 ## Content Management
 The system supports a tiered content structure (free, premium, VIP) and category-based organization for study materials, videos, and podcasts. Features include progress tracking (lesson completion, study ratings), search, and a comprehensive admin panel for content and user management, video/podcast uploads, tier assignment, and notification broadcasting. It also includes a robust system for managing study documents (PDFs, Word docs) with tier-based access. Admins can upload new PDF/Word documents, delete existing ones, and update study materials through the edit interface.

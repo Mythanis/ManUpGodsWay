@@ -87,15 +87,16 @@ export const studies = pgTable("studies", {
   category: varchar("category").notNull(), // leadership, marriage, fatherhood, character, etc.
   difficulty: varchar("difficulty").default("beginner"), // beginner, intermediate, advanced
   estimatedHours: integer("estimated_hours").default(1),
+  totalDays: integer("total_days").default(0), // Total number of days/lessons in the study
   thumbnailUrl: varchar("thumbnail_url"),
   thumbnailFilename: varchar("thumbnail_filename"), // Stored thumbnail file
   thumbnailMimeType: varchar("thumbnail_mime_type"),
   thumbnailFileSize: integer("thumbnail_file_size"),
-  pdfFilename: varchar("pdf_filename"), // Stored PDF document
+  pdfFilename: varchar("pdf_filename"), // Stored PDF document (optional backup)
   pdfOriginalName: varchar("pdf_original_name"),
   pdfMimeType: varchar("pdf_mime_type"),
   pdfFileSize: integer("pdf_file_size"),
-  wordFilename: varchar("word_filename"), // Stored Word document
+  wordFilename: varchar("word_filename"), // Stored Word document (optional backup)
   wordOriginalName: varchar("word_original_name"),
   wordMimeType: varchar("word_mime_type"),
   wordFileSize: integer("word_file_size"),
@@ -113,17 +114,54 @@ export const studies = pgTable("studies", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// User progress tracking
+// Study lessons/days - individual daily content for embedded studies
+export const studyLessons = pgTable("study_lessons", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studyId: varchar("study_id").notNull().references(() => studies.id, { onDelete: 'cascade' }),
+  dayNumber: integer("day_number").notNull(), // Day 1, Day 2, etc.
+  title: varchar("title").notNull(), // e.g., "The Foundation of Biblical Manhood"
+  content: text("content").notNull(), // Rich text content for the day
+  scripture: text("scripture"), // Bible verses or references
+  questions: jsonb("questions").default(sql`'[]'::jsonb`), // Array of reflection questions [{id, question, type}]
+  keyTakeaway: text("key_takeaway"), // Summary or key point for the day
+  displayOrder: integer("display_order").notNull(), // Order of lesson in study
+  estimatedMinutes: integer("estimated_minutes").default(15), // Estimated time to complete this lesson
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  unique().on(table.studyId, table.dayNumber), // Each study has unique day numbers
+  index("idx_study_lessons_study_order").on(table.studyId, table.displayOrder), // Optimize lesson ordering
+]);
+
+// User progress tracking for overall study
 export const userProgress = pgTable("user_progress", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   studyId: varchar("study_id").notNull().references(() => studies.id, { onDelete: 'cascade' }),
+  currentDay: integer("current_day").default(1), // Current day/lesson user is on
   status: varchar("status").default("not_started"), // not_started, in_progress, completed
-  documentScrollPosition: integer("document_scroll_position").default(0), // Track reading position in document
+  documentScrollPosition: integer("document_scroll_position").default(0), // Track reading position in document (for PDF fallback)
   lastAccessedAt: timestamp("last_accessed_at").defaultNow(),
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  unique().on(table.userId, table.studyId), // One progress record per user per study
+]);
+
+// User progress tracking for individual lessons/days
+export const userLessonProgress = pgTable("user_lesson_progress", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  lessonId: varchar("lesson_id").notNull().references(() => studyLessons.id, { onDelete: 'cascade' }),
+  isCompleted: boolean("is_completed").default(false),
+  completedAt: timestamp("completed_at"),
+  answers: jsonb("answers").default(sql`'{}'::jsonb`), // User's answers to questions {questionId: answer}
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.lessonId), // One progress record per user per lesson
+  index("idx_user_lesson_progress_user_lesson").on(table.userId, table.lessonId), // Fast lookups
+]);
 
 // User purchases
 export const userPurchases = pgTable("user_purchases", {
@@ -711,6 +749,7 @@ export const insertStudySchema = createInsertSchema(studies, {
   category: z.string().min(1, "Category is required"),
   difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
   estimatedHours: z.number().int().min(1).default(1),
+  totalDays: z.number().int().min(0).default(0),
   requiredTier: z.enum(["free", "premium", "vip"]).default("free"),
   requiresPurchase: z.boolean().default(false),
   price: z.string().nullable().optional(),
@@ -723,6 +762,34 @@ export const insertStudySchema = createInsertSchema(studies, {
   ratingCount: true, 
   createdAt: true, 
   updatedAt: true 
+});
+
+export const insertStudyLessonSchema = createInsertSchema(studyLessons, {
+  studyId: z.string().min(1, "Study ID is required"),
+  dayNumber: z.number().int().min(1, "Day number must be at least 1"),
+  title: z.string().min(1, "Lesson title is required"),
+  content: z.string().min(1, "Lesson content is required"),
+  scripture: z.string().optional(),
+  questions: z.any().optional(), // JSONB array of questions
+  keyTakeaway: z.string().optional(),
+  displayOrder: z.number().int().min(0),
+  estimatedMinutes: z.number().int().min(1).default(15),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserLessonProgressSchema = createInsertSchema(userLessonProgress, {
+  userId: z.string().min(1, "User ID is required"),
+  lessonId: z.string().min(1, "Lesson ID is required"),
+  isCompleted: z.boolean().default(false),
+  answers: z.any().optional(), // JSONB object of answers
+}).omit({
+  id: true,
+  completedAt: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const insertUserPurchaseSchema = createInsertSchema(userPurchases, {
@@ -877,6 +944,10 @@ export type InsertVideo = z.infer<typeof insertVideoSchema>;
 
 export type Study = typeof studies.$inferSelect;
 export type InsertStudy = z.infer<typeof insertStudySchema>;
+export type StudyLesson = typeof studyLessons.$inferSelect;
+export type InsertStudyLesson = z.infer<typeof insertStudyLessonSchema>;
+export type UserLessonProgress = typeof userLessonProgress.$inferSelect;
+export type InsertUserLessonProgress = z.infer<typeof insertUserLessonProgressSchema>;
 export type Discussion = typeof discussions.$inferSelect;
 export type InsertDiscussion = z.infer<typeof insertDiscussionSchema>;
 export type DiscussionReply = typeof discussionReplies.$inferSelect;
