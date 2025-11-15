@@ -195,6 +195,26 @@ export default function CarouselManagement() {
       return;
     }
 
+    // Validate linkId only for studies (other types only have list pages)
+    if (formData.linkType === "study" && !formData.linkId) {
+      toast({
+        title: "Validation Error",
+        description: "Study ID is required for study links",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate externalUrl for external links
+    if (formData.linkType === "external" && !formData.externalUrl) {
+      toast({
+        title: "Validation Error",
+        description: "External URL is required for external links",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const data = new FormData();
     data.append('title', formData.title);
     data.append('description', formData.description);

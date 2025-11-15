@@ -29,17 +29,20 @@ export default function HomeCarousel() {
       return item.externalUrl;
     }
     
+    // Link to content based on type
+    // Note: Videos, podcasts, and challenges only have list pages (no detail pages)
+    // Studies have detail pages at /studies/:id
     switch (item.linkType) {
       case "study":
-        return `/study/${item.linkId}`;
+        return item.linkId ? `/studies/${item.linkId}` : "/library";
       case "video":
-        return `/video-library`;
+        return "/videos"; // Videos only have list page
       case "podcast":
-        return `/podcasts`;
+        return "/podcasts"; // Podcasts only have list page
       case "devotional":
-        return `/home`;
+        return "/home"; // Devotionals are on home page
       case "challenge":
-        return `/home`;
+        return "/challenges"; // Challenges have list page
       default:
         return "/home";
     }
