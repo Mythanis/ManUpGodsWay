@@ -57,6 +57,7 @@ export default function HomeCarousel() {
         className={`overflow-hidden group cursor-pointer transition-all hover:shadow-xl ${
           isLarge ? 'h-64' : 'h-48'
         }`}
+        style={{ border: '3px solid rgb(252, 208, 0)' }}
         data-testid={`carousel-item-${item.position}`}
       >
         <div className="relative w-full h-full">
