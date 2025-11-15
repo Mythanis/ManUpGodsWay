@@ -694,7 +694,7 @@ export default function UploadStudyForm() {
               <Button
                 type="submit"
                 disabled={createStudy.isPending || titleExists || checkingTitle}
-                className="flex-1 bg-ministry-navy hover:bg-ministry-charcoal disabled:opacity-50"
+                className="flex-1 bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal font-semibold disabled:opacity-50"
                 data-testid="button-create-study"
               >
                 {createStudy.isPending ? "Creating..." : "Create Study"}
