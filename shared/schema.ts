@@ -1315,6 +1315,31 @@ export type InsertHurdleWallPrayer = z.infer<typeof insertHurdleWallPrayerSchema
 export type UserPrayerStats = typeof userPrayerStats.$inferSelect;
 export type InsertUserPrayerStats = z.infer<typeof insertUserPrayerStatsSchema>;
 
+// Carousel items for homepage featured content
+export const carouselItems = pgTable("carousel_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  imageUrl: varchar("image_url").notNull(),
+  linkType: varchar("link_type").notNull(), // study, video, podcast, devotional, challenge, external
+  linkId: varchar("link_id"), // ID of linked content (null for external links)
+  externalUrl: varchar("external_url"), // For external links
+  position: integer("position").notNull(), // 1 = large top, 2-3 = small bottom
+  isActive: boolean("is_active").default(true),
+  displayOrder: integer("display_order").notNull().default(0), // For sorting
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertCarouselItemSchema = createInsertSchema(carouselItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type CarouselItem = typeof carouselItems.$inferSelect;
+export type InsertCarouselItem = z.infer<typeof insertCarouselItemSchema>;
+
 // Exercises table for fitness center
 export const exercises = pgTable("exercises", {
   id: integer("id").primaryKey(),
