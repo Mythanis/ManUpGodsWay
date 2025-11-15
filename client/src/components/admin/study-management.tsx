@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { apiRequest } from "@/lib/queryClient";
-import { Edit, Trash2, Plus, Book, Users, Crown, Gem } from "lucide-react";
+import { Edit, Trash2, Plus, Book, Users, Crown, Gem, List } from "lucide-react";
 
 interface Study {
   id: string;
@@ -27,6 +27,22 @@ interface Study {
   requiresPurchase?: boolean;
   price?: string;
   purchaseRequiredTiers?: string[];
+  totalDays?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface StudyLesson {
+  id: string;
+  studyId: string;
+  dayNumber: number;
+  title: string;
+  content: string;
+  scripture?: string;
+  questions?: any[];
+  keyTakeaway?: string;
+  displayOrder: number;
+  estimatedMinutes?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -56,6 +72,18 @@ export default function StudyManagement() {
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [uploadingWord, setUploadingWord] = useState(false);
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [showLessonsDialog, setShowLessonsDialog] = useState(false);
+  const [managingLessonsStudy, setManagingLessonsStudy] = useState<Study | null>(null);
+  const [editingLesson, setEditingLesson] = useState<StudyLesson | null>(null);
+  const [lessonFormData, setLessonFormData] = useState({
+    dayNumber: 1,
+    title: "",
+    content: "",
+    scripture: "",
+    keyTakeaway: "",
+    displayOrder: 1,
+    estimatedMinutes: 15,
+  });
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
@@ -73,6 +101,13 @@ export default function StudyManagement() {
   // Fetch all studies
   const { data: studies = [], isLoading, refetch } = useQuery<Study[]>({
     queryKey: ["/api/studies"],
+    retry: false,
+  });
+
+  // Fetch lessons for a study
+  const { data: lessons = [], isLoading: lessonsLoading } = useQuery<StudyLesson[]>({
+    queryKey: [`/api/studies/${managingLessonsStudy?.id}/lessons`],
+    enabled: !!managingLessonsStudy,
     retry: false,
   });
 
@@ -118,6 +153,71 @@ export default function StudyManagement() {
       toast({
         title: "Error",
         description: error.message || "Failed to delete study",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Lesson mutations
+  const createLessonMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("POST", `/api/studies/${managingLessonsStudy?.id}/lessons`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/studies/${managingLessonsStudy?.id}/lessons`] });
+      setEditingLesson(null);
+      resetLessonForm();
+      toast({
+        title: "Success",
+        description: "Lesson created successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create lesson",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateLessonMutation = useMutation({
+    mutationFn: async (data: { lessonId: string; updates: any }) => {
+      return await apiRequest("PATCH", `/api/studies/${managingLessonsStudy?.id}/lessons/${data.lessonId}`, data.updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/studies/${managingLessonsStudy?.id}/lessons`] });
+      setEditingLesson(null);
+      resetLessonForm();
+      toast({
+        title: "Success",
+        description: "Lesson updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update lesson",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteLessonMutation = useMutation({
+    mutationFn: async (lessonId: string) => {
+      return await apiRequest("DELETE", `/api/studies/${managingLessonsStudy?.id}/lessons/${lessonId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/studies/${managingLessonsStudy?.id}/lessons`] });
+      toast({
+        title: "Success",
+        description: "Lesson deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete lesson",
         variant: "destructive",
       });
     },
@@ -176,6 +276,106 @@ export default function StudyManagement() {
     if (confirm("Are you sure you want to delete this study? This action cannot be undone.")) {
       deleteStudyMutation.mutate(studyId);
     }
+  };
+
+  const handleManageLessons = (study: Study) => {
+    setManagingLessonsStudy(study);
+    setShowLessonsDialog(true);
+  };
+
+  const handleAddLesson = () => {
+    const nextOrder = lessons.length > 0 ? Math.max(...lessons.map(l => l.displayOrder)) + 1 : 1;
+    const nextDay = lessons.length > 0 ? Math.max(...lessons.map(l => l.dayNumber)) + 1 : 1;
+    setLessonFormData({
+      dayNumber: nextDay,
+      title: "",
+      content: "",
+      scripture: "",
+      keyTakeaway: "",
+      displayOrder: nextOrder,
+      estimatedMinutes: 15,
+    });
+    setEditingLesson(null);
+  };
+
+  const handleEditLesson = (lesson: StudyLesson) => {
+    setEditingLesson(lesson);
+    setLessonFormData({
+      dayNumber: lesson.dayNumber,
+      title: lesson.title,
+      content: lesson.content,
+      scripture: lesson.scripture || "",
+      keyTakeaway: lesson.keyTakeaway || "",
+      displayOrder: lesson.displayOrder,
+      estimatedMinutes: lesson.estimatedMinutes || 15,
+    });
+  };
+
+  const handleDeleteLesson = (lessonId: string) => {
+    if (confirm("Are you sure you want to delete this lesson? This action cannot be undone.")) {
+      deleteLessonMutation.mutate(lessonId);
+    }
+  };
+
+  const handleSaveLesson = () => {
+    if (!lessonFormData.title.trim()) {
+      toast({
+        title: "Error",
+        description: "Title is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!lessonFormData.content.trim()) {
+      toast({
+        title: "Error",
+        description: "Content is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (lessonFormData.dayNumber < 1) {
+      toast({
+        title: "Error",
+        description: "Day number must be at least 1",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Ensure numbers are properly formatted
+    const validatedData = {
+      dayNumber: parseInt(String(lessonFormData.dayNumber)),
+      title: lessonFormData.title.trim(),
+      content: lessonFormData.content.trim(),
+      scripture: lessonFormData.scripture?.trim() || undefined,
+      keyTakeaway: lessonFormData.keyTakeaway?.trim() || undefined,
+      displayOrder: parseInt(String(lessonFormData.displayOrder)),
+      estimatedMinutes: parseInt(String(lessonFormData.estimatedMinutes)),
+    };
+
+    if (editingLesson) {
+      updateLessonMutation.mutate({
+        lessonId: editingLesson.id,
+        updates: validatedData,
+      });
+    } else {
+      createLessonMutation.mutate(validatedData);
+    }
+  };
+
+  const resetLessonForm = () => {
+    setLessonFormData({
+      dayNumber: 1,
+      title: "",
+      content: "",
+      scripture: "",
+      keyTakeaway: "",
+      displayOrder: 1,
+      estimatedMinutes: 15,
+    });
   };
 
   const handleFileUpload = async (file: File, type: 'pdf' | 'word') => {
@@ -396,6 +596,16 @@ export default function StudyManagement() {
                     </p>
                   </div>
                   <div className="flex items-center space-x-2 ml-4">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleManageLessons(study)}
+                      className="bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal"
+                      data-testid={`button-manage-lessons-${study.id}`}
+                    >
+                      <List className="w-4 h-4 mr-1" />
+                      Lessons
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"
@@ -805,6 +1015,198 @@ export default function StudyManagement() {
               >
                 {updateStudyMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lesson Management Dialog */}
+      <Dialog open={showLessonsDialog} onOpenChange={(open) => {
+        setShowLessonsDialog(open);
+        if (!open) {
+          setManagingLessonsStudy(null);
+          setEditingLesson(null);
+          resetLessonForm();
+        }
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Manage Lessons - {managingLessonsStudy?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {/* Add New Lesson Button */}
+            <Button
+              onClick={handleAddLesson}
+              className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal"
+              data-testid="button-add-lesson"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Lesson
+            </Button>
+
+            {/* Lesson Form (shown when adding or editing) */}
+            {(editingLesson || lessonFormData.title || lessonFormData.content) && (
+              <Card className="border-ministry-gold">
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    {editingLesson ? `Edit Lesson ${editingLesson.dayNumber}` : 'New Lesson'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label>Day Number</Label>
+                      <Input
+                        type="number"
+                        value={lessonFormData.dayNumber}
+                        onChange={(e) => setLessonFormData({...lessonFormData, dayNumber: parseInt(e.target.value) || 1})}
+                        data-testid="input-lesson-day"
+                      />
+                    </div>
+                    <div>
+                      <Label>Display Order</Label>
+                      <Input
+                        type="number"
+                        value={lessonFormData.displayOrder}
+                        onChange={(e) => setLessonFormData({...lessonFormData, displayOrder: parseInt(e.target.value) || 1})}
+                        data-testid="input-lesson-order"
+                      />
+                    </div>
+                    <div>
+                      <Label>Estimated Minutes</Label>
+                      <Input
+                        type="number"
+                        value={lessonFormData.estimatedMinutes}
+                        onChange={(e) => setLessonFormData({...lessonFormData, estimatedMinutes: parseInt(e.target.value) || 15})}
+                        data-testid="input-lesson-minutes"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Lesson Title *</Label>
+                    <Input
+                      value={lessonFormData.title}
+                      onChange={(e) => setLessonFormData({...lessonFormData, title: e.target.value})}
+                      placeholder="e.g., The Foundation of Biblical Manhood"
+                      data-testid="input-lesson-title"
+                    />
+                  </div>
+                  <div>
+                    <Label>Content *</Label>
+                    <Textarea
+                      value={lessonFormData.content}
+                      onChange={(e) => setLessonFormData({...lessonFormData, content: e.target.value})}
+                      placeholder="Lesson content..."
+                      rows={6}
+                      data-testid="textarea-lesson-content"
+                    />
+                  </div>
+                  <div>
+                    <Label>Scripture Reference</Label>
+                    <Input
+                      value={lessonFormData.scripture}
+                      onChange={(e) => setLessonFormData({...lessonFormData, scripture: e.target.value})}
+                      placeholder="e.g., Ephesians 5:25-33"
+                      data-testid="input-lesson-scripture"
+                    />
+                  </div>
+                  <div>
+                    <Label>Key Takeaway</Label>
+                    <Textarea
+                      value={lessonFormData.keyTakeaway}
+                      onChange={(e) => setLessonFormData({...lessonFormData, keyTakeaway: e.target.value})}
+                      placeholder="Main point or summary"
+                      rows={2}
+                      data-testid="textarea-lesson-takeaway"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleSaveLesson}
+                      disabled={createLessonMutation.isPending || updateLessonMutation.isPending}
+                      className="bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal"
+                      data-testid="button-save-lesson"
+                    >
+                      {editingLesson ? 'Update Lesson' : 'Save Lesson'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setEditingLesson(null);
+                        resetLessonForm();
+                      }}
+                      data-testid="button-cancel-lesson"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Lessons List */}
+            <div className="space-y-2">
+              <h3 className="font-semibold text-sm">Existing Lessons ({lessons.length})</h3>
+              {lessonsLoading ? (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-ministry-navy"></div>
+                </div>
+              ) : lessons.length === 0 ? (
+                <Card>
+                  <CardContent className="p-6 text-center text-muted-foreground">
+                    <Book className="w-8 h-8 mx-auto mb-2 text-ministry-slate" />
+                    <p>No lessons yet. Add your first lesson above.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {lessons.map((lesson) => (
+                    <Card key={lesson.id} className="border-gray-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant="secondary" className="text-xs">
+                                Day {lesson.dayNumber}
+                              </Badge>
+                              <h4 className="font-semibold text-sm">{lesson.title}</h4>
+                            </div>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {lesson.content}
+                            </p>
+                            {lesson.scripture && (
+                              <p className="text-xs text-ministry-gold mt-1">
+                                📖 {lesson.scripture}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 ml-4">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditLesson(lesson)}
+                              data-testid={`button-edit-lesson-${lesson.id}`}
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteLesson(lesson.id)}
+                              disabled={deleteLessonMutation.isPending}
+                              data-testid={`button-delete-lesson-${lesson.id}`}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </DialogContent>

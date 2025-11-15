@@ -1826,6 +1826,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Study lesson routes
+  app.get('/api/studies/:studyId/lessons', async (req, res) => {
+    try {
+      const lessons = await storage.getStudyLessons(req.params.studyId);
+      res.json(lessons);
+    } catch (error) {
+      console.error("Error fetching study lessons:", error);
+      res.status(500).json({ message: "Failed to fetch lessons" });
+    }
+  });
+
+  app.post('/api/studies/:studyId/lessons', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const lessonData = {
+        ...req.body,
+        studyId: req.params.studyId,
+      };
+
+      const newLesson = await storage.createStudyLesson(lessonData);
+      res.status(201).json(newLesson);
+    } catch (error) {
+      console.error("Error creating lesson:", error);
+      res.status(500).json({ message: "Failed to create lesson" });
+    }
+  });
+
+  app.patch('/api/studies/:studyId/lessons/:lessonId', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const updatedLesson = await storage.updateStudyLesson(req.params.lessonId, req.body);
+      res.json(updatedLesson);
+    } catch (error) {
+      console.error("Error updating lesson:", error);
+      res.status(500).json({ message: "Failed to update lesson" });
+    }
+  });
+
+  app.delete('/api/studies/:studyId/lessons/:lessonId', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      await storage.deleteStudyLesson(req.params.lessonId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting lesson:", error);
+      res.status(500).json({ message: "Failed to delete lesson" });
+    }
+  });
+
   // Devotional routes
   app.get('/api/devotionals/today', async (req, res) => {
     try {

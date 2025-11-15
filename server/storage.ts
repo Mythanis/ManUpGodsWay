@@ -1,6 +1,7 @@
 import {
   users,
   studies,
+  studyLessons,
   discussions,
   discussionReplies,
   discussionSubscriptions,
@@ -47,6 +48,8 @@ import {
   type UpsertUser,
   type Study,
   type InsertStudy,
+  type StudyLesson,
+  type InsertStudyLesson,
   type Discussion,
   type InsertDiscussion,
   type DiscussionReply,
@@ -161,6 +164,13 @@ export interface IStorage {
   searchStudies(query: string): Promise<Study[]>;
   getFeaturedStudy(): Promise<Study | null>;
   getRecommendedStudies(userId: string, limit?: number): Promise<Study[]>;
+  
+  // Study lesson operations
+  getStudyLessons(studyId: string): Promise<StudyLesson[]>;
+  getStudyLesson(lessonId: string): Promise<StudyLesson | undefined>;
+  createStudyLesson(lesson: InsertStudyLesson): Promise<StudyLesson>;
+  updateStudyLesson(id: string, lesson: Partial<InsertStudyLesson>): Promise<StudyLesson>;
+  deleteStudyLesson(id: string): Promise<void>;
   
   // Purchase operations
   checkUserPurchase(userId: string, studyId: string): Promise<boolean>;
@@ -641,7 +651,7 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(studies, eq(userProgress.studyId, studies.id))
       .where(and(
         eq(userProgress.userId, userId),
-        eq(userProgress.isCompleted, true)
+        isNotNull(userProgress.completedAt)
       ));
     
     const studiedCategories = Array.from(new Set(completedProgress.map(p => p.category)));
@@ -730,6 +740,45 @@ export class DatabaseStorage implements IStorage {
     // Get recommendations based on studied categories + tier logic
     const categoryBasedRecs = await getTierRecommendations();
     return categoryBasedRecs.slice(0, limit);
+  }
+
+  // Study lesson operations
+  async getStudyLessons(studyId: string): Promise<StudyLesson[]> {
+    return await db
+      .select()
+      .from(studyLessons)
+      .where(eq(studyLessons.studyId, studyId))
+      .orderBy(asc(studyLessons.displayOrder));
+  }
+
+  async getStudyLesson(lessonId: string): Promise<StudyLesson | undefined> {
+    const [lesson] = await db
+      .select()
+      .from(studyLessons)
+      .where(eq(studyLessons.id, lessonId))
+      .limit(1);
+    return lesson;
+  }
+
+  async createStudyLesson(lesson: InsertStudyLesson): Promise<StudyLesson> {
+    const [newLesson] = await db
+      .insert(studyLessons)
+      .values(lesson)
+      .returning();
+    return newLesson;
+  }
+
+  async updateStudyLesson(id: string, lesson: Partial<InsertStudyLesson>): Promise<StudyLesson> {
+    const [updatedLesson] = await db
+      .update(studyLessons)
+      .set({ ...lesson, updatedAt: new Date() })
+      .where(eq(studyLessons.id, id))
+      .returning();
+    return updatedLesson;
+  }
+
+  async deleteStudyLesson(id: string): Promise<void> {
+    await db.delete(studyLessons).where(eq(studyLessons.id, id));
   }
 
   // Purchase operations
@@ -2975,7 +3024,7 @@ export class DatabaseStorage implements IStorage {
       .from(userProgress)
       .where(and(
         eq(userProgress.userId, userId),
-        eq(userProgress.isCompleted, true)
+        isNotNull(userProgress.completedAt)
       ));
 
     // Calculate days active (unique days with any activity)
