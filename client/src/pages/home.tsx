@@ -13,6 +13,7 @@ import { NotificationPanel } from "@/components/notification-panel";
 import { LiveStreamBanner } from "@/components/live-stream-banner";
 import BrotherhoodRequests from "@/components/brotherhood-requests";
 import UpgradeModal from "@/components/upgrade-modal";
+import HomeCarousel from "@/components/home-carousel";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart } from "lucide-react";
@@ -389,6 +390,11 @@ export default function Home() {
       <div className="px-6 -mt-6 relative z-10">
         {/* Live Stream Banner */}
         <LiveStreamBanner />
+        
+        {/* Featured Carousel */}
+        <div className="mb-6">
+          <HomeCarousel />
+        </div>
         
         <Card className="shadow-lg mb-6" data-testid="card-devotional">
           <CardContent className="p-6">
