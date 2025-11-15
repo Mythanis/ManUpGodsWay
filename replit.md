@@ -22,7 +22,12 @@ PostgreSQL, hosted on Neon Database, is used with Drizzle ORM for type-safe quer
 - Various metadata tables for ratings, video content, and user engagement
 
 ## Content Management
-The system supports a tiered content structure (free, premium, VIP) and category-based organization for study materials, videos, and podcasts. Features include progress tracking (lesson completion, study ratings), search, and a comprehensive admin panel for content and user management, video/podcast uploads, tier assignment, and notification broadcasting. It also includes a robust system for managing study documents (PDFs, Word docs) with tier-based access. Admins can upload new PDF/Word documents, delete existing ones, and update study materials through the edit interface.
+The system supports a tiered content structure (free, premium, VIP) and category-based organization for study materials, videos, and podcasts. Features include progress tracking (lesson completion, study ratings), search, and a comprehensive admin panel for content and user management, video/podcast uploads, tier assignment, and notification broadcasting.
+
+### Study Content Management
+- **Embedded Lessons**: Admins can create structured, day-by-day study lessons directly in the app with rich text editor, scripture references, questions, and key takeaways
+- **Bulk Import Tool**: Production-ready feature for converting Word/PDF content to embedded lessons. Supports common export formats (Markdown headings, colon/hyphen/em-dash separators), automatic lesson parsing with preview, and batch creation. Safety features include stale data prevention (clears preview on text edits) and collision-free ordering (uses max displayOrder)
+- **Document Management**: Legacy system for managing PDF/Word study documents with tier-based access. Admins can upload new documents, delete existing ones, and update study materials through the edit interface
 
 ## Key Features
 - **Authentication**: Replit Auth integration with session management.
