@@ -30,19 +30,22 @@ export default function HomeCarousel() {
     }
     
     // Link to content based on type
-    // Note: Videos, podcasts, and challenges only have list pages (no detail pages)
-    // Studies have detail pages at /studies/:id
     switch (item.linkType) {
       case "study":
+        // Studies have detail pages, link directly to the study
         return item.linkId ? `/studies/${item.linkId}` : "/library";
       case "video":
-        return "/videos"; // Videos only have list page
+        // Videos: link to specific video if ID provided, otherwise videos page
+        return item.linkId ? `/videos?id=${item.linkId}` : "/videos";
       case "podcast":
-        return "/podcasts"; // Podcasts only have list page
+        // Podcasts: link to specific podcast if ID provided, otherwise podcasts page
+        return item.linkId ? `/podcasts?id=${item.linkId}` : "/podcasts";
       case "devotional":
-        return "/home"; // Devotionals are on home page
+        // Devotionals: link to specific devotional if ID provided, otherwise home
+        return item.linkId ? `/home?devotional=${item.linkId}` : "/home";
       case "challenge":
-        return "/challenges"; // Challenges have list page
+        // Challenges: link to specific challenge if ID provided, otherwise challenges page
+        return item.linkId ? `/challenges?id=${item.linkId}` : "/challenges";
       default:
         return "/home";
     }

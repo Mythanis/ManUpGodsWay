@@ -46,6 +46,32 @@ export default function CarouselManagement() {
     queryKey: ['/api/admin/carousel'],
   });
 
+  // Fetch content lists for dropdowns
+  const { data: studies = [] } = useQuery({
+    queryKey: ['/api/studies'],
+    enabled: formData.linkType === 'study',
+  });
+
+  const { data: videos = [] } = useQuery({
+    queryKey: ['/api/videos'],
+    enabled: formData.linkType === 'video',
+  });
+
+  const { data: podcasts = [] } = useQuery({
+    queryKey: ['/api/podcasts'],
+    enabled: formData.linkType === 'podcast',
+  });
+
+  const { data: devotionals = [] } = useQuery({
+    queryKey: ['/api/devotionals'],
+    enabled: formData.linkType === 'devotional',
+  });
+
+  const { data: challenges = [] } = useQuery({
+    queryKey: ['/api/challenges'],
+    enabled: formData.linkType === 'challenge',
+  });
+
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
       return await fetch('/api/admin/carousel', {
@@ -399,7 +425,7 @@ export default function CarouselManagement() {
 
             {formData.linkType === "external" ? (
               <div>
-                <Label htmlFor="carousel-external-url">External URL</Label>
+                <Label htmlFor="carousel-external-url">External URL *</Label>
                 <Input
                   id="carousel-external-url"
                   value={formData.externalUrl}
@@ -408,18 +434,106 @@ export default function CarouselManagement() {
                   data-testid="input-carousel-external-url"
                 />
               </div>
-            ) : (
+            ) : formData.linkType === "study" ? (
               <div>
-                <Label htmlFor="carousel-link-id">Content ID</Label>
-                <Input
-                  id="carousel-link-id"
+                <Label htmlFor="carousel-content">Select Study *</Label>
+                <Select
                   value={formData.linkId}
-                  onChange={(e) => setFormData({ ...formData, linkId: e.target.value })}
-                  placeholder="Enter content ID"
-                  data-testid="input-carousel-link-id"
-                />
+                  onValueChange={(value) => setFormData({ ...formData, linkId: value })}
+                >
+                  <SelectTrigger id="carousel-content" data-testid="select-carousel-content">
+                    <SelectValue placeholder="Choose a study" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(studies as any[]).map((study: any) => (
+                      <SelectItem key={study.id} value={study.id}>
+                        {study.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            )}
+            ) : formData.linkType === "video" ? (
+              <div>
+                <Label htmlFor="carousel-content">Select Video</Label>
+                <Select
+                  value={formData.linkId}
+                  onValueChange={(value) => setFormData({ ...formData, linkId: value })}
+                >
+                  <SelectTrigger id="carousel-content" data-testid="select-carousel-content">
+                    <SelectValue placeholder="Choose a video (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(videos as any[]).map((video: any) => (
+                      <SelectItem key={video.id} value={video.id}>
+                        {video.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-ministry-slate mt-1">Links to videos page by default</p>
+              </div>
+            ) : formData.linkType === "podcast" ? (
+              <div>
+                <Label htmlFor="carousel-content">Select Podcast</Label>
+                <Select
+                  value={formData.linkId}
+                  onValueChange={(value) => setFormData({ ...formData, linkId: value })}
+                >
+                  <SelectTrigger id="carousel-content" data-testid="select-carousel-content">
+                    <SelectValue placeholder="Choose a podcast (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(podcasts as any[]).map((podcast: any) => (
+                      <SelectItem key={podcast.id} value={podcast.id}>
+                        {podcast.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-ministry-slate mt-1">Links to podcasts page by default</p>
+              </div>
+            ) : formData.linkType === "devotional" ? (
+              <div>
+                <Label htmlFor="carousel-content">Select Devotional</Label>
+                <Select
+                  value={formData.linkId}
+                  onValueChange={(value) => setFormData({ ...formData, linkId: value })}
+                >
+                  <SelectTrigger id="carousel-content" data-testid="select-carousel-content">
+                    <SelectValue placeholder="Choose a devotional (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(devotionals as any[]).map((devotional: any) => (
+                      <SelectItem key={devotional.id} value={devotional.id}>
+                        {devotional.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-ministry-slate mt-1">Links to home page by default</p>
+              </div>
+            ) : formData.linkType === "challenge" ? (
+              <div>
+                <Label htmlFor="carousel-content">Select Challenge</Label>
+                <Select
+                  value={formData.linkId}
+                  onValueChange={(value) => setFormData({ ...formData, linkId: value })}
+                >
+                  <SelectTrigger id="carousel-content" data-testid="select-carousel-content">
+                    <SelectValue placeholder="Choose a challenge (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(challenges as any[]).map((challenge: any) => (
+                      <SelectItem key={challenge.id} value={challenge.id}>
+                        {challenge.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-ministry-slate mt-1">Links to challenges page by default</p>
+              </div>
+            ) : null}
 
             <div>
               <Label htmlFor="carousel-display-order">Display Order</Label>
