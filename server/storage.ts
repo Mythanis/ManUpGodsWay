@@ -832,6 +832,8 @@ export class DatabaseStorage implements IStorage {
 
     const now = new Date();
 
+    let result: UserLessonProgress;
+
     if (existing) {
       // Update existing progress
       const [updated] = await db
@@ -847,7 +849,7 @@ export class DatabaseStorage implements IStorage {
         ))
         .returning();
       
-      return updated;
+      result = updated;
     } else {
       // Create new progress record
       const [newProgress] = await db
@@ -860,8 +862,13 @@ export class DatabaseStorage implements IStorage {
         })
         .returning();
       
-      return newProgress;
+      result = newProgress;
     }
+
+    // Update user's streak when they complete a lesson
+    await this.updateUserStreak(userId, now);
+
+    return result;
   }
 
   // Purchase operations
