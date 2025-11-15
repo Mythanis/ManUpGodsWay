@@ -108,6 +108,36 @@ const imageUpload = multer({
   }
 });
 
+// Configure multer for thumbnail uploads with disk storage
+const thumbnailStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(process.cwd(), 'uploads', 'thumbnails');
+    // Ensure directory exists
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const filename = `study_thumbnail_${Date.now()}_${file.originalname}`;
+    cb(null, filename);
+  }
+});
+
+const thumbnailUpload = multer({
+  storage: thumbnailStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit for images
+  },
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'));
+    }
+  }
+});
+
 // Configure multer for document uploads (PDF/Word) with disk storage
 const documentStorage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -896,7 +926,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload thumbnail image for study
-  app.post('/api/studies/:id/upload-thumbnail', isAuthenticated, imageUpload.single('thumbnail'), async (req: any, res) => {
+  app.post('/api/studies/:id/upload-thumbnail', isAuthenticated, thumbnailUpload.single('thumbnail'), async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
       if (!user || !isAdmin(user)) {
@@ -908,10 +938,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Thumbnail image is required" });
       }
 
-      const filename = `study_thumbnail_${Date.now()}_${file.originalname}`;
-      const thumbnailUrl = `/uploads/thumbnails/${filename}`;
+      // File is already saved to disk by multer
+      const thumbnailUrl = `/uploads/thumbnails/${file.filename}`;
       const updateData = {
-        thumbnailFilename: filename,
+        thumbnailFilename: file.filename,
         thumbnailUrl: thumbnailUrl,
         thumbnailMimeType: file.mimetype,
         thumbnailFileSize: file.size,
@@ -940,7 +970,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Delete file from disk if it exists
       if (study.thumbnailFilename) {
-        const uploadsDir = path.resolve(process.cwd(), 'uploads', 'images');
+        const uploadsDir = path.resolve(process.cwd(), 'uploads', 'thumbnails');
         const filePath = path.resolve(uploadsDir, study.thumbnailFilename);
         
         if (fs.existsSync(filePath)) {
