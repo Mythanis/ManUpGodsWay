@@ -397,7 +397,7 @@ export default function Home() {
         </div>
         
         <h2 className="text-lg font-bold text-white mb-4">Today's Devotional</h2>
-        <Card className="shadow-sm border border-gray-100 bg-ministry-gold-exact/20 mb-6" data-testid="card-devotional">
+        <Card className="shadow-sm border-0 bg-ministry-gold-exact/20 mb-6" data-testid="card-devotional">
           <CardContent className="p-6">
             {devotional ? (
               <>
