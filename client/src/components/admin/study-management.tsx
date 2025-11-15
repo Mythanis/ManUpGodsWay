@@ -75,6 +75,10 @@ export default function StudyManagement() {
   const [showLessonsDialog, setShowLessonsDialog] = useState(false);
   const [managingLessonsStudy, setManagingLessonsStudy] = useState<Study | null>(null);
   const [editingLesson, setEditingLesson] = useState<StudyLesson | null>(null);
+  const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
+  const [bulkImportText, setBulkImportText] = useState("");
+  const [parsedLessons, setParsedLessons] = useState<any[]>([]);
+  const [isImporting, setIsImporting] = useState(false);
   const [lessonFormData, setLessonFormData] = useState({
     dayNumber: 1,
     title: "",
@@ -593,6 +597,115 @@ export default function StudyManagement() {
     }
   };
 
+  // Parse bulk imported content into lessons
+  const parseBulkContent = (text: string) => {
+    // Clear previous parsed lessons
+    setParsedLessons([]);
+    
+    if (!text.trim()) {
+      toast({
+        title: "Error",
+        description: "Please paste some content to import",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Enhanced pattern to support more heading styles:
+    // - "Day X:" or "Day X -"
+    // - "# Day X", "## Day X", "### Day X", etc. (Markdown)
+    // - Allows optional leading/trailing whitespace
+    const dayPattern = /(?:^|\n)\s*(?:#{1,6}\s*)?Day\s+(\d+)\s*[:\-\—]?\s*(.*?)(?=\n\s*(?:#{1,6}\s*)?Day\s+\d+\s*[:\-\—]?|$)/gis;
+    const matches = [...text.matchAll(dayPattern)];
+    
+    if (matches.length === 0) {
+      toast({
+        title: "No lessons found",
+        description: "Content should be formatted with 'Day 1:', '# Day 1', '## Day 1', or 'Day 1 -' style headings",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Get maximum display order to ensure new lessons append after existing ones
+    const maxDisplayOrder = lessons.length > 0 
+      ? Math.max(...lessons.map(l => l.displayOrder))
+      : 0;
+    
+    const parsed = matches.map((match, index) => {
+      const dayNum = parseInt(match[1]);
+      const titleAndContent = match[2] || "";
+      
+      // Try to extract title from first line and content from rest
+      const lines = titleAndContent.trim().split('\n');
+      const title = lines[0]?.trim() || `Lesson ${dayNum}`;
+      const content = lines.slice(1).join('\n').trim();
+      
+      // Try to extract scripture references (look for patterns like "John 3:16" or "1 Corinthians 13:4-8")
+      const scripturePattern = /(?:^|\n)(?:Scripture|Reference|Read):\s*([^\n]+)/i;
+      const scriptureMatch = titleAndContent.match(scripturePattern);
+      const scripture = scriptureMatch ? scriptureMatch[1].trim() : "";
+      
+      // Try to extract key takeaway
+      const takeawayPattern = /(?:^|\n)(?:Key Takeaway|Summary|Main Point):\s*([^\n]+)/i;
+      const takeawayMatch = titleAndContent.match(takeawayPattern);
+      const keyTakeaway = takeawayMatch ? takeawayMatch[1].trim() : "";
+      
+      return {
+        dayNumber: dayNum,
+        title: title || `Day ${dayNum}`,
+        content: content || titleAndContent,
+        scripture: scripture || "",
+        keyTakeaway: keyTakeaway || "",
+        displayOrder: maxDisplayOrder + index + 1, // Append after highest existing order
+        estimatedMinutes: 15,
+        questions: [],
+      };
+    });
+
+    setParsedLessons(parsed);
+    toast({
+      title: "Success",
+      description: `Parsed ${parsed.length} lessons from the content`,
+    });
+  };
+
+  // Bulk import lessons
+  const handleBulkImport = async () => {
+    if (!managingLessonsStudy || parsedLessons.length === 0) {
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      // Create lessons in batch
+      for (const lesson of parsedLessons) {
+        await apiRequest("POST", `/api/studies/${managingLessonsStudy.id}/lessons`, lesson);
+      }
+
+      toast({
+        title: "Success",
+        description: `Imported ${parsedLessons.length} lessons successfully`,
+      });
+
+      // Reset and close
+      setBulkImportText("");
+      setParsedLessons([]);
+      setShowBulkImportDialog(false);
+      
+      // Refresh lessons list
+      queryClient.invalidateQueries({ queryKey: [`/api/studies/${managingLessonsStudy.id}/lessons`] });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to import lessons",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   const getTierIcon = (tier: string) => {
     switch (tier) {
       case "premium":
@@ -1108,15 +1221,26 @@ export default function StudyManagement() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            {/* Add New Lesson Button */}
-            <Button
-              onClick={handleAddLesson}
-              className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal"
-              data-testid="button-add-lesson"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add New Lesson
-            </Button>
+            {/* Add New Lesson and Bulk Import Buttons */}
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                onClick={handleAddLesson}
+                className="bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal"
+                data-testid="button-add-lesson"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add New Lesson
+              </Button>
+              <Button
+                onClick={() => setShowBulkImportDialog(true)}
+                variant="outline"
+                className="border-ministry-gold text-ministry-gold hover:bg-ministry-gold/10"
+                data-testid="button-bulk-import"
+              >
+                <List className="w-4 h-4 mr-2" />
+                Bulk Import
+              </Button>
+            </div>
 
             {/* Lesson Form (shown when adding or editing) */}
             {(editingLesson || lessonFormData.title || lessonFormData.content) && (
@@ -1436,6 +1560,129 @@ export default function StudyManagement() {
                 </div>
               )}
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Import Dialog */}
+      <Dialog open={showBulkImportDialog} onOpenChange={(open) => {
+        setShowBulkImportDialog(open);
+        if (!open) {
+          setBulkImportText("");
+          setParsedLessons([]);
+        }
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Bulk Import Lessons - {managingLessonsStudy?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {/* Instructions */}
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <h4 className="font-semibold text-sm mb-2">Formatting Instructions</h4>
+              <p className="text-sm text-muted-foreground mb-2">
+                Paste your study content below. Use one of these formats for each day:
+              </p>
+              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                <li><code>Day 1: Title of Lesson</code> or <code>### Day 1: Title</code></li>
+                <li>Include <code>Scripture: John 3:16</code> for scripture references</li>
+                <li>Include <code>Key Takeaway: Summary text</code> for takeaways</li>
+              </ul>
+              <div className="mt-3 text-xs font-mono bg-white dark:bg-gray-900 p-2 rounded">
+                <div>Day 1: Foundation of Biblical Manhood</div>
+                <div>Scripture: Genesis 2:15-18</div>
+                <div>Content goes here...</div>
+                <div>Key Takeaway: God created man with purpose</div>
+                <div className="mt-2">Day 2: Leadership in the Home</div>
+                <div>Content for day 2...</div>
+              </div>
+            </div>
+
+            {/* Paste Area */}
+            <div>
+              <Label>Paste Study Content</Label>
+              <Textarea
+                value={bulkImportText}
+                onChange={(e) => {
+                  setBulkImportText(e.target.value);
+                  setParsedLessons([]); // Clear preview when text changes
+                }}
+                placeholder="Paste your study content here..."
+                rows={12}
+                className="font-mono text-sm"
+                data-testid="textarea-bulk-import"
+              />
+            </div>
+
+            {/* Parse Button */}
+            <Button
+              onClick={() => parseBulkContent(bulkImportText)}
+              disabled={!bulkImportText.trim()}
+              className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal"
+              data-testid="button-parse-content"
+            >
+              Parse Content into Lessons
+            </Button>
+
+            {/* Preview Parsed Lessons */}
+            {parsedLessons.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm">
+                    Preview ({parsedLessons.length} lessons)
+                  </h4>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setParsedLessons([])}
+                  >
+                    Clear
+                  </Button>
+                </div>
+                <div className="max-h-[300px] overflow-y-auto space-y-2">
+                  {parsedLessons.map((lesson, index) => (
+                    <Card key={index} className="border-ministry-steel/20">
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between mb-2">
+                          <Badge variant="secondary" className="text-xs">
+                            Day {lesson.dayNumber}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            ~{lesson.estimatedMinutes} min
+                          </span>
+                        </div>
+                        <h5 className="font-semibold text-sm mb-1">{lesson.title}</h5>
+                        {lesson.scripture && (
+                          <p className="text-xs text-muted-foreground mb-1">
+                            📖 {lesson.scripture}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {lesson.content.substring(0, 150)}...
+                        </p>
+                        {lesson.keyTakeaway && (
+                          <p className="text-xs text-ministry-gold mt-1">
+                            💡 {lesson.keyTakeaway}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Import Button */}
+                <Button
+                  onClick={handleBulkImport}
+                  disabled={isImporting}
+                  className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal font-semibold"
+                  data-testid="button-confirm-import"
+                >
+                  {isImporting ? "Importing..." : `Import ${parsedLessons.length} Lessons`}
+                </Button>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
