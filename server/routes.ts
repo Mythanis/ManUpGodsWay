@@ -6144,6 +6144,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Carousel routes
+  app.get('/api/carousel', async (req: any, res) => {
+    try {
+      const items = await storage.getActiveCarouselItems();
+      res.json(items);
+    } catch (error: any) {
+      console.error("Error fetching carousel items:", error);
+      res.status(500).json({ message: "Failed to fetch carousel items" });
+    }
+  });
+
+  app.get('/api/admin/carousel', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const items = await storage.getAllCarouselItems();
+      res.json(items);
+    } catch (error: any) {
+      console.error("Error fetching all carousel items:", error);
+      res.status(500).json({ message: "Failed to fetch carousel items" });
+    }
+  });
+
+  app.post('/api/admin/carousel', isAuthenticated, imageUpload.single('image'), async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { title, description, linkType, linkId, externalUrl, position, displayOrder } = req.body;
+      
+      if (!title || !linkType || !position) {
+        return res.status(400).json({ message: "Title, linkType, and position are required" });
+      }
+
+      let imageUrl = '';
+      if (req.file) {
+        imageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      }
+
+      const item = await storage.createCarouselItem({
+        title,
+        description,
+        imageUrl,
+        linkType,
+        linkId: linkId || null,
+        externalUrl: externalUrl || null,
+        position: parseInt(position),
+        displayOrder: displayOrder ? parseInt(displayOrder) : 0,
+        isActive: true,
+      });
+
+      res.json(item);
+    } catch (error: any) {
+      console.error("Error creating carousel item:", error);
+      res.status(500).json({ message: "Failed to create carousel item" });
+    }
+  });
+
+  app.put('/api/admin/carousel/:id', isAuthenticated, imageUpload.single('image'), async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { id } = req.params;
+      const { title, description, linkType, linkId, externalUrl, position, displayOrder, isActive } = req.body;
+
+      const existingItem = await storage.getCarouselItem(id);
+      if (!existingItem) {
+        return res.status(404).json({ message: "Carousel item not found" });
+      }
+
+      let imageUrl = existingItem.imageUrl;
+      if (req.file) {
+        imageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      }
+
+      const updated = await storage.updateCarouselItem(id, {
+        title: title || existingItem.title,
+        description: description !== undefined ? description : existingItem.description,
+        imageUrl,
+        linkType: linkType || existingItem.linkType,
+        linkId: linkId !== undefined ? linkId : existingItem.linkId,
+        externalUrl: externalUrl !== undefined ? externalUrl : existingItem.externalUrl,
+        position: position ? parseInt(position) : existingItem.position,
+        displayOrder: displayOrder !== undefined ? parseInt(displayOrder) : existingItem.displayOrder,
+        isActive: isActive !== undefined ? isActive === 'true' || isActive === true : existingItem.isActive,
+      });
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating carousel item:", error);
+      res.status(500).json({ message: "Failed to update carousel item" });
+    }
+  });
+
+  app.delete('/api/admin/carousel/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { id } = req.params;
+      await storage.deleteCarouselItem(id);
+      res.json({ message: "Carousel item deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting carousel item:", error);
+      res.status(500).json({ message: "Failed to delete carousel item" });
+    }
+  });
+
   app.post('/api/stripe/test-connection', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);

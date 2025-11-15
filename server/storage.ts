@@ -42,6 +42,7 @@ import {
   userPurchases,
   studyEditableSections,
   userStudyResponses,
+  carouselItems,
   type User,
   type UpsertUser,
   type Study,
@@ -140,6 +141,8 @@ import {
   type InsertUserStudyResponse,
   type TierPricing,
   type InsertTierPricing,
+  type CarouselItem,
+  type InsertCarouselItem,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne } from "drizzle-orm";
@@ -874,6 +877,57 @@ export class DatabaseStorage implements IStorage {
       .where(eq(tierPricing.tier, tier))
       .returning();
     return updated;
+  }
+
+  // Carousel operations
+  async getActiveCarouselItems(): Promise<CarouselItem[]> {
+    return await db
+      .select()
+      .from(carouselItems)
+      .where(eq(carouselItems.isActive, true))
+      .orderBy(asc(carouselItems.displayOrder), asc(carouselItems.position));
+  }
+
+  async getAllCarouselItems(): Promise<CarouselItem[]> {
+    return await db
+      .select()
+      .from(carouselItems)
+      .orderBy(asc(carouselItems.displayOrder), asc(carouselItems.position));
+  }
+
+  async getCarouselItem(id: string): Promise<CarouselItem | undefined> {
+    const [item] = await db
+      .select()
+      .from(carouselItems)
+      .where(eq(carouselItems.id, id))
+      .limit(1);
+    return item;
+  }
+
+  async createCarouselItem(item: InsertCarouselItem): Promise<CarouselItem> {
+    const [created] = await db
+      .insert(carouselItems)
+      .values(item)
+      .returning();
+    return created;
+  }
+
+  async updateCarouselItem(id: string, item: Partial<InsertCarouselItem>): Promise<CarouselItem> {
+    const [updated] = await db
+      .update(carouselItems)
+      .set({
+        ...item,
+        updatedAt: new Date(),
+      })
+      .where(eq(carouselItems.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCarouselItem(id: string): Promise<void> {
+    await db
+      .delete(carouselItems)
+      .where(eq(carouselItems.id, id));
   }
 
   // Progress operations
