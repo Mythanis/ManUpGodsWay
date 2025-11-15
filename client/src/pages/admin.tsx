@@ -26,7 +26,7 @@ import EventManagement from "@/components/admin/event-management";
 import TierPricingManagement from "@/components/admin/tier-pricing-management";
 import CarouselManagement from "@/components/admin/carousel-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Study {
   id: string;
@@ -74,6 +74,8 @@ export default function Admin() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingStudy, setEditingStudy] = useState<Study | null>(null);
   const [activeTab, setActiveTab] = useState("content");
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
   const [showNotificationDialog, setShowNotificationDialog] = useState(false);
   const [notificationData, setNotificationData] = useState({
     title: "",
@@ -102,6 +104,30 @@ export default function Admin() {
   });
   const [videoInputType, setVideoInputType] = useState<'manual' | 'uploaded'>('manual');
 
+  // Check scroll position to show/hide arrows
+  const checkScrollPosition = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    setCanScrollLeft(container.scrollLeft > 0);
+    setCanScrollRight(
+      container.scrollLeft < container.scrollWidth - container.clientWidth - 1
+    );
+  };
+
+  // Scroll left/right
+  const scrollLeft = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    container.scrollBy({ left: -200, behavior: 'smooth' });
+  };
+
+  const scrollRight = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    container.scrollBy({ left: 200, behavior: 'smooth' });
+  };
+
   // Mouse wheel horizontal scrolling for admin tabs
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -112,10 +138,28 @@ export default function Admin() {
       e.preventDefault();
       // Scroll horizontally instead
       container.scrollLeft += e.deltaY;
+      checkScrollPosition();
+    };
+
+    const handleScroll = () => {
+      checkScrollPosition();
     };
 
     container.addEventListener('wheel', handleWheel, { passive: false });
-    return () => container.removeEventListener('wheel', handleWheel);
+    container.addEventListener('scroll', handleScroll);
+    
+    // Initial check
+    checkScrollPosition();
+    
+    // Check on resize
+    const resizeObserver = new ResizeObserver(checkScrollPosition);
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+      container.removeEventListener('scroll', handleScroll);
+      resizeObserver.disconnect();
+    };
   }, []);
 
   // Check admin access
@@ -525,10 +569,33 @@ export default function Admin() {
 
       {/* Admin Management Tabs */}
       <div className="px-6 mb-6">
-        <div 
-          ref={scrollContainerRef}
-          className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2"
-        >
+        <div className="relative">
+          {/* Left scroll arrow */}
+          {canScrollLeft && (
+            <button
+              onClick={scrollLeft}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-ministry-charcoal text-white rounded-full p-2 shadow-lg hover:bg-ministry-steel transition-colors"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
+
+          {/* Right scroll arrow */}
+          {canScrollRight && (
+            <button
+              onClick={scrollRight}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-ministry-charcoal text-white rounded-full p-2 shadow-lg hover:bg-ministry-steel transition-colors"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
+
+          <div 
+            ref={scrollContainerRef}
+            className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2"
+          >
           {adminTabs.map((tab) => {
             const IconComponent = tab.icon;
             return (
@@ -560,6 +627,7 @@ export default function Admin() {
               </button>
             );
           })}
+          </div>
         </div>
 
         <div className="mt-6">
