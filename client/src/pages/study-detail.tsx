@@ -22,6 +22,7 @@ import { Link } from "wouter";
 import { z } from "zod";
 import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
 import { PurchasePopup } from "@/components/purchase-popup";
+import { EmbeddedLessonViewer } from "@/components/embedded-lesson-viewer";
 
 const ratingSchema = insertStudyRatingSchema.pick({ rating: true, review: true });
 
@@ -441,15 +442,29 @@ export default function StudyDetail() {
               {study.description}
             </p>
 
-            {/* Study Materials with Modal Viewing */}
-            {(study.pdfFilename || study.wordFilename) && hasAccess && (
-              <div className="bg-ministry-navy/5 rounded-lg p-4 mb-6 border border-ministry-navy/20">
-                <h3 className="font-semibold text-ministry-charcoal mb-3 flex items-center">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* Embedded Study Viewer - Always show when user has access */}
+            {hasAccess && user?.id && (
+              <div className="mb-6">
+                <EmbeddedLessonViewer 
+                  studyId={study.id!}
+                  totalDays={study.totalDays || undefined}
+                  userId={user.id}
+                />
+              </div>
+            )}
+
+            {/* Legacy Study Materials - Show as backup/alternative resources */}
+            {hasAccess && (study.pdfFilename || study.wordFilename) && (
+              <div className="bg-ministry-slate/5 rounded-lg p-4 mb-6 border border-ministry-slate/20">
+                <h3 className="font-semibold text-ministry-slate mb-2 text-sm flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  Study Materials
+                  Additional Resources
                 </h3>
+                <p className="text-xs text-ministry-slate/70 mb-3">
+                  Downloadable study materials for offline access
+                </p>
                 <div className="space-y-2">
                   {study.pdfFilename && (
                     <PDFTextViewer studyId={study.id!} studyTitle={study.title} />
