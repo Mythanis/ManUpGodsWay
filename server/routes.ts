@@ -909,8 +909,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const filename = `study_thumbnail_${Date.now()}_${file.originalname}`;
+      const thumbnailUrl = `/uploads/thumbnails/${filename}`;
       const updateData = {
         thumbnailFilename: filename,
+        thumbnailUrl: thumbnailUrl,
         thumbnailMimeType: file.mimetype,
         thumbnailFileSize: file.size,
       };
