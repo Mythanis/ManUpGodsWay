@@ -50,6 +50,7 @@ export default function PodcastManagement() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingPodcast, setEditingPodcast] = useState<Podcast | null>(null);
+  const [isImportingRSS, setIsImportingRSS] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -203,6 +204,39 @@ export default function PodcastManagement() {
   const handleDelete = (podcastId: string) => {
     if (confirm('Are you sure you want to delete this podcast? This action cannot be undone.')) {
       deletePodcastMutation.mutate(podcastId);
+    }
+  };
+
+  const handleRSSImport = async () => {
+    setIsImportingRSS(true);
+    try {
+      const response = await fetch('/api/admin/podcasts/import-rss', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedUrl: 'https://manupgodsway.podomatic.com/rss2.xml' }),
+        credentials: 'include'
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ['admin', 'podcasts'] });
+        queryClient.invalidateQueries({ queryKey: ['api', 'podcasts'] });
+        toast({
+          title: "Success",
+          description: `Imported ${result.imported} podcasts. Skipped ${result.skipped} (already exist or errors).`,
+        });
+      } else {
+        throw new Error(result.message || 'Import failed');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to import RSS feed",
+        variant: "destructive"
+      });
+    } finally {
+      setIsImportingRSS(false);
     }
   };
 
@@ -369,6 +403,44 @@ export default function PodcastManagement() {
     <div className="space-y-6">
       {/* Riverside.fm Integration Panel */}
       <RiversideIntegrationPanel />
+
+      {/* RSS Feed Import Section */}
+      <Card className="border border-ministry-charcoal bg-ministry-gold-exact">
+        <CardHeader>
+          <CardTitle className="flex items-center text-black">
+            <Radio className="w-5 h-5 mr-2" />
+            Import from RSS Feed
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-black mb-4">
+            Sync podcasts from your Podomatic RSS feed. This will automatically import new episodes while skipping any that already exist.
+          </p>
+          <div className="flex items-center space-x-3">
+            <code className="flex-1 bg-ministry-charcoal text-ministry-gold px-3 py-2 rounded text-sm">
+              https://manupgodsway.podomatic.com/rss2.xml
+            </code>
+            <Button
+              onClick={handleRSSImport}
+              disabled={isImportingRSS}
+              className="bg-ministry-charcoal text-white hover:bg-ministry-steel"
+              data-testid="button-import-rss"
+            >
+              {isImportingRSS ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Sync Podcasts
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
       
       <div>
         <div className="flex items-center justify-between mb-6">
