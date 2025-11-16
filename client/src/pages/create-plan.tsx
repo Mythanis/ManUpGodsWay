@@ -361,6 +361,7 @@ export default function CreatePlan() {
 
   return (
     <div className="p-4 max-w-6xl mx-auto space-y-6">
+      <BackButton fallbackPath="/fitness" />
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/fitness">

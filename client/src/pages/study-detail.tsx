@@ -394,6 +394,7 @@ export default function StudyDetail() {
 
   return (
     <div className="pb-20">
+      <BackButton fallbackPath="/library" />
       {/* Header */}
       <div className="bg-gradient-to-r from-ministry-charcoal to-ministry-steel text-white px-6 pt-12 pb-6">
         <div className="flex items-center mb-4">

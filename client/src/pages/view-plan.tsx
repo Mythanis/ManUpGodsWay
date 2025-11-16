@@ -231,6 +231,7 @@ export default function ViewPlan() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <BackButton fallbackPath="/fitness" />
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="p-4 flex items-center justify-between">

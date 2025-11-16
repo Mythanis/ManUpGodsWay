@@ -351,6 +351,7 @@ export default function Purchase() {
   // Show purchase setup form
   return (
     <div className="min-h-screen bg-black text-white p-4">
+      <BackButton fallbackPath="/library" />
       <div className="max-w-md mx-auto pt-8">
         <Card className="bg-white text-black">
           <CardHeader>
