@@ -188,52 +188,52 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           
           /* Lesson title - prominent */
           .lesson-print-content [data-testid="text-lesson-title"] {
-            font-size: 18pt !important;
+            font-size: 16pt !important;
             font-weight: bold !important;
-            margin-bottom: 8pt !important;
+            margin-bottom: 6pt !important;
             margin-top: 0 !important;
             padding: 0 !important;
-            border-bottom: 2pt solid black !important;
-            padding-bottom: 4pt !important;
+            border-bottom: 1.5pt solid black !important;
+            padding-bottom: 3pt !important;
           }
           
           /* Scripture section */
           .lesson-print-content [data-testid="text-scripture"] {
-            font-size: 11pt !important;
+            font-size: 10pt !important;
             font-style: italic !important;
-            margin: 10pt 0 !important;
-            padding: 8pt !important;
-            border-left: 3pt solid #ccc !important;
+            margin: 6pt 0 !important;
+            padding: 6pt !important;
+            border-left: 2pt solid #ccc !important;
             background: #f9f9f9 !important;
           }
           
           /* Main content - readable typography */
           .lesson-print-content [data-testid="content-lesson-body"] {
-            font-size: 11pt !important;
-            line-height: 1.5 !important;
-            margin: 10pt 0 !important;
+            font-size: 10pt !important;
+            line-height: 1.3 !important;
+            margin: 6pt 0 !important;
             padding: 0 !important;
           }
           
           .lesson-print-content [data-testid="content-lesson-body"] p {
-            margin: 6pt 0 !important;
+            margin: 4pt 0 !important;
             padding: 0 !important;
           }
           
           /* Key takeaway */
           .lesson-print-content [data-testid="text-key-takeaway"] {
-            font-size: 10pt !important;
-            margin: 10pt 0 !important;
-            padding: 8pt !important;
+            font-size: 9pt !important;
+            margin: 6pt 0 !important;
+            padding: 6pt !important;
             background: #f0f0f0 !important;
             border: 1pt solid #ccc !important;
           }
           
           /* Questions section */
           .lesson-print-content [data-testid^="question-text"] {
-            font-size: 10pt !important;
+            font-size: 9pt !important;
             font-weight: bold !important;
-            margin: 8pt 0 4pt 0 !important;
+            margin: 6pt 0 3pt 0 !important;
             padding: 0 !important;
           }
           
@@ -241,9 +241,9 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           .lesson-print-content h1,
           .lesson-print-content h2,
           .lesson-print-content h3 {
-            font-size: 14pt !important;
+            font-size: 12pt !important;
             font-weight: bold !important;
-            margin: 12pt 0 6pt 0 !important;
+            margin: 8pt 0 4pt 0 !important;
             padding: 0 !important;
           }
           
@@ -263,9 +263,9 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
             visibility: visible;
           }
           
-          /* Page settings */
+          /* Page settings - 1 inch margins */
           @page {
-            margin: 2cm;
+            margin: 1in;
             size: letter;
           }
           
