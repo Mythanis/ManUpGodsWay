@@ -157,15 +157,17 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           /* Position lesson content at top left of page and fit on one page */
           .lesson-print-content {
             position: absolute;
-            left: 0;
-            top: 0;
+            left: 0 !important;
+            top: 0 !important;
             width: 100%;
             max-height: 100vh;
             overflow: hidden;
             background: white !important;
             box-shadow: none !important;
             border: none !important;
-            transform: scale(0.85);
+            margin: 0 !important;
+            padding: 0.3cm !important;
+            transform: scale(0.75);
             transform-origin: top left;
           }
           
@@ -178,22 +180,26 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           }
           
           /* Compact spacing for single page */
-          .lesson-print-content {
-            padding: 0.5cm !important;
-          }
-          
           .lesson-print-content * {
-            font-size: 11pt !important;
-            line-height: 1.3 !important;
-            margin: 0.3em 0 !important;
-            padding: 0.2em !important;
+            font-size: 10pt !important;
+            line-height: 1.2 !important;
+            margin: 0.2em 0 !important;
+            padding: 0.15em !important;
           }
           
           .lesson-print-content h1,
           .lesson-print-content h2,
           .lesson-print-content h3 {
-            font-size: 13pt !important;
-            margin-bottom: 0.4em !important;
+            font-size: 12pt !important;
+            margin-bottom: 0.3em !important;
+            margin-top: 0.3em !important;
+          }
+          
+          /* Remove extra spacing from card components */
+          .lesson-print-content > div,
+          .lesson-print-content > div > div {
+            margin: 0 !important;
+            padding: 0.2cm !important;
           }
           
           /* Watermark */
