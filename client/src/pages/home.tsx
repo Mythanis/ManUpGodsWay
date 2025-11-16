@@ -446,7 +446,7 @@ export default function Home() {
         </div>
         
         <h2 className="text-lg font-bold text-white mb-4">Today's Devotional</h2>
-        <Card className="shadow-sm border-0 bg-ministry-gold-exact/20 mb-6" data-testid="card-devotional">
+        <Card className="shadow-sm border border-ministry-charcoal bg-ministry-gold-exact mb-6" data-testid="card-devotional">
           <CardContent className="p-6">
             {devotional ? (
               <>
@@ -501,7 +501,7 @@ export default function Home() {
       {/* This Week Challenge Section */}
       {currentChallenge && (
         <div className="px-6 mb-6">
-          <Card className="bg-ministry-gold-exact relative overflow-hidden" data-testid="card-current-challenge">
+          <Card className="border border-ministry-charcoal bg-ministry-gold-exact relative overflow-hidden" data-testid="card-current-challenge">
             <CardContent className="p-6">
               <div className="absolute top-0 right-0 w-32 h-32 bg-black/5 rounded-full -translate-y-16 translate-x-16"></div>
               <div className="relative z-10">
@@ -553,7 +553,7 @@ export default function Home() {
         ) : (
           <>
             {/* No Current Study - Show Recommendations */}
-            <Card className="border border-border p-6 mb-4 bg-ministry-gold-exact/20" data-testid="card-no-current-study">
+            <Card className="border border-ministry-charcoal p-6 mb-4 bg-ministry-gold-exact" data-testid="card-no-current-study">
               <div className="text-center">
                 <p className="text-ministry-slate mb-4">You haven't started any studies yet</p>
                 <Button 
@@ -730,7 +730,7 @@ export default function Home() {
         
         <div className="space-y-3">
           {completedCount > 0 && (
-            <Card className="border-border bg-ministry-gold-exact/20" data-testid="activity-completed-study">
+            <Card className="border border-ministry-charcoal bg-ministry-gold-exact" data-testid="activity-completed-study">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-full bg-ministry-steel/20 flex items-center justify-center">
@@ -749,7 +749,7 @@ export default function Home() {
             </Card>
           )}
           
-          <Card className="border-border bg-ministry-gold-exact/20" data-testid="activity-streak">
+          <Card className="border border-ministry-charcoal bg-ministry-gold-exact" data-testid="activity-streak">
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-full bg-ministry-gold-exact/20 flex items-center justify-center">
