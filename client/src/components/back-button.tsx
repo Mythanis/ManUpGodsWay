@@ -7,7 +7,7 @@ interface BackButtonProps {
   className?: string;
 }
 
-export function BackButton({ fallbackPath = "/home", className = "" }: BackButtonProps) {
+export function BackButton({ fallbackPath = "/", className = "" }: BackButtonProps) {
   const [, setLocation] = useLocation();
 
   const handleBack = () => {
@@ -23,10 +23,11 @@ export function BackButton({ fallbackPath = "/home", className = "" }: BackButto
       variant="ghost"
       size="icon"
       onClick={handleBack}
-      className={`fixed top-20 left-4 z-50 h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm border border-border/40 hover:bg-accent/80 shadow-sm ${className}`}
+      className={`fixed top-20 left-4 z-[9999] h-12 w-12 rounded-full bg-white dark:bg-gray-800 shadow-lg border-2 border-ministry-gold hover:bg-gray-100 dark:hover:bg-gray-700 transition-all hover:scale-110 ${className}`}
       data-testid="button-back"
+      aria-label="Go back"
     >
-      <ArrowLeft className="h-5 w-5" />
+      <ArrowLeft className="h-6 w-6 text-gray-800 dark:text-white" />
       <span className="sr-only">Go back</span>
     </Button>
   );
