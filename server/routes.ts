@@ -40,6 +40,7 @@ import {
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
+import Parser from 'rss-parser';
 
 // Role checking helper functions
 function isAdmin(user: any): boolean {
@@ -4261,6 +4262,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching admin podcasts:', error);
       res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Import podcasts from RSS feed (admin only)
+  app.post('/api/admin/podcasts/import-rss', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { feedUrl } = req.body;
+      if (!feedUrl) {
+        return res.status(400).json({ message: "RSS feed URL is required" });
+      }
+
+      const parser = new Parser({
+        customFields: {
+          item: [
+            ['itunes:duration', 'duration'],
+            ['itunes:image', 'image'],
+            ['enclosure', 'enclosure']
+          ]
+        }
+      });
+
+      const feed = await parser.parseURL(feedUrl);
+      const importedPodcasts = [];
+      const skippedPodcasts = [];
+
+      for (const item of feed.items) {
+        try {
+          // Check if podcast already exists by title to avoid duplicates
+          const existingPodcasts = await storage.getAllPodcasts();
+          const exists = existingPodcasts.some((p: any) => p.title === item.title);
+          
+          if (exists) {
+            skippedPodcasts.push({ title: item.title, reason: 'Already exists' });
+            continue;
+          }
+
+          // Parse duration from iTunes format (HH:MM:SS or MM:SS or seconds)
+          let durationInSeconds = 0;
+          if (item.duration) {
+            const parts = item.duration.split(':').map(Number);
+            if (parts.length === 3) {
+              durationInSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+            } else if (parts.length === 2) {
+              durationInSeconds = parts[0] * 60 + parts[1];
+            } else if (parts.length === 1) {
+              durationInSeconds = parts[0];
+            }
+          }
+
+          // Get audio URL from enclosure
+          const audioUrl = item.enclosure?.url || item.link || '';
+          const thumbnailUrl = item.image?.href || item.itunes?.image || feed.image?.url || '';
+
+          const podcastData = {
+            title: item.title || 'Untitled Podcast',
+            description: item.contentSnippet || item.content || '',
+            type: 'audio' as const,
+            fileUrl: audioUrl,
+            thumbnailUrl: thumbnailUrl,
+            duration: durationInSeconds,
+            category: 'general',
+            tags: item.categories || [],
+            isPublished: true,
+            uploadedBy: user.id
+          };
+
+          const podcast = await storage.createPodcast(podcastData);
+          importedPodcasts.push(podcast);
+        } catch (error) {
+          console.error('Error importing podcast:', item.title, error);
+          skippedPodcasts.push({ 
+            title: item.title || 'Unknown', 
+            reason: error instanceof Error ? error.message : 'Unknown error' 
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        imported: importedPodcasts.length,
+        skipped: skippedPodcasts.length,
+        details: {
+          importedPodcasts: importedPodcasts.map(p => ({ id: p.id, title: p.title })),
+          skippedPodcasts
+        }
+      });
+    } catch (error) {
+      console.error('Error importing RSS feed:', error);
+      res.status(500).json({ 
+        message: 'Failed to import RSS feed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
