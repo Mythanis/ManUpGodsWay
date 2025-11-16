@@ -231,7 +231,7 @@ export default function AdminWordEditor() {
         }
       `}</style>
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
+      <div className="sticky top-0 z-50 bg-background border-b border-ministry-charcoal shadow-sm">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center space-x-3 flex-1">
             <Button
@@ -266,7 +266,7 @@ export default function AdminWordEditor() {
         </div>
 
         {/* Editable Sections Sidebar */}
-        <div className="w-80 border-l border-border bg-background overflow-auto">
+        <div className="w-80 border-l border-ministry-charcoal bg-background overflow-auto">
           <div className="p-4">
             <h2 className="font-semibold text-lg mb-4">Editable Sections ({editableSections.length})</h2>
             

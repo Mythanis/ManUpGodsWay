@@ -366,7 +366,7 @@ export default function ChallengeManagement() {
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-4 flex-1">
                     <div className="flex-shrink-0">
-                      <div className="w-16 h-16 rounded-lg bg-ministry-gold-exact/20 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-lg bg-ministry-gold-exact flex items-center justify-center">
                         <Trophy className="w-8 h-8 text-ministry-gold" />
                       </div>
                     </div>

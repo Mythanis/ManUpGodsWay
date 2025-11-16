@@ -433,7 +433,7 @@ export default function Bible() {
         </div>
 
         {/* Bible Controls */}
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-ministry-charcoal">
           <CardHeader>
             <CardTitle className="text-foreground">Bible Navigation</CardTitle>
           </CardHeader>
@@ -442,7 +442,7 @@ export default function Bible() {
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Bible Version</label>
               <Select value={selectedVersion} onValueChange={setSelectedVersion}>
-                <SelectTrigger className="bg-background border-border w-full">
+                <SelectTrigger className="bg-background border-ministry-charcoal w-full">
                   <SelectValue placeholder="Select Bible version" />
                 </SelectTrigger>
                 <SelectContent>
@@ -464,7 +464,7 @@ export default function Bible() {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Book</label>
                 <Select value={selectedBook} onValueChange={setSelectedBook}>
-                  <SelectTrigger className="bg-background border-border">
+                  <SelectTrigger className="bg-background border-ministry-charcoal">
                     <SelectValue placeholder="Select book" />
                   </SelectTrigger>
                   <SelectContent className="max-h-60">
@@ -488,7 +488,7 @@ export default function Bible() {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Chapter</label>
                 <Select value={selectedChapter.toString()} onValueChange={(value) => setSelectedChapter(parseInt(value))}>
-                  <SelectTrigger className="bg-background border-border">
+                  <SelectTrigger className="bg-background border-ministry-charcoal">
                     <SelectValue placeholder="Chapter" />
                   </SelectTrigger>
                   <SelectContent className="max-h-60">
@@ -513,7 +513,7 @@ export default function Bible() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="pl-10 bg-background border-border text-foreground"
+                    className="pl-10 bg-background border-ministry-charcoal text-foreground"
                     data-testid="input-bible-search"
                   />
                 </div>
@@ -559,7 +559,7 @@ export default function Bible() {
         </Card>
 
         {/* Bible Text Display */}
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-ministry-charcoal">
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle className="text-foreground">
@@ -604,7 +604,7 @@ export default function Bible() {
 
 
         {/* API Status and Version Information */}
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-ministry-charcoal">
           <CardHeader>
             <CardTitle className="text-foreground">Bible API Status & Versions</CardTitle>
             <CardDescription>
@@ -616,7 +616,7 @@ export default function Bible() {
           <CardContent>
             <div className="space-y-4">
               {/* API Status Indicator */}
-              <div className="p-3 rounded-lg border border-border bg-accent/5">
+              <div className="p-3 rounded-lg border border-ministry-charcoal bg-accent/5">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-foreground">API Services:</span>
                   <div className="flex items-center gap-2">
@@ -640,7 +640,7 @@ export default function Bible() {
                     className={`p-4 rounded-lg border transition-colors ${
                       selectedVersion === version.id
                         ? 'border-ministry-gold bg-ministry-gold/10'
-                        : 'border-border bg-accent/5'
+                        : 'border-ministry-charcoal bg-accent/5'
                     }`}
                   >
                     <h3 className="font-semibold text-foreground">{version.id}</h3>
@@ -656,7 +656,7 @@ export default function Bible() {
 
       {/* Search Results Modal */}
       <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] bg-card border-border">
+        <DialogContent className="max-w-4xl max-h-[80vh] bg-card border-ministry-charcoal">
           <DialogHeader>
             <DialogTitle className="text-foreground">
               Search Results for "{searchTerm}"
@@ -683,7 +683,7 @@ export default function Bible() {
                 {searchResults.map((result, index) => (
                   <div 
                     key={index}
-                    className="p-4 border border-border rounded-lg hover:bg-accent/10 cursor-pointer transition-colors"
+                    className="p-4 border border-ministry-charcoal rounded-lg hover:bg-accent/10 cursor-pointer transition-colors"
                     onClick={() => goToSearchResult(result)}
                     data-testid={`search-result-${index}`}
                   >
@@ -710,7 +710,7 @@ export default function Bible() {
             )}
           </div>
 
-          <div className="flex justify-between items-center pt-4 border-t border-border">
+          <div className="flex justify-between items-center pt-4 border-t border-ministry-charcoal">
             <p className="text-xs text-muted-foreground">
               Click any verse to navigate directly to that location
             </p>

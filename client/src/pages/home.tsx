@@ -557,7 +557,7 @@ export default function Home() {
               <div className="text-center">
                 <p className="text-ministry-slate mb-4">You haven't started any studies yet</p>
                 <Button 
-                  className="bg-card text-foreground hover:bg-muted border border-border"
+                  className="bg-card text-foreground hover:bg-muted border border-ministry-charcoal"
                   data-testid="button-browse-studies"
                   onClick={() => window.location.href = '/library'}
                 >
@@ -573,7 +573,7 @@ export default function Home() {
                 <p className="text-xs text-white mb-4">Based on your interests</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
-                    <Card key={study.id} className="border border-border hover:shadow-sm transition-shadow bg-ministry-gold-exact/20">
+                    <Card key={study.id} className="border border-ministry-charcoal hover:shadow-sm transition-shadow bg-ministry-gold-exact">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
@@ -590,7 +590,7 @@ export default function Home() {
                           </div>
                           <Button 
                             size="sm"
-                            className="bg-card text-foreground hover:bg-muted border border-border ml-3"
+                            className="bg-card text-foreground hover:bg-muted border border-ministry-charcoal ml-3"
                             onClick={() => window.location.href = `/studies/${study.id}`}
                           >
                             Start
@@ -752,7 +752,7 @@ export default function Home() {
           <Card className="border border-ministry-charcoal bg-ministry-gold-exact" data-testid="activity-streak">
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-ministry-gold-exact/20 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-ministry-gold-exact flex items-center justify-center">
                   <svg className="w-5 h-5 text-ministry-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
                   </svg>
@@ -1072,7 +1072,7 @@ export default function Home() {
               {/* Challenge Header */}
               <div className="bg-gradient-to-br from-ministry-steel to-ministry-navy text-white p-6 rounded-lg">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="inline-flex items-center bg-ministry-gold-exact/20 text-ministry-gold px-3 py-1 rounded-full text-xs font-medium">
+                  <div className="inline-flex items-center bg-ministry-gold-exact text-ministry-gold px-3 py-1 rounded-full text-xs font-medium">
                     <Target className="w-3 h-3 mr-1" fill="currentColor" />
                     Week of {formatLocalDate(new Date((currentChallenge as any)?.releaseDate), { 
                       month: 'short', 
@@ -1094,7 +1094,7 @@ export default function Home() {
               </div>
 
               {/* Participant Count Banner */}
-              <div className="bg-ministry-gold-exact/10 border border-ministry-gold rounded-lg p-4">
+              <div className="bg-ministry-gold-exact border border-ministry-gold rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Users className="w-5 h-5 text-ministry-gold" />

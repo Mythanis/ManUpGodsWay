@@ -61,7 +61,7 @@ export default function Navigation() {
 
   return (
     <nav 
-      className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-card border-t border-border z-50 h-16"
+      className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-card border-t border-ministry-charcoal z-50 h-16"
       data-testid="navigation-bottom"
     >
       <div className="flex items-center justify-around h-full px-2">

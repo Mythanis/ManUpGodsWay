@@ -18,7 +18,7 @@ export function AccountSettingsButton() {
             variant="outline"
             size="icon"
             onClick={handleClick}
-            className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm border-border/40 hover:bg-accent/80 shadow-sm"
+            className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm border-ministry-charcoal/40 hover:bg-accent/80 shadow-sm"
           >
             <Settings className="h-4 w-4" />
             <span className="sr-only">Account Settings</span>

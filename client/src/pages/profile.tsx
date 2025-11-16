@@ -153,7 +153,7 @@ export default function Profile() {
             <div className="space-y-4">
               <div className={`flex items-center justify-between p-4 rounded-xl border ${
                 user?.subscriptionTier === 'free' 
-                  ? 'bg-ministry-gold-exact/10 border-ministry-gold-exact/20' 
+                  ? 'bg-ministry-gold-exact border-ministry-gold-exact/20' 
                   : 'bg-ministry-steel/10 border-ministry-steel/20'
               }`}>
                 <div className="flex items-center space-x-3">
@@ -189,7 +189,7 @@ export default function Profile() {
               <EditProfileDialog>
                 <Button 
                   variant="outline"
-                  className="w-full justify-between p-4 h-auto border-border hover:bg-muted"
+                  className="w-full justify-between p-4 h-auto border-ministry-charcoal hover:bg-muted"
                   data-testid="button-edit-profile"
                 >
                   <div className="flex items-center space-x-3">
@@ -212,19 +212,19 @@ export default function Profile() {
       <div className="px-6 mb-6">
         <h2 className="text-lg font-bold text-foreground mb-4">Settings</h2>
         
-        <Card className="border-border overflow-hidden" data-testid="card-settings">
+        <Card className="border-ministry-charcoal overflow-hidden" data-testid="card-settings">
           <CardContent className="p-0">
             <NotificationPanel variant="button" />
             
             {/* Notification Preferences */}
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-border"
+              className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-ministry-charcoal"
               onClick={() => setLocation('/notification-preferences')}
               data-testid="button-notification-preferences"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact/20 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact flex items-center justify-center">
                   <Settings className="w-4 h-4 text-ministry-gold" />
                 </div>
                 <span className="font-medium text-foreground">Notification Preferences</span>
@@ -240,7 +240,7 @@ export default function Profile() {
             
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-border"
+              className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-ministry-charcoal"
               data-testid="button-privacy"
             >
               <div className="flex items-center space-x-3">
@@ -256,11 +256,11 @@ export default function Profile() {
             
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-border"
+              className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-ministry-charcoal"
               data-testid="button-help"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact/20 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact flex items-center justify-center">
                   <HelpCircle className="w-4 h-4 text-ministry-gold" />
                 </div>
                 <span className="font-medium text-foreground">Help & Support</span>
@@ -321,7 +321,7 @@ export default function Profile() {
       <div className="px-6">
         <h2 className="text-lg font-bold text-white mb-4">Your Journey</h2>
         
-        <Card className="border-border bg-ministry-gold-exact/20" data-testid="card-progress">
+        <Card className="border-ministry-charcoal bg-ministry-gold-exact" data-testid="card-progress">
           <CardContent className="p-6">
             {currentStudies.length === 0 && completedStudies.length === 0 ? (
               <div className="text-center py-8">

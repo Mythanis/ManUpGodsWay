@@ -414,7 +414,7 @@ export default function PodcastManagement() {
       ) : (
         <div className="space-y-4">
           {podcasts.map((podcast: Podcast) => (
-            <Card key={podcast.id} className="hover:shadow-md transition-shadow bg-ministry-gold-exact/20">
+            <Card key={podcast.id} className="hover:shadow-md transition-shadow bg-ministry-gold-exact">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-4 flex-1">

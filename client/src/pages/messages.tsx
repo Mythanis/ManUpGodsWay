@@ -829,7 +829,7 @@ export default function Messages() {
       {/* Message Context Menu */}
       {showMessageMenu && (
         <div
-          className="fixed bg-background border border-border rounded-lg shadow-lg p-2 z-50 min-w-[140px]"
+          className="fixed bg-background border border-ministry-charcoal rounded-lg shadow-lg p-2 z-50 min-w-[140px]"
           style={{
             left: showMessageMenu.x,
             top: showMessageMenu.y,
@@ -855,7 +855,7 @@ export default function Messages() {
         const targetUser = allUsers.find(u => u.id === showProfileMenu.userId);
         return (
           <div
-            className="fixed bg-background border border-border rounded-lg shadow-lg p-2 z-50 min-w-[160px]"
+            className="fixed bg-background border border-ministry-charcoal rounded-lg shadow-lg p-2 z-50 min-w-[160px]"
             style={{
               left: showProfileMenu.x + 10,
               top: showProfileMenu.y,

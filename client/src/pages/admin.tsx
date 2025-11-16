@@ -536,7 +536,7 @@ export default function Admin() {
 
       {/* Quick Stats */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-lg bg-ministry-gold-exact/20" data-testid="card-admin-stats">
+        <Card className="shadow-lg bg-ministry-gold-exact" data-testid="card-admin-stats">
           <CardContent className="p-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
@@ -1154,7 +1154,7 @@ export default function Admin() {
       <div className="px-6">
         <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Recent Admin Activity</h2>
         
-        <Card className="border-border" data-testid="card-recent-activity">
+        <Card className="border-ministry-charcoal" data-testid="card-recent-activity">
           <CardContent className="p-4">
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between py-2">

@@ -87,7 +87,7 @@ function WordDocumentViewer({ studyId, studyTitle }: { studyId: string; studyTit
   return (
     <div
       onClick={handleOpenDocument}
-      className="w-full flex items-center justify-between p-3 bg-white dark:bg-card rounded-lg hover:bg-gray-50 dark:hover:bg-secondary transition-colors border border-gray-200 dark:border-border cursor-pointer"
+      className="w-full flex items-center justify-between p-3 bg-white dark:bg-card rounded-lg hover:bg-gray-50 dark:hover:bg-secondary transition-colors border border-gray-200 dark:border-ministry-charcoal cursor-pointer"
       data-testid="button-view-word"
     >
       <div className="flex items-center space-x-3">
@@ -357,7 +357,7 @@ export default function StudyDetail() {
       case 'premium':
         return 'bg-ministry-steel/20 text-ministry-steel';
       case 'vip':
-        return 'bg-ministry-gold-exact/20 text-ministry-gold';
+        return 'bg-ministry-gold-exact text-ministry-gold';
       default:
         return 'bg-ministry-success/20 text-ministry-success';
     }
@@ -421,7 +421,7 @@ export default function StudyDetail() {
 
       {/* Study Info */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-lg bg-ministry-gold-exact/20" data-testid="card-study-info">
+        <Card className="shadow-lg bg-ministry-gold-exact" data-testid="card-study-info">
           <CardContent className="p-6">
             {study.thumbnailUrl && (
               <img 
@@ -587,7 +587,7 @@ export default function StudyDetail() {
         <>
           {/* Progress Section */}
           <div className="px-6 mb-6">
-            <Card className="bg-ministry-gold-exact/20" data-testid="card-progress">
+            <Card className="bg-ministry-gold-exact" data-testid="card-progress">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-black">Your Progress</h2>

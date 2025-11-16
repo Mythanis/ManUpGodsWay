@@ -86,7 +86,7 @@ export function SilencedUsersButton() {
       <DialogTrigger asChild>
         <Button 
           variant="ghost"
-          className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-border"
+          className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-ministry-charcoal"
           onClick={() => {
             setSilencedToRemove(new Set());
             setSilencedDialogOpen(true);

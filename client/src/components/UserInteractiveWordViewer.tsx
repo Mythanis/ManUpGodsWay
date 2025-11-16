@@ -214,7 +214,7 @@ export default function UserInteractiveWordViewer({
   if (isDocFile) {
     return (
       <div className="h-screen flex flex-col bg-background">
-        <div className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
+        <div className="sticky top-0 z-50 bg-background border-b border-ministry-charcoal shadow-sm">
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center space-x-3 flex-1 min-w-0">
               <Button
@@ -272,7 +272,7 @@ export default function UserInteractiveWordViewer({
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
+      <div className="sticky top-0 z-50 bg-background border-b border-ministry-charcoal shadow-sm">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center space-x-3 flex-1 min-w-0">
             <Button

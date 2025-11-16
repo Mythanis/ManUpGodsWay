@@ -167,7 +167,7 @@ export default function TierPricingManagement() {
 
       <div className="grid gap-6 md:grid-cols-2">
         {tierPricing.map((tier: TierPricing) => (
-          <Card key={tier.id} className="border-border">
+          <Card key={tier.id} className="border-ministry-charcoal">
             <CardHeader className="pb-2">
               <div className="space-y-2">
                 <div className="flex justify-end">

@@ -233,7 +233,7 @@ export default function ViewPlan() {
     <div className="min-h-screen bg-background pb-20">
       <BackButton fallbackPath="/fitness" />
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background border-b border-border">
+      <div className="sticky top-0 z-10 bg-background border-b border-ministry-charcoal">
         <div className="p-4 flex items-center justify-between">
           <Link href="/fitness">
             <Button
@@ -360,7 +360,7 @@ export default function ViewPlan() {
                 .map((exercise, index) => {
                   const isCompleted = isExerciseCompleted(exercise.id);
                   return (
-                  <Card key={exercise.id} className={`border border-border ${isCompleted ? 'bg-green-50 dark:bg-green-950' : ''}`}>
+                  <Card key={exercise.id} className={`border border-ministry-charcoal ${isCompleted ? 'bg-green-50 dark:bg-green-950' : ''}`}>
                     <CardContent className="p-4">
                       <div className="flex gap-4">
                         {/* Completion Checkbox */}
@@ -378,11 +378,11 @@ export default function ViewPlan() {
                             <img
                               src={exercise.imageUrl}
                               alt={exercise.exerciseName}
-                              className="w-20 h-20 rounded-lg object-cover border border-border"
+                              className="w-20 h-20 rounded-lg object-cover border border-ministry-charcoal"
                               data-testid={`img-exercise-${exercise.exerciseId}`}
                             />
                           ) : (
-                            <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center border border-border">
+                            <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center border border-ministry-charcoal">
                               <Dumbbell className="w-8 h-8 text-muted-foreground" />
                             </div>
                           )}

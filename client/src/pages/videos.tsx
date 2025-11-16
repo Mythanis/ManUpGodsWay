@@ -360,7 +360,7 @@ export default function Videos() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVideos.map((video: Video) => (
-              <Card key={video.id} className={`overflow-hidden hover:shadow-lg transition-shadow bg-ministry-gold-exact/20 ${
+              <Card key={video.id} className={`overflow-hidden hover:shadow-lg transition-shadow bg-ministry-gold-exact ${
                 video.isFeatured ? 'ring-2 ring-yellow-400 shadow-xl' : ''
               }`}>
                 <div className="aspect-video bg-gray-900 relative cursor-pointer"
@@ -476,12 +476,12 @@ export default function Videos() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     {getTierBadge(selectedVideo.requiredTier)}
-                    <Badge variant="outline" className="bg-card border-border text-foreground">{selectedVideo.category}</Badge>
+                    <Badge variant="outline" className="bg-card border-ministry-charcoal text-foreground">{selectedVideo.category}</Badge>
                   </div>
                   <Button
                     onClick={() => setShowRatingDialog(true)}
                     variant="outline"
-                    className="bg-card border-border text-foreground hover:bg-muted"
+                    className="bg-card border-ministry-charcoal text-foreground hover:bg-muted"
                     size="sm"
                   >
                     <Star className="w-4 h-4 mr-1" />
@@ -518,7 +518,7 @@ export default function Videos() {
                     <h4 className="font-medium text-ministry-charcoal mb-3">Reviews</h4>
                     <div className="space-y-3 max-h-60 overflow-y-auto">
                       {videoReviews.map((review: any) => (
-                        <div key={review.id} className="border-b border-border pb-3 last:border-b-0">
+                        <div key={review.id} className="border-b border-ministry-charcoal pb-3 last:border-b-0">
                           <div className="flex items-center space-x-2 mb-1">
                             <div className="flex items-center">
                               {[...Array(5)].map((_, i) => (
@@ -586,7 +586,7 @@ export default function Videos() {
             </div>
 
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowRatingDialog(false)} className="bg-card border-border text-foreground hover:bg-muted">
+              <Button variant="outline" onClick={() => setShowRatingDialog(false)} className="bg-card border-ministry-charcoal text-foreground hover:bg-muted">
                 Cancel
               </Button>
               <Button 

@@ -557,7 +557,7 @@ export default function Community() {
 
       {/* Community Stats */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-lg bg-ministry-gold-exact/20" data-testid="card-stats">
+        <Card className="shadow-lg bg-ministry-gold-exact" data-testid="card-stats">
           <CardContent className="p-4">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
@@ -714,7 +714,7 @@ export default function Community() {
                 key={category.id}
                 variant="outline"
                 onClick={() => setSelectedCategory(selectedCategory === category.id ? '' : category.id)}
-                className={`h-auto p-4 bg-ministry-gold-exact/20 hover:bg-ministry-gold-exact/30 hover:shadow-md transition-all ${
+                className={`h-auto p-4 bg-ministry-gold-exact hover:bg-ministry-gold-exact/30 hover:shadow-md transition-all ${
                   selectedCategory === category.id ? 'ring-2 ring-ministry-gold bg-ministry-gold-exact/30' : 'border-gray-100'
                 }`}
                 data-testid={`button-category-${category.id}`}

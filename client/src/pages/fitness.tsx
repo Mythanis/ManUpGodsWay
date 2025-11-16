@@ -690,12 +690,12 @@ export default function Fitness() {
   };
 
   const FitnessChallengeCard = ({ challenge, isToday = false }: { challenge: FitnessChallenge; isToday?: boolean }) => (
-    <Card className={`hover:shadow-md transition-shadow bg-ministry-gold-exact/20 ${isToday ? 'ring-2 ring-ministry-gold bg-ministry-gold-exact/30' : ''}`}>
+    <Card className={`hover:shadow-md transition-shadow bg-ministry-gold-exact ${isToday ? 'ring-2 ring-ministry-gold bg-ministry-gold-exact/30' : ''}`}>
       <CardContent className="p-6">
         <div className="flex items-start space-x-4">
           <div className="flex-shrink-0">
             <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
-              isToday ? 'bg-ministry-gold text-black' : 'bg-ministry-gold-exact/20 text-ministry-gold'
+              isToday ? 'bg-ministry-gold text-black' : 'bg-ministry-gold-exact text-ministry-gold'
             }`}>
               {isToday ? (
                 <Star className="w-8 h-8 fill-current" />
@@ -764,7 +764,7 @@ export default function Fitness() {
   );
 
   const ExerciseCard = ({ exercise, showRemove = false }: { exercise: Exercise; showRemove?: boolean }) => (
-    <Card className="hover:shadow-md transition-shadow bg-ministry-gold-exact/20">
+    <Card className="hover:shadow-md transition-shadow bg-ministry-gold-exact">
       <CardContent className="p-4">
         <div className="flex items-start">
           <div className="flex-1">
@@ -1300,7 +1300,7 @@ export default function Fitness() {
 
         {/* Tab Navigation */}
         <Tabs defaultValue="workout" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-ministry-gold-exact/20">
+          <TabsList className="grid w-full grid-cols-5 bg-ministry-gold-exact">
             <TabsTrigger value="workout" className="flex items-center gap-2 data-[state=active]:bg-ministry-gold data-[state=active]:text-black">
               <Dumbbell className="w-4 h-4" />
               Workout
@@ -1339,7 +1339,7 @@ export default function Fitness() {
               
               if (todaysExercises.length === 0) {
                 return (
-                  <Card className="text-center py-12 bg-ministry-gold-exact/20">
+                  <Card className="text-center py-12 bg-ministry-gold-exact">
                     <CardContent>
                       <Calendar className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
                       <h3 className="text-lg font-medium text-black mb-2">No Workout Today</h3>
@@ -1354,7 +1354,7 @@ export default function Fitness() {
               return (
                 <div className="space-y-4">
                   {todaysExercises.map((exercise, index) => (
-                    <Card key={`${exercise.planId}-${exercise.exerciseId}`} className="border border-border bg-ministry-gold-exact/10">
+                    <Card key={`${exercise.planId}-${exercise.exerciseId}`} className="border border-ministry-charcoal bg-ministry-gold-exact/10">
                       <CardContent className="p-4">
                         <div className="flex gap-6">
                           {/* Exercise Details */}
@@ -1414,7 +1414,7 @@ export default function Fitness() {
 
                             {/* Notes */}
                             {exercise.notes && (
-                              <div className="mt-3 p-2 bg-ministry-gold-exact/20 rounded">
+                              <div className="mt-3 p-2 bg-ministry-gold-exact rounded">
                                 <p className="text-sm text-white">
                                   <strong>Notes:</strong> {exercise.notes}
                                 </p>
@@ -1460,7 +1460,7 @@ export default function Fitness() {
                     placeholder="Search exercises..."
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="bg-ministry-gold-exact/20 border-ministry-steel text-white placeholder:text-gray-400"
+                    className="bg-ministry-gold-exact border-ministry-steel text-white placeholder:text-gray-400"
                     data-testid="input-exercise-search"
                   />
                 </div>
@@ -1529,7 +1529,7 @@ export default function Fitness() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ministry-gold"></div>
               </div>
             ) : filteredExercises.length === 0 ? (
-              <Card className="text-center py-12 bg-ministry-gold-exact/20">
+              <Card className="text-center py-12 bg-ministry-gold-exact">
                 <CardContent>
                   <Search className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
                   <h3 className="text-lg font-medium text-black mb-2">No exercises found</h3>
@@ -1622,7 +1622,7 @@ export default function Fitness() {
             </div>
 
             {favoriteExercises.length === 0 ? (
-              <Card className="text-center py-12 bg-ministry-gold-exact/20">
+              <Card className="text-center py-12 bg-ministry-gold-exact">
                 <CardContent>
                   <Heart className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
                   <h3 className="text-lg font-medium text-black mb-2">No favorites yet</h3>
@@ -1662,7 +1662,7 @@ export default function Fitness() {
             {/* Plan Selection Options */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               {/* Level Selection */}
-              <Card className="bg-ministry-gold-exact/20">
+              <Card className="bg-ministry-gold-exact">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-black text-sm">Fitness Level</CardTitle>
                 </CardHeader>
@@ -1681,7 +1681,7 @@ export default function Fitness() {
               </Card>
 
               {/* Equipment Selection */}
-              <Card className="bg-ministry-gold-exact/20">
+              <Card className="bg-ministry-gold-exact">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-black text-sm">Available Equipment (Select Multiple)</CardTitle>
                   {selectedPlanEquipment.length > 0 && (
@@ -1728,7 +1728,7 @@ export default function Fitness() {
               </Card>
 
               {/* Start Day Selection */}
-              <Card className="bg-ministry-gold-exact/20">
+              <Card className="bg-ministry-gold-exact">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-black text-sm">Start Day</CardTitle>
                 </CardHeader>
@@ -1751,7 +1751,7 @@ export default function Fitness() {
               </Card>
 
               {/* Workout Duration Selection */}
-              <Card className="bg-ministry-gold-exact/20">
+              <Card className="bg-ministry-gold-exact">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-black text-sm">Workout Duration</CardTitle>
                 </CardHeader>
@@ -1771,7 +1771,7 @@ export default function Fitness() {
               </Card>
 
               {/* Frequency Selection */}
-              <Card className="bg-ministry-gold-exact/20">
+              <Card className="bg-ministry-gold-exact">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-black text-sm">Training Frequency</CardTitle>
                 </CardHeader>
@@ -1792,7 +1792,7 @@ export default function Fitness() {
 
               {/* Workout Days Selection */}
               {selectedFrequency && (
-                <Card className="bg-ministry-gold-exact/20">
+                <Card className="bg-ministry-gold-exact">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-black text-sm">
                       Workout Days (Select {selectedFrequency})
@@ -1868,7 +1868,7 @@ export default function Fitness() {
                   </Card>
                 ) : (
                   generatedPlans.map((plan, index) => (
-                  <Card key={index} className="bg-ministry-gold-exact/20 border border-ministry-gold/30">
+                  <Card key={index} className="bg-ministry-gold-exact border border-ministry-gold/30">
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div>
@@ -1940,7 +1940,7 @@ export default function Fitness() {
             )}
 
             {(!selectedLevel || !selectedPlanEquipment || !selectedStartDay || !selectedWorkoutDuration || !selectedFrequency || selectedDays.length === 0) && (
-              <Card className="bg-ministry-gold-exact/20">
+              <Card className="bg-ministry-gold-exact">
                 <CardContent className="py-8 text-center">
                   <BookOpen className="w-12 h-12 mx-auto text-ministry-gold mb-4" />
                   <h3 className="text-lg font-semibold text-black mb-2">Complete Your Plan Preferences</h3>
@@ -1995,7 +1995,7 @@ export default function Fitness() {
 
             {/* Create Plan Modal */}
             {showCreatePlan && (
-              <Card className="bg-ministry-gold-exact/20">
+              <Card className="bg-ministry-gold-exact">
                 <CardHeader>
                   <CardTitle className="text-black">Create New Fitness Plan</CardTitle>
                 </CardHeader>
@@ -2048,7 +2048,7 @@ export default function Fitness() {
 
             {/* Plans List */}
             {fitnessPlans.length === 0 ? (
-              <Card className="text-center py-12 bg-ministry-gold-exact/20">
+              <Card className="text-center py-12 bg-ministry-gold-exact">
                 <CardContent>
                   <BookOpen className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
                   <h3 className="text-lg font-medium text-black mb-2">No fitness plans yet</h3>
@@ -2058,7 +2058,7 @@ export default function Fitness() {
             ) : (
               <div className="space-y-4">
                 {fitnessPlans.map((plan: FitnessPlan) => (
-                  <Card key={plan.id} className="bg-ministry-gold-exact/20">
+                  <Card key={plan.id} className="bg-ministry-gold-exact">
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -2172,7 +2172,7 @@ export default function Fitness() {
                 return (
                   <div className="space-y-3">
                     {uniqueExercises.map((exercise, index) => (
-                      <Card key={exercise.id} className="border border-border">
+                      <Card key={exercise.id} className="border border-ministry-charcoal">
                         <CardContent className="p-4">
                           <div className="flex gap-4">
                             {/* Exercise Details */}
@@ -2280,7 +2280,7 @@ export default function Fitness() {
                 
                 <div className="space-y-3">
                   {(selectedPlanForPreview.exercises || []).map((exercise, index) => (
-                    <Card key={index} className="border border-border">
+                    <Card key={index} className="border border-ministry-charcoal">
                       <CardContent className="p-4">
                         <div className="flex gap-4">
                           {/* Exercise Details */}

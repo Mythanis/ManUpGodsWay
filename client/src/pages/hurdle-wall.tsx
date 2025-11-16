@@ -306,10 +306,10 @@ export default function HurdleWall() {
         </div>
         <div className="max-w-2xl mx-auto p-4">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-ministry-gold-exact/20 rounded"></div>
-            <div className="h-32 bg-ministry-gold-exact/20 rounded"></div>
-            <div className="h-24 bg-ministry-gold-exact/20 rounded"></div>
-            <div className="h-24 bg-ministry-gold-exact/20 rounded"></div>
+            <div className="h-8 bg-ministry-gold-exact rounded"></div>
+            <div className="h-32 bg-ministry-gold-exact rounded"></div>
+            <div className="h-24 bg-ministry-gold-exact rounded"></div>
+            <div className="h-24 bg-ministry-gold-exact rounded"></div>
           </div>
         </div>
       </div>
@@ -365,7 +365,7 @@ export default function HurdleWall() {
         </div>
 
         {/* New Post Form */}
-        <Card className="bg-ministry-gold-exact/20">
+        <Card className="bg-ministry-gold-exact">
           <CardHeader>
             <CardTitle className="text-black flex items-center gap-2">
               <Plus className="h-5 w-5" />
@@ -441,7 +441,7 @@ export default function HurdleWall() {
         {/* Posts List */}
         <div className="space-y-4">
           {posts.length === 0 ? (
-            <Card className="bg-ministry-gold-exact/20">
+            <Card className="bg-ministry-gold-exact">
               <CardContent className="text-center py-12">
                 <MessageSquare className="h-12 w-12 text-ministry-steel mx-auto mb-4" />
                 <p className="text-black">No posts yet. Be the first to share!</p>
@@ -449,7 +449,7 @@ export default function HurdleWall() {
             </Card>
           ) : (
             posts.map((post) => (
-              <Card key={post.id} className="bg-ministry-gold-exact/20">
+              <Card key={post.id} className="bg-ministry-gold-exact">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
