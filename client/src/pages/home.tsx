@@ -113,6 +113,43 @@ export default function Home() {
     refetchIntervalInBackground: true,
   });
 
+  // Get challenge participant count
+  const { data: challengeParticipants } = useQuery({
+    queryKey: ["/api/challenges", (currentChallenge as any)?.id, "participant-count"],
+    enabled: !!(currentChallenge as any)?.id,
+    retry: false,
+    refetchInterval: 5000, // Update count every 5 seconds
+  });
+
+  // Check if user accepted the challenge
+  const { data: userAccepted, refetch: refetchUserAccepted } = useQuery({
+    queryKey: ["/api/challenges", (currentChallenge as any)?.id, "user-accepted"],
+    enabled: !!(currentChallenge as any)?.id,
+    retry: false,
+  });
+
+  // Mutation to accept the challenge
+  const acceptChallengeMutation = useMutation({
+    mutationFn: async (challengeId: string) => {
+      return await apiRequest("POST", `/api/challenges/${challengeId}/accept`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/challenges", (currentChallenge as any)?.id, "participant-count"] });
+      refetchUserAccepted();
+      toast({
+        title: "Challenge Accepted!",
+        description: "You've joined this week's challenge. Let's grow together!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to accept challenge",
+        variant: "destructive",
+      });
+    },
+  });
+
   const { data: recommendedStudies = [] } = useQuery({
     queryKey: ["/api/studies/recommendations", { limit: 3 }],
     queryFn: async () => {
@@ -583,7 +620,7 @@ export default function Home() {
             <div className="h-full w-16 bg-black flex items-center justify-center flex-shrink-0">
               <Target className="w-6 h-6 text-white" />
             </div>
-            <span className="flex-1 font-bold text-base text-black text-left px-4">Current Challenge</span>
+            <span className="flex-1 font-bold text-base text-black text-left px-4">Weekly Challenge</span>
             <div className="pr-4">
               <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -1054,6 +1091,32 @@ export default function Home() {
                 <p className="text-blue-100 leading-relaxed">
                   {(currentChallenge as any)?.description}
                 </p>
+              </div>
+
+              {/* Participant Count Banner */}
+              <div className="bg-ministry-gold-exact/10 border border-ministry-gold rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Users className="w-5 h-5 text-ministry-gold" />
+                    <span className="text-sm font-medium text-black">
+                      {(challengeParticipants as any)?.count || 0} {((challengeParticipants as any)?.count || 0) === 1 ? 'brother has' : 'brothers have'} taken this challenge
+                    </span>
+                  </div>
+                  <Button 
+                    className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-bold"
+                    onClick={() => acceptChallengeMutation.mutate((currentChallenge as any)?.id)}
+                    disabled={(userAccepted as any)?.hasAccepted || acceptChallengeMutation.isPending}
+                    data-testid="button-accept-challenge"
+                  >
+                    {acceptChallengeMutation.isPending ? (
+                      "Accepting..."
+                    ) : (userAccepted as any)?.hasAccepted ? (
+                      "Challenge Accepted ✓"
+                    ) : (
+                      "I Take the Challenge"
+                    )}
+                  </Button>
+                </div>
               </div>
 
               {/* Action Buttons */}
