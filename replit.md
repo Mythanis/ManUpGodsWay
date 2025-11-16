@@ -57,7 +57,12 @@ The system supports a tiered content structure (free, premium, VIP) and category
 - **Messaging**: Real-time direct and group messaging with conversation management.
 - **Studies & Devotionals**: Comprehensive management for Bible studies (including lesson-based structures) and devotionals with thumbnail image uploads for visual appeal on home page.
 - **Community**: Interactive discussion features with auto-subscription when posting replies, real-time statistics, user profiles, and a discipleship system with tag-based user discovery and faith journey stages for testimonies.
-- **Video & Podcast Management**: Full upload, storage, processing, and management system for videos and podcasts with tiered access, topic classification, ratings/reviews, and live session support (Riverside.fm integration).
+- **Video & Podcast Management**: Full upload, storage, processing, and management system for videos and podcasts with tiered access, topic classification, ratings/reviews, live session support (Riverside.fm integration), and RSS feed import capability.
+  - **RSS Feed Import**: One-click sync from Podomatic RSS feed (https://manupgodsway.podomatic.com/rss2.xml)
+  - Automatic duplicate detection using case-insensitive title matching
+  - Efficient batch processing with O(1) duplicate lookups using Set data structure
+  - Parses iTunes-specific metadata (duration, thumbnails, enclosures)
+  - Success feedback with detailed import/skip counts
 - **Notifications**: Enhanced system with push notification broadcasting, user management, automated daily devotional notifications, tiered content update notifications, and automatic discussion reply notifications (users are automatically subscribed when they post a reply).
 - **User Engagement**: Streak tracking, prayer time system, weekly challenges with intelligent release logic and participation tracking ("I Take the Challenge" button with real-time participant counts), and a comprehensive testimony system.
 - **Fitness Integration**: Local exercise database with filtering and search capabilities for creating fitness plans.
