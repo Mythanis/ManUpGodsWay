@@ -39,8 +39,8 @@ export default function StudyCard({ study, isCompleted = false, completedAt, has
   return (
     <Card className={`shadow-sm border overflow-hidden transition-all ${
       isCompleted 
-        ? 'border-ministry-gold border-2 bg-ministry-gold-exact/5' 
-        : 'border-gray-100 bg-ministry-gold-exact/20'
+        ? 'border-ministry-charcoal border-2 bg-ministry-gold-exact' 
+        : 'border-ministry-charcoal bg-ministry-gold-exact'
     }`} data-testid="study-card">
       <CardContent className="p-0 relative">
         {isCompleted && (

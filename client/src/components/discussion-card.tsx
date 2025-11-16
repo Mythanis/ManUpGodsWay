@@ -178,7 +178,7 @@ export default function DiscussionCard({
   };
 
   return (
-    <Card className="shadow-sm border border-gray-100 bg-ministry-gold-exact/20 hover:shadow-md transition-shadow" data-testid="discussion-card">
+    <Card className="shadow-sm border border-ministry-charcoal bg-ministry-gold-exact hover:shadow-md transition-shadow" data-testid="discussion-card">
       <CardContent className="p-4">
         <div className="flex items-start space-x-3">
           <img 
