@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation, Link } from "wouter";
+import { BackButton } from "@/components/back-button";
 
 interface Exercise {
   exerciseId: string;

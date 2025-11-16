@@ -8,6 +8,7 @@ import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { FitnessPlan, FitnessPlanExercise, ExerciseCompletion } from "@shared/schema";
+import { BackButton } from "@/components/back-button";
 
 // Type for plan with exercises included
 type FitnessPlanWithExercises = FitnessPlan & { exercises: FitnessPlanExercise[] };

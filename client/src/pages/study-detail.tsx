@@ -23,6 +23,7 @@ import { z } from "zod";
 import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
 import { PurchasePopup } from "@/components/purchase-popup";
 import { EmbeddedLessonViewer } from "@/components/embedded-lesson-viewer";
+import { BackButton } from "@/components/back-button";
 
 const ratingSchema = insertStudyRatingSchema.pick({ rating: true, review: true });
 

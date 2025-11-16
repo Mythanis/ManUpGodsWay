@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { BackButton } from "@/components/back-button";
 
 interface NotificationPreferences {
   id: string;
@@ -128,6 +129,7 @@ export default function NotificationPreferences() {
 
   return (
     <div className="container mx-auto px-4 py-8 pb-24 max-w-2xl">
+      <BackButton fallbackPath="/profile" />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-ministry-charcoal mb-2">Notification Preferences</h1>
         <p className="text-ministry-slate">

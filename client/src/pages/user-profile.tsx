@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { TestimonyForm } from "@/components/testimony-form";
 import BrotherhoodRequestButton from "@/components/brotherhood-request-button";
+import { BackButton } from "@/components/back-button";
 
 interface UserProfile {
   user: {
@@ -251,7 +252,8 @@ export default function UserProfile() {
   const tierInfo = getTierInfo(profile.user.subscriptionTier, profile.user.role);
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-4xl pb-20">
+      <BackButton fallbackPath="/brothers" />
       <h1 className="text-2xl font-bold text-ministry-charcoal mb-6">User Profile</h1>
 
       {/* User Info Card */}
