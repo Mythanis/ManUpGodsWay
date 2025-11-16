@@ -1151,6 +1151,22 @@ export const insertChallengeSchema = createInsertSchema(challenges).omit({
 export type Challenge = typeof challenges.$inferSelect;
 export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
 
+// Challenge Participants - tracks who accepts weekly challenges
+export const challengeParticipants = pgTable("challenge_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  challengeId: varchar("challenge_id").notNull().references(() => challenges.id, { onDelete: 'cascade' }),
+  acceptedAt: timestamp("accepted_at").defaultNow(),
+});
+
+export const insertChallengeParticipantSchema = createInsertSchema(challengeParticipants).omit({
+  id: true,
+  acceptedAt: true,
+});
+
+export type ChallengeParticipant = typeof challengeParticipants.$inferSelect;
+export type InsertChallengeParticipant = z.infer<typeof insertChallengeParticipantSchema>;
+
 // Events
 export const events = pgTable("events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
