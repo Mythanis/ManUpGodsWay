@@ -154,15 +154,46 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
             visibility: visible;
           }
           
-          /* Position lesson content at top left of page */
+          /* Position lesson content at top left of page and fit on one page */
           .lesson-print-content {
             position: absolute;
             left: 0;
             top: 0;
             width: 100%;
+            max-height: 100vh;
+            overflow: hidden;
             background: white !important;
             box-shadow: none !important;
             border: none !important;
+            transform: scale(0.85);
+            transform-origin: top left;
+          }
+          
+          /* Prevent page breaks */
+          .lesson-print-content,
+          .lesson-print-content * {
+            page-break-inside: avoid;
+            page-break-after: avoid;
+            page-break-before: avoid;
+          }
+          
+          /* Compact spacing for single page */
+          .lesson-print-content {
+            padding: 0.5cm !important;
+          }
+          
+          .lesson-print-content * {
+            font-size: 11pt !important;
+            line-height: 1.3 !important;
+            margin: 0.3em 0 !important;
+            padding: 0.2em !important;
+          }
+          
+          .lesson-print-content h1,
+          .lesson-print-content h2,
+          .lesson-print-content h3 {
+            font-size: 13pt !important;
+            margin-bottom: 0.4em !important;
           }
           
           /* Watermark */
@@ -184,6 +215,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           /* Clean print layout */
           @page {
             margin: 1cm;
+            size: letter;
           }
           
           /* Make text black for printing */
