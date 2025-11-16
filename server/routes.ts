@@ -4292,13 +4292,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const importedPodcasts = [];
       const skippedPodcasts = [];
 
+      // Fetch existing podcasts once before the loop for efficiency
+      const existingPodcasts = await storage.getAllPodcasts();
+      const existingTitles = new Set(existingPodcasts.map((p: any) => p.title?.toLowerCase().trim()));
+
       for (const item of feed.items) {
         try {
-          // Check if podcast already exists by title to avoid duplicates
-          const existingPodcasts = await storage.getAllPodcasts();
-          const exists = existingPodcasts.some((p: any) => p.title === item.title);
+          const itemTitle = item.title?.toLowerCase().trim();
           
-          if (exists) {
+          // Check if podcast already exists by title to avoid duplicates
+          if (existingTitles.has(itemTitle)) {
             skippedPodcasts.push({ title: item.title, reason: 'Already exists' });
             continue;
           }
@@ -4335,6 +4338,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const podcast = await storage.createPodcast(podcastData);
           importedPodcasts.push(podcast);
+          
+          // Add to existing titles set to prevent duplicates within same import batch
+          existingTitles.add(itemTitle);
         } catch (error) {
           console.error('Error importing podcast:', item.title, error);
           skippedPodcasts.push({ 
