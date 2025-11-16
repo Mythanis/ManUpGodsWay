@@ -1355,14 +1355,33 @@ export default function StudyManagement() {
                         </Button>
                       </div>
                       <div
-                        contentEditable
-                        className="min-h-[150px] p-3 focus:outline-none"
-                        dangerouslySetInnerHTML={{ __html: lessonFormData.content }}
-                        onInput={(e) => {
-                          const content = e.currentTarget.innerHTML;
-                          setLessonFormData({...lessonFormData, content});
+                        ref={(el) => {
+                          if (el && el.innerHTML !== lessonFormData.content) {
+                            const selection = window.getSelection();
+                            const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+                            const offset = range?.startOffset || 0;
+                            const startContainer = range?.startContainer;
+                            
+                            el.innerHTML = lessonFormData.content;
+                            
+                            // Restore cursor position
+                            if (startContainer && el.contains(startContainer)) {
+                              try {
+                                const newRange = document.createRange();
+                                newRange.setStart(startContainer, Math.min(offset, startContainer.textContent?.length || 0));
+                                newRange.collapse(true);
+                                selection?.removeAllRanges();
+                                selection?.addRange(newRange);
+                              } catch (e) {
+                                // Cursor restoration failed, that's ok
+                              }
+                            }
+                          }
                         }}
-                        onBlur={(e) => {
+                        contentEditable
+                        suppressContentEditableWarning
+                        className="min-h-[150px] p-3 focus:outline-none"
+                        onInput={(e) => {
                           const content = e.currentTarget.innerHTML;
                           setLessonFormData({...lessonFormData, content});
                         }}
