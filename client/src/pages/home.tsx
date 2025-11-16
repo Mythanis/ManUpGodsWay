@@ -610,10 +610,10 @@ export default function Home() {
       <div className="px-6 mb-6">
         <h2 className="text-lg font-bold text-white mb-4">POPULAR</h2>
         
-        <div className="space-y-4">
+        <div>
           <Button 
             variant="outline"
-            className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
+            className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group mb-4"
             data-testid="button-current-challenge"
             onClick={() => setShowChallengeDialog(true)}
           >
@@ -628,7 +628,7 @@ export default function Home() {
             </div>
           </Button>
 
-          <Link href="/videos">
+          <Link href="/videos" className="block mb-4">
             <Button 
               variant="outline"
               className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
@@ -646,7 +646,7 @@ export default function Home() {
             </Button>
           </Link>
           
-          <Link href="/hurdle-wall">
+          <Link href="/hurdle-wall" className="block mb-4">
             <Button 
               variant="outline"
               className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
@@ -664,7 +664,7 @@ export default function Home() {
             </Button>
           </Link>
 
-          <Link href="/community">
+          <Link href="/community" className="block mb-4">
             <Button 
               variant="outline"
               className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
@@ -684,7 +684,7 @@ export default function Home() {
 
           <Button 
             variant="outline"
-            className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
+            className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group mb-4"
             data-testid="button-prayer-time"
             onClick={() => isPraying ? endPrayerTime() : setShowPrayerDialog(true)}
           >
