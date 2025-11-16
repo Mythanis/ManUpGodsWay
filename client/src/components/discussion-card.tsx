@@ -178,13 +178,13 @@ export default function DiscussionCard({
   };
 
   return (
-    <Card className="shadow-sm border border-ministry-charcoal bg-ministry-gold-exact hover:shadow-md transition-shadow" data-testid="discussion-card">
+    <Card className="shadow-sm border border-black bg-black hover:shadow-md transition-shadow" data-testid="discussion-card">
       <CardContent className="p-4">
         <div className="flex items-start space-x-3">
           <img 
             src={discussion.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${discussion.user?.firstName}+${discussion.user?.lastName}&background=4A90B8&color=fff`}
             alt={`${discussion.user?.firstName} ${discussion.user?.lastName}`}
-            className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy"
+            className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-gold-exact"
             onClick={(e) => {
               e.stopPropagation();
               setLocation(`/users/${discussion.userId}`);
@@ -193,32 +193,32 @@ export default function DiscussionCard({
           />
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-2">
-              <h3 className="font-semibold text-sm text-ministry-charcoal" data-testid="text-user-name">
+              <h3 className="font-semibold text-sm text-white" data-testid="text-user-name">
                 {discussion.user?.firstName} {discussion.user?.lastName?.charAt(0)}.
               </h3>
               {getTierBadge(discussion.user?.subscriptionTier)}
-              <span className="text-xs text-ministry-slate" data-testid="text-time-ago">
+              <span className="text-xs text-gray-400" data-testid="text-time-ago">
                 • {getTimeAgo(discussion.createdAt)}
               </span>
             </div>
             
             <div className="flex items-center space-x-2 mb-2">
-              <h4 className="font-medium text-ministry-charcoal" data-testid="text-discussion-title">
+              <h4 className="font-medium text-white" data-testid="text-discussion-title">
                 {discussion.title}
               </h4>
               {discussion.studyId && (
-                <Badge variant="default" className="text-xs bg-ministry-navy text-white">
+                <Badge variant="default" className="text-xs bg-ministry-gold-exact text-black">
                   📚 Study
                 </Badge>
               )}
               {discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' && (
-                <Badge variant="outline" className="text-xs border-ministry-gold text-ministry-gold">
+                <Badge variant="outline" className="text-xs border-ministry-gold-exact text-ministry-gold-exact">
                   {discussion.study.requiredTier.charAt(0).toUpperCase() + discussion.study.requiredTier.slice(1)} Only
                 </Badge>
               )}
             </div>
             
-            <p className="text-sm text-ministry-slate mb-3 line-clamp-3" data-testid="text-discussion-content">
+            <p className="text-sm text-gray-300 mb-3 line-clamp-3" data-testid="text-discussion-content">
               {discussion.content}
             </p>
             
@@ -237,7 +237,7 @@ export default function DiscussionCard({
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowReplies(!showReplies)}
-                  className="flex items-center space-x-1 text-ministry-slate hover:text-ministry-steel p-1"
+                  className="flex items-center space-x-1 text-gray-300 hover:text-white p-1"
                   data-testid="button-replies"
                 >
                   <MessageCircle className="w-4 h-4" />
@@ -272,8 +272,8 @@ export default function DiscussionCard({
                   discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' &&
                   !((discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
                     (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip'))
-                    ? 'text-ministry-slate/50 cursor-not-allowed'
-                    : 'text-ministry-steel hover:text-ministry-navy'
+                    ? 'text-gray-500 cursor-not-allowed'
+                    : 'text-ministry-gold-exact hover:text-white'
                 }`}
                 data-testid="button-reply"
               >
@@ -290,7 +290,7 @@ export default function DiscussionCard({
                 contentType="discussion" 
                 contentId={discussion.id}
                 triggerElement={
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-red-600 p-1">
+                  <Button variant="ghost" size="sm" className="text-gray-400 hover:text-red-600 p-1">
                     <Flag className="h-4 w-4" />
                   </Button>
                 }
@@ -301,14 +301,14 @@ export default function DiscussionCard({
         
         {/* Show replies if expanded */}
         {showReplies && discussion.replyCount > 0 && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="mt-4 pt-4 border-t border-gray-700">
             <div className="space-y-3">
               {(replies as any[])?.map((reply: any) => (
-                <div key={reply.id} className="flex items-start space-x-3 ml-4 p-3 bg-ministry-gold-exact/10 rounded-lg">
+                <div key={reply.id} className="flex items-start space-x-3 ml-4 p-3 bg-gray-800 rounded-lg">
                   <img 
                     src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=4A90B8&color=fff&size=32`}
                     alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
-                    className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy"
+                    className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-gold-exact"
                     onClick={(e) => {
                       e.stopPropagation();
                       setLocation(`/users/${reply.userId}`);
@@ -316,14 +316,14 @@ export default function DiscussionCard({
                   />
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className="font-medium text-xs text-ministry-charcoal">
+                      <span className="font-medium text-xs text-white">
                         {reply.user?.firstName} {reply.user?.lastName?.charAt(0)}.
                       </span>
-                      <span className="text-xs text-ministry-slate">
+                      <span className="text-xs text-gray-400">
                         • {getTimeAgo(reply.createdAt)}
                       </span>
                     </div>
-                    <p className="text-sm text-ministry-slate">{reply.content}</p>
+                    <p className="text-sm text-gray-300">{reply.content}</p>
                     
                     {/* Honor and Flag Reply Buttons */}
                     <div className="flex justify-between items-center mt-2">
