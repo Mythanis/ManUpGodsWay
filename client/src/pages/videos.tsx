@@ -151,7 +151,8 @@ export default function Videos() {
     if (!open) {
       // If opened from carousel, go to home, otherwise stay on videos page
       if (fromCarousel) {
-        setLocation('/home');
+        setLocation('/');
+        setFromCarousel(false);
       } else {
         // Clear selected video to return to video list
         setSelectedVideo(null);
