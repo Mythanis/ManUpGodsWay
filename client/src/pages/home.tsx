@@ -610,7 +610,7 @@ export default function Home() {
       <div className="px-6 mb-6">
         <h2 className="text-lg font-bold text-white mb-4">POPULAR</h2>
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           <Button 
             variant="outline"
             className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
