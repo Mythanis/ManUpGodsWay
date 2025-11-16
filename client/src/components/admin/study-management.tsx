@@ -238,7 +238,7 @@ export default function StudyManagement() {
       videoUrl: study.videoUrl || "",
       duration: study.duration,
       author: study.author,
-      tags: study.tags.join(", "),
+      tags: study.tags ? study.tags.join(", ") : "",
       requiresPurchase: study.requiresPurchase || false,
       price: study.price || "",
       purchaseRequiredTiers: study.purchaseRequiredTiers || [],
