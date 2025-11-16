@@ -714,8 +714,8 @@ export default function Community() {
                 key={category.id}
                 variant="outline"
                 onClick={() => setSelectedCategory(selectedCategory === category.id ? '' : category.id)}
-                className={`h-auto p-4 bg-ministry-gold-exact hover:bg-ministry-gold-exact/30 hover:shadow-md transition-all ${
-                  selectedCategory === category.id ? 'ring-2 ring-ministry-gold bg-ministry-gold-exact/30' : 'border-gray-100'
+                className={`h-auto p-4 bg-ministry-gold-exact hover:bg-ministry-gold-exact/30 hover:shadow-md transition-all border-0 ${
+                  selectedCategory === category.id ? 'ring-2 ring-ministry-gold bg-ministry-gold-exact/30' : ''
                 }`}
                 data-testid={`button-category-${category.id}`}
               >
