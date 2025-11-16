@@ -255,35 +255,42 @@ export default function Library() {
       </div>
 
       {/* Featured Study */}
-      {featuredStudy && selectedCategory === 'all' && (
-        <div className="px-6 mb-6">
-          <Card className="bg-gradient-to-br from-ministry-steel to-ministry-navy dark:from-featured-dark dark:to-featured-dark-secondary text-white relative overflow-hidden" data-testid="card-featured">
-            <CardContent className="p-6">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-              <div className="relative z-10">
-                <div className="inline-flex items-center bg-ministry-gold-exact/20 text-black px-3 py-1 rounded-full text-xs font-medium mb-3">
-                  <Star className="w-3 h-3 mr-1 text-black" fill="currentColor" />
-                  Featured
+      {featuredStudy && selectedCategory === 'all' && (() => {
+        const featuredProgress = (userProgress as any[]).find((p: any) => p.studyId === featuredStudy.id);
+        const featuredIsCompleted = featuredProgress?.isCompleted || false;
+        const featuredHasStarted = !!featuredProgress && !featuredIsCompleted;
+        const featuredButtonText = featuredIsCompleted ? 'Review Study' : featuredHasStarted ? 'Continue Study' : 'Start Study';
+        
+        return (
+          <div className="px-6 mb-6">
+            <Card className="bg-gradient-to-br from-ministry-steel to-ministry-navy dark:from-featured-dark dark:to-featured-dark-secondary text-white relative overflow-hidden" data-testid="card-featured">
+              <CardContent className="p-6">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+                <div className="relative z-10">
+                  <div className="inline-flex items-center bg-ministry-gold-exact/20 text-black px-3 py-1 rounded-full text-xs font-medium mb-3">
+                    <Star className="w-3 h-3 mr-1 text-black" fill="currentColor" />
+                    Featured
+                  </div>
+                  <h3 className="text-lg font-bold mb-2" data-testid="text-featured-title">
+                    {featuredStudy.title}
+                  </h3>
+                  <p className="text-blue-100 text-sm mb-4" data-testid="text-featured-description">
+                    {featuredStudy.description}
+                  </p>
+                  <Link href={`/studies/${featuredStudy.id}`}>
+                    <Button 
+                      className="bg-card text-foreground hover:bg-muted"
+                      data-testid="button-start-featured"
+                    >
+                      {featuredButtonText}
+                    </Button>
+                  </Link>
                 </div>
-                <h3 className="text-lg font-bold mb-2" data-testid="text-featured-title">
-                  {featuredStudy.title}
-                </h3>
-                <p className="text-blue-100 text-sm mb-4" data-testid="text-featured-description">
-                  {featuredStudy.description}
-                </p>
-                <Link href={`/studies/${featuredStudy.id}`}>
-                  <Button 
-                    className="bg-card text-foreground hover:bg-muted"
-                    data-testid="button-start-featured"
-                  >
-                    Start Study
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
 
       {/* Study List */}
       <div className="px-6 space-y-4">
@@ -306,6 +313,7 @@ export default function Library() {
             const progress = (userProgress as any[]).find((p: any) => p.studyId === study.id);
             const isCompleted = progress?.isCompleted || false;
             const completedAt = progress?.completedAt;
+            const hasStarted = !!progress && !isCompleted;
             
             // Check if user has purchased this study
             const hasPurchased = (userPurchases as any[]).some((p: any) => p.studyId === study.id && p.status === 'completed');
@@ -338,6 +346,7 @@ export default function Library() {
                 study={study} 
                 isCompleted={isCompleted}
                 completedAt={completedAt}
+                hasStarted={hasStarted}
                 hideTierBadge={shouldHideTierBadge}
                 requiresPurchase={requiresPurchase}
                 hasPurchased={hasPurchased}

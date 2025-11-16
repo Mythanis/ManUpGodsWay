@@ -30,6 +30,7 @@ The system supports a tiered content structure (free, premium, VIP) and category
 - **Progress Tracking**: 
   - **Study Detail Page**: Displays incremental progress based on completed lessons (X of Y lessons completed, percentage)
   - **EmbeddedLessonViewer**: Shows comprehensive progress indicators including progress bar, day badges, visual navigation dots with completion checkmarks
+  - **Library Page**: Smart button labels - "Start" for new studies, "Continue" for in-progress studies, "Review" for completed studies
   - **Streak Tracking**: Automatically updates when lessons are completed, incrementing once per calendar day regardless of activity type (devotionals or lessons)
 - **Document Management**: Legacy system for managing PDF/Word study documents with tier-based access. Admins can upload new documents, delete existing ones, and update study materials through the edit interface
 

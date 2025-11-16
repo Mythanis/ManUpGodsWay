@@ -11,6 +11,7 @@ interface StudyCardProps {
   study: any;
   isCompleted?: boolean;
   completedAt?: string;
+  hasStarted?: boolean;
   hideTierBadge?: boolean;
   requiresPurchase?: boolean;
   hasPurchased?: boolean;
@@ -18,7 +19,7 @@ interface StudyCardProps {
   onPurchase?: () => void;
 }
 
-export default function StudyCard({ study, isCompleted = false, completedAt, hideTierBadge = false, requiresPurchase = false, hasPurchased = false, allowPreviewAccess = false, onPurchase }: StudyCardProps) {
+export default function StudyCard({ study, isCompleted = false, completedAt, hasStarted = false, hideTierBadge = false, requiresPurchase = false, hasPurchased = false, allowPreviewAccess = false, onPurchase }: StudyCardProps) {
   const [showReviews, setShowReviews] = useState(false);
   const getTierColor = (tier: string) => {
     switch (tier) {
@@ -175,6 +176,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt, hid
                     data-testid="button-view-study"
                   >
                     {isCompleted ? 'Review' : 
+                     hasStarted ? 'Continue' :
                      allowPreviewAccess ? 'Preview' : 
                      (study.requiredTier === 'free' ? 'Start' : 'View')}
                   </Button>
