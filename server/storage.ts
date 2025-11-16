@@ -105,6 +105,9 @@ import {
   challenges,
   type Challenge,
   type InsertChallenge,
+  challengeParticipants,
+  type ChallengeParticipant,
+  type InsertChallengeParticipant,
   type ContentFlag,
   type InsertContentFlag,
   type Testimony,
@@ -356,6 +359,11 @@ export interface IStorage {
   deleteChallenge(id: string): Promise<void>;
   getCurrentWeekChallenge(): Promise<Challenge | undefined>;
   pushChallengeToCurrentWeek(id: string): Promise<Challenge>;
+  
+  // Challenge participation operations
+  acceptChallenge(userId: string, challengeId: string): Promise<ChallengeParticipant>;
+  getChallengeParticipantCount(challengeId: string): Promise<number>;
+  hasUserAcceptedChallenge(userId: string, challengeId: string): Promise<boolean>;
 
   // Content flagging operations
   flagContent(flagData: InsertContentFlag): Promise<ContentFlag>;
@@ -3837,6 +3845,51 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return challenge;
+  }
+
+  // Challenge participation methods
+  async acceptChallenge(userId: string, challengeId: string): Promise<ChallengeParticipant> {
+    // Check if user already accepted this challenge
+    const [existing] = await db
+      .select()
+      .from(challengeParticipants)
+      .where(and(
+        eq(challengeParticipants.userId, userId),
+        eq(challengeParticipants.challengeId, challengeId)
+      ));
+    
+    if (existing) {
+      return existing; // Already accepted, return existing record
+    }
+    
+    // Create new participation
+    const [participant] = await db
+      .insert(challengeParticipants)
+      .values({ userId, challengeId })
+      .returning();
+    
+    return participant;
+  }
+
+  async getChallengeParticipantCount(challengeId: string): Promise<number> {
+    const [result] = await db
+      .select({ count: count() })
+      .from(challengeParticipants)
+      .where(eq(challengeParticipants.challengeId, challengeId));
+    
+    return result?.count || 0;
+  }
+
+  async hasUserAcceptedChallenge(userId: string, challengeId: string): Promise<boolean> {
+    const [participant] = await db
+      .select()
+      .from(challengeParticipants)
+      .where(and(
+        eq(challengeParticipants.userId, userId),
+        eq(challengeParticipants.challengeId, challengeId)
+      ));
+    
+    return !!participant;
   }
 
   // Content Flagging Methods
