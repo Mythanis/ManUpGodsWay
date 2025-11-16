@@ -4317,6 +4317,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Challenge participation routes
+  app.post('/api/challenges/:id/accept', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const challengeId = req.params.id;
+      
+      const participant = await storage.acceptChallenge(userId, challengeId);
+      res.json(participant);
+    } catch (error) {
+      console.error('Error accepting challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/challenges/:id/participant-count', async (req, res) => {
+    try {
+      const challengeId = req.params.id;
+      const count = await storage.getChallengeParticipantCount(challengeId);
+      res.json({ count });
+    } catch (error) {
+      console.error('Error getting participant count:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/challenges/:id/user-accepted', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const challengeId = req.params.id;
+      
+      const hasAccepted = await storage.hasUserAcceptedChallenge(userId, challengeId);
+      res.json({ hasAccepted });
+    } catch (error) {
+      console.error('Error checking if user accepted challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Content Flagging Routes
   
   // Flag content (discussion or reply)
