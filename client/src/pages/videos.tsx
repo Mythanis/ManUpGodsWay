@@ -145,11 +145,18 @@ export default function Videos() {
     }
   }, [selectedVideo, showVideoDialog]);
 
-  // Handle closing video dialog - navigate back to home if from carousel
+  // Handle closing video dialog - navigate back to home
   const handleCloseVideoDialog = (open: boolean) => {
     setShowVideoDialog(open);
-    if (!open && fromCarousel) {
-      setLocation('/home');
+    if (!open) {
+      // If opened from carousel, go to home, otherwise stay on videos page
+      if (fromCarousel) {
+        setLocation('/home');
+      } else {
+        // Clear selected video to return to video list
+        setSelectedVideo(null);
+        setVideoStreamUrl(null);
+      }
     }
   };
 
