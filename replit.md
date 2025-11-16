@@ -44,6 +44,13 @@ The system supports a tiered content structure (free, premium, VIP) and category
   - Remove functionality to delete uploaded thumbnails
   - Form workflow ensures both devotional and thumbnail complete before success notification
   - Existing thumbnails preserved when editing devotional without uploading new image
+- **Bulk Import**: Admins can import up to 30 devotionals at once for automated posting
+  - Structured text format with TITLE, REFERENCE, VERSE, and CONTENT fields
+  - Supports multiline devotional content and separators between entries
+  - Start date picker assigns consecutive dates automatically (daily posting schedule)
+  - Preview functionality shows parsed devotionals before import
+  - Backend validation ensures data integrity for each devotional
+  - Devotionals automatically appear on their assigned dates on the home page
 
 ## Key Features
 - **Authentication**: Replit Auth integration with session management.
