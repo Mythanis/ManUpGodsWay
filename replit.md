@@ -27,7 +27,10 @@ The system supports a tiered content structure (free, premium, VIP) and category
 ### Study Content Management
 - **Embedded Lessons**: Admins can create structured, day-by-day study lessons directly in the app with rich text editor, scripture references, questions, and key takeaways
 - **Bulk Import Tool**: Production-ready feature for converting Word/PDF content to embedded lessons. Supports common export formats (Markdown headings, colon/hyphen/em-dash separators), automatic lesson parsing with preview, and batch creation. Safety features include stale data prevention (clears preview on text edits) and collision-free ordering (uses max displayOrder)
-- **Progress Tracking**: EmbeddedLessonViewer displays comprehensive progress indicators including progress bar (X of Y lessons completed), day badges, visual navigation dots with completion checkmarks, and automatic streak tracking when lessons are completed. Streaks increment once per calendar day regardless of activity type (devotionals or lessons)
+- **Progress Tracking**: 
+  - **Study Detail Page**: Displays incremental progress based on completed lessons (X of Y lessons completed, percentage)
+  - **EmbeddedLessonViewer**: Shows comprehensive progress indicators including progress bar, day badges, visual navigation dots with completion checkmarks
+  - **Streak Tracking**: Automatically updates when lessons are completed, incrementing once per calendar day regardless of activity type (devotionals or lessons)
 - **Document Management**: Legacy system for managing PDF/Word study documents with tier-based access. Admins can upload new documents, delete existing ones, and update study materials through the edit interface
 
 ## Key Features

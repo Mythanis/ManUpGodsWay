@@ -240,6 +240,18 @@ export default function StudyDetail() {
     enabled: !!id && isAuthenticated,
   });
 
+  // Fetch user's lesson completion data for accurate progress tracking
+  const { data: lessonProgressData = [] } = useQuery<any[]>({
+    queryKey: [`/api/users/${user?.id}/lesson-progress`],
+    enabled: !!user?.id && isAuthenticated,
+  });
+
+  // Fetch all lessons for this study to calculate progress
+  const { data: studyLessons = [] } = useQuery<any[]>({
+    queryKey: [`/api/studies/${id}/lessons`],
+    enabled: !!id,
+  });
+
   const { data: studyDiscussion } = useQuery<Discussion & { user: { firstName: string; lastName: string } }>({
     queryKey: ["/api/studies", id, "discussion"],
     retry: false,
@@ -328,8 +340,16 @@ export default function StudyDetail() {
   }
 
   const userProgress = Array.isArray(progress) ? progress[0] : progress;
-  // Progress is now based on completion status, not lessons
-  const progressPercent = userProgress?.status === 'completed' ? 100 : 0;
+  
+  // Calculate progress based on completed lessons
+  const lessonsForThisStudy = studyLessons.filter((lesson: any) => lesson.studyId === id);
+  const completedLessonsForThisStudy = lessonProgressData.filter(
+    (lp: any) => lp.completedAt && lessonsForThisStudy.some((lesson: any) => lesson.id === lp.lessonId)
+  );
+  
+  const progressPercent = lessonsForThisStudy.length > 0 
+    ? Math.round((completedLessonsForThisStudy.length / lessonsForThisStudy.length) * 100)
+    : 0;
 
   const getTierColor = (tier: string) => {
     switch (tier) {
@@ -561,7 +581,7 @@ export default function StudyDetail() {
         </Card>
       </div>
 
-      {canAccess && (
+      {hasAccess && (
         <>
           {/* Progress Section */}
           <div className="px-6 mb-6">
@@ -572,6 +592,13 @@ export default function StudyDetail() {
                   <span className="text-sm text-black font-bold" data-testid="text-progress-status">
                     {progressPercent === 100 ? 'Completed' : 'In Progress'}
                   </span>
+                </div>
+                
+                <div className="mb-2">
+                  <div className="flex justify-between items-center text-sm text-black font-medium">
+                    <span>{completedLessonsForThisStudy.length} of {lessonsForThisStudy.length} lessons completed</span>
+                    <span>{progressPercent}%</span>
+                  </div>
                 </div>
                 
                 <Progress value={progressPercent} className="mb-4" data-testid="progress-bar" />
@@ -834,7 +861,7 @@ export default function StudyDetail() {
               </div>
 
               {/* Reply Form - Fixed at Bottom */}
-              {canAccess && (
+              {hasAccess && (
                 <div className="discussion-reply-form">
                   <StudyDiscussionReplyForm 
                     discussionId={studyDiscussion.id}
@@ -851,7 +878,7 @@ export default function StudyDetail() {
       {/* Purchase Popup */}
       {purchasePopupOpen && study && (
         <PurchasePopup
-          study={study}
+          study={study as any}
           isOpen={purchasePopupOpen}
           onClose={() => setPurchasePopupOpen(false)}
           onPurchaseComplete={() => {
