@@ -816,7 +816,7 @@ export default function StudyManagement() {
                   <span>By {study.author}</span>
                   <span>•</span>
                   <span>Created {new Date(study.createdAt).toLocaleDateString()}</span>
-                  {study.tags.length > 0 && (
+                  {study.tags && study.tags.length > 0 && (
                     <>
                       <span>•</span>
                       <span>Tags: {study.tags.join(", ")}</span>
