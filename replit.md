@@ -38,9 +38,9 @@ The system supports a tiered content structure (free, premium, VIP) and category
 - **Authentication**: Replit Auth integration with session management.
 - **Messaging**: Real-time direct and group messaging with conversation management.
 - **Studies & Devotionals**: Comprehensive management for Bible studies (including lesson-based structures) and devotionals.
-- **Community**: Interactive discussion features, real-time statistics, user profiles, and a discipleship system with tag-based user discovery and faith journey stages for testimonies.
+- **Community**: Interactive discussion features with auto-subscription when posting replies, real-time statistics, user profiles, and a discipleship system with tag-based user discovery and faith journey stages for testimonies.
 - **Video & Podcast Management**: Full upload, storage, processing, and management system for videos and podcasts with tiered access, topic classification, ratings/reviews, and live session support (Riverside.fm integration).
-- **Notifications**: Enhanced system with push notification broadcasting, user management, automated daily devotional notifications, and tiered content update notifications.
+- **Notifications**: Enhanced system with push notification broadcasting, user management, automated daily devotional notifications, tiered content update notifications, and automatic discussion reply notifications (users are automatically subscribed when they post a reply).
 - **User Engagement**: Streak tracking, prayer time system, weekly challenges with intelligent release logic, and a comprehensive testimony system.
 - **Fitness Integration**: Local exercise database with filtering and search capabilities for creating fitness plans.
 

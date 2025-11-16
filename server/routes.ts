@@ -1698,6 +1698,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const reply = await storage.createReply(replyData);
       
+      // Automatically subscribe the user to the discussion so they get notified of future replies
+      try {
+        await storage.subscribeToDiscussion({
+          userId,
+          discussionId,
+          isActive: true,
+        });
+      } catch (subscribeError) {
+        console.error("Error auto-subscribing user to discussion:", subscribeError);
+        // Don't fail the reply creation if auto-subscription fails
+      }
+      
       // Send notifications to discussion subscribers (but not the person who posted the reply)
       try {
         const subscribers = await storage.getDiscussionSubscribers(discussionId);
