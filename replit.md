@@ -35,10 +35,20 @@ The system supports a tiered content structure (free, premium, VIP) and category
   - **Streak Tracking**: Automatically updates when lessons are completed, incrementing once per calendar day regardless of activity type (devotionals or lessons)
 - **Document Management**: Legacy system for managing PDF/Word study documents with tier-based access. Admins can upload new documents, delete existing ones, and update study materials through the edit interface
 
+### Devotional Content Management
+- **Thumbnail Uploads**: Admins can upload custom thumbnail images for daily devotionals through the admin panel
+  - File upload UI with dropzone-style interface and instant preview
+  - Uploaded images stored in `/uploads/thumbnails/` directory
+  - Automatic display on home page devotional card (20x20 rounded thumbnail)
+  - Graceful fallback to default logo when no custom thumbnail exists
+  - Remove functionality to delete uploaded thumbnails
+  - Form workflow ensures both devotional and thumbnail complete before success notification
+  - Existing thumbnails preserved when editing devotional without uploading new image
+
 ## Key Features
 - **Authentication**: Replit Auth integration with session management.
 - **Messaging**: Real-time direct and group messaging with conversation management.
-- **Studies & Devotionals**: Comprehensive management for Bible studies (including lesson-based structures) and devotionals.
+- **Studies & Devotionals**: Comprehensive management for Bible studies (including lesson-based structures) and devotionals with thumbnail image uploads for visual appeal on home page.
 - **Community**: Interactive discussion features with auto-subscription when posting replies, real-time statistics, user profiles, and a discipleship system with tag-based user discovery and faith journey stages for testimonies.
 - **Video & Podcast Management**: Full upload, storage, processing, and management system for videos and podcasts with tiered access, topic classification, ratings/reviews, and live session support (Riverside.fm integration).
 - **Notifications**: Enhanced system with push notification broadcasting, user management, automated daily devotional notifications, tiered content update notifications, and automatic discussion reply notifications (users are automatically subscribed when they post a reply).
