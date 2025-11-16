@@ -143,6 +143,28 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
       {/* Print Watermark - Only visible when printing */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
+          /* Hide everything first */
+          body * {
+            visibility: hidden;
+          }
+          
+          /* Show only the lesson content */
+          .lesson-print-content,
+          .lesson-print-content * {
+            visibility: visible;
+          }
+          
+          /* Position lesson content at top left of page */
+          .lesson-print-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            background: white !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
+          
           /* Watermark */
           .lesson-print-content::before {
             content: "Man Up God's Way";
@@ -156,6 +178,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
             z-index: 9999;
             pointer-events: none;
             white-space: nowrap;
+            visibility: visible;
           }
           
           /* Clean print layout */
@@ -163,12 +186,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
             margin: 1cm;
           }
           
-          /* Make content print-friendly */
-          .lesson-print-content {
-            background: white !important;
-            color: black !important;
-          }
-          
+          /* Make text black for printing */
           .lesson-print-content * {
             color: black !important;
           }
