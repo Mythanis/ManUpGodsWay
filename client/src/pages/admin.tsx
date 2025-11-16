@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import UploadStudyForm from "@/components/admin/upload-study-form";
+import StudyManagement from "@/components/admin/study-management";
 import UserManagement from "@/components/admin/user-management";
 import DevotionalManagement from "@/components/admin/devotional-management";
 import VideoManagement from "@/components/admin/video-management";
@@ -672,145 +673,8 @@ export default function Admin() {
 
           {activeTab === "studies" && (
             <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-ministry-charcoal">Study Management</h2>
-              <UploadStudyForm />
-            </div>
-            
-            {studiesLoading ? (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-navy"></div>
-              </div>
-            ) : studies.length === 0 ? (
-              <Card className="bg-ministry-gold-exact/20">
-                <CardContent className="p-8 text-center">
-                  <Book className="w-12 h-12 text-black mx-auto mb-4" />
-                  <p className="text-black">No studies created yet</p>
-                  <p className="text-sm text-black">Click "Upload New Study" above to create your first study</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {studies.map((study) => (
-                  <Card key={study.id} className="border-border bg-ministry-gold-exact/20">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-lg text-black mb-2">
-                            {study.title}
-                          </CardTitle>
-                          <div className="flex flex-wrap items-center gap-2 mb-2">
-                            <Badge variant="secondary" className="text-xs">
-                              {study.category}
-                            </Badge>
-                            <Badge className={`text-xs ${getTierBadgeColor(study.requiredTier)}`}>
-                              <span className="flex items-center gap-1">
-                                {getTierIcon(study.requiredTier)}
-                                {study.requiredTier.toUpperCase()}
-                              </span>
-                            </Badge>
-                            {study.requiresPurchase && study.price && (
-                              <Badge className="text-xs bg-ministry-gold text-black border-ministry-gold">
-                                ${parseFloat(String(study.price)).toFixed(2)}
-                              </Badge>
-                            )}
-                            <span className="text-xs text-black">
-                              {study.duration} min
-                            </span>
-                          </div>
-                          <p className="text-sm text-black line-clamp-2">
-                            {study.description}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-2 ml-4">
-                          <Button
-                            size="sm"
-                            variant={study.isFeatured ? "default" : "outline"}
-                            onClick={() => handleToggleFeatured(study.id, !study.isFeatured)}
-                            disabled={toggleFeaturedMutation.isPending}
-                            style={study.isFeatured ? {
-                              backgroundColor: 'hsl(49, 100%, 49%)',
-                              color: 'hsl(215, 25%, 27%)',
-                              border: 'none'
-                            } : {
-                              backgroundColor: 'transparent',
-                              color: 'hsl(215, 25%, 27%)',
-                              border: '1px solid hsl(213, 12%, 47%)'
-                            }}
-                            title={study.isFeatured ? "Remove from featured" : "Mark as featured"}
-                          >
-                            <Star className={`w-4 h-4 ${study.isFeatured ? 'fill-current' : ''}`} />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={study.isPublished ? "default" : "outline"}
-                            onClick={() => handleTogglePublish(study.id, !study.isPublished)}
-                            disabled={togglePublishMutation.isPending}
-                            style={study.isPublished ? {
-                              backgroundColor: 'hsl(215, 25%, 27%)',
-                              color: 'white',
-                              border: 'none'
-                            } : {
-                              backgroundColor: 'transparent',
-                              color: 'hsl(215, 25%, 27%)',
-                              border: '1px solid hsl(213, 12%, 47%)'
-                            }}
-                          >
-                            {study.isPublished ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(study)}
-                            style={{
-                              backgroundColor: 'transparent',
-                              color: 'hsl(215, 25%, 27%)',
-                              border: '1px solid hsl(213, 12%, 47%)'
-                            }}
-                            data-testid={`button-edit-study-${study.id}`}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(study.id)}
-                            disabled={deleteStudyMutation.isPending}
-                            data-testid={`button-delete-study-${study.id}`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-ministry-slate">
-                        <span>By Admin</span>
-                        <span>•</span>
-                        <span>{(study as any).lessonCount || 0} lessons</span>
-                        <span>•</span>
-                        <span>Created {new Date(study.createdAt).toLocaleDateString()}</span>
-                        <span>•</span>
-                        <span className="capitalize">{study.category}</span>
-                        <span>•</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          study.isPublished 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {study.isPublished ? 'Published' : 'Draft'}
-                        </span>
-                        {study.isFeatured && (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            Featured
-                          </span>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Study Management</h2>
+              <StudyManagement />
             </div>
           )}
 
