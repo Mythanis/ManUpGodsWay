@@ -25,6 +25,11 @@ export default function BrotherhoodRequests() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Get current user
+  const { data: currentUser } = useQuery<any>({
+    queryKey: ['/api/auth/user'],
+  });
+
   const { data: requests, isLoading } = useQuery<BrotherhoodRequest[]>({
     queryKey: ['/api/brotherhood-requests'],
     refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
@@ -84,6 +89,13 @@ export default function BrotherhoodRequests() {
     return null; // Don't show the card if no requests
   }
 
+  // Filter to only show incoming requests (where current user is the recipient)
+  const incomingRequests = requests.filter(req => req.recipientId === currentUser?.id);
+
+  if (incomingRequests.length === 0) {
+    return null; // Don't show the card if no incoming requests
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -91,13 +103,13 @@ export default function BrotherhoodRequests() {
           <UserPlus className="w-5 h-5 text-ministry-gold" />
           Brotherhood Requests
           <span className="ml-2 bg-ministry-gold text-black text-xs px-2 py-1 rounded-full font-semibold">
-            {requests.length}
+            {incomingRequests.length}
           </span>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {requests.map((request) => (
+          {incomingRequests.map((request) => (
             <div
               key={request.id}
               className="flex items-start space-x-4 p-4 border rounded-lg bg-muted/50"
