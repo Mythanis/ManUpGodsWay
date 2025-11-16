@@ -2153,6 +2153,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk import devotionals (admin only)
+  app.post('/api/devotionals/bulk', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { devotionals } = req.body;
+      if (!Array.isArray(devotionals) || devotionals.length === 0) {
+        return res.status(400).json({ message: "Devotionals array is required" });
+      }
+
+      if (devotionals.length > 30) {
+        return res.status(400).json({ message: "Maximum 30 devotionals can be imported at once" });
+      }
+
+      // Validate each devotional
+      const validatedDevotionals = [];
+      for (let i = 0; i < devotionals.length; i++) {
+        const item = devotionals[i];
+        try {
+          const validated = insertDevotionalSchema.parse({
+            title: item.title,
+            date: new Date(item.date),
+            verse: item.verse,
+            verseReference: item.verseReference,
+            content: item.content,
+          });
+          validatedDevotionals.push(validated);
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            return res.status(400).json({ 
+              message: `Invalid data for devotional #${i + 1}`, 
+              errors: error.errors 
+            });
+          }
+          throw error;
+        }
+      }
+
+      // Create all devotionals
+      const created = [];
+      for (const devotional of validatedDevotionals) {
+        const result = await storage.createDevotional(devotional);
+        created.push(result);
+      }
+
+      res.status(201).json({ 
+        message: `Successfully created ${created.length} devotionals`,
+        devotionals: created 
+      });
+    } catch (error) {
+      console.error("Error bulk importing devotionals:", error);
+      res.status(500).json({ message: "Failed to bulk import devotionals" });
+    }
+  });
+
   // Devotional notification service management routes (admin only)
   app.get('/api/admin/devotional-notifications/status', isAuthenticated, async (req: any, res) => {
     try {

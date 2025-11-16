@@ -35,10 +35,14 @@ interface Devotional {
 
 export default function DevotionalManagement() {
   const [showForm, setShowForm] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
   const [editingDevotional, setEditingDevotional] = useState<Devotional | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [bulkText, setBulkText] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [parsedDevotionals, setParsedDevotionals] = useState<any[]>([]);
   const { toast } = useToast();
   const { effectiveTheme } = useTheme();
   const queryClient = useQueryClient();
@@ -116,6 +120,32 @@ export default function DevotionalManagement() {
       toast({
         title: "Error",
         description: error.message || "Failed to delete devotional",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Bulk import devotionals mutation
+  const bulkImportMutation = useMutation({
+    mutationFn: async (devotionals: any[]) => {
+      return await apiRequest("POST", "/api/devotionals/bulk", { devotionals });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/devotionals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/devotionals/today"] });
+      toast({
+        title: "Success",
+        description: data.message || "Devotionals imported successfully",
+      });
+      setShowBulkImport(false);
+      setBulkText("");
+      setStartDate("");
+      setParsedDevotionals([]);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to import devotionals",
         variant: "destructive",
       });
     },
@@ -260,6 +290,107 @@ export default function DevotionalManagement() {
     }
   };
 
+  const parseBulkText = () => {
+    if (!bulkText.trim() || !startDate) {
+      toast({
+        title: "Error",
+        description: "Please provide both devotional text and a start date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Split by separator (---) or double newlines
+      const sections = bulkText.split(/\n---\n|\n\n\n/).map(s => s.trim()).filter(s => s.length > 0);
+      const devotionals: any[] = [];
+      let currentDate = new Date(startDate);
+
+      for (const section of sections) {
+        if (devotionals.length >= 30) break;
+
+        const lines = section.split('\n').map(l => l.trim());
+        let title = '';
+        let verseReference = '';
+        let verse = '';
+        const contentLines: string[] = [];
+        let mode = '';
+
+        for (const line of lines) {
+          if (line.startsWith('TITLE:')) {
+            title = line.substring(6).trim();
+            mode = '';
+          } else if (line.startsWith('REFERENCE:')) {
+            verseReference = line.substring(10).trim();
+            mode = '';
+          } else if (line.startsWith('VERSE:')) {
+            verse = line.substring(6).trim();
+            mode = 'verse';
+          } else if (line.startsWith('CONTENT:')) {
+            mode = 'content';
+          } else if (line) {
+            // Continuation of previous field
+            if (mode === 'verse') {
+              verse += ' ' + line;
+            } else if (mode === 'content') {
+              contentLines.push(line);
+            }
+          }
+        }
+
+        // Validate that we have all required fields
+        if (title && verseReference && verse && contentLines.length > 0) {
+          devotionals.push({
+            title,
+            verseReference,
+            verse,
+            content: contentLines.join('\n'),
+            date: currentDate.toISOString().split('T')[0],
+          });
+          
+          // Increment date for next devotional
+          currentDate.setDate(currentDate.getDate() + 1);
+        } else {
+          console.warn('Skipping incomplete devotional section:', { title, verseReference, verse, contentLines });
+        }
+      }
+
+      if (devotionals.length === 0) {
+        toast({
+          title: "Error",
+          description: "No valid devotionals found. Check the format and ensure all required fields are present.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setParsedDevotionals(devotionals);
+      toast({
+        title: "Success",
+        description: `Parsed ${devotionals.length} devotionals. Review and confirm to import.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to parse devotionals. Check the format and try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkImport = () => {
+    if (parsedDevotionals.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please parse devotionals first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    bulkImportMutation.mutate(parsedDevotionals);
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -281,14 +412,24 @@ export default function DevotionalManagement() {
               <CalendarDays className="w-5 h-5" />
               <span>Daily Devotional Management</span>
             </CardTitle>
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="px-4 py-2 rounded-lg transition-colors flex items-center cursor-pointer bg-ministry-gold hover:bg-ministry-gold/80 text-ministry-charcoal"
-              data-testid="button-add-devotional"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Devotional
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowBulkImport(!showBulkImport)}
+                className="px-4 py-2 rounded-lg transition-colors flex items-center cursor-pointer bg-ministry-steel hover:bg-ministry-steel/80 text-white"
+                data-testid="button-bulk-import"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Bulk Import
+              </button>
+              <button
+                onClick={() => setShowForm(!showForm)}
+                className="px-4 py-2 rounded-lg transition-colors flex items-center cursor-pointer bg-ministry-gold hover:bg-ministry-gold/80 text-ministry-charcoal"
+                data-testid="button-add-devotional"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Devotional
+              </button>
+            </div>
           </div>
         </CardHeader>
 
@@ -446,6 +587,127 @@ export default function DevotionalManagement() {
           </CardContent>
         )}
       </Card>
+
+      {/* Bulk Import Section */}
+      {showBulkImport && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center space-x-2">
+                <Upload className="w-5 h-5" />
+                <span>Bulk Import Devotionals (Up to 30 Days)</span>
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowBulkImport(false);
+                  setBulkText("");
+                  setStartDate("");
+                  setParsedDevotionals([]);
+                }}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-ministry-gold/10 border border-ministry-gold/30 rounded-lg p-4">
+              <h4 className="font-semibold text-ministry-charcoal mb-2">Format Instructions</h4>
+              <p className="text-sm text-ministry-charcoal mb-2">
+                Separate each devotional with a line containing "---". Use this format for each devotional:
+              </p>
+              <code className="block bg-ministry-charcoal text-ministry-gold p-3 rounded text-xs mb-2 whitespace-pre">
+{`TITLE: Your devotional title
+REFERENCE: John 3:16
+VERSE: For God so loved the world that he gave...
+CONTENT:
+This is the devotional content.
+It can span multiple lines and paragraphs.
+
+Each devotional is separated by ---`}
+              </code>
+              <p className="text-xs text-ministry-charcoal">
+                All fields (TITLE, REFERENCE, VERSE, CONTENT) are required. Content can be multi-line.
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="start-date">Start Date (for first devotional)</Label>
+              <Input
+                id="start-date"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="mt-1"
+                data-testid="input-bulk-start-date"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="bulk-text">Devotionals (one per line, up to 30)</Label>
+              <Textarea
+                id="bulk-text"
+                value={bulkText}
+                onChange={(e) => setBulkText(e.target.value)}
+                placeholder="Enter devotionals in the format above, one per line..."
+                rows={12}
+                className="mt-1 font-mono text-sm"
+                data-testid="input-bulk-text"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Each devotional will be assigned consecutive dates starting from the start date.
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                onClick={parseBulkText}
+                disabled={!bulkText.trim() || !startDate}
+                className="bg-ministry-steel text-white hover:bg-ministry-steel/80"
+                data-testid="button-parse-bulk"
+              >
+                Parse Devotionals
+              </Button>
+              {parsedDevotionals.length > 0 && (
+                <Button
+                  onClick={handleBulkImport}
+                  disabled={bulkImportMutation.isPending}
+                  className="bg-ministry-gold text-ministry-charcoal hover:bg-ministry-gold/80"
+                  data-testid="button-confirm-bulk-import"
+                >
+                  {bulkImportMutation.isPending && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-ministry-charcoal mr-2"></div>
+                  )}
+                  Import {parsedDevotionals.length} Devotionals
+                </Button>
+              )}
+            </div>
+
+            {parsedDevotionals.length > 0 && (
+              <div className="border rounded-lg p-4 bg-ministry-gold/5">
+                <h4 className="font-semibold text-ministry-charcoal mb-3">
+                  Preview ({parsedDevotionals.length} devotionals parsed)
+                </h4>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {parsedDevotionals.map((dev, index) => (
+                    <div key={index} className="border-l-4 border-ministry-gold pl-3 py-2 bg-white rounded">
+                      <p className="text-xs text-muted-foreground mb-1">
+                        Day {index + 1} - {formatLocalDate(dev.date)}
+                      </p>
+                      <p className="font-semibold text-sm text-ministry-charcoal">{dev.title}</p>
+                      <p className="text-xs text-ministry-steel">{dev.verseReference}: {dev.verse.substring(0, 60)}...</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {dev.content.substring(0, 100)}...
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Devotionals List */}
       <Card>
