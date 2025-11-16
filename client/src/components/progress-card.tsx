@@ -13,7 +13,7 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
   const isStudyCompleted = progress.status === 'completed';
 
   return (
-    <Card className="shadow-sm border border-gray-100 bg-ministry-gold-exact/20" data-testid="progress-card">
+    <Card className="shadow-sm bg-ministry-gold-exact/20" data-testid="progress-card">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
