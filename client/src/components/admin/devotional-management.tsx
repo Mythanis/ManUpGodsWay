@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatLocalDate, getCurrentLocalDate, parseDateSafely } from "@/lib/utils";
-import { CalendarDays, Plus, Edit, Trash } from "lucide-react";
+import { CalendarDays, Plus, Edit, Trash, Upload, X, Image as ImageIcon } from "lucide-react";
 import { insertDevotionalSchema } from "@shared/schema";
 
 // Create form schema based on insertDevotionalSchema
@@ -36,6 +36,9 @@ interface Devotional {
 export default function DevotionalManagement() {
   const [showForm, setShowForm] = useState(false);
   const [editingDevotional, setEditingDevotional] = useState<Devotional | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const { toast } = useToast();
   const { effectiveTheme } = useTheme();
   const queryClient = useQueryClient();
@@ -61,21 +64,12 @@ export default function DevotionalManagement() {
   // Create devotional mutation
   const createMutation = useMutation({
     mutationFn: async (data: DevotionalFormData) => {
-      const devotionalData = {
-        ...data,
+      const { imageUrl, ...devotionalData } = data;
+      const finalData = {
+        ...devotionalData,
         date: new Date(data.date + 'T00:00:00Z'),
       };
-      return await apiRequest("POST", "/api/devotionals", devotionalData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/devotionals"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/devotionals/today"] });
-      toast({
-        title: "Success",
-        description: "Devotional created successfully",
-      });
-      setShowForm(false);
-      form.reset();
+      return await apiRequest("POST", "/api/devotionals", finalData);
     },
     onError: (error: any) => {
       toast({
@@ -89,22 +83,12 @@ export default function DevotionalManagement() {
   // Update devotional mutation
   const updateMutation = useMutation({
     mutationFn: async (data: DevotionalFormData & { id: string }) => {
-      const devotionalData = {
-        ...data,
+      const { imageUrl, ...devotionalData } = data;
+      const finalData = {
+        ...devotionalData,
         date: new Date(data.date + 'T00:00:00Z'),
       };
-      return await apiRequest("PUT", `/api/devotionals/${data.id}`, devotionalData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/devotionals"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/devotionals/today"] });
-      toast({
-        title: "Success",
-        description: "Devotional updated successfully",
-      });
-      setEditingDevotional(null);
-      setShowForm(false);
-      form.reset();
+      return await apiRequest("PUT", `/api/devotionals/${data.id}`, finalData);
     },
     onError: (error: any) => {
       toast({
@@ -137,11 +121,41 @@ export default function DevotionalManagement() {
     },
   });
 
-  const onSubmit = (data: DevotionalFormData) => {
-    if (editingDevotional) {
-      updateMutation.mutate({ ...data, id: editingDevotional.id });
-    } else {
-      createMutation.mutate(data);
+  const onSubmit = async (data: DevotionalFormData) => {
+    try {
+      if (editingDevotional) {
+        await updateMutation.mutateAsync({ ...data, id: editingDevotional.id });
+        if (thumbnailFile) {
+          await handleThumbnailUpload(editingDevotional.id);
+        }
+        queryClient.invalidateQueries({ queryKey: ["/api/devotionals"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/devotionals/today"] });
+        toast({
+          title: "Success",
+          description: "Devotional updated successfully",
+        });
+      } else {
+        const result: any = await createMutation.mutateAsync(data);
+        if (thumbnailFile && result?.id) {
+          await handleThumbnailUpload(result.id);
+        }
+        queryClient.invalidateQueries({ queryKey: ["/api/devotionals"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/devotionals/today"] });
+        toast({
+          title: "Success",
+          description: "Devotional created successfully",
+        });
+      }
+      
+      // Only close form and reset after everything succeeds
+      setShowForm(false);
+      setEditingDevotional(null);
+      setThumbnailFile(null);
+      setThumbnailPreview("");
+      form.reset();
+    } catch (error) {
+      console.error("Error submitting devotional:", error);
+      // Error toasts are already handled by mutations and handleThumbnailUpload
     }
   };
 
@@ -155,6 +169,8 @@ export default function DevotionalManagement() {
       imageUrl: devotional.imageUrl || "",
       date: parseDateSafely(devotional.date).toISOString().split('T')[0],
     });
+    setThumbnailPreview(devotional.imageUrl || "");
+    setThumbnailFile(null);
     setShowForm(true);
   };
 
@@ -167,7 +183,81 @@ export default function DevotionalManagement() {
   const handleCancel = () => {
     setShowForm(false);
     setEditingDevotional(null);
+    setThumbnailFile(null);
+    setThumbnailPreview("");
     form.reset();
+  };
+
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setThumbnailFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setThumbnailPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleThumbnailUpload = async (devotionalId: string) => {
+    if (!thumbnailFile) return;
+
+    setUploadingThumbnail(true);
+    try {
+      const formData = new FormData();
+      formData.append('thumbnail', thumbnailFile);
+
+      const response = await fetch(`/api/devotionals/${devotionalId}/upload-thumbnail`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload thumbnail');
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["/api/devotionals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/devotionals/today"] });
+      toast({
+        title: "Success",
+        description: "Thumbnail uploaded successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to upload thumbnail",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  };
+
+  const handleThumbnailRemove = async () => {
+    if (editingDevotional?.id && editingDevotional.imageUrl) {
+      try {
+        await apiRequest("DELETE", `/api/devotionals/${editingDevotional.id}/delete-thumbnail`);
+        queryClient.invalidateQueries({ queryKey: ["/api/devotionals"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/devotionals/today"] });
+        setThumbnailPreview("");
+        setThumbnailFile(null);
+        toast({
+          title: "Success",
+          description: "Thumbnail removed successfully",
+        });
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to remove thumbnail",
+          variant: "destructive",
+        });
+      }
+    } else {
+      setThumbnailPreview("");
+      setThumbnailFile(null);
+    }
   };
 
   if (isLoading) {
@@ -285,17 +375,48 @@ export default function DevotionalManagement() {
               </div>
 
               <div>
-                <Label htmlFor="imageUrl">Image URL (Optional)</Label>
-                <Input
-                  id="imageUrl"
-                  {...form.register("imageUrl")}
-                  placeholder="https://example.com/image.jpg"
-                  data-testid="input-devotional-image"
-                />
-                {form.formState.errors.imageUrl && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.imageUrl.message}
-                  </p>
+                <Label htmlFor="thumbnail">Thumbnail Image (Optional)</Label>
+                <p className="text-xs text-gray-500 mb-2">Recommended: 16:9 aspect ratio, max 5MB</p>
+                
+                {thumbnailPreview ? (
+                  <div className="relative inline-block">
+                    <img 
+                      src={thumbnailPreview} 
+                      alt="Thumbnail preview" 
+                      className="w-48 h-27 object-cover rounded-lg border-2 border-ministry-gold"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={handleThumbnailRemove}
+                      data-testid="button-remove-thumbnail"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <input
+                      type="file"
+                      id="thumbnail"
+                      accept="image/*"
+                      onChange={handleThumbnailChange}
+                      className="hidden"
+                      data-testid="input-devotional-thumbnail"
+                    />
+                    <label
+                      htmlFor="thumbnail"
+                      className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-ministry-steel rounded-lg cursor-pointer hover:bg-ministry-gold/10 transition-colors"
+                    >
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-8 h-8 mb-2 text-ministry-steel" />
+                        <p className="text-sm text-ministry-charcoal">Click to upload thumbnail</p>
+                        <p className="text-xs text-ministry-slate">PNG, JPG up to 5MB</p>
+                      </div>
+                    </label>
+                  </div>
                 )}
               </div>
 

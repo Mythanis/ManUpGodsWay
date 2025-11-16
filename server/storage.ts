@@ -233,9 +233,10 @@ export interface IStorage {
   
   // Devotional operations
   getTodaysDevotional(): Promise<Devotional | undefined>;
+  getDevotional(id: string): Promise<Devotional | undefined>;
   getDevotionals(limit?: number): Promise<Devotional[]>;
   createDevotional(devotional: InsertDevotional): Promise<Devotional>;
-  updateDevotional(id: string, devotional: InsertDevotional): Promise<Devotional | undefined>;
+  updateDevotional(id: string, devotional: Partial<InsertDevotional>): Promise<Devotional | undefined>;
   deleteDevotional(id: string): Promise<void>;
   
   // Rating operations
@@ -1600,6 +1601,15 @@ export class DatabaseStorage implements IStorage {
     return recentDevotional;
   }
 
+  async getDevotional(id: string): Promise<Devotional | undefined> {
+    const [devotional] = await db
+      .select()
+      .from(devotionals)
+      .where(eq(devotionals.id, id))
+      .limit(1);
+    return devotional;
+  }
+
   async getDevotionals(limit = 10): Promise<Devotional[]> {
     return await db
       .select()
@@ -1613,7 +1623,7 @@ export class DatabaseStorage implements IStorage {
     return newDevotional;
   }
 
-  async updateDevotional(id: string, devotional: InsertDevotional): Promise<Devotional | undefined> {
+  async updateDevotional(id: string, devotional: Partial<InsertDevotional>): Promise<Devotional | undefined> {
     const [updatedDevotional] = await db
       .update(devotionals)
       .set(devotional)

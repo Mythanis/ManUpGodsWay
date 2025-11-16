@@ -2089,6 +2089,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload thumbnail image for devotional
+  app.post('/api/devotionals/:id/upload-thumbnail', isAuthenticated, thumbnailUpload.single('thumbnail'), async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      // File is already saved to disk by multer
+      const thumbnailUrl = `/uploads/thumbnails/${file.filename}`;
+      const devotional = await storage.updateDevotional(req.params.id, {
+        imageUrl: thumbnailUrl,
+      });
+
+      res.json(devotional);
+    } catch (error) {
+      console.error("Error uploading devotional thumbnail:", error);
+      res.status(500).json({ message: "Failed to upload thumbnail" });
+    }
+  });
+
+  // Delete thumbnail image for devotional
+  app.delete('/api/devotionals/:id/delete-thumbnail', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const devotional = await storage.getDevotional(req.params.id);
+      if (!devotional) {
+        return res.status(404).json({ message: "Devotional not found" });
+      }
+
+      // Extract filename from URL if it's a local upload
+      if (devotional.imageUrl && devotional.imageUrl.startsWith('/uploads/thumbnails/')) {
+        const filename = devotional.imageUrl.split('/').pop();
+        if (filename) {
+          const uploadsDir = path.resolve(process.cwd(), 'uploads', 'thumbnails');
+          const filePath = path.resolve(uploadsDir, filename);
+          
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        }
+      }
+
+      // Update devotional to remove the image URL
+      const updated = await storage.updateDevotional(req.params.id, {
+        imageUrl: null,
+      });
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error deleting devotional thumbnail:", error);
+      res.status(500).json({ message: "Failed to delete thumbnail" });
+    }
+  });
+
   // Devotional notification service management routes (admin only)
   app.get('/api/admin/devotional-notifications/status', isAuthenticated, async (req: any, res) => {
     try {
