@@ -498,25 +498,25 @@ export default function Home() {
         <BrotherhoodRequests />
       </div>
 
-      {/* This Week's Challenge Section */}
+      {/* This Week Challenge Section */}
       {currentChallenge && (
         <div className="px-6 mb-6">
-          <Card className="bg-gradient-to-br from-ministry-steel to-ministry-navy dark:from-featured-dark dark:to-featured-dark-secondary text-white relative overflow-hidden" data-testid="card-current-challenge">
+          <Card className="bg-ministry-gold-exact relative overflow-hidden" data-testid="card-current-challenge">
             <CardContent className="p-6">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-black/5 rounded-full -translate-y-16 translate-x-16"></div>
               <div className="relative z-10">
-                <div className="inline-flex items-center bg-ministry-gold-exact/20 text-black px-3 py-1 rounded-full text-xs font-medium mb-3">
+                <div className="inline-flex items-center bg-black/10 text-black px-3 py-1 rounded-full text-xs font-medium mb-3">
                   <Target className="w-3 h-3 mr-1" fill="currentColor" />
-                  This Week's Challenge
+                  This Week Challenge
                 </div>
-                <h3 className="text-lg font-bold mb-2" data-testid="text-current-challenge-title">
+                <h3 className="text-lg font-bold mb-2 text-black" data-testid="text-current-challenge-title">
                   {(currentChallenge as any)?.title}
                 </h3>
-                <p className="text-blue-100 text-sm mb-4" data-testid="text-current-challenge-description">
+                <p className="text-black text-sm mb-4" data-testid="text-current-challenge-description">
                   {(currentChallenge as any)?.description}
                 </p>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 text-xs text-blue-200">
+                  <div className="flex items-center space-x-4 text-xs text-black/70">
                     <span className="flex items-center">
                       <Calendar className="w-3 h-3 mr-1" />
                       Week of {formatLocalDate(new Date((currentChallenge as any)?.releaseDate), { 
@@ -528,7 +528,7 @@ export default function Home() {
                   </div>
                   <Button 
                     onClick={() => setShowChallengeDialog(true)}
-                    className="bg-white/20 text-white hover:bg-white/30 border border-white/30"
+                    className="bg-black text-white hover:bg-black/90"
                     data-testid="button-view-challenge"
                   >
                     View Challenge
@@ -1063,7 +1063,7 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2 text-ministry-navy">
               <Target className="w-5 h-5 text-ministry-gold" />
-              <span className="text-black">This Week's Challenge</span>
+              <span className="text-black">This Week Challenge</span>
             </DialogTitle>
           </DialogHeader>
           
