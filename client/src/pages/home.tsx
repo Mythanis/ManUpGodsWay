@@ -569,82 +569,121 @@ export default function Home() {
         )}
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Access */}
       <div className="px-6 mb-6">
-        <h2 className="text-lg font-bold text-white mb-4">Quick Access</h2>
+        <h2 className="text-lg font-bold text-white mb-4">POPULAR</h2>
         
-        <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-3">
+          <Button 
+            variant="outline"
+            className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
+            data-testid="button-current-challenge"
+            onClick={() => setShowChallengeDialog(true)}
+          >
+            <div className="h-full w-16 bg-black flex items-center justify-center flex-shrink-0">
+              <Target className="w-6 h-6 text-white" />
+            </div>
+            <span className="flex-1 font-bold text-base text-black text-left px-4">Current Challenge</span>
+            <div className="pr-4">
+              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
+          </Button>
+
           <Link href="/videos">
             <Button 
               variant="outline"
-              className="h-20 flex flex-col items-center justify-center space-y-2 bg-ministry-gold-exact/20 text-black border-ministry-gold hover:bg-ministry-gold-exact/30 w-full"
+              className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
               data-testid="button-watch-videos"
             >
-              <Play className="w-8 h-8 text-black" />
-              <span className="font-medium text-sm text-black">Watch Videos</span>
+              <div className="h-full w-16 bg-black flex items-center justify-center flex-shrink-0">
+                <Play className="w-6 h-6 text-white" />
+              </div>
+              <span className="flex-1 font-bold text-base text-black text-left px-4">Watch Videos</span>
+              <div className="pr-4">
+                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </div>
             </Button>
           </Link>
-          
-          <Link href="/community">
-            <Button 
-              variant="outline"
-              className="h-20 flex flex-col items-center justify-center space-y-2 bg-ministry-gold-exact/20 text-black border-ministry-gold hover:bg-ministry-gold-exact/30 w-full"
-              data-testid="button-join-discussion"
-            >
-              <Users className="w-8 h-8 text-black" />
-              <span className="font-medium text-sm text-black">Join Discussion</span>
-            </Button>
-          </Link>
-          
-          <Button 
-            variant="outline"
-            className="h-20 flex flex-col items-center justify-center space-y-2 bg-ministry-gold-exact/20 text-black border-ministry-gold hover:bg-ministry-gold-exact/30"
-            data-testid="button-track-progress"
-            onClick={() => setShowProgressDialog(true)}
-          >
-            <BarChart3 className="w-8 h-8 text-black" />
-            <span className="font-medium text-sm text-black">Track Progress</span>
-          </Button>
-          
-          <Button 
-            variant="outline"
-            className="h-20 flex flex-col items-center justify-center space-y-2 bg-ministry-gold-exact/20 text-black border-ministry-gold hover:bg-ministry-gold-exact/30"
-            data-testid="button-prayer-time"
-            onClick={() => isPraying ? endPrayerTime() : setShowPrayerDialog(true)}
-          >
-            {isPraying ? (
-              <>
-                <PauseCircle className="w-8 h-8 text-black" />
-                <span className="font-medium text-sm text-black">{formatTime(prayerTimeLeft)}</span>
-              </>
-            ) : (
-              <>
-                <Clock className="w-8 h-8 text-black" />
-                <span className="font-medium text-sm text-black">Prayer Time</span>
-              </>
-            )}
-          </Button>
-          
-          <Button 
-            variant="outline"
-            className="h-20 flex flex-col items-center justify-center space-y-2 bg-ministry-gold-exact/20 text-black border-ministry-gold hover:bg-ministry-gold-exact/30"
-            data-testid="button-my-posts"
-            onClick={() => setShowHurdleWallDialog(true)}
-          >
-            <Shield className="w-8 h-8 text-black" />
-            <span className="font-medium text-sm text-black">My Posts ({userHurdleWallPosts.length})</span>
-          </Button>
           
           <Link href="/hurdle-wall">
             <Button 
               variant="outline"
-              className="h-20 flex flex-col items-center justify-center space-y-2 bg-ministry-gold-exact/20 text-black border-ministry-gold hover:bg-ministry-gold-exact/30 w-full"
+              className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
               data-testid="button-hurdle-wall"
             >
-              <Shield className="w-8 h-8 text-black" />
-              <span className="font-medium text-sm text-black">Hurdle Wall</span>
+              <div className="h-full w-16 bg-black flex items-center justify-center flex-shrink-0">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <span className="flex-1 font-bold text-base text-black text-left px-4">Hurdle Wall</span>
+              <div className="pr-4">
+                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </div>
             </Button>
           </Link>
+
+          <Link href="/community">
+            <Button 
+              variant="outline"
+              className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
+              data-testid="button-join-discussion"
+            >
+              <div className="h-full w-16 bg-black flex items-center justify-center flex-shrink-0">
+                <MessageSquare className="w-6 h-6 text-white" />
+              </div>
+              <span className="flex-1 font-bold text-base text-black text-left px-4">Join Discussion</span>
+              <div className="pr-4">
+                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </div>
+            </Button>
+          </Link>
+
+          <Button 
+            variant="outline"
+            className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
+            data-testid="button-prayer-time"
+            onClick={() => isPraying ? endPrayerTime() : setShowPrayerDialog(true)}
+          >
+            <div className="h-full w-16 bg-black flex items-center justify-center flex-shrink-0">
+              {isPraying ? (
+                <PauseCircle className="w-6 h-6 text-white" />
+              ) : (
+                <Clock className="w-6 h-6 text-white" />
+              )}
+            </div>
+            <span className="flex-1 font-bold text-base text-black text-left px-4">
+              {isPraying ? formatTime(prayerTimeLeft) : 'Prayer Time'}
+            </span>
+            <div className="pr-4">
+              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
+          </Button>
+
+          <Button 
+            variant="outline"
+            className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
+            data-testid="button-track-progress"
+            onClick={() => setShowProgressDialog(true)}
+          >
+            <div className="h-full w-16 bg-black flex items-center justify-center flex-shrink-0">
+              <BarChart3 className="w-6 h-6 text-white" />
+            </div>
+            <span className="flex-1 font-bold text-base text-black text-left px-4">Track Progress</span>
+            <div className="pr-4">
+              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
+          </Button>
         </div>
       </div>
 
