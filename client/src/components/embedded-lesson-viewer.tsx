@@ -154,52 +154,97 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
             visibility: visible;
           }
           
-          /* Position lesson content at top left of page and fit on one page */
+          /* Clean print layout - remove all card styling */
           .lesson-print-content {
             position: absolute;
             left: 0 !important;
             top: 0 !important;
             width: 100%;
-            max-height: 100vh;
-            overflow: hidden;
             background: white !important;
             box-shadow: none !important;
             border: none !important;
+            border-radius: 0 !important;
             margin: 0 !important;
-            padding: 0.3cm !important;
-            transform: scale(0.75);
-            transform-origin: top left;
+            padding: 0 !important;
           }
           
-          /* Prevent page breaks */
-          .lesson-print-content,
-          .lesson-print-content * {
-            page-break-inside: avoid;
-            page-break-after: avoid;
-            page-break-before: avoid;
+          /* Remove all card/container styling */
+          .lesson-print-content > *,
+          .lesson-print-content div[class*="card"],
+          .lesson-print-content div[class*="Card"] {
+            background: white !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
           }
           
-          /* Compact spacing for single page */
+          /* Professional print typography */
           .lesson-print-content * {
+            color: black !important;
+            font-family: Georgia, 'Times New Roman', serif !important;
+          }
+          
+          /* Lesson title - prominent */
+          .lesson-print-content [data-testid="text-lesson-title"] {
+            font-size: 18pt !important;
+            font-weight: bold !important;
+            margin-bottom: 8pt !important;
+            margin-top: 0 !important;
+            padding: 0 !important;
+            border-bottom: 2pt solid black !important;
+            padding-bottom: 4pt !important;
+          }
+          
+          /* Scripture section */
+          .lesson-print-content [data-testid="text-scripture"] {
+            font-size: 11pt !important;
+            font-style: italic !important;
+            margin: 10pt 0 !important;
+            padding: 8pt !important;
+            border-left: 3pt solid #ccc !important;
+            background: #f9f9f9 !important;
+          }
+          
+          /* Main content - readable typography */
+          .lesson-print-content [data-testid="content-lesson-body"] {
+            font-size: 11pt !important;
+            line-height: 1.5 !important;
+            margin: 10pt 0 !important;
+            padding: 0 !important;
+          }
+          
+          .lesson-print-content [data-testid="content-lesson-body"] p {
+            margin: 6pt 0 !important;
+            padding: 0 !important;
+          }
+          
+          /* Key takeaway */
+          .lesson-print-content [data-testid="text-key-takeaway"] {
             font-size: 10pt !important;
-            line-height: 1.2 !important;
-            margin: 0.2em 0 !important;
-            padding: 0.15em !important;
+            margin: 10pt 0 !important;
+            padding: 8pt !important;
+            background: #f0f0f0 !important;
+            border: 1pt solid #ccc !important;
           }
           
+          /* Questions section */
+          .lesson-print-content [data-testid^="question-text"] {
+            font-size: 10pt !important;
+            font-weight: bold !important;
+            margin: 8pt 0 4pt 0 !important;
+            padding: 0 !important;
+          }
+          
+          /* Section headings */
           .lesson-print-content h1,
           .lesson-print-content h2,
           .lesson-print-content h3 {
-            font-size: 12pt !important;
-            margin-bottom: 0.3em !important;
-            margin-top: 0.3em !important;
-          }
-          
-          /* Remove extra spacing from card components */
-          .lesson-print-content > div,
-          .lesson-print-content > div > div {
-            margin: 0 !important;
-            padding: 0.2cm !important;
+            font-size: 14pt !important;
+            font-weight: bold !important;
+            margin: 12pt 0 6pt 0 !important;
+            padding: 0 !important;
           }
           
           /* Watermark */
@@ -218,15 +263,20 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
             visibility: visible;
           }
           
-          /* Clean print layout */
+          /* Page settings */
           @page {
-            margin: 1cm;
+            margin: 2cm;
             size: letter;
           }
           
-          /* Make text black for printing */
-          .lesson-print-content * {
-            color: black !important;
+          /* Prevent awkward page breaks */
+          h1, h2, h3, h4, h5, h6 {
+            page-break-after: avoid;
+          }
+          
+          p {
+            orphans: 3;
+            widows: 3;
           }
         }
       `}} />
