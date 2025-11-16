@@ -498,48 +498,6 @@ export default function Home() {
         <BrotherhoodRequests />
       </div>
 
-      {/* This Week Challenge Section */}
-      {currentChallenge && (
-        <div className="px-6 mb-6">
-          <Card className="border border-ministry-charcoal bg-ministry-gold-exact relative overflow-hidden" data-testid="card-current-challenge">
-            <CardContent className="p-6">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-black/5 rounded-full -translate-y-16 translate-x-16"></div>
-              <div className="relative z-10">
-                <div className="inline-flex items-center bg-black/10 text-black px-3 py-1 rounded-full text-xs font-medium mb-3">
-                  <Target className="w-3 h-3 mr-1" fill="currentColor" />
-                  This Week Challenge
-                </div>
-                <h3 className="text-lg font-bold mb-2 text-black" data-testid="text-current-challenge-title">
-                  {(currentChallenge as any)?.title}
-                </h3>
-                <p className="text-black text-sm mb-4" data-testid="text-current-challenge-description">
-                  {(currentChallenge as any)?.description}
-                </p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 text-xs text-black/70">
-                    <span className="flex items-center">
-                      <Calendar className="w-3 h-3 mr-1" />
-                      Week of {formatLocalDate(new Date((currentChallenge as any)?.releaseDate), { 
-                        month: 'short', 
-                        day: 'numeric' 
-                      })}
-                    </span>
-                    <span className="capitalize">{(currentChallenge as any)?.topic}</span>
-                  </div>
-                  <Button 
-                    onClick={() => setShowChallengeDialog(true)}
-                    className="bg-black text-white hover:bg-black/90"
-                    data-testid="button-view-challenge"
-                  >
-                    View Challenge
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {/* Current Progress Section */}
       <div className="px-6 mb-6">
         <h2 className="text-lg font-bold text-white mb-4">Your Journey</h2>
