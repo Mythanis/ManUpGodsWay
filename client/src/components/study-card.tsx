@@ -62,7 +62,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt, has
               <div className="flex-1">
                 <div className="flex items-center space-x-2 mb-1">
                   <h3 className={`font-semibold text-sm ${
-                    isCompleted ? 'text-ministry-gold' : 'text-ministry-charcoal'
+                    isCompleted ? 'text-ministry-gold' : 'text-black'
                   }`} data-testid="text-study-title">
                     {study.title}
                   </h3>
@@ -73,7 +73,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt, has
                     <Video className="w-3 h-3 text-ministry-steel flex-shrink-0" />
                   )}
                 </div>
-                <div className="text-xs text-ministry-slate" data-testid="text-study-info">
+                <div className="text-xs text-black" data-testid="text-study-info">
                   {isCompleted && completedAt ? (
                     <p className="text-ministry-gold font-medium mb-1">
                       ✓ Completed {new Date(completedAt).toLocaleDateString('en-US', {
@@ -90,7 +90,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt, has
                 <div className="flex items-center ml-2 space-x-2" data-testid="rating-display">
                   <div className="flex items-center">
                     <Star className="w-3 h-3 text-black fill-current mr-1" />
-                    <span className="text-xs text-ministry-slate">{study.rating}</span>
+                    <span className="text-xs text-black">{study.rating}</span>
                   </div>
                   {study.ratingCount > 0 && (
                     <button
@@ -99,7 +99,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt, has
                         e.stopPropagation();
                         setShowReviews(true);
                       }}
-                      className="flex items-center text-xs text-ministry-steel hover:text-ministry-navy transition-colors"
+                      className="flex items-center text-xs text-black hover:text-black/70 transition-colors"
                       data-testid="button-view-reviews"
                     >
                       <MessageSquare className="w-3 h-3 mr-1" />
@@ -110,7 +110,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt, has
               )}
             </div>
             
-            <p className="text-xs text-ministry-slate mb-3 line-clamp-2" data-testid="text-study-description">
+            <p className="text-xs text-black mb-3 line-clamp-2" data-testid="text-study-description">
               {study.description}
             </p>
             
@@ -119,10 +119,10 @@ export default function StudyCard({ study, isCompleted = false, completedAt, has
               <div className="bg-ministry-gold/10 border border-ministry-gold/30 rounded-lg p-3 mb-3" data-testid="purchase-section">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-ministry-charcoal mb-1">
+                    <p className="text-sm font-semibold text-black mb-1">
                       Purchase Required
                     </p>
-                    <p className="text-xs text-ministry-slate">
+                    <p className="text-xs text-black">
                       {study.price ? `$${parseFloat(study.price).toFixed(2)}` : 'Contact for pricing'}
                     </p>
                   </div>
@@ -150,7 +150,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt, has
                     {getTierLabel(study.requiredTier)}
                   </Badge>
                 )}
-                <div className="flex items-center space-x-1 text-xs text-ministry-slate">
+                <div className="flex items-center space-x-1 text-xs text-black">
                   <Users className="w-3 h-3" />
                   <span>{study.difficulty}</span>
                 </div>
@@ -158,7 +158,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt, has
               {requiresPurchase && !hasPurchased && !allowPreviewAccess ? (
                 <Button
                   variant="ghost"
-                  className="text-xs font-medium p-1 text-ministry-slate cursor-not-allowed opacity-50"
+                  className="text-xs font-medium p-1 text-black cursor-not-allowed opacity-50"
                   disabled
                   data-testid="button-locked-study"
                 >
@@ -171,7 +171,7 @@ export default function StudyCard({ study, isCompleted = false, completedAt, has
                     className={`text-xs font-medium p-1 ${
                       isCompleted 
                         ? 'text-ministry-gold hover:text-ministry-gold/80'
-                        : 'text-ministry-steel hover:text-ministry-navy'
+                        : 'text-black hover:text-black/70'
                     }`}
                     data-testid="button-view-study"
                   >

@@ -821,6 +821,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async markLessonComplete(userId: string, lessonId: string, answers?: Record<string, string>): Promise<UserLessonProgress> {
+    // First, get the lesson to find its studyId
+    const [lesson] = await db
+      .select()
+      .from(studyLessons)
+      .where(eq(studyLessons.id, lessonId));
+
+    if (!lesson) {
+      throw new Error('Lesson not found');
+    }
+
     // Check if progress already exists
     const [existing] = await db
       .select()
@@ -863,6 +873,38 @@ export class DatabaseStorage implements IStorage {
         .returning();
       
       result = newProgress;
+    }
+
+    // Ensure userProgress entry exists for this study
+    const [existingStudyProgress] = await db
+      .select()
+      .from(userProgress)
+      .where(and(
+        eq(userProgress.userId, userId),
+        eq(userProgress.studyId, lesson.studyId)
+      ));
+
+    if (!existingStudyProgress) {
+      // Create userProgress entry for the study
+      await db
+        .insert(userProgress)
+        .values({
+          userId,
+          studyId: lesson.studyId,
+          status: 'in_progress',
+          lastAccessedAt: now,
+        });
+    } else {
+      // Update last accessed time
+      await db
+        .update(userProgress)
+        .set({
+          lastAccessedAt: now,
+        })
+        .where(and(
+          eq(userProgress.userId, userId),
+          eq(userProgress.studyId, lesson.studyId)
+        ));
     }
 
     // Update user's streak when they complete a lesson
