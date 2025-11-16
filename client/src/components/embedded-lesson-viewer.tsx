@@ -143,21 +143,8 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
       {/* Print Watermark - Only visible when printing */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
-          /* Hide everything except the lesson content */
-          body > *:not(#root) {
-            display: none !important;
-          }
-          
-          #root > *:not([data-testid="embedded-lesson-viewer"]) {
-            display: none !important;
-          }
-          
-          nav, header, footer, aside {
-            display: none !important;
-          }
-          
           /* Watermark */
-          body::before {
+          .lesson-print-content::before {
             content: "Man Up God's Way";
             position: fixed;
             top: 50%;
@@ -176,19 +163,13 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
             margin: 1cm;
           }
           
-          /* Ensure lesson content is visible and formatted */
-          [data-testid="embedded-lesson-viewer"] {
-            display: block !important;
-          }
-          
-          /* Remove backgrounds and borders for clean printing */
-          * {
+          /* Make content print-friendly */
+          .lesson-print-content {
             background: white !important;
             color: black !important;
           }
           
-          /* Preserve important formatting */
-          .prose, .font-serif {
+          .lesson-print-content * {
             color: black !important;
           }
         }
@@ -248,7 +229,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
       </div>
 
       {/* Lesson Content */}
-      <Card>
+      <Card className="lesson-print-content">
         <CardHeader className="print:pb-2">
           <div className="flex items-start justify-between">
             <div className="flex-1">
