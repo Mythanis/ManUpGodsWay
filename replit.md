@@ -19,6 +19,7 @@ PostgreSQL, hosted on Neon Database, is used with Drizzle ORM for type-safe quer
 - **userProgress**: Overall study progress tracking (currentDay, status, completedAt)
 - **userLessonProgress**: Per-lesson completion tracking (isCompleted, answers, completedAt)
 - **users, discussions, devotionals, podcasts, challenges, testimonies, exercises**: Additional core tables
+- **challengeParticipants**: Tracks which users have accepted weekly challenges (with unique constraint to prevent duplicates)
 - Various metadata tables for ratings, video content, and user engagement
 
 ## Content Management
@@ -41,7 +42,7 @@ The system supports a tiered content structure (free, premium, VIP) and category
 - **Community**: Interactive discussion features with auto-subscription when posting replies, real-time statistics, user profiles, and a discipleship system with tag-based user discovery and faith journey stages for testimonies.
 - **Video & Podcast Management**: Full upload, storage, processing, and management system for videos and podcasts with tiered access, topic classification, ratings/reviews, and live session support (Riverside.fm integration).
 - **Notifications**: Enhanced system with push notification broadcasting, user management, automated daily devotional notifications, tiered content update notifications, and automatic discussion reply notifications (users are automatically subscribed when they post a reply).
-- **User Engagement**: Streak tracking, prayer time system, weekly challenges with intelligent release logic, and a comprehensive testimony system.
+- **User Engagement**: Streak tracking, prayer time system, weekly challenges with intelligent release logic and participation tracking ("I Take the Challenge" button with real-time participant counts), and a comprehensive testimony system.
 - **Fitness Integration**: Local exercise database with filtering and search capabilities for creating fitness plans.
 
 # External Dependencies
