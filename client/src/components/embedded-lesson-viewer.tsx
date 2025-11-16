@@ -139,9 +139,33 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
   }
 
   return (
-    <div className="space-y-4 print:space-y-2" data-testid="embedded-lesson-viewer">
-      {/* Progress Bar */}
-      <Card className="print:hidden">
+    <>
+      {/* Print Watermark - Only visible when printing */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          body::before {
+            content: "Man Up God's Way";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            font-weight: bold;
+            color: rgba(252, 208, 0, 0.15);
+            z-index: 9999;
+            pointer-events: none;
+            white-space: nowrap;
+          }
+          
+          @page {
+            margin: 1cm;
+          }
+        }
+      `}} />
+      
+      <div className="space-y-4 print:space-y-2" data-testid="embedded-lesson-viewer">
+        {/* Progress Bar */}
+        <Card className="print:hidden">
         <CardContent className="p-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
@@ -336,6 +360,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           );
         })}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
