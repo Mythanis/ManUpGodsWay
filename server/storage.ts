@@ -1141,16 +1141,7 @@ export class DatabaseStorage implements IStorage {
         lastAccessedAt: userProgress.lastAccessedAt,
         completedAt: userProgress.completedAt,
         createdAt: userProgress.createdAt,
-        study: {
-          id: studies.id,
-          title: studies.title,
-          description: studies.description,
-          category: studies.category,
-          tier: studies.tier,
-          estimatedHours: studies.estimatedHours,
-          totalDays: studies.totalDays,
-          createdAt: studies.createdAt,
-        },
+        study: studies,
       })
       .from(userProgress)
       .leftJoin(studies, eq(userProgress.studyId, studies.id))
