@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, X } from "lucide-react";
+import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus } from "lucide-react";
 import { FlagContentDialog } from "@/components/flag-content-dialog";
 import { z } from "zod";
 
@@ -235,7 +235,9 @@ export default function DiscussionCard({
                   } hover:text-ministry-gold-exact`}
                   data-testid="button-like-discussion"
                 >
-                  <X className="w-4 h-4" />
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 2h4v7h7v4h-7v9h-4v-9H3v-4h7V2z"/>
+                  </svg>
                   <span className="text-xs">{likeCount}</span>
                 </Button>
                 
@@ -339,7 +341,9 @@ export default function DiscussionCard({
                         className="flex items-center space-x-1 text-gray-300 hover:text-ministry-gold-exact p-1"
                         data-testid={`button-like-reply-${reply.id}`}
                       >
-                        <X className="w-3 h-3" />
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M10 2h4v7h7v4h-7v9h-4v-9H3v-4h7V2z"/>
+                        </svg>
                         <span className="text-xs">{reply.likes || 0}</span>
                       </Button>
                       <FlagContentDialog 
