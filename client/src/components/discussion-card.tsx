@@ -236,7 +236,7 @@ export default function DiscussionCard({
                   data-testid="button-like-discussion"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M10 2h4v7h7v4h-7v9h-4v-9H3v-4h7V2z"/>
+                    <path d="M10.5 1h3v6h6v3.5h-6v12.5h-3V10.5h-6V7h6V1z"/>
                   </svg>
                   <span className="text-xs">{likeCount}</span>
                 </Button>
@@ -342,7 +342,7 @@ export default function DiscussionCard({
                         data-testid={`button-like-reply-${reply.id}`}
                       >
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M10 2h4v7h7v4h-7v9h-4v-9H3v-4h7V2z"/>
+                          <path d="M10.5 1h3v6h6v3.5h-6v12.5h-3V10.5h-6V7h6V1z"/>
                         </svg>
                         <span className="text-xs">{reply.likes || 0}</span>
                       </Button>
