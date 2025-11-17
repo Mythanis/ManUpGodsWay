@@ -377,33 +377,33 @@ export default function HurdleWall() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Post Type Selection */}
-            <div className="space-y-3">
-              <Label className="text-black font-semibold text-base">Post Type</Label>
-              <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label className="text-black font-semibold">Post Type</Label>
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setNewPostType('discussion')}
-                  className={`flex items-center justify-center gap-2 px-6 py-4 rounded-lg border-2 transition-all font-semibold text-base ${
+                  className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border-2 transition-all font-medium text-sm ${
                     newPostType === 'discussion'
-                      ? 'bg-black text-white border-black shadow-lg'
+                      ? 'bg-black text-white border-black shadow-md'
                       : 'bg-white text-black border-black hover:bg-gray-100'
                   }`}
                   data-testid="button-discussion-type"
                 >
-                  <MessageCircle className="h-5 w-5" />
+                  <MessageCircle className="h-4 w-4" />
                   Open Discussion
                 </button>
                 <button
                   type="button"
                   onClick={() => setNewPostType('prayer_request')}
-                  className={`flex items-center justify-center gap-2 px-6 py-4 rounded-lg border-2 transition-all font-semibold text-base ${
+                  className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border-2 transition-all font-medium text-sm ${
                     newPostType === 'prayer_request'
-                      ? 'bg-black text-white border-black shadow-lg'
+                      ? 'bg-black text-white border-black shadow-md'
                       : 'bg-white text-black border-black hover:bg-gray-100'
                   }`}
                   data-testid="button-prayer-type"
                 >
-                  <Heart className="h-5 w-5" />
+                  <Heart className="h-4 w-4" />
                   Prayer Request
                 </button>
               </div>
