@@ -1123,14 +1123,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Progress operations
-  async getUserProgress(userId: string, studyId?: string): Promise<(UserProgress & { study: Study | null })[]> {
+  async getUserProgress(userId: string, studyId?: string): Promise<(UserProgress & { study: Study | null; completedLessons?: number })[]> {
     const conditions = [eq(userProgress.userId, userId)];
     
     if (studyId) {
       conditions.push(eq(userProgress.studyId, studyId));
     }
     
-    return await db
+    const progressRecords = await db
       .select({
         id: userProgress.id,
         userId: userProgress.userId,
@@ -1147,6 +1147,34 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(studies, eq(userProgress.studyId, studies.id))
       .where(and(...conditions))
       .orderBy(desc(userProgress.lastAccessedAt));
+    
+    // For each progress record, count completed lessons
+    const enrichedProgress = await Promise.all(
+      progressRecords.map(async (record) => {
+        // Get all lessons for this study
+        const lessons = await db
+          .select({ id: studyLessons.id })
+          .from(studyLessons)
+          .where(eq(studyLessons.studyId, record.studyId));
+        
+        // Get completed lessons for this user and study
+        const completedCount = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(userLessonProgress)
+          .where(and(
+            eq(userLessonProgress.userId, userId),
+            sql`${userLessonProgress.lessonId} IN (SELECT id FROM study_lessons WHERE study_id = ${record.studyId})`,
+            sql`${userLessonProgress.completedAt} IS NOT NULL`
+          ));
+        
+        return {
+          ...record,
+          completedLessons: Number(completedCount[0]?.count || 0),
+        };
+      })
+    );
+    
+    return enrichedProgress;
   }
 
   async updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>, userLocalDate?: Date): Promise<UserProgress> {

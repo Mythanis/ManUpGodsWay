@@ -12,12 +12,12 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
   const isStudyCompleted = progress.status === 'completed';
   
   // Calculate progress percentage based on completed lessons
-  const totalDays = study.totalDays || 0;
-  const currentDay = progress.currentDay || 1;
+  const totalLessons = study.totalDays || 0;
+  const completedLessons = progress.completedLessons || 0;
   const progressPercent = isStudyCompleted 
     ? 100 
-    : totalDays > 0 
-      ? Math.round(((currentDay - 1) / totalDays) * 100)
+    : totalLessons > 0 
+      ? Math.round((completedLessons / totalLessons) * 100)
       : 0;
 
   return (
