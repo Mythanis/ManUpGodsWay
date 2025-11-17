@@ -13,9 +13,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag } from "lucide-react";
+import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, X } from "lucide-react";
 import { FlagContentDialog } from "@/components/flag-content-dialog";
-import { HonorButton } from "@/components/honor-button";
 import { z } from "zod";
 
 interface DiscussionCardProps {
@@ -38,6 +37,7 @@ export default function DiscussionCard({
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const [userHasLiked, setUserHasLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(discussion.likes || 0);
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -102,10 +102,12 @@ export default function DiscussionCard({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
-      setUserHasLiked(!userHasLiked);
+      const newLikedState = !userHasLiked;
+      setUserHasLiked(newLikedState);
+      setLikeCount((prev: number) => newLikedState ? prev + 1 : prev - 1);
       toast({
         title: "Success",
-        description: userHasLiked ? "Removed like" : "Discussion liked!",
+        description: newLikedState ? "Discussion liked!" : "Removed like",
       });
     },
     onError: (error) => {
@@ -224,14 +226,18 @@ export default function DiscussionCard({
             
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <HonorButton
-                  type="discussion"
-                  id={discussion.id}
-                  initialCount={discussion.likes || 0}
+                <Button 
                   variant="ghost"
                   size="sm"
-                  showText={true}
-                />
+                  onClick={() => toggleLike.mutate()}
+                  className={`flex items-center space-x-1 p-1 ${
+                    userHasLiked ? 'text-ministry-gold-exact' : 'text-gray-300'
+                  } hover:text-ministry-gold-exact`}
+                  data-testid="button-like-discussion"
+                >
+                  <X className="w-4 h-4" />
+                  <span className="text-xs">{likeCount}</span>
+                </Button>
                 
                 <Button 
                   variant="ghost"
@@ -325,21 +331,22 @@ export default function DiscussionCard({
                     </div>
                     <p className="text-sm text-gray-300">{reply.content}</p>
                     
-                    {/* Honor and Flag Reply Buttons */}
+                    {/* Like and Flag Reply Buttons */}
                     <div className="flex justify-between items-center mt-2">
-                      <HonorButton
-                        type="reply"
-                        id={reply.id}
-                        initialCount={reply.likes || 0}
+                      <Button 
                         variant="ghost"
                         size="sm"
-                        showText={true}
-                      />
+                        className="flex items-center space-x-1 text-gray-300 hover:text-ministry-gold-exact p-1"
+                        data-testid={`button-like-reply-${reply.id}`}
+                      >
+                        <X className="w-3 h-3" />
+                        <span className="text-xs">{reply.likes || 0}</span>
+                      </Button>
                       <FlagContentDialog 
                         contentType="reply" 
                         contentId={reply.id}
                         triggerElement={
-                          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-red-600 p-1">
+                          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-red-600 p-1">
                             <Flag className="h-3 w-3" />
                           </Button>
                         }
