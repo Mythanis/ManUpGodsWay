@@ -12,7 +12,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageSquare, HandHeart, Send, Plus, Eye, EyeOff, Trash2, Search, Filter, SortDesc } from 'lucide-react';
+import { MessageSquare, HandHeart, Send, Plus, Eye, EyeOff, Trash2, Search, Filter, SortDesc, MessageCircle, Heart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'wouter';
@@ -378,21 +378,35 @@ export default function HurdleWall() {
           <CardContent className="space-y-4">
             {/* Post Type Selection */}
             <div className="space-y-3">
-              <Label className="text-black">Post Type</Label>
-              <RadioGroup 
-                value={newPostType} 
-                onValueChange={(value: 'discussion' | 'prayer_request') => setNewPostType(value)}
-                className="flex gap-6"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="discussion" id="discussion" />
-                  <Label htmlFor="discussion" className="text-black">Open Discussion</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="prayer_request" id="prayer_request" />
-                  <Label htmlFor="prayer_request" className="text-black">Prayer Request</Label>
-                </div>
-              </RadioGroup>
+              <Label className="text-black font-semibold text-base">Post Type</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setNewPostType('discussion')}
+                  className={`flex items-center justify-center gap-2 px-6 py-4 rounded-lg border-2 transition-all font-semibold text-base ${
+                    newPostType === 'discussion'
+                      ? 'bg-black text-white border-black shadow-lg'
+                      : 'bg-white text-black border-black hover:bg-gray-100'
+                  }`}
+                  data-testid="button-discussion-type"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  Open Discussion
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewPostType('prayer_request')}
+                  className={`flex items-center justify-center gap-2 px-6 py-4 rounded-lg border-2 transition-all font-semibold text-base ${
+                    newPostType === 'prayer_request'
+                      ? 'bg-black text-white border-black shadow-lg'
+                      : 'bg-white text-black border-black hover:bg-gray-100'
+                  }`}
+                  data-testid="button-prayer-type"
+                >
+                  <Heart className="h-5 w-5" />
+                  Prayer Request
+                </button>
+              </div>
             </div>
 
             {/* Content */}
