@@ -107,7 +107,7 @@ export default function HurdleWall() {
     onSuccess: () => {
       toast({
         title: "Post Created",
-        description: "Your post has been shared on the Hurdle Wall",
+        description: "Your post has been shared on the War Room",
       });
       setNewPostContent('');
       setNewPostType('discussion');
@@ -176,7 +176,7 @@ export default function HurdleWall() {
     onSuccess: () => {
       toast({
         title: "Post Deleted",
-        description: "Your post has been removed from the Hurdle Wall",
+        description: "Your post has been removed from the War Room",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
     },
@@ -300,7 +300,7 @@ export default function HurdleWall() {
       <div className="pb-20">
         <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
           <div className="max-w-2xl mx-auto">
-            <h1 className="text-2xl font-bold mb-2">Hurdle Wall</h1>
+            <h1 className="text-2xl font-bold mb-2">War Room</h1>
             <p className="text-blue-200 text-sm">Share your struggles and prayer requests anonymously</p>
           </div>
         </div>
@@ -321,7 +321,7 @@ export default function HurdleWall() {
       {/* Header */}
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl font-bold mb-2">Hurdle Wall</h1>
+          <h1 className="text-2xl font-bold mb-2">War Room</h1>
           <p className="text-blue-200 text-sm">Share your struggles and prayer requests anonymously</p>
         </div>
       </div>
@@ -371,8 +371,8 @@ export default function HurdleWall() {
               <Plus className="h-6 w-6" />
               Share Your Heart
             </CardTitle>
-            <CardDescription className="text-black text-base font-medium">
-              Share your thoughts, struggles, or prayer requests with the community
+            <CardDescription className="text-black text-base font-medium leading-relaxed">
+              A place for men to bring their battles to God and stand together in prayer. Share your needs, lift up your brothers, and fight on your knees. This is where warriors seek the Lord and find strength.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

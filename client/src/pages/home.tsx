@@ -180,7 +180,7 @@ export default function Home() {
     refetchIntervalInBackground: true,
   });
 
-  // Fetch user's Hurdle Wall posts
+  // Fetch user's War Room posts
   const { data: userHurdleWallPosts = [] } = useQuery({
     queryKey: [`/api/hurdle-wall/user/${user?.id}`],
     enabled: !!user?.id,
@@ -613,7 +613,7 @@ export default function Home() {
               <div className="h-full w-16 bg-black flex items-center justify-center flex-shrink-0">
                 <Shield className="w-6 h-6 text-white" />
               </div>
-              <span className="flex-1 font-bold text-base text-black text-left px-4">Hurdle Wall</span>
+              <span className="flex-1 font-bold text-base text-black text-left px-4">War Room</span>
               <div className="pr-4">
                 <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -1100,13 +1100,13 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* Hurdle Wall Posts Dialog */}
+      {/* War Room Posts Dialog */}
       <Dialog open={showHurdleWallDialog} onOpenChange={setShowHurdleWallDialog}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <Shield className="w-5 h-5 text-ministry-steel" />
-              <span>My Hurdle Wall Posts</span>
+              <span>My War Room Posts</span>
             </DialogTitle>
           </DialogHeader>
           
@@ -1115,10 +1115,10 @@ export default function Home() {
               <div className="text-center py-8">
                 <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600 mb-2">No posts yet</p>
-                <p className="text-sm text-gray-500">Share your first prayer request or discussion on the Hurdle Wall!</p>
+                <p className="text-sm text-gray-500">Share your first prayer request or discussion on the War Room!</p>
                 <Link href="/hurdle-wall">
                   <Button className="mt-4 bg-ministry-navy hover:bg-ministry-steel text-white">
-                    Go to Hurdle Wall
+                    Go to War Room
                   </Button>
                 </Link>
               </div>
@@ -1172,7 +1172,7 @@ export default function Home() {
                 className="bg-ministry-navy hover:bg-ministry-steel text-white"
                 onClick={() => setShowHurdleWallDialog(false)}
               >
-                Go to Hurdle Wall
+                Go to War Room
               </Button>
             </Link>
           </div>

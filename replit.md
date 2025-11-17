@@ -65,6 +65,7 @@ The system supports a tiered content structure (free, premium, VIP) and category
   - Success feedback with detailed import/skip counts
 - **Notifications**: Enhanced system with push notification broadcasting, user management, automated daily devotional notifications, tiered content update notifications, and automatic discussion reply notifications (users are automatically subscribed when they post a reply).
 - **User Engagement**: Streak tracking, prayer time system, weekly challenges with intelligent release logic and participation tracking ("I Take the Challenge" button with real-time participant counts), and a comprehensive testimony system.
+- **War Room**: Renamed from "Hurdle Wall" - A dedicated space for men to bring their battles to God and stand together in prayer. Features anonymous posting, discussion threads, and prayer request tracking with black card design, white text, and yellow badges.
 - **Fitness Integration**: Local exercise database with filtering and search capabilities for creating fitness plans.
 
 # External Dependencies
