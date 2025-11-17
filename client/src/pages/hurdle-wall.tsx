@@ -300,8 +300,8 @@ export default function HurdleWall() {
       <div className="pb-20">
         <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
           <div className="max-w-2xl mx-auto">
-            <h1 className="text-2xl font-bold mb-2">War Room</h1>
-            <p className="text-blue-200 text-sm">Share your struggles and prayer requests anonymously</p>
+            <h1 className="text-4xl font-black mb-2 tracking-tight">War Room</h1>
+            <p className="text-ministry-gold-exact text-sm font-semibold">Share your struggles and prayer requests anonymously</p>
           </div>
         </div>
         <div className="max-w-2xl mx-auto p-4">
@@ -321,8 +321,8 @@ export default function HurdleWall() {
       {/* Header */}
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl font-bold mb-2">War Room</h1>
-          <p className="text-blue-200 text-sm">Share your struggles and prayer requests anonymously</p>
+          <h1 className="text-4xl font-black mb-2 tracking-tight">War Room</h1>
+          <p className="text-ministry-gold-exact text-sm font-semibold">Share your struggles and prayer requests anonymously</p>
         </div>
       </div>
       
