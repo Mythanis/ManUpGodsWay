@@ -260,9 +260,6 @@ export default function Community() {
   const [groupDescription, setGroupDescription] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightedDiscussion, setHighlightedDiscussion] = useState<string | null>(null);
-  const [selectedDiscussionForDialog, setSelectedDiscussionForDialog] = useState<any | null>(null);
-  const [discussionDialogOpen, setDiscussionDialogOpen] = useState(false);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -282,90 +279,6 @@ export default function Community() {
       }, 1000);
     }
   }, []);
-
-  // Detect virtual keyboard visibility on mobile
-  useEffect(() => {
-    if (typeof window === 'undefined' || !discussionDialogOpen) return;
-    
-    let initialViewportHeight = window.visualViewport?.height || window.innerHeight;
-    
-    const handleViewportChange = () => {
-      const currentHeight = window.visualViewport?.height || window.innerHeight;
-      const heightDifference = initialViewportHeight - currentHeight;
-      
-      console.log('Viewport change:', { initialViewportHeight, currentHeight, heightDifference });
-      
-      // If viewport height decreased by more than 100px, keyboard is likely visible
-      const keyboardVisible = heightDifference > 100;
-      setIsKeyboardVisible(keyboardVisible);
-      
-      // Also add CSS class directly to body for global styling
-      if (keyboardVisible) {
-        document.body.classList.add('keyboard-visible');
-      } else {
-        document.body.classList.remove('keyboard-visible');
-      }
-    };
-    
-    // Reset initial height when dialog opens
-    initialViewportHeight = window.visualViewport?.height || window.innerHeight;
-    
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleViewportChange);
-      return () => {
-        window.visualViewport?.removeEventListener('resize', handleViewportChange);
-        document.body.classList.remove('keyboard-visible');
-      };
-    } else {
-      window.addEventListener('resize', handleViewportChange);
-      return () => {
-        window.removeEventListener('resize', handleViewportChange);
-        document.body.classList.remove('keyboard-visible');
-      };
-    }
-  }, [discussionDialogOpen]);
-
-  // Additional keyboard detection using input focus (fallback method)
-  useEffect(() => {
-    if (!discussionDialogOpen) return;
-
-    const handleInputFocus = () => {
-      // Small delay to allow keyboard to appear
-      setTimeout(() => {
-        const currentHeight = window.visualViewport?.height || window.innerHeight;
-        const windowHeight = window.innerHeight;
-        
-        console.log('Input focus - heights:', { currentHeight, windowHeight });
-        
-        if (currentHeight < windowHeight * 0.8) {
-          setIsKeyboardVisible(true);
-          document.body.classList.add('keyboard-visible');
-        }
-      }, 300);
-    };
-
-    const handleInputBlur = () => {
-      setTimeout(() => {
-        setIsKeyboardVisible(false);
-        document.body.classList.remove('keyboard-visible');
-      }, 300);
-    };
-
-    // Add listeners to all text inputs and textareas in the dialog
-    const textInputs = document.querySelectorAll('textarea, input[type="text"]');
-    
-    textInputs.forEach(input => {
-      input.addEventListener('focus', handleInputFocus);
-      input.addEventListener('blur', handleInputBlur);
-    });
-
-    return () => {
-      textInputs.forEach(input => {
-        input.removeEventListener('focus', handleInputFocus);
-        input.removeEventListener('blur', handleInputBlur);
-      });
-    };
-  }, [discussionDialogOpen]);
 
   // Fetch real community stats with live updates
   const { data: communityStats } = useQuery<{
@@ -799,11 +712,7 @@ export default function Community() {
               <div 
                 key={discussion.id}
                 data-discussion-id={discussion.id}
-                className={`${highlightedDiscussion === discussion.id ? 'ring-2 ring-ministry-gold ring-opacity-50 rounded-lg' : ''} cursor-pointer hover:shadow-lg transition-shadow`}
-                onClick={() => {
-                  setSelectedDiscussionForDialog(discussion);
-                  setDiscussionDialogOpen(true);
-                }}
+                className={`${highlightedDiscussion === discussion.id ? 'ring-2 ring-ministry-gold ring-opacity-50 rounded-lg' : ''}`}
               >
                 <DiscussionCard 
                   discussion={discussion}
@@ -817,74 +726,6 @@ export default function Community() {
           </div>
         )}
       </div>
-
-      {/* Discussion Dialog Pop-out */}
-      <Dialog open={discussionDialogOpen} onOpenChange={setDiscussionDialogOpen}>
-        <DialogContent className={`max-w-4xl max-h-[80vh] flex flex-col p-4 sm:p-6 w-full sm:mx-auto overflow-hidden ${isKeyboardVisible ? 'keyboard-visible' : ''}`}>
-          <DialogHeader className="flex-shrink-0 pb-2 sm:pb-4">
-            <DialogTitle className="flex items-center space-x-2 text-lg sm:text-xl">
-              <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-ministry-navy" />
-              <span>Discussion</span>
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedDiscussionForDialog && (
-            <>
-              {/* Discussion Content Area - Scrollable */}
-              <div className="discussion-content-area">
-                {/* Discussion Header */}
-                <div className="border-b pb-4 mb-4">
-                  <div className="flex items-start space-x-3 mb-2">
-                    <img 
-                      src={selectedDiscussionForDialog.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${selectedDiscussionForDialog.user?.firstName}+${selectedDiscussionForDialog.user?.lastName}&background=4A90B8&color=fff`}
-                      alt={`${selectedDiscussionForDialog.user?.firstName} ${selectedDiscussionForDialog.user?.lastName}`}
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="font-bold text-base sm:text-lg text-ministry-charcoal truncate">
-                          {selectedDiscussionForDialog.title}
-                        </h3>
-                        {selectedDiscussionForDialog.studyId && (
-                          <Badge variant="default" className="text-xs bg-ministry-navy text-white flex-shrink-0">
-                            📚 Study
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-sm text-ministry-charcoal font-medium truncate">
-                          {selectedDiscussionForDialog.user?.firstName} {selectedDiscussionForDialog.user?.lastName?.charAt(0)}.
-                        </span>
-                        <span className="text-xs text-ministry-slate flex-shrink-0">
-                          • {getTimeAgo(selectedDiscussionForDialog.createdAt)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-ministry-slate mb-2">{selectedDiscussionForDialog.content}</p>
-                      <div className="flex items-center justify-end">
-                        <DiscussionSubscriptionButton discussionId={selectedDiscussionForDialog.id} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Replies Section */}
-                <div className="space-y-4">
-                  <DiscussionReplies discussionId={selectedDiscussionForDialog.id} />
-                </div>
-              </div>
-
-              {/* Reply Form - Fixed at Bottom */}
-              <div className="discussion-reply-form">
-                <DiscussionReplyForm 
-                  discussionId={selectedDiscussionForDialog.id}
-                  currentUserTier={(user as any)?.subscriptionTier || 'free'}
-                  discussion={selectedDiscussionForDialog}
-                />
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
