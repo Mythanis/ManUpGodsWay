@@ -428,10 +428,10 @@ export default function HurdleWall() {
             </div>
 
             {/* Anonymous Toggle */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                {newPostAnonymous ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                <Label htmlFor="anonymous" className="text-black">
+            <div className="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-black">
+              <div className="flex items-center space-x-3">
+                {newPostAnonymous ? <EyeOff className="h-5 w-5 text-black" /> : <Eye className="h-5 w-5 text-black" />}
+                <Label htmlFor="anonymous" className="text-black font-bold text-base cursor-pointer">
                   {newPostAnonymous ? 'Posting Anonymously' : 'Posting with Name'}
                 </Label>
               </div>
@@ -439,13 +439,15 @@ export default function HurdleWall() {
                 id="anonymous"
                 checked={newPostAnonymous}
                 onCheckedChange={setNewPostAnonymous}
+                className="data-[state=checked]:bg-black data-[state=unchecked]:bg-gray-300 scale-125"
               />
             </div>
 
             <Button 
               onClick={handleCreatePost}
               disabled={createPostMutation.isPending || !newPostContent.trim()}
-              className="w-full bg-ministry-navy hover:bg-ministry-charcoal text-white font-medium"
+              className="w-full bg-black hover:bg-gray-900 text-white font-bold text-lg py-6 rounded-xl shadow-lg border-2 border-black transition-all hover:scale-[1.02]"
+              data-testid="button-share-post"
             >
               {createPostMutation.isPending ? 'Posting...' : 'Share Post'}
             </Button>
