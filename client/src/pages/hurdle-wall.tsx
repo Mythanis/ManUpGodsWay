@@ -439,7 +439,7 @@ export default function HurdleWall() {
                 id="anonymous"
                 checked={newPostAnonymous}
                 onCheckedChange={setNewPostAnonymous}
-                className="data-[state=checked]:bg-black data-[state=unchecked]:bg-gray-300 scale-125"
+                className="data-[state=checked]:bg-black data-[state=unchecked]:bg-gray-300"
               />
             </div>
 
