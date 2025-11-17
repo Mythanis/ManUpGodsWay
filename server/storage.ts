@@ -1135,6 +1135,7 @@ export class DatabaseStorage implements IStorage {
         id: userProgress.id,
         userId: userProgress.userId,
         studyId: userProgress.studyId,
+        currentDay: userProgress.currentDay,
         status: userProgress.status,
         documentScrollPosition: userProgress.documentScrollPosition,
         lastAccessedAt: userProgress.lastAccessedAt,
