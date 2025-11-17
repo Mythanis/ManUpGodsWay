@@ -1141,7 +1141,16 @@ export class DatabaseStorage implements IStorage {
         lastAccessedAt: userProgress.lastAccessedAt,
         completedAt: userProgress.completedAt,
         createdAt: userProgress.createdAt,
-        study: studies,
+        study: {
+          id: studies.id,
+          title: studies.title,
+          description: studies.description,
+          category: studies.category,
+          tier: studies.tier,
+          estimatedHours: studies.estimatedHours,
+          totalDays: studies.totalDays,
+          createdAt: studies.createdAt,
+        },
       })
       .from(userProgress)
       .leftJoin(studies, eq(userProgress.studyId, studies.id))
@@ -1151,25 +1160,22 @@ export class DatabaseStorage implements IStorage {
     // For each progress record, count completed lessons
     const enrichedProgress = await Promise.all(
       progressRecords.map(async (record) => {
-        // Get all lessons for this study
-        const lessons = await db
-          .select({ id: studyLessons.id })
-          .from(studyLessons)
-          .where(eq(studyLessons.studyId, record.studyId));
-        
-        // Get completed lessons for this user and study
-        const completedCount = await db
-          .select({ count: sql<number>`count(*)` })
+        // Count completed lessons for this user and study using a join
+        const result = await db
+          .select({ count: sql<number>`count(*)::int` })
           .from(userLessonProgress)
+          .innerJoin(studyLessons, eq(userLessonProgress.lessonId, studyLessons.id))
           .where(and(
             eq(userLessonProgress.userId, userId),
-            sql`${userLessonProgress.lessonId} IN (SELECT id FROM study_lessons WHERE study_id = ${record.studyId})`,
+            eq(studyLessons.studyId, record.studyId),
             sql`${userLessonProgress.completedAt} IS NOT NULL`
           ));
         
+        const completedLessons = Number(result[0]?.count || 0);
+        
         return {
           ...record,
-          completedLessons: Number(completedCount[0]?.count || 0),
+          completedLessons,
         };
       })
     );
