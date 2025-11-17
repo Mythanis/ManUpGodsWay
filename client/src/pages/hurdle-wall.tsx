@@ -365,13 +365,13 @@ export default function HurdleWall() {
         </div>
 
         {/* New Post Form */}
-        <Card className="bg-ministry-gold-exact">
+        <Card className="bg-ministry-gold-exact border-2 border-black">
           <CardHeader>
-            <CardTitle className="text-black flex items-center gap-2">
-              <Plus className="h-5 w-5" />
+            <CardTitle className="text-black flex items-center gap-2 text-2xl font-bold tracking-tight">
+              <Plus className="h-6 w-6" />
               Share Your Heart
             </CardTitle>
-            <CardDescription className="text-black">
+            <CardDescription className="text-black text-base font-medium">
               Share your thoughts, struggles, or prayer requests with the community
             </CardDescription>
           </CardHeader>
