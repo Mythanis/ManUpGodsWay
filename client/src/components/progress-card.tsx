@@ -25,13 +25,13 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-semibold text-black" data-testid="text-study-title">
+            <h3 className="font-bold text-xl text-black" data-testid="text-study-title">
               {study.title}
             </h3>
-            <p className="text-sm text-black" data-testid="text-study-info">
+            <p className="text-sm text-black font-semibold mt-1" data-testid="text-study-info">
               {study.estimatedHours}h study
             </p>
-            <p className="text-xs text-black mt-1">
+            <p className="text-sm text-black font-medium mt-1">
               {isStudyCompleted 
                 ? "Study completed" 
                 : "In progress"
@@ -39,7 +39,7 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-black font-bold text-lg" data-testid="text-progress-status">
+            <p className="text-black font-extrabold text-xl" data-testid="text-progress-status">
               {isStudyCompleted ? 'Completed' : 'In Progress'}
             </p>
           </div>
