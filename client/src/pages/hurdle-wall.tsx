@@ -54,7 +54,7 @@ export default function HurdleWall() {
   const queryClient = useQueryClient();
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostType, setNewPostType] = useState<'discussion' | 'prayer_request'>('discussion');
-  const [newPostAnonymous, setNewPostAnonymous] = useState(true);
+  const [newPostAnonymous, setNewPostAnonymous] = useState(false);
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState<Record<string, string>>({});
   const [replyAnonymous, setReplyAnonymous] = useState<Record<string, boolean>>({});
@@ -111,7 +111,7 @@ export default function HurdleWall() {
       });
       setNewPostContent('');
       setNewPostType('discussion');
-      setNewPostAnonymous(true);
+      setNewPostAnonymous(false);
       queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
     },
     onError: (error: any) => {
