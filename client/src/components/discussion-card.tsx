@@ -364,7 +364,8 @@ export default function DiscussionCard({
         )}
 
         {showReplyForm && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="mt-4 pt-4 border-t border-gray-700 bg-gray-900 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-white mb-3">Write your reply</h4>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmitReply)} className="space-y-3">
                 <FormField
@@ -375,7 +376,7 @@ export default function DiscussionCard({
                       <FormControl>
                         <Textarea
                           placeholder="Write your reply..."
-                          className="min-h-[80px] resize-none"
+                          className="min-h-[80px] resize-none bg-black text-white border-gray-700 focus:border-ministry-gold-exact"
                           {...field}
                           data-testid="textarea-reply-content"
                         />
@@ -394,34 +395,20 @@ export default function DiscussionCard({
                       setShowReplyForm(false);
                       form.reset();
                     }}
-                    className="text-xs"
+                    className="text-xs text-gray-400 hover:text-white"
                     data-testid="button-cancel-reply"
                   >
                     Cancel
                   </Button>
-                  <button
+                  <Button
                     type="submit"
                     disabled={createReply.isPending}
+                    className="text-xs bg-ministry-gold-exact text-black hover:bg-yellow-400"
                     data-testid="button-submit-reply"
-                    style={{
-                      backgroundColor: 'hsl(0 0% 0%)',
-                      color: 'white',
-                      border: '1px solid hsl(0 0% 0%)',
-                      borderRadius: '0.375rem',
-                      padding: '0.375rem 0.75rem',
-                      fontSize: '0.75rem',
-                      fontWeight: '500',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      cursor: createReply.isPending ? 'default' : 'pointer',
-                      opacity: createReply.isPending ? 0.6 : 1,
-                      transition: 'opacity 0.2s'
-                    }}
                   >
-                    <Send className="w-3 h-3" />
+                    <Send className="w-3 h-3 mr-1" />
                     {createReply.isPending ? "Posting..." : "Post Reply"}
-                  </button>
+                  </Button>
                 </div>
               </form>
             </Form>
