@@ -9,8 +9,16 @@ interface ProgressCardProps {
 }
 
 export default function ProgressCard({ study, progress }: ProgressCardProps) {
-  const progressPercent = progress.status === 'completed' ? 100 : 0;
   const isStudyCompleted = progress.status === 'completed';
+  
+  // Calculate progress percentage based on completed lessons
+  const totalDays = study.totalDays || 0;
+  const currentDay = progress.currentDay || 1;
+  const progressPercent = isStudyCompleted 
+    ? 100 
+    : totalDays > 0 
+      ? Math.round(((currentDay - 1) / totalDays) * 100)
+      : 0;
 
   return (
     <Card className="shadow-sm border border-ministry-charcoal bg-ministry-gold-exact" data-testid="progress-card">
