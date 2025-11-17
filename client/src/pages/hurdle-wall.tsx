@@ -279,12 +279,12 @@ export default function HurdleWall() {
 
   const renderUserName = (user: HurdleWallPost['user'], isAnonymous: boolean) => {
     if (isAnonymous) {
-      return <span className="text-black font-medium">Anonymous</span>;
+      return <span className="text-white font-medium">Anonymous</span>;
     }
     
     return (
       <Link href={`/users/${user.id}`}>
-        <span className="text-black font-medium hover:text-ministry-gold cursor-pointer transition-colors">
+        <span className="text-white font-medium hover:text-ministry-gold-exact cursor-pointer transition-colors">
           {user.firstName} {user.lastName}
         </span>
       </Link>
@@ -463,23 +463,19 @@ export default function HurdleWall() {
             </Card>
           ) : (
             posts.map((post) => (
-              <Card key={post.id} className="bg-ministry-gold-exact">
+              <Card key={post.id} className="bg-black border-2 border-black">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         {renderUserName(post.user, post.isAnonymous)}
                         <Badge 
-                          variant={post.postType === 'prayer_request' ? 'default' : 'secondary'}
-                          className={post.postType === 'prayer_request' 
-                            ? 'bg-blue-600 text-white' 
-                            : 'bg-gray-700 text-gray-300'
-                          }
+                          className="bg-ministry-gold-exact text-black font-semibold"
                         >
                           {post.postType === 'prayer_request' ? 'Prayer Request' : 'Discussion'}
                         </Badge>
                       </div>
-                      <p className="text-sm text-ministry-slate">{formatTimeAgo(post.createdAt)}</p>
+                      <p className="text-sm text-gray-400">{formatTimeAgo(post.createdAt)}</p>
                     </div>
                     {currentUser?.id === post.userId && (
                       <Button
@@ -495,9 +491,9 @@ export default function HurdleWall() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-black leading-relaxed">{post.content}</p>
+                  <p className="text-white leading-relaxed">{post.content}</p>
                   
-                  <Separator className="bg-ministry-steel/30" />
+                  <Separator className="bg-gray-700" />
                   
                   <div className="flex items-center gap-4">
                     {post.postType === 'prayer_request' ? (
@@ -507,8 +503,8 @@ export default function HurdleWall() {
                         onClick={() => handlePrayer(post.id, post.userHasPrayed)}
                         className={`flex items-center gap-2 ${
                           post.userHasPrayed 
-                            ? 'text-red-400 hover:text-red-300' 
-                            : 'text-gray-400 hover:text-red-400'
+                            ? 'text-ministry-gold-exact hover:text-yellow-300' 
+                            : 'text-gray-400 hover:text-ministry-gold-exact'
                         }`}
                         disabled={prayerMutation.isPending}
                       >
@@ -520,7 +516,7 @@ export default function HurdleWall() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
-                        className="flex items-center gap-2 text-ministry-slate hover:text-black"
+                        className="flex items-center gap-2 text-gray-400 hover:text-white"
                       >
                         <MessageSquare className="h-4 w-4" />
                         {post.replyCount} {post.replyCount === 1 ? 'Reply' : 'Replies'}
@@ -530,19 +526,19 @@ export default function HurdleWall() {
 
                   {/* Reply Section for Discussions */}
                   {post.postType === 'discussion' && expandedPost === post.id && (
-                    <div className="space-y-4 pt-4 border-t border-ministry-steel/30">
+                    <div className="space-y-4 pt-4 border-t border-gray-700">
                       {/* Existing Replies */}
                       {post.replies && post.replies.length > 0 && (
                         <div className="space-y-3">
-                          <h4 className="text-black font-medium">Replies</h4>
+                          <h4 className="text-white font-medium">Replies</h4>
                           {post.replies.map((reply) => (
-                            <div key={reply.id} className="bg-ministry-gold-exact/10 rounded-lg p-3 border-l-2 border-ministry-gold">
+                            <div key={reply.id} className="bg-gray-800 rounded-lg p-3 border-l-2 border-ministry-gold-exact">
                               <div className="flex items-start justify-between mb-2">
                                 <span className="text-sm">
                                   {renderUserName(reply.user, reply.isAnonymous)}
                                 </span>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-ministry-slate text-xs">
+                                  <span className="text-gray-400 text-xs">
                                     {formatTimeAgo(reply.createdAt)}
                                   </span>
                                   {currentUser?.id === reply.userId && (
@@ -558,7 +554,7 @@ export default function HurdleWall() {
                                   )}
                                 </div>
                               </div>
-                              <p className="text-black text-sm leading-relaxed">{reply.content}</p>
+                              <p className="text-white text-sm leading-relaxed">{reply.content}</p>
                             </div>
                           ))}
                         </div>
@@ -573,13 +569,13 @@ export default function HurdleWall() {
                             ...prev,
                             [post.id]: e.target.value
                           }))}
-                          className=""
+                          className="bg-gray-800 text-white border-gray-700"
                         />
                         <Button
                           onClick={() => handleCreateReply(post.id)}
                           disabled={createReplyMutation.isPending || !replyContent[post.id]?.trim()}
                           size="sm"
-                          className="bg-ministry-navy hover:bg-ministry-charcoal text-white"
+                          className="bg-ministry-gold-exact text-black hover:bg-yellow-400"
                         >
                           <Send className="h-4 w-4 mr-2" />
                           Reply
