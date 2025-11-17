@@ -112,19 +112,23 @@
 
 /* Exact hex color overrides for ministry gold */
 .bg-ministry-gold-exact {
-  background-color: #FBD000 !important;
+  background-color: #FCD000 !important;
+}
+
+.text-ministry-gold-exact {
+  color: #FCD000 !important;
 }
 
 .bg-ministry-gold-exact\/10 {
-  background-color: #FBD00019 !important; /* #FBD000 with 10% opacity */
+  background-color: #FCD00019 !important; /* #FCD000 with 10% opacity */
 }
 
 .bg-ministry-gold-exact\/20 {
-  background-color: #FBD000 !important; /* #FBD000 with 100% opacity (full color) */
+  background-color: #FCD000 !important; /* #FCD000 with 100% opacity (full color) */
 }
 
 .bg-ministry-gold-exact\/30 {
-  background-color: #FBD0004D !important; /* #FBD000 with 30% opacity */
+  background-color: #FCD0004D !important; /* #FCD000 with 30% opacity */
 }
 
 /* Mobile viewport fixes for keyboards */
