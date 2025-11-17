@@ -480,7 +480,7 @@ export default function Home() {
                 
                 <Button 
                   onClick={() => setShowFullDevotional(true)}
-                  className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700"
+                  className="w-full bg-black text-white py-3 rounded-xl font-medium hover:bg-gray-900"
                   data-testid="button-read-devotional"
                 >
                   Read Today's Devotional
