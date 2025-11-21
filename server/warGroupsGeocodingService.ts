@@ -1,9 +1,7 @@
 import { db } from "./db";
 import * as schema from "@shared/schema";
-import { eq, or, isNull } from "drizzle-orm";
-
-// In-memory cache for geocoded locations
-const geocodeCache = new Map<string, { lat: number; lng: number }>();
+import { eq, or, and, isNull, sql } from "drizzle-orm";
+import { geocodeLocation } from "./warGroupsService";
 
 // Service to automatically geocode war groups missing coordinates
 class WarGroupsGeocodingService {
@@ -11,8 +9,9 @@ class WarGroupsGeocodingService {
   private isRunning = false;
   private isProcessing = false;
 
-  // Check every 2 hours for groups needing geocoding
-  private readonly CHECK_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+  // Check every 2 minutes for groups needing geocoding (fast iteration for new groups)
+  private readonly CHECK_INTERVAL = 2 * 60 * 1000; // 2 minutes in milliseconds
+  private readonly MAX_FAILURE_COUNT = 5; // Stop retrying after 5 failures
 
   start() {
     if (this.isRunning) {
@@ -33,7 +32,7 @@ class WarGroupsGeocodingService {
       this.geocodeAllGroups();
     }, this.CHECK_INTERVAL);
 
-    console.log(`War Groups geocoding service started - checking every ${this.CHECK_INTERVAL / 1000 / 60 / 60} hours`);
+    console.log(`War Groups geocoding service started - checking every ${this.CHECK_INTERVAL / 1000 / 60} minutes`);
   }
 
   stop() {
@@ -44,55 +43,6 @@ class WarGroupsGeocodingService {
     this.isRunning = false;
     this.isProcessing = false;
     console.log('War Groups geocoding service stopped');
-  }
-
-  private async geocodeLocation(city: string, state: string): Promise<{ lat: number; lng: number } | null> {
-    const cacheKey = `${city.toLowerCase()},${state.toLowerCase()}`;
-    
-    // Check cache first
-    if (geocodeCache.has(cacheKey)) {
-      return geocodeCache.get(cacheKey)!;
-    }
-    
-    try {
-      // Use OpenStreetMap Nominatim API (free, no API key required)
-      const query = encodeURIComponent(`${city}, ${state}, USA`);
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`,
-        {
-          headers: {
-            'User-Agent': 'ManUpGodsWay/1.0'
-          }
-        }
-      );
-      
-      if (!response.ok) {
-        console.error(`Geocoding failed for ${city}, ${state}`);
-        return null;
-      }
-      
-      const data = await response.json();
-      
-      if (data && data.length > 0) {
-        const coords = {
-          lat: parseFloat(data[0].lat),
-          lng: parseFloat(data[0].lon)
-        };
-        
-        // Cache the result
-        geocodeCache.set(cacheKey, coords);
-        
-        // Add a delay to respect Nominatim's usage policy (max 1 req/sec)
-        await new Promise(resolve => setTimeout(resolve, 1100));
-        
-        return coords;
-      }
-      
-      return null;
-    } catch (error) {
-      console.error(`Error geocoding ${city}, ${state}:`, error);
-      return null;
-    }
   }
 
   private async geocodeAllGroups() {
@@ -106,13 +56,16 @@ class WarGroupsGeocodingService {
     try {
       console.log('Checking for war groups that need geocoding...');
       
-      // Get all active, licensed groups without coordinates
+      // Get all groups that need geocoding (explicit flag) and haven't exceeded max failures
       const groupsNeedingGeocode = await db.select()
         .from(schema.warGroups)
         .where(
-          or(
-            isNull(schema.warGroups.latitude),
-            isNull(schema.warGroups.longitude)
+          and(
+            eq(schema.warGroups.needsGeocode, true),
+            or(
+              isNull(schema.warGroups.geocodeFailureCount),
+              sql`${schema.warGroups.geocodeFailureCount} < ${this.MAX_FAILURE_COUNT}`
+            )
           )
         );
       
@@ -132,22 +85,43 @@ class WarGroupsGeocodingService {
         try {
           console.log(`Geocoding group "${group.name}" in ${group.city}, ${group.state}...`);
           
-          const coords = await this.geocodeLocation(group.city, group.state);
+          const coords = await geocodeLocation(group.city, group.state);
+          
+          // Add delay to respect Nominatim's 1 req/sec limit
+          await new Promise(resolve => setTimeout(resolve, 1100));
           
           if (coords) {
-            // Update the database with the geocoded coordinates
+            // Update with coordinates, mark as geocoded, reset failure count
             await db.update(schema.warGroups)
               .set({
                 latitude: coords.lat,
-                longitude: coords.lng
+                longitude: coords.lng,
+                needsGeocode: false,
+                geocodeFailureCount: 0,
+                lastGeocodeAttempt: new Date()
               })
               .where(eq(schema.warGroups.id, group.id));
             
             successCount++;
             console.log(`✓ Successfully geocoded "${group.name}": ${coords.lat}, ${coords.lng}`);
           } else {
+            // Increment failure count
+            const currentFailures = group.geocodeFailureCount || 0;
+            const newFailureCount = currentFailures + 1;
+            
+            await db.update(schema.warGroups)
+              .set({
+                geocodeFailureCount: newFailureCount,
+                lastGeocodeAttempt: new Date()
+              })
+              .where(eq(schema.warGroups.id, group.id));
+            
             failCount++;
-            console.error(`✗ Failed to geocode "${group.name}" in ${group.city}, ${group.state}`);
+            if (newFailureCount >= this.MAX_FAILURE_COUNT) {
+              console.error(`✗ PERMANENT FAILURE: "${group.name}" in ${group.city}, ${group.state} - Max retries (${this.MAX_FAILURE_COUNT}) reached`);
+            } else {
+              console.error(`✗ Failed to geocode "${group.name}" in ${group.city}, ${group.state} (attempt ${newFailureCount}/${this.MAX_FAILURE_COUNT})`);
+            }
           }
         } catch (error) {
           failCount++;
