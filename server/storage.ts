@@ -474,8 +474,8 @@ export interface IStorage {
   updatePlanReminder(id: string, updates: Partial<InsertFitnessPlanReminder>): Promise<FitnessPlanReminder>;
   removePlanReminder(id: string): Promise<void>;
   getActiveReminders(): Promise<(FitnessPlanReminder & { plan: { name: string; userId: string } })[]>;
-  getDueFitnessReminders(dayOfWeek: number, currentTime: string): Promise<Array<FitnessPlanReminder & { plan: FitnessPlan }>>;
-  getTodayFitnessPlanExercises(planId: string, dayOfWeek: number): Promise<FitnessPlanExercise[]>;
+  getDueFitnessReminders(dayOfWeek: string, currentTime: string): Promise<Array<FitnessPlanReminder & { plan: FitnessPlan }>>;
+  getTodayFitnessPlanExercises(planId: string, dayOfWeek: string): Promise<FitnessPlanExercise[]>;
   markFitnessReminderSent(reminderId: string): Promise<void>;
   
   // Exercise completion operations for weekly progression
@@ -4712,45 +4712,40 @@ export class DatabaseStorage implements IStorage {
       .where(eq(fitnessPlanReminders.isActive, true));
   }
 
-  async getDueFitnessReminders(dayOfWeek: number, currentTime: string): Promise<Array<FitnessPlanReminder & { plan: FitnessPlan }>> {
-    const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+  async getDueFitnessReminders(dayOfWeek: string, currentTime: string): Promise<Array<FitnessPlanReminder & { plan: FitnessPlan }>> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of day
     
-    return await db
-      .select({
-        id: fitnessPlanReminders.id,
-        planId: fitnessPlanReminders.planId,
-        dayOfWeek: fitnessPlanReminders.dayOfWeek,
-        time: fitnessPlanReminders.time,
-        isActive: fitnessPlanReminders.isActive,
-        lastSent: fitnessPlanReminders.lastSent,
-        createdAt: fitnessPlanReminders.createdAt,
-        plan: {
-          id: fitnessPlans.id,
-          name: fitnessPlans.name,
-          description: fitnessPlans.description,
-          userId: fitnessPlans.userId,
-          visibility: fitnessPlans.visibility,
-          tags: fitnessPlans.tags,
-          createdAt: fitnessPlans.createdAt,
-          updatedAt: fitnessPlans.updatedAt
-        }
-      })
+    const results = await db
+      .select()
       .from(fitnessPlanReminders)
       .innerJoin(fitnessPlans, eq(fitnessPlanReminders.planId, fitnessPlans.id))
       .where(
         and(
           eq(fitnessPlanReminders.isActive, true),
           eq(fitnessPlanReminders.dayOfWeek, dayOfWeek),
-          eq(fitnessPlanReminders.time, currentTime),
-          or(
-            isNull(fitnessPlanReminders.lastSent),
-            ne(fitnessPlanReminders.lastSent, today)
-          )
+          eq(fitnessPlanReminders.time, currentTime)
         )
       );
+    
+    // Filter in-memory to avoid toISOString errors
+    const filtered = results.filter(r => {
+      const reminder = r.fitness_plan_reminders;
+      if (!reminder.lastSent) return true;
+      
+      const lastSentDate = new Date(reminder.lastSent);
+      lastSentDate.setHours(0, 0, 0, 0);
+      
+      return lastSentDate.getTime() < today.getTime();
+    });
+    
+    return filtered.map(r => ({
+      ...r.fitness_plan_reminders,
+      plan: r.fitness_plans
+    })) as Array<FitnessPlanReminder & { plan: FitnessPlan }>;
   }
 
-  async getTodayFitnessPlanExercises(planId: string, dayOfWeek: number): Promise<FitnessPlanExercise[]> {
+  async getTodayFitnessPlanExercises(planId: string, dayOfWeek: string): Promise<FitnessPlanExercise[]> {
     return await db
       .select()
       .from(fitnessPlanExercises)

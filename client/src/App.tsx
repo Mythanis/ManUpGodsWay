@@ -33,6 +33,8 @@ import NotificationPreferences from "@/pages/notification-preferences";
 import MoreManUp from "@/pages/more-man-up";
 import Discipleship from "@/pages/discipleship";
 import HurdleWall from "@/pages/hurdle-wall";
+import WarGroups from "@/pages/war-groups";
+import WarGroupDetail from "@/pages/war-group-detail";
 import Purchase from "@/pages/purchase";
 import Bible from "@/pages/bible";
 import NotFound from "@/pages/not-found";
@@ -120,6 +122,8 @@ function Router() {
             <Route path="/notification-preferences" component={NotificationPreferences} />
             <Route path="/discipleship" component={Discipleship} />
             <Route path="/hurdle-wall" component={HurdleWall} />
+            <Route path="/war-groups" component={WarGroups} />
+            <Route path="/war-groups/:id" component={WarGroupDetail} />
             <Route path="/purchase" component={Purchase} />
             <Route path="/purchase/:studyId" component={Purchase} />
             <Route path="/bible" component={Bible} />

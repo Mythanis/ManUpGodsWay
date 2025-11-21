@@ -1481,3 +1481,246 @@ export type InsertUserStudyResponse = z.infer<typeof insertUserStudyResponseSche
 
 export type TierPricing = typeof tierPricing.$inferSelect;
 export type InsertTierPricing = z.infer<typeof insertTierPricingSchema>;
+
+// War Groups - Local discipleship groups across USA
+export const warGroups = pgTable("war_groups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(), // "Man Up God's Way - City Name"
+  city: varchar("city").notNull(),
+  state: varchar("state").notNull(),
+  description: text("description"),
+  leaderId: varchar("leader_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  meetingInfo: text("meeting_info"), // Meeting times, location details
+  isLicensed: boolean("is_licensed").default(false), // License status
+  licenseExpiresAt: timestamp("license_expires_at"),
+  stripeLicensePaymentId: varchar("stripe_license_payment_id"), // Payment for licensing fee
+  licenseType: varchar("license_type").default("monthly"), // monthly, yearly
+  logoUrl: varchar("logo_url"), // Group-specific logo if customized
+  memberCount: integer("member_count").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_war_groups_city").on(table.city),
+  index("idx_war_groups_state").on(table.state),
+]);
+
+// War Group Members - Users belonging to groups
+export const warGroupMembers = pgTable("war_group_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").notNull().references(() => warGroups.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  status: varchar("status").default("pending"), // pending, approved, rejected
+  role: varchar("role").default("member"), // member, leader (co-leader)
+  joinedAt: timestamp("joined_at"),
+  requestedAt: timestamp("requested_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  unique().on(table.groupId, table.userId), // Prevent duplicate memberships
+  index("idx_war_group_members_group").on(table.groupId),
+  index("idx_war_group_members_user").on(table.userId),
+]);
+
+// War Group Community Posts - Group-specific discussion posts
+export const warGroupPosts = pgTable("war_group_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").notNull().references(() => warGroups.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  postType: varchar("post_type").notNull().default("discussion"), // discussion, shared_content
+  sharedContentType: varchar("shared_content_type"), // study, devotional, podcast (when shared from main app)
+  sharedContentId: varchar("shared_content_id"), // ID of shared content
+  likes: integer("likes").default(0),
+  replyCount: integer("reply_count").default(0),
+  isPinned: boolean("is_pinned").default(false), // Leader can pin important posts
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_war_group_posts_group").on(table.groupId),
+]);
+
+// War Group Post Replies
+export const warGroupPostReplies = pgTable("war_group_post_replies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull().references(() => warGroupPosts.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  likes: integer("likes").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// War Group War Room Posts - Private group war room
+export const warGroupWarRoomPosts = pgTable("war_group_war_room_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").notNull().references(() => warGroups.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  isAnonymous: boolean("is_anonymous").default(false),
+  postType: varchar("post_type").notNull().default("discussion"), // discussion, prayer_request
+  prayerCount: integer("prayer_count").default(0),
+  replyCount: integer("reply_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_war_group_war_room_group").on(table.groupId),
+]);
+
+// War Group War Room Replies
+export const warGroupWarRoomReplies = pgTable("war_group_war_room_replies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull().references(() => warGroupWarRoomPosts.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  isAnonymous: boolean("is_anonymous").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// War Group War Room Prayers
+export const warGroupWarRoomPrayers = pgTable("war_group_war_room_prayers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull().references(() => warGroupWarRoomPosts.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.postId, table.userId), // Prevent duplicate prayers
+]);
+
+// War Group Challenges - Leader creates challenges for group
+export const warGroupChallenges = pgTable("war_group_challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").notNull().references(() => warGroups.id, { onDelete: 'cascade' }),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  title: varchar("title").notNull(),
+  description: text("description").notNull(),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  category: varchar("category").default("spiritual"), // spiritual, fitness, accountability, scripture
+  participantCount: integer("participant_count").default(0),
+  completionCount: integer("completion_count").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_war_group_challenges_group").on(table.groupId),
+]);
+
+// War Group Challenge Participants
+export const warGroupChallengeParticipants = pgTable("war_group_challenge_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  challengeId: varchar("challenge_id").notNull().references(() => warGroupChallenges.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  status: varchar("status").default("active"), // active, completed, dropped
+  progress: integer("progress").default(0), // Percentage or days completed
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  unique().on(table.challengeId, table.userId), // Prevent duplicate participants
+]);
+
+// War Group Announcements - Leader announcements to group
+export const warGroupAnnouncements = pgTable("war_group_announcements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").notNull().references(() => warGroups.id, { onDelete: 'cascade' }),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  title: varchar("title").notNull(),
+  content: text("content").notNull(),
+  isPinned: boolean("is_pinned").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_war_group_announcements_group").on(table.groupId),
+]);
+
+// Insert schemas for War Groups
+export const insertWarGroupSchema = createInsertSchema(warGroups).omit({
+  id: true,
+  memberCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWarGroupMemberSchema = createInsertSchema(warGroupMembers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWarGroupPostSchema = createInsertSchema(warGroupPosts).omit({
+  id: true,
+  likes: true,
+  replyCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWarGroupPostReplySchema = createInsertSchema(warGroupPostReplies).omit({
+  id: true,
+  likes: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWarGroupWarRoomPostSchema = createInsertSchema(warGroupWarRoomPosts).omit({
+  id: true,
+  prayerCount: true,
+  replyCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWarGroupWarRoomReplySchema = createInsertSchema(warGroupWarRoomReplies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWarGroupWarRoomPrayerSchema = createInsertSchema(warGroupWarRoomPrayers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertWarGroupChallengeSchema = createInsertSchema(warGroupChallenges).omit({
+  id: true,
+  participantCount: true,
+  completionCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWarGroupChallengeParticipantSchema = createInsertSchema(warGroupChallengeParticipants).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWarGroupAnnouncementSchema = createInsertSchema(warGroupAnnouncements).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Types for War Groups
+export type WarGroup = typeof warGroups.$inferSelect;
+export type InsertWarGroup = z.infer<typeof insertWarGroupSchema>;
+export type WarGroupMember = typeof warGroupMembers.$inferSelect;
+export type InsertWarGroupMember = z.infer<typeof insertWarGroupMemberSchema>;
+export type WarGroupPost = typeof warGroupPosts.$inferSelect;
+export type InsertWarGroupPost = z.infer<typeof insertWarGroupPostSchema>;
+export type WarGroupPostReply = typeof warGroupPostReplies.$inferSelect;
+export type InsertWarGroupPostReply = z.infer<typeof insertWarGroupPostReplySchema>;
+export type WarGroupWarRoomPost = typeof warGroupWarRoomPosts.$inferSelect;
+export type InsertWarGroupWarRoomPost = z.infer<typeof insertWarGroupWarRoomPostSchema>;
+export type WarGroupWarRoomReply = typeof warGroupWarRoomReplies.$inferSelect;
+export type InsertWarGroupWarRoomReply = z.infer<typeof insertWarGroupWarRoomReplySchema>;
+export type WarGroupWarRoomPrayer = typeof warGroupWarRoomPrayers.$inferSelect;
+export type InsertWarGroupWarRoomPrayer = z.infer<typeof insertWarGroupWarRoomPrayerSchema>;
+export type WarGroupChallenge = typeof warGroupChallenges.$inferSelect;
+export type InsertWarGroupChallenge = z.infer<typeof insertWarGroupChallengeSchema>;
+export type WarGroupChallengeParticipant = typeof warGroupChallengeParticipants.$inferSelect;
+export type InsertWarGroupChallengeParticipant = z.infer<typeof insertWarGroupChallengeParticipantSchema>;
+export type WarGroupAnnouncement = typeof warGroupAnnouncements.$inferSelect;
+export type InsertWarGroupAnnouncement = z.infer<typeof insertWarGroupAnnouncementSchema>;

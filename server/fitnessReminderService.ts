@@ -47,7 +47,10 @@ class FitnessReminderService {
       
       // Get current date and day information
       const now = new Date();
-      const currentDayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const currentDayOfWeekNum = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const currentDayOfWeek = dayNames[currentDayOfWeekNum];
+      
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
       const currentTime = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;

@@ -9,6 +9,7 @@ import { pdfToPng } from 'pdf-to-png-converter';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 import { storage } from "./storage";
+import { warGroupsService } from "./warGroupsService";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
 import * as schema from "@shared/schema";
@@ -36,7 +37,9 @@ import {
   insertEventSchema,
   insertEventRegistrationSchema,
   insertStudyEditableSectionSchema,
-  insertUserStudyResponseSchema
+  insertUserStudyResponseSchema,
+  insertWarGroupSchema,
+  insertWarGroupMemberSchema
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -6740,6 +6743,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: false,
         message: "Stripe connection failed: " + (error.message || "Unknown error")
       });
+    }
+  });
+
+  // War Groups routes
+  app.get('/api/war-groups', async (req, res) => {
+    try {
+      const { search, city, state } = req.query;
+      const groups = await warGroupsService.getAllGroups(
+        search as string | undefined,
+        city as string | undefined,
+        state as string | undefined
+      );
+      res.json(groups);
+    } catch (error) {
+      console.error('Error fetching war groups:', error);
+      res.status(500).json({ message: 'Failed to fetch war groups' });
+    }
+  });
+
+  app.get('/api/war-groups/:id', async (req, res) => {
+    try {
+      const group = await warGroupsService.getGroupById(req.params.id);
+      if (!group) {
+        return res.status(404).json({ message: 'Group not found' });
+      }
+      res.json(group);
+    } catch (error) {
+      console.error('Error fetching war group:', error);
+      res.status(500).json({ message: 'Failed to fetch war group' });
+    }
+  });
+
+  app.get('/api/war-groups/:id/membership', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groupId = req.params.id;
+      const membership = await warGroupsService.getUserGroupMembership(userId, groupId);
+      res.json(membership);
+    } catch (error) {
+      console.error('Error fetching membership:', error);
+      res.status(500).json({ message: 'Failed to fetch membership' });
+    }
+  });
+
+  app.get('/api/user/war-groups', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groups = await warGroupsService.getUserGroups(userId);
+      res.json(groups);
+    } catch (error) {
+      console.error('Error fetching user war groups:', error);
+      res.status(500).json({ message: 'Failed to fetch user war groups' });
+    }
+  });
+
+  app.post('/api/war-groups/:id/join', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groupId = req.params.id;
+      
+      const membership = await warGroupsService.requestToJoinGroup(userId, groupId);
+      res.json(membership);
+    } catch (error: any) {
+      console.error('Error requesting to join group:', error);
+      res.status(400).json({ message: error.message || 'Failed to request to join group' });
+    }
+  });
+
+  app.get('/api/war-groups/:id/members', isAuthenticated, async (req, res) => {
+    try {
+      const groupId = req.params.id;
+      const status = req.query.status as string | undefined;
+      const members = await warGroupsService.getGroupMembers(groupId, status);
+      res.json(members);
+    } catch (error) {
+      console.error('Error fetching group members:', error);
+      res.status(500).json({ message: 'Failed to fetch group members' });
+    }
+  });
+
+  app.post('/api/war-groups/:id/members/:memberId/approve', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { memberId } = req.params;
+      
+      const membership = await warGroupsService.approveMemberRequest(memberId, userId);
+      res.json(membership);
+    } catch (error: any) {
+      console.error('Error approving member:', error);
+      res.status(403).json({ message: error.message || 'Failed to approve member' });
+    }
+  });
+
+  app.delete('/api/war-groups/:id/members/:memberId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { memberId } = req.params;
+      
+      await warGroupsService.removeMember(memberId, userId);
+      res.status(204).send();
+    } catch (error: any) {
+      console.error('Error removing member:', error);
+      res.status(403).json({ message: error.message || 'Failed to remove member' });
+    }
+  });
+
+  app.put('/api/war-groups/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groupId = req.params.id;
+      const groupData = req.body;
+      
+      const updated = await warGroupsService.updateGroup(groupId, groupData, userId);
+      res.json(updated);
+    } catch (error: any) {
+      console.error('Error updating group:', error);
+      res.status(403).json({ message: error.message || 'Failed to update group' });
+    }
+  });
+
+  app.post('/api/admin/war-groups', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+      
+      const groupData = insertWarGroupSchema.parse(req.body);
+      const newGroup = await warGroupsService.createGroup(groupData);
+      res.json(newGroup);
+    } catch (error: any) {
+      console.error('Error creating war group:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid group data', errors: error.errors });
+      }
+      res.status(500).json({ message: error.message || 'Failed to create war group' });
     }
   });
 
