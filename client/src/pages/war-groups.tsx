@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, MapPin, Users, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, MapPin, Users, User, Map, List, Mail } from "lucide-react";
+
+const WarGroupsMap = lazy(() => import("@/components/WarGroupsMap"));
 
 interface WarGroup {
   id: string;
@@ -27,6 +30,7 @@ export default function WarGroups() {
   const [searchTerm, setSearchTerm] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   const { data: groups = [], isLoading } = useQuery<WarGroup[]>({
     queryKey: ['/api/war-groups', { search: searchTerm, city: cityFilter, state: stateFilter }],
@@ -154,11 +158,37 @@ export default function WarGroups() {
           </Card>
         </div>
 
-        {/* Groups List */}
+        {/* Groups List/Map */}
         <div>
-          <h2 className="text-2xl font-bold mb-4">
-            Available Groups {!isLoading && groups.length > 0 && `(${groups.length})`}
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold">
+              Available Groups {!isLoading && groups.length > 0 && `(${groups.length})`}
+            </h2>
+            {groups.length > 0 && (
+              <div className="flex gap-2">
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className={viewMode === 'list' ? 'bg-black text-white' : 'border-black text-black'}
+                  data-testid="button-view-list"
+                >
+                  <List className="h-4 w-4 mr-2" />
+                  List
+                </Button>
+                <Button
+                  variant={viewMode === 'map' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('map')}
+                  className={viewMode === 'map' ? 'bg-black text-white' : 'border-black text-black'}
+                  data-testid="button-view-map"
+                >
+                  <Map className="h-4 w-4 mr-2" />
+                  Map
+                </Button>
+              </div>
+            )}
+          </div>
           {isLoading ? (
             <div className="grid gap-4 md:grid-cols-2">
               {[1, 2, 3, 4].map((i) => (
@@ -175,13 +205,52 @@ export default function WarGroups() {
               ))}
             </div>
           ) : groups.length === 0 ? (
-            <Card className="bg-ministry-gold-exact border-2 border-black">
-              <CardContent className="text-center py-12">
-                <MapPin className="h-12 w-12 text-ministry-steel mx-auto mb-4" />
-                <p className="text-black font-semibold">No groups found in your area</p>
-                <p className="text-sm text-black mt-2">Try adjusting your search filters</p>
-              </CardContent>
-            </Card>
+            <div className="space-y-4">
+              <Card className="bg-ministry-gold-exact border-2 border-black">
+                <CardContent className="text-center py-12">
+                  <MapPin className="h-12 w-12 text-ministry-steel mx-auto mb-4" />
+                  <p className="text-black font-semibold text-lg mb-2">No groups found in your area</p>
+                  <p className="text-sm text-black">Try adjusting your search filters</p>
+                </CardContent>
+              </Card>
+              
+              {/* Start a Group Section */}
+              <Card className="bg-black border-2 border-ministry-gold-exact">
+                <CardContent className="py-8">
+                  <div className="text-center">
+                    <h3 className="text-ministry-gold-exact text-2xl font-black mb-3">
+                      Want to Start a Group in Your Area?
+                    </h3>
+                    <p className="text-white mb-6 max-w-2xl mx-auto">
+                      Be a leader in your community. Bring biblical masculinity and discipleship to the men in your area. 
+                      Licensed groups get exclusive rights to use the Man Up God's Way brand and merchandise in their city.
+                    </p>
+                    <a
+                      href="mailto:info@manupgodsway.org?subject=Start a War Group&body=I'm interested in starting a licensed Man Up God's Way war group in my area.%0D%0A%0D%0ACity:%0D%0AState:%0D%0AName:%0D%0APhone:%0D%0A%0D%0APlease send me more information about licensing requirements and getting started."
+                      className="inline-flex items-center gap-2 bg-ministry-gold-exact hover:bg-yellow-500 text-black font-bold py-3 px-6 rounded-lg transition-colors"
+                      data-testid="link-start-group"
+                    >
+                      <Mail className="h-5 w-5" />
+                      Get More Information
+                    </a>
+                    <p className="text-ministry-gold-exact text-sm mt-4">
+                      Contact: info@manupgodsway.org
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : viewMode === 'map' ? (
+            <Suspense fallback={
+              <div className="h-[500px] w-full rounded-lg overflow-hidden border-2 border-black bg-ministry-gold-exact flex items-center justify-center">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+                  <p className="text-black font-semibold">Loading map...</p>
+                </div>
+              </div>
+            }>
+              <WarGroupsMap groups={groups} />
+            </Suspense>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {groups.map((group) => (

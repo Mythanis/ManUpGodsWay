@@ -5,6 +5,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { devotionalNotificationService } from "./devotionalNotificationService";
 import { subscriptionExpirationService } from "./subscriptionExpirationService";
 import { fitnessReminderService } from "./fitnessReminderService";
+import { warGroupsGeocodingService } from "./warGroupsGeocodingService";
 
 const app = express();
 app.use(express.json());
@@ -83,5 +84,8 @@ app.use((req, res, next) => {
     
     // Start the fitness reminder service
     fitnessReminderService.start();
+    
+    // Start the war groups geocoding service
+    warGroupsGeocodingService.start();
   });
 })();

@@ -55,6 +55,8 @@ export class WarGroupsService {
       );
     }
     
+    // Return groups immediately
+    // Geocoding is handled by the background warGroupsGeocodingService
     return filteredResults.map(r => ({
       ...r.group,
       leader: r.leader
@@ -80,8 +82,12 @@ export class WarGroupsService {
       return null;
     }
     
+    const group = result[0].group;
+    
+    // Return group data
+    // Geocoding is handled by the background warGroupsGeocodingService
     return {
-      ...result[0].group,
+      ...group,
       leader: result[0].leader
     };
   }

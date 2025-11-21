@@ -11,6 +11,7 @@ import {
   decimal,
   pgEnum,
   unique,
+  real,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -1491,6 +1492,8 @@ export const warGroups = pgTable("war_groups", {
   description: text("description"),
   leaderId: varchar("leader_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   meetingInfo: text("meeting_info"), // Meeting times, location details
+  latitude: real("latitude"), // Geocoded latitude
+  longitude: real("longitude"), // Geocoded longitude
   isLicensed: boolean("is_licensed").default(false), // License status
   licenseExpiresAt: timestamp("license_expires_at"),
   stripeLicensePaymentId: varchar("stripe_license_payment_id"), // Payment for licensing fee
