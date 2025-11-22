@@ -74,6 +74,11 @@ The system supports a tiered content structure (free, premium, VIP) and category
     - Approval automatically creates war group and assigns requester as leader
     - Rejection requires reason that's stored with the request
     - Admin can view pending, approved, and rejected registrations in tabbed interface
+    - **Notifications**: When a registration is submitted:
+      - All admin users receive in-app notification with registration details
+      - Email sent to info@manupgodsway.org with complete registration information
+      - Email includes link to admin panel for review
+      - HTML sanitization prevents XSS in email content
   - **Admin Management**: Comprehensive admin interface for managing war groups including:
     - View all groups with member counts, leader info, location, and licensing status
     - Search and filter groups by name, location, or leader
