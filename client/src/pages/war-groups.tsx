@@ -1,12 +1,12 @@
 import { useState, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Users, User, Map, List, Mail } from "lucide-react";
+import { Search, MapPin, Users, User, Map, List, Mail, Plus } from "lucide-react";
 
 const WarGroupsMap = lazy(() => import("@/components/WarGroupsMap"));
 
@@ -27,6 +27,7 @@ interface WarGroup {
 }
 
 export default function WarGroups() {
+  const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
@@ -78,8 +79,20 @@ export default function WarGroups() {
       {/* Header */}
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-black mb-2 tracking-tight">War Groups</h1>
-          <p className="text-ministry-gold-exact text-sm font-semibold">Local discipleship groups across the USA</p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-black mb-2 tracking-tight">War Groups</h1>
+              <p className="text-ministry-gold-exact text-sm font-semibold">Local discipleship groups across the USA</p>
+            </div>
+            <Button
+              onClick={() => navigate('/war-groups/register')}
+              className="bg-ministry-gold-exact hover:bg-ministry-gold text-black font-semibold whitespace-nowrap"
+              data-testid="button-register-war-group"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Register a War Group
+            </Button>
+          </div>
         </div>
       </div>
 
