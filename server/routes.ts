@@ -6957,6 +6957,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const registration = await warGroupsService.createRegistration(registrationData);
+
+      // Create notifications for all admin users
+      const adminUsers = await db.select().from(schema.users).where(eq(schema.users.role, 'admin'));
+      const notificationPromises = adminUsers.map(admin => 
+        db.insert(schema.notifications).values({
+          userId: admin.id,
+          type: 'war_group_registration',
+          title: 'New War Group Registration',
+          message: `${req.user.email} has submitted a registration request for "${registration.name}" in ${registration.city}, ${registration.state}`,
+          relatedId: registration.id,
+        })
+      );
+      await Promise.all(notificationPromises);
+
       res.status(201).json(registration);
     } catch (error: any) {
       console.error('Error creating war group registration:', error);
