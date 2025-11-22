@@ -97,7 +97,20 @@ export default function WarGroupRegister() {
           <CardContent>
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit((data) => registerMutation.mutate(data))}
+                onSubmit={form.handleSubmit(
+                  (data) => {
+                    console.log('Form submitted with data:', data);
+                    registerMutation.mutate(data);
+                  },
+                  (errors) => {
+                    console.log('Form validation errors:', errors);
+                    toast({
+                      title: "Validation Error",
+                      description: "Please fill out all required fields correctly",
+                      variant: "destructive",
+                    });
+                  }
+                )}
                 className="space-y-6"
               >
                 {/* Location Section */}
