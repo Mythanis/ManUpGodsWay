@@ -1736,6 +1736,7 @@ export const insertWarGroupAnnouncementSchema = createInsertSchema(warGroupAnnou
 
 export const insertWarGroupRegistrationSchema = createInsertSchema(warGroupRegistrations).omit({
   id: true,
+  requestedBy: true,
   reviewedBy: true,
   reviewedAt: true,
   status: true,
