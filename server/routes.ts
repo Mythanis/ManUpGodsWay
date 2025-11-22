@@ -6971,6 +6971,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       await Promise.all(notificationPromises);
 
+      // Send email notification to info@manupgodsway.org
+      const { sendWarGroupRegistrationEmail } = await import('./emailService');
+      sendWarGroupRegistrationEmail(registration, req.user.email).catch(err => 
+        console.error('Failed to send registration email:', err)
+      );
+
       res.status(201).json(registration);
     } catch (error: any) {
       console.error('Error creating war group registration:', error);
