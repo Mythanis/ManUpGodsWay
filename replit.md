@@ -67,6 +67,13 @@ The system supports a tiered content structure (free, premium, VIP) and category
 - **User Engagement**: Streak tracking, prayer time system, weekly challenges with intelligent release logic and participation tracking ("I Take the Challenge" button with real-time participant counts), and a comprehensive testimony system.
 - **War Room**: Renamed from "Hurdle Wall" - A dedicated space for men to bring their battles to God and stand together in prayer. Features anonymous posting, discussion threads, and prayer request tracking with black card design, white text, and yellow badges.
 - **War Groups**: Licensed discipleship groups named "Man Up God's Way - [City Name]" with city-based discovery, interactive map view with geocoding (OpenStreetMap Nominatim API), group leaders, member management, and admin oversight. Includes synchronous geocoding on group creation/updates with background retry service for failed attempts.
+  - **Registration & Approval Workflow**: Users can submit registration requests to start new war groups:
+    - Registration form collects: city/state, description, meeting info, contact details, leadership experience, and motivation
+    - Auto-formatted group name: "Man Up God's Way - [City]"
+    - Admin review process with approve/reject actions
+    - Approval automatically creates war group and assigns requester as leader
+    - Rejection requires reason that's stored with the request
+    - Admin can view pending, approved, and rejected registrations in tabbed interface
   - **Admin Management**: Comprehensive admin interface for managing war groups including:
     - View all groups with member counts, leader info, location, and licensing status
     - Search and filter groups by name, location, or leader
@@ -74,6 +81,7 @@ The system supports a tiered content structure (free, premium, VIP) and category
     - View group member rosters with profile information
     - Remove members from groups (with confirmation)
     - User search functionality for leader selection
+    - Registration management with pending/approved/rejected tabs
 - **Fitness Integration**: Local exercise database with filtering and search capabilities for creating fitness plans.
 
 # External Dependencies

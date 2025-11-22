@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UploadStudyForm from "@/components/admin/upload-study-form";
 import StudyManagement from "@/components/admin/study-management";
 import UserManagement from "@/components/admin/user-management";
@@ -27,6 +28,7 @@ import EventManagement from "@/components/admin/event-management";
 import TierPricingManagement from "@/components/admin/tier-pricing-management";
 import CarouselManagement from "@/components/admin/carousel-management";
 import WarGroupsManagement from "@/components/admin/war-groups-management";
+import WarGroupRegistrationsManagement from "@/components/admin/war-group-registrations-management";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield } from "lucide-react";
 
@@ -752,8 +754,19 @@ export default function Admin() {
           )}
 
           {activeTab === "war-groups" && (
-            <div>
-              <WarGroupsManagement />
+            <div className="space-y-6">
+              <Tabs defaultValue="groups" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="groups">Manage Groups</TabsTrigger>
+                  <TabsTrigger value="registrations">Registrations</TabsTrigger>
+                </TabsList>
+                <TabsContent value="groups">
+                  <WarGroupsManagement />
+                </TabsContent>
+                <TabsContent value="registrations">
+                  <WarGroupRegistrationsManagement />
+                </TabsContent>
+              </Tabs>
             </div>
           )}
 
