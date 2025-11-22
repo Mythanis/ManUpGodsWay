@@ -6932,6 +6932,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/admin/war-groups/:id/members', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const members = await warGroupsService.getGroupMembers(id);
+      res.json(members);
+    } catch (error: any) {
+      console.error('Error fetching group members:', error);
+      res.status(500).json({ message: error.message || 'Failed to fetch group members' });
+    }
+  });
+
   // WebSocket server for real-time notifications
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   

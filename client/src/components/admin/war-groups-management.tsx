@@ -85,12 +85,12 @@ export default function WarGroupsManagement() {
   });
 
   const { data: users = [] } = useQuery<User[]>({
-    queryKey: ["/api/admin/users", userSearchQuery],
+    queryKey: [`/api/admin/users?search=${userSearchQuery}`],
     enabled: showChangeLeaderDialog,
   });
 
   const { data: members = [] } = useQuery<GroupMember[]>({
-    queryKey: ["/api/war-groups", selectedGroup?.id, "members"],
+    queryKey: [`/api/admin/war-groups/${selectedGroup?.id}/members`],
     enabled: showMembersDialog && !!selectedGroup,
   });
 
@@ -134,7 +134,7 @@ export default function WarGroupsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/war-groups"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/war-groups", selectedGroup?.id, "members"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/war-groups/${selectedGroup?.id}/members`] });
       toast({
         title: "Member Removed",
         description: "The member has been removed from the group.",
