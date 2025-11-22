@@ -509,6 +509,133 @@ export class WarGroupsService {
 
     return results;
   }
+
+  // War Group Registration Methods
+  async createRegistration(data: schema.InsertWarGroupRegistration) {
+    const [registration] = await db.insert(schema.warGroupRegistrations)
+      .values(data)
+      .returning();
+    return registration;
+  }
+
+  async getAllRegistrations(status?: string) {
+    let query = db.select({
+      registration: schema.warGroupRegistrations,
+      requester: {
+        id: schema.users.id,
+        firstName: schema.users.firstName,
+        lastName: schema.users.lastName,
+        email: schema.users.email,
+        profileImageUrl: schema.users.profileImageUrl
+      }
+    })
+    .from(schema.warGroupRegistrations)
+    .leftJoin(
+      schema.users,
+      eq(schema.warGroupRegistrations.requestedBy, schema.users.id)
+    )
+    .orderBy(desc(schema.warGroupRegistrations.createdAt));
+
+    if (status) {
+      const results = await query;
+      return results.filter(r => r.registration.status === status);
+    }
+
+    return query;
+  }
+
+  async approveRegistration(registrationId: string, reviewerId: string) {
+    const [registration] = await db.select()
+      .from(schema.warGroupRegistrations)
+      .where(eq(schema.warGroupRegistrations.id, registrationId))
+      .limit(1);
+
+    if (!registration) {
+      throw new Error('Registration not found');
+    }
+
+    if (registration.status !== 'pending') {
+      throw new Error('Registration has already been reviewed');
+    }
+
+    // Create the war group
+    const [newGroup] = await db.insert(schema.warGroups)
+      .values({
+        name: registration.name,
+        city: registration.city,
+        state: registration.state,
+        description: registration.description,
+        meetingInfo: registration.meetingInfo,
+        leaderId: registration.requestedBy,
+        isActive: true,
+        isLicensed: false,
+        needsGeocode: true
+      })
+      .returning();
+
+    // Create leader membership
+    await db.insert(schema.warGroupMembers).values({
+      groupId: newGroup.id,
+      userId: registration.requestedBy,
+      role: 'leader',
+      status: 'approved',
+      joinedAt: new Date()
+    });
+
+    // Try to geocode synchronously
+    try {
+      const coords = await geocodeLocation(newGroup.city, newGroup.state);
+      if (coords) {
+        await db.update(schema.warGroups)
+          .set({
+            latitude: coords.lat,
+            longitude: coords.lng,
+            needsGeocode: false,
+            geocodeFailureCount: 0
+          })
+          .where(eq(schema.warGroups.id, newGroup.id));
+      }
+    } catch (error) {
+      console.error('Geocoding failed during registration approval:', error);
+    }
+
+    // Update registration status
+    await db.update(schema.warGroupRegistrations)
+      .set({
+        status: 'approved',
+        reviewedBy: reviewerId,
+        reviewedAt: new Date()
+      })
+      .where(eq(schema.warGroupRegistrations.id, registrationId));
+
+    return newGroup;
+  }
+
+  async rejectRegistration(registrationId: string, reviewerId: string, reason: string) {
+    const [registration] = await db.select()
+      .from(schema.warGroupRegistrations)
+      .where(eq(schema.warGroupRegistrations.id, registrationId))
+      .limit(1);
+
+    if (!registration) {
+      throw new Error('Registration not found');
+    }
+
+    if (registration.status !== 'pending') {
+      throw new Error('Registration has already been reviewed');
+    }
+
+    await db.update(schema.warGroupRegistrations)
+      .set({
+        status: 'rejected',
+        reviewedBy: reviewerId,
+        reviewedAt: new Date(),
+        rejectionReason: reason
+      })
+      .where(eq(schema.warGroupRegistrations.id, registrationId));
+
+    return { success: true };
+  }
 }
 
 export const warGroupsService = new WarGroupsService();

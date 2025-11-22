@@ -6943,6 +6943,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // War Group Registration Routes
+  app.post('/api/war-groups/register', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const registrationData = schema.insertWarGroupRegistrationSchema.parse({
+        ...req.body,
+        requestedBy: userId
+      });
+
+      const registration = await warGroupsService.createRegistration(registrationData);
+      res.status(201).json(registration);
+    } catch (error: any) {
+      console.error('Error creating war group registration:', error);
+      res.status(500).json({ message: error.message || 'Failed to create registration' });
+    }
+  });
+
+  app.get('/api/admin/war-groups/registrations', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { status } = req.query;
+      const registrations = await warGroupsService.getAllRegistrations(status as string);
+      res.json(registrations);
+    } catch (error: any) {
+      console.error('Error fetching registrations:', error);
+      res.status(500).json({ message: error.message || 'Failed to fetch registrations' });
+    }
+  });
+
+  app.post('/api/admin/war-groups/registrations/:id/approve', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const reviewerId = req.user?.id;
+
+      if (!reviewerId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const newGroup = await warGroupsService.approveRegistration(id, reviewerId);
+      res.json(newGroup);
+    } catch (error: any) {
+      console.error('Error approving registration:', error);
+      res.status(500).json({ message: error.message || 'Failed to approve registration' });
+    }
+  });
+
+  app.post('/api/admin/war-groups/registrations/:id/reject', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+      const reviewerId = req.user?.id;
+
+      if (!reviewerId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      if (!reason) {
+        return res.status(400).json({ message: 'Rejection reason is required' });
+      }
+
+      await warGroupsService.rejectRegistration(id, reviewerId, reason);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error rejecting registration:', error);
+      res.status(500).json({ message: error.message || 'Failed to reject registration' });
+    }
+  });
+
   // WebSocket server for real-time notifications
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
