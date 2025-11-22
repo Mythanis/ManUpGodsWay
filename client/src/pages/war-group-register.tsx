@@ -165,7 +165,7 @@ export default function WarGroupRegister() {
                           <Input
                             {...field}
                             readOnly
-                            className="bg-charcoal/50 border-slate text-slate-light cursor-not-allowed"
+                            className="bg-charcoal/50 border-slate text-black cursor-not-allowed"
                             data-testid="input-name"
                           />
                         </FormControl>
