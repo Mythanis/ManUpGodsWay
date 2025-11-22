@@ -1557,6 +1557,31 @@ export const warGroupPostReplies = pgTable("war_group_post_replies", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// War Group Registrations - Pending registration requests
+export const warGroupRegistrations = pgTable("war_group_registrations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requestedBy: varchar("requested_by").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar("name").notNull(), // "Man Up God's Way - City Name"
+  city: varchar("city").notNull(),
+  state: varchar("state").notNull(),
+  description: text("description"),
+  meetingInfo: text("meeting_info"), // Proposed meeting times, location details
+  contactEmail: varchar("contact_email").notNull(),
+  contactPhone: varchar("contact_phone"),
+  leadershipExperience: text("leadership_experience"), // Background/experience
+  motivation: text("motivation"), // Why they want to start a group
+  status: varchar("status").default("pending"), // pending, approved, rejected
+  reviewedBy: varchar("reviewed_by").references(() => users.id), // Admin who reviewed
+  reviewedAt: timestamp("reviewed_at"),
+  rejectionReason: text("rejection_reason"),
+  notes: text("notes"), // Admin notes
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_war_group_registrations_status").on(table.status),
+  index("idx_war_group_registrations_requester").on(table.requestedBy),
+]);
+
 // War Group War Room Posts - Private group war room
 export const warGroupWarRoomPosts = pgTable("war_group_war_room_posts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1709,6 +1734,15 @@ export const insertWarGroupAnnouncementSchema = createInsertSchema(warGroupAnnou
   updatedAt: true,
 });
 
+export const insertWarGroupRegistrationSchema = createInsertSchema(warGroupRegistrations).omit({
+  id: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types for War Groups
 export type WarGroup = typeof warGroups.$inferSelect;
 export type InsertWarGroup = z.infer<typeof insertWarGroupSchema>;
@@ -1730,3 +1764,5 @@ export type WarGroupChallengeParticipant = typeof warGroupChallengeParticipants.
 export type InsertWarGroupChallengeParticipant = z.infer<typeof insertWarGroupChallengeParticipantSchema>;
 export type WarGroupAnnouncement = typeof warGroupAnnouncements.$inferSelect;
 export type InsertWarGroupAnnouncement = z.infer<typeof insertWarGroupAnnouncementSchema>;
+export type WarGroupRegistration = typeof warGroupRegistrations.$inferSelect;
+export type InsertWarGroupRegistration = z.infer<typeof insertWarGroupRegistrationSchema>;
