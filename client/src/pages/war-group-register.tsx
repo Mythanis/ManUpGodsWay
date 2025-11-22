@@ -124,7 +124,7 @@ export default function WarGroupRegister() {
                             {...field}
                             onChange={(e) => handleCityChange(e.target.value)}
                             placeholder="e.g., Dallas"
-                            className="bg-charcoal border-slate text-white"
+                            className="bg-charcoal border-slate text-black"
                             data-testid="input-city"
                           />
                         </FormControl>
@@ -143,7 +143,7 @@ export default function WarGroupRegister() {
                           <Input
                             {...field}
                             placeholder="e.g., TX"
-                            className="bg-charcoal border-slate text-white"
+                            className="bg-charcoal border-slate text-black"
                             data-testid="input-state"
                           />
                         </FormControl>
@@ -195,7 +195,7 @@ export default function WarGroupRegister() {
                           <Textarea
                             {...field}
                             placeholder="Describe your vision for this war group..."
-                            className="bg-charcoal border-slate text-white min-h-[100px]"
+                            className="bg-charcoal border-slate text-black min-h-[100px]"
                             data-testid="input-description"
                           />
                         </FormControl>
@@ -214,7 +214,7 @@ export default function WarGroupRegister() {
                           <Textarea
                             {...field}
                             placeholder="When and where do you plan to meet? (e.g., Every Tuesday 7pm at Community Center)"
-                            className="bg-charcoal border-slate text-white min-h-[80px]"
+                            className="bg-charcoal border-slate text-black min-h-[80px]"
                             data-testid="input-meeting-info"
                           />
                         </FormControl>
@@ -242,7 +242,7 @@ export default function WarGroupRegister() {
                             {...field}
                             type="email"
                             placeholder="your@email.com"
-                            className="bg-charcoal border-slate text-white"
+                            className="bg-charcoal border-slate text-black"
                             data-testid="input-contact-email"
                           />
                         </FormControl>
@@ -262,7 +262,7 @@ export default function WarGroupRegister() {
                             {...field}
                             type="tel"
                             placeholder="(555) 123-4567"
-                            className="bg-charcoal border-slate text-white"
+                            className="bg-charcoal border-slate text-black"
                             data-testid="input-contact-phone"
                           />
                         </FormControl>
@@ -289,7 +289,7 @@ export default function WarGroupRegister() {
                           <Textarea
                             {...field}
                             placeholder="Share your leadership background and experience in ministry or discipleship..."
-                            className="bg-charcoal border-slate text-white min-h-[100px]"
+                            className="bg-charcoal border-slate text-black min-h-[100px]"
                             data-testid="input-leadership-experience"
                           />
                         </FormControl>
@@ -308,7 +308,7 @@ export default function WarGroupRegister() {
                           <Textarea
                             {...field}
                             placeholder="What's your vision and motivation for leading this group?"
-                            className="bg-charcoal border-slate text-white min-h-[100px]"
+                            className="bg-charcoal border-slate text-black min-h-[100px]"
                             data-testid="input-motivation"
                           />
                         </FormControl>
