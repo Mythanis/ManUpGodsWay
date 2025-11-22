@@ -42,13 +42,10 @@ export default function WarGroupRegister() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await fetch("/api/war-groups/register", {
+      return await apiRequest("/api/war-groups/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Failed to submit registration");
-      return response.json();
     },
     onSuccess: () => {
       toast({
