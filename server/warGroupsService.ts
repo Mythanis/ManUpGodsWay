@@ -385,6 +385,130 @@ export class WarGroupsService {
       membershipRole: m.membership.role,
     }));
   }
+
+  async getAllGroupsForAdmin() {
+    const results = await db.select({
+      group: schema.warGroups,
+      leader: {
+        id: schema.users.id,
+        firstName: schema.users.firstName,
+        lastName: schema.users.lastName,
+        email: schema.users.email,
+        profileImageUrl: schema.users.profileImageUrl,
+      }
+    })
+    .from(schema.warGroups)
+    .leftJoin(schema.users, eq(schema.warGroups.leaderId, schema.users.id))
+    .where(eq(schema.warGroups.isActive, true))
+    .orderBy(desc(schema.warGroups.createdAt));
+
+    const groupsWithStats = await Promise.all(results.map(async (r) => {
+      const memberCount = await db.select({ count: sql<number>`count(*)` })
+        .from(schema.warGroupMembers)
+        .where(and(
+          eq(schema.warGroupMembers.groupId, r.group.id),
+          eq(schema.warGroupMembers.status, 'approved')
+        ));
+
+      return {
+        ...r.group,
+        leader: r.leader,
+        memberCount: Number(memberCount[0].count)
+      };
+    }));
+
+    return groupsWithStats;
+  }
+
+  async changeGroupLeader(groupId: string, newLeaderId: string) {
+    const group = await this.getGroupById(groupId);
+    if (!group) {
+      throw new Error('Group not found');
+    }
+
+    const oldLeaderId = group.leaderId;
+
+    const updated = await db.update(schema.warGroups)
+      .set({
+        leaderId: newLeaderId,
+        updatedAt: new Date()
+      })
+      .where(eq(schema.warGroups.id, groupId))
+      .returning();
+
+    const existingMembership = await db.select()
+      .from(schema.warGroupMembers)
+      .where(and(
+        eq(schema.warGroupMembers.groupId, groupId),
+        eq(schema.warGroupMembers.userId, newLeaderId)
+      ));
+
+    if (existingMembership.length > 0) {
+      await db.update(schema.warGroupMembers)
+        .set({
+          role: 'leader',
+          status: 'approved',
+          joinedAt: new Date()
+        })
+        .where(and(
+          eq(schema.warGroupMembers.groupId, groupId),
+          eq(schema.warGroupMembers.userId, newLeaderId)
+        ));
+    } else {
+      await db.insert(schema.warGroupMembers).values({
+        userId: newLeaderId,
+        groupId,
+        role: 'leader',
+        status: 'approved',
+        joinedAt: new Date()
+      });
+    }
+
+    await db.update(schema.warGroupMembers)
+      .set({
+        role: 'member'
+      })
+      .where(and(
+        eq(schema.warGroupMembers.groupId, groupId),
+        eq(schema.warGroupMembers.userId, oldLeaderId)
+      ));
+
+    return updated[0];
+  }
+
+  async removeMemberFromGroup(groupId: string, userId: string) {
+    await db.delete(schema.warGroupMembers)
+      .where(and(
+        eq(schema.warGroupMembers.groupId, groupId),
+        eq(schema.warGroupMembers.userId, userId)
+      ));
+
+    return { success: true };
+  }
+
+  async getAllUsers(search?: string) {
+    let query = db.select({
+      id: schema.users.id,
+      firstName: schema.users.firstName,
+      lastName: schema.users.lastName,
+      email: schema.users.email,
+      profileImageUrl: schema.users.profileImageUrl
+    })
+    .from(schema.users);
+
+    const results = await query;
+
+    if (search) {
+      const searchLower = search.toLowerCase();
+      return results.filter(u => 
+        u.firstName?.toLowerCase().includes(searchLower) ||
+        u.lastName?.toLowerCase().includes(searchLower) ||
+        u.email?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    return results;
+  }
 }
 
 export const warGroupsService = new WarGroupsService();

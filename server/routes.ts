@@ -6882,6 +6882,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/admin/war-groups', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const groups = await warGroupsService.getAllGroupsForAdmin();
+      res.json(groups);
+    } catch (error: any) {
+      console.error('Error fetching war groups for admin:', error);
+      res.status(500).json({ message: error.message || 'Failed to fetch war groups' });
+    }
+  });
+
+  app.patch('/api/admin/war-groups/:id/leader', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { newLeaderId } = req.body;
+      
+      if (!newLeaderId) {
+        return res.status(400).json({ message: 'New leader ID is required' });
+      }
+      
+      const updated = await warGroupsService.changeGroupLeader(id, newLeaderId);
+      res.json(updated);
+    } catch (error: any) {
+      console.error('Error changing group leader:', error);
+      res.status(500).json({ message: error.message || 'Failed to change group leader' });
+    }
+  });
+
+  app.delete('/api/admin/war-groups/:groupId/members/:userId', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { groupId, userId } = req.params;
+      
+      await warGroupsService.removeMemberFromGroup(groupId, userId);
+      res.status(204).send();
+    } catch (error: any) {
+      console.error('Error removing member from group:', error);
+      res.status(500).json({ message: error.message || 'Failed to remove member' });
+    }
+  });
+
+  app.get('/api/admin/users', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { search } = req.query;
+      const users = await warGroupsService.getAllUsers(search as string);
+      res.json(users);
+    } catch (error: any) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ message: error.message || 'Failed to fetch users' });
+    }
+  });
+
   // WebSocket server for real-time notifications
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
