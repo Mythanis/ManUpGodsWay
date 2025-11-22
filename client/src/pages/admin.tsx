@@ -26,8 +26,9 @@ import FitnessManagement from "@/components/admin/fitness-management";
 import EventManagement from "@/components/admin/event-management";
 import TierPricingManagement from "@/components/admin/tier-pricing-management";
 import CarouselManagement from "@/components/admin/carousel-management";
+import WarGroupsManagement from "@/components/admin/war-groups-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield } from "lucide-react";
 
 interface Study {
   id: string;
@@ -60,6 +61,7 @@ const adminTabs = [
   { id: "fitness", label: "Fitness", icon: Dumbbell },
   { id: "events", label: "Events", icon: Calendar },
   { id: "devotionals", label: "Devotionals", icon: Calendar },
+  { id: "war-groups", label: "War Groups", icon: Shield },
   { id: "logo", label: "Logo", icon: Image },
   { id: "tiers", label: "Tiers", icon: DollarSign },
   { id: "settings", label: "Settings", icon: Settings },
@@ -746,6 +748,12 @@ export default function Admin() {
             <div>
               <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Tier Pricing Configuration</h2>
               <TierPricingManagement />
+            </div>
+          )}
+
+          {activeTab === "war-groups" && (
+            <div>
+              <WarGroupsManagement />
             </div>
           )}
 
