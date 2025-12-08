@@ -11,7 +11,7 @@ export default function Landing() {
           <h1 className="text-4xl font-bold mb-4 text-[#FCD000]" data-testid="hero-title">
             Man Up God's Way
           </h1>
-          <p className="text-xl text-white mb-8" data-testid="hero-subtitle">
+          <p className="text-xl text-[#FCD000] mb-8" data-testid="hero-subtitle">
             Strengthen your faith, character, and leadership through biblical masculinity
           </p>
           <Button 
