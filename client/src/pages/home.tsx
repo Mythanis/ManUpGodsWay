@@ -407,7 +407,7 @@ export default function Home() {
         </div>
         
         <div className="mb-6">
-          <h1 className="text-3xl font-grunge uppercase tracking-wide" data-testid="text-greeting">
+          <h1 className="text-3xl font-grunge" data-testid="text-greeting">
             Good Morning, {user?.firstName || 'Brother'}
           </h1>
           <p className="text-[#FCD000] text-sm" data-testid="text-motivation">

@@ -12,6 +12,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .font-grunge {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
 :root {
   /* Clean, crisp background and foreground */
   --background: hsl(0 0% 100%);
