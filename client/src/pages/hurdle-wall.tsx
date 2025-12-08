@@ -362,7 +362,7 @@ export default function HurdleWall() {
         </div>
 
         {/* New Post Form */}
-        <Card className="bg-ministry-gold-exact border-2 border-black">
+        <Card className="bg-white border-2 border-black">
           <CardHeader>
             <CardTitle className="text-black flex items-center gap-2 text-2xl font-bold tracking-tight">
               <Plus className="h-6 w-6" />
