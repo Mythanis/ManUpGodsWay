@@ -463,7 +463,7 @@ export default function Community() {
       {/* Header */}
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
         <h1 className="text-2xl font-bold mb-2" data-testid="text-community-title">Community</h1>
-        <p className="text-blue-200 text-sm" data-testid="text-community-subtitle">
+        <p className="text-[#FCD000] text-sm" data-testid="text-community-subtitle">
           Iron sharpens iron among brothers
         </p>
       </div>
@@ -616,10 +616,10 @@ export default function Community() {
       </div>
 
       {/* Discussion Categories */}
-      <div className="px-6 mb-6">
-        <h2 className="text-lg font-bold text-white mb-4">Popular Topics</h2>
+      <div className="px-6 mb-4">
+        <h2 className="text-base font-bold text-white mb-2">Popular Topics</h2>
         
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-2">
           {allCategories.map((category) => {
             const Icon = category.icon;
             return (
@@ -627,22 +627,19 @@ export default function Community() {
                 key={category.id}
                 variant="outline"
                 onClick={() => setSelectedCategory(selectedCategory === category.id ? '' : category.id)}
-                className={`h-auto p-4 bg-ministry-gold-exact hover:bg-ministry-gold-exact/30 hover:shadow-md transition-all border-0 ${
+                className={`h-auto p-2 bg-ministry-gold-exact hover:bg-ministry-gold-exact/30 hover:shadow-md transition-all border-0 ${
                   selectedCategory === category.id ? 'ring-2 ring-ministry-gold bg-ministry-gold-exact/30' : ''
                 }`}
                 data-testid={`button-category-${category.id}`}
               >
-                <div className="flex items-center space-x-3 w-full">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                <div className="flex flex-col items-center space-y-1 w-full">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                     selectedCategory === category.id ? 'bg-ministry-gold' : 'bg-ministry-gold-exact/40'
                   }`}>
-                    <Icon className="w-5 h-5 text-black" />
+                    <Icon className="w-4 h-4 text-black" />
                   </div>
-                  <div className="text-left">
-                    <h3 className="font-semibold text-sm text-black">{category.label}</h3>
-                    <p className="text-xs text-black">
-                      {communityStats?.categoryStats[category.id] || 0} posts
-                    </p>
+                  <div className="text-center">
+                    <h3 className="font-semibold text-xs text-black">{category.label}</h3>
                   </div>
                 </div>
               </Button>
