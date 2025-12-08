@@ -5,13 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageSquare, HandHeart, Send, Plus, Trash2, Search, Filter, SortDesc, MessageCircle, Heart } from 'lucide-react';
+import { MessageSquare, HandHeart, Plus, Trash2, Search, Filter, SortDesc } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'wouter';
@@ -52,12 +51,8 @@ export default function HurdleWall() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [newPostContent, setNewPostContent] = useState('');
-  const [newPostType, setNewPostType] = useState<'discussion' | 'prayer_request'>('discussion');
-  const [expandedPost, setExpandedPost] = useState<string | null>(null);
-  const [replyContent, setReplyContent] = useState<Record<string, string>>({});
-  const [replyAnonymous, setReplyAnonymous] = useState<Record<string, boolean>>({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<'all' | 'discussion' | 'prayer_request'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'prayer_request'>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
   
   // Get current user
@@ -104,41 +99,16 @@ export default function HurdleWall() {
     },
     onSuccess: () => {
       toast({
-        title: "Post Created",
-        description: "Your post has been shared on the War Room",
+        title: "Prayer Request Posted",
+        description: "Your prayer request has been shared on the War Room",
       });
       setNewPostContent('');
-      setNewPostType('discussion');
       queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
         description: error.response?.data?.message || "Failed to create post",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Create reply mutation
-  const createReplyMutation = useMutation({
-    mutationFn: async ({ postId, content, isAnonymous }: { postId: string; content: string; isAnonymous: boolean }) => {
-      return apiRequest('POST', `/api/hurdle-wall/${postId}/replies`, { content, isAnonymous });
-    },
-    onSuccess: (_, variables) => {
-      toast({
-        title: "Reply Added",
-        description: "Your reply has been posted",
-      });
-      setReplyContent(prev => ({ ...prev, [variables.postId]: '' }));
-      setReplyAnonymous(prev => ({ ...prev, [variables.postId]: true }));
-      queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/hurdle-wall/${variables.postId}`] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to create reply",
         variant: "destructive",
       });
     },
@@ -185,27 +155,6 @@ export default function HurdleWall() {
       });
     },
   });
-  
-  // Delete reply mutation
-  const deleteReplyMutation = useMutation({
-    mutationFn: async (replyId: string) => {
-      return apiRequest('DELETE', `/api/hurdle-wall/replies/${replyId}`);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Reply Deleted",
-        description: "Your reply has been removed",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to delete reply",
-        variant: "destructive",
-      });
-    },
-  });
 
   const handleCreatePost = () => {
     if (!newPostContent.trim()) {
@@ -220,43 +169,13 @@ export default function HurdleWall() {
     createPostMutation.mutate({
       content: newPostContent,
       isAnonymous: false,
-      postType: newPostType,
+      postType: 'prayer_request',
     });
-  };
-
-  const handleCreateReply = (postId: string) => {
-    const content = replyContent[postId]?.trim();
-    if (!content) {
-      toast({
-        title: "Error",
-        description: "Please enter some content for your reply",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    createReplyMutation.mutate({
-      postId,
-      content,
-      isAnonymous: false, // Always use real name for replies
-    });
-    
-    // Clear the reply content after submission
-    setReplyContent(prev => ({
-      ...prev,
-      [postId]: ''
-    }));
   };
   
   const handleDeletePost = (postId: string) => {
     if (window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
       deletePostMutation.mutate(postId);
-    }
-  };
-  
-  const handleDeleteReply = (replyId: string) => {
-    if (window.confirm('Are you sure you want to delete this reply? This action cannot be undone.')) {
-      deleteReplyMutation.mutate(replyId);
     }
   };
 
@@ -298,7 +217,7 @@ export default function HurdleWall() {
         <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
           <div className="max-w-2xl mx-auto">
             <h1 className="text-4xl font-black mb-2 tracking-tight">War Room</h1>
-            <p className="text-ministry-gold-exact text-sm font-semibold">Share Your Struggles And Prayer Requests</p>
+            <p className="text-ministry-gold-exact text-sm font-semibold">A Sacred Space For Prayer Requests</p>
           </div>
         </div>
         <div className="max-w-2xl mx-auto p-4">
@@ -319,7 +238,7 @@ export default function HurdleWall() {
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-4xl font-black mb-2 tracking-tight">War Room</h1>
-          <p className="text-ministry-gold-exact text-sm font-semibold">Share your struggles and prayer requests</p>
+          <p className="text-ministry-gold-exact text-sm font-semibold">A Sacred Space For Prayer Requests</p>
         </div>
       </div>
       
@@ -343,8 +262,7 @@ export default function HurdleWall() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Posts</SelectItem>
-                <SelectItem value="discussion">Discussions</SelectItem>
+                <SelectItem value="all">All Requests</SelectItem>
                 <SelectItem value="prayer_request">Prayer Requests</SelectItem>
               </SelectContent>
             </Select>
@@ -373,54 +291,18 @@ export default function HurdleWall() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Post Type Selection */}
-            <div className="space-y-2">
-              <Label className="text-black font-semibold">Post Type</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setNewPostType('discussion')}
-                  className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border-2 transition-all font-medium text-sm ${
-                    newPostType === 'discussion'
-                      ? 'bg-black text-white border-black shadow-md'
-                      : 'bg-white text-black border-black hover:bg-gray-100'
-                  }`}
-                  data-testid="button-discussion-type"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  Open Discussion
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNewPostType('prayer_request')}
-                  className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border-2 transition-all font-medium text-sm ${
-                    newPostType === 'prayer_request'
-                      ? 'bg-black text-white border-black shadow-md'
-                      : 'bg-white text-black border-black hover:bg-gray-100'
-                  }`}
-                  data-testid="button-prayer-type"
-                >
-                  <Heart className="h-4 w-4" />
-                  Prayer Request
-                </button>
-              </div>
-            </div>
-
             {/* Content */}
             <div className="space-y-2">
-              <Label htmlFor="content" className="text-black">
-                {newPostType === 'prayer_request' ? 'Prayer Request' : 'Discussion Topic'}
+              <Label htmlFor="content" className="text-black font-semibold">
+                Prayer Request
               </Label>
               <Textarea
                 id="content"
-                placeholder={
-                  newPostType === 'prayer_request' 
-                    ? "Share what you'd like prayer for..."
-                    : "Share what's on your heart or start a discussion..."
-                }
+                placeholder="Share what you'd like prayer for..."
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
                 className="min-h-[100px]"
+                data-testid="textarea-prayer-request"
               />
             </div>
 
@@ -455,7 +337,7 @@ export default function HurdleWall() {
                         <Badge 
                           className="bg-ministry-gold-exact text-black font-semibold"
                         >
-                          {post.postType === 'prayer_request' ? 'Prayer Request' : 'Discussion'}
+                          Prayer Request
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-400">{formatTimeAgo(post.createdAt)}</p>
@@ -479,93 +361,22 @@ export default function HurdleWall() {
                   <Separator className="bg-gray-700" />
                   
                   <div className="flex items-center gap-4">
-                    {post.postType === 'prayer_request' ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handlePrayer(post.id, post.userHasPrayed)}
-                        className={`flex items-center gap-2 ${
-                          post.userHasPrayed 
-                            ? 'text-ministry-gold-exact hover:text-yellow-300' 
-                            : 'text-gray-400 hover:text-ministry-gold-exact'
-                        }`}
-                        disabled={prayerMutation.isPending}
-                      >
-                        <HandHeart className={`h-4 w-4 ${post.userHasPrayed ? 'fill-current' : ''}`} />
-                        {post.prayerCount} {post.prayerCount === 1 ? 'Prayer' : 'Prayers'}
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
-                        className="flex items-center gap-2 text-gray-400 hover:text-white"
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                        {post.replyCount} {post.replyCount === 1 ? 'Reply' : 'Replies'}
-                      </Button>
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handlePrayer(post.id, post.userHasPrayed)}
+                      className={`flex items-center gap-2 ${
+                        post.userHasPrayed 
+                          ? 'text-ministry-gold-exact hover:text-yellow-300' 
+                          : 'text-gray-400 hover:text-ministry-gold-exact'
+                      }`}
+                      disabled={prayerMutation.isPending}
+                      data-testid={`button-prayer-${post.id}`}
+                    >
+                      <HandHeart className={`h-4 w-4 ${post.userHasPrayed ? 'fill-current' : ''}`} />
+                      {post.prayerCount} {post.prayerCount === 1 ? 'Prayer' : 'Prayers'}
+                    </Button>
                   </div>
-
-                  {/* Reply Section for Discussions */}
-                  {post.postType === 'discussion' && expandedPost === post.id && (
-                    <div className="space-y-4 pt-4 border-t border-gray-700">
-                      {/* Existing Replies */}
-                      {post.replies && post.replies.length > 0 && (
-                        <div className="space-y-3">
-                          <h4 className="text-white font-medium">Replies</h4>
-                          {post.replies.map((reply) => (
-                            <div key={reply.id} className="bg-gray-800 rounded-lg p-3 border-l-2 border-ministry-gold-exact">
-                              <div className="flex items-start justify-between mb-2">
-                                <span className="text-sm">
-                                  {renderUserName(reply.user, reply.isAnonymous)}
-                                </span>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-gray-400 text-xs">
-                                    {formatTimeAgo(reply.createdAt)}
-                                  </span>
-                                  {currentUser?.id === reply.userId && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleDeleteReply(reply.id)}
-                                      className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-1 h-auto"
-                                      disabled={deleteReplyMutation.isPending}
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                              <p className="text-white text-sm leading-relaxed">{reply.content}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {/* Reply Form */}
-                      <div className="space-y-3">
-                        <Textarea
-                          placeholder="Share your thoughts..."
-                          value={replyContent[post.id] || ''}
-                          onChange={(e) => setReplyContent(prev => ({
-                            ...prev,
-                            [post.id]: e.target.value
-                          }))}
-                          className="bg-gray-800 text-white border-gray-700"
-                        />
-                        <Button
-                          onClick={() => handleCreateReply(post.id)}
-                          disabled={createReplyMutation.isPending || !replyContent[post.id]?.trim()}
-                          size="sm"
-                          className="bg-ministry-gold-exact text-black hover:bg-yellow-400"
-                        >
-                          <Send className="h-4 w-4 mr-2" />
-                          Reply
-                        </Button>
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             ))
