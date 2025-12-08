@@ -410,7 +410,7 @@ export default function Home() {
           <h1 className="text-2xl font-bold" data-testid="text-greeting">
             Good Morning, {user?.firstName || 'Brother'}
           </h1>
-          <p className="text-blue-200 text-sm" data-testid="text-motivation">
+          <p className="text-[#FCD000] text-sm" data-testid="text-motivation">
             {systemSettings?.homepageTagline || "Ready to grow in God's strength?"}
           </p>
         </div>
