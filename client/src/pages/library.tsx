@@ -147,7 +147,7 @@ export default function Library() {
       {/* Header */}
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
         <h1 className="text-2xl font-bold mb-2" data-testid="text-library-title">Study Library</h1>
-        <p className="text-blue-200 text-sm" data-testid="text-library-subtitle">
+        <p className="text-[#FCD000] text-sm" data-testid="text-library-subtitle">
           Grow stronger in faith and character
         </p>
       </div>
