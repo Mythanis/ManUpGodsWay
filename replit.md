@@ -65,7 +65,12 @@ The system supports a tiered content structure (free, premium, VIP) and category
   - Success feedback with detailed import/skip counts
 - **Notifications**: Enhanced system with push notification broadcasting, user management, automated daily devotional notifications, tiered content update notifications, and automatic discussion reply notifications (users are automatically subscribed when they post a reply).
 - **User Engagement**: Streak tracking, prayer time system, weekly challenges with intelligent release logic and participation tracking ("I Take the Challenge" button with real-time participant counts), and a comprehensive testimony system.
-- **War Room**: Renamed from "Hurdle Wall" - A dedicated space for men to bring their battles to God and stand together in prayer. Features anonymous posting, discussion threads, and prayer request tracking with black card design, white text, and yellow badges.
+- **War Room**: Renamed from "Hurdle Wall" - A dedicated prayer request space where men bring their battles to God and stand together in prayer. **Prayer requests only** (discussion posts removed). Features include:
+  - **Prayer Requests**: All posts use real names (anonymous posting removed) and are tagged as "Prayer Request"
+  - **Commenting System**: Users can add supportive comments to any prayer request, view/hide comments with toggle button, and delete their own comments
+  - **Prayer Interaction**: Prayer button to indicate you've prayed for a request, with real-time prayer counts
+  - **Visual Design**: Black card design with white text and yellow badges/buttons for high contrast
+  - **Real-time Updates**: WebSocket integration for live prayer counts and comment updates
 - **War Groups**: Licensed discipleship groups named "Man Up God's Way - [City Name]" with city-based discovery, interactive map view with geocoding (OpenStreetMap Nominatim API), group leaders, member management, and admin oversight. Includes synchronous geocoding on group creation/updates with background retry service for failed attempts.
   - **Registration & Approval Workflow**: Users can submit registration requests to start new war groups:
     - Registration form collects: city/state, description, meeting info, contact details, leadership experience, and motivation
