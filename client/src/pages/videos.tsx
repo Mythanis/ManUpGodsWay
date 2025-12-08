@@ -248,8 +248,8 @@ export default function Videos() {
       {/* Header */}
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
         <h1 className="text-2xl font-bold mb-2">Video Library</h1>
-        <p className="text-blue-200 text-sm">
-          Watch inspiring content and grow in faith
+        <p className="text-[#FCD000] text-sm">
+          Watch Inspiring Content And Grow In Faith
         </p>
       </div>
 
