@@ -10,7 +10,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageSquare, HandHeart, Plus, Trash2, Search, Filter, SortDesc } from 'lucide-react';
+import { MessageSquare, HandHeart, Plus, Trash2, Search, Filter, SortDesc, Send } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'wouter';
@@ -51,6 +51,8 @@ export default function HurdleWall() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [newPostContent, setNewPostContent] = useState('');
+  const [expandedPost, setExpandedPost] = useState<string | null>(null);
+  const [commentContent, setCommentContent] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'prayer_request'>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
@@ -156,6 +158,49 @@ export default function HurdleWall() {
     },
   });
 
+  // Create comment mutation
+  const createCommentMutation = useMutation({
+    mutationFn: async ({ postId, content }: { postId: string; content: string }) => {
+      return apiRequest('POST', `/api/hurdle-wall/${postId}/replies`, { content, isAnonymous: false });
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: "Comment Added",
+        description: "Your comment has been posted",
+      });
+      setCommentContent(prev => ({ ...prev, [variables.postId]: '' }));
+      queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to post comment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete comment mutation
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      return apiRequest('DELETE', `/api/hurdle-wall/replies/${commentId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Comment Deleted",
+        description: "Your comment has been removed",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to delete comment",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreatePost = () => {
     if (!newPostContent.trim()) {
       toast({
@@ -172,10 +217,30 @@ export default function HurdleWall() {
       postType: 'prayer_request',
     });
   };
+
+  const handleCreateComment = (postId: string) => {
+    const content = commentContent[postId]?.trim();
+    if (!content) {
+      toast({
+        title: "Error",
+        description: "Please enter a comment",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createCommentMutation.mutate({ postId, content });
+  };
   
   const handleDeletePost = (postId: string) => {
     if (window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
       deletePostMutation.mutate(postId);
+    }
+  };
+
+  const handleDeleteComment = (commentId: string) => {
+    if (window.confirm('Are you sure you want to delete this comment? This action cannot be undone.')) {
+      deleteCommentMutation.mutate(commentId);
     }
   };
 
@@ -376,7 +441,80 @@ export default function HurdleWall() {
                       <HandHeart className={`h-4 w-4 ${post.userHasPrayed ? 'fill-current' : ''}`} />
                       {post.prayerCount} {post.prayerCount === 1 ? 'Prayer' : 'Prayers'}
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
+                      className="flex items-center gap-2 text-gray-400 hover:text-white"
+                      data-testid={`button-toggle-comments-${post.id}`}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      {post.replyCount} {post.replyCount === 1 ? 'Comment' : 'Comments'}
+                    </Button>
                   </div>
+
+                  {/* Comments Section */}
+                  {expandedPost === post.id && (
+                    <div className="space-y-4 pt-4 border-t border-gray-700">
+                      {/* Existing Comments */}
+                      {post.replies && post.replies.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="text-white font-medium">Comments</h4>
+                          {post.replies.map((reply) => (
+                            <div key={reply.id} className="bg-gray-800 rounded-lg p-3 border-l-2 border-ministry-gold-exact">
+                              <div className="flex items-start justify-between mb-2">
+                                <span className="text-sm">
+                                  {renderUserName(reply.user, reply.isAnonymous)}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-gray-400 text-xs">
+                                    {formatTimeAgo(reply.createdAt)}
+                                  </span>
+                                  {currentUser?.id === reply.userId && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteComment(reply.id)}
+                                      className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-1 h-auto"
+                                      disabled={deleteCommentMutation.isPending}
+                                      data-testid={`button-delete-comment-${reply.id}`}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                              <p className="text-white text-sm leading-relaxed">{reply.content}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Comment Form */}
+                      <div className="space-y-3">
+                        <Textarea
+                          placeholder="Add a comment..."
+                          value={commentContent[post.id] || ''}
+                          onChange={(e) => setCommentContent(prev => ({
+                            ...prev,
+                            [post.id]: e.target.value
+                          }))}
+                          className="bg-gray-800 text-white border-gray-700"
+                          data-testid={`textarea-comment-${post.id}`}
+                        />
+                        <Button
+                          onClick={() => handleCreateComment(post.id)}
+                          disabled={createCommentMutation.isPending || !commentContent[post.id]?.trim()}
+                          size="sm"
+                          className="bg-ministry-gold-exact text-black hover:bg-yellow-400"
+                          data-testid={`button-post-comment-${post.id}`}
+                        >
+                          <Send className="h-4 w-4 mr-2" />
+                          Post Comment
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))

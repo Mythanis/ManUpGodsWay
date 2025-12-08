@@ -6102,14 +6102,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Content is required" });
       }
 
-      // Check if post exists and is a discussion
+      // Check if post exists
       const post = await storage.getHurdleWallPost(postId);
       if (!post) {
         return res.status(404).json({ message: "Post not found" });
-      }
-
-      if (post.postType !== 'discussion') {
-        return res.status(400).json({ message: "Can only reply to discussion posts" });
       }
 
       const reply = await storage.createHurdleWallReply({
