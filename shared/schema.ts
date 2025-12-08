@@ -1058,6 +1058,7 @@ export type InsertSystemSettings = z.infer<typeof insertSystemSettingsSchema>;
 export const podcasts = pgTable("podcasts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: varchar("title").notNull(),
+  episodeNumber: integer("episode_number"), // For sorting by episode order
   description: text("description"),
   type: varchar("type").notNull(), // "audio" or "video"
   fileUrl: varchar("file_url").notNull(),

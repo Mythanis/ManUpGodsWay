@@ -3496,7 +3496,8 @@ export class DatabaseStorage implements IStorage {
         break;
       case 'date':
       default:
-        query = query.orderBy(desc(podcasts.createdAt)) as any;
+        // Sort by episode number (highest first: 115, 114, ..., 1), then by createdAt for non-episode podcasts
+        query = query.orderBy(desc(podcasts.episodeNumber), desc(podcasts.createdAt)) as any;
         break;
     }
     
@@ -3507,7 +3508,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(podcasts)
-      .orderBy(desc(podcasts.createdAt));
+      .orderBy(desc(podcasts.episodeNumber), desc(podcasts.createdAt));
   }
 
   async getPodcastById(id: string): Promise<Podcast | undefined> {
