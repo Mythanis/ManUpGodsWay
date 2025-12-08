@@ -46,7 +46,7 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
         </div>
         
         <div className="mb-4">
-          <Progress value={progressPercent} className="h-2 mb-2" data-testid="progress-bar" />
+          <Progress value={progressPercent} className="h-2 mb-2 bg-white [&>div]:bg-black" data-testid="progress-bar" />
         </div>
         
         <Link href={`/studies/${study.id}`}>
