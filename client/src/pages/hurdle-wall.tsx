@@ -427,7 +427,7 @@ export default function HurdleWall() {
             <Button 
               onClick={handleCreatePost}
               disabled={createPostMutation.isPending || !newPostContent.trim()}
-              className="w-full bg-white hover:bg-gray-100 text-black font-bold text-lg py-6 rounded-xl shadow-lg border-2 border-black transition-all hover:scale-[1.02]"
+              className="w-full bg-black hover:bg-gray-900 text-white font-bold text-lg py-6 rounded-xl shadow-lg border-2 border-black transition-all hover:scale-[1.02]"
               data-testid="button-share-post"
             >
               {createPostMutation.isPending ? 'Posting...' : 'Share Post'}
