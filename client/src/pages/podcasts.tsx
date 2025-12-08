@@ -393,14 +393,14 @@ export default function Podcasts() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-br from-ministry-steel to-ministry-charcoal text-white p-6">
+      <div className="bg-black text-white p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold flex items-center">
               <Headphones className="w-7 h-7 mr-2" />
               Podcasts
             </h1>
-            <p className="text-blue-200 text-sm">Audio & Video Content</p>
+            <p className="text-[#FCD000] text-sm">Audio & Video Content</p>
           </div>
 
         </div>
