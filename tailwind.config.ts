@@ -78,6 +78,7 @@ export default {
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
         inter: ["Inter", "sans-serif"],
+        grunge: ["var(--font-grunge)"],
       },
       keyframes: {
         "accordion-down": {

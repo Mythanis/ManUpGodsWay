@@ -1,5 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Crimson+Pro:ital,wght@0,400;0,600;1,400;1,600&display=swap');
 
+@font-face {
+  font-family: 'Bad Grunge';
+  src: url('/fonts/BadGrunge.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -63,6 +71,7 @@
   --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-serif: 'Crimson Pro', Georgia, serif;
   --font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  --font-grunge: 'Bad Grunge', Impact, sans-serif;
   
   /* Border radius - clean and modern */
   --radius: 0.75rem;
