@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
@@ -12,7 +11,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageSquare, HandHeart, Send, Plus, Eye, EyeOff, Trash2, Search, Filter, SortDesc, MessageCircle, Heart } from 'lucide-react';
+import { MessageSquare, HandHeart, Send, Plus, Trash2, Search, Filter, SortDesc, MessageCircle, Heart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'wouter';
@@ -54,7 +53,6 @@ export default function HurdleWall() {
   const queryClient = useQueryClient();
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostType, setNewPostType] = useState<'discussion' | 'prayer_request'>('discussion');
-  const [newPostAnonymous, setNewPostAnonymous] = useState(false);
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState<Record<string, string>>({});
   const [replyAnonymous, setReplyAnonymous] = useState<Record<string, boolean>>({});
@@ -111,7 +109,6 @@ export default function HurdleWall() {
       });
       setNewPostContent('');
       setNewPostType('discussion');
-      setNewPostAnonymous(false);
       queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
     },
     onError: (error: any) => {
@@ -222,7 +219,7 @@ export default function HurdleWall() {
 
     createPostMutation.mutate({
       content: newPostContent,
-      isAnonymous: newPostAnonymous,
+      isAnonymous: false,
       postType: newPostType,
     });
   };
@@ -424,22 +421,6 @@ export default function HurdleWall() {
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
                 className="min-h-[100px]"
-              />
-            </div>
-
-            {/* Anonymous Toggle */}
-            <div className="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-black">
-              <div className="flex items-center space-x-3">
-                {newPostAnonymous ? <EyeOff className="h-5 w-5 text-black" /> : <Eye className="h-5 w-5 text-black" />}
-                <Label htmlFor="anonymous" className="text-black font-bold text-base cursor-pointer">
-                  {newPostAnonymous ? 'Posting Anonymously' : 'Posting with Name'}
-                </Label>
-              </div>
-              <Switch
-                id="anonymous"
-                checked={newPostAnonymous}
-                onCheckedChange={setNewPostAnonymous}
-                className="data-[state=checked]:bg-black data-[state=unchecked]:bg-gray-300"
               />
             </div>
 
