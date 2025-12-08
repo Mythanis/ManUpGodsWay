@@ -150,8 +150,8 @@ function AppContent() {
 
   return (
     <div className="max-w-md mx-auto bg-background text-foreground shadow-2xl min-h-screen relative">
-      {/* Add top padding to create space for the fixed header logo */}
-      <div className="pt-24">
+      {/* Add top padding to create space for the fixed header logo, but only when authenticated */}
+      <div className={isAuthenticated ? "pt-24" : ""}>
         <Router />
       </div>
       {isAuthenticated && !isLoading && splashCompleted && <Navigation />}
