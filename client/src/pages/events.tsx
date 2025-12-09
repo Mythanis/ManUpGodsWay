@@ -93,7 +93,7 @@ export default function Events() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-white flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Please sign in to view events</h1>
           <p className="text-gray-400">You need to be logged in to access the events page.</p>
@@ -103,19 +103,20 @@ export default function Events() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Ministry Events</h1>
-          <p className="text-gray-400">
-            Join us for special events, conferences, and gatherings designed to strengthen your faith and build community.
-          </p>
+    <div className="min-h-screen bg-background pb-20">
+      {/* Header - matching War Room style */}
+      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-4xl font-black mb-2 tracking-tight">Ministry Events</h1>
+          <p className="text-ministry-gold-exact text-sm font-semibold">Join Us For Special Events And Gatherings</p>
         </div>
+      </div>
 
+      <div className="px-6 py-6 max-w-2xl mx-auto">
         {eventsLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <Card key={i} className="bg-gray-900 border-gray-700">
+              <Card key={i} className="bg-black border-2 border-black">
                 <CardHeader>
                   <div className="animate-pulse">
                     <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
@@ -132,74 +133,74 @@ export default function Events() {
             ))}
           </div>
         ) : events.length === 0 ? (
-          <Card className="bg-gray-900 border-gray-700 text-center py-12">
+          <Card className="bg-black border-2 border-black text-center py-12">
             <CardContent>
-              <Calendar className="mx-auto mb-4 h-16 w-16 text-gray-500" />
-              <h3 className="text-xl font-semibold mb-2">No Events Scheduled</h3>
+              <Calendar className="mx-auto mb-4 h-16 w-16 text-ministry-gold" />
+              <h3 className="text-xl font-semibold mb-2 text-white">No Events Scheduled</h3>
               <p className="text-gray-400">
                 There are no upcoming events at this time. Check back soon for new announcements!
               </p>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {events.map((event) => {
               const isRegistered = isRegisteredForEvent(event.id);
               const eventDate = new Date(event.eventDate);
               const isPastEvent = eventDate < new Date();
               
               return (
-                <Card key={event.id} className="bg-gray-900 border-gray-700 hover:bg-gray-800 transition-colors">
+                <Card key={event.id} className="bg-black border-2 border-black">
                   <CardHeader>
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between flex-wrap gap-2">
                       <div className="flex-1">
                         <CardTitle className="text-xl mb-2 text-white">
                           {event.title}
                         </CardTitle>
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+                        <div className="flex flex-wrap gap-3 text-sm text-gray-400">
                           <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
+                            <Calendar className="h-4 w-4 text-ministry-gold" />
                             <span>{formatDate(event.eventDate)}</span>
                           </div>
                           {event.eventTime && (
                             <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
+                              <Clock className="h-4 w-4 text-ministry-gold" />
                               <span>{formatTime(event.eventTime)}</span>
                             </div>
                           )}
                           {event.location && (
                             <div className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4" />
+                              <MapPin className="h-4 w-4 text-ministry-gold" />
                               <span className="truncate max-w-48">{event.location}</span>
                             </div>
                           )}
                           {event.requiresPurchase && event.price && (
                             <div className="flex items-center gap-1">
-                              <DollarSign className="h-4 w-4" />
+                              <DollarSign className="h-4 w-4 text-ministry-gold" />
                               <span>${event.price}</span>
                             </div>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {isPastEvent && (
-                          <Badge variant="secondary" className="bg-gray-700 text-gray-300">
+                          <Badge className="bg-gray-700 text-gray-300">
                             Past Event
                           </Badge>
                         )}
                         {isRegistered && (
-                          <Badge className="bg-green-600 text-white">
+                          <Badge className="bg-ministry-gold-exact text-black font-semibold">
                             <Users className="h-3 w-3 mr-1" />
                             Registered
                           </Badge>
                         )}
                         {event.requiresPurchase && !isPastEvent && (
-                          <Badge className="bg-yellow-600 text-white">
+                          <Badge className="bg-ministry-gold-exact text-black font-semibold">
                             Paid Event
                           </Badge>
                         )}
                         {!event.requiresPurchase && !isPastEvent && (
-                          <Badge variant="outline" className="border-green-500 text-green-400">
+                          <Badge className="bg-ministry-gold-exact text-black font-semibold">
                             Free Event
                           </Badge>
                         )}
@@ -222,7 +223,7 @@ export default function Events() {
                           variant="outline"
                           size="sm"
                           asChild
-                          className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                          className="border-gray-600 text-gray-300 hover:bg-gray-800"
                         >
                           <a href={event.eventUrl} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-4 w-4 mr-2" />
@@ -235,7 +236,7 @@ export default function Events() {
                         <Button
                           onClick={() => registerMutation.mutate(event.id)}
                           disabled={registerMutation.isPending}
-                          className="bg-rgb(251,208,0) text-black hover:bg-yellow-500"
+                          className="bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90 font-bold"
                           size="sm"
                           data-testid={`button-register-${event.id}`}
                         >
@@ -245,7 +246,7 @@ export default function Events() {
                       
                       {!isPastEvent && !isRegistered && event.requiresPurchase && (
                         <Button
-                          className="bg-rgb(251,208,0) text-black hover:bg-yellow-500"
+                          className="bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90 font-bold"
                           size="sm"
                           data-testid={`button-purchase-${event.id}`}
                         >
