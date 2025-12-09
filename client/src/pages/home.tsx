@@ -920,9 +920,9 @@ export default function Home() {
 
       {/* Full Devotional Modal */}
       <Dialog open={showFullDevotional} onOpenChange={setShowFullDevotional}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-black border-2 border-black">
           <DialogHeader>
-            <DialogTitle className="text-ministry-navy">{devotional?.title}</DialogTitle>
+            <DialogTitle className="text-white text-xl font-black">{devotional?.title}</DialogTitle>
           </DialogHeader>
           
           {devotional && (
@@ -942,21 +942,21 @@ export default function Home() {
               )}
               
               {/* Verse */}
-              <div className="bg-ministry-steel/10 rounded-lg p-4">
-                <p className="text-ministry-navy font-semibold text-base mb-2">
+              <div className="bg-gray-800 rounded-lg p-4 border border-ministry-gold-exact">
+                <p className="text-ministry-gold-exact font-semibold text-base">
                   "{devotional.verse}" - {devotional.verseReference}
                 </p>
               </div>
               
               {/* Full Content */}
-              <div className="prose prose-sm max-w-none">
-                <p className="text-ministry-slate leading-relaxed whitespace-pre-wrap">
+              <div className="prose prose-sm max-w-none prose-invert">
+                <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">
                   {devotional.content}
                 </p>
               </div>
               
               {/* Actions */}
-              <div className="flex items-center justify-between pt-4 border-t">
+              <div className="flex items-center justify-between pt-4 border-t border-gray-700">
                 <div className="flex items-center space-x-3">
                   <Button 
                     variant="ghost" 
@@ -964,7 +964,7 @@ export default function Home() {
                     className={`flex items-center space-x-2 ${
                       isLiked 
                         ? 'text-red-500 hover:text-red-600' 
-                        : 'text-ministry-slate hover:text-ministry-navy'
+                        : 'text-gray-400 hover:text-white'
                     }`}
                     onClick={() => {
                       setIsLiked(!isLiked);
@@ -981,7 +981,7 @@ export default function Home() {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="flex items-center space-x-2 text-ministry-slate hover:text-ministry-navy"
+                    className="flex items-center space-x-2 text-gray-400 hover:text-white"
                     onClick={() => {
                       const shareText = `${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n${devotional.content}`;
                       
@@ -1007,9 +1007,9 @@ export default function Home() {
                 </div>
                 
                 <Button 
-                  variant="outline" 
                   size="sm"
                   onClick={() => setShowFullDevotional(false)}
+                  className="bg-ministry-gold-exact text-black hover:bg-ministry-gold font-semibold"
                 >
                   Close
                 </Button>
