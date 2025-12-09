@@ -146,15 +146,15 @@ export default function Library() {
     <div className="pb-20">
       {/* Header */}
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
-        <h1 className="text-2xl font-bold mb-2" data-testid="text-library-title">Study Library</h1>
-        <p className="text-[#FCD000] text-sm" data-testid="text-library-subtitle">
-          Grow stronger in faith and character
+        <h1 className="text-4xl font-black mb-2 tracking-tight" data-testid="text-library-title">Study Library</h1>
+        <p className="text-ministry-gold-exact text-sm font-semibold" data-testid="text-library-subtitle">
+          Grow Stronger In Faith And Character
         </p>
       </div>
 
       {/* Search Bar */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-lg bg-ministry-gold-exact" data-testid="card-search">
+        <Card className="shadow-lg bg-black border-2 border-black" data-testid="card-search">
           <CardContent className="p-4">
             <div className="relative">
               <Input
@@ -162,10 +162,10 @@ export default function Library() {
                 placeholder="Search studies, topics, or verses..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-muted rounded-xl pl-10 pr-4 py-3 text-sm border-0 focus:ring-2 focus:ring-ministry-steel focus:bg-background"
+                className="w-full bg-gray-800 border-gray-700 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-gray-400 focus:ring-2 focus:ring-ministry-gold-exact focus:bg-gray-800"
                 data-testid="input-search"
               />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ministry-slate" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             </div>
           </CardContent>
         </Card>
@@ -205,24 +205,11 @@ export default function Library() {
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              style={{
-                backgroundColor: selectedCategory === category.id 
-                  ? 'hsl(0 0% 0%)' 
-                  : effectiveTheme === 'dark' 
-                    ? 'hsl(220 8% 26%)' 
-                    : 'hsl(240 1.9608% 90%)',
-                color: selectedCategory === category.id 
-                  ? 'white' 
-                  : effectiveTheme === 'dark' 
-                    ? 'hsl(0 0% 95%)' 
-                    : 'hsl(210 25% 7.8431%)',
-                borderColor: selectedCategory === category.id 
-                  ? 'hsl(0 0% 0%)' 
-                  : effectiveTheme === 'dark' 
-                    ? 'hsl(210 5.2632% 14.9020%)' 
-                    : 'hsl(201.4286 30.4348% 90.9804%)'
-              }}
-              className="px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start border cursor-pointer transition-colors"
+              className={`px-6 py-2 rounded-full text-sm font-semibold whitespace-nowrap flex-shrink-0 snap-start border-2 cursor-pointer transition-colors ${
+                selectedCategory === category.id 
+                  ? 'bg-ministry-gold-exact text-black border-ministry-gold-exact' 
+                  : 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700'
+              }`}
               data-testid={`button-category-${category.id}`}
             >
               {category.label}
@@ -234,12 +221,12 @@ export default function Library() {
       {/* Additional Filters */}
       <div className="px-6 mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-ministry-slate">Filters</h3>
+          <h3 className="text-sm font-medium text-white">Filters</h3>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
-            className="text-ministry-navy"
+            className="text-ministry-gold-exact hover:text-yellow-300"
           >
             <Filter className="w-4 h-4 mr-1" />
             {showFilters ? 'Hide' : 'Show'} Filters
@@ -249,11 +236,11 @@ export default function Library() {
         {showFilters && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="text-xs font-medium text-ministry-slate mb-1 block">
+              <label className="text-xs font-medium text-gray-400 mb-1 block">
                 Difficulty Level
               </label>
               <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-                <SelectTrigger className="w-full h-8 text-sm">
+                <SelectTrigger className="w-full h-8 text-sm bg-gray-800 border-gray-700 text-white">
                   <SelectValue placeholder="Any level" />
                 </SelectTrigger>
                 <SelectContent>
@@ -266,11 +253,11 @@ export default function Library() {
             </div>
             
             <div>
-              <label className="text-xs font-medium text-ministry-slate mb-1 block">
+              <label className="text-xs font-medium text-gray-400 mb-1 block">
                 Estimated Hours
               </label>
               <Select value={hoursFilter} onValueChange={setHoursFilter}>
-                <SelectTrigger className="w-full h-8 text-sm">
+                <SelectTrigger className="w-full h-8 text-sm bg-gray-800 border-gray-700 text-white">
                   <SelectValue placeholder="Any duration" />
                 </SelectTrigger>
                 <SelectContent>
@@ -283,11 +270,11 @@ export default function Library() {
             </div>
             
             <div>
-              <label className="text-xs font-medium text-ministry-slate mb-1 block">
+              <label className="text-xs font-medium text-gray-400 mb-1 block">
                 Number of Lessons
               </label>
               <Select value={lessonsFilter} onValueChange={setLessonsFilter}>
-                <SelectTrigger className="w-full h-8 text-sm">
+                <SelectTrigger className="w-full h-8 text-sm bg-gray-800 border-gray-700 text-white">
                   <SelectValue placeholder="Any count" />
                 </SelectTrigger>
                 <SelectContent>
@@ -300,11 +287,11 @@ export default function Library() {
             </div>
             
             <div>
-              <label className="text-xs font-medium text-ministry-slate mb-1 block">
+              <label className="text-xs font-medium text-gray-400 mb-1 block">
                 Video Content
               </label>
               <Select value={videoFilter} onValueChange={setVideoFilter}>
-                <SelectTrigger className="w-full h-8 text-sm">
+                <SelectTrigger className="w-full h-8 text-sm bg-gray-800 border-gray-700 text-white">
                   <SelectValue placeholder="Any type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -327,23 +314,23 @@ export default function Library() {
         
         return (
           <div className="px-6 mb-6">
-            <Card className="bg-gradient-to-br from-ministry-steel to-ministry-navy dark:from-featured-dark dark:to-featured-dark-secondary text-white relative overflow-hidden" data-testid="card-featured">
+            <Card className="bg-black border-2 border-ministry-gold-exact text-white relative overflow-hidden" data-testid="card-featured">
               <CardContent className="p-6">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-ministry-gold-exact/10 rounded-full -translate-y-16 translate-x-16"></div>
                 <div className="relative z-10">
-                  <div className="inline-flex items-center bg-ministry-gold-exact text-black px-3 py-1 rounded-full text-xs font-medium mb-3">
+                  <div className="inline-flex items-center bg-ministry-gold-exact text-black px-3 py-1 rounded-full text-xs font-bold mb-3">
                     <Star className="w-3 h-3 mr-1 text-black" fill="currentColor" />
                     Featured
                   </div>
                   <h3 className="text-lg font-bold mb-2" data-testid="text-featured-title">
                     {featuredStudy.title}
                   </h3>
-                  <p className="text-blue-100 text-sm mb-4" data-testid="text-featured-description">
+                  <p className="text-gray-300 text-sm mb-4" data-testid="text-featured-description">
                     {featuredStudy.description}
                   </p>
                   <Link href={`/studies/${featuredStudy.id}`}>
                     <Button 
-                      className="bg-card text-foreground hover:bg-muted"
+                      className="bg-ministry-gold-exact text-black hover:bg-ministry-gold font-semibold"
                       data-testid="button-start-featured"
                     >
                       {featuredButtonText}
@@ -360,12 +347,12 @@ export default function Library() {
       <div className="px-6 space-y-4">
         {isLoading ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-navy mx-auto mb-4"></div>
-            <p className="text-ministry-slate">Loading studies...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold-exact mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading studies...</p>
           </div>
         ) : filteredStudies.length === 0 ? (
           <div className="text-center py-8" data-testid="empty-studies">
-            <p className="text-ministry-slate">
+            <p className="text-gray-400">
               {searchQuery.length > 2 || difficultyFilter !== 'all' || hoursFilter !== 'all' || lessonsFilter !== 'all' || videoFilter !== 'all' || selectedCategory !== 'all' 
                 ? 'No studies found for your filters.' 
                 : 'No studies available.'}
