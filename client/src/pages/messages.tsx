@@ -390,8 +390,8 @@ export default function Messages() {
 
   if (conversationsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ministry-navy"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ministry-gold"></div>
       </div>
     );
   }
@@ -403,9 +403,12 @@ export default function Messages() {
       {/* Conversations List */}
       {!selectedConversation ? (
         <div className="w-full">
-          <div className="bg-gradient-to-r from-ministry-charcoal to-ministry-steel dark:from-header-dark dark:to-ministry-charcoal text-white px-6 pt-12 pb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold" data-testid="text-messages-title">Messages</h1>
+          <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h1 className="text-4xl font-black tracking-tight" data-testid="text-messages-title">Messages</h1>
+                <p className="text-ministry-gold-exact text-sm font-semibold">Connect With Your Brothers</p>
+              </div>
               <div className="flex space-x-2">
                 <Dialog open={showUserListDialog} onOpenChange={setShowUserListDialog}>
                   <DialogTrigger asChild>
@@ -614,26 +617,26 @@ export default function Messages() {
           <div className="px-6 py-4">
             {conversations.length === 0 ? (
               <div className="text-center py-8">
-                <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No conversations yet</p>
-                <p className="text-sm text-muted-foreground">Start a new conversation above</p>
+                <MessageCircle className="w-12 h-12 text-ministry-gold mx-auto mb-4" />
+                <p className="text-white font-medium">No conversations yet</p>
+                <p className="text-sm text-gray-400">Start a new conversation above</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {conversations.map((conversation) => (
                   <Card
                     key={conversation.id}
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    className="cursor-pointer bg-black border-2 border-black hover:ring-1 hover:ring-ministry-gold transition-all"
                     onClick={() => setSelectedConversation(conversation)}
                     data-testid={`conversation-item-${conversation.id}`}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-foreground truncate">
+                          <h3 className="font-medium text-white truncate">
                             {getConversationTitle(conversation)}
                           </h3>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-gray-400">
                             {conversation.type === "group" 
                               ? `${conversation.participants?.length || 0} members`
                               : "Direct message"
@@ -641,7 +644,7 @@ export default function Messages() {
                           </p>
                         </div>
                         {conversation.lastMessageAt && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-ministry-gold">
                             {formatMessageTime(conversation.lastMessageAt)}
                           </p>
                         )}
@@ -657,19 +660,19 @@ export default function Messages() {
         /* Chat Interface */
         <div className="w-full h-screen flex flex-col pb-16">
           {/* Chat Header */}
-          <div className="bg-ministry-charcoal text-white px-6 py-4 flex items-center flex-shrink-0">
+          <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal text-white px-6 py-4 flex items-center flex-shrink-0">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSelectedConversation(null)}
-              className="text-white hover:bg-ministry-charcoal mr-3"
+              className="text-white hover:bg-white/10 mr-3"
               data-testid="button-back-to-conversations"
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div className="flex-1">
-              <h2 className="font-bold">{getConversationTitle(selectedConversation)}</h2>
-              <p className="text-sm text-white/70">
+              <h2 className="font-bold text-white">{getConversationTitle(selectedConversation)}</h2>
+              <p className="text-sm text-ministry-gold-exact">
                 {selectedConversation.type === "group" 
                   ? `${selectedConversation.participants?.length || 0} members`
                   : "Direct message"
@@ -814,7 +817,7 @@ export default function Messages() {
                   <Button
                     type="submit"
                     disabled={!newMessage.trim() || sendMessageMutation.isPending}
-                    className="bg-primary hover:bg-primary/90"
+                    className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black"
                     data-testid="button-send-message"
                   >
                     <Send className="w-4 h-4" />
