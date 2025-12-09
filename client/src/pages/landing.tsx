@@ -12,7 +12,7 @@ export default function Landing() {
             Man Up God's Way
           </h1>
           <p className="text-xl text-[#FCD000] mb-8" data-testid="hero-subtitle">
-            Strengthen your faith, character, and leadership through biblical masculinity
+            Strengthen your Faith, character, and leadership through biblical masculinity
           </p>
           <Button 
             onClick={() => window.location.href = '/api/login'}
