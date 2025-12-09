@@ -30,7 +30,7 @@ export default function Challenges() {
       return response.json();
     },
     staleTime: 0,
-    refetchInterval: 5000, // Poll every 5 seconds for challenges list
+    refetchInterval: 5000,
   });
 
   // Fetch current week's challenge
@@ -47,31 +47,27 @@ export default function Challenges() {
       if (!response.ok) return null;
       return response.json();
     },
-    staleTime: 0, // Always consider data stale to enable faster updates
-    gcTime: 0, // Don't cache at all (gcTime is the new name for cacheTime)
-    refetchOnWindowFocus: true, // Refetch when window gains focus
-    refetchInterval: 3000, // Poll every 3 seconds for real-time updates
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: true,
+    refetchInterval: 3000,
   });
 
   // Filter and sort challenges (current and previous only, excluding current week display)
   const processedChallenges = challenges
     .filter((challenge: Challenge) => {
-      // Exclude current week's challenge from the list (it's shown separately)
       if (currentWeekChallenge && challenge.id === currentWeekChallenge.id) {
         return false;
       }
       
-      // Only show current and previous challenges (not future ones)
       const now = new Date();
       const challengeDate = new Date(challenge.releaseDate);
-      const startOfThisWeek = startOfWeek(now, { weekStartsOn: 1 }); // Monday
+      const startOfThisWeek = startOfWeek(now, { weekStartsOn: 1 });
       
-      // If challenge is in the future (after this week), don't show it
       if (challengeDate > startOfThisWeek) {
         return false;
       }
       
-      // Filter by topic
       if (filterTopic !== 'all' && challenge.topic !== filterTopic) {
         return false;
       }
@@ -84,36 +80,20 @@ export default function Challenges() {
       return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
     });
 
-  // Get unique topics for filter
   const uniqueTopics: string[] = Array.from(new Set(challenges.map((c: Challenge) => c.topic as string))).sort();
 
   const formatChallengeDate = (releaseDate: string) => {
-    // Parse the UTC date and format it correctly
     const date = new Date(releaseDate);
     return format(date, 'MMM d, yyyy');
   };
 
-  const getTopicColor = (topic: string) => {
-    const colors: Record<string, string> = {
-      leadership: 'bg-blue-100 text-blue-800 border-blue-200',
-      marriage: 'bg-pink-100 text-pink-800 border-pink-200',
-      fatherhood: 'bg-green-100 text-green-800 border-green-200',
-      character: 'bg-purple-100 text-purple-800 border-purple-200',
-      faith: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-      discipline: 'bg-orange-100 text-orange-800 border-orange-200',
-      service: 'bg-teal-100 text-teal-800 border-teal-200',
-      growth: 'bg-amber-100 text-amber-800 border-amber-200',
-    };
-    return colors[topic] || 'bg-gray-100 text-gray-800 border-gray-200';
-  };
-
   const ChallengeCard = ({ challenge, isCurrentWeek = false }: { challenge: Challenge; isCurrentWeek?: boolean }) => (
-    <Card className={`hover:shadow-md transition-shadow bg-ministry-gold-exact ${isCurrentWeek ? 'ring-2 ring-ministry-gold bg-ministry-gold-exact/30' : ''}`}>
+    <Card className={`bg-black border-2 border-black ${isCurrentWeek ? 'ring-2 ring-ministry-gold' : ''}`}>
       <CardContent className="p-6">
         <div className="flex items-start space-x-4">
           <div className="flex-shrink-0">
             <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
-              isCurrentWeek ? 'bg-ministry-gold text-black' : 'bg-ministry-gold-exact text-ministry-gold'
+              isCurrentWeek ? 'bg-ministry-gold text-black' : 'bg-gray-800 text-ministry-gold'
             }`}>
               {isCurrentWeek ? (
                 <Star className="w-8 h-8 fill-current" />
@@ -126,16 +106,16 @@ export default function Challenges() {
           <div className="flex-1">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <h3 className="font-semibold text-lg mb-1 text-black">
+                <h3 className="font-semibold text-lg mb-1 text-white">
                   {challenge.title}
                   {isCurrentWeek && (
-                    <Badge className="ml-2 bg-ministry-gold text-black">
+                    <Badge className="ml-2 bg-ministry-gold-exact text-black font-semibold">
                       Current Week
                     </Badge>
                   )}
                 </h3>
-                <div className="flex items-center space-x-3 text-sm text-black mb-2">
-                  <Badge className={`text-xs capitalize border ${getTopicColor(challenge.topic)}`}>
+                <div className="flex items-center space-x-3 text-sm text-gray-400 mb-2">
+                  <Badge className="bg-ministry-gold-exact text-black font-semibold text-xs capitalize border-0">
                     {challenge.topic}
                   </Badge>
                   <div className="flex items-center">
@@ -147,7 +127,7 @@ export default function Challenges() {
             </div>
 
             {challenge.description && (
-              <p className="text-black text-sm line-clamp-2">
+              <p className="text-gray-300 text-sm line-clamp-2">
                 {challenge.description}
               </p>
             )}
@@ -159,7 +139,7 @@ export default function Challenges() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-background">
         <div className="px-6 pt-6">
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ministry-gold"></div>
@@ -170,18 +150,16 @@ export default function Challenges() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      <div className="px-6 pt-6 space-y-6">
-        {/* Header */}
-        <div className="text-center mb-8 bg-black p-6 rounded-lg">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Weekly Challenges
-          </h1>
-          <p className="text-white">
-            Grow stronger in faith through weekly challenges designed to build godly character
-          </p>
+    <div className="min-h-screen bg-background pb-20">
+      {/* Header - matching War Room style */}
+      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-4xl font-black mb-2 tracking-tight">Weekly Challenges</h1>
+          <p className="text-ministry-gold-exact text-sm font-semibold">Grow Stronger In Faith Through Weekly Challenges</p>
         </div>
+      </div>
 
+      <div className="px-6 py-6 space-y-6 max-w-2xl mx-auto">
         {/* Current Week Challenge */}
         {currentWeekChallenge ? (
           <div className="mb-8">
@@ -197,11 +175,11 @@ export default function Challenges() {
               <Target className="w-6 h-6 text-ministry-gold mr-2" />
               <h2 className="text-xl font-bold text-white">This Week's Challenge</h2>
             </div>
-            <Card className="text-center py-12 bg-ministry-gold-exact">
+            <Card className="text-center py-12 bg-black border-2 border-black">
               <CardContent>
-                <Clock className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
-                <h3 className="text-lg font-medium text-black mb-2">No Current Challenge</h3>
-                <p className="text-black">Check back soon for this week's challenge!</p>
+                <Clock className="w-12 h-12 mx-auto text-ministry-gold mb-4" />
+                <h3 className="text-lg font-medium text-white mb-2">No Current Challenge</h3>
+                <p className="text-gray-400">Check back soon for this week's challenge!</p>
               </CardContent>
             </Card>
           </div>
@@ -216,7 +194,7 @@ export default function Challenges() {
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium text-white">Filter by Topic:</span>
               <Select value={filterTopic} onValueChange={setFilterTopic}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-40 border-white bg-transparent text-white">
                   <div className="flex items-center">
                     <Filter className="w-4 h-4 mr-2" />
                     <SelectValue placeholder="All Topics" />
@@ -240,7 +218,7 @@ export default function Challenges() {
                 variant="default"
                 size="sm"
                 onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-                className="flex items-center space-x-1 bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                className="flex items-center space-x-1 bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-semibold"
               >
                 {sortOrder === 'desc' ? (
                   <>
@@ -260,15 +238,15 @@ export default function Challenges() {
           {/* Active Filters Display */}
           {filterTopic !== 'all' && (
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-black">Showing:</span>
-              <Badge variant="outline" className="capitalize">
+              <span className="text-sm text-gray-400">Showing:</span>
+              <Badge className="capitalize bg-ministry-gold-exact text-black font-semibold">
                 {filterTopic} challenges
               </Badge>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setFilterTopic('all')}
-                className="text-xs text-ministry-slate hover:text-ministry-charcoal"
+                className="text-xs text-gray-400 hover:text-white"
               >
                 Clear filter
               </Button>
@@ -278,13 +256,13 @@ export default function Challenges() {
 
         {/* Previous Challenges List */}
         {processedChallenges.length === 0 ? (
-          <Card className="text-center py-12 bg-ministry-gold-exact">
+          <Card className="text-center py-12 bg-black border-2 border-black">
             <CardContent>
-              <Trophy className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
-              <h3 className="text-lg font-medium text-black mb-2">
+              <Trophy className="w-12 h-12 mx-auto text-ministry-gold mb-4" />
+              <h3 className="text-lg font-medium text-white mb-2">
                 {filterTopic !== 'all' ? 'No challenges found for this topic' : 'No previous challenges yet'}
               </h3>
-              <p className="text-black">
+              <p className="text-gray-400">
                 {filterTopic !== 'all' 
                   ? 'Try selecting a different topic or clear the filter' 
                   : 'Check back as more challenges are added!'}
