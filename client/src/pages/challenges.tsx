@@ -4,7 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trophy, Calendar, Filter, Target, Star, ArrowUp, ArrowDown, Clock, Users, CheckCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Trophy, Calendar, Filter, Target, Star, ArrowUp, ArrowDown, Clock, Users, CheckCircle, Eye } from "lucide-react";
 import { format, startOfWeek } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -22,6 +23,8 @@ interface Challenge {
 export default function Challenges() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterTopic, setFilterTopic] = useState<string>('all');
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
+  const [showChallengeDialog, setShowChallengeDialog] = useState(false);
   const { toast } = useToast();
 
   // Get current user
@@ -73,7 +76,18 @@ export default function Challenges() {
     refetchInterval: 3000,
   });
 
-  // Check if current user has accepted the challenge
+  // Fetch participant count for selected challenge in dialog
+  const { data: selectedParticipantCount } = useQuery({
+    queryKey: ['api', 'challenges', selectedChallenge?.id, 'participant-count'],
+    queryFn: async () => {
+      const response = await fetch(`/api/challenges/${selectedChallenge?.id}/participant-count`, { credentials: 'include' });
+      if (!response.ok) return { count: 0 };
+      return response.json();
+    },
+    enabled: !!selectedChallenge?.id,
+  });
+
+  // Check if current user has accepted the current week challenge
   const { data: userAccepted } = useQuery({
     queryKey: ['api', 'challenges', currentWeekChallenge?.id, 'user-accepted'],
     queryFn: async () => {
@@ -83,6 +97,17 @@ export default function Challenges() {
     },
     enabled: !!currentWeekChallenge?.id && !!user,
     refetchInterval: 3000,
+  });
+
+  // Check if user has accepted the selected challenge
+  const { data: selectedUserAccepted } = useQuery({
+    queryKey: ['api', 'challenges', selectedChallenge?.id, 'user-accepted'],
+    queryFn: async () => {
+      const response = await fetch(`/api/challenges/${selectedChallenge?.id}/user-accepted`, { credentials: 'include' });
+      if (!response.ok) return { hasAccepted: false };
+      return response.json();
+    },
+    enabled: !!selectedChallenge?.id && !!user,
   });
 
   // Accept challenge mutation
@@ -97,6 +122,8 @@ export default function Challenges() {
       });
       queryClient.invalidateQueries({ queryKey: ['api', 'challenges', currentWeekChallenge?.id, 'participant-count'] });
       queryClient.invalidateQueries({ queryKey: ['api', 'challenges', currentWeekChallenge?.id, 'user-accepted'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', selectedChallenge?.id, 'participant-count'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', selectedChallenge?.id, 'user-accepted'] });
     },
     onError: () => {
       toast({
@@ -141,8 +168,16 @@ export default function Challenges() {
     return format(date, 'MMM d, yyyy');
   };
 
+  const openChallengeDialog = (challenge: Challenge) => {
+    setSelectedChallenge(challenge);
+    setShowChallengeDialog(true);
+  };
+
   const ChallengeCard = ({ challenge, isCurrentWeek = false }: { challenge: Challenge; isCurrentWeek?: boolean }) => (
-    <Card className={`bg-black border-2 border-black ${isCurrentWeek ? 'ring-2 ring-ministry-gold' : ''}`}>
+    <Card 
+      className={`bg-black border-2 border-black cursor-pointer hover:ring-1 hover:ring-ministry-gold transition-all ${isCurrentWeek ? 'ring-2 ring-ministry-gold' : ''}`}
+      onClick={() => openChallengeDialog(challenge)}
+    >
       <CardContent className="p-6">
         <div className="flex items-start space-x-4">
           <div className="flex-shrink-0">
@@ -181,10 +216,15 @@ export default function Challenges() {
             </div>
 
             {challenge.description && (
-              <p className="text-gray-300 text-sm line-clamp-2 mb-4">
+              <p className="text-gray-300 text-sm line-clamp-2 mb-2">
                 {challenge.description}
               </p>
             )}
+
+            <div className="flex items-center text-ministry-gold text-sm">
+              <Eye className="w-4 h-4 mr-1" />
+              <span>Tap to view details</span>
+            </div>
 
             {/* Accept Challenge Section - Only for current week */}
             {isCurrentWeek && (
@@ -199,7 +239,10 @@ export default function Challenges() {
                   {user ? (
                     <Button
                       className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-bold"
-                      onClick={() => acceptChallengeMutation.mutate(challenge.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        acceptChallengeMutation.mutate(challenge.id);
+                      }}
                       disabled={userAccepted?.hasAccepted || acceptChallengeMutation.isPending}
                       data-testid="button-accept-challenge"
                     >
@@ -218,6 +261,7 @@ export default function Challenges() {
                     <Button
                       className="bg-gray-700 text-gray-400"
                       disabled
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Login to Accept
                     </Button>
@@ -242,6 +286,8 @@ export default function Challenges() {
       </div>
     );
   }
+
+  const isSelectedCurrentWeek = selectedChallenge && currentWeekChallenge && selectedChallenge.id === currentWeekChallenge.id;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -371,6 +417,96 @@ export default function Challenges() {
           </div>
         )}
       </div>
+
+      {/* Challenge Detail Dialog */}
+      <Dialog open={showChallengeDialog} onOpenChange={setShowChallengeDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Target className="w-5 h-5 text-ministry-gold" />
+              <span className="text-black">Challenge Details</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedChallenge && (
+            <div className="space-y-4">
+              {/* Challenge Header */}
+              <div className="bg-black text-white p-6 rounded-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="inline-flex items-center bg-ministry-gold-exact text-black px-3 py-1 rounded-full text-xs font-medium">
+                    <Target className="w-3 h-3 mr-1" fill="currentColor" />
+                    Week of {formatChallengeDate(selectedChallenge.releaseDate)}
+                  </div>
+                  <Badge className="bg-ministry-gold-exact text-black font-semibold capitalize">
+                    {selectedChallenge.topic}
+                  </Badge>
+                </div>
+                
+                <h3 className="text-xl font-bold mb-3">
+                  {selectedChallenge.title}
+                  {isSelectedCurrentWeek && (
+                    <Badge className="ml-2 bg-ministry-gold text-black">
+                      Current Week
+                    </Badge>
+                  )}
+                </h3>
+                
+                <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">
+                  {selectedChallenge.description || "No description available for this challenge."}
+                </p>
+              </div>
+
+              {/* Participant Count Banner */}
+              <div className="bg-ministry-gold-exact border border-ministry-gold rounded-lg p-4">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center space-x-2">
+                    <Users className="w-5 h-5 text-black" />
+                    <span className="text-sm font-medium text-black">
+                      {selectedParticipantCount?.count || 0} {(selectedParticipantCount?.count || 0) === 1 ? 'brother has' : 'brothers have'} taken this challenge
+                    </span>
+                  </div>
+                  {user ? (
+                    <Button 
+                      className="bg-black hover:bg-gray-800 text-white font-bold"
+                      onClick={() => acceptChallengeMutation.mutate(selectedChallenge.id)}
+                      disabled={selectedUserAccepted?.hasAccepted || acceptChallengeMutation.isPending}
+                      data-testid="button-accept-challenge-dialog"
+                    >
+                      {acceptChallengeMutation.isPending ? (
+                        "Accepting..."
+                      ) : selectedUserAccepted?.hasAccepted ? (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Challenge Accepted
+                        </>
+                      ) : (
+                        "I Take the Challenge"
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      className="bg-gray-700 text-gray-400"
+                      disabled
+                    >
+                      Login to Accept
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Close Button */}
+              <div className="flex justify-end pt-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowChallengeDialog(false)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
