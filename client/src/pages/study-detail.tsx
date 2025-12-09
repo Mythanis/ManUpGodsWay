@@ -614,7 +614,7 @@ export default function StudyDetail() {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-bold text-ministry-gold-exact text-lg">🎉 Study Completed!</h3>
-                        <p className="text-sm text-gray-300">Congratulations on finishing this study and growing in your faith journey.</p>
+                        <p className="text-sm text-gray-300">Congratulations on finishing this study and growing in your Faith journey.</p>
                         {userProgress?.completedAt && (
                           <p className="text-xs text-gray-400 mt-1 font-medium">
                             Completed on {new Date(userProgress.completedAt).toLocaleDateString('en-US', {
