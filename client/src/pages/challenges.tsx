@@ -229,16 +229,17 @@ export default function Challenges() {
             {/* Accept Challenge Section - Only for current week */}
             {isCurrentWeek && (
               <div className="mt-4 pt-4 border-t border-gray-700">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div className="flex items-center space-x-2">
-                    <Users className="w-5 h-5 text-ministry-gold" />
+                    <Users className="w-5 h-5 text-ministry-gold flex-shrink-0" />
                     <span className="text-sm text-gray-300">
-                      {participantCount?.count || 0} {(participantCount?.count || 0) === 1 ? 'brother has' : 'brothers have'} accepted
+                      {participantCount?.count || 0} accepted
                     </span>
                   </div>
                   {user ? (
                     <Button
-                      className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-bold"
+                      size="sm"
+                      className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-bold whitespace-nowrap"
                       onClick={(e) => {
                         e.stopPropagation();
                         acceptChallengeMutation.mutate(challenge.id);
@@ -247,23 +248,24 @@ export default function Challenges() {
                       data-testid="button-accept-challenge"
                     >
                       {acceptChallengeMutation.isPending ? (
-                        "Accepting..."
+                        "..."
                       ) : userAccepted?.hasAccepted ? (
                         <>
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Challenge Accepted
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Accepted
                         </>
                       ) : (
-                        "I Take the Challenge"
+                        "Accept"
                       )}
                     </Button>
                   ) : (
                     <Button
+                      size="sm"
                       className="bg-gray-700 text-gray-400"
                       disabled
                       onClick={(e) => e.stopPropagation()}
                     >
-                      Login to Accept
+                      Login
                     </Button>
                   )}
                 </div>
@@ -467,24 +469,26 @@ export default function Challenges() {
                   </div>
                   {user ? (
                     <Button 
-                      className="bg-black hover:bg-gray-800 text-white font-bold"
+                      size="sm"
+                      className="bg-black hover:bg-gray-800 text-white font-bold whitespace-nowrap"
                       onClick={() => acceptChallengeMutation.mutate(selectedChallenge.id)}
                       disabled={selectedUserAccepted?.hasAccepted || acceptChallengeMutation.isPending}
                       data-testid="button-accept-challenge-dialog"
                     >
                       {acceptChallengeMutation.isPending ? (
-                        "Accepting..."
+                        "..."
                       ) : selectedUserAccepted?.hasAccepted ? (
                         <>
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Challenge Accepted
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Accepted
                         </>
                       ) : (
-                        "I Take the Challenge"
+                        "Accept"
                       )}
                     </Button>
                   ) : (
                     <Button
+                      size="sm"
                       className="bg-gray-700 text-gray-400"
                       disabled
                     >
