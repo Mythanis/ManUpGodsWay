@@ -513,13 +513,17 @@ export default function Home() {
             {/* No Current Study - Show Recommendations */}
             <Card className="border border-ministry-charcoal p-6 mb-4 bg-ministry-gold-exact" data-testid="card-no-current-study">
               <div className="text-center">
-                <p className="text-ministry-slate mb-4">You haven't started any studies yet</p>
+                <p className="text-ministry-slate mb-4">
+                  {completedCount > 0 
+                    ? "Great job completing your study! Start a new one to continue growing." 
+                    : "You haven't started any studies yet"}
+                </p>
                 <Button 
                   className="bg-card text-foreground hover:bg-muted border border-ministry-charcoal"
                   data-testid="button-browse-studies"
                   onClick={() => window.location.href = '/library'}
                 >
-                  Browse Studies
+                  {completedCount > 0 ? "Start New Study" : "Browse Studies"}
                 </Button>
               </div>
             </Card>
@@ -528,7 +532,7 @@ export default function Home() {
             {recommendedStudies.length > 0 && (
               <>
                 <h3 className="text-md font-semibold text-white mb-3">Recommended for You</h3>
-                <p className="text-xs text-white mb-4">Based on your interests</p>
+                <p className="text-xs text-white mb-4">{completedCount > 0 ? "Continue your Faith journey" : "Based on your interests"}</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
                     <Card key={study.id} className="border border-ministry-charcoal hover:shadow-sm transition-shadow bg-ministry-gold-exact">
