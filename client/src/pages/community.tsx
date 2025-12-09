@@ -519,9 +519,9 @@ export default function Community() {
               <span>Start New Discussion</span>
             </button>
           </DialogTrigger>
-          <DialogContent className="max-w-md mx-auto" data-testid="dialog-new-discussion">
+          <DialogContent className="max-w-md mx-auto bg-black border-2 border-black" data-testid="dialog-new-discussion">
             <DialogHeader>
-              <DialogTitle>Start New Discussion</DialogTitle>
+              <DialogTitle className="text-white text-xl font-black">Start New Discussion</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form 
@@ -533,10 +533,11 @@ export default function Community() {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel className="text-gray-300">Title</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="What would you like to discuss?"
+                          className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
                           {...field}
                           data-testid="input-discussion-title"
                         />
@@ -551,14 +552,14 @@ export default function Community() {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
+                      <FormLabel className="text-gray-300">Category</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-discussion-category">
+                          <SelectTrigger className="bg-gray-800 border-gray-700 text-white" data-testid="select-discussion-category">
                             <SelectValue placeholder="Select a category" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="bg-gray-800 border-gray-700">
                           {creationCategories.map((category) => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.label}
@@ -576,11 +577,11 @@ export default function Community() {
                   name="content"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Content</FormLabel>
+                      <FormLabel className="text-gray-300">Content</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Share your thoughts..."
-                          className="min-h-[100px]"
+                          className="min-h-[100px] bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
                           {...field}
                           data-testid="textarea-discussion-content"
                         />
@@ -595,7 +596,7 @@ export default function Community() {
                     type="button"
                     variant="outline"
                     onClick={() => setDialogOpen(false)}
-                    className="flex-1"
+                    className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
                     data-testid="button-cancel-discussion"
                   >
                     Cancel
@@ -603,7 +604,7 @@ export default function Community() {
                   <Button
                     type="submit"
                     disabled={createDiscussion.isPending}
-                    className="flex-1 bg-ministry-navy hover:bg-ministry-charcoal"
+                    className="flex-1 bg-ministry-gold-exact text-black hover:bg-ministry-gold font-semibold"
                     data-testid="button-create-discussion"
                   >
                     {createDiscussion.isPending ? "Creating..." : "Create"}
