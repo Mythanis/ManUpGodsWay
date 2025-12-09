@@ -98,18 +98,18 @@ export default function Profile() {
   return (
     <div className="pb-20">
       {/* Profile Header */}
-      <div className="bg-gradient-to-br from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-8">
+      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-8">
         <div className="text-center">
           <img 
             src={(user as any)?.profileImageUrl || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=4A90B8&color=fff`}
             alt="Profile"
-            className="w-20 h-20 rounded-full mx-auto mb-4 border-4 border-white/20 object-cover"
+            className="w-20 h-20 rounded-full mx-auto mb-4 border-4 border-ministry-gold-exact object-cover"
             data-testid="img-profile"
           />
-          <h1 className="text-xl font-bold mb-1" data-testid="text-user-name">
+          <h1 className="text-2xl font-black mb-1 tracking-tight" data-testid="text-user-name">
             {user?.firstName} {user?.lastName}
           </h1>
-          <p className="text-blue-200 text-sm mb-4" data-testid="text-member-since">
+          <p className="text-ministry-gold-exact text-sm font-semibold mb-4" data-testid="text-member-since">
             Member since {new Date((user as any)?.createdAt || '').toLocaleDateString('en-US', { 
               month: 'long', 
               year: 'numeric' 
@@ -121,19 +121,19 @@ export default function Profile() {
               <p className="text-2xl font-bold" data-testid="text-completed-count">
                 {completedStudies.length}
               </p>
-              <p className="text-xs text-blue-200">Studies Completed</p>
+              <p className="text-xs text-ministry-gold-exact font-semibold">Studies Completed</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold" data-testid="text-streak-days">
                 {user?.streakDays || 0}
               </p>
-              <p className="text-xs text-blue-200">Days Active</p>
+              <p className="text-xs text-ministry-gold-exact font-semibold">Days Active</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold" data-testid="text-forum-posts">
                 0
               </p>
-              <p className="text-xs text-blue-200">Forum Posts</p>
+              <p className="text-xs text-ministry-gold-exact font-semibold">Forum Posts</p>
             </div>
           </div>
           
@@ -146,9 +146,9 @@ export default function Profile() {
 
       {/* Account Management */}
       <div className="px-6 -mt-6 relative z-10 mb-6">
-        <Card className="shadow-lg" data-testid="card-account">
+        <Card className="shadow-lg bg-black border-2 border-black" data-testid="card-account">
           <CardContent className="p-6">
-            <h2 className="text-lg font-bold text-foreground mb-4">Account & Subscription</h2>
+            <h2 className="text-lg font-bold text-white mb-4">Account & Subscription</h2>
             
             <div className="space-y-4">
               <div className={`flex items-center justify-between p-4 rounded-xl border ${
@@ -189,16 +189,16 @@ export default function Profile() {
               <EditProfileDialog>
                 <Button 
                   variant="outline"
-                  className="w-full justify-between p-4 h-auto border-ministry-charcoal hover:bg-muted"
+                  className="w-full justify-between p-4 h-auto border-gray-700 hover:bg-gray-800 bg-gray-800"
                   data-testid="button-edit-profile"
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-lg bg-ministry-steel/20 flex items-center justify-center">
-                      <User className="w-4 h-4 text-ministry-steel" />
+                    <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact flex items-center justify-center">
+                      <User className="w-4 h-4 text-black" />
                     </div>
-                    <span className="font-medium text-foreground">Edit Profile</span>
+                    <span className="font-medium text-white">Edit Profile</span>
                   </div>
-                  <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                   </svg>
                 </Button>
@@ -210,26 +210,26 @@ export default function Profile() {
 
       {/* Settings Menu */}
       <div className="px-6 mb-6">
-        <h2 className="text-lg font-bold text-foreground mb-4">Settings</h2>
+        <h2 className="text-lg font-bold text-white mb-4">Settings</h2>
         
-        <Card className="border-ministry-charcoal overflow-hidden" data-testid="card-settings">
+        <Card className="bg-black border-2 border-black overflow-hidden" data-testid="card-settings">
           <CardContent className="p-0">
             <NotificationPanel variant="button" />
             
             {/* Notification Preferences */}
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-ministry-charcoal"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b border-gray-700"
               onClick={() => setLocation('/notification-preferences')}
               data-testid="button-notification-preferences"
             >
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact flex items-center justify-center">
-                  <Settings className="w-4 h-4 text-ministry-gold" />
+                  <Settings className="w-4 h-4 text-black" />
                 </div>
-                <span className="font-medium text-foreground">Notification Preferences</span>
+                <span className="font-medium text-white">Notification Preferences</span>
               </div>
-              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </Button>
@@ -240,59 +240,48 @@ export default function Profile() {
             
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-ministry-charcoal"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b border-gray-700"
               data-testid="button-privacy"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-ministry-steel/20 flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-ministry-steel" />
+                <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-black" />
                 </div>
-                <span className="font-medium text-foreground">Privacy & Security</span>
+                <span className="font-medium text-white">Privacy & Security</span>
               </div>
-              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </Button>
             
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-ministry-charcoal"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b border-gray-700"
               data-testid="button-help"
             >
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact flex items-center justify-center">
-                  <HelpCircle className="w-4 h-4 text-ministry-gold" />
+                  <HelpCircle className="w-4 h-4 text-black" />
                 </div>
-                <span className="font-medium text-foreground">Help & Support</span>
+                <span className="font-medium text-white">Help & Support</span>
               </div>
-              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </Button>
             
             <button
               onClick={() => setShowFeedbackDialog(true)}
-              style={{
-                backgroundColor: effectiveTheme === 'dark' 
-                  ? 'hsl(220 8% 26%)' 
-                  : 'hsl(240 1.9608% 90%)',
-                color: effectiveTheme === 'dark' 
-                  ? 'hsl(0 0% 95%)' 
-                  : 'hsl(210 25% 7.8431%)',
-                borderColor: effectiveTheme === 'dark' 
-                  ? 'hsl(210 5.2632% 14.9020%)' 
-                  : 'hsl(201.4286 30.4348% 90.9804%)'
-              }}
-              className="w-full justify-between p-4 h-auto hover:opacity-90 border-b border cursor-pointer transition-colors flex"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b border-gray-700 cursor-pointer transition-colors flex bg-transparent"
               data-testid="button-feedback"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-ministry-navy/20 flex items-center justify-center">
-                  <MessageCircle className="w-4 h-4 text-ministry-navy" />
+                <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact flex items-center justify-center">
+                  <MessageCircle className="w-4 h-4 text-black" />
                 </div>
-                <span className="font-medium">Send Feedback</span>
+                <span className="font-medium text-white">Send Feedback</span>
               </div>
-              <svg className="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </button>
@@ -300,16 +289,16 @@ export default function Profile() {
             <Button 
               variant="ghost"
               onClick={() => window.location.href = '/api/logout'}
-              className="w-full justify-between p-4 h-auto hover:bg-muted"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800"
               data-testid="button-logout"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
-                  <LogOut className="w-4 h-4 text-red-600" />
+                <div className="w-8 h-8 rounded-lg bg-red-900/50 flex items-center justify-center">
+                  <LogOut className="w-4 h-4 text-red-400" />
                 </div>
-                <span className="font-medium text-red-600">Sign Out</span>
+                <span className="font-medium text-red-400">Sign Out</span>
               </div>
-              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </Button>
@@ -386,7 +375,7 @@ export default function Profile() {
       </div>
 
       {/* Testimony Section */}
-      <div className="px-6 mt-6">
+      <div className="px-6 mt-6 mb-6">
         <h2 className="text-lg font-bold text-white mb-4">Your Testimony</h2>
         <TestimonyForm isOwnProfile={true} />
       </div>
