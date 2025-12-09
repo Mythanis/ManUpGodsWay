@@ -604,7 +604,8 @@ export default function Community() {
                   <Button
                     type="submit"
                     disabled={createDiscussion.isPending}
-                    className="flex-1 bg-ministry-gold-exact text-black hover:bg-ministry-gold font-semibold"
+                    className="flex-1 font-semibold"
+                    style={{ backgroundColor: '#FCD000', color: 'black' }}
                     data-testid="button-create-discussion"
                   >
                     {createDiscussion.isPending ? "Creating..." : "Create"}
