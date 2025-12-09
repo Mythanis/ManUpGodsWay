@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trophy, Calendar, Filter, Target, Star, ArrowUp, ArrowDown, Clock, X } from "lucide-react";
-import { format, startOfWeek, isAfter, isSameWeek } from "date-fns";
+import { Trophy, Calendar, Filter, Target, Star, ArrowUp, ArrowDown, Clock, Users, CheckCircle } from "lucide-react";
+import { format, startOfWeek } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface Challenge {
   id: string;
@@ -20,6 +22,12 @@ interface Challenge {
 export default function Challenges() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterTopic, setFilterTopic] = useState<string>('all');
+  const { toast } = useToast();
+
+  // Get current user
+  const { data: user } = useQuery({
+    queryKey: ['/api/auth/user'],
+  });
 
   // Fetch all challenges
   const { data: challenges = [], isLoading } = useQuery({
@@ -51,6 +59,52 @@ export default function Challenges() {
     gcTime: 0,
     refetchOnWindowFocus: true,
     refetchInterval: 3000,
+  });
+
+  // Fetch participant count for current challenge
+  const { data: participantCount } = useQuery({
+    queryKey: ['api', 'challenges', currentWeekChallenge?.id, 'participant-count'],
+    queryFn: async () => {
+      const response = await fetch(`/api/challenges/${currentWeekChallenge?.id}/participant-count`, { credentials: 'include' });
+      if (!response.ok) return { count: 0 };
+      return response.json();
+    },
+    enabled: !!currentWeekChallenge?.id,
+    refetchInterval: 3000,
+  });
+
+  // Check if current user has accepted the challenge
+  const { data: userAccepted } = useQuery({
+    queryKey: ['api', 'challenges', currentWeekChallenge?.id, 'user-accepted'],
+    queryFn: async () => {
+      const response = await fetch(`/api/challenges/${currentWeekChallenge?.id}/user-accepted`, { credentials: 'include' });
+      if (!response.ok) return { hasAccepted: false };
+      return response.json();
+    },
+    enabled: !!currentWeekChallenge?.id && !!user,
+    refetchInterval: 3000,
+  });
+
+  // Accept challenge mutation
+  const acceptChallengeMutation = useMutation({
+    mutationFn: async (challengeId: string) => {
+      return apiRequest('POST', `/api/challenges/${challengeId}/accept`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Challenge Accepted!",
+        description: "You've joined this week's challenge. Let's grow together!",
+      });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', currentWeekChallenge?.id, 'participant-count'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', currentWeekChallenge?.id, 'user-accepted'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to accept challenge. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   // Filter and sort challenges (current and previous only, excluding current week display)
@@ -127,9 +181,49 @@ export default function Challenges() {
             </div>
 
             {challenge.description && (
-              <p className="text-gray-300 text-sm line-clamp-2">
+              <p className="text-gray-300 text-sm line-clamp-2 mb-4">
                 {challenge.description}
               </p>
+            )}
+
+            {/* Accept Challenge Section - Only for current week */}
+            {isCurrentWeek && (
+              <div className="mt-4 pt-4 border-t border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Users className="w-5 h-5 text-ministry-gold" />
+                    <span className="text-sm text-gray-300">
+                      {participantCount?.count || 0} {(participantCount?.count || 0) === 1 ? 'brother has' : 'brothers have'} accepted
+                    </span>
+                  </div>
+                  {user ? (
+                    <Button
+                      className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-bold"
+                      onClick={() => acceptChallengeMutation.mutate(challenge.id)}
+                      disabled={userAccepted?.hasAccepted || acceptChallengeMutation.isPending}
+                      data-testid="button-accept-challenge"
+                    >
+                      {acceptChallengeMutation.isPending ? (
+                        "Accepting..."
+                      ) : userAccepted?.hasAccepted ? (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Challenge Accepted
+                        </>
+                      ) : (
+                        "I Take the Challenge"
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      className="bg-gray-700 text-gray-400"
+                      disabled
+                    >
+                      Login to Accept
+                    </Button>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </div>
