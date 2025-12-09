@@ -1028,7 +1028,7 @@ export default function Home() {
           {currentChallenge && (
             <div className="space-y-4">
               {/* Challenge Header */}
-              <div className="bg-gradient-to-br from-ministry-steel to-ministry-navy text-white p-6 rounded-lg">
+              <div className="bg-black text-white p-6 rounded-lg">
                 <div className="flex items-center justify-between mb-4">
                   <div className="inline-flex items-center bg-ministry-gold-exact text-ministry-gold px-3 py-1 rounded-full text-xs font-medium">
                     <Target className="w-3 h-3 mr-1" fill="currentColor" />
@@ -1037,7 +1037,7 @@ export default function Home() {
                       day: 'numeric' 
                     })}
                   </div>
-                  <span className="text-xs text-blue-200 capitalize">
+                  <span className="text-xs text-[#FCD000] capitalize">
                     {(currentChallenge as any)?.topic}
                   </span>
                 </div>
@@ -1046,7 +1046,7 @@ export default function Home() {
                   {(currentChallenge as any)?.title}
                 </h3>
                 
-                <p className="text-blue-100 leading-relaxed">
+                <p className="text-gray-200 leading-relaxed">
                   {(currentChallenge as any)?.description}
                 </p>
               </div>
