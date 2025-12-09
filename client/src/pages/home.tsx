@@ -811,7 +811,7 @@ export default function Home() {
                   <p>💪 You're building a strong foundation with {completedCount} completed studies!</p>
                 )}
                 {completedCount >= 10 && (
-                  <p>🏆 Incredible dedication! {completedCount} studies completed - you're truly growing in faith!</p>
+                  <p>🏆 Incredible dedication! {completedCount} studies completed - you're truly growing in Faith!</p>
                 )}
                 
                 {(user?.streakDays || 0) >= 7 && (
