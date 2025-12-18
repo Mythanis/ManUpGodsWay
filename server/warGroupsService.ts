@@ -511,7 +511,7 @@ export class WarGroupsService {
   }
 
   // War Group Registration Methods
-  async createRegistration(data: schema.InsertWarGroupRegistration) {
+  async createRegistration(data: schema.InsertWarGroupRegistration & { requestedBy: string }) {
     const [registration] = await db.insert(schema.warGroupRegistrations)
       .values(data)
       .returning();
