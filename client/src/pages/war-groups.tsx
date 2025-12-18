@@ -129,19 +129,19 @@ export default function WarGroups() {
         )}
 
         {/* Search Section */}
-        <div>
+        <div className="relative z-10">
           <h2 className="text-2xl font-bold mb-4">Discover Groups</h2>
           <Card className="bg-ministry-gold-exact border-2 border-black">
             <CardContent className="pt-6">
               <div className="space-y-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-ministry-slate" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-ministry-slate pointer-events-none" />
                   <Input
                     type="text"
                     placeholder="Search groups by name or city..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-white"
+                    className="pl-10 bg-white relative z-10"
                     data-testid="input-search-groups"
                   />
                 </div>
@@ -151,7 +151,7 @@ export default function WarGroups() {
                     placeholder="City"
                     value={cityFilter}
                     onChange={(e) => setCityFilter(e.target.value)}
-                    className="bg-white"
+                    className="bg-white relative z-10"
                     data-testid="input-filter-city"
                   />
                   <Input
@@ -159,7 +159,7 @@ export default function WarGroups() {
                     placeholder="State"
                     value={stateFilter}
                     onChange={(e) => setStateFilter(e.target.value)}
-                    className="bg-white"
+                    className="bg-white relative z-10"
                     data-testid="input-filter-state"
                   />
                 </div>
