@@ -46,7 +46,7 @@ export default function WarGroups() {
     return () => clearTimeout(timer);
   }, [searchTerm, cityFilter, stateFilter]);
 
-  const { data: groups = [], isLoading } = useQuery<WarGroup[]>({
+  const { data: groups = [], isLoading, isFetching } = useQuery<WarGroup[]>({
     queryKey: ['/api/war-groups', { search: debouncedSearch, city: debouncedCity, state: debouncedState }],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -63,29 +63,11 @@ export default function WarGroups() {
     },
   });
 
-  const { data: myGroups = [] } = useQuery<WarGroup[]>({
+  const { data: myGroups = [], isLoading: myGroupsLoading } = useQuery<WarGroup[]>({
     queryKey: ['/api/user/war-groups'],
   });
 
-  if (isLoading) {
-    return (
-      <div className="pb-20">
-        <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl font-black mb-2 tracking-tight">War Groups</h1>
-            <p className="text-ministry-gold-exact text-sm font-semibold">Local Discipleship Groups Across The USA</p>
-          </div>
-        </div>
-        <div className="max-w-4xl mx-auto p-4">
-          <div className="animate-pulse space-y-4">
-            <div className="h-12 bg-ministry-gold-exact rounded"></div>
-            <div className="h-32 bg-ministry-gold-exact rounded"></div>
-            <div className="h-32 bg-ministry-gold-exact rounded"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const initialLoading = isLoading && myGroupsLoading && groups.length === 0;
 
   return (
     <div className="pb-20">
@@ -148,13 +130,13 @@ export default function WarGroups() {
             <CardContent className="pt-6">
               <div className="space-y-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-ministry-slate pointer-events-none" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none z-20" />
                   <Input
                     type="text"
                     placeholder="Search groups by name or city..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-white relative z-10"
+                    className="pl-10 bg-white text-black placeholder:text-gray-400 border-black"
                     data-testid="input-search-groups"
                   />
                 </div>
@@ -164,7 +146,7 @@ export default function WarGroups() {
                     placeholder="City"
                     value={cityFilter}
                     onChange={(e) => setCityFilter(e.target.value)}
-                    className="bg-white relative z-10"
+                    className="bg-white text-black placeholder:text-gray-400 border-black"
                     data-testid="input-filter-city"
                   />
                   <Input
@@ -172,11 +154,11 @@ export default function WarGroups() {
                     placeholder="State"
                     value={stateFilter}
                     onChange={(e) => setStateFilter(e.target.value)}
-                    className="bg-white relative z-10"
+                    className="bg-white text-black placeholder:text-gray-400 border-black"
                     data-testid="input-filter-state"
                   />
                 </div>
-                {isLoading && (
+                {isFetching && (
                   <p className="text-xs text-black text-center">Searching...</p>
                 )}
               </div>
