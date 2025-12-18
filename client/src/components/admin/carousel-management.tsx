@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { Edit, Trash2, Plus, Eye, EyeOff } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -26,6 +26,30 @@ interface CarouselItem {
   updatedAt: string;
 }
 
+const PAGE_LINK_TYPES = [
+  { value: "page_library", label: "Library Page", path: "/library" },
+  { value: "page_videos", label: "Videos Page", path: "/videos" },
+  { value: "page_podcasts", label: "Podcasts Page", path: "/podcasts" },
+  { value: "page_challenges", label: "Challenges Page", path: "/challenges" },
+  { value: "page_fitness", label: "Fitness Page", path: "/fitness" },
+  { value: "page_events", label: "Events Page", path: "/events" },
+  { value: "page_community", label: "Community Page", path: "/community" },
+  { value: "page_brothers", label: "Brothers Page", path: "/brothers" },
+  { value: "page_discipleship", label: "Discipleship Page", path: "/discipleship" },
+  { value: "page_war_room", label: "War Room Page", path: "/hurdle-wall" },
+  { value: "page_war_groups", label: "War Groups Page", path: "/war-groups" },
+  { value: "page_bible", label: "Bible Page", path: "/bible" },
+  { value: "page_more_man_up", label: "More Man Up Page", path: "/more-man-up" },
+];
+
+const CONTENT_LINK_TYPES = [
+  { value: "study", label: "Specific Study" },
+  { value: "video", label: "Specific Video" },
+  { value: "podcast", label: "Specific Podcast" },
+  { value: "devotional", label: "Specific Devotional" },
+  { value: "challenge", label: "Specific Challenge" },
+];
+
 export default function CarouselManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -35,7 +59,7 @@ export default function CarouselManagement() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    linkType: "study",
+    linkType: "page_library",
     linkId: "",
     externalUrl: "",
     position: 1,
@@ -178,7 +202,7 @@ export default function CarouselManagement() {
     setFormData({
       title: "",
       description: "",
-      linkType: "study",
+      linkType: "page_library",
       linkId: "",
       externalUrl: "",
       position: 1,
@@ -188,12 +212,45 @@ export default function CarouselManagement() {
     setEditingItem(null);
   };
 
+  const isPageLink = formData.linkType.startsWith('page_');
+  const isContentLink = ['study', 'video', 'podcast', 'devotional', 'challenge'].includes(formData.linkType);
+  
+  const getPagePath = (linkType: string) => {
+    const page = PAGE_LINK_TYPES.find(p => p.value === linkType);
+    return page?.path || '';
+  };
+  
+  const getLinkTypeLabelForItem = (item: CarouselItem) => {
+    // Check if it's a page link stored as external
+    if (item.linkType === 'external' && item.externalUrl) {
+      const matchedPage = PAGE_LINK_TYPES.find(p => p.path === item.externalUrl);
+      if (matchedPage) return matchedPage.label;
+      return 'External Link';
+    }
+    
+    const page = PAGE_LINK_TYPES.find(p => p.value === item.linkType);
+    if (page) return page.label;
+    const content = CONTENT_LINK_TYPES.find(c => c.value === item.linkType);
+    if (content) return content.label;
+    return item.linkType;
+  };
+
   const handleEdit = (item: CarouselItem) => {
     setEditingItem(item);
+    
+    // Detect if this is a page link based on external URL path
+    let linkType = item.linkType;
+    if (item.linkType === 'external' && item.externalUrl) {
+      const matchedPage = PAGE_LINK_TYPES.find(p => p.path === item.externalUrl);
+      if (matchedPage) {
+        linkType = matchedPage.value;
+      }
+    }
+    
     setFormData({
       title: item.title,
       description: item.description || "",
-      linkType: item.linkType,
+      linkType: linkType,
       linkId: item.linkId || "",
       externalUrl: item.externalUrl || "",
       position: item.position,
@@ -221,11 +278,11 @@ export default function CarouselManagement() {
       return;
     }
 
-    // Validate linkId only for studies (other types only have list pages)
+    // Validate linkId for content types that require selection
     if (formData.linkType === "study" && !formData.linkId) {
       toast({
         title: "Validation Error",
-        description: "Study ID is required for study links",
+        description: "Please select a study",
         variant: "destructive",
       });
       return;
@@ -244,9 +301,18 @@ export default function CarouselManagement() {
     const data = new FormData();
     data.append('title', formData.title);
     data.append('description', formData.description);
-    data.append('linkType', formData.linkType);
-    data.append('linkId', formData.linkId);
-    data.append('externalUrl', formData.externalUrl);
+    
+    // For page links, store as external with the page path
+    if (isPageLink) {
+      data.append('linkType', 'external');
+      data.append('externalUrl', getPagePath(formData.linkType));
+      data.append('linkId', '');
+    } else {
+      data.append('linkType', formData.linkType);
+      data.append('linkId', formData.linkId);
+      data.append('externalUrl', formData.externalUrl);
+    }
+    
     data.append('position', String(formData.position));
     data.append('displayOrder', String(formData.displayOrder));
     
@@ -304,7 +370,7 @@ export default function CarouselManagement() {
                 <p className="text-sm text-ministry-slate mb-2 line-clamp-2">{item.description}</p>
               )}
               <div className="flex items-center justify-between text-xs text-ministry-slate mb-3">
-                <span>Type: {item.linkType}</span>
+                <span>Type: {getLinkTypeLabelForItem(item)}</span>
                 <span>Order: {item.displayOrder}</span>
               </div>
               <div className="flex gap-2">
@@ -389,18 +455,32 @@ export default function CarouselManagement() {
                 <Label htmlFor="carousel-link-type">Link Type *</Label>
                 <Select
                   value={formData.linkType}
-                  onValueChange={(value) => setFormData({ ...formData, linkType: value })}
+                  onValueChange={(value) => setFormData({ ...formData, linkType: value, linkId: "", externalUrl: "" })}
                 >
                   <SelectTrigger id="carousel-link-type" data-testid="select-carousel-link-type">
-                    <SelectValue />
+                    <SelectValue placeholder="Select link type" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="study">Study</SelectItem>
-                    <SelectItem value="video">Video</SelectItem>
-                    <SelectItem value="podcast">Podcast</SelectItem>
-                    <SelectItem value="devotional">Devotional</SelectItem>
-                    <SelectItem value="challenge">Challenge</SelectItem>
-                    <SelectItem value="external">External Link</SelectItem>
+                  <SelectContent className="max-h-80">
+                    <SelectGroup>
+                      <SelectLabel className="font-bold text-ministry-charcoal">Pages (Full Page)</SelectLabel>
+                      {PAGE_LINK_TYPES.map((page) => (
+                        <SelectItem key={page.value} value={page.value}>
+                          {page.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel className="font-bold text-ministry-charcoal">Specific Content</SelectLabel>
+                      {CONTENT_LINK_TYPES.map((content) => (
+                        <SelectItem key={content.value} value={content.value}>
+                          {content.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel className="font-bold text-ministry-charcoal">Other</SelectLabel>
+                      <SelectItem value="external">Custom External URL</SelectItem>
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </div>
@@ -423,7 +503,18 @@ export default function CarouselManagement() {
               </div>
             </div>
 
-            {formData.linkType === "external" ? (
+            {isPageLink && (
+              <div className="bg-ministry-gold/10 p-3 rounded-lg border border-ministry-gold/30">
+                <p className="text-sm text-ministry-charcoal">
+                  <strong>Links to:</strong> {getPagePath(formData.linkType)}
+                </p>
+                <p className="text-xs text-ministry-slate mt-1">
+                  This carousel item will navigate to the full page when clicked.
+                </p>
+              </div>
+            )}
+
+            {formData.linkType === "external" && (
               <div>
                 <Label htmlFor="carousel-external-url">External URL *</Label>
                 <Input
@@ -434,7 +525,9 @@ export default function CarouselManagement() {
                   data-testid="input-carousel-external-url"
                 />
               </div>
-            ) : formData.linkType === "study" ? (
+            )}
+
+            {formData.linkType === "study" && (
               <div>
                 <Label htmlFor="carousel-content">Select Study *</Label>
                 <Select
@@ -453,15 +546,17 @@ export default function CarouselManagement() {
                   </SelectContent>
                 </Select>
               </div>
-            ) : formData.linkType === "video" ? (
+            )}
+
+            {formData.linkType === "video" && (
               <div>
-                <Label htmlFor="carousel-content">Select Video</Label>
+                <Label htmlFor="carousel-content">Select Video (Optional)</Label>
                 <Select
                   value={formData.linkId}
                   onValueChange={(value) => setFormData({ ...formData, linkId: value })}
                 >
                   <SelectTrigger id="carousel-content" data-testid="select-carousel-content">
-                    <SelectValue placeholder="Choose a video (optional)" />
+                    <SelectValue placeholder="Choose a video (or leave blank for Videos page)" />
                   </SelectTrigger>
                   <SelectContent>
                     {(videos as any[]).map((video: any) => (
@@ -471,17 +566,19 @@ export default function CarouselManagement() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-ministry-slate mt-1">Links to videos page by default</p>
+                <p className="text-xs text-ministry-slate mt-1">Leave empty to link to the Videos page</p>
               </div>
-            ) : formData.linkType === "podcast" ? (
+            )}
+
+            {formData.linkType === "podcast" && (
               <div>
-                <Label htmlFor="carousel-content">Select Podcast</Label>
+                <Label htmlFor="carousel-content">Select Podcast (Optional)</Label>
                 <Select
                   value={formData.linkId}
                   onValueChange={(value) => setFormData({ ...formData, linkId: value })}
                 >
                   <SelectTrigger id="carousel-content" data-testid="select-carousel-content">
-                    <SelectValue placeholder="Choose a podcast (optional)" />
+                    <SelectValue placeholder="Choose a podcast (or leave blank for Podcasts page)" />
                   </SelectTrigger>
                   <SelectContent>
                     {(podcasts as any[]).map((podcast: any) => (
@@ -491,11 +588,13 @@ export default function CarouselManagement() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-ministry-slate mt-1">Links to podcasts page by default</p>
+                <p className="text-xs text-ministry-slate mt-1">Leave empty to link to the Podcasts page</p>
               </div>
-            ) : formData.linkType === "devotional" ? (
+            )}
+
+            {formData.linkType === "devotional" && (
               <div>
-                <Label htmlFor="carousel-content">Select Devotional</Label>
+                <Label htmlFor="carousel-content">Select Devotional (Optional)</Label>
                 <Select
                   value={formData.linkId}
                   onValueChange={(value) => setFormData({ ...formData, linkId: value })}
@@ -511,17 +610,19 @@ export default function CarouselManagement() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-ministry-slate mt-1">Links to home page by default</p>
+                <p className="text-xs text-ministry-slate mt-1">Leave empty to link to the home page</p>
               </div>
-            ) : formData.linkType === "challenge" ? (
+            )}
+
+            {formData.linkType === "challenge" && (
               <div>
-                <Label htmlFor="carousel-content">Select Challenge</Label>
+                <Label htmlFor="carousel-content">Select Challenge (Optional)</Label>
                 <Select
                   value={formData.linkId}
                   onValueChange={(value) => setFormData({ ...formData, linkId: value })}
                 >
                   <SelectTrigger id="carousel-content" data-testid="select-carousel-content">
-                    <SelectValue placeholder="Choose a challenge (optional)" />
+                    <SelectValue placeholder="Choose a challenge (or leave blank for Challenges page)" />
                   </SelectTrigger>
                   <SelectContent>
                     {(challenges as any[]).map((challenge: any) => (
@@ -531,9 +632,9 @@ export default function CarouselManagement() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-ministry-slate mt-1">Links to challenges page by default</p>
+                <p className="text-xs text-ministry-slate mt-1">Leave empty to link to the Challenges page</p>
               </div>
-            ) : null}
+            )}
 
             <div>
               <Label htmlFor="carousel-display-order">Display Order</Label>
