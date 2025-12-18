@@ -6947,10 +6947,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const registrationData = schema.insertWarGroupRegistrationSchema.parse({
-        ...req.body,
+      // Parse the form data (requestedBy is omitted from schema, so add it separately)
+      const parsedData = schema.insertWarGroupRegistrationSchema.parse(req.body);
+      const registrationData = {
+        ...parsedData,
         requestedBy: userId
-      });
+      };
 
       const registration = await warGroupsService.createRegistration(registrationData);
 
