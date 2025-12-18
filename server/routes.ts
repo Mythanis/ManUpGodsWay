@@ -6942,7 +6942,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // War Group Registration Routes
   app.post('/api/war-groups/register', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.claims?.sub;
       if (!userId) {
         return res.status(401).json({ message: 'Unauthorized' });
       }
@@ -6994,7 +6994,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/admin/war-groups/registrations/:id/approve', isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
       const { id } = req.params;
-      const reviewerId = req.user?.id;
+      const reviewerId = req.user?.claims?.sub;
 
       if (!reviewerId) {
         return res.status(401).json({ message: 'Unauthorized' });
@@ -7012,7 +7012,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { reason } = req.body;
-      const reviewerId = req.user?.id;
+      const reviewerId = req.user?.claims?.sub;
 
       if (!reviewerId) {
         return res.status(401).json({ message: 'Unauthorized' });
