@@ -6807,6 +6807,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/war-groups/:id/leave', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groupId = req.params.id;
+      
+      const group = await warGroupsService.getGroupById(groupId);
+      if (group && group.leaderId === userId) {
+        return res.status(400).json({ message: 'Group leaders cannot leave their own group. Transfer leadership first or delete the group.' });
+      }
+      
+      await warGroupsService.removeMemberFromGroup(groupId, userId);
+      res.status(204).send();
+    } catch (error: any) {
+      console.error('Error leaving group:', error);
+      res.status(400).json({ message: error.message || 'Failed to leave group' });
+    }
+  });
+
   app.get('/api/war-groups/:id/members', isAuthenticated, async (req, res) => {
     try {
       const groupId = req.params.id;

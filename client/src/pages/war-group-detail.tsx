@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Users, User, Calendar, ChevronLeft } from "lucide-react";
+import { MapPin, Users, User, Calendar, ChevronLeft, LogOut } from "lucide-react";
+import { useLocation } from "wouter";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
@@ -37,6 +38,7 @@ interface GroupMembership {
 export default function WarGroupDetail() {
   const { id } = useParams();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   const { data: group, isLoading } = useQuery<WarGroup>({
     queryKey: [`/api/war-groups/${id}`],
@@ -71,8 +73,32 @@ export default function WarGroupDetail() {
     },
   });
 
+  const leaveMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', `/api/war-groups/${id}/leave`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Left Group",
+        description: "You have left this war group",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/war-groups'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}/membership`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}`] });
+      navigate('/war-groups');
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to leave group",
+        variant: "destructive",
+      });
+    },
+  });
+
   const isMember = myGroups.some(g => g.id === id);
   const hasPendingRequest = membership?.status === 'pending';
+  const isLeader = group?.leader?.id === membership?.userId;
 
   if (isLoading) {
     return (
@@ -173,9 +199,26 @@ export default function WarGroupDetail() {
 
         {isMember && (
           <Card className="bg-ministry-gold-exact border-2 border-black">
-            <CardContent className="pt-6 text-center">
-              <Badge className="bg-black text-white mb-2">Member</Badge>
-              <p className="text-black font-semibold">You are a member of this group</p>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Badge className="bg-black text-white">{isLeader ? 'Leader' : 'Member'}</Badge>
+                  <p className="text-black font-semibold">You are a {isLeader ? 'leader' : 'member'} of this group</p>
+                </div>
+                {!isLeader && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => leaveMutation.mutate()}
+                    disabled={leaveMutation.isPending}
+                    className="border-red-600 text-red-600 hover:bg-red-50"
+                    data-testid="button-leave-group"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    {leaveMutation.isPending ? 'Leaving...' : 'Leave Group'}
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         )}
