@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,14 +32,27 @@ export default function WarGroups() {
   const [cityFilter, setCityFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [debouncedCity, setDebouncedCity] = useState("");
+  const [debouncedState, setDebouncedState] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setDebouncedCity(cityFilter);
+      setDebouncedState(stateFilter);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm, cityFilter, stateFilter]);
 
   const { data: groups = [], isLoading } = useQuery<WarGroup[]>({
-    queryKey: ['/api/war-groups', { search: searchTerm, city: cityFilter, state: stateFilter }],
+    queryKey: ['/api/war-groups', { search: debouncedSearch, city: debouncedCity, state: debouncedState }],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
-      if (cityFilter) params.append('city', cityFilter);
-      if (stateFilter) params.append('state', stateFilter);
+      if (debouncedSearch) params.append('search', debouncedSearch);
+      if (debouncedCity) params.append('city', debouncedCity);
+      if (debouncedState) params.append('state', debouncedState);
       
       const queryString = params.toString();
       const url = queryString ? `/api/war-groups?${queryString}` : '/api/war-groups';
