@@ -20,8 +20,11 @@ export default function Landing() {
         <div className="relative px-6 pt-20 pb-16 max-w-4xl mx-auto">
           <div className="text-center">
             {/* Eyebrow text */}
-            <p className="text-[#FCD000]/80 text-sm font-semibold tracking-[0.2em] uppercase mb-6" data-testid="hero-eyebrow">
-              Biblical Masculinity • Faith • Leadership
+            <p className="text-[#FCD000]/80 text-sm font-semibold tracking-[0.2em] uppercase mb-2" data-testid="hero-eyebrow">
+              Biblical Masculinity
+            </p>
+            <p className="text-[#FCD000]/80 text-sm font-semibold tracking-[0.2em] uppercase mb-6">
+              Faith • Leadership
             </p>
             
             <h1 
@@ -29,7 +32,9 @@ export default function Landing() {
               style={{ fontFamily: "'Inter', 'DM Sans', sans-serif" }}
               data-testid="hero-title"
             >
-              Man Up God's Way
+              Man Up
+              <br />
+              God's Way
             </h1>
             
             <p 
@@ -37,8 +42,8 @@ export default function Landing() {
               data-testid="hero-subtitle"
             >
               Strengthen your <span className="text-[#FCD000] font-medium">Faith</span>, build your{" "}
-              <span className="text-[#FCD000] font-medium">character</span>, and rise as the leader{" "}
-              God designed you to be.
+              <span className="text-[#FCD000] font-medium">character</span>, and rise as the{" "}
+              <span className="text-[#FCD000] font-medium">leader</span> God designed you to be.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
@@ -66,8 +71,8 @@ export default function Landing() {
       </div>
 
       {/* Features Section */}
-      <div className="px-6 py-20 max-w-6xl mx-auto">
-        <div className="text-center mb-16">
+      <div className="px-6 py-10 max-w-6xl mx-auto">
+        <div className="text-center mb-10">
           <p className="text-[#FCD000] text-sm font-semibold tracking-[0.15em] uppercase mb-4">
             Your Growth Toolkit
           </p>
@@ -83,7 +88,7 @@ export default function Landing() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <Card 
             className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FCD000]/5 rounded-2xl overflow-hidden" 
             data-testid="card-bible-studies"
@@ -146,7 +151,7 @@ export default function Landing() {
         </div>
 
         {/* Additional Features Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <div className="text-center p-6">
             <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-4">
               <Shield className="w-6 h-6 text-[#FCD000]" />
