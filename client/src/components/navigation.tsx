@@ -21,7 +21,6 @@ const navItems = [
   { id: 'community', path: '/community', label: 'Community', icon: Users },
   { id: 'brothers', path: '/brothers', label: 'Brothers', icon: UserPlus },
   { id: 'messages', path: '/messages', label: 'Messages', icon: MessageCircle },
-  { id: 'hurdle-wall', path: '/hurdle-wall', label: 'War Room', icon: Shield },
   { id: 'war-groups', path: '/war-groups', label: 'War Groups', icon: MapPin },
   { id: 'discipleship', path: '/discipleship', label: 'Discipleship', icon: Heart },
   { id: 'bible', path: '/bible', label: 'Bible', icon: Book },
@@ -45,7 +44,7 @@ export default function Navigation() {
   }
 
   // Define primary tabs (always visible)
-  const primaryTabIds = ['home', 'library', 'community', 'hurdle-wall'];
+  const primaryTabIds = ['home', 'library', 'community', 'war-groups'];
   
   // Split items into primary and dropdown items
   const primaryItems = allNavItems.filter(item => primaryTabIds.includes(item.id));

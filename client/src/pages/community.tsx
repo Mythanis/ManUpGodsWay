@@ -17,7 +17,7 @@ import { insertDiscussionSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X, Send, Hash } from "lucide-react";
+import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X, Send, Hash, HandHeart } from "lucide-react";
 import { HonorButton } from "@/components/honor-button";
 import { z } from "zod";
 import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
@@ -28,6 +28,7 @@ const allCategories = [
   { id: 'marriage', label: 'Marriage', icon: Heart },
   { id: 'parenting', label: 'Parenting', icon: Users },
   { id: 'faith', label: 'Faith', icon: Lightbulb },
+  { id: 'prayer', label: 'Prayer', icon: HandHeart },
   { id: 'studies', label: 'Study Discussions', icon: MessageCircle },
   { id: 'miscellaneous', label: 'Miscellaneous', icon: Hash },
 ];
@@ -38,6 +39,7 @@ const creationCategories = [
   { id: 'marriage', label: 'Marriage', icon: Heart },
   { id: 'parenting', label: 'Parenting', icon: Users },
   { id: 'faith', label: 'Faith', icon: Lightbulb },
+  { id: 'prayer', label: 'Prayer', icon: HandHeart },
   { id: 'miscellaneous', label: 'Miscellaneous', icon: Hash },
 ];
 
