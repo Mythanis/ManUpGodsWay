@@ -18,6 +18,8 @@ interface WarGroup {
   description: string | null;
   memberCount: number;
   meetingInfo: string | null;
+  latitude: number | null;
+  longitude: number | null;
   leader: {
     id: string;
     firstName: string;
