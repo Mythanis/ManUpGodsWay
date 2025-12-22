@@ -191,6 +191,43 @@ const documentUpload = multer({
   }
 });
 
+// Configure multer for community media uploads (images, videos, gifs)
+const communityMediaStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(process.cwd(), 'uploads', 'community');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    if (file.originalname.includes('\0')) {
+      return cb(new Error('Invalid filename: contains null byte'));
+    }
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `community-${uniqueSuffix}${ext}`);
+  }
+});
+
+const communityMediaUpload = multer({
+  storage: communityMediaStorage,
+  limits: {
+    fileSize: 100 * 1024 * 1024 // 100MB limit for videos, smaller files for images
+  },
+  fileFilter: function (req, file, cb) {
+    const allowedMimeTypes = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'video/mp4', 'video/webm', 'video/quicktime'
+    ];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only images (JPEG, PNG, GIF, WebP) and videos (MP4, WebM) are allowed!'));
+    }
+  }
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
@@ -1606,6 +1643,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Community media upload endpoint
+  app.post('/api/community/upload-media', isAuthenticated, communityMediaUpload.array('media', 10), async (req: any, res) => {
+    try {
+      const files = req.files as Express.Multer.File[];
+      if (!files || files.length === 0) {
+        return res.status(400).json({ message: "No files uploaded" });
+      }
+
+      const mediaUrls: string[] = [];
+      const mediaTypes: string[] = [];
+
+      for (const file of files) {
+        const url = `/uploads/community/${file.filename}`;
+        mediaUrls.push(url);
+        
+        // Determine media type
+        if (file.mimetype.startsWith('image/')) {
+          if (file.mimetype === 'image/gif') {
+            mediaTypes.push('gif');
+          } else {
+            mediaTypes.push('image');
+          }
+        } else if (file.mimetype.startsWith('video/')) {
+          mediaTypes.push('video');
+        }
+      }
+
+      res.json({ mediaUrls, mediaTypes });
+    } catch (error) {
+      console.error("Error uploading community media:", error);
+      res.status(500).json({ message: "Failed to upload media" });
+    }
+  });
+
   app.post('/api/discussions', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -1871,6 +1942,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting user honor stats:", error);
       res.status(500).json({ message: "Failed to get honor stats" });
+    }
+  });
+
+  // Live stream routes (admin-only)
+  app.get('/api/live-streams', async (req, res) => {
+    try {
+      const streams = await storage.getLiveStreams();
+      res.json(streams);
+    } catch (error) {
+      console.error("Error fetching live streams:", error);
+      res.status(500).json({ message: "Failed to fetch live streams" });
+    }
+  });
+
+  app.get('/api/live-streams/active', async (req, res) => {
+    try {
+      const stream = await storage.getActiveLiveStream();
+      res.json(stream);
+    } catch (error) {
+      console.error("Error fetching active live stream:", error);
+      res.status(500).json({ message: "Failed to fetch active stream" });
+    }
+  });
+
+  app.post('/api/live-streams', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required for live streaming" });
+      }
+
+      const streamData = {
+        ...req.body,
+        createdBy: user.id,
+        status: 'scheduled',
+      };
+      
+      const stream = await storage.createLiveStream(streamData);
+      res.status(201).json(stream);
+    } catch (error) {
+      console.error("Error creating live stream:", error);
+      res.status(500).json({ message: "Failed to create live stream" });
+    }
+  });
+
+  app.patch('/api/live-streams/:id/start', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const stream = await storage.startLiveStream(req.params.id);
+      res.json(stream);
+    } catch (error) {
+      console.error("Error starting live stream:", error);
+      res.status(500).json({ message: "Failed to start live stream" });
+    }
+  });
+
+  app.patch('/api/live-streams/:id/end', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const stream = await storage.endLiveStream(req.params.id);
+      res.json(stream);
+    } catch (error) {
+      console.error("Error ending live stream:", error);
+      res.status(500).json({ message: "Failed to end live stream" });
+    }
+  });
+
+  app.delete('/api/live-streams/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      await storage.deleteLiveStream(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting live stream:", error);
+      res.status(500).json({ message: "Failed to delete live stream" });
     }
   });
 

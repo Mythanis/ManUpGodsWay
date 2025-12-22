@@ -45,6 +45,7 @@ import {
   studyEditableSections,
   userStudyResponses,
   carouselItems,
+  liveStreams,
   type User,
   type UpsertUser,
   type Study,
@@ -152,6 +153,8 @@ import {
   type InsertTierPricing,
   type CarouselItem,
   type InsertCarouselItem,
+  type LiveStream,
+  type InsertLiveStream,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne } from "drizzle-orm";
@@ -492,6 +495,15 @@ export interface IStorage {
   registerForEvent(registration: InsertEventRegistration): Promise<EventRegistration>;
   getEventRegistration(eventId: string, userId: string): Promise<EventRegistration | undefined>;
   getUserEventRegistrations(userId: string): Promise<(EventRegistration & { event: Event })[]>;
+
+  // Live stream operations
+  getLiveStreams(): Promise<LiveStream[]>;
+  getActiveLiveStream(): Promise<LiveStream | null>;
+  getLiveStream(id: string): Promise<LiveStream | undefined>;
+  createLiveStream(stream: InsertLiveStream): Promise<LiveStream>;
+  startLiveStream(id: string): Promise<LiveStream>;
+  endLiveStream(id: string): Promise<LiveStream>;
+  deleteLiveStream(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -5280,6 +5292,71 @@ export class DatabaseStorage implements IStorage {
       registeredAt: r.registeredAt,
       event: r.event
     }));
+  }
+
+  // Live stream operations
+  async getLiveStreams(): Promise<LiveStream[]> {
+    return await db
+      .select()
+      .from(liveStreams)
+      .orderBy(desc(liveStreams.createdAt));
+  }
+
+  async getActiveLiveStream(): Promise<LiveStream | null> {
+    const [stream] = await db
+      .select()
+      .from(liveStreams)
+      .where(eq(liveStreams.status, 'live'))
+      .limit(1);
+    return stream || null;
+  }
+
+  async getLiveStream(id: string): Promise<LiveStream | undefined> {
+    const [stream] = await db
+      .select()
+      .from(liveStreams)
+      .where(eq(liveStreams.id, id));
+    return stream;
+  }
+
+  async createLiveStream(stream: InsertLiveStream): Promise<LiveStream> {
+    const [newStream] = await db
+      .insert(liveStreams)
+      .values(stream)
+      .returning();
+    return newStream;
+  }
+
+  async startLiveStream(id: string): Promise<LiveStream> {
+    const [stream] = await db
+      .update(liveStreams)
+      .set({ 
+        status: 'live', 
+        startedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(liveStreams.id, id))
+      .returning();
+    return stream;
+  }
+
+  async endLiveStream(id: string): Promise<LiveStream> {
+    const [stream] = await db
+      .update(liveStreams)
+      .set({ 
+        status: 'ended', 
+        endedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(liveStreams.id, id))
+      .returning();
+    return stream;
+  }
+
+  async deleteLiveStream(id: string): Promise<void> {
+    await db
+      .delete(liveStreams)
+      .where(eq(liveStreams.id, id));
   }
 }
 
