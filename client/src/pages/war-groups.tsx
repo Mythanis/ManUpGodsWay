@@ -20,12 +20,20 @@ interface WarGroup {
   meetingInfo: string | null;
   latitude: number | null;
   longitude: number | null;
+  isHeadquarters: boolean | null;
   leader: {
     id: string;
     firstName: string;
     lastName: string;
     profileImageUrl: string | null;
   };
+}
+
+function getGroupDisplayName(group: WarGroup): string {
+  if (group.isHeadquarters) {
+    return "War Group HQ";
+  }
+  return `Outpost: ${group.city}`;
 }
 
 export default function WarGroups() {
@@ -103,7 +111,7 @@ export default function WarGroups() {
                 <Link key={group.id} href={`/war-groups/${group.id}`}>
                   <Card className="bg-ministry-gold-exact border-2 border-black hover:shadow-lg transition-shadow cursor-pointer">
                     <CardHeader>
-                      <CardTitle className="text-black">{group.name}</CardTitle>
+                      <CardTitle className="text-black">{getGroupDisplayName(group)}</CardTitle>
                       <CardDescription className="flex items-center gap-2 text-black">
                         <MapPin className="h-4 w-4" />
                         {group.city}, {group.state}
@@ -267,7 +275,7 @@ export default function WarGroups() {
                 <Link key={group.id} href={`/war-groups/${group.id}`}>
                   <Card className="bg-ministry-gold-exact border-2 border-black hover:shadow-lg transition-shadow cursor-pointer h-full">
                     <CardHeader>
-                      <CardTitle className="text-black">{group.name}</CardTitle>
+                      <CardTitle className="text-black">{getGroupDisplayName(group)}</CardTitle>
                       <CardDescription className="flex items-center gap-2 text-black">
                         <MapPin className="h-4 w-4" />
                         {group.city}, {group.state}

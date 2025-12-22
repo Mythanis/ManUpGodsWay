@@ -33,12 +33,20 @@ interface WarGroup {
   meetingInfo: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  isHeadquarters?: boolean | null;
   leader: {
     id: string;
     firstName: string;
     lastName: string;
     profileImageUrl: string | null;
   };
+}
+
+function getGroupDisplayName(group: WarGroup): string {
+  if (group.isHeadquarters) {
+    return "War Group HQ";
+  }
+  return `Outpost: ${group.city}`;
 }
 
 interface WarGroupsMapProps {
@@ -86,7 +94,7 @@ export default function WarGroupsMap({ groups }: WarGroupsMapProps) {
               className="!bg-zinc-900 !border-ministry-gold-exact !border-2 !rounded-lg !shadow-xl"
             >
               <div className="min-w-[220px] p-2 text-white">
-                <h3 className="font-bold text-base mb-1 text-ministry-gold-exact">{group.name}</h3>
+                <h3 className="font-bold text-base mb-1 text-ministry-gold-exact">{getGroupDisplayName(group)}</h3>
                 <div className="flex items-center gap-1 text-xs text-zinc-300 mb-1">
                   <MapPin className="h-3 w-3 text-ministry-gold-exact" />
                   {group.city}, {group.state}
@@ -105,7 +113,7 @@ export default function WarGroupsMap({ groups }: WarGroupsMapProps) {
             </Tooltip>
             <Popup>
               <div className="min-w-[220px]">
-                <h3 className="font-bold text-lg mb-1">{group.name}</h3>
+                <h3 className="font-bold text-lg mb-1">{getGroupDisplayName(group)}</h3>
                 <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
                   <MapPin className="h-3 w-3" />
                   {group.city}, {group.state}

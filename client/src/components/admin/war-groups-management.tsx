@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
-import { Users, MapPin, Calendar, Crown, Trash2, Search, Shield, ShieldOff } from "lucide-react";
+import { Users, MapPin, Calendar, Crown, Trash2, Search, Shield, ShieldOff, Building2 } from "lucide-react";
 import { format } from "date-fns";
 import {
   Select,
@@ -45,7 +45,15 @@ interface WarGroup {
   };
   memberCount: number;
   isLicensed: boolean;
+  isHeadquarters: boolean;
   createdAt: string;
+}
+
+function getGroupDisplayName(group: WarGroup): string {
+  if (group.isHeadquarters) {
+    return "War Group HQ";
+  }
+  return `Outpost: ${group.city}`;
 }
 
 interface User {
@@ -178,6 +186,35 @@ export default function WarGroupsManagement() {
     },
   });
 
+  const toggleHQMutation = useMutation({
+    mutationFn: async ({ groupId, isHeadquarters }: { groupId: string; isHeadquarters: boolean }) => {
+      const response = await fetch(`/api/admin/war-groups/${groupId}/headquarters`, {
+        method: "PATCH",
+        body: JSON.stringify({ isHeadquarters }),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) throw new Error('Failed to update HQ status');
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/war-groups"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/war-groups"] });
+      toast({
+        title: variables.isHeadquarters ? "Set as War Group HQ" : "Set as Outpost",
+        description: variables.isHeadquarters 
+          ? "This group is now the official War Group HQ." 
+          : "This group is now an Outpost.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update HQ status",
+        variant: "destructive",
+      });
+    },
+  });
+
   const filteredGroups = groups.filter((group) =>
     group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     group.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -265,7 +302,12 @@ export default function WarGroupsManagement() {
                       data-testid={`row-group-${group.id}`}
                     >
                       <TableCell className="font-medium text-white">
-                        {group.name}
+                        <div className="flex items-center gap-2">
+                          {getGroupDisplayName(group)}
+                          {group.isHeadquarters && (
+                            <Badge className="bg-ministry-gold-exact text-black text-xs">HQ</Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-slate-300">
                         <div className="flex items-center gap-2">
@@ -301,6 +343,25 @@ export default function WarGroupsManagement() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-2 justify-end flex-wrap">
+                          <Button
+                            data-testid={`button-toggle-hq-${group.id}`}
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              toggleHQMutation.mutate({
+                                groupId: group.id,
+                                isHeadquarters: !group.isHeadquarters,
+                              });
+                            }}
+                            disabled={toggleHQMutation.isPending}
+                            className={group.isHeadquarters 
+                              ? "bg-ministry-gold-exact hover:bg-yellow-500 text-black border-ministry-gold-exact" 
+                              : "bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
+                            }
+                          >
+                            <Building2 className="w-4 h-4 mr-2" />
+                            {group.isHeadquarters ? "Is HQ" : "Set HQ"}
+                          </Button>
                           <Button
                             data-testid={`button-toggle-license-${group.id}`}
                             size="sm"

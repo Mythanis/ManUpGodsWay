@@ -6963,6 +6963,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/admin/war-groups/:id/headquarters', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { isHeadquarters } = req.body;
+      
+      if (typeof isHeadquarters !== 'boolean') {
+        return res.status(400).json({ message: 'isHeadquarters must be a boolean' });
+      }
+      
+      // If setting as HQ, first remove HQ status from any existing HQ group
+      if (isHeadquarters) {
+        await db.update(schema.warGroups)
+          .set({ isHeadquarters: false, updatedAt: new Date() })
+          .where(eq(schema.warGroups.isHeadquarters, true));
+      }
+      
+      const updated = await db.update(schema.warGroups)
+        .set({ 
+          isHeadquarters,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.warGroups.id, id))
+        .returning();
+      
+      if (!updated.length) {
+        return res.status(404).json({ message: 'Group not found' });
+      }
+      
+      res.json(updated[0]);
+    } catch (error: any) {
+      console.error('Error updating headquarters status:', error);
+      res.status(500).json({ message: error.message || 'Failed to update headquarters status' });
+    }
+  });
+
   app.get('/api/admin/users', isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
       const { search } = req.query;

@@ -1499,6 +1499,7 @@ export const warGroups = pgTable("war_groups", {
   geocodeFailureCount: integer("geocode_failure_count").default(0), // Track geocoding retry attempts
   lastGeocodeAttempt: timestamp("last_geocode_attempt"), // Last time geocoding was attempted
   isLicensed: boolean("is_licensed").default(false), // License status
+  isHeadquarters: boolean("is_headquarters").default(false), // Founder's group is HQ, others are Outposts
   licenseExpiresAt: timestamp("license_expires_at"),
   stripeLicensePaymentId: varchar("stripe_license_payment_id"), // Payment for licensing fee
   licenseType: varchar("license_type").default("monthly"), // monthly, yearly
