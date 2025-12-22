@@ -224,6 +224,40 @@ export default function DiscussionCard({
               {discussion.content}
             </p>
             
+            {/* Media Display */}
+            {discussion.mediaUrls && discussion.mediaUrls.length > 0 && (
+              <div className={`mb-3 ${discussion.mediaUrls.length === 1 ? '' : 'grid grid-cols-2 gap-2'}`}>
+                {discussion.mediaUrls.map((url: string, index: number) => {
+                  const mediaType = discussion.mediaTypes?.[index] || 'image';
+                  return (
+                    <div key={index} className="relative rounded-lg overflow-hidden">
+                      {mediaType === 'video' ? (
+                        <video 
+                          src={url} 
+                          controls
+                          className="w-full max-h-80 object-cover rounded-lg bg-gray-800"
+                          data-testid={`video-media-${index}`}
+                        />
+                      ) : (
+                        <img 
+                          src={url} 
+                          alt={`Post media ${index + 1}`}
+                          className={`w-full ${discussion.mediaUrls.length === 1 ? 'max-h-96' : 'h-40'} object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity`}
+                          onClick={() => window.open(url, '_blank')}
+                          data-testid={`img-media-${index}`}
+                        />
+                      )}
+                      {mediaType === 'gif' && (
+                        <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-0.5 rounded">
+                          GIF
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <Button 

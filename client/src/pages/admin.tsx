@@ -29,8 +29,9 @@ import TierPricingManagement from "@/components/admin/tier-pricing-management";
 import CarouselManagement from "@/components/admin/carousel-management";
 import WarGroupsManagement from "@/components/admin/war-groups-management";
 import WarGroupRegistrationsManagement from "@/components/admin/war-group-registrations-management";
+import LiveStreamManagement from "@/components/admin/live-stream-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio } from "lucide-react";
 
 interface Study {
   id: string;
@@ -58,6 +59,7 @@ const adminTabs = [
   { id: "studies", label: "Studies", icon: Activity },
   { id: "videos", label: "Videos", icon: Video },
   { id: "podcasts", label: "Podcasts", icon: Headphones },
+  { id: "live-streams", label: "Live", icon: Radio },
   { id: "challenges", label: "Challenges", icon: Trophy },
   { id: "carousel", label: "Carousel", icon: ImagePlus },
   { id: "fitness", label: "Fitness", icon: Dumbbell },
@@ -712,6 +714,12 @@ export default function Admin() {
           {activeTab === "podcasts" && (
             <div>
               <PodcastManagement />
+            </div>
+          )}
+
+          {activeTab === "live-streams" && (
+            <div>
+              <LiveStreamManagement />
             </div>
           )}
           

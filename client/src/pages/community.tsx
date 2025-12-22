@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +17,7 @@ import { insertDiscussionSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X, Send, Hash, HandHeart } from "lucide-react";
+import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X, Send, Hash, HandHeart, Image, Video, Radio, Trash2 } from "lucide-react";
 import { HonorButton } from "@/components/honor-button";
 import { z } from "zod";
 import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
@@ -47,6 +47,9 @@ const createDiscussionSchema = z.object({
   title: z.string().min(1, "Title is required"),
   content: z.string().min(1, "Content is required"),
   category: z.string().min(1, "Category is required"),
+  mediaUrls: z.array(z.string()).optional(),
+  mediaTypes: z.array(z.string()).optional(),
+  postType: z.string().optional(),
 });
 
 const replySchema = z.object({
@@ -262,9 +265,18 @@ export default function Community() {
   const [groupDescription, setGroupDescription] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightedDiscussion, setHighlightedDiscussion] = useState<string | null>(null);
+  const [uploadedMedia, setUploadedMedia] = useState<{ urls: string[]; types: string[] }>({ urls: [], types: [] });
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Query for active live stream
+  const { data: activeLiveStream } = useQuery<any>({
+    queryKey: ["/api/live-streams/active"],
+    refetchInterval: 10000,
+  });
 
   // Handle discussion query parameter from URL
   useEffect(() => {
@@ -361,6 +373,56 @@ export default function Community() {
     },
   });
 
+  // Handle media file upload
+  const handleMediaUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    setIsUploading(true);
+    const formData = new FormData();
+    Array.from(files).forEach(file => {
+      formData.append('media', file);
+    });
+    
+    try {
+      const response = await fetch('/api/community/upload-media', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+      
+      if (!response.ok) throw new Error('Failed to upload media');
+      
+      const result = await response.json();
+      setUploadedMedia({
+        urls: [...uploadedMedia.urls, ...result.mediaUrls],
+        types: [...uploadedMedia.types, ...result.mediaTypes],
+      });
+      toast({
+        title: "Success",
+        description: `${files.length} file(s) uploaded successfully!`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload media. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+  
+  const removeMedia = (index: number) => {
+    setUploadedMedia({
+      urls: uploadedMedia.urls.filter((_, i) => i !== index),
+      types: uploadedMedia.types.filter((_, i) => i !== index),
+    });
+  };
+
   const onSubmit = async (data: { title: string; content: string; category: string }) => {
     if (!(user as any)?.id) {
       toast({
@@ -376,9 +438,13 @@ export default function Community() {
       content: data.content.trim(),
       category: data.category,
       userId: (user as any).id,
+      mediaUrls: uploadedMedia.urls.length > 0 ? uploadedMedia.urls : undefined,
+      mediaTypes: uploadedMedia.types.length > 0 ? uploadedMedia.types : undefined,
+      postType: uploadedMedia.urls.length > 0 ? 'media' : 'text',
     };
     
     await createDiscussion.mutateAsync(discussionData);
+    setUploadedMedia({ urls: [], types: [] });
   };
 
   // Create direct conversation mutation for profile interactions
@@ -470,8 +536,41 @@ export default function Community() {
         </p>
       </div>
 
+      {/* Live Stream Banner */}
+      {activeLiveStream && (
+        <div className="px-6 -mt-3 relative z-20 mb-3">
+          <Card className="shadow-lg bg-red-600 border-2 border-red-400" data-testid="card-live-stream">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                    </span>
+                    <Radio className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-sm">{activeLiveStream.title}</p>
+                    <p className="text-red-100 text-xs">LIVE NOW</p>
+                  </div>
+                </div>
+                <Button 
+                  size="sm" 
+                  className="bg-white text-red-600 hover:bg-red-50"
+                  onClick={() => window.open(activeLiveStream.streamUrl, '_blank')}
+                  data-testid="button-watch-live"
+                >
+                  Watch
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Community Stats */}
-      <div className="px-6 -mt-3 relative z-10 mb-6">
+      <div className={`px-6 ${activeLiveStream ? '' : '-mt-3'} relative z-10 mb-4`}>
         <Card className="shadow-lg bg-ministry-gold-exact" data-testid="card-stats">
           <CardContent className="p-4">
             <div className="grid grid-cols-3 gap-4 text-center">
@@ -497,33 +596,61 @@ export default function Community() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Facebook-style Quick Post Card */}
+      <div className="px-6 mb-4">
+        <Card className="shadow-md bg-black border border-gray-700" data-testid="card-quick-post">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-3">
+              <img 
+                src={(user as any)?.profileImageUrl || `https://ui-avatars.com/api/?name=${(user as any)?.firstName || 'U'}+${(user as any)?.lastName || ''}&background=FCD000&color=000&size=40`}
+                alt="Your avatar"
+                className="w-10 h-10 rounded-full object-cover"
+              />
+              <button
+                onClick={() => setDialogOpen(true)}
+                className="flex-1 text-left px-4 py-2.5 rounded-full bg-gray-800 text-gray-400 hover:bg-gray-700 transition-colors text-sm"
+                data-testid="button-quick-post"
+              >
+                What's on your mind?
+              </button>
+            </div>
+            <div className="flex justify-between mt-3 pt-3 border-t border-gray-700">
+              <button 
+                onClick={() => { setDialogOpen(true); }}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-lg hover:bg-gray-800 transition-colors text-gray-300 text-sm"
+                data-testid="button-quick-photo"
+              >
+                <Image className="w-5 h-5 text-green-500" />
+                <span>Photo</span>
+              </button>
+              <button 
+                onClick={() => { setDialogOpen(true); }}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-lg hover:bg-gray-800 transition-colors text-gray-300 text-sm"
+                data-testid="button-quick-video"
+              >
+                <Video className="w-5 h-5 text-red-500" />
+                <span>Video</span>
+              </button>
+              <button 
+                onClick={() => setDialogOpen(true)}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-lg hover:bg-gray-800 transition-colors text-gray-300 text-sm"
+                data-testid="button-quick-post-btn"
+              >
+                <Plus className="w-5 h-5 text-ministry-gold" />
+                <span>Post</span>
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Quick Actions */}
-      <div className="px-6 mb-6">
+      {/* Post Dialog */}
+      <div className="px-6">
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <button 
-              className="w-full py-4 rounded-2xl font-bold shadow-lg flex items-center justify-center space-x-2"
-              data-testid="button-new-discussion"
-              style={{
-                backgroundColor: 'hsl(49 100% 49%)', // ministry-gold
-                color: 'black',
-                transition: 'background-color 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'hsl(49 100% 44%)'; // hover effect
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'hsl(49 100% 49%)'; // back to normal
-              }}
-            >
-              <Plus className="w-5 h-5" />
-              <span>Start New Discussion</span>
-            </button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md mx-auto bg-black border-2 border-black" data-testid="dialog-new-discussion">
+          <DialogContent className="max-w-md mx-auto bg-black border-2 border-gray-700" data-testid="dialog-new-discussion">
             <DialogHeader>
-              <DialogTitle className="text-white text-xl font-black">Start New Discussion</DialogTitle>
+              <DialogTitle className="text-white text-xl font-black">Create Post</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form 
@@ -582,7 +709,7 @@ export default function Community() {
                       <FormLabel className="text-gray-300">Content</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Share your thoughts..."
+                          placeholder="Share your thoughts, photos, videos, or memes..."
                           className="min-h-[100px] bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
                           {...field}
                           data-testid="textarea-discussion-content"
@@ -593,11 +720,96 @@ export default function Community() {
                   )}
                 />
 
+                {/* Media Upload Section */}
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleMediaUpload}
+                    accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
+                    multiple
+                    className="hidden"
+                    data-testid="input-media-upload"
+                  />
+                  
+                  {/* Media Upload Buttons */}
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
+                      data-testid="button-add-photo"
+                    >
+                      <Image className="w-4 h-4 mr-2" />
+                      Photo
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
+                      data-testid="button-add-video"
+                    >
+                      <Video className="w-4 h-4 mr-2" />
+                      Video
+                    </Button>
+                  </div>
+                  
+                  {/* Uploading indicator */}
+                  {isUploading && (
+                    <div className="flex items-center gap-2 text-gray-400 text-sm">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-ministry-gold"></div>
+                      Uploading...
+                    </div>
+                  )}
+                  
+                  {/* Media Preview */}
+                  {uploadedMedia.urls.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {uploadedMedia.urls.map((url, index) => (
+                        <div key={index} className="relative group">
+                          {uploadedMedia.types[index] === 'video' ? (
+                            <video 
+                              src={url} 
+                              className="w-full h-20 object-cover rounded-lg"
+                            />
+                          ) : (
+                            <img 
+                              src={url} 
+                              alt={`Upload ${index + 1}`}
+                              className="w-full h-20 object-cover rounded-lg"
+                            />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => removeMedia(index)}
+                            className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            data-testid={`button-remove-media-${index}`}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                          <span className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-1 rounded">
+                            {uploadedMedia.types[index]}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex space-x-2">
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setDialogOpen(false)}
+                    onClick={() => {
+                      setDialogOpen(false);
+                      setUploadedMedia({ urls: [], types: [] });
+                    }}
                     className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
                     data-testid="button-cancel-discussion"
                   >
@@ -605,12 +817,12 @@ export default function Community() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={createDiscussion.isPending}
+                    disabled={createDiscussion.isPending || isUploading}
                     className="flex-1 font-semibold"
                     style={{ backgroundColor: '#FCD000', color: 'black' }}
                     data-testid="button-create-discussion"
                   >
-                    {createDiscussion.isPending ? "Creating..." : "Create"}
+                    {createDiscussion.isPending ? "Creating..." : "Post"}
                   </Button>
                 </div>
               </form>
