@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, BookOpen, Video, MessageCircle, Shield, Target, Flame, ChevronRight } from "lucide-react";
+import logoUrl from "@assets/App Man Up Logo-Gods way-White-Yellow black background_1755872469606.jpeg";
 
 export default function Landing() {
   return (
@@ -27,15 +28,14 @@ export default function Landing() {
               Faith • Leadership
             </p>
             
-            <h1 
-              className="text-5xl md:text-6xl font-black tracking-tight mb-6 bg-gradient-to-r from-white via-white to-zinc-400 bg-clip-text text-transparent leading-[1.1]"
-              style={{ fontFamily: "'Inter', 'DM Sans', sans-serif" }}
-              data-testid="hero-title"
-            >
-              Man Up
-              <br />
-              God's Way
-            </h1>
+            {/* Logo */}
+            <div className="mb-6" data-testid="hero-logo">
+              <img 
+                src={logoUrl} 
+                alt="Man Up God's Way" 
+                className="w-64 md:w-80 h-auto mx-auto"
+              />
+            </div>
             
             <p 
               className="text-xl md:text-2xl text-zinc-300 mb-10 max-w-2xl mx-auto leading-relaxed font-light"
