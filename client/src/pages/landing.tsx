@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, BookOpen, Video, MessageCircle, Shield, Target, Flame, ChevronRight } from "lucide-react";
-import logoUrl from "@assets/App Man Up Logo-Gods way-White-Yellow black background_1755872469606.jpeg";
+import logoUrl from "@assets/Man_Up_Logo-Gods_way-White-Yellow_copy_1766440697541.png";
 
 export default function Landing() {
   return (
