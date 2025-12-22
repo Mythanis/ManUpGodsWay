@@ -188,7 +188,7 @@ export default function WarGroups() {
                   variant={viewMode === 'list' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className={viewMode === 'list' ? 'bg-black text-white' : 'border-black text-black'}
+                  className={viewMode === 'list' ? 'bg-black text-white' : 'bg-white border-2 border-black text-black hover:bg-gray-100'}
                   data-testid="button-view-list"
                 >
                   <List className="h-4 w-4 mr-2" />
@@ -198,7 +198,7 @@ export default function WarGroups() {
                   variant={viewMode === 'map' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setViewMode('map')}
-                  className={viewMode === 'map' ? 'bg-black text-white' : 'border-black text-black'}
+                  className={viewMode === 'map' ? 'bg-black text-white' : 'bg-white border-2 border-black text-black hover:bg-gray-100'}
                   data-testid="button-view-map"
                 >
                   <Map className="h-4 w-4 mr-2" />
