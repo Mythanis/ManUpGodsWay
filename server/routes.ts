@@ -6935,6 +6935,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/admin/war-groups/:id/license', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { isLicensed } = req.body;
+      
+      if (typeof isLicensed !== 'boolean') {
+        return res.status(400).json({ message: 'isLicensed must be a boolean' });
+      }
+      
+      const updated = await db.update(schema.warGroups)
+        .set({ 
+          isLicensed,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.warGroups.id, id))
+        .returning();
+      
+      if (!updated.length) {
+        return res.status(404).json({ message: 'Group not found' });
+      }
+      
+      res.json(updated[0]);
+    } catch (error: any) {
+      console.error('Error updating license status:', error);
+      res.status(500).json({ message: error.message || 'Failed to update license status' });
+    }
+  });
+
   app.get('/api/admin/users', isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
       const { search } = req.query;

@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
-import { Users, MapPin, Calendar, Crown, Trash2, Search } from "lucide-react";
+import { Users, MapPin, Calendar, Crown, Trash2, Search, Shield, ShieldOff } from "lucide-react";
 import { format } from "date-fns";
 import {
   Select,
@@ -149,6 +149,35 @@ export default function WarGroupsManagement() {
     },
   });
 
+  const toggleLicenseMutation = useMutation({
+    mutationFn: async ({ groupId, isLicensed }: { groupId: string; isLicensed: boolean }) => {
+      const response = await fetch(`/api/admin/war-groups/${groupId}/license`, {
+        method: "PATCH",
+        body: JSON.stringify({ isLicensed }),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) throw new Error('Failed to update license status');
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/war-groups"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/war-groups"] });
+      toast({
+        title: variables.isLicensed ? "Group Licensed" : "License Revoked",
+        description: variables.isLicensed 
+          ? "The group is now licensed and visible to users." 
+          : "The group license has been revoked.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update license status",
+        variant: "destructive",
+      });
+    },
+  });
+
   const filteredGroups = groups.filter((group) =>
     group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     group.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -271,7 +300,35 @@ export default function WarGroupsManagement() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
+                        <div className="flex gap-2 justify-end flex-wrap">
+                          <Button
+                            data-testid={`button-toggle-license-${group.id}`}
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              toggleLicenseMutation.mutate({
+                                groupId: group.id,
+                                isLicensed: !group.isLicensed,
+                              });
+                            }}
+                            disabled={toggleLicenseMutation.isPending}
+                            className={group.isLicensed 
+                              ? "bg-red-700 hover:bg-red-600 text-white border-red-600" 
+                              : "bg-green-700 hover:bg-green-600 text-white border-green-600"
+                            }
+                          >
+                            {group.isLicensed ? (
+                              <>
+                                <ShieldOff className="w-4 h-4 mr-2" />
+                                Revoke
+                              </>
+                            ) : (
+                              <>
+                                <Shield className="w-4 h-4 mr-2" />
+                                License
+                              </>
+                            )}
+                          </Button>
                           <Button
                             data-testid={`button-change-leader-${group.id}`}
                             size="sm"
