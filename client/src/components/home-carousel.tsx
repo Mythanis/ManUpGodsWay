@@ -70,9 +70,12 @@ export default function HomeCarousel() {
           <img
             src={item.imageUrl}
             alt={item.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 grayscale-[30%] contrast-[1.1]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
+          {/* Consistent overlay filter for all images */}
+          <div className="absolute inset-0 bg-black/30 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-ministry-gold-exact/10 mix-blend-overlay" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-4">
             <div>
               <h3 className={`text-white font-bold ${isLarge ? 'text-xl' : 'text-base'}`}>
                 {item.title}
