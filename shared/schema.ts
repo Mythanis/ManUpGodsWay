@@ -212,9 +212,32 @@ export const discussions = pgTable("discussions", {
   content: text("content").notNull(),
   category: varchar("category").notNull(),
   studyId: varchar("study_id").references(() => studies.id, { onDelete: 'cascade' }), // Optional link to study
+  // Media support for social posts
+  mediaUrls: text("media_urls").array(), // Array of image/video URLs
+  mediaTypes: text("media_types").array(), // Array of media types (image, video, gif)
+  postType: varchar("post_type").default("text"), // text, media, link, share
+  linkUrl: varchar("link_url"), // External link if sharing a link
+  linkPreview: jsonb("link_preview"), // Preview data for shared links
   likes: integer("likes").default(0),
   replyCount: integer("reply_count").default(0),
   isPinned: boolean("is_pinned").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Live streams table for admin-only streaming
+export const liveStreams = pgTable("live_streams", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  streamUrl: varchar("stream_url"), // Embed URL (YouTube Live, Facebook Live, etc.)
+  thumbnailUrl: varchar("thumbnail_url"),
+  status: varchar("status").default("scheduled"), // scheduled, live, ended
+  scheduledAt: timestamp("scheduled_at"),
+  startedAt: timestamp("started_at"),
+  endedAt: timestamp("ended_at"),
+  createdBy: varchar("created_by").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  viewCount: integer("view_count").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -835,6 +858,15 @@ export const insertDiscussionSchema = createInsertSchema(discussions).omit({
   replyCount: true,
 });
 
+export const insertLiveStreamSchema = createInsertSchema(liveStreams).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  viewCount: true,
+  startedAt: true,
+  endedAt: true,
+});
+
 export const insertDiscussionReplySchema = createInsertSchema(discussionReplies).omit({
   id: true,
   createdAt: true,
@@ -951,6 +983,8 @@ export type UserLessonProgress = typeof userLessonProgress.$inferSelect;
 export type InsertUserLessonProgress = z.infer<typeof insertUserLessonProgressSchema>;
 export type Discussion = typeof discussions.$inferSelect;
 export type InsertDiscussion = z.infer<typeof insertDiscussionSchema>;
+export type LiveStream = typeof liveStreams.$inferSelect;
+export type InsertLiveStream = z.infer<typeof insertLiveStreamSchema>;
 export type DiscussionReply = typeof discussionReplies.$inferSelect;
 export type InsertDiscussionReply = z.infer<typeof insertDiscussionReplySchema>;
 export type UserProgress = typeof userProgress.$inferSelect;
