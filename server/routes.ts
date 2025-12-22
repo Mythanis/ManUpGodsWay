@@ -1724,6 +1724,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update discussion (only by owner)
+  app.patch('/api/discussions/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const discussionId = req.params.id;
+      const { title, content } = req.body;
+      
+      // Get the discussion to verify ownership
+      const discussion = await storage.getDiscussion(discussionId);
+      if (!discussion) {
+        return res.status(404).json({ message: "Discussion not found" });
+      }
+      
+      // Check if user owns this discussion
+      if (discussion.userId !== userId) {
+        return res.status(403).json({ message: "You can only edit your own discussions" });
+      }
+      
+      // Update the discussion
+      const updatedDiscussion = await storage.updateDiscussion(discussionId, { title, content });
+      res.json(updatedDiscussion);
+    } catch (error) {
+      console.error("Error updating discussion:", error);
+      res.status(500).json({ message: "Failed to update discussion" });
+    }
+  });
+
   app.get('/api/discussions/:id/replies', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

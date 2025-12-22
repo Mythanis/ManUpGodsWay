@@ -220,6 +220,7 @@ export interface IStorage {
   getDiscussions(category?: string, limit?: number, sortBy?: string, searchTerm?: string): Promise<(Discussion & { user: User })[]>;
   getDiscussion(id: string): Promise<(Discussion & { user: User; replies: (DiscussionReply & { user: User })[] }) | undefined>;
   createDiscussion(discussion: InsertDiscussion): Promise<Discussion>;
+  updateDiscussion(id: string, updates: { title?: string; content?: string }): Promise<Discussion>;
   
   // Reply operations
   createReply(reply: InsertDiscussionReply): Promise<DiscussionReply>;
@@ -1483,6 +1484,18 @@ export class DatabaseStorage implements IStorage {
   async createDiscussion(discussion: InsertDiscussion): Promise<Discussion> {
     const [newDiscussion] = await db.insert(discussions).values(discussion).returning();
     return newDiscussion;
+  }
+
+  async updateDiscussion(id: string, updates: { title?: string; content?: string }): Promise<Discussion> {
+    const [updatedDiscussion] = await db
+      .update(discussions)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(discussions.id, id))
+      .returning();
+    return updatedDiscussion;
   }
 
   // Reply operations

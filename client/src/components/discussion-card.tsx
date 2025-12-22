@@ -13,9 +13,17 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus } from "lucide-react";
+import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus, Edit, Share2, X } from "lucide-react";
+import { SiFacebook, SiX, SiWhatsapp, SiLinkedin } from "react-icons/si";
 import { FlagContentDialog } from "@/components/flag-content-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { z } from "zod";
+
+const editSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
+});
 
 interface DiscussionCardProps {
   discussion: any;
@@ -38,7 +46,12 @@ export default function DiscussionCard({
   const [showReplies, setShowReplies] = useState(false);
   const [userHasLiked, setUserHasLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(discussion.likes || 0);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
   const { user } = useAuth();
+  
+  // Check if current user owns this discussion
+  const isOwner = user && (user as any).id === discussion.userId;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -56,6 +69,14 @@ export default function DiscussionCard({
     resolver: zodResolver(replySchema),
     defaultValues: {
       content: '',
+    },
+  });
+
+  const editForm = useForm({
+    resolver: zodResolver(editSchema),
+    defaultValues: {
+      title: discussion.title || '',
+      content: discussion.content || '',
     },
   });
 
@@ -129,6 +150,85 @@ export default function DiscussionCard({
       });
     },
   });
+
+  const updateDiscussion = useMutation({
+    mutationFn: async (data: z.infer<typeof editSchema>) => {
+      const response = await apiRequest('PATCH', `/api/discussions/${discussion.id}`, data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
+      toast({
+        title: "Success",
+        description: "Discussion updated successfully!",
+      });
+      setShowEditDialog(false);
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: `Failed to update discussion: ${error.message || 'Please try again.'}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmitEdit = async (data: z.infer<typeof editSchema>) => {
+    await updateDiscussion.mutateAsync(data);
+  };
+
+  // Social share functions
+  const getShareUrl = () => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/community?post=${discussion.id}`;
+  };
+
+  const shareToFacebook = () => {
+    const url = encodeURIComponent(getShareUrl());
+    const text = encodeURIComponent(`Check out this post on Man Up God's Way: "${discussion.title}"`);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, '_blank', 'width=600,height=400');
+    setShowShareMenu(false);
+  };
+
+  const shareToTwitter = () => {
+    const url = encodeURIComponent(getShareUrl());
+    const text = encodeURIComponent(`Check out this post on Man Up God's Way: "${discussion.title}" - Join our community of men growing in faith!`);
+    window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank', 'width=600,height=400');
+    setShowShareMenu(false);
+  };
+
+  const shareToWhatsApp = () => {
+    const url = encodeURIComponent(getShareUrl());
+    const text = encodeURIComponent(`Check out this post on Man Up God's Way: "${discussion.title}" - ${url}`);
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+    setShowShareMenu(false);
+  };
+
+  const shareToLinkedIn = () => {
+    const url = encodeURIComponent(getShareUrl());
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank', 'width=600,height=400');
+    setShowShareMenu(false);
+  };
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(getShareUrl());
+    toast({
+      title: "Link Copied!",
+      description: "Share link copied to clipboard",
+    });
+    setShowShareMenu(false);
+  };
 
   const onSubmitReply = async (data: z.infer<typeof replySchema>) => {
     if (!(user as any)?.id) {
@@ -327,6 +427,95 @@ export default function DiscussionCard({
                 }
               </Button>
               
+              {/* Edit Button - Only for post owner */}
+              {isOwner && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-gray-400 hover:text-ministry-gold-exact p-1"
+                  onClick={() => {
+                    editForm.reset({
+                      title: discussion.title || '',
+                      content: discussion.content || '',
+                    });
+                    setShowEditDialog(true);
+                  }}
+                  data-testid="button-edit-discussion"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
+
+              {/* Share Button */}
+              <div className="relative">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-gray-400 hover:text-ministry-gold-exact p-1"
+                  onClick={() => setShowShareMenu(!showShareMenu)}
+                  data-testid="button-share-discussion"
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
+                
+                {showShareMenu && (
+                  <div className="absolute right-0 bottom-full mb-2 bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-2 z-50 min-w-[160px]">
+                    <div className="text-xs text-gray-400 font-medium mb-2 px-2">Share to:</div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-700"
+                      onClick={shareToFacebook}
+                      data-testid="button-share-facebook"
+                    >
+                      <SiFacebook className="h-4 w-4 mr-2 text-blue-500" />
+                      Facebook
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-700"
+                      onClick={shareToTwitter}
+                      data-testid="button-share-twitter"
+                    >
+                      <SiX className="h-4 w-4 mr-2" />
+                      X (Twitter)
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-700"
+                      onClick={shareToWhatsApp}
+                      data-testid="button-share-whatsapp"
+                    >
+                      <SiWhatsapp className="h-4 w-4 mr-2 text-green-500" />
+                      WhatsApp
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-700"
+                      onClick={shareToLinkedIn}
+                      data-testid="button-share-linkedin"
+                    >
+                      <SiLinkedin className="h-4 w-4 mr-2 text-blue-600" />
+                      LinkedIn
+                    </Button>
+                    <div className="border-t border-gray-700 my-1"></div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-700"
+                      onClick={copyLink}
+                      data-testid="button-copy-link"
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Copy Link
+                    </Button>
+                  </div>
+                )}
+              </div>
+
               {/* Flag Discussion Button */}
               <FlagContentDialog 
                 contentType="discussion" 
@@ -452,6 +641,74 @@ export default function DiscussionCard({
 
       {/* Profile Menu */}
 
+      {/* Edit Discussion Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-white">Edit Discussion</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Make changes to your discussion post below.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onSubmitEdit)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        placeholder="Discussion title..."
+                        className="bg-gray-800 text-white border-gray-700 focus:border-ministry-gold-exact"
+                        {...field}
+                        data-testid="input-edit-title"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Textarea
+                        placeholder="What's on your mind?"
+                        className="min-h-[120px] resize-none bg-gray-800 text-white border-gray-700 focus:border-ministry-gold-exact"
+                        {...field}
+                        data-testid="textarea-edit-content"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowEditDialog(false)}
+                  className="text-gray-400 hover:text-white"
+                  data-testid="button-cancel-edit"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={updateDiscussion.isPending}
+                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400"
+                  data-testid="button-save-edit"
+                >
+                  {updateDiscussion.isPending ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
