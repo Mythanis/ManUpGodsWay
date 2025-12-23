@@ -839,6 +839,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PATCH handler for study updates (same as PUT)
+  app.patch('/api/studies/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Get the current study to check if it's being published
+      const currentStudy = await storage.getStudy(req.params.id);
+      const studyData = insertStudySchema.partial().parse(req.body);
+      const study = await storage.updateStudy(req.params.id, studyData);
+      
+      // Check if study is being published (was unpublished, now published)
+      const wasUnpublished = !currentStudy?.isPublished;
+      const isBeingPublished = studyData.isPublished === true;
+      
+      if (wasUnpublished && isBeingPublished) {
+        // Send real-time notifications to users based on tier access
+        try {
+          const allUsers = await storage.getAllUsers();
+          let targetUsers: any[] = [];
+          
+          // Determine target users based on study's required tier
+          switch (study.requiredTier || 'free') {
+            case 'free':
+              targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
+              break;
+            case 'premium':
+              targetUsers = allUsers.filter(targetUser => 
+                targetUser.id !== user.id && 
+                ['premium', 'vip'].includes(targetUser.subscriptionTier || 'free')
+              );
+              break;
+            case 'vip':
+              targetUsers = allUsers.filter(targetUser => 
+                targetUser.id !== user.id && 
+                (targetUser.subscriptionTier || 'free') === 'vip'
+              );
+              break;
+          }
+          
+          if (targetUsers.length > 0) {
+            const notificationPromises = targetUsers.map(async (targetUser) => {
+              return await storage.createNotification({
+                userId: targetUser.id,
+                type: 'study',
+                title: '📚 New Study Available',
+                message: `"${study.title}" has been published and is now available in the Library.`,
+                relatedId: study.id,
+              });
+            });
+            
+            await Promise.all(notificationPromises.filter(Boolean));
+            console.log(`Sent study publication notifications to ${targetUsers.length} users`);
+          }
+        } catch (notificationError) {
+          console.error('Error sending study publication notifications:', notificationError);
+        }
+      }
+      
+      res.json(study);
+    } catch (error) {
+      console.error("Error updating study:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid study data", errors: error.errors });
+      }
+      if (error instanceof Error && error.message.includes("already exists")) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Failed to update study" });
+    }
+  });
+
   app.delete('/api/studies/:id', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
