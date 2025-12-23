@@ -111,13 +111,18 @@ export class WarGroupsService {
     
     // If city is provided with distance, do distance-based filtering
     if (city && distance !== undefined && distance > 0) {
-      // Get coordinates for the search city
+      // Get coordinates for the search city+state combination
       const searchState = state || 'USA';
       const searchCoords = await geocodeLocation(city, searchState);
       
       if (searchCoords) {
         // Filter groups within the specified distance
         filteredResults = filteredResults.filter(r => {
+          // If state is specified, also filter by state
+          if (state && r.group.state.toLowerCase() !== state.toLowerCase()) {
+            return false;
+          }
+          
           // If group has coordinates, calculate distance
           if (r.group.latitude && r.group.longitude) {
             const dist = this.calculateDistance(
@@ -132,20 +137,22 @@ export class WarGroupsService {
           return r.group.city.toLowerCase() === city.toLowerCase();
         });
       } else {
-        // Fallback to exact city match if geocoding fails
-        filteredResults = filteredResults.filter(r => 
-          r.group.city.toLowerCase() === city.toLowerCase()
-        );
+        // Fallback to exact city+state match if geocoding fails
+        filteredResults = filteredResults.filter(r => {
+          const cityMatch = r.group.city.toLowerCase() === city.toLowerCase();
+          const stateMatch = !state || r.group.state.toLowerCase() === state.toLowerCase();
+          return cityMatch && stateMatch;
+        });
       }
     } else if (city) {
-      // No distance specified, do exact city match
-      filteredResults = filteredResults.filter(r => 
-        r.group.city.toLowerCase() === city.toLowerCase()
-      );
-    }
-    
-    if (state && !city) {
-      // Only filter by state if no city is provided (city search already handles state)
+      // No distance specified, do exact city match (and state if provided)
+      filteredResults = filteredResults.filter(r => {
+        const cityMatch = r.group.city.toLowerCase() === city.toLowerCase();
+        const stateMatch = !state || r.group.state.toLowerCase() === state.toLowerCase();
+        return cityMatch && stateMatch;
+      });
+    } else if (state) {
+      // Only state provided, filter by state
       filteredResults = filteredResults.filter(r => 
         r.group.state.toLowerCase() === state.toLowerCase()
       );
