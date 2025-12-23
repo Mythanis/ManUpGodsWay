@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { apiRequest } from "@/lib/queryClient";
-import { Edit, Trash2, Plus, Book, Users, Crown, Gem, List, ChevronUp, ChevronDown } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Edit, Trash2, Plus, Book, Users, Crown, Gem, List, ChevronUp, ChevronDown, Layers, X, Check, BookOpen } from "lucide-react";
 
 interface Study {
   id: string;
@@ -112,6 +113,20 @@ export default function StudyManagement() {
     price: "",
     purchaseRequiredTiers: [],
     seriesId: "",
+  });
+
+  // Series management state
+  const [activeView, setActiveView] = useState<"all" | "series" | "individual">("all");
+  const [showCreateSeriesDialog, setShowCreateSeriesDialog] = useState(false);
+  const [showEditSeriesDialog, setShowEditSeriesDialog] = useState(false);
+  const [editingSeriesData, setEditingSeriesData] = useState<StudySeries | null>(null);
+  const [showManageSeriesStudiesDialog, setShowManageSeriesStudiesDialog] = useState(false);
+  const [managingSeriesStudies, setManagingSeriesStudies] = useState<StudySeries | null>(null);
+  const [seriesFormData, setSeriesFormData] = useState({
+    title: "",
+    description: "",
+    category: "",
+    thumbnailUrl: "",
   });
 
   // Fetch all studies
@@ -244,6 +259,111 @@ export default function StudyManagement() {
       });
     },
   });
+
+  // Series mutations
+  const createSeriesMutation = useMutation({
+    mutationFn: async (data: typeof seriesFormData) => {
+      return await apiRequest("POST", "/api/admin/study-series", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      setShowCreateSeriesDialog(false);
+      resetSeriesForm();
+      toast({ title: "Success", description: "Series created successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to create series", variant: "destructive" });
+    },
+  });
+
+  const updateSeriesMutation = useMutation({
+    mutationFn: async (data: { id: string; updates: typeof seriesFormData }) => {
+      return await apiRequest("PUT", `/api/admin/study-series/${data.id}`, data.updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      setShowEditSeriesDialog(false);
+      setEditingSeriesData(null);
+      resetSeriesForm();
+      toast({ title: "Success", description: "Series updated successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update series", variant: "destructive" });
+    },
+  });
+
+  const deleteSeriesMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/admin/study-series/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+      toast({ title: "Success", description: "Series deleted. Studies are now individual." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to delete series", variant: "destructive" });
+    },
+  });
+
+  const assignStudyToSeriesMutation = useMutation({
+    mutationFn: async (data: { studyId: string; seriesId: string | null; seriesOrder?: number }) => {
+      return await apiRequest("PUT", `/api/admin/studies/${data.studyId}/series`, {
+        seriesId: data.seriesId,
+        seriesOrder: data.seriesOrder,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+      toast({ title: "Success", description: "Study assignment updated" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update study", variant: "destructive" });
+    },
+  });
+
+  const resetSeriesForm = () => {
+    setSeriesFormData({ title: "", description: "", category: "", thumbnailUrl: "" });
+  };
+
+  const handleEditSeries = (series: StudySeries) => {
+    setEditingSeriesData(series);
+    setSeriesFormData({
+      title: series.title,
+      description: series.description || "",
+      category: series.category || "",
+      thumbnailUrl: "",
+    });
+    setShowEditSeriesDialog(true);
+  };
+
+  const handleManageSeriesStudies = (series: StudySeries) => {
+    setManagingSeriesStudies(series);
+    setShowManageSeriesStudiesDialog(true);
+  };
+
+  const handleAddStudyToSeries = (studyId: string) => {
+    if (!managingSeriesStudies) return;
+    const seriesStudiesCount = studies.filter(s => s.seriesId === managingSeriesStudies.id).length;
+    assignStudyToSeriesMutation.mutate({ 
+      studyId, 
+      seriesId: managingSeriesStudies.id, 
+      seriesOrder: seriesStudiesCount + 1 
+    });
+  };
+
+  const handleRemoveStudyFromSeries = (studyId: string) => {
+    assignStudyToSeriesMutation.mutate({ studyId, seriesId: null });
+  };
+
+  // Computed values for views
+  const seriesWithStudies = allSeries.map(series => ({
+    ...series,
+    studies: studies.filter(s => s.seriesId === series.id),
+  }));
+  const individualStudies = studies.filter(s => !s.seriesId);
+  const unassignedStudies = studies.filter(s => !s.seriesId);
 
   const handleEdit = (study: Study) => {
     setEditingStudy(study);
@@ -756,103 +876,452 @@ export default function StudyManagement() {
     );
   }
 
+  const renderStudyCard = (study: Study) => (
+    <Card key={study.id} className="border-gray-200">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="text-lg text-foreground mb-2">
+              {study.title}
+            </CardTitle>
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <Badge variant="secondary" className="text-xs">
+                {study.category}
+              </Badge>
+              <Badge className={`text-xs ${getTierBadgeColor(study.requiredTier)}`}>
+                <span className="flex items-center gap-1">
+                  {getTierIcon(study.requiredTier)}
+                  {study.requiredTier.toUpperCase()}
+                </span>
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {study.duration} min
+              </span>
+              {study.requiresPurchase && study.price && (
+                <Badge className="text-xs bg-ministry-gold text-black">
+                  ${parseFloat(String(study.price)).toFixed(2)}
+                </Badge>
+              )}
+              {study.seriesId && (
+                <Badge className="text-xs bg-blue-100 text-blue-800 border border-blue-300">
+                  {allSeries.find(s => s.id === study.seriesId)?.title || 'In Series'}
+                </Badge>
+              )}
+              {!study.seriesId && (
+                <Badge className="text-xs bg-gray-100 text-gray-600 border border-gray-300">
+                  Individual
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {study.description}
+            </p>
+          </div>
+          <div className="flex items-center space-x-2 ml-4">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleManageLessons(study)}
+              className="bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal"
+              data-testid={`button-manage-lessons-${study.id}`}
+            >
+              <List className="w-4 h-4 mr-1" />
+              Lessons
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleEdit(study)}
+              data-testid={`button-edit-study-${study.id}`}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => handleDelete(study.id)}
+              disabled={deleteStudyMutation.isPending}
+              data-testid={`button-delete-study-${study.id}`}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span>By {study.author}</span>
+          <span>•</span>
+          <span>Created {new Date(study.createdAt).toLocaleDateString()}</span>
+          {study.tags && study.tags.length > 0 && (
+            <>
+              <span>•</span>
+              <span>Tags: {study.tags.join(", ")}</span>
+            </>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const categories = [
+    { id: 'leadership', label: 'Leadership' },
+    { id: 'marriage', label: 'Marriage' },
+    { id: 'fatherhood', label: 'Fatherhood' },
+    { id: 'character', label: 'Character' },
+    { id: 'faith', label: 'Faith' },
+    { id: 'holy-spirit', label: 'Holy Spirit' },
+  ];
+
   return (
     <div className="space-y-4">
-      {/* Studies List */}
-      {studies.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <Book className="w-12 h-12 text-ministry-slate mx-auto mb-4" />
-            <p className="text-muted-foreground">No studies created yet</p>
-            <p className="text-sm text-muted-foreground">Use the Content tab to add your first study</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {studies.map((study) => (
-            <Card key={study.id} className="border-gray-200">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg text-foreground mb-2">
-                      {study.title}
-                    </CardTitle>
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {study.category}
-                      </Badge>
-                      <Badge className={`text-xs ${getTierBadgeColor(study.requiredTier)}`}>
-                        <span className="flex items-center gap-1">
-                          {getTierIcon(study.requiredTier)}
-                          {study.requiredTier.toUpperCase()}
-                        </span>
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {study.duration} min
-                      </span>
-                      {study.requiresPurchase && study.price && (
-                        <Badge className="text-xs bg-ministry-gold text-black">
-                          ${parseFloat(String(study.price)).toFixed(2)}
-                        </Badge>
-                      )}
-                      {study.seriesId && (
-                        <Badge className="text-xs bg-blue-100 text-blue-800 border border-blue-300">
-                          {allSeries.find(s => s.id === study.seriesId)?.title || 'In Series'}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {study.description}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2 ml-4">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleManageLessons(study)}
-                      className="bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal"
-                      data-testid={`button-manage-lessons-${study.id}`}
-                    >
-                      <List className="w-4 h-4 mr-1" />
-                      Lessons
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEdit(study)}
-                      data-testid={`button-edit-study-${study.id}`}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleDelete(study.id)}
-                      disabled={deleteStudyMutation.isPending}
-                      data-testid={`button-delete-study-${study.id}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <span>By {study.author}</span>
-                  <span>•</span>
-                  <span>Created {new Date(study.createdAt).toLocaleDateString()}</span>
-                  {study.tags && study.tags.length > 0 && (
-                    <>
-                      <span>•</span>
-                      <span>Tags: {study.tags.join(", ")}</span>
-                    </>
-                  )}
-                </div>
+      <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
+        <div className="flex items-center justify-between mb-4">
+          <TabsList>
+            <TabsTrigger value="all" data-testid="tab-all-studies">
+              All Studies ({studies.length})
+            </TabsTrigger>
+            <TabsTrigger value="series" data-testid="tab-series">
+              Series ({allSeries.length})
+            </TabsTrigger>
+            <TabsTrigger value="individual" data-testid="tab-individual">
+              Individual ({individualStudies.length})
+            </TabsTrigger>
+          </TabsList>
+          {activeView === "series" && (
+            <Button
+              onClick={() => {
+                resetSeriesForm();
+                setShowCreateSeriesDialog(true);
+              }}
+              className="bg-ministry-gold-exact text-black hover:bg-yellow-500"
+              data-testid="button-create-series"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Series
+            </Button>
+          )}
+        </div>
+
+        <TabsContent value="all" className="space-y-4">
+          {studies.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Book className="w-12 h-12 text-ministry-slate mx-auto mb-4" />
+                <p className="text-muted-foreground">No studies created yet</p>
+                <p className="text-sm text-muted-foreground">Use the Content tab to add your first study</p>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
+          ) : (
+            <div className="space-y-4">
+              {studies.map(renderStudyCard)}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="series" className="space-y-6">
+          {allSeries.length === 0 ? (
+            <Card className="bg-gray-50 border-dashed">
+              <CardContent className="py-8 text-center">
+                <Layers className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No series created yet.</p>
+                <p className="text-sm text-gray-400">A series groups 2 or more related studies together.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            seriesWithStudies.map((series) => (
+              <Card key={series.id} className="bg-white border-2 border-gray-200" data-testid={`series-card-${series.id}`}>
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-ministry-gold-exact/20 rounded-lg flex items-center justify-center">
+                        <Layers className="w-5 h-5 text-ministry-gold-exact" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">{series.title}</CardTitle>
+                        <p className="text-sm text-gray-500">{series.category || 'No category'} • {series.studies.length} studies</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleManageSeriesStudies(series)}
+                        data-testid={`button-manage-series-${series.id}`}
+                      >
+                        <BookOpen className="w-4 h-4 mr-1" />
+                        Manage Studies
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditSeries(series)}
+                        data-testid={`button-edit-series-${series.id}`}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (confirm("Delete this series? Studies will become individual studies.")) {
+                            deleteSeriesMutation.mutate(series.id);
+                          }
+                        }}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        data-testid={`button-delete-series-${series.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  {series.description && (
+                    <p className="text-sm text-gray-600 mb-3">{series.description}</p>
+                  )}
+                  {series.studies.length === 0 ? (
+                    <p className="text-sm text-gray-400 italic">No studies assigned yet. Click "Manage Studies" to add studies.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {series.studies.map((study, index) => (
+                        <div key={study.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <span className="w-6 h-6 bg-ministry-gold-exact text-black text-xs font-bold rounded-full flex items-center justify-center">
+                              {index + 1}
+                            </span>
+                            <span className="text-sm font-medium">{study.title}</span>
+                            <Badge className={`text-xs ${getTierBadgeColor(study.requiredTier)}`}>
+                              {study.requiredTier}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => handleEdit(study)}>
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => handleRemoveStudyFromSeries(study.id)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </TabsContent>
+
+        <TabsContent value="individual" className="space-y-4">
+          {individualStudies.length === 0 ? (
+            <Card className="bg-gray-50 border-dashed">
+              <CardContent className="py-8 text-center">
+                <Book className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No individual studies.</p>
+                <p className="text-sm text-gray-400">All studies are currently part of a series.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {individualStudies.map(renderStudyCard)}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Create Series Dialog */}
+      <Dialog open={showCreateSeriesDialog} onOpenChange={setShowCreateSeriesDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Series</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="series-title">Title</Label>
+              <Input
+                id="series-title"
+                value={seriesFormData.title}
+                onChange={(e) => setSeriesFormData({ ...seriesFormData, title: e.target.value })}
+                placeholder="e.g., Holy Spirit Series"
+                data-testid="input-series-title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="series-description">Description</Label>
+              <Textarea
+                id="series-description"
+                value={seriesFormData.description}
+                onChange={(e) => setSeriesFormData({ ...seriesFormData, description: e.target.value })}
+                placeholder="Brief description..."
+                rows={3}
+                data-testid="input-series-description"
+              />
+            </div>
+            <div>
+              <Label htmlFor="series-category">Category</Label>
+              <Select value={seriesFormData.category} onValueChange={(val) => setSeriesFormData({ ...seriesFormData, category: val })}>
+                <SelectTrigger data-testid="select-series-category">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateSeriesDialog(false)}>Cancel</Button>
+            <Button
+              onClick={() => createSeriesMutation.mutate(seriesFormData)}
+              disabled={!seriesFormData.title || createSeriesMutation.isPending}
+              className="bg-ministry-gold-exact text-black hover:bg-yellow-500"
+              data-testid="button-save-series"
+            >
+              {createSeriesMutation.isPending ? "Creating..." : "Create Series"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Series Dialog */}
+      <Dialog open={showEditSeriesDialog} onOpenChange={setShowEditSeriesDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Series</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-series-title">Title</Label>
+              <Input
+                id="edit-series-title"
+                value={seriesFormData.title}
+                onChange={(e) => setSeriesFormData({ ...seriesFormData, title: e.target.value })}
+                data-testid="input-edit-series-title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-series-description">Description</Label>
+              <Textarea
+                id="edit-series-description"
+                value={seriesFormData.description}
+                onChange={(e) => setSeriesFormData({ ...seriesFormData, description: e.target.value })}
+                rows={3}
+                data-testid="input-edit-series-description"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-series-category">Category</Label>
+              <Select value={seriesFormData.category} onValueChange={(val) => setSeriesFormData({ ...seriesFormData, category: val })}>
+                <SelectTrigger data-testid="select-edit-series-category">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditSeriesDialog(false)}>Cancel</Button>
+            <Button
+              onClick={() => editingSeriesData && updateSeriesMutation.mutate({ id: editingSeriesData.id, updates: seriesFormData })}
+              disabled={!seriesFormData.title || updateSeriesMutation.isPending}
+              className="bg-ministry-gold-exact text-black hover:bg-yellow-500"
+              data-testid="button-update-series"
+            >
+              {updateSeriesMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Series Studies Dialog */}
+      <Dialog open={showManageSeriesStudiesDialog} onOpenChange={setShowManageSeriesStudiesDialog}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Manage Studies in "{managingSeriesStudies?.title}"</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto space-y-6">
+            <div>
+              <h4 className="font-medium mb-3 text-gray-700">Studies in this Series</h4>
+              {(() => {
+                const seriesStudiesList = studies.filter(s => s.seriesId === managingSeriesStudies?.id);
+                return seriesStudiesList.length === 0 ? (
+                  <p className="text-gray-500 text-sm py-4 text-center bg-gray-50 rounded-lg">
+                    No studies assigned to this series yet.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {seriesStudiesList.map((study, index) => (
+                      <div key={study.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <span className="w-6 h-6 bg-ministry-gold-exact text-black rounded-full flex items-center justify-center text-sm font-bold">
+                            {index + 1}
+                          </span>
+                          <div>
+                            <p className="font-medium text-gray-900">{study.title}</p>
+                            <p className="text-xs text-gray-500">{study.category} • {study.requiredTier}</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveStudyFromSeries(study.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div>
+              <h4 className="font-medium mb-3 text-gray-700">Available Individual Studies</h4>
+              {unassignedStudies.length === 0 ? (
+                <p className="text-gray-500 text-sm py-4 text-center bg-gray-50 rounded-lg">
+                  All studies are already assigned to series.
+                </p>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {unassignedStudies.map((study) => (
+                    <div key={study.id} className="flex items-center justify-between p-3 bg-white border rounded-lg hover:border-ministry-gold-exact transition-colors">
+                      <div>
+                        <p className="font-medium text-gray-900">{study.title}</p>
+                        <p className="text-xs text-gray-500">{study.category} • {study.requiredTier}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAddStudyToSeries(study.id)}
+                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                      >
+                        <Check className="w-4 h-4 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowManageSeriesStudiesDialog(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Study Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
