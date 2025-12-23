@@ -1570,9 +1570,11 @@ export const warGroupPosts = pgTable("war_group_posts", {
   groupId: varchar("group_id").notNull().references(() => warGroups.id, { onDelete: 'cascade' }),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   content: text("content").notNull(),
-  postType: varchar("post_type").notNull().default("discussion"), // discussion, shared_content
+  postType: varchar("post_type").notNull().default("discussion"), // discussion, shared_content, media
   sharedContentType: varchar("shared_content_type"), // study, devotional, podcast (when shared from main app)
   sharedContentId: varchar("shared_content_id"), // ID of shared content
+  mediaUrls: text("media_urls").array(), // Array of uploaded media URLs
+  mediaTypes: text("media_types").array(), // Array of media types (image, video)
   likes: integer("likes").default(0),
   replyCount: integer("reply_count").default(0),
   isPinned: boolean("is_pinned").default(false), // Leader can pin important posts
