@@ -390,8 +390,8 @@ export default function Messages() {
 
   if (conversationsLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ministry-gold"></div>
+      <div className="min-h-screen bg-ministry-light-gray flex items-center justify-center">
+        <div className="animate-spin rounded-none h-12 w-12 border-b-4 border-black"></div>
       </div>
     );
   }
@@ -399,35 +399,35 @@ export default function Messages() {
 
 
   return (
-    <div className="flex h-screen max-w-md mx-auto bg-background pb-16">
+    <div className="flex h-screen max-w-md mx-auto bg-ministry-light-gray pb-16">
       {/* Conversations List */}
       {!selectedConversation ? (
         <div className="w-full">
-          <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+          <div className="bg-black text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
             <div className="flex items-center justify-between mb-2">
               <div>
-                <h1 className="text-4xl font-black tracking-tight" data-testid="text-messages-title">Messages</h1>
-                <p className="text-ministry-gold-exact text-sm font-semibold">Connect With Your Brothers</p>
+                <h1 className="text-4xl font-black tracking-tighter uppercase" data-testid="text-messages-title">Messages</h1>
+                <p className="text-ministry-gold-exact text-sm font-bold uppercase tracking-wide">Connect With Your Brothers</p>
               </div>
               <div className="flex space-x-2">
                 <Dialog open={showUserListDialog} onOpenChange={setShowUserListDialog}>
                   <DialogTrigger asChild>
-                    <Button size="sm" variant="secondary" data-testid="button-new-direct-message">
+                    <Button size="sm" className="bg-ministry-gold-exact text-black hover:bg-yellow-400 rounded-none border-2 border-black font-black" data-testid="button-new-direct-message">
                       <MessageCircle className="w-4 h-4" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                     <DialogHeader>
-                      <DialogTitle>Start Direct Message</DialogTitle>
+                      <DialogTitle className="font-black uppercase tracking-tighter text-xl">Start Direct Message</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                       <div className="relative">
-                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-black" />
                         <Input
                           placeholder="Search users..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-10"
+                          className="pl-10 rounded-none border-2 border-black"
                           data-testid="input-search-users"
                         />
                       </div>
@@ -440,14 +440,14 @@ export default function Messages() {
                           filteredUsers.map((targetUser) => (
                             <div
                               key={targetUser.id}
-                              className="flex items-center justify-between p-2 hover:bg-muted/50 rounded"
+                              className="flex items-center justify-between p-2 hover:bg-ministry-gold-exact/20 rounded-none border-b border-black/10"
                               data-testid={`user-item-${targetUser.id}`}
                             >
                               <div className="flex items-center space-x-3">
                                 <img
                                   src={targetUser.profileImageUrl || `https://ui-avatars.com/api/?name=${targetUser.firstName}+${targetUser.lastName}&background=4A90B8&color=fff`}
                                   alt={`${targetUser.firstName} ${targetUser.lastName}`}
-                                  className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-navy"
+                                  className="w-10 h-10 rounded-none border-2 border-black object-cover cursor-pointer hover:ring-2 hover:ring-ministry-gold-exact"
                                   onClick={(e) => {
                                     const rect = e.currentTarget.getBoundingClientRect();
                                     setShowProfileMenu({
@@ -468,6 +468,7 @@ export default function Messages() {
                                 size="sm"
                                 onClick={() => createDirectConversationMutation.mutate(targetUser.id)}
                                 disabled={createDirectConversationMutation.isPending}
+                                className="bg-black text-white hover:bg-gray-900 rounded-none border-2 border-black font-bold uppercase text-xs"
                                 data-testid={`button-message-${targetUser.id}`}
                               >
                                 Message
@@ -482,44 +483,46 @@ export default function Messages() {
 
                 <Dialog open={showNewGroupDialog} onOpenChange={setShowNewGroupDialog}>
                   <DialogTrigger asChild>
-                    <Button size="sm" variant="secondary" data-testid="button-new-group">
+                    <Button size="sm" className="bg-ministry-gold-exact text-black hover:bg-yellow-400 rounded-none border-2 border-black font-black" data-testid="button-new-group">
                       <Users className="w-4 h-4" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                     <DialogHeader>
-                      <DialogTitle>Create Group Chat</DialogTitle>
+                      <DialogTitle className="font-black uppercase tracking-tighter text-xl">Create Group Chat</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="groupName">Group Name</Label>
+                        <Label htmlFor="groupName" className="font-bold uppercase tracking-wide text-sm">Group Name</Label>
                         <Input
                           id="groupName"
                           value={groupName}
                           onChange={(e) => setGroupName(e.target.value)}
                           placeholder="Enter group name"
+                          className="rounded-none border-2 border-black mt-1"
                           data-testid="input-group-name"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="groupDescription">Description (Optional)</Label>
+                        <Label htmlFor="groupDescription" className="font-bold uppercase tracking-wide text-sm">Description (Optional)</Label>
                         <Textarea
                           id="groupDescription"
                           value={groupDescription}
                           onChange={(e) => setGroupDescription(e.target.value)}
                           placeholder="Enter group description"
+                          className="rounded-none border-2 border-black mt-1"
                           data-testid="input-group-description"
                         />
                       </div>
                       <div>
-                        <Label>Select Members</Label>
-                        <div className="relative mb-2">
-                          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Label className="font-bold uppercase tracking-wide text-sm">Select Members</Label>
+                        <div className="relative mb-2 mt-1">
+                          <Search className="absolute left-3 top-3 h-4 w-4 text-black" />
                           <Input
                             placeholder="Search users..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10"
+                            className="pl-10 rounded-none border-2 border-black"
                             data-testid="input-search-group-users"
                           />
                         </div>
@@ -527,21 +530,20 @@ export default function Messages() {
                         {/* Selected users display */}
                         {selectedUsers.length > 0 && (
                           <div className="mb-3">
-                            <p className="text-sm text-muted-foreground mb-2">Selected Members ({selectedUsers.length}):</p>
+                            <p className="text-sm text-black/70 mb-2 font-medium">Selected Members ({selectedUsers.length}):</p>
                             <div className="flex flex-wrap gap-1">
                               {selectedUsers.map(userId => {
                                 const selectedUser = allUsers.find(u => u.id === userId);
                                 return selectedUser ? (
                                   <Badge
                                     key={userId}
-                                    variant="secondary"
-                                    className="flex items-center space-x-1"
+                                    className="flex items-center space-x-1 bg-ministry-gold-exact text-black rounded-none border-2 border-black font-bold"
                                   >
                                     <span className="text-xs">
                                       {selectedUser.firstName} {selectedUser.lastName}
                                     </span>
                                     <X
-                                      className="w-3 h-3 cursor-pointer hover:text-red-500"
+                                      className="w-3 h-3 cursor-pointer hover:text-red-600"
                                       onClick={() => setSelectedUsers(selectedUsers.filter(id => id !== userId))}
                                     />
                                   </Badge>
@@ -551,7 +553,7 @@ export default function Messages() {
                           </div>
                         )}
                         
-                        <ScrollArea className="h-40 border rounded p-2">
+                        <ScrollArea className="h-40 border-2 border-black rounded-none p-2">
                           {filteredUsersForGroup.length === 0 ? (
                             <div className="text-center py-4">
                               <p className="text-muted-foreground text-sm">No users found</p>
@@ -602,7 +604,7 @@ export default function Messages() {
                       <Button
                         onClick={handleCreateGroup}
                         disabled={!groupName.trim() || selectedUsers.length === 0 || createGroupConversationMutation.isPending}
-                        className="w-full"
+                        className="w-full bg-black text-white hover:bg-gray-900 rounded-none border-2 border-black font-black uppercase tracking-wide"
                         data-testid="button-create-group"
                       >
                         {createGroupConversationMutation.isPending ? "Creating..." : "Create Group"}
@@ -616,27 +618,27 @@ export default function Messages() {
 
           <div className="px-6 py-4">
             {conversations.length === 0 ? (
-              <div className="text-center py-8">
-                <MessageCircle className="w-12 h-12 text-ministry-gold mx-auto mb-4" />
-                <p className="text-white font-medium">No conversations yet</p>
-                <p className="text-sm text-gray-400">Start a new conversation above</p>
+              <div className="text-center py-8 bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
+                <MessageCircle className="w-12 h-12 text-black mx-auto mb-4" />
+                <p className="text-black font-black uppercase tracking-tighter">No conversations yet</p>
+                <p className="text-sm text-black/70 font-medium">Start a new conversation above</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {conversations.map((conversation) => (
                   <Card
                     key={conversation.id}
-                    className="cursor-pointer bg-black border-2 border-black hover:ring-1 hover:ring-ministry-gold transition-all"
+                    className="cursor-pointer bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-200"
                     onClick={() => setSelectedConversation(conversation)}
                     data-testid={`conversation-item-${conversation.id}`}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-white truncate">
+                          <h3 className="font-black text-black truncate uppercase tracking-tighter">
                             {getConversationTitle(conversation)}
                           </h3>
-                          <p className="text-sm text-gray-400">
+                          <p className="text-sm text-black/70 font-medium">
                             {conversation.type === "group" 
                               ? `${conversation.participants?.length || 0} members`
                               : "Direct message"
@@ -644,7 +646,7 @@ export default function Messages() {
                           </p>
                         </div>
                         {conversation.lastMessageAt && (
-                          <p className="text-xs text-ministry-gold">
+                          <p className="text-xs text-black font-bold">
                             {formatMessageTime(conversation.lastMessageAt)}
                           </p>
                         )}
@@ -658,21 +660,21 @@ export default function Messages() {
         </div>
       ) : (
         /* Chat Interface */
-        <div className="w-full h-screen flex flex-col pb-16">
+        <div className="w-full h-screen flex flex-col pb-16 bg-ministry-light-gray">
           {/* Chat Header */}
-          <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal text-white px-6 py-4 flex items-center flex-shrink-0">
+          <div className="bg-black text-white px-6 py-4 flex items-center flex-shrink-0 border-b-4 border-ministry-gold-exact">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSelectedConversation(null)}
-              className="text-white hover:bg-white/10 mr-3"
+              className="text-white hover:bg-white/10 mr-3 rounded-none"
               data-testid="button-back-to-conversations"
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div className="flex-1">
-              <h2 className="font-bold text-white">{getConversationTitle(selectedConversation)}</h2>
-              <p className="text-sm text-ministry-gold-exact">
+              <h2 className="font-black text-white uppercase tracking-tighter">{getConversationTitle(selectedConversation)}</h2>
+              <p className="text-sm text-ministry-gold-exact font-bold uppercase tracking-wide">
                 {selectedConversation.type === "group" 
                   ? `${selectedConversation.participants?.length || 0} members`
                   : "Direct message"
@@ -683,11 +685,11 @@ export default function Messages() {
             {/* Conversation options menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-white hover:bg-ministry-charcoal">
+                <Button variant="ghost" size="sm" className="text-white hover:bg-gray-900 rounded-none">
                   <MoreVertical className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-48 rounded-none border-2 border-black">
                 {selectedConversation.type === "direct" ? (
                   <DropdownMenuItem 
                     onClick={() => deleteConversationMutation.mutate({ conversationId: selectedConversation.id })}
@@ -774,10 +776,10 @@ export default function Messages() {
                         />
                       )}
                       
-                      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-none border-2 border-black ${
                         message.userId === (user as any)?.id
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-foreground'
+                          ? 'bg-ministry-gold-exact text-black'
+                          : 'bg-white text-black'
                       }`}>
                         {selectedConversation.type === "group" && message.userId !== (user as any)?.id && (
                           <p className="text-xs opacity-75 mb-1">
@@ -786,7 +788,7 @@ export default function Messages() {
                         )}
                         <p className="text-sm">{message.content}</p>
                         <p className={`text-xs mt-1 ${
-                          message.userId === (user as any)?.id ? 'text-primary-foreground/70' : 'text-muted-foreground/70'
+                          message.userId === (user as any)?.id ? 'text-black/70' : 'text-black/50'
                         }`}>
                           {formatMessageTime(message.createdAt)}
                         </p>
@@ -800,7 +802,7 @@ export default function Messages() {
           </div>
 
           {/* Message Input - Fixed at bottom with proper spacing */}
-          <div className="flex-shrink-0 border-t bg-background mb-16">
+          <div className="flex-shrink-0 border-t-2 border-black bg-white mb-16">
             <div className="px-6 py-4">
               <form onSubmit={handleSendMessage}>
                 <div className="flex space-x-2">
@@ -809,7 +811,7 @@ export default function Messages() {
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Type a message..."
-                    className="flex-1"
+                    className="flex-1 rounded-none border-2 border-black"
                     disabled={sendMessageMutation.isPending}
                     data-testid="input-new-message"
                     autoComplete="off"
@@ -817,7 +819,7 @@ export default function Messages() {
                   <Button
                     type="submit"
                     disabled={!newMessage.trim() || sendMessageMutation.isPending}
-                    className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black"
+                    className="bg-black hover:bg-gray-900 text-white rounded-none border-2 border-black"
                     data-testid="button-send-message"
                   >
                     <Send className="w-4 h-4" />
@@ -832,7 +834,7 @@ export default function Messages() {
       {/* Message Context Menu */}
       {showMessageMenu && (
         <div
-          className="fixed bg-background border border-ministry-charcoal rounded-lg shadow-lg p-2 z-50 min-w-[140px]"
+          className="fixed bg-white border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-2 z-50 min-w-[140px]"
           style={{
             left: showMessageMenu.x,
             top: showMessageMenu.y,
@@ -842,7 +844,7 @@ export default function Messages() {
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start text-left text-red-600 hover:text-red-600 hover:bg-red-50"
+            className="w-full justify-start text-left text-red-600 hover:text-red-600 hover:bg-red-50 rounded-none font-bold uppercase text-xs"
             onClick={() => {
               deleteMessageMutation.mutate(showMessageMenu.messageId);
             }}
@@ -858,7 +860,7 @@ export default function Messages() {
         const targetUser = allUsers.find(u => u.id === showProfileMenu.userId);
         return (
           <div
-            className="fixed bg-background border border-ministry-charcoal rounded-lg shadow-lg p-2 z-50 min-w-[160px]"
+            className="fixed bg-white border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-2 z-50 min-w-[160px]"
             style={{
               left: showProfileMenu.x + 10,
               top: showProfileMenu.y,
@@ -869,7 +871,7 @@ export default function Messages() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full justify-start text-left"
+                className="w-full justify-start text-left rounded-none font-bold uppercase text-xs hover:bg-ministry-gold-exact/20"
                 onClick={() => {
                   setLocation(`/users/${showProfileMenu.userId}`);
                   setShowProfileMenu(null);
@@ -883,7 +885,7 @@ export default function Messages() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start text-left"
+                  className="w-full justify-start text-left rounded-none font-bold uppercase text-xs hover:bg-ministry-gold-exact/20"
                   onClick={() => {
                     createDirectConversationMutation.mutate(showProfileMenu.userId);
                   }}
@@ -897,7 +899,7 @@ export default function Messages() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start text-left"
+                  className="w-full justify-start text-left rounded-none font-bold uppercase text-xs hover:bg-ministry-gold-exact/20"
                   onClick={() => {
                     if (!selectedUsers.includes(showProfileMenu.userId)) {
                       setSelectedUsers([...selectedUsers, showProfileMenu.userId]);
