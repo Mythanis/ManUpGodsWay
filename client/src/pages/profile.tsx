@@ -80,19 +80,19 @@ export default function Profile() {
   const getTierBadge = (tier: string) => {
     switch (tier) {
       case 'premium':
-        return <Badge className="bg-ministry-steel/20 text-ministry-steel">Premium Member</Badge>;
+        return <Badge className="bg-ministry-steel/20 text-ministry-steel rounded-none font-black uppercase tracking-wide">Premium Member</Badge>;
       case 'vip':
-        return <Badge className="bg-ministry-gold-exact text-black">VIP Member</Badge>;
+        return <Badge className="bg-ministry-gold-exact text-black rounded-none font-black uppercase tracking-wide">VIP Member</Badge>;
       default:
-        return <Badge variant="outline">Free Member</Badge>;
+        return <Badge variant="outline" className="rounded-none font-black uppercase tracking-wide">Free Member</Badge>;
     }
   };
 
   const getStreakBadge = (days: number) => {
     if (days >= 30) {
-      return <Badge className="bg-ministry-success/20 text-ministry-success">{days}-Day Streak</Badge>;
+      return <Badge className="bg-ministry-success/20 text-ministry-success rounded-none font-black uppercase tracking-wide">{days}-Day Streak</Badge>;
     }
-    return <Badge variant="outline">{days}-Day Streak</Badge>;
+    return <Badge variant="outline" className="rounded-none font-black uppercase tracking-wide">{days}-Day Streak</Badge>;
   };
 
   return (
@@ -103,13 +103,13 @@ export default function Profile() {
           <img 
             src={(user as any)?.profileImageUrl || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=4A90B8&color=fff`}
             alt="Profile"
-            className="w-20 h-20 rounded-full mx-auto mb-4 border-4 border-ministry-gold-exact object-cover"
+            className="w-20 h-20 rounded-none mx-auto mb-4 border-4 border-ministry-gold-exact object-cover"
             data-testid="img-profile"
           />
-          <h1 className="text-2xl font-black mb-1 tracking-tight" data-testid="text-user-name">
+          <h1 className="text-4xl font-black mb-1 tracking-tighter uppercase" data-testid="text-user-name">
             {user?.firstName} {user?.lastName}
           </h1>
-          <p className="text-ministry-gold-exact text-sm font-semibold mb-4" data-testid="text-member-since">
+          <p className="text-ministry-gold-exact text-xs font-bold tracking-widest uppercase mb-4" data-testid="text-member-since">
             Member since {new Date((user as any)?.createdAt || '').toLocaleDateString('en-US', { 
               month: 'long', 
               year: 'numeric' 
@@ -117,23 +117,23 @@ export default function Profile() {
           </p>
           
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold" data-testid="text-completed-count">
+            <div className="text-center bg-black/20 py-3 px-2 border-2 border-ministry-gold-exact">
+              <p className="text-2xl font-black" data-testid="text-completed-count">
                 {completedStudies.length}
               </p>
-              <p className="text-xs text-ministry-gold-exact font-semibold">Studies Completed</p>
+              <p className="text-xs text-ministry-gold-exact font-bold uppercase tracking-wide">Studies</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold" data-testid="text-streak-days">
+            <div className="text-center bg-black/20 py-3 px-2 border-2 border-ministry-gold-exact">
+              <p className="text-2xl font-black" data-testid="text-streak-days">
                 {user?.streakDays || 0}
               </p>
-              <p className="text-xs text-ministry-gold-exact font-semibold">Days Active</p>
+              <p className="text-xs text-ministry-gold-exact font-bold uppercase tracking-wide">Days</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold" data-testid="text-forum-posts">
+            <div className="text-center bg-black/20 py-3 px-2 border-2 border-ministry-gold-exact">
+              <p className="text-2xl font-black" data-testid="text-forum-posts">
                 0
               </p>
-              <p className="text-xs text-ministry-gold-exact font-semibold">Forum Posts</p>
+              <p className="text-xs text-ministry-gold-exact font-bold uppercase tracking-wide">Posts</p>
             </div>
           </div>
           
@@ -146,20 +146,20 @@ export default function Profile() {
 
       {/* Account Management */}
       <div className="px-6 -mt-6 relative z-10 mb-6">
-        <Card className="shadow-lg bg-black border-2 border-black" data-testid="card-account">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] bg-black border-2 border-black rounded-none" data-testid="card-account">
           <CardContent className="p-6">
-            <h2 className="text-lg font-bold text-white mb-4">Account & Subscription</h2>
+            <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Account & Subscription</h2>
             
             <div className="space-y-4">
-              <div className={`flex items-center justify-between p-4 rounded-xl border ${
+              <div className={`flex items-center justify-between p-4 rounded-none border-2 border-black ${
                 user?.subscriptionTier === 'free' 
-                  ? 'bg-ministry-gold-exact border-ministry-gold-exact/20' 
-                  : 'bg-ministry-steel/10 border-ministry-steel/20'
+                  ? 'bg-ministry-gold-exact' 
+                  : 'bg-ministry-steel/10'
               }`}>
                 <div className="flex items-center space-x-3">
-                  <Crown className="w-5 h-5 text-ministry-gold" />
+                  <Crown className="w-5 h-5 text-black" />
                   <div>
-                    <h3 className="font-semibold text-foreground">
+                    <h3 className="font-black text-foreground uppercase tracking-wide">
                       {user?.subscriptionTier === 'free' ? 'Free Plan' : 
                        user?.subscriptionTier === 'premium' ? 'Premium Plan' : 'VIP Plan'}
                     </h3>
@@ -189,14 +189,14 @@ export default function Profile() {
               <EditProfileDialog>
                 <Button 
                   variant="outline"
-                  className="w-full justify-between p-4 h-auto border-gray-700 hover:bg-gray-800 bg-gray-800"
+                  className="w-full justify-between p-4 h-auto border-2 border-black hover:bg-gray-800 bg-gray-800 rounded-none"
                   data-testid="button-edit-profile"
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-none bg-ministry-gold-exact flex items-center justify-center">
                       <User className="w-4 h-4 text-black" />
                     </div>
-                    <span className="font-medium text-white">Edit Profile</span>
+                    <span className="font-bold text-white uppercase tracking-wide">Edit Profile</span>
                   </div>
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -210,24 +210,24 @@ export default function Profile() {
 
       {/* Settings Menu */}
       <div className="px-6 mb-6">
-        <h2 className="text-lg font-bold text-white mb-4">Settings</h2>
+        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Settings</h2>
         
-        <Card className="bg-black border-2 border-black overflow-hidden" data-testid="card-settings">
+        <Card className="bg-black border-2 border-black overflow-hidden rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]" data-testid="card-settings">
           <CardContent className="p-0">
             <NotificationPanel variant="button" />
             
             {/* Notification Preferences */}
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b border-gray-700"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-gray-700 rounded-none"
               onClick={() => setLocation('/notification-preferences')}
               data-testid="button-notification-preferences"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact flex items-center justify-center">
+                <div className="w-8 h-8 rounded-none bg-ministry-gold-exact flex items-center justify-center">
                   <Settings className="w-4 h-4 text-black" />
                 </div>
-                <span className="font-medium text-white">Notification Preferences</span>
+                <span className="font-bold text-white uppercase tracking-wide">Notification Preferences</span>
               </div>
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -240,14 +240,14 @@ export default function Profile() {
             
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b border-gray-700"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-gray-700 rounded-none"
               data-testid="button-privacy"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact flex items-center justify-center">
+                <div className="w-8 h-8 rounded-none bg-ministry-gold-exact flex items-center justify-center">
                   <Shield className="w-4 h-4 text-black" />
                 </div>
-                <span className="font-medium text-white">Privacy & Security</span>
+                <span className="font-bold text-white uppercase tracking-wide">Privacy & Security</span>
               </div>
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -256,14 +256,14 @@ export default function Profile() {
             
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b border-gray-700"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-gray-700 rounded-none"
               data-testid="button-help"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact flex items-center justify-center">
+                <div className="w-8 h-8 rounded-none bg-ministry-gold-exact flex items-center justify-center">
                   <HelpCircle className="w-4 h-4 text-black" />
                 </div>
-                <span className="font-medium text-white">Help & Support</span>
+                <span className="font-bold text-white uppercase tracking-wide">Help & Support</span>
               </div>
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -272,14 +272,14 @@ export default function Profile() {
             
             <button
               onClick={() => setShowFeedbackDialog(true)}
-              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b border-gray-700 cursor-pointer transition-colors flex bg-transparent"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-gray-700 cursor-pointer transition-colors flex bg-transparent"
               data-testid="button-feedback"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-ministry-gold-exact flex items-center justify-center">
+                <div className="w-8 h-8 rounded-none bg-ministry-gold-exact flex items-center justify-center">
                   <MessageCircle className="w-4 h-4 text-black" />
                 </div>
-                <span className="font-medium text-white">Send Feedback</span>
+                <span className="font-bold text-white uppercase tracking-wide">Send Feedback</span>
               </div>
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -289,14 +289,14 @@ export default function Profile() {
             <Button 
               variant="ghost"
               onClick={() => window.location.href = '/api/logout'}
-              className="w-full justify-between p-4 h-auto hover:bg-gray-800"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 rounded-none"
               data-testid="button-logout"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-red-900/50 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-none bg-red-900/50 flex items-center justify-center">
                   <LogOut className="w-4 h-4 text-red-400" />
                 </div>
-                <span className="font-medium text-red-400">Sign Out</span>
+                <span className="font-bold text-red-400 uppercase tracking-wide">Sign Out</span>
               </div>
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -308,15 +308,15 @@ export default function Profile() {
 
       {/* Progress Summary */}
       <div className="px-6">
-        <h2 className="text-lg font-bold text-white mb-4">Your Journey</h2>
+        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Your Journey</h2>
         
-        <Card className="border-ministry-charcoal bg-ministry-gold-exact" data-testid="card-progress">
+        <Card className="border-2 border-black bg-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-progress">
           <CardContent className="p-6">
             {currentStudies.length === 0 && completedStudies.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-black mb-4">You haven't started any studies yet</p>
+                <p className="text-black mb-4 font-medium">You haven't started any studies yet</p>
                 <Button 
-                  className="bg-ministry-navy text-white hover:bg-ministry-charcoal"
+                  className="bg-black text-white hover:bg-gray-900 rounded-none font-black uppercase tracking-wide"
                   data-testid="button-start-journey"
                 >
                   Start Your Journey
@@ -376,7 +376,7 @@ export default function Profile() {
 
       {/* Testimony Section */}
       <div className="px-6 mt-6 mb-6">
-        <h2 className="text-lg font-bold text-white mb-4">Your Testimony</h2>
+        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Your Testimony</h2>
         <TestimonyForm isOwnProfile={true} />
       </div>
       
