@@ -1298,11 +1298,11 @@ export class DatabaseStorage implements IStorage {
       .where(and(...conditions))
       .orderBy(desc(userProgress.lastAccessedAt));
     
-    // For each progress record, count completed lessons
+    // For each progress record, count completed lessons and total lessons
     const enrichedProgress = await Promise.all(
       progressRecords.map(async (record) => {
         // Count completed lessons for this user and study using a join
-        const result = await db
+        const completedResult = await db
           .select({ count: sql<number>`count(*)::int` })
           .from(userLessonProgress)
           .innerJoin(studyLessons, eq(userLessonProgress.lessonId, studyLessons.id))
@@ -1312,11 +1312,19 @@ export class DatabaseStorage implements IStorage {
             sql`${userLessonProgress.completedAt} IS NOT NULL`
           ));
         
-        const completedLessons = Number(result[0]?.count || 0);
+        // Count total lessons for this study
+        const totalResult = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(studyLessons)
+          .where(eq(studyLessons.studyId, record.studyId));
+        
+        const completedLessons = Number(completedResult[0]?.count || 0);
+        const totalLessons = Number(totalResult[0]?.count || 0);
         
         return {
           ...record,
           completedLessons,
+          totalLessons,
         };
       })
     );

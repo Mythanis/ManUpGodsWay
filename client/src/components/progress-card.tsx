@@ -12,7 +12,8 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
   const isStudyCompleted = progress.status === 'completed';
   
   // Calculate progress percentage based on completed lessons
-  const totalLessons = study.totalDays || 0;
+  // Use progress.totalLessons (actual lesson count) with fallback to study.totalDays
+  const totalLessons = progress.totalLessons || study.totalDays || 0;
   const completedLessons = progress.completedLessons || 0;
   const progressPercent = isStudyCompleted 
     ? 100 
@@ -46,7 +47,11 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
         </div>
         
         <div className="mb-4">
-          <Progress value={progressPercent} className="h-3 mb-2 bg-white border-2 border-black rounded-none [&>div]:bg-black [&>div]:rounded-none" data-testid="progress-bar" />
+          <div className="flex items-center justify-between text-xs text-black/70 mb-2 font-bold uppercase">
+            <span>{completedLessons} of {totalLessons} lessons</span>
+            <span>{progressPercent}%</span>
+          </div>
+          <Progress value={progressPercent} className="h-3 bg-white border-2 border-black rounded-none [&>div]:bg-black [&>div]:rounded-none" data-testid="progress-bar" />
         </div>
         
         <Link href={`/studies/${study.id}`}>
