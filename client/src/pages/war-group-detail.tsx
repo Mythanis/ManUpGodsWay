@@ -4,9 +4,21 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus, Cross, MessageCircle, Pin, Trash2, Send, Pencil, X, Save, Image, Video, Loader2 } from "lucide-react";
+import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus, MessageCircle, Pin, Trash2, Send, Pencil, X, Save, Image, Video, Loader2 } from "lucide-react";
+
+// Christian Cross icon component
+function ChristianCross({ className }: { className?: string }) {
+  return (
+    <svg 
+      viewBox="0 0 24 24" 
+      fill="currentColor" 
+      className={className}
+    >
+      <path d="M11 2h2v6h6v2h-6v12h-2V10H5V8h6V2z" />
+    </svg>
+  );
+}
 import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
@@ -676,15 +688,10 @@ export default function WarGroupDetail() {
           </CardContent>
         </Card>
 
-        {/* Tabs for Community */}
+        {/* Community Section */}
         {isMember && (
-          <Tabs defaultValue="community" className="w-full">
-            <TabsList className="w-full bg-transparent p-0 gap-2">
-              <TabsTrigger value="community" className="flex-1 font-bold uppercase tracking-wide text-sm data-[state=active]:bg-black data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:border-2 data-[state=inactive]:border-black data-[state=inactive]:text-black data-[state=inactive]:hover:bg-gray-100">Community</TabsTrigger>
-              <TabsTrigger value="info" className="flex-1 font-bold uppercase tracking-wide text-sm data-[state=active]:bg-black data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:border-2 data-[state=inactive]:border-black data-[state=inactive]:text-black data-[state=inactive]:hover:bg-gray-100">Info</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="community" className="mt-4 space-y-4">
+          <div className="w-full space-y-4">
+            <h2 className="text-2xl font-black uppercase tracking-tight text-black">Community</h2>
               {/* Create Post */}
               <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]">
                 <CardContent className="pt-4">
@@ -808,41 +815,7 @@ export default function WarGroupDetail() {
                   ))}
                 </div>
               )}
-            </TabsContent>
-
-            <TabsContent value="info" className="mt-4">
-              <Card className="bg-black border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]">
-                <CardHeader>
-                  <CardTitle className="text-2xl font-black uppercase tracking-tight text-ministry-gold-exact">About This Group</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {group.description && (
-                    <div>
-                      <p className="text-white/90 font-medium leading-relaxed">{group.description}</p>
-                    </div>
-                  )}
-                  
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <User className="h-4 w-4 text-ministry-gold-exact" />
-                      <span className="text-ministry-gold-exact font-bold uppercase tracking-widest text-xs">Group Leader</span>
-                    </div>
-                    <p className="text-white font-semibold text-lg">{group.leader.firstName} {group.leader.lastName}</p>
-                  </div>
-
-                  {group.meetingInfo && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Calendar className="h-4 w-4 text-ministry-gold-exact" />
-                        <span className="text-ministry-gold-exact font-bold uppercase tracking-widest text-xs">Meeting Info</span>
-                      </div>
-                      <p className="text-white font-semibold text-lg">{group.meetingInfo}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          </div>
         )}
       </div>
     </div>
@@ -985,7 +958,7 @@ function PostCard({
             className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10 font-semibold uppercase tracking-wide text-xs"
             data-testid={`button-like-${post.id}`}
           >
-            <Cross className="h-4 w-4 mr-1" />
+            <ChristianCross className="h-4 w-4 mr-1" />
             {post.likes > 0 && post.likes}
           </Button>
           <Button
