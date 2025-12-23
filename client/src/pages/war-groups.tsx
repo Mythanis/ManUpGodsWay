@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, MapPin, Users, User, Map, List, Mail, Plus, Shield, BookOpen, Award, Headphones, CheckCircle, ShoppingBag } from "lucide-react";
 
 const WarGroupsMap = lazy(() => import("@/components/WarGroupsMap"));
@@ -43,6 +42,7 @@ export default function WarGroups() {
   const [cityFilter, setCityFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [activeTab, setActiveTab] = useState<'find' | 'about'>('find');
   
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [debouncedCity, setDebouncedCity] = useState("");
@@ -83,9 +83,9 @@ export default function WarGroups() {
   return (
     <div className="pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-4">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between gap-4 mb-4">
             <div>
               <h1 className="text-4xl font-black mb-2 tracking-tight">War Groups</h1>
               <p className="text-ministry-gold-exact text-sm font-bold tracking-tight">Local Discipleship Groups Across The USA</p>
@@ -98,6 +98,32 @@ export default function WarGroups() {
               <Plus className="h-4 w-4 mr-2" />
               Register a War Group
             </Button>
+          </div>
+          
+          {/* Tabs in Header */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('find')}
+              className={`px-4 py-2 rounded-t-lg font-semibold text-sm transition-colors ${
+                activeTab === 'find' 
+                  ? 'bg-ministry-gold-exact text-black' 
+                  : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+              data-testid="tab-find-groups"
+            >
+              Find Groups
+            </button>
+            <button
+              onClick={() => setActiveTab('about')}
+              className={`px-4 py-2 rounded-t-lg font-semibold text-sm transition-colors ${
+                activeTab === 'about' 
+                  ? 'bg-ministry-gold-exact text-black' 
+                  : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+              data-testid="tab-about-war-groups"
+            >
+              What are War Groups?
+            </button>
           </div>
         </div>
       </div>
@@ -139,26 +165,9 @@ export default function WarGroups() {
 
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         
-        <Tabs defaultValue="find" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-black border border-ministry-gold-exact mb-6">
-            <TabsTrigger 
-              value="find" 
-              className="data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black text-white font-semibold"
-              data-testid="tab-find-groups"
-            >
-              Find Groups
-            </TabsTrigger>
-            <TabsTrigger 
-              value="about" 
-              className="data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black text-white font-semibold"
-              data-testid="tab-about-war-groups"
-            >
-              What are War Groups?
-            </TabsTrigger>
-          </TabsList>
-
-          {/* About War Groups Tab */}
-          <TabsContent value="about" className="space-y-6">
+        {/* About War Groups Content */}
+        {activeTab === 'about' && (
+          <div className="space-y-6">
             <Card className="bg-black border-ministry-gold-exact">
               <CardHeader>
                 <div className="flex items-center gap-3 mb-2">
@@ -258,10 +267,12 @@ export default function WarGroups() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        )}
 
-          {/* Find Groups Tab */}
-          <TabsContent value="find" className="space-y-6">
+        {/* Find Groups Content */}
+        {activeTab === 'find' && (
+          <>
             {/* Search Section */}
             <div className="relative z-10">
               <h2 className="text-2xl font-bold mb-4">Discover Groups</h2>
@@ -436,8 +447,8 @@ export default function WarGroups() {
             </div>
           )}
             </div>
-          </TabsContent>
-        </Tabs>
+          </>
+        )}
       </div>
     </div>
   );
