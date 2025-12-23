@@ -199,21 +199,21 @@ export default function Videos() {
     switch (tier) {
       case 'vip':
         return (
-          <Badge className="bg-ministry-gold-exact text-black flex items-center space-x-1">
+          <Badge className="bg-ministry-gold-exact text-black flex items-center space-x-1 rounded-none font-black uppercase tracking-wide">
             <Crown className="w-3 h-3" />
             <span>VIP</span>
           </Badge>
         );
       case 'premium':
         return (
-          <Badge className="bg-blue-100 text-blue-800 flex items-center space-x-1">
+          <Badge className="bg-blue-100 text-blue-800 flex items-center space-x-1 rounded-none font-black uppercase tracking-wide">
             <Gem className="w-3 h-3" />
             <span>Premium</span>
           </Badge>
         );
       default:
         return (
-          <Badge className="bg-white text-black border border-gray-300 flex items-center space-x-1">
+          <Badge className="bg-white text-black border-2 border-black flex items-center space-x-1 rounded-none font-bold uppercase tracking-wide">
             <Zap className="w-3 h-3" />
             <span>Free</span>
           </Badge>
@@ -247,25 +247,25 @@ export default function Videos() {
     <div className="pb-20">
       {/* Header */}
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
-        <h1 className="text-2xl font-bold mb-2">Video Library</h1>
-        <p className="text-[#FCD000] text-sm">
+        <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase">Video Library</h1>
+        <p className="text-[#FCD000] text-xs font-bold tracking-widest uppercase">
           Watch Inspiring Content And Grow In Faith
         </p>
       </div>
 
       {/* Search Bar */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-lg">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-ministry-gold-exact border-2 border-black rounded-none">
           <CardContent className="p-4">
             <div className="relative">
               <Input
                 type="text"
-                placeholder="Search videos..."
+                placeholder="SEARCH VIDEOS..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-muted rounded-xl pl-10 pr-4 py-3 text-sm border-0 focus:ring-2 focus:ring-ministry-steel focus:bg-background"
+                className="w-full bg-white border-2 border-black rounded-none pl-10 pr-4 py-3 text-sm text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide focus:ring-2 focus:ring-black font-medium"
               />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ministry-slate" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-black" />
             </div>
           </CardContent>
         </Card>
@@ -298,7 +298,7 @@ export default function Videos() {
                     ? 'hsl(210 5.2632% 14.9020%)' 
                     : 'hsl(201.4286 30.4348% 90.9804%)'
               }}
-              className="px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start border cursor-pointer transition-colors"
+              className="px-6 py-2 rounded-none text-sm font-black uppercase tracking-wide whitespace-nowrap flex-shrink-0 snap-start border-2 border-black cursor-pointer transition-all"
             >
               {category.label}
             </button>
@@ -360,7 +360,7 @@ export default function Videos() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVideos.map((video: Video) => (
-              <Card key={video.id} className={`overflow-hidden hover:shadow-lg transition-shadow bg-ministry-gold-exact ${
+              <Card key={video.id} className={`overflow-hidden hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all bg-ministry-gold-exact border-2 border-black rounded-none ${
                 video.isFeatured ? 'ring-2 ring-yellow-400 shadow-xl' : ''
               }`}>
                 <div className="aspect-video bg-gray-900 relative cursor-pointer"
@@ -394,7 +394,7 @@ export default function Videos() {
                 
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-ministry-charcoal line-clamp-2 flex-1">
+                    <h3 className="font-black text-black line-clamp-2 flex-1 tracking-tight">
                       {video.title}
                     </h3>
                     {video.isFeatured && (

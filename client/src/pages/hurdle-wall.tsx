@@ -302,8 +302,8 @@ export default function HurdleWall() {
       {/* Header */}
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-4xl font-black mb-2 tracking-tight">War Room</h1>
-          <p className="text-ministry-gold-exact text-sm font-semibold">A Sacred Space For Prayer Requests</p>
+          <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase">War Room</h1>
+          <p className="text-ministry-gold-exact text-xs font-bold tracking-widest uppercase">A Sacred Space For Prayer Requests</p>
         </div>
       </div>
       
@@ -312,17 +312,17 @@ export default function HurdleWall() {
         {/* Search and Filter Controls */}
         <div className="flex flex-col sm:flex-row gap-4 items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-ministry-slate" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black" />
             <Input
-              placeholder="Search posts..."
+              placeholder="SEARCH POSTS..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-white"
+              className="pl-10 border-2 border-black bg-ministry-gold-exact rounded-none text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide font-medium"
             />
           </div>
           <div className="flex gap-2">
             <Select value={filterType} onValueChange={(value: any) => setFilterType(value)}>
-              <SelectTrigger className="w-40 border-white">
+              <SelectTrigger className="w-40 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-none">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -332,7 +332,7 @@ export default function HurdleWall() {
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-              <SelectTrigger className="w-36 border-white">
+              <SelectTrigger className="w-36 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-none">
                 <SortDesc className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -345,9 +345,9 @@ export default function HurdleWall() {
         </div>
 
         {/* New Post Form */}
-        <Card className="bg-ministry-gold-exact border-2 border-black">
+        <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <CardHeader>
-            <CardTitle className="text-black flex items-center gap-2 text-2xl font-bold tracking-tight">
+            <CardTitle className="text-black flex items-center gap-2 text-2xl font-black tracking-tighter uppercase">
               <Plus className="h-6 w-6" />
               Share Your Heart
             </CardTitle>
@@ -374,7 +374,7 @@ export default function HurdleWall() {
             <Button 
               onClick={handleCreatePost}
               disabled={createPostMutation.isPending || !newPostContent.trim()}
-              className="w-full bg-black hover:bg-gray-900 text-white font-bold text-lg py-6 rounded-xl shadow-lg border-2 border-black transition-all hover:scale-[1.02]"
+              className="w-full bg-black hover:bg-gray-900 text-white font-black text-lg py-6 rounded-none shadow-lg border-2 border-black transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] uppercase tracking-wide"
               data-testid="button-share-post"
             >
               {createPostMutation.isPending ? 'Posting...' : 'Share Post'}
@@ -385,15 +385,15 @@ export default function HurdleWall() {
         {/* Posts List */}
         <div className="space-y-4">
           {posts.length === 0 ? (
-            <Card className="bg-ministry-gold-exact">
+            <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <CardContent className="text-center py-12">
-                <MessageSquare className="h-12 w-12 text-ministry-steel mx-auto mb-4" />
-                <p className="text-black">No posts yet. Be the first to share!</p>
+                <MessageSquare className="h-12 w-12 text-black mx-auto mb-4" />
+                <p className="text-black font-medium">No posts yet. Be the first to share!</p>
               </CardContent>
             </Card>
           ) : (
             posts.map((post) => (
-              <Card key={post.id} className="bg-black border-2 border-black">
+              <Card key={post.id} className="bg-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">

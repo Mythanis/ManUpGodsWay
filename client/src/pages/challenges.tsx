@@ -175,13 +175,13 @@ export default function Challenges() {
 
   const ChallengeCard = ({ challenge, isCurrentWeek = false }: { challenge: Challenge; isCurrentWeek?: boolean }) => (
     <Card 
-      className={`bg-black border-2 border-black cursor-pointer hover:ring-1 hover:ring-ministry-gold transition-all ${isCurrentWeek ? 'ring-2 ring-ministry-gold' : ''}`}
+      className={`bg-black border-2 border-black cursor-pointer hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-none ${isCurrentWeek ? 'ring-2 ring-ministry-gold' : ''}`}
       onClick={() => openChallengeDialog(challenge)}
     >
       <CardContent className="p-6">
         <div className="flex items-start space-x-4">
           <div className="flex-shrink-0">
-            <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
+            <div className={`w-16 h-16 rounded-none flex items-center justify-center ${
               isCurrentWeek ? 'bg-ministry-gold text-black' : 'bg-gray-800 text-ministry-gold'
             }`}>
               {isCurrentWeek ? (
@@ -195,16 +195,16 @@ export default function Challenges() {
           <div className="flex-1">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <h3 className="font-semibold text-lg mb-1 text-white">
+                <h3 className="font-black text-lg mb-1 text-white tracking-tight">
                   {challenge.title}
                   {isCurrentWeek && (
-                    <Badge className="ml-2 bg-ministry-gold-exact text-black font-semibold">
+                    <Badge className="ml-2 bg-ministry-gold-exact text-black font-black rounded-none uppercase tracking-wide text-xs">
                       Current Week
                     </Badge>
                   )}
                 </h3>
                 <div className="flex items-center space-x-3 text-sm text-gray-400 mb-2">
-                  <Badge className="bg-ministry-gold-exact text-black font-semibold text-xs capitalize border-0">
+                  <Badge className="bg-ministry-gold-exact text-black font-bold text-xs uppercase tracking-wide border-0 rounded-none">
                     {challenge.topic}
                   </Badge>
                   <div className="flex items-center">
@@ -239,7 +239,7 @@ export default function Challenges() {
                   {user ? (
                     <Button
                       size="sm"
-                      className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-bold whitespace-nowrap"
+                      className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide"
                       onClick={(e) => {
                         e.stopPropagation();
                         acceptChallengeMutation.mutate(challenge.id);
@@ -296,8 +296,8 @@ export default function Challenges() {
       {/* Header - matching War Room style */}
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-4xl font-black mb-2 tracking-tight">Weekly Challenges</h1>
-          <p className="text-ministry-gold-exact text-sm font-semibold">Grow Stronger In Faith Through Weekly Challenges</p>
+          <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase">Weekly Challenges</h1>
+          <p className="text-ministry-gold-exact text-xs font-bold tracking-widest uppercase">Grow Stronger In Faith Through Weekly Challenges</p>
         </div>
       </div>
 
@@ -307,7 +307,7 @@ export default function Challenges() {
           <div className="mb-8">
             <div className="flex items-center mb-4">
               <Target className="w-6 h-6 text-ministry-gold mr-2" />
-              <h2 className="text-xl font-bold text-white">This Week's Challenge</h2>
+              <h2 className="text-xl font-black text-white tracking-tight uppercase">This Week's Challenge</h2>
             </div>
             <ChallengeCard challenge={currentWeekChallenge} isCurrentWeek={true} />
           </div>
@@ -315,9 +315,9 @@ export default function Challenges() {
           <div className="mb-8">
             <div className="flex items-center mb-4">
               <Target className="w-6 h-6 text-ministry-gold mr-2" />
-              <h2 className="text-xl font-bold text-white">This Week's Challenge</h2>
+              <h2 className="text-xl font-black text-white tracking-tight uppercase">This Week's Challenge</h2>
             </div>
-            <Card className="text-center py-12 bg-black border-2 border-black">
+            <Card className="text-center py-12 bg-black border-2 border-black rounded-none">
               <CardContent>
                 <Clock className="w-12 h-12 mx-auto text-ministry-gold mb-4" />
                 <h3 className="text-lg font-medium text-white mb-2">No Current Challenge</h3>
@@ -329,14 +329,14 @@ export default function Challenges() {
 
         {/* Previous Challenges Header & Controls */}
         <div className="flex flex-col space-y-4 mb-6">
-          <h2 className="text-xl font-bold text-white">Previous Challenges</h2>
+          <h2 className="text-xl font-black text-white tracking-tight uppercase">Previous Challenges</h2>
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
             {/* Topic Filter */}
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-white">Filter by Topic:</span>
+              <span className="text-xs font-black text-white uppercase tracking-wide">Filter:</span>
               <Select value={filterTopic} onValueChange={setFilterTopic}>
-                <SelectTrigger className="w-40 border-white bg-transparent text-white">
+                <SelectTrigger className="w-40 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-none">
                   <div className="flex items-center">
                     <Filter className="w-4 h-4 mr-2" />
                     <SelectValue placeholder="All Topics" />
@@ -355,12 +355,12 @@ export default function Challenges() {
 
             {/* Sort Controls */}
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-white">Sort by:</span>
+              <span className="text-xs font-black text-white uppercase tracking-wide">Sort:</span>
               <Button
                 variant="default"
                 size="sm"
                 onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-                className="flex items-center space-x-1 bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-semibold"
+                className="flex items-center space-x-1 bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black rounded-none uppercase tracking-wide"
               >
                 {sortOrder === 'desc' ? (
                   <>

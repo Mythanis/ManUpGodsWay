@@ -393,14 +393,14 @@ export default function Podcasts() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-black text-white p-6">
+      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold flex items-center">
-              <Headphones className="w-7 h-7 mr-2" />
+            <h1 className="text-4xl font-black flex items-center tracking-tighter uppercase">
+              <Headphones className="w-8 h-8 mr-2" />
               Podcasts
             </h1>
-            <p className="text-[#FCD000] text-sm">Audio & Video Content</p>
+            <p className="text-[#FCD000] text-xs font-bold tracking-widest uppercase">Audio & Video Content</p>
           </div>
 
         </div>
@@ -408,18 +408,18 @@ export default function Podcasts() {
         {/* Search and Filters */}
         <div className="space-y-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black w-5 h-5" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search podcasts..."
-              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60"
+              placeholder="SEARCH PODCASTS..."
+              className="pl-10 bg-white border-2 border-black text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide rounded-none font-medium"
             />
           </div>
           
           <div className="flex space-x-3">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="bg-white/10 border-white/20 text-white w-40">
+              <SelectTrigger className="bg-ministry-gold-exact border-2 border-black text-black font-bold rounded-none w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -433,7 +433,7 @@ export default function Podcasts() {
             </Select>
 
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="bg-white/10 border-white/20 text-white w-40">
+              <SelectTrigger className="bg-ministry-gold-exact border-2 border-black text-black font-bold rounded-none w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -457,10 +457,10 @@ export default function Podcasts() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold"></div>
           </div>
         ) : filteredPodcasts.length === 0 ? (
-          <Card className="text-center py-12 bg-ministry-gold-exact">
+          <Card className="text-center py-12 bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <CardContent>
-              <Headphones className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
-              <h3 className="text-lg font-medium text-ministry-charcoal mb-2">No Podcasts Found</h3>
+              <Headphones className="w-12 h-12 mx-auto text-black mb-4" />
+              <h3 className="text-lg font-black text-black mb-2 tracking-tight">No Podcasts Found</h3>
               <p className="text-ministry-slate">
                 {searchQuery ? 'No podcasts match your search.' : 'No podcasts available yet.'}
               </p>
@@ -469,7 +469,7 @@ export default function Podcasts() {
         ) : (
           <div className="space-y-4">
             {filteredPodcasts.map((podcast: Podcast) => (
-              <Card key={podcast.id} className="hover:shadow-md transition-shadow bg-ministry-gold-exact">
+              <Card key={podcast.id} className="hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all bg-ministry-gold-exact border-2 border-black rounded-none">
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex items-start space-x-4">
                     {/* Thumbnail/Icon */}

@@ -156,27 +156,33 @@ export default function Brothers() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 pb-20">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-2">
-            <UserPlus className="w-6 h-6 text-ministry-gold" />
-            <h1 className="text-2xl font-bold">My Brothers</h1>
+    <div className="min-h-screen bg-background pb-20">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6 mb-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <UserPlus className="w-8 h-8 text-ministry-gold" />
+              <h1 className="text-4xl font-black tracking-tighter uppercase">My Brothers</h1>
+            </div>
+            <div className="flex items-center space-x-2 text-xs font-bold bg-ministry-gold-exact text-black px-3 py-1 rounded-none uppercase tracking-wide">
+              <Users className="w-4 h-4" />
+              <span>{brothers?.length || 0} Brothers</span>
+            </div>
           </div>
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Users className="w-4 h-4" />
-            <span>{brothers?.length || 0} Brothers</span>
-          </div>
+          <p className="text-ministry-gold-exact text-xs font-bold tracking-widest uppercase mt-2">Your Brotherhood Connections</p>
         </div>
+      </div>
+      <div className="max-w-4xl mx-auto px-4">
 
         {/* User Search Bar - Find new brothers */}
         {!isLoading && (
           <div className="relative mb-6">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black w-5 h-5" />
               <Input
                 type="text"
-                placeholder="Search for users to connect with as brothers..."
+                placeholder="SEARCH FOR BROTHERS..."
                 value={userSearchQuery}
                 onChange={(e) => {
                   setUserSearchQuery(e.target.value);
@@ -185,13 +191,13 @@ export default function Brothers() {
                   }
                 }}
                 onKeyDown={handleSearchKeyPress}
-                className="pl-10 pr-12 border-white dark:border-white"
+                className="pl-10 pr-12 border-2 border-black bg-ministry-gold-exact text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide rounded-none font-medium"
                 data-testid="input-search-users"
               />
               <Button
                 onClick={handleSearch}
                 disabled={userSearchQuery.length < 2}
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 bg-black hover:bg-gray-900 text-white rounded-none"
                 data-testid="button-search-users"
               >
                 <Send className="w-4 h-4" />
@@ -200,7 +206,7 @@ export default function Brothers() {
 
             {/* User Search Results Dropdown */}
             {showUserSearch && userSearchQuery.length >= 2 && (
-              <div className="absolute top-full left-0 right-0 z-50 bg-background border border-white dark:border-white rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+              <div className="absolute top-full left-0 right-0 z-50 bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-1 max-h-60 overflow-y-auto">
                 {isSearchingUsers ? (
                   <div className="p-4 text-center text-muted-foreground">
                     Searching users...
@@ -255,15 +261,15 @@ export default function Brothers() {
         )}
 
         {!brothers || brothers.length === 0 ? (
-          <Card>
+          <Card className="border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-ministry-gold-exact">
             <CardContent className="text-center py-12">
-              <UserPlus className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">No Brothers Yet</h2>
-              <p className="text-muted-foreground mb-6">
+              <UserPlus className="w-16 h-16 text-black mx-auto mb-4" />
+              <h2 className="text-xl font-black mb-2 text-black tracking-tight">No Brothers Yet</h2>
+              <p className="text-black mb-6">
                 Start building meaningful relationships by connecting with other men in the community.
               </p>
               <Link href="/community">
-                <Button className="bg-ministry-charcoal hover:bg-ministry-charcoal/90">
+                <Button className="bg-black hover:bg-gray-900 text-white rounded-none font-black uppercase tracking-wide">
                   <Users className="w-4 h-4 mr-2" />
                   Explore Community
                 </Button>
@@ -279,21 +285,21 @@ export default function Brothers() {
                 return (
                   <Card
                     key={brother.id}
-                    className="hover:shadow-md transition-shadow"
+                    className="hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-none bg-ministry-gold-exact"
                     data-testid={`brother-card-${brother.id}`}
                   >
                     <CardContent className="p-6">
                       <div className="flex items-start space-x-4">
                         <Link href={`/users/${brother.id}`} className="flex-shrink-0">
-                          <Avatar className="w-16 h-16 cursor-pointer">
-                            <AvatarFallback className="bg-ministry-gold text-black text-lg font-semibold">
+                          <Avatar className="w-16 h-16 cursor-pointer rounded-none">
+                            <AvatarFallback className="bg-black text-white text-lg font-black rounded-none">
                               {brother.firstName?.[0]}{brother.lastName?.[0]}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
                         <div className="flex-1 min-w-0">
                           <Link href={`/users/${brother.id}`}>
-                            <h3 className="text-lg font-semibold cursor-pointer hover:text-ministry-gold transition-colors">
+                            <h3 className="text-lg font-black cursor-pointer hover:text-ministry-charcoal transition-colors text-black tracking-tight">
                               {brother.firstName} {brother.lastName}
                             </h3>
                           </Link>
@@ -303,7 +309,7 @@ export default function Brothers() {
                           
                           {/* Tag Display */}
                           {tagInfo && (
-                            <div className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium mt-2 ${tagInfo.bgColor} ${tagInfo.color}`}>
+                            <div className={`inline-flex items-center space-x-1 px-2 py-1 rounded-none text-xs font-bold mt-2 uppercase tracking-wide ${tagInfo.bgColor} ${tagInfo.color}`}>
                               <Tag className="w-3 h-3" />
                               <span>{tagInfo.label}</span>
                               <span className="text-xs opacity-75">• {tagInfo.description}</span>
