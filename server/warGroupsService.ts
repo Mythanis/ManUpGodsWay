@@ -684,6 +684,184 @@ export class WarGroupsService {
 
     return { success: true };
   }
+
+  // War Group Posts (Private Discussion Board)
+  async getGroupPosts(groupId: string, userId: string, limit = 50, offset = 0) {
+    // Verify user is a member
+    const membership = await this.getUserGroupMembership(userId, groupId);
+    if (!membership || membership.status !== 'approved') {
+      throw new Error('Only approved members can view group posts');
+    }
+
+    const posts = await db.select({
+      post: schema.warGroupPosts,
+      user: {
+        id: schema.users.id,
+        firstName: schema.users.firstName,
+        lastName: schema.users.lastName,
+        profileImageUrl: schema.users.profileImageUrl,
+      }
+    })
+    .from(schema.warGroupPosts)
+    .leftJoin(schema.users, eq(schema.warGroupPosts.userId, schema.users.id))
+    .where(eq(schema.warGroupPosts.groupId, groupId))
+    .orderBy(desc(schema.warGroupPosts.isPinned), desc(schema.warGroupPosts.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+    return posts.map(p => ({
+      ...p.post,
+      user: p.user
+    }));
+  }
+
+  async createGroupPost(groupId: string, userId: string, content: string, postType = 'discussion') {
+    // Verify user is a member
+    const membership = await this.getUserGroupMembership(userId, groupId);
+    if (!membership || membership.status !== 'approved') {
+      throw new Error('Only approved members can post in this group');
+    }
+
+    const [newPost] = await db.insert(schema.warGroupPosts).values({
+      groupId,
+      userId,
+      content,
+      postType,
+    }).returning();
+
+    return newPost;
+  }
+
+  async likeGroupPost(postId: string, userId: string) {
+    // Get the post to verify group membership
+    const [post] = await db.select()
+      .from(schema.warGroupPosts)
+      .where(eq(schema.warGroupPosts.id, postId))
+      .limit(1);
+
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    const membership = await this.getUserGroupMembership(userId, post.groupId);
+    if (!membership || membership.status !== 'approved') {
+      throw new Error('Only approved members can like posts');
+    }
+
+    await db.update(schema.warGroupPosts)
+      .set({ likes: sql`${schema.warGroupPosts.likes} + 1` })
+      .where(eq(schema.warGroupPosts.id, postId));
+
+    return { success: true };
+  }
+
+  async deleteGroupPost(postId: string, userId: string) {
+    const [post] = await db.select()
+      .from(schema.warGroupPosts)
+      .where(eq(schema.warGroupPosts.id, postId))
+      .limit(1);
+
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    // Check if user is the author or the group leader
+    const group = await this.getGroupById(post.groupId);
+    if (post.userId !== userId && group?.leaderId !== userId) {
+      throw new Error('Only post author or group leader can delete posts');
+    }
+
+    await db.delete(schema.warGroupPosts)
+      .where(eq(schema.warGroupPosts.id, postId));
+
+    return { success: true };
+  }
+
+  async getPostReplies(postId: string, userId: string) {
+    const [post] = await db.select()
+      .from(schema.warGroupPosts)
+      .where(eq(schema.warGroupPosts.id, postId))
+      .limit(1);
+
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    const membership = await this.getUserGroupMembership(userId, post.groupId);
+    if (!membership || membership.status !== 'approved') {
+      throw new Error('Only approved members can view replies');
+    }
+
+    const replies = await db.select({
+      reply: schema.warGroupPostReplies,
+      user: {
+        id: schema.users.id,
+        firstName: schema.users.firstName,
+        lastName: schema.users.lastName,
+        profileImageUrl: schema.users.profileImageUrl,
+      }
+    })
+    .from(schema.warGroupPostReplies)
+    .leftJoin(schema.users, eq(schema.warGroupPostReplies.userId, schema.users.id))
+    .where(eq(schema.warGroupPostReplies.postId, postId))
+    .orderBy(schema.warGroupPostReplies.createdAt);
+
+    return replies.map(r => ({
+      ...r.reply,
+      user: r.user
+    }));
+  }
+
+  async createPostReply(postId: string, userId: string, content: string) {
+    const [post] = await db.select()
+      .from(schema.warGroupPosts)
+      .where(eq(schema.warGroupPosts.id, postId))
+      .limit(1);
+
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    const membership = await this.getUserGroupMembership(userId, post.groupId);
+    if (!membership || membership.status !== 'approved') {
+      throw new Error('Only approved members can reply to posts');
+    }
+
+    const [newReply] = await db.insert(schema.warGroupPostReplies).values({
+      postId,
+      userId,
+      content,
+    }).returning();
+
+    // Update reply count
+    await db.update(schema.warGroupPosts)
+      .set({ replyCount: sql`${schema.warGroupPosts.replyCount} + 1` })
+      .where(eq(schema.warGroupPosts.id, postId));
+
+    return newReply;
+  }
+
+  async togglePinPost(postId: string, userId: string) {
+    const [post] = await db.select()
+      .from(schema.warGroupPosts)
+      .where(eq(schema.warGroupPosts.id, postId))
+      .limit(1);
+
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    const group = await this.getGroupById(post.groupId);
+    if (group?.leaderId !== userId) {
+      throw new Error('Only group leader can pin posts');
+    }
+
+    await db.update(schema.warGroupPosts)
+      .set({ isPinned: !post.isPinned })
+      .where(eq(schema.warGroupPosts.id, postId));
+
+    return { success: true, isPinned: !post.isPinned };
+  }
 }
 
 export const warGroupsService = new WarGroupsService();

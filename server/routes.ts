@@ -7061,6 +7061,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // War Group Discussion Posts (Private Group Board)
+  app.get('/api/war-groups/:id/posts', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groupId = req.params.id;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
+      
+      const posts = await warGroupsService.getGroupPosts(groupId, userId, limit, offset);
+      res.json(posts);
+    } catch (error: any) {
+      console.error('Error fetching group posts:', error);
+      res.status(403).json({ message: error.message || 'Failed to fetch group posts' });
+    }
+  });
+
+  app.post('/api/war-groups/:id/posts', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groupId = req.params.id;
+      const { content, postType } = req.body;
+      
+      if (!content || content.trim().length === 0) {
+        return res.status(400).json({ message: 'Post content is required' });
+      }
+      
+      const post = await warGroupsService.createGroupPost(groupId, userId, content, postType);
+      res.status(201).json(post);
+    } catch (error: any) {
+      console.error('Error creating group post:', error);
+      res.status(403).json({ message: error.message || 'Failed to create group post' });
+    }
+  });
+
+  app.post('/api/war-groups/:id/posts/:postId/like', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+      
+      await warGroupsService.likeGroupPost(postId, userId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error liking group post:', error);
+      res.status(403).json({ message: error.message || 'Failed to like post' });
+    }
+  });
+
+  app.delete('/api/war-groups/:id/posts/:postId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+      
+      await warGroupsService.deleteGroupPost(postId, userId);
+      res.status(204).send();
+    } catch (error: any) {
+      console.error('Error deleting group post:', error);
+      res.status(403).json({ message: error.message || 'Failed to delete post' });
+    }
+  });
+
+  app.post('/api/war-groups/:id/posts/:postId/pin', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+      
+      const result = await warGroupsService.togglePinPost(postId, userId);
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error toggling pin on post:', error);
+      res.status(403).json({ message: error.message || 'Failed to toggle pin' });
+    }
+  });
+
+  // War Group Post Replies
+  app.get('/api/war-groups/:id/posts/:postId/replies', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+      
+      const replies = await warGroupsService.getPostReplies(postId, userId);
+      res.json(replies);
+    } catch (error: any) {
+      console.error('Error fetching post replies:', error);
+      res.status(403).json({ message: error.message || 'Failed to fetch replies' });
+    }
+  });
+
+  app.post('/api/war-groups/:id/posts/:postId/replies', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+      const { content } = req.body;
+      
+      if (!content || content.trim().length === 0) {
+        return res.status(400).json({ message: 'Reply content is required' });
+      }
+      
+      const reply = await warGroupsService.createPostReply(postId, userId, content);
+      res.status(201).json(reply);
+    } catch (error: any) {
+      console.error('Error creating post reply:', error);
+      res.status(403).json({ message: error.message || 'Failed to create reply' });
+    }
+  });
+
   app.delete('/api/war-groups/:id/members/:memberId', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
