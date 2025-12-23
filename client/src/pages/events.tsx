@@ -116,7 +116,7 @@ export default function Events() {
         {eventsLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <Card key={i} className="bg-white border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <Card key={i} className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <CardHeader>
                   <div className="animate-pulse">
                     <div className="h-4 bg-gray-300 rounded-none w-3/4 mb-2"></div>
@@ -133,11 +133,11 @@ export default function Events() {
             ))}
           </div>
         ) : events.length === 0 ? (
-          <Card className="bg-white border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center py-12">
+          <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center py-12">
             <CardContent>
               <Calendar className="mx-auto mb-4 h-16 w-16 text-black" />
               <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-black">No Events Scheduled</h3>
-              <p className="text-black/70 font-medium">
+              <p className="text-black/80 font-medium">
                 There are no upcoming events at this time. Check back soon for new announcements!
               </p>
             </CardContent>
@@ -150,7 +150,7 @@ export default function Events() {
               const isPastEvent = eventDate < new Date();
               
               return (
-                <Card key={event.id} className="bg-white border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-200">
+                <Card key={event.id} className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-200">
                   <CardHeader>
                     <div className="flex items-start justify-between flex-wrap gap-2">
                       <div className="flex-1">
@@ -184,23 +184,23 @@ export default function Events() {
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
                         {isPastEvent && (
-                          <Badge className="bg-gray-200 text-black font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
+                          <Badge className="bg-gray-600 text-white font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
                             Past Event
                           </Badge>
                         )}
                         {isRegistered && (
-                          <Badge className="bg-ministry-gold-exact text-black font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
+                          <Badge className="bg-black text-white font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
                             <Users className="h-3 w-3 mr-1" />
                             Registered
                           </Badge>
                         )}
                         {event.requiresPurchase && !isPastEvent && (
-                          <Badge className="bg-ministry-gold-exact text-black font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
+                          <Badge className="bg-black text-white font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
                             Paid Event
                           </Badge>
                         )}
                         {!event.requiresPurchase && !isPastEvent && (
-                          <Badge className="bg-ministry-gold-exact text-black font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
+                          <Badge className="bg-black text-white font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
                             Free Event
                           </Badge>
                         )}
@@ -223,7 +223,7 @@ export default function Events() {
                           variant="outline"
                           size="sm"
                           asChild
-                          className="border-2 border-black text-black hover:bg-gray-100 rounded-none font-bold uppercase tracking-wide"
+                          className="bg-white border-2 border-black text-black hover:bg-gray-100 rounded-none font-bold uppercase tracking-wide"
                         >
                           <a href={event.eventUrl} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-4 w-4 mr-2" />
@@ -236,7 +236,7 @@ export default function Events() {
                         <Button
                           onClick={() => registerMutation.mutate(event.id)}
                           disabled={registerMutation.isPending}
-                          className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-black uppercase tracking-wide rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                          className="bg-black text-white hover:bg-gray-900 font-black uppercase tracking-wide rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(255,255,255,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.5)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                           size="sm"
                           data-testid={`button-register-${event.id}`}
                         >
@@ -246,7 +246,7 @@ export default function Events() {
                       
                       {!isPastEvent && !isRegistered && event.requiresPurchase && (
                         <Button
-                          className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-black uppercase tracking-wide rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                          className="bg-black text-white hover:bg-gray-900 font-black uppercase tracking-wide rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(255,255,255,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.5)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                           size="sm"
                           data-testid={`button-purchase-${event.id}`}
                         >
