@@ -213,16 +213,20 @@ export default function WarGroups() {
             )}
           </div>
           {isLoading ? (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
               {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="bg-ministry-gold-exact border-2 border-black">
-                  <CardHeader>
-                    <Skeleton className="h-6 w-3/4 bg-ministry-steel" />
-                    <Skeleton className="h-4 w-1/2 bg-ministry-steel" />
-                  </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-16 w-full bg-ministry-steel mb-2" />
-                    <Skeleton className="h-4 w-1/3 bg-ministry-steel" />
+                <Card key={i} className="bg-ministry-gold-exact border border-black">
+                  <CardContent className="py-3 px-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-1">
+                        <Skeleton className="h-4 w-32 bg-ministry-steel" />
+                        <Skeleton className="h-3 w-24 bg-ministry-steel" />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-3 w-20 bg-ministry-steel" />
+                        <Skeleton className="h-3 w-8 bg-ministry-steel" />
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -275,37 +279,31 @@ export default function WarGroups() {
               <WarGroupsMap groups={groups} />
             </Suspense>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
               {groups.map((group) => (
                 <Link key={group.id} href={`/war-groups/${group.id}`}>
-                  <Card className="bg-ministry-gold-exact border-2 border-black hover:shadow-lg transition-shadow cursor-pointer h-full">
-                    <CardHeader>
-                      <CardTitle className="text-black">{getGroupDisplayName(group)}</CardTitle>
-                      <CardDescription className="flex items-center gap-2 text-black">
-                        <MapPin className="h-4 w-4" />
-                        {group.city}, {group.state}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {group.description && (
-                        <p className="text-sm text-black mb-4 line-clamp-2">{group.description}</p>
-                      )}
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-black" />
-                          <span className="text-sm text-black font-semibold">{group.memberCount} members</span>
+                  <Card className="bg-ministry-gold-exact border border-black hover:shadow-md transition-shadow cursor-pointer">
+                    <CardContent className="py-3 px-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex flex-col">
+                            <span className="font-bold text-black text-sm">{getGroupDisplayName(group)}</span>
+                            <span className="text-xs text-black/70 flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {group.city}, {group.state}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-black" />
-                          <span className="text-sm text-black">
-                            Led by {group.leader.firstName} {group.leader.lastName}
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-black flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            {group.leader.firstName} {group.leader.lastName}
+                          </span>
+                          <span className="text-xs text-black flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {group.memberCount}
                           </span>
                         </div>
-                        {group.meetingInfo && (
-                          <p className="text-xs text-black mt-2 line-clamp-1">
-                            <strong>Meets:</strong> {group.meetingInfo}
-                          </p>
-                        )}
                       </div>
                     </CardContent>
                   </Card>
