@@ -21,17 +21,17 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
       : 0;
 
   return (
-    <Card className="shadow-sm border border-ministry-charcoal bg-ministry-gold-exact" data-testid="progress-card">
+    <Card className="border-2 border-black bg-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="progress-card">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-bold text-xl text-black" data-testid="text-study-title">
+            <h3 className="font-black text-xl text-black uppercase tracking-tight" data-testid="text-study-title">
               {study.title}
             </h3>
-            <p className="text-sm text-black font-semibold mt-1" data-testid="text-study-info">
+            <p className="text-sm text-black font-bold mt-1 uppercase tracking-wide" data-testid="text-study-info">
               {study.estimatedHours}h study
             </p>
-            <p className="text-sm text-black font-medium mt-1">
+            <p className="text-sm text-black/70 font-medium mt-1">
               {isStudyCompleted 
                 ? "Study completed" 
                 : "In progress"
@@ -39,19 +39,19 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-black font-extrabold text-xl" data-testid="text-progress-status">
+            <div className="bg-black text-white px-3 py-1 rounded-none text-xs font-black uppercase tracking-wide" data-testid="text-progress-status">
               {isStudyCompleted ? 'Completed' : 'In Progress'}
-            </p>
+            </div>
           </div>
         </div>
         
         <div className="mb-4">
-          <Progress value={progressPercent} className="h-2 mb-2 bg-white [&>div]:bg-black" data-testid="progress-bar" />
+          <Progress value={progressPercent} className="h-3 mb-2 bg-white border-2 border-black rounded-none [&>div]:bg-black [&>div]:rounded-none" data-testid="progress-bar" />
         </div>
         
         <Link href={`/studies/${study.id}`}>
           <Button 
-            className="w-full bg-black text-white py-3 rounded-xl font-medium hover:bg-gray-900"
+            className="w-full bg-black text-white py-3 rounded-none font-black uppercase tracking-wide hover:bg-gray-900 border-2 border-black"
             data-testid="button-continue-study"
           >
             {isStudyCompleted ? 'Review Study' : 'Continue Study'}

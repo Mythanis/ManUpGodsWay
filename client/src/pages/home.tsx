@@ -741,66 +741,66 @@ export default function Home() {
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-6 py-4">
+          <div className="space-y-4 py-4">
             {/* Completed Studies */}
-            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="flex items-center justify-between p-4 bg-ministry-gold-exact rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                  <Target className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 rounded-none bg-black flex items-center justify-center">
+                  <Target className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="font-medium text-green-800">Studies Completed</p>
-                  <p className="text-sm text-green-600">Total finished studies</p>
+                  <p className="font-black text-black uppercase tracking-tight">Studies Completed</p>
+                  <p className="text-sm text-black/70">Total finished studies</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-green-800">{completedCount}</p>
-                <p className="text-xs text-green-600">studies</p>
+                <p className="text-2xl font-black text-black">{completedCount}</p>
+                <p className="text-xs text-black/70 font-bold uppercase">studies</p>
               </div>
             </div>
 
             {/* Current Streak */}
-            <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
+            <div className="flex items-center justify-between p-4 bg-ministry-gold-exact rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-orange-600" />
+                <div className="w-10 h-10 rounded-none bg-black flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="font-medium text-orange-800">Current Streak</p>
-                  <p className="text-sm text-orange-600">Consecutive days on app</p>
+                  <p className="font-black text-black uppercase tracking-tight">Current Streak</p>
+                  <p className="text-sm text-black/70">Consecutive days on app</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-orange-800">{appOpenStreak}</p>
-                <p className="text-xs text-orange-600">days</p>
+                <p className="text-2xl font-black text-black">{appOpenStreak}</p>
+                <p className="text-xs text-black/70 font-bold uppercase">days</p>
               </div>
             </div>
 
             {/* Total Active Days */}
-            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-center justify-between p-4 bg-ministry-gold-exact rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 rounded-none bg-black flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="font-medium text-blue-800">Total Active Days</p>
-                  <p className="text-sm text-blue-600">Days with study activity</p>
+                  <p className="font-black text-black uppercase tracking-tight">Total Active Days</p>
+                  <p className="text-sm text-black/70">Days with study activity</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-blue-800">
+                <p className="text-2xl font-black text-black">
                   {progress.length > 0 
                     ? new Set(progress.map((p: any) => new Date(p.lastAccessedAt || p.createdAt).toDateString())).size 
                     : 0}
                 </p>
-                <p className="text-xs text-blue-600">days</p>
+                <p className="text-xs text-black/70 font-bold uppercase">days</p>
               </div>
             </div>
 
             {/* Progress Insights */}
-            <div className="bg-ministry-navy/5 p-4 rounded-lg border border-ministry-navy/20">
-              <h4 className="font-medium text-white mb-2">Your Journey</h4>
-              <div className="space-y-2 text-sm text-ministry-slate">
+            <div className="bg-ministry-gold-exact p-4 rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+              <h4 className="font-black text-black mb-2 uppercase tracking-tight">Your Journey</h4>
+              <div className="space-y-2 text-sm text-black/80">
                 {completedCount === 0 && (
                   <p>🌱 Ready to start your first study? Check out the featured study above!</p>
                 )}
@@ -822,7 +822,7 @@ export default function Home() {
 
             <Button 
               onClick={() => setShowProgressDialog(false)}
-              className="w-full bg-ministry-navy text-white hover:bg-ministry-charcoal"
+              className="w-full bg-black text-white hover:bg-gray-900 rounded-none font-black uppercase tracking-wide border-2 border-black"
             >
               Continue Growing
             </Button>
