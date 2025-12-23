@@ -302,6 +302,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Study Series routes
+  app.get('/api/study-series', async (req: any, res) => {
+    try {
+      const { category } = req.query;
+      const series = await storage.getStudySeries(category as string);
+      res.json(series);
+    } catch (error) {
+      console.error("Error fetching study series:", error);
+      res.status(500).json({ message: "Failed to fetch study series" });
+    }
+  });
+
+  app.get('/api/study-series/:id', async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const series = await storage.getStudySeriesById(id);
+      if (!series) {
+        return res.status(404).json({ message: "Series not found" });
+      }
+      res.json(series);
+    } catch (error) {
+      console.error("Error fetching study series:", error);
+      res.status(500).json({ message: "Failed to fetch study series" });
+    }
+  });
+
+  app.get('/api/study-series/:id/studies', async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.claims?.sub;
+      const studies = await storage.getStudiesInSeries(id, userId);
+      res.json(studies);
+    } catch (error) {
+      console.error("Error fetching studies in series:", error);
+      res.status(500).json({ message: "Failed to fetch studies in series" });
+    }
+  });
+
   // Study routes
   app.get('/api/studies', async (req: any, res) => {
     try {

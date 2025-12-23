@@ -1,5 +1,6 @@
 import {
   users,
+  studySeries,
   studies,
   studyLessons,
   userLessonProgress,
@@ -164,6 +165,14 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   
+  // Study Series operations
+  getStudySeries(category?: string): Promise<any[]>;
+  getStudySeriesById(id: string): Promise<any | undefined>;
+  getStudiesInSeries(seriesId: string, userId?: string): Promise<any[]>;
+  createStudySeries(series: any): Promise<any>;
+  updateStudySeries(id: string, series: any): Promise<any>;
+  deleteStudySeries(id: string): Promise<void>;
+
   // Study operations
   getStudies(category?: string, requiredTier?: string, isAdmin?: boolean): Promise<Study[]>;
   getStudy(id: string): Promise<Study | undefined>;
@@ -527,6 +536,100 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  // Study Series operations
+  async getStudySeries(category?: string): Promise<any[]> {
+    const conditions = [eq(studySeries.isPublished, true)];
+    if (category && category !== 'all') {
+      conditions.push(eq(studySeries.category, category));
+    }
+    
+    const seriesList = await db.select().from(studySeries)
+      .where(and(...conditions))
+      .orderBy(asc(studySeries.displayOrder), desc(studySeries.createdAt));
+    
+    // Get study count and total lessons for each series
+    const enrichedSeries = await Promise.all(seriesList.map(async (s) => {
+      const seriesStudies = await db.select().from(studies)
+        .where(and(
+          eq(studies.seriesId, s.id),
+          eq(studies.isPublished, true)
+        ));
+      
+      const totalLessons = seriesStudies.reduce((sum, study) => sum + (study.totalDays || 0), 0);
+      
+      return {
+        ...s,
+        studyCount: seriesStudies.length,
+        totalLessons,
+      };
+    }));
+    
+    return enrichedSeries;
+  }
+
+  async getStudySeriesById(id: string): Promise<any | undefined> {
+    const [series] = await db.select().from(studySeries).where(eq(studySeries.id, id));
+    return series;
+  }
+
+  async getStudiesInSeries(seriesId: string, userId?: string): Promise<any[]> {
+    const seriesStudies = await db.select().from(studies)
+      .where(and(
+        eq(studies.seriesId, seriesId),
+        eq(studies.isPublished, true)
+      ))
+      .orderBy(asc(studies.seriesOrder), asc(studies.createdAt));
+    
+    // Get progress for each study if user is logged in
+    if (userId) {
+      const enrichedStudies = await Promise.all(seriesStudies.map(async (study) => {
+        const [progress] = await db.select().from(userProgress)
+          .where(and(
+            eq(userProgress.userId, userId),
+            eq(userProgress.studyId, study.id)
+          ));
+        
+        // Get lesson completion count
+        const lessons = await db.select().from(studyLessons)
+          .where(eq(studyLessons.studyId, study.id));
+        
+        const completedLessons = await db.select().from(userLessonProgress)
+          .where(and(
+            eq(userLessonProgress.userId, userId),
+            inArray(userLessonProgress.lessonId, lessons.map(l => l.id)),
+            eq(userLessonProgress.isCompleted, true)
+          ));
+        
+        return {
+          ...study,
+          progress: progress || null,
+          completedLessons: completedLessons.length,
+          totalLessons: lessons.length,
+        };
+      }));
+      return enrichedStudies;
+    }
+    
+    return seriesStudies;
+  }
+
+  async createStudySeries(series: any): Promise<any> {
+    const [newSeries] = await db.insert(studySeries).values(series).returning();
+    return newSeries;
+  }
+
+  async updateStudySeries(id: string, series: any): Promise<any> {
+    const [updated] = await db.update(studySeries)
+      .set({ ...series, updatedAt: new Date() })
+      .where(eq(studySeries.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteStudySeries(id: string): Promise<void> {
+    await db.delete(studySeries).where(eq(studySeries.id, id));
   }
 
   // Study operations
