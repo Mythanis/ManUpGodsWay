@@ -31,7 +31,8 @@ import WarGroupsManagement from "@/components/admin/war-groups-management";
 import WarGroupRegistrationsManagement from "@/components/admin/war-group-registrations-management";
 import LiveStreamManagement from "@/components/admin/live-stream-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio, Layers } from "lucide-react";
+import SeriesManagement from "@/components/admin/series-management";
 
 interface Study {
   id: string;
@@ -57,6 +58,7 @@ interface Study {
 const adminTabs = [
   { id: "content", label: "Content", icon: Book },
   { id: "studies", label: "Studies", icon: Activity },
+  { id: "series", label: "Series", icon: Layers },
   { id: "videos", label: "Videos", icon: Video },
   { id: "podcasts", label: "Podcasts", icon: Headphones },
   { id: "live-streams", label: "Live", icon: Radio },
@@ -693,6 +695,13 @@ export default function Admin() {
             <div>
               <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Study Management</h2>
               <StudyManagement />
+            </div>
+          )}
+
+          {activeTab === "series" && (
+            <div>
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Study Series Management</h2>
+              <SeriesManagement />
             </div>
           )}
 
