@@ -216,6 +216,18 @@ export default function Admin() {
     enabled: (user as any)?.role === 'admin' && showEditDialog,
   });
 
+  // Fetch pending war group registrations count
+  const { data: pendingRegistrations = [] } = useQuery<any[]>({
+    queryKey: ['/api/admin/war-groups/registrations', 'pending'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/war-groups/registrations?status=pending');
+      if (!response.ok) throw new Error('Failed to fetch registrations');
+      return response.json();
+    },
+    retry: false,
+    enabled: ['admin', 'owner'].includes((user as any)?.role),
+  });
+
   // Update study mutation
   const updateStudyMutation = useMutation({
     mutationFn: async (data: { id: string; updates: Partial<Study> }) => {
@@ -766,7 +778,14 @@ export default function Admin() {
               <Tabs defaultValue="groups" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6">
                   <TabsTrigger value="groups">Manage Groups</TabsTrigger>
-                  <TabsTrigger value="registrations">Registrations</TabsTrigger>
+                  <TabsTrigger value="registrations" className="relative">
+                    Registrations
+                    {pendingRegistrations.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                        {pendingRegistrations.length}
+                      </span>
+                    )}
+                  </TabsTrigger>
                 </TabsList>
                 <TabsContent value="groups">
                   <WarGroupsManagement />
