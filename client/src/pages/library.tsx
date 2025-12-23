@@ -8,7 +8,6 @@ import { Search, BookOpen, ChevronRight, Layers } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
-import StudyCard from "@/components/study-card";
 
 const categories = [
   { id: 'all', label: 'All Content' },
@@ -183,12 +182,12 @@ export default function Library() {
                       >
                         <CardContent className="p-4">
                           <div className="flex items-start gap-4">
-                            <div className="flex-shrink-0 w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center">
+                            <div className="flex-shrink-0 w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden">
                               {s.thumbnailUrl ? (
                                 <img 
                                   src={s.thumbnailUrl} 
                                   alt={s.title}
-                                  className="w-full h-full object-cover rounded-lg"
+                                  className="w-full h-full object-cover rounded-lg grayscale-[30%] contrast-[1.1]"
                                 />
                               ) : (
                                 <Layers className="w-8 h-8 text-ministry-gold-exact" />
@@ -233,21 +232,71 @@ export default function Library() {
                   Individual Studies
                 </h2>
                 <div className="space-y-4">
-                  {filteredStudies.map((study: any) => {
+                  {filteredStudies.map((study: Study) => {
                     const progress = (userProgress as any[]).find((p: any) => p.studyId === study.id);
                     const isCompleted = progress?.isCompleted || false;
-                    const completedAt = progress?.completedAt;
                     const hasStarted = !!progress && !isCompleted;
                     
+                    const getTierBadge = (tier: string) => {
+                      switch (tier) {
+                        case 'premium':
+                          return <span className="text-xs bg-ministry-steel/20 text-ministry-steel px-2 py-0.5 rounded">Premium</span>;
+                        case 'vip':
+                          return <span className="text-xs bg-ministry-gold-exact text-black px-2 py-0.5 rounded font-medium">VIP</span>;
+                        default:
+                          return <span className="text-xs bg-white/10 text-gray-400 px-2 py-0.5 rounded">Free</span>;
+                      }
+                    };
+                    
                     return (
-                      <StudyCard 
-                        key={study.id} 
-                        study={study} 
-                        isCompleted={isCompleted}
-                        completedAt={completedAt}
-                        hasStarted={hasStarted}
-                        data-testid={`study-card-${study.id}`}
-                      />
+                      <Link key={study.id} href={`/studies/${study.id}`}>
+                        <Card 
+                          className="bg-black border border-gray-800 hover:border-ministry-gold-exact transition-colors cursor-pointer"
+                          data-testid={`study-card-${study.id}`}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-shrink-0 w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden">
+                                {study.thumbnailUrl ? (
+                                  <img 
+                                    src={study.thumbnailUrl} 
+                                    alt={study.title}
+                                    className="w-full h-full object-cover rounded-lg grayscale-[30%] contrast-[1.1]"
+                                  />
+                                ) : (
+                                  <BookOpen className="w-8 h-8 text-ministry-gold-exact" />
+                                )}
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-white font-bold text-lg mb-1 line-clamp-1" data-testid={`text-study-title-${study.id}`}>
+                                  {study.title}
+                                </h3>
+                                <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+                                  {study.description}
+                                </p>
+                                <div className="flex items-center gap-4 text-xs text-gray-500">
+                                  <span className="flex items-center gap-1">
+                                    <BookOpen className="w-3.5 h-3.5" />
+                                    {study.totalDays} {study.totalDays === 1 ? 'Day' : 'Days'}
+                                  </span>
+                                  {getTierBadge(study.requiredTier)}
+                                  {isCompleted && (
+                                    <span className="text-ministry-gold-exact font-medium">✓ Completed</span>
+                                  )}
+                                  {hasStarted && !isCompleted && (
+                                    <span className="text-ministry-gold-exact font-medium">In Progress</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex-shrink-0 self-center">
+                                <ChevronRight className="w-5 h-5 text-gray-500" />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
                     );
                   })}
                 </div>
