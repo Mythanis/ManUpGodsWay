@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus, Heart, MessageCircle, Pin, Trash2, Send } from "lucide-react";
+import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus, Heart, MessageCircle, Pin, Trash2, Send, Pencil, X, Save } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -203,6 +204,11 @@ export default function WarGroupDetail() {
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   const [replyContent, setReplyContent] = useState<{ [postId: string]: string }>({});
 
+  // Edit Group State
+  const [isEditing, setIsEditing] = useState(false);
+  const [editDescription, setEditDescription] = useState("");
+  const [editMeetingInfo, setEditMeetingInfo] = useState("");
+
   // Fetch group posts (only for members)
   const { data: posts = [], isLoading: postsLoading } = useQuery<GroupPost[]>({
     queryKey: [`/api/war-groups/${id}/posts`],
@@ -290,6 +296,30 @@ export default function WarGroupDetail() {
       }
       return newSet;
     });
+  };
+
+  // Update group mutation
+  const updateGroupMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('PUT', `/api/war-groups/${id}`, { 
+        description: editDescription, 
+        meetingInfo: editMeetingInfo 
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Updated", description: "Group information has been saved" });
+      setIsEditing(false);
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update group", variant: "destructive" });
+    },
+  });
+
+  const startEditing = () => {
+    setEditDescription(group?.description || "");
+    setEditMeetingInfo(group?.meetingInfo || "");
+    setIsEditing(true);
   };
 
   if (isLoading) {
@@ -482,31 +512,100 @@ export default function WarGroupDetail() {
         {/* Group Info */}
         <Card className="bg-black border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]">
           <CardHeader>
-            <CardTitle className="text-2xl font-black uppercase tracking-tight text-ministry-gold-exact">About This Group</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl font-black uppercase tracking-tight text-ministry-gold-exact">About This Group</CardTitle>
+              {isLeader && !isEditing && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={startEditing}
+                  className="text-ministry-gold-exact hover:bg-white/10"
+                  data-testid="button-edit-group"
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {group.description && (
-              <div>
-                <p className="text-white/90 font-medium leading-relaxed">{group.description}</p>
-              </div>
-            )}
-            
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <User className="h-4 w-4 text-ministry-gold-exact" />
-                <span className="text-ministry-gold-exact font-bold uppercase tracking-widest text-xs">Group Leader</span>
-              </div>
-              <p className="text-white font-semibold text-lg">{group.leader.firstName} {group.leader.lastName}</p>
-            </div>
-
-            {group.meetingInfo && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-ministry-gold-exact" />
-                  <span className="text-ministry-gold-exact font-bold uppercase tracking-widest text-xs">Meeting Info</span>
+            {isEditing ? (
+              <>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-ministry-gold-exact font-bold uppercase tracking-widest text-xs">Description</span>
+                  </div>
+                  <Textarea
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    className="bg-white/10 border-white/20 text-white font-medium resize-none"
+                    rows={4}
+                    placeholder="Describe your group..."
+                    data-testid="input-edit-description"
+                  />
                 </div>
-                <p className="text-white font-semibold text-lg">{group.meetingInfo}</p>
-              </div>
+
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="h-4 w-4 text-ministry-gold-exact" />
+                    <span className="text-ministry-gold-exact font-bold uppercase tracking-widest text-xs">Meeting Info</span>
+                  </div>
+                  <Input
+                    value={editMeetingInfo}
+                    onChange={(e) => setEditMeetingInfo(e.target.value)}
+                    className="bg-white/10 border-white/20 text-white font-medium"
+                    placeholder="e.g., Saturdays at 9am"
+                    data-testid="input-edit-meeting"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    onClick={() => updateGroupMutation.mutate()}
+                    disabled={updateGroupMutation.isPending}
+                    className="bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90 font-bold"
+                    data-testid="button-save-group"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {updateGroupMutation.isPending ? 'Saving...' : 'Save'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditing(false)}
+                    className="border-white/30 text-white hover:bg-white/10"
+                    data-testid="button-cancel-edit"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                {group.description && (
+                  <div>
+                    <p className="text-white/90 font-medium leading-relaxed">{group.description}</p>
+                  </div>
+                )}
+                
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <User className="h-4 w-4 text-ministry-gold-exact" />
+                    <span className="text-ministry-gold-exact font-bold uppercase tracking-widest text-xs">Group Leader</span>
+                  </div>
+                  <p className="text-white font-semibold text-lg">{group.leader.firstName} {group.leader.lastName}</p>
+                </div>
+
+                {group.meetingInfo && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Calendar className="h-4 w-4 text-ministry-gold-exact" />
+                      <span className="text-ministry-gold-exact font-bold uppercase tracking-widest text-xs">Meeting Info</span>
+                    </div>
+                    <p className="text-white font-semibold text-lg">{group.meetingInfo}</p>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
