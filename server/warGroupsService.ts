@@ -235,6 +235,54 @@ export class WarGroupsService {
     return updated[0];
   }
 
+  async rejectMemberRequest(membershipId: string, leaderId: string) {
+    const membership = await db.select()
+      .from(schema.warGroupMembers)
+      .where(eq(schema.warGroupMembers.id, membershipId))
+      .limit(1);
+    
+    if (!membership.length) {
+      throw new Error('Membership request not found');
+    }
+    
+    const group = await this.getGroupById(membership[0].groupId);
+    if (!group || group.leaderId !== leaderId) {
+      throw new Error('Only the group leader can reject members');
+    }
+    
+    await db.delete(schema.warGroupMembers)
+      .where(eq(schema.warGroupMembers.id, membershipId));
+  }
+
+  async getPendingMemberRequests(groupId: string, leaderId: string) {
+    const group = await this.getGroupById(groupId);
+    if (!group || group.leaderId !== leaderId) {
+      throw new Error('Only the group leader can view pending requests');
+    }
+    
+    const results = await db.select({
+      membership: schema.warGroupMembers,
+      user: {
+        id: schema.users.id,
+        firstName: schema.users.firstName,
+        lastName: schema.users.lastName,
+        profileImageUrl: schema.users.profileImageUrl,
+        email: schema.users.email,
+      }
+    })
+    .from(schema.warGroupMembers)
+    .leftJoin(schema.users, eq(schema.warGroupMembers.userId, schema.users.id))
+    .where(and(
+      eq(schema.warGroupMembers.groupId, groupId),
+      eq(schema.warGroupMembers.status, 'pending')
+    ));
+    
+    return results.map(r => ({
+      ...r.membership,
+      user: r.user
+    }));
+  }
+
   async removeMember(membershipId: string, leaderId: string) {
     const membership = await db.select()
       .from(schema.warGroupMembers)

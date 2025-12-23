@@ -7035,6 +7035,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/war-groups/:id/members/:memberId/reject', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { memberId } = req.params;
+      
+      await warGroupsService.rejectMemberRequest(memberId, userId);
+      res.status(204).send();
+    } catch (error: any) {
+      console.error('Error rejecting member:', error);
+      res.status(403).json({ message: error.message || 'Failed to reject member' });
+    }
+  });
+
+  app.get('/api/war-groups/:id/pending-requests', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groupId = req.params.id;
+      
+      const pendingRequests = await warGroupsService.getPendingMemberRequests(groupId, userId);
+      res.json(pendingRequests);
+    } catch (error: any) {
+      console.error('Error fetching pending requests:', error);
+      res.status(403).json({ message: error.message || 'Failed to fetch pending requests' });
+    }
+  });
+
   app.delete('/api/war-groups/:id/members/:memberId', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Users, User, Calendar, ChevronLeft, LogOut } from "lucide-react";
+import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus } from "lucide-react";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -33,6 +33,21 @@ interface GroupMembership {
   userId: string;
   status: string;
   role: string;
+}
+
+interface PendingRequest {
+  id: string;
+  groupId: string;
+  userId: string;
+  status: string;
+  requestedAt: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    profileImageUrl: string | null;
+    email: string;
+  };
 }
 
 export default function WarGroupDetail() {
@@ -97,8 +112,56 @@ export default function WarGroupDetail() {
   });
 
   const isMember = myGroups.some(g => g.id === id);
-  const hasPendingRequest = membership?.status === 'pending';
   const isLeader = group?.leader?.id === membership?.userId;
+
+  // Fetch pending requests (only for leaders)
+  const { data: pendingRequests = [] } = useQuery<PendingRequest[]>({
+    queryKey: [`/api/war-groups/${id}/pending-requests`],
+    enabled: !!id && isLeader,
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: async (memberId: string) => {
+      return apiRequest('POST', `/api/war-groups/${id}/members/${memberId}/approve`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Member Approved",
+        description: "The member has been added to the group",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}/pending-requests`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to approve member",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async (memberId: string) => {
+      return apiRequest('POST', `/api/war-groups/${id}/members/${memberId}/reject`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Request Rejected",
+        description: "The membership request has been declined",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}/pending-requests`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reject request",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const hasPendingRequest = membership?.status === 'pending';
 
   if (isLoading) {
     return (
@@ -219,6 +282,70 @@ export default function WarGroupDetail() {
                   </Button>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Pending Requests (Leader Only) */}
+        {isLeader && pendingRequests.length > 0 && (
+          <Card className="bg-black border-2 border-ministry-gold-exact">
+            <CardHeader>
+              <CardTitle className="text-ministry-gold-exact flex items-center gap-2">
+                <UserPlus className="h-5 w-5" />
+                Pending Membership Requests
+                <Badge className="bg-red-500 text-white ml-2">{pendingRequests.length}</Badge>
+              </CardTitle>
+              <CardDescription className="text-white/70">
+                Review and approve members who want to join your group
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {pendingRequests.map((request) => (
+                <div key={request.id} className="flex items-center justify-between bg-white/10 rounded-lg p-3">
+                  <div className="flex items-center gap-3">
+                    {request.user.profileImageUrl ? (
+                      <img 
+                        src={request.user.profileImageUrl} 
+                        alt={request.user.firstName}
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded-full bg-ministry-gold-exact flex items-center justify-center">
+                        <User className="h-5 w-5 text-black" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-white font-semibold">
+                        {request.user.firstName} {request.user.lastName}
+                      </p>
+                      <p className="text-white/60 text-xs">{request.user.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => approveMutation.mutate(request.id)}
+                      disabled={approveMutation.isPending || rejectMutation.isPending}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      data-testid={`button-approve-${request.id}`}
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-1" />
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => rejectMutation.mutate(request.id)}
+                      disabled={approveMutation.isPending || rejectMutation.isPending}
+                      className="border-red-500 text-red-500 hover:bg-red-500/10"
+                      data-testid={`button-reject-${request.id}`}
+                    >
+                      <XCircle className="h-4 w-4 mr-1" />
+                      Decline
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
         )}
