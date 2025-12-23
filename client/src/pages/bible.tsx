@@ -419,15 +419,15 @@ export default function Bible() {
   };
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 bg-black min-h-screen">
       {/* Header */}
-      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+      <div className="bg-black border-b-4 border-ministry-gold-exact text-white px-6 pt-12 pb-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
             <Book className="h-8 w-8 text-ministry-gold-exact" />
-            <h1 className="text-4xl font-black tracking-tight">Bible Reader</h1>
+            <h1 className="text-4xl font-black tracking-tighter uppercase">Bible Reader</h1>
           </div>
-          <p className="text-ministry-gold-exact text-sm font-semibold">
+          <p className="text-ministry-gold-exact text-sm font-bold uppercase tracking-widest">
             Read God's Word In Multiple Translations
           </p>
         </div>
@@ -435,23 +435,23 @@ export default function Bible() {
 
       <div className="max-w-6xl mx-auto p-4 space-y-6">
         {/* Bible Controls */}
-        <Card className="bg-black border-2 border-black">
-          <CardHeader>
-            <CardTitle className="text-white">Bible Navigation</CardTitle>
+        <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-black font-black uppercase tracking-tight text-xl">Bible Navigation</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Version Selector - Full Width at Top */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white">Bible Version</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-black">Bible Version</label>
               <Select value={selectedVersion} onValueChange={setSelectedVersion}>
-                <SelectTrigger className="bg-gray-800 border-gray-700 text-white w-full">
+                <SelectTrigger className="bg-black border-2 border-black text-white w-full rounded-none font-semibold" data-testid="select-bible-version">
                   <SelectValue placeholder="Select Bible version" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-none border-2 border-black">
                   {bibleVersions.map((version) => (
                     <SelectItem key={version.id} value={version.id}>
                       <div className="flex flex-col">
-                        <span className="font-medium">{version.id} - {version.name}</span>
+                        <span className="font-bold">{version.id} - {version.name}</span>
                         <span className="text-xs text-muted-foreground">{version.description}</span>
                       </div>
                     </SelectItem>
@@ -464,19 +464,19 @@ export default function Bible() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Book Selector */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white">Book</label>
+                <label className="text-xs font-bold uppercase tracking-widest text-black">Book</label>
                 <Select value={selectedBook} onValueChange={setSelectedBook}>
-                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                  <SelectTrigger className="bg-black border-2 border-black text-white rounded-none font-semibold" data-testid="select-bible-book">
                     <SelectValue placeholder="Select book" />
                   </SelectTrigger>
-                  <SelectContent className="max-h-60">
-                    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Old Testament</div>
+                  <SelectContent className="max-h-60 rounded-none border-2 border-black">
+                    <div className="px-2 py-1 text-xs font-black uppercase tracking-widest text-ministry-gold-exact bg-black">Old Testament</div>
                     {bibleBooks.filter(book => book.testament === "Old").map((book) => (
                       <SelectItem key={book.name} value={book.name}>
                         {book.name}
                       </SelectItem>
                     ))}
-                    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">New Testament</div>
+                    <div className="px-2 py-1 text-xs font-black uppercase tracking-widest text-ministry-gold-exact bg-black border-t-2 border-black mt-1 pt-2">New Testament</div>
                     {bibleBooks.filter(book => book.testament === "New").map((book) => (
                       <SelectItem key={book.name} value={book.name}>
                         {book.name}
@@ -488,12 +488,12 @@ export default function Bible() {
 
               {/* Chapter Selector */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white">Chapter</label>
+                <label className="text-xs font-bold uppercase tracking-widest text-black">Chapter</label>
                 <Select value={selectedChapter.toString()} onValueChange={(value) => setSelectedChapter(parseInt(value))}>
-                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                  <SelectTrigger className="bg-black border-2 border-black text-white rounded-none font-semibold" data-testid="select-bible-chapter">
                     <SelectValue placeholder="Chapter" />
                   </SelectTrigger>
-                  <SelectContent className="max-h-60">
+                  <SelectContent className="max-h-60 rounded-none border-2 border-black">
                     {chapterOptions.map((chapter) => (
                       <SelectItem key={chapter} value={chapter.toString()}>
                         Chapter {chapter}
@@ -506,23 +506,23 @@ export default function Bible() {
 
             {/* Search - Full Width Below */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white">Search Verses</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-black">Search Verses</label>
               <div className="flex gap-3">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
                   <Input
                     placeholder="Search for verses containing..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="pl-10 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+                    className="pl-10 bg-black border-2 border-black text-white placeholder:text-white/50 rounded-none font-medium"
                     data-testid="input-bible-search"
                   />
                 </div>
                 <Button 
                   onClick={handleSearch}
                   disabled={!searchTerm.trim() || isSearching}
-                  className="px-6 bg-ministry-gold-exact hover:bg-ministry-gold text-black font-semibold"
+                  className="px-6 bg-black hover:bg-black/80 text-ministry-gold-exact font-black uppercase tracking-wide rounded-none border-2 border-black"
                   data-testid="button-bible-search"
                 >
                   {isSearching ? "Searching..." : "Search"}
@@ -531,18 +531,19 @@ export default function Bible() {
             </div>
 
             {/* Chapter Navigation */}
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-4 pt-2">
               <Button
                 variant="outline"
                 onClick={() => navigateChapter('prev')}
                 disabled={selectedChapter <= 1}
-                className="flex items-center gap-2 border-gray-700 text-white hover:bg-gray-800"
+                className="flex items-center gap-2 bg-black border-2 border-black text-white hover:bg-black/80 rounded-none font-bold uppercase tracking-wide"
+                data-testid="button-prev-chapter"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Previous
               </Button>
               
-              <Badge className="px-4 py-2 text-sm bg-ministry-gold-exact text-black font-semibold">
+              <Badge className="px-4 py-2 text-sm bg-black text-ministry-gold-exact font-black uppercase tracking-wide rounded-none border-2 border-black">
                 {selectedBook} {selectedChapter}
               </Badge>
               
@@ -550,7 +551,8 @@ export default function Bible() {
                 variant="outline"
                 onClick={() => navigateChapter('next')}
                 disabled={!currentBook || selectedChapter >= currentBook.chapters}
-                className="flex items-center gap-2 border-gray-700 text-white hover:bg-gray-800"
+                className="flex items-center gap-2 bg-black border-2 border-black text-white hover:bg-black/80 rounded-none font-bold uppercase tracking-wide"
+                data-testid="button-next-chapter"
               >
                 Next
                 <ChevronRight className="h-4 w-4" />
@@ -560,19 +562,24 @@ export default function Bible() {
         </Card>
 
         {/* Bible Text Display */}
-        <Card className="bg-black border-2 border-black">
+        <Card className="bg-black border-2 border-ministry-gold-exact rounded-none shadow-[0_0_20px_rgba(252,208,0,0.15)]">
           <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-white">
+            <div className="flex flex-wrap justify-between items-center gap-3">
+              <CardTitle className="text-ministry-gold-exact font-black uppercase tracking-tight text-xl">
                 {selectedBook} Chapter {selectedChapter} ({selectedVersion})
               </CardTitle>
               <div className="flex gap-2">
-                <Badge className="bg-ministry-gold text-black">
+                <Badge className="bg-ministry-gold-exact text-black font-bold uppercase tracking-wide rounded-none border-2 border-black">
                   {currentBook?.testament} Testament
                 </Badge>
                 <Badge 
-                  variant={apiStatus === "connected" ? "default" : "secondary"}
-                  className={apiStatus === "connected" ? "bg-green-600 text-white" : ""}
+                  className={`font-bold uppercase tracking-wide rounded-none border-2 border-black ${
+                    apiStatus === "connected" 
+                      ? "bg-green-600 text-white" 
+                      : apiStatus === "fallback" 
+                        ? "bg-yellow-600 text-black" 
+                        : "bg-red-600 text-white"
+                  }`}
                 >
                   {apiStatus === "connected" ? "Live API" : apiStatus === "fallback" ? "Sample" : "Offline"}
                 </Badge>
@@ -582,17 +589,17 @@ export default function Bible() {
           <CardContent>
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold-exact"></div>
+                <div className="animate-spin h-8 w-8 border-4 border-ministry-gold-exact border-t-transparent"></div>
               </div>
             ) : (
-              <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-ministry-gold/20 scrollbar-track-gray-800 pr-2">
-                <div className="space-y-4">
+              <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-ministry-gold-exact/30 scrollbar-track-black pr-2">
+                <div className="space-y-3">
                   {bibleText.map((verseData) => (
-                    <div key={verseData.verse} className="flex gap-4 p-3 hover:bg-gray-800 rounded-lg transition-colors">
-                      <span className="text-ministry-gold-exact font-semibold text-sm min-w-[2rem] mt-1 flex-shrink-0">
+                    <div key={verseData.verse} className="flex gap-4 p-3 hover:bg-ministry-gold-exact/10 transition-colors border-l-4 border-ministry-gold-exact/30 hover:border-ministry-gold-exact" data-testid={`verse-${verseData.verse}`}>
+                      <span className="text-ministry-gold-exact font-black text-sm min-w-[2rem] mt-1 flex-shrink-0">
                         {verseData.verse}
                       </span>
-                      <p className="text-white leading-relaxed text-base">
+                      <p className="text-white leading-relaxed text-base font-medium">
                         {verseData.text}
                       </p>
                     </div>
@@ -605,10 +612,10 @@ export default function Bible() {
 
 
         {/* API Status and Version Information */}
-        <Card className="bg-black border-2 border-black">
+        <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <CardHeader>
-            <CardTitle className="text-white">Bible API Status & Versions</CardTitle>
-            <CardDescription className="text-gray-400">
+            <CardTitle className="text-black font-black uppercase tracking-tight text-xl">Bible API Status & Versions</CardTitle>
+            <CardDescription className="text-black/70 font-semibold">
               {apiStatus === "connected" && "Connected to live Bible API services for authentic scripture text."}
               {apiStatus === "fallback" && "Using sample content. Full Bible text available when API services are accessible."}
               {apiStatus === "error" && "Bible API services temporarily unavailable. Showing cached content."}
@@ -617,15 +624,15 @@ export default function Bible() {
           <CardContent>
             <div className="space-y-4">
               {/* API Status Indicator */}
-              <div className="p-3 rounded-lg border border-gray-700 bg-gray-800">
+              <div className="p-3 border-2 border-black bg-black rounded-none">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-white">API Services:</span>
+                  <span className="text-sm font-bold uppercase tracking-wide text-white">API Services:</span>
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${
+                    <div className={`w-3 h-3 ${
                       apiStatus === "connected" ? "bg-green-500" : 
                       apiStatus === "fallback" ? "bg-yellow-500" : "bg-red-500"
                     }`}></div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs font-semibold text-white/80">
                       {apiStatus === "connected" ? "KJV, ESV, NASB Live" : 
                        apiStatus === "fallback" ? "Sample Content" : "Offline"}
                     </span>
@@ -638,15 +645,16 @@ export default function Bible() {
                 {bibleVersions.map((version) => (
                   <div
                     key={version.id}
-                    className={`p-4 rounded-lg border transition-colors ${
+                    className={`p-4 border-2 border-black rounded-none transition-colors ${
                       selectedVersion === version.id
-                        ? 'border-ministry-gold-exact bg-ministry-gold-exact/10'
-                        : 'border-gray-700 bg-gray-800'
+                        ? 'bg-black text-ministry-gold-exact shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
+                        : 'bg-black/20 text-black'
                     }`}
+                    data-testid={`version-card-${version.id}`}
                   >
-                    <h3 className="font-semibold text-white">{version.id}</h3>
-                    <p className="text-sm font-medium text-white mb-1">{version.name}</p>
-                    <p className="text-xs text-gray-400">{version.description}</p>
+                    <h3 className="font-black uppercase tracking-tight">{version.id}</h3>
+                    <p className={`text-sm font-bold mb-1 ${selectedVersion === version.id ? 'text-white' : 'text-black'}`}>{version.name}</p>
+                    <p className={`text-xs ${selectedVersion === version.id ? 'text-white/70' : 'text-black/60'}`}>{version.description}</p>
                   </div>
                 ))}
               </div>
@@ -657,12 +665,12 @@ export default function Bible() {
 
       {/* Search Results Modal */}
       <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] bg-black border-2 border-gray-700">
+        <DialogContent className="max-w-4xl max-h-[80vh] bg-black border-2 border-ministry-gold-exact rounded-none">
           <DialogHeader>
-            <DialogTitle className="text-white">
+            <DialogTitle className="text-ministry-gold-exact font-black uppercase tracking-tight text-xl">
               Search Results for "{searchTerm}"
             </DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription className="text-white/70 font-semibold">
               {isSearching ? (
                 "Searching Bible verses..."
               ) : (
@@ -675,8 +683,8 @@ export default function Bible() {
             {isSearching ? (
               <div className="flex items-center justify-center py-8">
                 <div className="text-center space-y-2">
-                  <div className="animate-spin w-8 h-8 border-4 border-ministry-gold-exact border-t-transparent rounded-full mx-auto"></div>
-                  <p className="text-sm text-gray-400">Searching through Bible books...</p>
+                  <div className="animate-spin w-8 h-8 border-4 border-ministry-gold-exact border-t-transparent mx-auto"></div>
+                  <p className="text-sm text-white/60 font-medium">Searching through Bible books...</p>
                 </div>
               </div>
             ) : searchResults.length > 0 ? (
@@ -684,15 +692,15 @@ export default function Bible() {
                 {searchResults.map((result, index) => (
                   <div 
                     key={index}
-                    className="p-4 border border-gray-700 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors"
+                    className="p-4 border-2 border-ministry-gold-exact/50 hover:border-ministry-gold-exact bg-black hover:bg-ministry-gold-exact/10 cursor-pointer transition-colors rounded-none"
                     onClick={() => goToSearchResult(result)}
                     data-testid={`search-result-${index}`}
                   >
                     <div className="flex items-start gap-3">
-                      <Badge className="text-xs font-medium shrink-0 bg-ministry-gold-exact text-black">
+                      <Badge className="text-xs font-black shrink-0 bg-ministry-gold-exact text-black rounded-none border-2 border-black uppercase tracking-wide">
                         {result.book} {result.chapter}:{result.verse}
                       </Badge>
-                      <p className="text-sm text-white leading-relaxed flex-1">
+                      <p className="text-sm text-white leading-relaxed flex-1 font-medium">
                         {result.text}
                       </p>
                     </div>
@@ -701,23 +709,23 @@ export default function Bible() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-gray-400">
+                <p className="text-white/60 font-semibold">
                   No verses found containing "{searchTerm}" in the searched books.
                 </p>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-white/40 mt-2">
                   Try searching for a different word or phrase.
                 </p>
               </div>
             )}
           </div>
 
-          <div className="flex justify-between items-center pt-4 border-t border-gray-700">
-            <p className="text-xs text-gray-400">
+          <div className="flex justify-between items-center pt-4 border-t-2 border-ministry-gold-exact/30">
+            <p className="text-xs text-white/50 font-medium">
               Click any verse to navigate directly to that location
             </p>
             <Button 
               onClick={() => setIsSearchModalOpen(false)}
-              className="bg-ministry-gold-exact hover:bg-ministry-gold text-black font-semibold"
+              className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black uppercase tracking-wide rounded-none border-2 border-black"
               data-testid="button-close-search"
             >
               Close
