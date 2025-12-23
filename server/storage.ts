@@ -167,6 +167,7 @@ export interface IStorage {
   
   // Study Series operations
   getStudySeries(category?: string): Promise<any[]>;
+  getAllStudySeries(): Promise<any[]>;
   getStudySeriesById(id: string): Promise<any | undefined>;
   getStudiesInSeries(seriesId: string, userId?: string): Promise<any[]>;
   createStudySeries(series: any): Promise<any>;
@@ -563,6 +564,23 @@ export class DatabaseStorage implements IStorage {
         ...s,
         studyCount: seriesStudies.length,
         totalLessons,
+      };
+    }));
+    
+    return enrichedSeries;
+  }
+
+  async getAllStudySeries(): Promise<any[]> {
+    const seriesList = await db.select().from(studySeries)
+      .orderBy(asc(studySeries.displayOrder), desc(studySeries.createdAt));
+    
+    const enrichedSeries = await Promise.all(seriesList.map(async (s) => {
+      const seriesStudies = await db.select().from(studies)
+        .where(eq(studies.seriesId, s.id));
+      
+      return {
+        ...s,
+        studyCount: seriesStudies.length,
       };
     }));
     

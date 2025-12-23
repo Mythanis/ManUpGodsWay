@@ -16,6 +16,7 @@ import * as schema from "@shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { 
   insertStudySchema, 
+  insertStudySeriesSchema,
   insertDiscussionSchema, 
   insertDiscussionReplySchema,
   insertDiscussionSubscriptionSchema,
@@ -337,6 +338,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching studies in series:", error);
       res.status(500).json({ message: "Failed to fetch studies in series" });
+    }
+  });
+
+  // Admin Study Series routes
+  app.get('/api/admin/study-series', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const series = await storage.getAllStudySeries();
+      res.json(series);
+    } catch (error) {
+      console.error("Error fetching all study series:", error);
+      res.status(500).json({ message: "Failed to fetch study series" });
+    }
+  });
+
+  app.post('/api/admin/study-series', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const seriesData = insertStudySeriesSchema.parse(req.body);
+      const series = await storage.createStudySeries(seriesData);
+      res.status(201).json(series);
+    } catch (error) {
+      console.error("Error creating study series:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid series data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create study series" });
+    }
+  });
+
+  app.put('/api/admin/study-series/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const seriesData = insertStudySeriesSchema.partial().parse(req.body);
+      const series = await storage.updateStudySeries(req.params.id, seriesData);
+      res.json(series);
+    } catch (error) {
+      console.error("Error updating study series:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid series data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update study series" });
+    }
+  });
+
+  app.delete('/api/admin/study-series/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      await storage.deleteStudySeries(req.params.id);
+      res.json({ message: "Series deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting study series:", error);
+      res.status(500).json({ message: "Failed to delete study series" });
+    }
+  });
+
+  // Assign study to series
+  const assignStudyToSeriesSchema = z.object({
+    seriesId: z.string().uuid().nullable().optional(),
+    seriesOrder: z.number().int().min(0).default(0),
+  });
+
+  app.put('/api/admin/studies/:studyId/series', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const validatedData = assignStudyToSeriesSchema.parse(req.body);
+      
+      // Validate that the series exists if seriesId is provided
+      if (validatedData.seriesId) {
+        const series = await storage.getStudySeriesById(validatedData.seriesId);
+        if (!series) {
+          return res.status(400).json({ message: "Series not found" });
+        }
+      }
+      
+      const study = await storage.updateStudy(req.params.studyId, { 
+        seriesId: validatedData.seriesId || null, 
+        seriesOrder: validatedData.seriesOrder 
+      });
+      res.json(study);
+    } catch (error) {
+      console.error("Error assigning study to series:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to assign study to series" });
     }
   });
 
