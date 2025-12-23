@@ -87,11 +87,11 @@ export default function WarGroups() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-4xl font-black mb-2 tracking-tight">War Groups</h1>
-              <p className="text-ministry-gold-exact text-sm font-semibold">Local Discipleship Groups Across The USA</p>
+              <p className="text-ministry-gold-exact text-sm font-bold tracking-tight">Local Discipleship Groups Across The USA</p>
             </div>
             <Button
               onClick={() => navigate('/war-groups/register')}
-              className="bg-ministry-gold-exact hover:bg-ministry-gold text-black font-semibold whitespace-nowrap"
+              className="bg-ministry-gold-exact hover:bg-ministry-gold text-black font-bold tracking-tight whitespace-nowrap"
               data-testid="button-register-war-group"
             >
               <Plus className="h-4 w-4 mr-2" />
