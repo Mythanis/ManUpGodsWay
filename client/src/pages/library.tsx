@@ -104,26 +104,26 @@ export default function Library() {
     <div className="pb-20">
       {/* Header */}
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
-        <h1 className="text-4xl font-black mb-2 tracking-tight" data-testid="text-library-title">Study Library</h1>
-        <p className="text-ministry-gold-exact text-sm font-semibold" data-testid="text-library-subtitle">
+        <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase" data-testid="text-library-title">Study Library</h1>
+        <p className="text-ministry-gold-exact text-xs font-bold tracking-widest uppercase" data-testid="text-library-subtitle">
           Grow Stronger In Faith And Character
         </p>
       </div>
 
       {/* Search Bar */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-lg bg-black border-2 border-black" data-testid="card-search">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-ministry-gold-exact border-2 border-black rounded-none" data-testid="card-search">
           <CardContent className="p-4">
             <div className="relative">
               <Input
                 type="text"
-                placeholder="Search studies..."
+                placeholder="SEARCH STUDIES..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-800 border-gray-700 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-gray-400 focus:ring-2 focus:ring-ministry-gold-exact focus:bg-gray-800"
+                className="w-full bg-white border-2 border-black rounded-none pl-10 pr-4 py-3 text-sm text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide focus:ring-2 focus:ring-black font-medium"
                 data-testid="input-search"
               />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-black" />
             </div>
           </CardContent>
         </Card>
@@ -131,11 +131,11 @@ export default function Library() {
 
       {/* Categories Filter - Dropdown */}
       <div className="px-6 mb-6">
-        <label className="text-xs font-medium text-gray-400 mb-1 block">
+        <label className="text-xs font-black text-white mb-2 block uppercase tracking-wide">
           Category
         </label>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-full md:w-64 bg-gray-800 border-gray-700 text-white" data-testid="select-category">
+          <SelectTrigger className="w-full md:w-64 bg-ministry-gold-exact border-2 border-black text-black font-bold rounded-none" data-testid="select-category">
             <SelectValue placeholder="Select a category" />
           </SelectTrigger>
           <SelectContent>
@@ -169,7 +169,7 @@ export default function Library() {
             {/* Series Section */}
             {filteredSeries.length > 0 && (
               <div>
-                <h2 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                <h2 className="text-white font-black text-lg mb-4 flex items-center gap-2 tracking-tight uppercase">
                   <Layers className="w-5 h-5 text-ministry-gold-exact" />
                   Study Series
                 </h2>
@@ -177,17 +177,17 @@ export default function Library() {
                   {filteredSeries.map((s) => (
                     <Link key={s.id} href={`/series/${s.id}`}>
                       <Card 
-                        className="bg-black border border-gray-800 hover:border-ministry-gold-exact transition-colors cursor-pointer"
+                        className="bg-black border-2 border-ministry-gold-exact/50 hover:border-ministry-gold-exact hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer rounded-none"
                         data-testid={`series-card-${s.id}`}
                       >
                         <CardContent className="p-4">
                           <div className="flex items-start gap-4">
-                            <div className="flex-shrink-0 w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden">
+                            <div className="flex-shrink-0 w-16 h-16 bg-gray-800 rounded-none flex items-center justify-center overflow-hidden border border-ministry-gold-exact/30">
                               {s.thumbnailUrl ? (
                                 <img 
                                   src={s.thumbnailUrl} 
                                   alt={s.title}
-                                  className="w-full h-full object-cover rounded-lg grayscale-[30%] contrast-[1.1]"
+                                  className="w-full h-full object-cover grayscale-[30%] contrast-[1.1]"
                                 />
                               ) : (
                                 <Layers className="w-8 h-8 text-ministry-gold-exact" />
@@ -195,25 +195,25 @@ export default function Library() {
                             </div>
 
                             <div className="flex-1 min-w-0">
-                              <h3 className="text-white font-bold text-lg mb-1 line-clamp-1" data-testid={`text-series-title-${s.id}`}>
+                              <h3 className="text-white font-black text-lg mb-1 line-clamp-1 tracking-tight" data-testid={`text-series-title-${s.id}`}>
                                 {s.title}
                               </h3>
                               <p className="text-gray-400 text-sm mb-3 line-clamp-2">
                                 {s.description}
                               </p>
-                              <div className="flex items-center gap-4 text-xs text-gray-500">
-                                <span className="flex items-center gap-1">
+                              <div className="flex items-center gap-4 text-xs text-gray-400 font-medium">
+                                <span className="flex items-center gap-1 bg-white/10 px-2 py-0.5">
                                   <BookOpen className="w-3.5 h-3.5" />
                                   {s.studyCount} {s.studyCount === 1 ? 'Study' : 'Studies'}
                                 </span>
-                                <span>
+                                <span className="bg-white/10 px-2 py-0.5">
                                   {s.totalLessons} {s.totalLessons === 1 ? 'Lesson' : 'Lessons'}
                                 </span>
                               </div>
                             </div>
 
                             <div className="flex-shrink-0 self-center">
-                              <ChevronRight className="w-5 h-5 text-gray-500" />
+                              <ChevronRight className="w-5 h-5 text-ministry-gold-exact" />
                             </div>
                           </div>
                         </CardContent>
@@ -227,7 +227,7 @@ export default function Library() {
             {/* Individual Studies Section */}
             {filteredStudies.length > 0 && (
               <div>
-                <h2 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                <h2 className="text-white font-black text-lg mb-4 flex items-center gap-2 tracking-tight uppercase">
                   <BookOpen className="w-5 h-5 text-ministry-gold-exact" />
                   Individual Studies
                 </h2>
@@ -240,28 +240,28 @@ export default function Library() {
                     const getTierBadge = (tier: string) => {
                       switch (tier) {
                         case 'premium':
-                          return <span className="text-xs bg-ministry-steel/20 text-ministry-steel px-2 py-0.5 rounded">Premium</span>;
+                          return <span className="text-xs bg-ministry-steel/20 text-ministry-steel px-2 py-0.5 rounded-none font-bold uppercase tracking-wide">Premium</span>;
                         case 'vip':
-                          return <span className="text-xs bg-ministry-gold-exact text-black px-2 py-0.5 rounded font-medium">VIP</span>;
+                          return <span className="text-xs bg-ministry-gold-exact text-black px-2 py-0.5 rounded-none font-black uppercase tracking-wide">VIP</span>;
                         default:
-                          return <span className="text-xs bg-white/10 text-gray-400 px-2 py-0.5 rounded">Free</span>;
+                          return <span className="text-xs bg-white/10 text-gray-400 px-2 py-0.5 rounded-none font-bold uppercase tracking-wide">Free</span>;
                       }
                     };
                     
                     return (
                       <Link key={study.id} href={`/studies/${study.id}`}>
                         <Card 
-                          className="bg-black border border-gray-800 hover:border-ministry-gold-exact transition-colors cursor-pointer"
+                          className="bg-black border-2 border-ministry-gold-exact/50 hover:border-ministry-gold-exact hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer rounded-none"
                           data-testid={`study-card-${study.id}`}
                         >
                           <CardContent className="p-4">
                             <div className="flex items-start gap-4">
-                              <div className="flex-shrink-0 w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden">
+                              <div className="flex-shrink-0 w-16 h-16 bg-gray-800 rounded-none flex items-center justify-center overflow-hidden border border-ministry-gold-exact/30">
                                 {study.thumbnailUrl ? (
                                   <img 
                                     src={study.thumbnailUrl} 
                                     alt={study.title}
-                                    className="w-full h-full object-cover rounded-lg grayscale-[30%] contrast-[1.1]"
+                                    className="w-full h-full object-cover grayscale-[30%] contrast-[1.1]"
                                   />
                                 ) : (
                                   <BookOpen className="w-8 h-8 text-ministry-gold-exact" />
@@ -269,13 +269,13 @@ export default function Library() {
                               </div>
 
                               <div className="flex-1 min-w-0">
-                                <h3 className="text-white font-bold text-lg mb-1 line-clamp-1" data-testid={`text-study-title-${study.id}`}>
+                                <h3 className="text-white font-black text-lg mb-1 line-clamp-1 tracking-tight" data-testid={`text-study-title-${study.id}`}>
                                   {study.title}
                                 </h3>
                                 <p className="text-gray-400 text-sm mb-3 line-clamp-2">
                                   {study.description}
                                 </p>
-                                <div className="flex items-center gap-4 text-xs text-gray-500">
+                                <div className="flex items-center gap-4 text-xs text-gray-400 font-medium">
                                   <span className="flex items-center gap-1">
                                     <BookOpen className="w-3.5 h-3.5" />
                                     {study.totalDays} {study.totalDays === 1 ? 'Day' : 'Days'}

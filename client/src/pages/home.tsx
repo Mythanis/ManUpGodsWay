@@ -396,7 +396,7 @@ export default function Home() {
                 alt={`${user?.firstName} ${user?.lastName}`}
                 className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
               />
-              <div className="bg-ministry-gold text-black px-3 py-1 rounded-full text-sm font-bold">
+              <div className="bg-ministry-gold text-black px-3 py-1 rounded-none text-xs font-black uppercase tracking-wide">
                 {(weeklyCompletions as any)?.count || 0} studies this week
               </div>
             </div>
@@ -407,10 +407,10 @@ export default function Home() {
         </div>
         
         <div className="mb-6">
-          <h1 className="text-2xl font-bold" data-testid="text-greeting">
+          <h1 className="text-2xl font-black tracking-tight" data-testid="text-greeting">
             Good Morning, {user?.firstName || 'Brother'}
           </h1>
-          <p className="text-[#FCD000] text-sm" data-testid="text-motivation">
+          <p className="text-[#FCD000] text-xs font-bold tracking-widest uppercase" data-testid="text-motivation">
             {systemSettings?.homepageTagline || "Ready to grow in God's strength?"}
           </p>
         </div>
@@ -445,8 +445,8 @@ export default function Home() {
           <HomeCarousel />
         </div>
         
-        <h2 className="text-lg font-bold text-white mb-4">Today's Devotional</h2>
-        <Card className="shadow-sm border border-ministry-charcoal bg-ministry-gold-exact mb-6" data-testid="card-devotional">
+        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Today's Devotional</h2>
+        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black bg-ministry-gold-exact mb-6 rounded-none" data-testid="card-devotional">
           <CardContent className="p-6">
             {devotional ? (
               <>
@@ -480,7 +480,7 @@ export default function Home() {
                 
                 <Button 
                   onClick={() => setShowFullDevotional(true)}
-                  className="w-full bg-black text-white py-3 rounded-xl font-medium hover:bg-gray-900"
+                  className="w-full bg-black text-white py-3 rounded-none font-black hover:bg-gray-900 uppercase tracking-wide text-sm"
                   data-testid="button-read-devotional"
                 >
                   Read Today's Devotional
@@ -500,7 +500,7 @@ export default function Home() {
 
       {/* Current Progress Section */}
       <div className="px-6 mb-6">
-        <h2 className="text-lg font-bold text-white mb-4">Your Journey</h2>
+        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Your Journey</h2>
         
         {currentStudy && currentStudy.study ? (
           <ProgressCard 
@@ -511,7 +511,7 @@ export default function Home() {
         ) : (
           <>
             {/* No Current Study - Show Recommendations */}
-            <Card className="border border-ministry-charcoal p-6 mb-4 bg-ministry-gold-exact" data-testid="card-no-current-study">
+            <Card className="border-2 border-black p-6 mb-4 bg-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-no-current-study">
               <div className="text-center">
                 <p className="text-ministry-slate mb-4">
                   {completedCount > 0 
@@ -519,7 +519,7 @@ export default function Home() {
                     : "You haven't started any studies yet"}
                 </p>
                 <Button 
-                  className="bg-card text-foreground hover:bg-muted border border-ministry-charcoal"
+                  className="bg-black text-white hover:bg-gray-900 border-2 border-black rounded-none font-black uppercase tracking-wide text-sm"
                   data-testid="button-browse-studies"
                   onClick={() => window.location.href = '/library'}
                 >
