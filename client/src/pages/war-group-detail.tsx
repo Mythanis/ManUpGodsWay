@@ -1,15 +1,18 @@
+import { useState } from "react";
 import { useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus, Heart, MessageCircle, Pin, Trash2, Send } from "lucide-react";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
+import { formatDistanceToNow } from "date-fns";
 
 interface WarGroup {
   id: string;
@@ -48,6 +51,38 @@ interface PendingRequest {
     profileImageUrl: string | null;
     email: string;
   };
+}
+
+interface GroupPost {
+  id: string;
+  groupId: string;
+  userId: string;
+  content: string;
+  postType: string;
+  likes: number;
+  replyCount: number;
+  isPinned: boolean;
+  createdAt: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    profileImageUrl: string | null;
+  } | null;
+}
+
+interface GroupReply {
+  id: string;
+  postId: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    profileImageUrl: string | null;
+  } | null;
 }
 
 export default function WarGroupDetail() {
@@ -162,6 +197,100 @@ export default function WarGroupDetail() {
   });
 
   const hasPendingRequest = membership?.status === 'pending';
+
+  // Discussion Board State
+  const [newPostContent, setNewPostContent] = useState("");
+  const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
+  const [replyContent, setReplyContent] = useState<{ [postId: string]: string }>({});
+
+  // Fetch group posts (only for members)
+  const { data: posts = [], isLoading: postsLoading } = useQuery<GroupPost[]>({
+    queryKey: [`/api/war-groups/${id}/posts`],
+    enabled: !!id && isMember,
+  });
+
+  // Create post mutation
+  const createPostMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', `/api/war-groups/${id}/posts`, { content: newPostContent, postType: 'discussion' });
+    },
+    onSuccess: () => {
+      toast({ title: "Posted", description: "Your post has been shared" });
+      setNewPostContent("");
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}/posts`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to create post", variant: "destructive" });
+    },
+  });
+
+  // Like post mutation
+  const likePostMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      return apiRequest('POST', `/api/war-groups/${id}/posts/${postId}/like`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}/posts`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to like post", variant: "destructive" });
+    },
+  });
+
+  // Delete post mutation
+  const deletePostMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      return apiRequest('DELETE', `/api/war-groups/${id}/posts/${postId}`, {});
+    },
+    onSuccess: () => {
+      toast({ title: "Deleted", description: "Post has been removed" });
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}/posts`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to delete post", variant: "destructive" });
+    },
+  });
+
+  // Pin post mutation
+  const pinPostMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      return apiRequest('POST', `/api/war-groups/${id}/posts/${postId}/pin`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}/posts`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to pin post", variant: "destructive" });
+    },
+  });
+
+  // Create reply mutation
+  const createReplyMutation = useMutation({
+    mutationFn: async ({ postId, content }: { postId: string; content: string }) => {
+      return apiRequest('POST', `/api/war-groups/${id}/posts/${postId}/replies`, { content });
+    },
+    onSuccess: (_, { postId }) => {
+      toast({ title: "Replied", description: "Your reply has been posted" });
+      setReplyContent(prev => ({ ...prev, [postId]: "" }));
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}/posts`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}/posts/${postId}/replies`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to post reply", variant: "destructive" });
+    },
+  });
+
+  const toggleReplies = (postId: string) => {
+    setExpandedPosts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(postId)) {
+        newSet.delete(postId);
+      } else {
+        newSet.add(postId);
+      }
+      return newSet;
+    });
+  };
 
   if (isLoading) {
     return (
@@ -382,27 +511,297 @@ export default function WarGroupDetail() {
           </CardContent>
         </Card>
 
-        {/* Tabs for Community, War Room, Challenges (Coming Soon) */}
+        {/* Tabs for Community */}
         {isMember && (
-          <Card className="bg-ministry-gold-exact border-2 border-black">
-            <CardContent className="pt-6">
-              <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="w-full bg-black">
-                  <TabsTrigger value="overview" className="flex-1 text-white data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black">Overview</TabsTrigger>
-                  <TabsTrigger value="community" className="flex-1 text-white data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black" disabled>Community</TabsTrigger>
-                  <TabsTrigger value="war-room" className="flex-1 text-white data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black" disabled>War Room</TabsTrigger>
-                </TabsList>
-                <TabsContent value="overview" className="mt-4">
-                  <div className="text-center py-12">
-                    <p className="text-black font-semibold">Welcome to {group.name}!</p>
-                    <p className="text-sm text-black mt-2">Group features coming soon...</p>
+          <Tabs defaultValue="community" className="w-full">
+            <TabsList className="w-full bg-black rounded-lg">
+              <TabsTrigger value="community" className="flex-1 text-white data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black">Community</TabsTrigger>
+              <TabsTrigger value="info" className="flex-1 text-white data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black">Info</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="community" className="mt-4 space-y-4">
+              {/* Create Post */}
+              <Card className="bg-black border-2 border-ministry-gold-exact">
+                <CardContent className="pt-4">
+                  <Textarea
+                    placeholder="Share something with your group..."
+                    value={newPostContent}
+                    onChange={(e) => setNewPostContent(e.target.value)}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50 resize-none"
+                    rows={3}
+                    data-testid="input-new-post"
+                  />
+                  <div className="flex justify-end mt-3">
+                    <Button
+                      onClick={() => createPostMutation.mutate()}
+                      disabled={!newPostContent.trim() || createPostMutation.isPending}
+                      className="bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90"
+                      data-testid="button-create-post"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Post
+                    </Button>
                   </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+
+              {/* Posts List */}
+              {postsLoading ? (
+                <div className="animate-pulse space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-32 bg-black/50 rounded-lg"></div>
+                  ))}
+                </div>
+              ) : posts.length === 0 ? (
+                <Card className="bg-black border-2 border-ministry-gold-exact">
+                  <CardContent className="text-center py-12">
+                    <MessageCircle className="h-12 w-12 text-ministry-gold-exact mx-auto mb-4" />
+                    <p className="text-white font-semibold">No posts yet</p>
+                    <p className="text-white/60 text-sm mt-1">Be the first to share something!</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {posts.map((post) => (
+                    <PostCard 
+                      key={post.id} 
+                      post={post} 
+                      groupId={id!}
+                      isLeader={isLeader}
+                      currentUserId={membership?.userId}
+                      onLike={() => likePostMutation.mutate(post.id)}
+                      onDelete={() => deletePostMutation.mutate(post.id)}
+                      onPin={() => pinPostMutation.mutate(post.id)}
+                      isExpanded={expandedPosts.has(post.id)}
+                      onToggleReplies={() => toggleReplies(post.id)}
+                      replyContent={replyContent[post.id] || ""}
+                      onReplyContentChange={(content) => setReplyContent(prev => ({ ...prev, [post.id]: content }))}
+                      onSubmitReply={() => createReplyMutation.mutate({ postId: post.id, content: replyContent[post.id] || "" })}
+                      isSubmittingReply={createReplyMutation.isPending}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="info" className="mt-4">
+              <Card className="bg-ministry-gold-exact border-2 border-black">
+                <CardContent className="pt-6 space-y-4">
+                  {group.description && (
+                    <div>
+                      <p className="text-black">{group.description}</p>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <User className="h-4 w-4 text-black" />
+                      <span className="text-black font-bold">Group Leader</span>
+                    </div>
+                    <p className="text-black">{group.leader.firstName} {group.leader.lastName}</p>
+                  </div>
+
+                  {group.meetingInfo && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Calendar className="h-4 w-4 text-black" />
+                        <span className="text-black font-bold">Meeting Info</span>
+                      </div>
+                      <p className="text-black">{group.meetingInfo}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         )}
       </div>
     </div>
+  );
+}
+
+// PostCard Component
+interface PostCardProps {
+  post: GroupPost;
+  groupId: string;
+  isLeader: boolean;
+  currentUserId: string | undefined;
+  onLike: () => void;
+  onDelete: () => void;
+  onPin: () => void;
+  isExpanded: boolean;
+  onToggleReplies: () => void;
+  replyContent: string;
+  onReplyContentChange: (content: string) => void;
+  onSubmitReply: () => void;
+  isSubmittingReply: boolean;
+}
+
+function PostCard({
+  post,
+  groupId,
+  isLeader,
+  currentUserId,
+  onLike,
+  onDelete,
+  onPin,
+  isExpanded,
+  onToggleReplies,
+  replyContent,
+  onReplyContentChange,
+  onSubmitReply,
+  isSubmittingReply,
+}: PostCardProps) {
+  const canDelete = post.userId === currentUserId || isLeader;
+
+  // Fetch replies when expanded
+  const { data: replies = [] } = useQuery<GroupReply[]>({
+    queryKey: [`/api/war-groups/${groupId}/posts/${post.id}/replies`],
+    enabled: isExpanded,
+  });
+
+  return (
+    <Card className="bg-black border-2 border-ministry-gold-exact" data-testid={`post-${post.id}`}>
+      <CardContent className="pt-4">
+        {/* Post Header */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
+            {post.user?.profileImageUrl ? (
+              <img 
+                src={post.user.profileImageUrl} 
+                alt={post.user.firstName || "User"}
+                className="h-10 w-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="h-10 w-10 rounded-full bg-ministry-gold-exact flex items-center justify-center">
+                <User className="h-5 w-5 text-black" />
+              </div>
+            )}
+            <div>
+              <p className="text-white font-semibold">
+                {post.user?.firstName} {post.user?.lastName}
+              </p>
+              <p className="text-white/50 text-xs">
+                {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {post.isPinned && (
+              <Badge className="bg-ministry-gold-exact text-black">
+                <Pin className="h-3 w-3 mr-1" />
+                Pinned
+              </Badge>
+            )}
+            {isLeader && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onPin}
+                className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10"
+                data-testid={`button-pin-${post.id}`}
+              >
+                <Pin className="h-4 w-4" />
+              </Button>
+            )}
+            {canDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onDelete}
+                className="text-white/60 hover:text-red-500 hover:bg-white/10"
+                data-testid={`button-delete-${post.id}`}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Post Content */}
+        <p className="text-white mb-4 whitespace-pre-wrap">{post.content}</p>
+
+        {/* Post Actions */}
+        <div className="flex items-center gap-4 pt-3 border-t border-white/10">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onLike}
+            className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10"
+            data-testid={`button-like-${post.id}`}
+          >
+            <Heart className="h-4 w-4 mr-1" />
+            {post.likes > 0 && post.likes}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleReplies}
+            className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10"
+            data-testid={`button-replies-${post.id}`}
+          >
+            <MessageCircle className="h-4 w-4 mr-1" />
+            {post.replyCount > 0 && post.replyCount}
+          </Button>
+        </div>
+
+        {/* Replies Section */}
+        {isExpanded && (
+          <div className="mt-4 pt-4 border-t border-white/10">
+            {/* Reply Input */}
+            <div className="flex gap-2 mb-4">
+              <Textarea
+                placeholder="Write a reply..."
+                value={replyContent}
+                onChange={(e) => onReplyContentChange(e.target.value)}
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/50 resize-none flex-1"
+                rows={2}
+                data-testid={`input-reply-${post.id}`}
+              />
+              <Button
+                onClick={onSubmitReply}
+                disabled={!replyContent.trim() || isSubmittingReply}
+                className="bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90 self-end"
+                data-testid={`button-submit-reply-${post.id}`}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Replies List */}
+            {replies.length > 0 && (
+              <div className="space-y-3">
+                {replies.map((reply) => (
+                  <div key={reply.id} className="flex gap-3 bg-white/5 rounded-lg p-3" data-testid={`reply-${reply.id}`}>
+                    {reply.user?.profileImageUrl ? (
+                      <img 
+                        src={reply.user.profileImageUrl} 
+                        alt={reply.user.firstName || "User"}
+                        className="h-8 w-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-ministry-gold-exact flex items-center justify-center flex-shrink-0">
+                        <User className="h-4 w-4 text-black" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-semibold text-sm">
+                          {reply.user?.firstName} {reply.user?.lastName}
+                        </span>
+                        <span className="text-white/50 text-xs">
+                          {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
+                        </span>
+                      </div>
+                      <p className="text-white/80 text-sm mt-1">{reply.content}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
