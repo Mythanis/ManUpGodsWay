@@ -14,7 +14,8 @@ The backend is an Express.js server in TypeScript, following a RESTful API desig
 
 ## Database Design
 PostgreSQL, hosted on Neon Database, is used with Drizzle ORM for type-safe queries and migrations. The schema includes:
-- **studies**: Bible study metadata (title, description, category, tier, totalDays, etc.)
+- **studySeries**: Groups related studies into series (e.g., "Holy Spirit" series) with title, description, category, thumbnail, and display order
+- **studies**: Bible study metadata (title, description, category, tier, totalDays, seriesId, seriesOrder, etc.)
 - **studyLessons**: Individual day/lesson content (dayNumber, title, content, scripture, questions, keyTakeaway)
 - **userProgress**: Overall study progress tracking (currentDay, status, completedAt)
 - **userLessonProgress**: Per-lesson completion tracking (isCompleted, answers, completedAt)
@@ -31,7 +32,9 @@ The system supports a tiered content structure (free, premium, VIP) and category
 - **Progress Tracking**: 
   - **Study Detail Page**: Displays incremental progress based on completed lessons (X of Y lessons completed, percentage)
   - **EmbeddedLessonViewer**: Shows comprehensive progress indicators including progress bar, day badges, visual navigation dots with completion checkmarks
-  - **Library Page**: Smart button labels - "Start" for new studies, "Continue" for in-progress studies, "Review" for completed studies
+  - **Library Page**: Displays study series cards (not individual studies). Click a series to see all contained studies with progress tracking
+  - **Series Detail Page**: Shows all studies in a series with order, progress bars, lesson counts, and tier badges
+  - Smart button labels - "Start" for new studies, "Continue" for in-progress studies, "Review" for completed studies
   - **Streak Tracking**: Automatically updates when lessons are completed, incrementing once per calendar day regardless of activity type (devotionals or lessons)
 - **Document Management**: Legacy system for managing PDF/Word study documents with tier-based access. Admins can upload new documents, delete existing ones, and update study materials through the edit interface
 
