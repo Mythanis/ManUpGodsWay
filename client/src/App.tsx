@@ -36,6 +36,7 @@ import HurdleWall from "@/pages/hurdle-wall";
 import WarGroups from "@/pages/war-groups";
 import WarGroupDetail from "@/pages/war-group-detail";
 import WarGroupRegister from "@/pages/war-group-register";
+import SeriesDetail from "@/pages/series-detail";
 import Purchase from "@/pages/purchase";
 import Bible from "@/pages/bible";
 import NotFound from "@/pages/not-found";
@@ -101,6 +102,7 @@ function Router() {
           <>
             <Route path="/" component={Home} />
             <Route path="/library" component={Library} />
+            <Route path="/series/:id" component={SeriesDetail} />
             <Route path="/videos" component={Videos} />
             <Route path="/podcasts" component={Podcasts} />
             <Route path="/challenges" component={Challenges} />
