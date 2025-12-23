@@ -72,6 +72,14 @@ The system supports a tiered content structure (free, premium, VIP) and category
   - **Visual Design**: Black card design with white text and yellow badges/buttons for high contrast
   - **Real-time Updates**: WebSocket integration for live prayer counts and comment updates
 - **War Groups**: Licensed discipleship groups named "Man Up God's Way - [City Name]" with city-based discovery, interactive map view with geocoding (OpenStreetMap Nominatim API), group leaders, member management, and admin oversight. Includes synchronous geocoding on group creation/updates with background retry service for failed attempts.
+  - **Private Discussion Boards**: Each war group has a private discussion board accessible only to approved members:
+    - Create text posts and share thoughts with the group
+    - **Media Upload Support**: Upload images and videos to posts with preview and removal capabilities
+    - Cross icon for post interactions (instead of heart)
+    - Reply to posts with threaded conversations
+    - Leaders can pin important posts and delete any post
+    - Members can only delete their own posts
+    - Leader can edit group description and meeting info
   - **Registration & Approval Workflow**: Users can submit registration requests to start new war groups:
     - Registration form collects: city/state, description, meeting info, contact details, leadership experience, and motivation
     - Auto-formatted group name: "Man Up God's Way - [City]"
