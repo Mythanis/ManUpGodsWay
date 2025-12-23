@@ -110,19 +110,15 @@ export class WarGroupsService {
     }
     
     // If city is provided with distance, do distance-based filtering
+    // Distance takes priority - state is only used to pinpoint the search location
     if (city && distance !== undefined && distance > 0) {
       // Get coordinates for the search city+state combination
       const searchState = state || 'USA';
       const searchCoords = await geocodeLocation(city, searchState);
       
       if (searchCoords) {
-        // Filter groups within the specified distance
+        // Filter groups within the specified distance (any state within radius)
         filteredResults = filteredResults.filter(r => {
-          // If state is specified, also filter by state
-          if (state && r.group.state.toLowerCase() !== state.toLowerCase()) {
-            return false;
-          }
-          
           // If group has coordinates, calculate distance
           if (r.group.latitude && r.group.longitude) {
             const dist = this.calculateDistance(
@@ -133,8 +129,10 @@ export class WarGroupsService {
             );
             return dist <= distance;
           }
-          // If no coordinates, fall back to exact city match
-          return r.group.city.toLowerCase() === city.toLowerCase();
+          // If no coordinates, fall back to exact city+state match
+          const cityMatch = r.group.city.toLowerCase() === city.toLowerCase();
+          const stateMatch = !state || r.group.state.toLowerCase() === state.toLowerCase();
+          return cityMatch && stateMatch;
         });
       } else {
         // Fallback to exact city+state match if geocoding fails
