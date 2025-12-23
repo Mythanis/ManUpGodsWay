@@ -394,9 +394,9 @@ export default function Home() {
               <img
                 src={(user as any)?.profileImageUrl || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=4A90B8&color=fff&size=60`}
                 alt={`${user?.firstName} ${user?.lastName}`}
-                className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
+                className="w-12 h-12 rounded-none object-cover border-2 border-ministry-gold-exact"
               />
-              <div className="bg-ministry-gold text-black px-3 py-1 rounded-none text-xs font-black uppercase tracking-wide">
+              <div className="bg-ministry-gold-exact text-black px-3 py-1 rounded-none text-xs font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                 {(weeklyCompletions as any)?.count || 0} studies this week
               </div>
             </div>
@@ -407,8 +407,8 @@ export default function Home() {
         </div>
         
         <div className="mb-6">
-          <h1 className="text-2xl font-black tracking-tight" data-testid="text-greeting">
-            Good Morning, {user?.firstName || 'Brother'}
+          <h1 className="text-4xl font-black tracking-tighter uppercase" data-testid="text-greeting">
+            Welcome, {user?.firstName || 'Brother'}
           </h1>
           <p className="text-[#FCD000] text-xs font-bold tracking-widest uppercase" data-testid="text-motivation">
             {systemSettings?.homepageTagline || "Ready to grow in God's strength?"}
@@ -417,14 +417,14 @@ export default function Home() {
         
         {/* Subscription Banner */}
         {user?.subscriptionTier === 'free' && (
-          <div className="bg-ministry-gold/90 text-ministry-navy rounded-xl p-4 mb-4" data-testid="banner-subscription">
+          <div className="bg-ministry-gold-exact text-black rounded-none border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="banner-subscription">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-sm text-black">Upgrade to Premium</h3>
-                <p className="text-xs text-black">Unlock all community features</p>
+                <h3 className="font-black text-sm text-black uppercase tracking-tight">Upgrade to Premium</h3>
+                <p className="text-xs text-black/80 font-medium">Unlock all community features</p>
               </div>
               <Button 
-                className="bg-ministry-navy text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-ministry-charcoal"
+                className="bg-black text-white px-4 py-2 rounded-none text-xs font-black uppercase tracking-wide hover:bg-gray-900 border-2 border-black"
                 data-testid="button-upgrade"
                 onClick={() => setShowUpgradeModal(true)}
               >
@@ -456,19 +456,19 @@ export default function Home() {
                     <img 
                       src={getDefaultThumbnail((devotional as any)?.imageUrl)} 
                       alt={(devotional as any)?.title || 'Daily Devotional'}
-                      className="w-20 h-20 rounded-lg object-cover"
+                      className="w-20 h-20 rounded-none object-cover border-2 border-black"
                     />
                   </div>
                   
                   {/* Title and Verse */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-black text-base mb-1" data-testid="text-devotional-title">
+                    <h3 className="font-black text-black text-base mb-1 uppercase tracking-tight" data-testid="text-devotional-title">
                       {(devotional as any)?.title}
                     </h3>
-                    <p className="text-sm text-black mb-1" data-testid="text-verse">
+                    <p className="text-sm text-black font-bold mb-1" data-testid="text-verse">
                       {(devotional as any)?.verseReference}
                     </p>
-                    <p className="text-xs text-black">
+                    <p className="text-xs text-black/70 font-medium">
                       {formatLocalDate(new Date(), { 
                         weekday: 'long', 
                         month: 'long', 
@@ -531,28 +531,28 @@ export default function Home() {
             {/* Recommended Studies */}
             {recommendedStudies.length > 0 && (
               <>
-                <h3 className="text-md font-semibold text-white mb-3">Recommended for You</h3>
-                <p className="text-xs text-white mb-4">{completedCount > 0 ? "Continue your Faith journey" : "Based on your interests"}</p>
+                <h3 className="text-md font-black text-white mb-3 uppercase tracking-tight">Recommended for You</h3>
+                <p className="text-xs text-white/80 mb-4 font-medium">{completedCount > 0 ? "Continue your Faith journey" : "Based on your interests"}</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
-                    <Card key={study.id} className="border border-ministry-charcoal hover:shadow-sm transition-shadow bg-ministry-gold-exact">
+                    <Card key={study.id} className="border-2 border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all bg-ministry-gold-exact rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
-                            <h4 className="font-medium text-ministry-charcoal text-sm mb-1">{study.title}</h4>
-                            <p className="text-xs text-ministry-slate mb-2 line-clamp-2">{study.description}</p>
-                            <div className="flex items-center space-x-3 text-xs text-ministry-slate mb-2">
+                            <h4 className="font-black text-black text-sm mb-1 uppercase tracking-tight">{study.title}</h4>
+                            <p className="text-xs text-black/70 mb-2 line-clamp-2">{study.description}</p>
+                            <div className="flex items-center space-x-3 text-xs text-black/60 mb-2 font-medium">
                               <span>{study.estimatedHours}h study</span>
                               <span className="capitalize">{study.difficulty}</span>
                             </div>
                             <div className="flex items-center space-x-1">
                               {renderStars(study.rating || 0)}
-                              <span className="text-xs text-ministry-slate ml-1">({study.rating || 0})</span>
+                              <span className="text-xs text-black/60 ml-1">({study.rating || 0})</span>
                             </div>
                           </div>
                           <Button 
                             size="sm"
-                            className="bg-card text-foreground hover:bg-muted border border-ministry-charcoal ml-3"
+                            className="bg-black text-white hover:bg-gray-900 rounded-none font-black uppercase tracking-wide text-xs border-2 border-black ml-3"
                             onClick={() => window.location.href = `/studies/${study.id}`}
                           >
                             Start
@@ -570,19 +570,19 @@ export default function Home() {
 
       {/* Quick Access */}
       <div className="px-6 mb-6">
-        <h2 className="text-lg font-bold text-white mb-4">POPULAR</h2>
+        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Popular</h2>
         
-        <div>
+        <div className="space-y-2">
           <Button 
             variant="outline"
-            className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group mb-2"
+            className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
             data-testid="button-current-challenge"
             onClick={() => setShowChallengeDialog(true)}
           >
             <div className="h-full w-16 bg-black flex items-center justify-center flex-shrink-0">
               <Target className="w-6 h-6 text-white" />
             </div>
-            <span className="flex-1 font-bold text-base text-black text-left px-4">Weekly Challenge</span>
+            <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide">Weekly Challenge</span>
             <div className="pr-4">
               <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -590,16 +590,16 @@ export default function Home() {
             </div>
           </Button>
 
-          <Link href="/videos" className="block mb-2">
+          <Link href="/videos" className="block">
             <Button 
               variant="outline"
-              className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
+              className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
               data-testid="button-watch-videos"
             >
               <div className="h-full w-16 bg-black flex items-center justify-center flex-shrink-0">
                 <Play className="w-6 h-6 text-white" />
               </div>
-              <span className="flex-1 font-bold text-base text-black text-left px-4">Watch Videos</span>
+              <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide">Watch Videos</span>
               <div className="pr-4">
                 <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -608,16 +608,16 @@ export default function Home() {
             </Button>
           </Link>
           
-          <Link href="/hurdle-wall" className="block mb-2">
+          <Link href="/hurdle-wall" className="block">
             <Button 
               variant="outline"
-              className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
+              className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
               data-testid="button-hurdle-wall"
             >
               <div className="h-full w-16 bg-black flex items-center justify-center flex-shrink-0">
                 <Shield className="w-6 h-6 text-white" />
               </div>
-              <span className="flex-1 font-bold text-base text-black text-left px-4">War Room</span>
+              <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide">War Room</span>
               <div className="pr-4">
                 <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -626,16 +626,16 @@ export default function Home() {
             </Button>
           </Link>
 
-          <Link href="/community" className="block mb-2">
+          <Link href="/community" className="block">
             <Button 
               variant="outline"
-              className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
+              className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
               data-testid="button-join-discussion"
             >
               <div className="h-full w-16 bg-black flex items-center justify-center flex-shrink-0">
                 <MessageSquare className="w-6 h-6 text-white" />
               </div>
-              <span className="flex-1 font-bold text-base text-black text-left px-4">Join Discussion</span>
+              <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide">Join Discussion</span>
               <div className="pr-4">
                 <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -646,7 +646,7 @@ export default function Home() {
 
           <Button 
             variant="outline"
-            className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group mb-2"
+            className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
             data-testid="button-prayer-time"
             onClick={() => isPraying ? endPrayerTime() : setShowPrayerDialog(true)}
           >
@@ -657,7 +657,7 @@ export default function Home() {
                 <Clock className="w-6 h-6 text-white" />
               )}
             </div>
-            <span className="flex-1 font-bold text-base text-black text-left px-4">
+            <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide">
               {isPraying ? formatTime(prayerTimeLeft) : 'Prayer Time'}
             </span>
             <div className="pr-4">
@@ -669,14 +669,14 @@ export default function Home() {
 
           <Button 
             variant="outline"
-            className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 border-0 p-0 overflow-hidden group"
+            className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
             data-testid="button-track-progress"
             onClick={() => setShowProgressDialog(true)}
           >
             <div className="h-full w-16 bg-black flex items-center justify-center flex-shrink-0">
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
-            <span className="flex-1 font-bold text-base text-black text-left px-4">Track Progress</span>
+            <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide">Track Progress</span>
             <div className="pr-4">
               <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -688,39 +688,39 @@ export default function Home() {
 
       {/* Recent Activity */}
       <div className="px-6 mb-8">
-        <h2 className="text-lg font-bold text-white mb-4">Recent Activity</h2>
+        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Recent Activity</h2>
         
         <div className="space-y-3">
           {completedCount > 0 && (
-            <Card className="border border-ministry-charcoal bg-ministry-gold-exact" data-testid="activity-completed-study">
+            <Card className="border-2 border-black bg-ministry-gold-exact rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="activity-completed-study">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-ministry-steel/20 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-ministry-steel" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 rounded-none bg-black flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-ministry-charcoal">
+                    <p className="text-sm font-black text-black uppercase tracking-wide">
                       Completed {completedCount} {completedCount === 1 ? 'study' : 'studies'}
                     </p>
-                    <p className="text-xs text-ministry-slate">Keep up the great work!</p>
+                    <p className="text-xs text-black/70 font-medium">Keep up the great work!</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           )}
           
-          <Card className="border border-ministry-charcoal bg-ministry-gold-exact" data-testid="activity-streak">
+          <Card className="border-2 border-black bg-ministry-gold-exact rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="activity-streak">
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-ministry-gold-exact flex items-center justify-center">
-                  <svg className="w-5 h-5 text-ministry-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 rounded-none bg-black flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-ministry-charcoal">
+                  <p className="text-sm font-black text-black uppercase tracking-wide">
                     {appOpenStreak}-day streak
                   </p>
                   <p className="text-xs text-ministry-slate">Consecutive days on the app</p>
