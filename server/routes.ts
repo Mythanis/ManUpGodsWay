@@ -7283,6 +7283,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if user can manage members (for UI visibility)
+  app.get('/api/war-groups/:id/can-manage', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groupId = req.params.id;
+      
+      const canManage = await warGroupsService.canUserManageMembers(userId, groupId);
+      res.json({ canManage });
+    } catch (error: any) {
+      console.error('Error checking manage permission:', error);
+      res.status(500).json({ message: error.message || 'Failed to check permission' });
+    }
+  });
+
+  // Get approved members list (for leaders and managers)
+  app.get('/api/war-groups/:id/approved-members', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groupId = req.params.id;
+      
+      const members = await warGroupsService.getApprovedMembers(groupId, userId);
+      res.json(members);
+    } catch (error: any) {
+      console.error('Error fetching approved members:', error);
+      res.status(403).json({ message: error.message || 'Failed to fetch members' });
+    }
+  });
+
+  // Toggle member management permission (leader only)
+  app.post('/api/war-groups/:id/members/:memberId/toggle-manage', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { memberId } = req.params;
+      
+      const updated = await warGroupsService.toggleMemberManagePermission(memberId, userId);
+      res.json(updated);
+    } catch (error: any) {
+      console.error('Error toggling manage permission:', error);
+      res.status(403).json({ message: error.message || 'Failed to toggle permission' });
+    }
+  });
+
   // War Group Discussion Posts (Private Group Board)
   app.get('/api/war-groups/:id/posts', isAuthenticated, async (req: any, res) => {
     try {
