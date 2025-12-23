@@ -79,9 +79,25 @@ export const videos = pgTable("videos", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Study Series - groups related studies together
+export const studySeries = pgTable("study_series", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  thumbnailUrl: varchar("thumbnail_url"),
+  category: varchar("category").notNull().default("general"),
+  requiredTier: varchar("required_tier").default("free"),
+  displayOrder: integer("display_order").default(0),
+  isPublished: boolean("is_published").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Bible studies
 export const studies = pgTable("studies", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  seriesId: varchar("series_id").references(() => studySeries.id, { onDelete: 'set null' }),
+  seriesOrder: integer("series_order").default(0),
   title: varchar("title").notNull(),
   description: text("description"),
   content: text("content"),
@@ -646,11 +662,16 @@ export const fitnessPlanExercisesRelations = relations(fitnessPlanExercises, ({ 
   plan: one(fitnessPlans, { fields: [fitnessPlanExercises.planId], references: [fitnessPlans.id] }),
 }));
 
+export const studySeriesRelations = relations(studySeries, ({ many }) => ({
+  studies: many(studies),
+}));
+
 export const studiesRelations = relations(studies, ({ one, many }) => ({
   progress: many(userProgress),
   ratings: many(studyRatings),
   discussions: many(discussions),
   video: one(videos, { fields: [studies.videoId], references: [videos.id] }),
+  series: one(studySeries, { fields: [studies.seriesId], references: [studySeries.id] }),
 }));
 
 export const discussionsRelations = relations(discussions, ({ one, many }) => ({
@@ -766,6 +787,20 @@ export const insertVideoSchema = createInsertSchema(videos, {
   updatedAt: true 
 });
 
+export const insertStudySeriesSchema = createInsertSchema(studySeries, {
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  thumbnailUrl: z.string().optional(),
+  category: z.string().default("general"),
+  requiredTier: z.enum(["free", "premium", "vip"]).default("free"),
+  displayOrder: z.number().int().default(0),
+  isPublished: z.boolean().default(false),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertStudySchema = createInsertSchema(studies, {
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
@@ -780,6 +815,8 @@ export const insertStudySchema = createInsertSchema(studies, {
   purchaseRequiredTiers: z.array(z.enum(["free", "premium", "vip"])).default([]),
   isPublished: z.boolean().default(false),
   videoId: z.string().optional(),
+  seriesId: z.string().optional(),
+  seriesOrder: z.number().int().default(0),
 }).omit({ 
   id: true, 
   rating: true, 
@@ -975,6 +1012,8 @@ export type User = typeof users.$inferSelect;
 export type Video = typeof videos.$inferSelect;
 export type InsertVideo = z.infer<typeof insertVideoSchema>;
 
+export type StudySeries = typeof studySeries.$inferSelect;
+export type InsertStudySeries = z.infer<typeof insertStudySeriesSchema>;
 export type Study = typeof studies.$inferSelect;
 export type InsertStudy = z.infer<typeof insertStudySchema>;
 export type StudyLesson = typeof studyLessons.$inferSelect;
