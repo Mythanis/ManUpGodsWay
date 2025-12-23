@@ -101,37 +101,42 @@ export default function WarGroups() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-4 space-y-6">
-        {/* My Groups Section */}
-        {myGroups.length > 0 && (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">My Groups</h2>
-            <div className="grid gap-4 md:grid-cols-2">
-              {myGroups.map((group) => (
-                <Link key={group.id} href={`/war-groups/${group.id}`}>
-                  <Card className="bg-ministry-gold-exact border-2 border-black hover:shadow-lg transition-shadow cursor-pointer">
-                    <CardHeader>
-                      <CardTitle className="text-black">{getGroupDisplayName(group)}</CardTitle>
-                      <CardDescription className="flex items-center gap-2 text-black">
-                        <MapPin className="h-4 w-4" />
-                        {group.city}, {group.state}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-black" />
-                          <span className="text-sm text-black font-semibold">{group.memberCount} members</span>
+      {/* My Groups Section - Full Width */}
+      {myGroups.length > 0 && (
+        <div className="px-4 py-3">
+          <h2 className="text-lg font-bold mb-2">My War Group</h2>
+          <div className="space-y-2">
+            {myGroups.map((group) => (
+              <Link key={group.id} href={`/war-groups/${group.id}`}>
+                <Card className="bg-ministry-gold-exact border border-black hover:shadow-md transition-shadow cursor-pointer">
+                  <CardContent className="py-3 px-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-black text-sm">{getGroupDisplayName(group)}</span>
+                          <span className="text-xs text-black/70 flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {group.city}, {group.state}
+                          </span>
                         </div>
-                        <Badge className="bg-black text-white">Member</Badge>
                       </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-black flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {group.memberCount}
+                        </span>
+                        <Badge className="bg-black text-white text-xs py-0.5">Member</Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
           </div>
-        )}
+        </div>
+      )}
+
+      <div className="max-w-4xl mx-auto p-4 space-y-6">
 
         {/* Search Section */}
         <div className="relative z-10">
