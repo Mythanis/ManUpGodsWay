@@ -41,7 +41,7 @@ export default function WarGroups() {
   const [searchTerm, setSearchTerm] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('map');
   const [activeTab, setActiveTab] = useState<'find' | 'about'>('find');
   
   const [debouncedSearch, setDebouncedSearch] = useState("");
