@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import StudyCard from "@/components/study-card";
-import { Search, Star, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Star, Filter } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
@@ -27,63 +27,6 @@ export default function Library() {
   const [lessonsFilter, setLessonsFilter] = useState('all');
   const [videoFilter, setVideoFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  // Check scroll position to show/hide arrows
-  const checkScrollPosition = () => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    
-    setCanScrollLeft(container.scrollLeft > 0);
-    setCanScrollRight(
-      container.scrollLeft < container.scrollWidth - container.clientWidth - 1
-    );
-  };
-
-  // Scroll left
-  const scrollLeft = () => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    container.scrollBy({ left: -200, behavior: 'smooth' });
-  };
-
-  // Scroll right
-  const scrollRight = () => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    container.scrollBy({ left: 200, behavior: 'smooth' });
-  };
-
-  // Add mouse wheel horizontal scroll support
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      // Prevent default vertical scroll
-      e.preventDefault();
-      // Scroll horizontally instead
-      container.scrollLeft += e.deltaY;
-      checkScrollPosition();
-    };
-
-    const handleScroll = () => {
-      checkScrollPosition();
-    };
-
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    container.addEventListener('scroll', handleScroll);
-    
-    // Initial check
-    checkScrollPosition();
-    
-    return () => {
-      container.removeEventListener('wheel', handleWheel);
-      container.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   const { user, isAuthenticated } = useAuth();
 
@@ -171,51 +114,23 @@ export default function Library() {
         </Card>
       </div>
 
-      {/* Categories Filter - Horizontal Scroll */}
-      <div className="px-6 mb-4 relative">
-        {/* Left scroll arrow */}
-        {canScrollLeft && (
-          <button
-            onClick={scrollLeft}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-ministry-gold-exact hover:bg-yellow-400 text-black rounded-full p-2 shadow-lg transition-all"
-            aria-label="Scroll left"
-            data-testid="button-scroll-left"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-        )}
-        
-        {/* Right scroll arrow */}
-        {canScrollRight && (
-          <button
-            onClick={scrollRight}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-ministry-gold-exact hover:bg-yellow-400 text-black rounded-full p-2 shadow-lg transition-all"
-            aria-label="Scroll right"
-            data-testid="button-scroll-right"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        )}
-        
-        <div 
-          ref={scrollContainerRef}
-          className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2"
-        >
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`px-6 py-2 rounded-full text-sm font-semibold whitespace-nowrap flex-shrink-0 snap-start border-2 cursor-pointer transition-colors ${
-                selectedCategory === category.id 
-                  ? 'bg-ministry-gold-exact text-black border-ministry-gold-exact' 
-                  : 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700'
-              }`}
-              data-testid={`button-category-${category.id}`}
-            >
-              {category.label}
-            </button>
-          ))}
-        </div>
+      {/* Categories Filter - Dropdown */}
+      <div className="px-6 mb-4">
+        <label className="text-xs font-medium text-gray-400 mb-1 block">
+          Category
+        </label>
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-full md:w-64 bg-gray-800 border-gray-700 text-white" data-testid="select-category">
+            <SelectValue placeholder="Select a category" />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map((category) => (
+              <SelectItem key={category.id} value={category.id} data-testid={`option-category-${category.id}`}>
+                {category.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Additional Filters */}
