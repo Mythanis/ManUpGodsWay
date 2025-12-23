@@ -41,7 +41,7 @@ export default function MoreManUp() {
       <div className="bg-black text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
         <div className="max-w-md mx-auto">
           <h1 className="text-4xl font-black tracking-tighter uppercase">
-            More Man Up
+            More <span className="text-ministry-gold-exact">Man Up</span>
           </h1>
           <p className="text-ministry-gold-exact text-sm font-bold uppercase tracking-wide">
             Connect With Us Across All Platforms
