@@ -296,11 +296,11 @@ export default function Podcasts() {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-4 h-4 ${
+        className={`w-5 h-5 ${
           i < rating 
-            ? 'fill-current text-black' 
-            : 'text-black'
-        } ${interactive ? 'cursor-pointer hover:text-black' : ''}`}
+            ? 'fill-yellow-400 text-yellow-400' 
+            : 'text-gray-400'
+        } ${interactive ? 'cursor-pointer hover:fill-yellow-300 hover:text-yellow-300' : ''}`}
         onClick={interactive && onRatingSelect ? () => onRatingSelect(i + 1) : undefined}
       />
     ));
@@ -334,39 +334,40 @@ export default function Podcasts() {
     return (
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="w-full text-xs px-2 py-1 h-auto">
+          <Button variant="outline" size="sm" className="w-full text-xs px-2 py-1 h-auto bg-black text-white hover:bg-gray-900 rounded-none border-2 border-black font-black uppercase tracking-wide">
             <Star className="w-3 h-3 mr-1" />
             Rate
           </Button>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <DialogHeader>
-            <DialogTitle>Rate "{podcast.title}"</DialogTitle>
+            <DialogTitle className="font-black uppercase tracking-tight">Rate "{podcast.title}"</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Rating</label>
-              <div className="flex space-x-1 mt-2">
+              <label className="text-sm font-black uppercase tracking-wide">Rating</label>
+              <div className="flex space-x-2 mt-3 p-4 bg-ministry-gold-exact border-2 border-black rounded-none">
                 {renderStars(rating, true, setRating)}
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium">Review (Optional)</label>
+              <label className="text-sm font-black uppercase tracking-wide">Review (Optional)</label>
               <Textarea
                 value={review}
                 onChange={(e) => setReview(e.target.value)}
                 placeholder="Share your thoughts about this podcast..."
-                className="mt-2"
+                className="mt-2 rounded-none border-2 border-black"
                 rows={3}
               />
             </div>
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowDialog(false)}>
+              <Button variant="outline" onClick={() => setShowDialog(false)} className="rounded-none border-2 border-black font-black uppercase tracking-wide">
                 Cancel
               </Button>
               <Button 
                 onClick={handleSubmit}
                 disabled={ratePodcastMutation.isPending}
+                className="bg-black text-white hover:bg-gray-900 rounded-none border-2 border-black font-black uppercase tracking-wide"
               >
                 Submit Rating
               </Button>
@@ -478,13 +479,13 @@ export default function Podcasts() {
                         <img
                           src={getDefaultThumbnail(podcast.thumbnailUrl)}
                           alt={podcast.title}
-                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
+                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-none object-cover border-2 border-black"
                         />
                       ) : (
                         <img
                           src={getDefaultThumbnail(podcast.thumbnailUrl)}
                           alt={podcast.title}
-                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
+                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-none object-cover border-2 border-black"
                         />
                       )}
                     </div>
@@ -493,11 +494,11 @@ export default function Podcasts() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1 min-w-0 pr-2">
-                          <h3 className="font-semibold text-base sm:text-lg text-ministry-charcoal mb-1 truncate">
+                          <h3 className="font-black text-base sm:text-lg text-black mb-1 truncate uppercase tracking-tight">
                             {podcast.title}
                           </h3>
-                          <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-ministry-slate mb-2">
-                            <Badge variant="outline" className="text-xs text-black">
+                          <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-black/70 mb-2">
+                            <Badge variant="outline" className="text-xs text-black rounded-none border-2 border-black font-bold uppercase">
                               {podcast.type === 'audio' ? 'Audio' : 'Video'}
                             </Badge>
                             {podcast.isLive && (
@@ -518,7 +519,7 @@ export default function Podcasts() {
                           {podcast.isLive ? (
                             <Button
                               onClick={() => window.open(podcast.liveUrl, '_blank')}
-                              className="bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm px-2 sm:px-4"
+                              className="bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm px-2 sm:px-4 rounded-none border-2 border-black font-black uppercase"
                               size="sm"
                             >
                               <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
@@ -527,7 +528,7 @@ export default function Podcasts() {
                           ) : (
                             <Button
                               onClick={() => handlePlayPause(podcast)}
-                              className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                              className="bg-black hover:bg-gray-900 text-white rounded-none border-2 border-black"
                               size="sm"
                             >
                               {currentlyPlaying === podcast.id ? (
@@ -541,7 +542,7 @@ export default function Podcasts() {
                       </div>
 
                       {podcast.description && (
-                        <p className="text-ministry-slate text-sm mb-3 overflow-hidden" 
+                        <p className="text-black/70 text-sm mb-3 overflow-hidden font-medium" 
                            style={{
                              display: '-webkit-box',
                              WebkitLineClamp: 2,
@@ -554,10 +555,10 @@ export default function Podcasts() {
 
                       {/* Stats and Actions */}
                       <div className="flex flex-col gap-3">
-                        <div className="flex items-center space-x-3 text-xs sm:text-sm text-ministry-slate">
+                        <div className="flex items-center space-x-3 text-xs sm:text-sm text-black/70 font-bold">
                           <div className="flex items-center">
                             {renderStars(Math.round(parseFloat(podcast.rating)))}
-                            <span className="ml-1">
+                            <span className="ml-2">
                               {parseFloat(podcast.rating).toFixed(1)} ({podcast.ratingCount})
                             </span>
                           </div>
