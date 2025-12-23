@@ -249,8 +249,20 @@ export class WarGroupsService {
     return newMembership[0];
   }
 
-  async approveMemberRequest(membershipId: string, leaderId: string) {
-    // Verify leader has permission
+  async canUserManageMembers(userId: string, groupId: string): Promise<boolean> {
+    const group = await this.getGroupById(groupId);
+    if (!group) return false;
+    
+    // Leader always has permission
+    if (group.leaderId === userId) return true;
+    
+    // Check if user has canManageMembers permission
+    const membership = await this.getUserGroupMembership(userId, groupId);
+    return membership?.canManageMembers === true && membership?.status === 'approved';
+  }
+
+  async approveMemberRequest(membershipId: string, managerId: string) {
+    // Verify manager has permission
     const membership = await db.select()
       .from(schema.warGroupMembers)
       .where(eq(schema.warGroupMembers.id, membershipId))
@@ -260,9 +272,9 @@ export class WarGroupsService {
       throw new Error('Membership request not found');
     }
     
-    const group = await this.getGroupById(membership[0].groupId);
-    if (!group || group.leaderId !== leaderId) {
-      throw new Error('Only the group leader can approve members');
+    const canManage = await this.canUserManageMembers(managerId, membership[0].groupId);
+    if (!canManage) {
+      throw new Error('You do not have permission to approve members');
     }
     
     const updated = await db.update(schema.warGroupMembers)
@@ -283,7 +295,7 @@ export class WarGroupsService {
     return updated[0];
   }
 
-  async rejectMemberRequest(membershipId: string, leaderId: string) {
+  async rejectMemberRequest(membershipId: string, managerId: string) {
     const membership = await db.select()
       .from(schema.warGroupMembers)
       .where(eq(schema.warGroupMembers.id, membershipId))
@@ -293,19 +305,19 @@ export class WarGroupsService {
       throw new Error('Membership request not found');
     }
     
-    const group = await this.getGroupById(membership[0].groupId);
-    if (!group || group.leaderId !== leaderId) {
-      throw new Error('Only the group leader can reject members');
+    const canManage = await this.canUserManageMembers(managerId, membership[0].groupId);
+    if (!canManage) {
+      throw new Error('You do not have permission to reject members');
     }
     
     await db.delete(schema.warGroupMembers)
       .where(eq(schema.warGroupMembers.id, membershipId));
   }
 
-  async getPendingMemberRequests(groupId: string, leaderId: string) {
-    const group = await this.getGroupById(groupId);
-    if (!group || group.leaderId !== leaderId) {
-      throw new Error('Only the group leader can view pending requests');
+  async getPendingMemberRequests(groupId: string, managerId: string) {
+    const canManage = await this.canUserManageMembers(managerId, groupId);
+    if (!canManage) {
+      throw new Error('You do not have permission to view pending requests');
     }
     
     const results = await db.select({
@@ -331,7 +343,7 @@ export class WarGroupsService {
     }));
   }
 
-  async removeMember(membershipId: string, leaderId: string) {
+  async removeMember(membershipId: string, managerId: string) {
     const membership = await db.select()
       .from(schema.warGroupMembers)
       .where(eq(schema.warGroupMembers.id, membershipId))
@@ -341,9 +353,15 @@ export class WarGroupsService {
       throw new Error('Membership not found');
     }
     
+    const canManage = await this.canUserManageMembers(managerId, membership[0].groupId);
+    if (!canManage) {
+      throw new Error('You do not have permission to remove members');
+    }
+    
+    // Don't allow removing the leader
     const group = await this.getGroupById(membership[0].groupId);
-    if (!group || group.leaderId !== leaderId) {
-      throw new Error('Only the group leader can remove members');
+    if (group && membership[0].userId === group.leaderId) {
+      throw new Error('Cannot remove the group leader');
     }
     
     await db.delete(schema.warGroupMembers)
@@ -357,6 +375,68 @@ export class WarGroupsService {
         })
         .where(eq(schema.warGroups.id, membership[0].groupId));
     }
+  }
+
+  async getApprovedMembers(groupId: string, managerId: string) {
+    const canManage = await this.canUserManageMembers(managerId, groupId);
+    if (!canManage) {
+      throw new Error('You do not have permission to view members');
+    }
+    
+    const results = await db.select({
+      membership: schema.warGroupMembers,
+      user: {
+        id: schema.users.id,
+        firstName: schema.users.firstName,
+        lastName: schema.users.lastName,
+        profileImageUrl: schema.users.profileImageUrl,
+        email: schema.users.email,
+      }
+    })
+    .from(schema.warGroupMembers)
+    .leftJoin(schema.users, eq(schema.warGroupMembers.userId, schema.users.id))
+    .where(and(
+      eq(schema.warGroupMembers.groupId, groupId),
+      eq(schema.warGroupMembers.status, 'approved')
+    ));
+    
+    return results.map(r => ({
+      ...r.membership,
+      user: r.user
+    }));
+  }
+
+  async toggleMemberManagePermission(membershipId: string, leaderId: string) {
+    // Only the leader can assign management permissions
+    const membership = await db.select()
+      .from(schema.warGroupMembers)
+      .where(eq(schema.warGroupMembers.id, membershipId))
+      .limit(1);
+    
+    if (!membership.length) {
+      throw new Error('Membership not found');
+    }
+    
+    const group = await this.getGroupById(membership[0].groupId);
+    if (!group || group.leaderId !== leaderId) {
+      throw new Error('Only the group leader can assign management permissions');
+    }
+    
+    // Don't allow toggling for the leader themselves
+    if (membership[0].userId === leaderId) {
+      throw new Error('Cannot modify leader permissions');
+    }
+    
+    const newValue = !membership[0].canManageMembers;
+    const updated = await db.update(schema.warGroupMembers)
+      .set({
+        canManageMembers: newValue,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.warGroupMembers.id, membershipId))
+      .returning();
+    
+    return updated[0];
   }
 
   async createGroup(groupData: InsertWarGroup) {

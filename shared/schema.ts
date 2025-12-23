@@ -1593,6 +1593,7 @@ export const warGroupMembers = pgTable("war_group_members", {
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   status: varchar("status").default("pending"), // pending, approved, rejected
   role: varchar("role").default("member"), // member, leader (co-leader)
+  canManageMembers: boolean("can_manage_members").default(false), // Can view members, approve requests, remove members
   joinedAt: timestamp("joined_at"),
   requestedAt: timestamp("requested_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
