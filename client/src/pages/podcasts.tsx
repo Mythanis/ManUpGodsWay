@@ -298,9 +298,9 @@ export default function Podcasts() {
         key={i}
         className={`w-5 h-5 ${
           i < rating 
-            ? 'fill-yellow-400 text-yellow-400' 
+            ? 'fill-black text-black' 
             : 'text-gray-400'
-        } ${interactive ? 'cursor-pointer hover:fill-yellow-300 hover:text-yellow-300' : ''}`}
+        } ${interactive ? 'cursor-pointer hover:fill-gray-700 hover:text-gray-700' : ''}`}
         onClick={interactive && onRatingSelect ? () => onRatingSelect(i + 1) : undefined}
       />
     ));
