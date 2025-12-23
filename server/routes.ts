@@ -7151,11 +7151,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // War Groups routes
   app.get('/api/war-groups', async (req, res) => {
     try {
-      const { search, city, state } = req.query;
+      const { search, city, state, distance } = req.query;
       const groups = await warGroupsService.getAllGroups(
         search as string | undefined,
         city as string | undefined,
-        state as string | undefined
+        state as string | undefined,
+        distance ? parseInt(distance as string, 10) : undefined
       );
       res.json(groups);
     } catch (error) {

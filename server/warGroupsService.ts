@@ -65,7 +65,20 @@ export async function geocodeLocation(city: string, state: string): Promise<{ la
 
 export class WarGroupsService {
   
-  async getAllGroups(search?: string, city?: string, state?: string) {
+  // Calculate distance between two points using Haversine formula (returns miles)
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 3959; // Earth's radius in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+  
+  async getAllGroups(search?: string, city?: string, state?: string, distance?: number) {
     let query = db.select({
       group: schema.warGroups,
       leader: {
@@ -96,13 +109,43 @@ export class WarGroupsService {
       );
     }
     
-    if (city) {
+    // If city is provided with distance, do distance-based filtering
+    if (city && distance !== undefined && distance > 0) {
+      // Get coordinates for the search city
+      const searchState = state || 'USA';
+      const searchCoords = await geocodeLocation(city, searchState);
+      
+      if (searchCoords) {
+        // Filter groups within the specified distance
+        filteredResults = filteredResults.filter(r => {
+          // If group has coordinates, calculate distance
+          if (r.group.latitude && r.group.longitude) {
+            const dist = this.calculateDistance(
+              searchCoords.lat,
+              searchCoords.lng,
+              r.group.latitude,
+              r.group.longitude
+            );
+            return dist <= distance;
+          }
+          // If no coordinates, fall back to exact city match
+          return r.group.city.toLowerCase() === city.toLowerCase();
+        });
+      } else {
+        // Fallback to exact city match if geocoding fails
+        filteredResults = filteredResults.filter(r => 
+          r.group.city.toLowerCase() === city.toLowerCase()
+        );
+      }
+    } else if (city) {
+      // No distance specified, do exact city match
       filteredResults = filteredResults.filter(r => 
         r.group.city.toLowerCase() === city.toLowerCase()
       );
     }
     
-    if (state) {
+    if (state && !city) {
+      // Only filter by state if no city is provided (city search already handles state)
       filteredResults = filteredResults.filter(r => 
         r.group.state.toLowerCase() === state.toLowerCase()
       );

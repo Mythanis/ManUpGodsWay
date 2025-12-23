@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { Search, MapPin, Users, User, Map, List, Mail, Plus, Shield, BookOpen, Award, Headphones, CheckCircle, ShoppingBag } from "lucide-react";
 
 const WarGroupsMap = lazy(() => import("@/components/WarGroupsMap"));
@@ -41,12 +42,14 @@ export default function WarGroups() {
   const [searchTerm, setSearchTerm] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
+  const [distanceFilter, setDistanceFilter] = useState(25);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('map');
   const [activeTab, setActiveTab] = useState<'find' | 'about'>('find');
   
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [debouncedCity, setDebouncedCity] = useState("");
   const [debouncedState, setDebouncedState] = useState("");
+  const [debouncedDistance, setDebouncedDistance] = useState(25);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -57,17 +60,19 @@ export default function WarGroups() {
       setDebouncedSearch(searchTerm);
       setDebouncedCity(cityFilter);
       setDebouncedState(stateFilter);
+      setDebouncedDistance(distanceFilter);
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchTerm, cityFilter, stateFilter]);
+  }, [searchTerm, cityFilter, stateFilter, distanceFilter]);
 
   const { data: groups = [], isLoading, isFetching } = useQuery<WarGroup[]>({
-    queryKey: ['/api/war-groups', { search: debouncedSearch, city: debouncedCity, state: debouncedState }],
+    queryKey: ['/api/war-groups', { search: debouncedSearch, city: debouncedCity, state: debouncedState, distance: debouncedDistance }],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append('search', debouncedSearch);
       if (debouncedCity) params.append('city', debouncedCity);
       if (debouncedState) params.append('state', debouncedState);
+      if (debouncedCity) params.append('distance', debouncedDistance.toString());
       
       const queryString = params.toString();
       const url = queryString ? `/api/war-groups?${queryString}` : '/api/war-groups';
@@ -314,6 +319,30 @@ export default function WarGroups() {
                     className="bg-white text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide border-2 border-black rounded-none font-medium"
                     data-testid="input-filter-state"
                   />
+                </div>
+                <div className="bg-black p-4 border-2 border-black">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-white font-black text-xs uppercase tracking-wide">
+                      Search Distance
+                    </label>
+                    <span className="bg-ministry-gold-exact text-black px-3 py-1 font-black text-sm" data-testid="text-distance-value">
+                      {distanceFilter} miles
+                    </span>
+                  </div>
+                  <Slider
+                    value={[distanceFilter]}
+                    onValueChange={(value) => setDistanceFilter(value[0])}
+                    min={0}
+                    max={100}
+                    step={5}
+                    className="w-full"
+                    data-testid="slider-distance"
+                  />
+                  <div className="flex justify-between mt-2 text-white/60 text-xs font-bold uppercase">
+                    <span>0 mi</span>
+                    <span>50 mi</span>
+                    <span>100 mi</span>
+                  </div>
                 </div>
                 {isFetching && (
                   <p className="text-xs text-black text-center font-bold tracking-wide uppercase">Searching...</p>
