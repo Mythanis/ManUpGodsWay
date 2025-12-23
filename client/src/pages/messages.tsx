@@ -618,27 +618,27 @@ export default function Messages() {
 
           <div className="px-6 py-4">
             {conversations.length === 0 ? (
-              <div className="text-center py-8 bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
-                <MessageCircle className="w-12 h-12 text-black mx-auto mb-4" />
-                <p className="text-black font-black uppercase tracking-tighter">No conversations yet</p>
-                <p className="text-sm text-black/70 font-medium">Start a new conversation above</p>
+              <div className="text-center py-8 bg-black border-2 border-ministry-gold-exact/50 rounded-none p-6">
+                <MessageCircle className="w-12 h-12 text-ministry-gold-exact mx-auto mb-4" />
+                <p className="text-white font-black uppercase tracking-tighter">No conversations yet</p>
+                <p className="text-sm text-gray-400 font-medium">Start a new conversation above</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {conversations.map((conversation) => (
                   <Card
                     key={conversation.id}
-                    className="cursor-pointer bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-200"
+                    className="cursor-pointer bg-black border-2 border-ministry-gold-exact/50 hover:border-ministry-gold-exact hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-none"
                     onClick={() => setSelectedConversation(conversation)}
                     data-testid={`conversation-item-${conversation.id}`}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-black text-black truncate uppercase tracking-tighter">
+                          <h3 className="font-black text-white truncate uppercase tracking-tighter">
                             {getConversationTitle(conversation)}
                           </h3>
-                          <p className="text-sm text-black/70 font-medium">
+                          <p className="text-sm text-gray-400 font-medium">
                             {conversation.type === "group" 
                               ? `${conversation.participants?.length || 0} members`
                               : "Direct message"
@@ -646,7 +646,7 @@ export default function Messages() {
                           </p>
                         </div>
                         {conversation.lastMessageAt && (
-                          <p className="text-xs text-black font-bold">
+                          <p className="text-xs text-ministry-gold-exact font-bold">
                             {formatMessageTime(conversation.lastMessageAt)}
                           </p>
                         )}
