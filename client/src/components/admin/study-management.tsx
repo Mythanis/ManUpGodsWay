@@ -70,6 +70,7 @@ interface FormData {
   price: string;
   purchaseRequiredTiers: string[];
   seriesId: string;
+  isPublished: boolean;
 }
 
 export default function StudyManagement() {
@@ -113,6 +114,7 @@ export default function StudyManagement() {
     price: "",
     purchaseRequiredTiers: [],
     seriesId: "",
+    isPublished: false,
   });
 
   // Series management state
@@ -380,6 +382,7 @@ export default function StudyManagement() {
       price: study.price || "",
       purchaseRequiredTiers: study.purchaseRequiredTiers || [],
       seriesId: study.seriesId || "",
+      isPublished: study.isPublished || false,
     });
     setShowEditDialog(true);
   };
@@ -411,6 +414,7 @@ export default function StudyManagement() {
       price: formData.requiresPurchase && formData.price && formData.price.trim() !== '' ? formData.price : undefined,
       purchaseRequiredTiers: formData.requiresPurchase ? formData.purchaseRequiredTiers : [],
       seriesId: formData.seriesId || null,
+      isPublished: formData.isPublished,
     };
 
     updateStudyMutation.mutate({ id: editingStudy.id, updates });
@@ -1699,6 +1703,20 @@ export default function StudyManagement() {
                   )}
                 </div>
               )}
+            </div>
+
+            {/* Publish Toggle */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div>
+                <Label htmlFor="edit-published" className="font-medium">Publish Study</Label>
+                <p className="text-xs text-muted-foreground">Published studies are visible in the library</p>
+              </div>
+              <Switch
+                id="edit-published"
+                checked={formData.isPublished}
+                onCheckedChange={(checked) => setFormData({ ...formData, isPublished: checked })}
+                data-testid="switch-publish-study"
+              />
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
