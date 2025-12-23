@@ -59,30 +59,14 @@ export default function SeriesManagement() {
 
   const { data: seriesList = [], isLoading } = useQuery<StudySeries[]>({
     queryKey: ["/api/study-series"],
-    queryFn: async () => {
-      const res = await fetch("/api/study-series");
-      if (!res.ok) throw new Error("Failed to fetch series");
-      return res.json();
-    },
   });
 
   const { data: allStudies = [] } = useQuery<Study[]>({
     queryKey: ["/api/studies"],
-    queryFn: async () => {
-      const res = await fetch("/api/studies");
-      if (!res.ok) throw new Error("Failed to fetch studies");
-      return res.json();
-    },
   });
 
   const { data: seriesStudies = [] } = useQuery<Study[]>({
     queryKey: ["/api/study-series", assigningSeries?.id, "studies"],
-    queryFn: async () => {
-      if (!assigningSeries) return [];
-      const res = await fetch(`/api/study-series/${assigningSeries.id}/studies`);
-      if (!res.ok) throw new Error("Failed to fetch series studies");
-      return res.json();
-    },
     enabled: !!assigningSeries,
   });
 

@@ -28,8 +28,17 @@ interface Study {
   price?: string;
   purchaseRequiredTiers?: string[];
   totalDays?: number;
+  seriesId?: string | null;
+  seriesOrder?: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+interface StudySeries {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
 }
 
 interface StudyLesson {
@@ -59,6 +68,7 @@ interface FormData {
   requiresPurchase: boolean;
   price: string;
   purchaseRequiredTiers: string[];
+  seriesId: string;
 }
 
 export default function StudyManagement() {
@@ -101,11 +111,18 @@ export default function StudyManagement() {
     requiresPurchase: false,
     price: "",
     purchaseRequiredTiers: [],
+    seriesId: "",
   });
 
   // Fetch all studies
   const { data: studies = [], isLoading, refetch } = useQuery<Study[]>({
     queryKey: ["/api/studies"],
+    retry: false,
+  });
+
+  // Fetch all series for assignment dropdown
+  const { data: allSeries = [] } = useQuery<StudySeries[]>({
+    queryKey: ["/api/study-series"],
     retry: false,
   });
 
@@ -242,6 +259,7 @@ export default function StudyManagement() {
       requiresPurchase: study.requiresPurchase || false,
       price: study.price || "",
       purchaseRequiredTiers: study.purchaseRequiredTiers || [],
+      seriesId: study.seriesId || "",
     });
     setShowEditDialog(true);
   };
@@ -272,9 +290,11 @@ export default function StudyManagement() {
       requiresPurchase: formData.requiresPurchase,
       price: formData.requiresPurchase && formData.price && formData.price.trim() !== '' ? formData.price : undefined,
       purchaseRequiredTiers: formData.requiresPurchase ? formData.purchaseRequiredTiers : [],
+      seriesId: formData.seriesId || null,
     };
 
     updateStudyMutation.mutate({ id: editingStudy.id, updates });
+    queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
   };
 
   const handleDelete = (studyId: string) => {
@@ -775,6 +795,11 @@ export default function StudyManagement() {
                           ${parseFloat(String(study.price)).toFixed(2)}
                         </Badge>
                       )}
+                      {study.seriesId && (
+                        <Badge className="text-xs bg-blue-100 text-blue-800 border border-blue-300">
+                          {allSeries.find(s => s.id === study.seriesId)?.title || 'In Series'}
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-2">
                       {study.description}
@@ -929,6 +954,28 @@ export default function StudyManagement() {
                 placeholder="https://..."
                 data-testid="input-edit-video-url"
               />
+            </div>
+
+            {/* Series Assignment */}
+            <div className="rounded-lg border border-ministry-gold-exact/30 p-4 bg-yellow-50">
+              <Label htmlFor="edit-series" className="text-sm font-medium text-gray-700">Study Series (Optional)</Label>
+              <p className="text-xs text-gray-500 mb-2">Assign this study to a series or leave empty for individual study</p>
+              <Select
+                value={formData.seriesId || "none"}
+                onValueChange={(value) => setFormData({ ...formData, seriesId: value === "none" ? "" : value })}
+              >
+                <SelectTrigger data-testid="select-edit-series">
+                  <SelectValue placeholder="Select a series (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Series (Individual Study)</SelectItem>
+                  {allSeries.map((series) => (
+                    <SelectItem key={series.id} value={series.id}>
+                      {series.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Purchase Options Section - HIGHLY VISIBLE */}
