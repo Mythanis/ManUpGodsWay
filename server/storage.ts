@@ -176,6 +176,7 @@ export interface IStorage {
 
   // Study operations
   getStudies(category?: string, requiredTier?: string, isAdmin?: boolean): Promise<Study[]>;
+  getIndividualStudies(category?: string): Promise<Study[]>;
   getStudy(id: string): Promise<Study | undefined>;
   createStudy(study: InsertStudy, createdByUserId?: string): Promise<Study>;
   updateStudy(id: string, study: Partial<InsertStudy>): Promise<Study>;
@@ -674,6 +675,21 @@ export class DatabaseStorage implements IStorage {
     }
     
     return await query.orderBy(desc(studies.createdAt));
+  }
+
+  async getIndividualStudies(category?: string): Promise<Study[]> {
+    const conditions = [
+      eq(studies.isPublished, true),
+      isNull(studies.seriesId)
+    ];
+    
+    if (category && category !== 'all') {
+      conditions.push(eq(studies.category, category));
+    }
+    
+    return await db.select().from(studies)
+      .where(and(...conditions))
+      .orderBy(desc(studies.createdAt));
   }
 
   async getStudy(id: string): Promise<Study | undefined> {

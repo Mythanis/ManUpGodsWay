@@ -8,14 +8,15 @@ import { Search, BookOpen, ChevronRight, Layers } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
+import StudyCard from "@/components/study-card";
 
 const categories = [
-  { id: 'all', label: 'All Series' },
+  { id: 'all', label: 'All Content' },
   { id: 'leadership', label: 'Leadership' },
   { id: 'marriage', label: 'Marriage' },
   { id: 'fatherhood', label: 'Fatherhood' },
   { id: 'character', label: 'Character' },
-  { id: 'holy-spirit', label: 'Holy Spirit' },
+  { id: 'faith', label: 'Faith' },
 ];
 
 interface StudySeries {
@@ -28,6 +29,16 @@ interface StudySeries {
   totalLessons: number;
 }
 
+interface Study {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  requiredTier: string;
+  thumbnailUrl: string | null;
+  totalDays: number;
+}
+
 export default function Library() {
   const { effectiveTheme } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -35,7 +46,7 @@ export default function Library() {
 
   const { user, isAuthenticated } = useAuth();
 
-  const { data: series = [], isLoading } = useQuery<StudySeries[]>({
+  const { data: series = [], isLoading: seriesLoading } = useQuery<StudySeries[]>({
     queryKey: ["/api/study-series", selectedCategory],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -51,11 +62,44 @@ export default function Library() {
     refetchIntervalInBackground: true,
   });
 
+  const { data: individualStudies = [], isLoading: studiesLoading } = useQuery<Study[]>({
+    queryKey: ["/api/studies", "individual", selectedCategory],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append('individual', 'true');
+      if (selectedCategory && selectedCategory !== 'all') {
+        params.append('category', selectedCategory);
+      }
+      const res = await fetch(`/api/studies?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch studies');
+      return res.json();
+    },
+    retry: false,
+    refetchInterval: 8000,
+    refetchIntervalInBackground: true,
+  });
+
+  const { data: userProgress = [] } = useQuery({
+    queryKey: ["/api/progress"],
+    enabled: isAuthenticated,
+    retry: false,
+  });
+
+  const isLoading = seriesLoading || studiesLoading;
+
   const filteredSeries = series.filter((s) => {
     if (!searchQuery) return true;
     return s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
            s.description.toLowerCase().includes(searchQuery.toLowerCase());
   });
+
+  const filteredStudies = individualStudies.filter((s) => {
+    if (!searchQuery) return true;
+    return s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           s.description.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const hasContent = filteredSeries.length > 0 || filteredStudies.length > 0;
 
   return (
     <div className="pb-20">
@@ -74,7 +118,7 @@ export default function Library() {
             <div className="relative">
               <Input
                 type="text"
-                placeholder="Search series..."
+                placeholder="Search studies..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-gray-800 border-gray-700 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-gray-400 focus:ring-2 focus:ring-ministry-gold-exact focus:bg-gray-800"
@@ -105,72 +149,111 @@ export default function Library() {
         </Select>
       </div>
 
-      {/* Series List */}
-      <div className="px-6 space-y-4">
+      {/* Content */}
+      <div className="px-6 space-y-6">
         {isLoading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold-exact mx-auto mb-4"></div>
-            <p className="text-gray-400">Loading series...</p>
+            <p className="text-gray-400">Loading...</p>
           </div>
-        ) : filteredSeries.length === 0 ? (
-          <div className="text-center py-8" data-testid="empty-series">
+        ) : !hasContent ? (
+          <div className="text-center py-8" data-testid="empty-library">
             <Layers className="w-12 h-12 text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400">
               {searchQuery || selectedCategory !== 'all' 
-                ? 'No series found for your filters.' 
-                : 'No study series available yet.'}
+                ? 'No content found for your filters.' 
+                : 'No studies available yet.'}
             </p>
           </div>
         ) : (
-          filteredSeries.map((s) => (
-            <Link key={s.id} href={`/series/${s.id}`}>
-              <Card 
-                className="bg-black border border-gray-800 hover:border-ministry-gold-exact transition-colors cursor-pointer"
-                data-testid={`series-card-${s.id}`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    {/* Thumbnail or Icon */}
-                    <div className="flex-shrink-0 w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center">
-                      {s.thumbnailUrl ? (
-                        <img 
-                          src={s.thumbnailUrl} 
-                          alt={s.title}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      ) : (
-                        <Layers className="w-8 h-8 text-ministry-gold-exact" />
-                      )}
-                    </div>
+          <>
+            {/* Series Section */}
+            {filteredSeries.length > 0 && (
+              <div>
+                <h2 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-ministry-gold-exact" />
+                  Study Series
+                </h2>
+                <div className="space-y-4">
+                  {filteredSeries.map((s) => (
+                    <Link key={s.id} href={`/series/${s.id}`}>
+                      <Card 
+                        className="bg-black border border-gray-800 hover:border-ministry-gold-exact transition-colors cursor-pointer"
+                        data-testid={`series-card-${s.id}`}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0 w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center">
+                              {s.thumbnailUrl ? (
+                                <img 
+                                  src={s.thumbnailUrl} 
+                                  alt={s.title}
+                                  className="w-full h-full object-cover rounded-lg"
+                                />
+                              ) : (
+                                <Layers className="w-8 h-8 text-ministry-gold-exact" />
+                              )}
+                            </div>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-white font-bold text-lg mb-1 line-clamp-1" data-testid={`text-series-title-${s.id}`}>
-                        {s.title}
-                      </h3>
-                      <p className="text-gray-400 text-sm mb-3 line-clamp-2">
-                        {s.description}
-                      </p>
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <BookOpen className="w-3.5 h-3.5" />
-                          {s.studyCount} {s.studyCount === 1 ? 'Study' : 'Studies'}
-                        </span>
-                        <span>
-                          {s.totalLessons} {s.totalLessons === 1 ? 'Lesson' : 'Lessons'}
-                        </span>
-                      </div>
-                    </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-white font-bold text-lg mb-1 line-clamp-1" data-testid={`text-series-title-${s.id}`}>
+                                {s.title}
+                              </h3>
+                              <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+                                {s.description}
+                              </p>
+                              <div className="flex items-center gap-4 text-xs text-gray-500">
+                                <span className="flex items-center gap-1">
+                                  <BookOpen className="w-3.5 h-3.5" />
+                                  {s.studyCount} {s.studyCount === 1 ? 'Study' : 'Studies'}
+                                </span>
+                                <span>
+                                  {s.totalLessons} {s.totalLessons === 1 ? 'Lesson' : 'Lessons'}
+                                </span>
+                              </div>
+                            </div>
 
-                    {/* Arrow */}
-                    <div className="flex-shrink-0 self-center">
-                      <ChevronRight className="w-5 h-5 text-gray-500" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))
+                            <div className="flex-shrink-0 self-center">
+                              <ChevronRight className="w-5 h-5 text-gray-500" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Individual Studies Section */}
+            {filteredStudies.length > 0 && (
+              <div>
+                <h2 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-ministry-gold-exact" />
+                  Individual Studies
+                </h2>
+                <div className="space-y-4">
+                  {filteredStudies.map((study: any) => {
+                    const progress = (userProgress as any[]).find((p: any) => p.studyId === study.id);
+                    const isCompleted = progress?.isCompleted || false;
+                    const completedAt = progress?.completedAt;
+                    const hasStarted = !!progress && !isCompleted;
+                    
+                    return (
+                      <StudyCard 
+                        key={study.id} 
+                        study={study} 
+                        isCompleted={isCompleted}
+                        completedAt={completedAt}
+                        hasStarted={hasStarted}
+                        data-testid={`study-card-${study.id}`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

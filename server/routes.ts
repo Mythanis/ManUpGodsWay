@@ -446,7 +446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Study routes
   app.get('/api/studies', async (req: any, res) => {
     try {
-      const { category, tier } = req.query;
+      const { category, tier, individual } = req.query;
       
       // Check if user is admin
       let isAdmin = false;
@@ -458,6 +458,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // If there's an error getting user info, continue as non-admin
           console.log("Could not verify admin status:", error);
         }
+      }
+      
+      // If individual=true, only return studies not in any series
+      if (individual === 'true') {
+        const studies = await storage.getIndividualStudies(category as string);
+        return res.json(studies);
       }
       
       const studies = await storage.getStudies(
