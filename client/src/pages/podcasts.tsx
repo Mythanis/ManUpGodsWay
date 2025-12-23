@@ -557,14 +557,14 @@ export default function Podcasts() {
                       <div className="flex flex-col gap-3">
                         <div className="flex items-center space-x-3 text-xs sm:text-sm text-black/70 font-bold">
                           <div className="flex items-center">
-                            {renderStars(Math.round(parseFloat(podcast.rating)))}
+                            {renderStars(Math.round(parseFloat(podcast.rating || '0')))}
                             <span className="ml-2">
-                              {parseFloat(podcast.rating).toFixed(1)} ({podcast.ratingCount})
+                              {parseFloat(podcast.rating || '0').toFixed(1)} ({podcast.ratingCount || 0})
                             </span>
                           </div>
                           <div className="flex items-center">
                             <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                            {podcast.viewCount} views
+                            {podcast.viewCount || 0} views
                           </div>
                         </div>
 
@@ -577,7 +577,7 @@ export default function Podcasts() {
                               variant="outline" 
                               size="sm"
                               onClick={() => handlePodcastView(podcast.id)}
-                              className="text-xs px-2 py-1 h-auto w-full"
+                              className="text-xs px-2 py-1 h-auto w-full bg-ministry-gold-exact hover:bg-yellow-400 text-black rounded-none border-2 border-black font-black uppercase tracking-wide"
                             >
                               <MessageSquare className="w-3 h-3 mr-1" />
                               Reviews
