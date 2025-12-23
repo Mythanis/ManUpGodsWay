@@ -1021,32 +1021,33 @@ export default function StudyManagement() {
 
         <TabsContent value="series" className="space-y-6">
           {allSeries.length === 0 ? (
-            <Card className="bg-gray-50 border-dashed">
+            <Card className="border-gray-200">
               <CardContent className="py-8 text-center">
-                <Layers className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No series created yet.</p>
-                <p className="text-sm text-gray-400">A series groups 2 or more related studies together.</p>
+                <Layers className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No series created yet.</p>
+                <p className="text-sm text-muted-foreground">A series groups 2 or more related studies together.</p>
               </CardContent>
             </Card>
           ) : (
             seriesWithStudies.map((series) => (
-              <Card key={series.id} className="bg-white border-2 border-gray-200" data-testid={`series-card-${series.id}`}>
+              <Card key={series.id} className="border-gray-200" data-testid={`series-card-${series.id}`}>
                 <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-ministry-gold-exact/20 rounded-lg flex items-center justify-center">
+                      <div className="w-10 h-10 bg-ministry-gold-exact/20 rounded-lg flex items-center justify-center flex-shrink-0">
                         <Layers className="w-5 h-5 text-ministry-gold-exact" />
                       </div>
-                      <div>
-                        <CardTitle className="text-lg">{series.title}</CardTitle>
-                        <p className="text-sm text-gray-500">{series.category || 'No category'} • {series.studies.length} studies</p>
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-lg text-foreground">{series.title}</CardTitle>
+                        <p className="text-sm text-muted-foreground">{series.category || 'No category'} • {series.studies.length} studies</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleManageSeriesStudies(series)}
+                        className="bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal border-0"
                         data-testid={`button-manage-series-${series.id}`}
                       >
                         <BookOpen className="w-4 h-4 mr-1" />
@@ -1078,24 +1079,24 @@ export default function StudyManagement() {
                 </CardHeader>
                 <CardContent className="pt-2">
                   {series.description && (
-                    <p className="text-sm text-gray-600 mb-3">{series.description}</p>
+                    <p className="text-sm text-muted-foreground mb-3">{series.description}</p>
                   )}
                   {series.studies.length === 0 ? (
-                    <p className="text-sm text-gray-400 italic">No studies assigned yet. Click "Manage Studies" to add studies.</p>
+                    <p className="text-sm text-muted-foreground italic">No studies assigned yet. Click "Manage Studies" to add studies.</p>
                   ) : (
                     <div className="space-y-2">
                       {series.studies.map((study, index) => (
-                        <div key={study.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <span className="w-6 h-6 bg-ministry-gold-exact text-black text-xs font-bold rounded-full flex items-center justify-center">
+                        <div key={study.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="w-6 h-6 bg-ministry-gold-exact text-black text-xs font-bold rounded-full flex items-center justify-center flex-shrink-0">
                               {index + 1}
                             </span>
-                            <span className="text-sm font-medium">{study.title}</span>
-                            <Badge className={`text-xs ${getTierBadgeColor(study.requiredTier)}`}>
+                            <span className="text-sm font-medium text-foreground truncate">{study.title}</span>
+                            <Badge className={`text-xs flex-shrink-0 ${getTierBadgeColor(study.requiredTier)}`}>
                               {study.requiredTier}
                             </Badge>
                           </div>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 flex-shrink-0">
                             <Button size="sm" variant="ghost" onClick={() => handleEdit(study)}>
                               <Edit className="w-3 h-3" />
                             </Button>
@@ -1120,11 +1121,11 @@ export default function StudyManagement() {
 
         <TabsContent value="individual" className="space-y-4">
           {individualStudies.length === 0 ? (
-            <Card className="bg-gray-50 border-dashed">
+            <Card className="border-gray-200">
               <CardContent className="py-8 text-center">
-                <Book className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No individual studies.</p>
-                <p className="text-sm text-gray-400">All studies are currently part of a series.</p>
+                <Book className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No individual studies.</p>
+                <p className="text-sm text-muted-foreground">All studies are currently part of a series.</p>
               </CardContent>
             </Card>
           ) : (
