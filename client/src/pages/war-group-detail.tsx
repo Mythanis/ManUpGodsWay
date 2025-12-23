@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus, MessageCircle, Pin, Trash2, Send, Pencil, X, Save, Image, Video, Loader2 } from "lucide-react";
+import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus, MessageCircle, Pin, Trash2, Send, Pencil, X, Save, Image, Video, Loader2, Shield, UserMinus, ChevronDown, ChevronUp } from "lucide-react";
 
 // Christian Cross icon component
 function ChristianCross({ className }: { className?: string }) {
@@ -49,6 +49,24 @@ interface GroupMembership {
   userId: string;
   status: string;
   role: string;
+  canManageMembers?: boolean;
+}
+
+interface GroupMember {
+  id: string;
+  groupId: string;
+  userId: string;
+  status: string;
+  role: string;
+  canManageMembers: boolean;
+  joinedAt: string | null;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    profileImageUrl: string | null;
+    email: string;
+  };
 }
 
 interface PendingRequest {
@@ -164,10 +182,23 @@ export default function WarGroupDetail() {
   const isMember = myGroups.some(g => g.id === id);
   const isLeader = group?.leader?.id === membership?.userId;
 
-  // Fetch pending requests (only for leaders)
+  // Check if user can manage members (leader or assigned manager)
+  const { data: canManageData } = useQuery<{ canManage: boolean }>({
+    queryKey: [`/api/war-groups/${id}/can-manage`],
+    enabled: !!id && isMember,
+  });
+  const canManageMembers = canManageData?.canManage || false;
+
+  // Fetch pending requests (for leaders and managers)
   const { data: pendingRequests = [] } = useQuery<PendingRequest[]>({
     queryKey: [`/api/war-groups/${id}/pending-requests`],
-    enabled: !!id && isLeader,
+    enabled: !!id && canManageMembers,
+  });
+
+  // Fetch approved members list (for leaders and managers)
+  const { data: approvedMembers = [] } = useQuery<GroupMember[]>({
+    queryKey: [`/api/war-groups/${id}/approved-members`],
+    enabled: !!id && canManageMembers,
   });
 
   const approveMutation = useMutation({
@@ -211,7 +242,51 @@ export default function WarGroupDetail() {
     },
   });
 
+  const removeMemberMutation = useMutation({
+    mutationFn: async (memberId: string) => {
+      return apiRequest('DELETE', `/api/war-groups/${id}/members/${memberId}`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Member Removed",
+        description: "The member has been removed from the group",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}/approved-members`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove member",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleManagePermissionMutation = useMutation({
+    mutationFn: async (memberId: string) => {
+      return apiRequest('POST', `/api/war-groups/${id}/members/${memberId}/toggle-manage`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Permission Updated",
+        description: "Member management permission has been updated",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}/approved-members`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update permission",
+        variant: "destructive",
+      });
+    },
+  });
+
   const hasPendingRequest = membership?.status === 'pending';
+  
+  // Member Management State
+  const [showMembersSection, setShowMembersSection] = useState(false);
 
   // Discussion Board State
   const [newPostContent, setNewPostContent] = useState("");
@@ -523,8 +598,8 @@ export default function WarGroupDetail() {
           </Card>
         )}
 
-        {/* Pending Requests (Leader Only) */}
-        {isLeader && pendingRequests.length > 0 && (
+        {/* Pending Requests (For Leaders and Managers) */}
+        {canManageMembers && pendingRequests.length > 0 && (
           <Card className="bg-black border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]">
             <CardHeader>
               <CardTitle className="text-ministry-gold-exact flex items-center gap-2 text-xl font-black uppercase tracking-tight">
@@ -533,12 +608,12 @@ export default function WarGroupDetail() {
                 <Badge className="bg-red-500 text-white ml-2 font-bold">{pendingRequests.length}</Badge>
               </CardTitle>
               <CardDescription className="text-white/70 font-medium">
-                Review and approve members who want to join your group
+                Review and approve members who want to join this group
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {pendingRequests.map((request) => (
-                <div key={request.id} className="flex items-center justify-between bg-white/10 rounded-lg p-3">
+                <div key={request.id} className="flex items-center justify-between bg-white/10 rounded-none p-3">
                   <div className="flex items-center gap-3">
                     {request.user.profileImageUrl ? (
                       <img 
@@ -563,7 +638,7 @@ export default function WarGroupDetail() {
                       size="sm"
                       onClick={() => approveMutation.mutate(request.id)}
                       disabled={approveMutation.isPending || rejectMutation.isPending}
-                      className="bg-green-600 hover:bg-green-700 text-white"
+                      className="bg-green-600 hover:bg-green-700 text-white rounded-none"
                       data-testid={`button-approve-${request.id}`}
                     >
                       <CheckCircle2 className="h-4 w-4 mr-1" />
@@ -574,7 +649,7 @@ export default function WarGroupDetail() {
                       variant="outline"
                       onClick={() => rejectMutation.mutate(request.id)}
                       disabled={approveMutation.isPending || rejectMutation.isPending}
-                      className="border-red-500 text-red-500 hover:bg-red-500/10"
+                      className="border-red-500 text-red-500 hover:bg-red-500/10 rounded-none"
                       data-testid={`button-reject-${request.id}`}
                     >
                       <XCircle className="h-4 w-4 mr-1" />
@@ -584,6 +659,112 @@ export default function WarGroupDetail() {
                 </div>
               ))}
             </CardContent>
+          </Card>
+        )}
+
+        {/* Members Management Section (For Leaders and Managers) */}
+        {canManageMembers && (
+          <Card className="bg-black border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]">
+            <CardHeader>
+              <div 
+                className="flex items-center justify-between cursor-pointer"
+                onClick={() => setShowMembersSection(!showMembersSection)}
+                data-testid="button-toggle-members"
+              >
+                <CardTitle className="text-ministry-gold-exact flex items-center gap-2 text-xl font-black uppercase tracking-tight">
+                  <Users className="h-5 w-5" />
+                  Group Members
+                  <Badge className="bg-ministry-gold-exact text-black ml-2 font-bold">{approvedMembers.length}</Badge>
+                </CardTitle>
+                {showMembersSection ? (
+                  <ChevronUp className="h-5 w-5 text-ministry-gold-exact" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-ministry-gold-exact" />
+                )}
+              </div>
+              <CardDescription className="text-white/70 font-medium">
+                {isLeader ? 'Manage members and assign management permissions' : 'View and manage group members'}
+              </CardDescription>
+            </CardHeader>
+            {showMembersSection && (
+              <CardContent className="space-y-3">
+                {approvedMembers.map((member) => {
+                  const isMemberLeader = member.userId === group?.leader?.id;
+                  return (
+                    <div key={member.id} className="flex items-center justify-between bg-white/10 rounded-none p-3">
+                      <div className="flex items-center gap-3">
+                        {member.user.profileImageUrl ? (
+                          <img 
+                            src={member.user.profileImageUrl} 
+                            alt={member.user.firstName}
+                            className="h-10 w-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-ministry-gold-exact flex items-center justify-center">
+                            <User className="h-5 w-5 text-black" />
+                          </div>
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-white font-semibold">
+                              {member.user.firstName} {member.user.lastName}
+                            </p>
+                            {isMemberLeader && (
+                              <Badge className="bg-ministry-gold-exact text-black text-xs font-bold">Leader</Badge>
+                            )}
+                            {member.canManageMembers && !isMemberLeader && (
+                              <Badge className="bg-blue-600 text-white text-xs font-bold">
+                                <Shield className="h-3 w-3 mr-1" />
+                                Manager
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-white/60 text-xs">{member.user.email}</p>
+                        </div>
+                      </div>
+                      {!isMemberLeader && (
+                        <div className="flex items-center gap-2">
+                          {isLeader && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => toggleManagePermissionMutation.mutate(member.id)}
+                              disabled={toggleManagePermissionMutation.isPending}
+                              className={member.canManageMembers 
+                                ? "border-blue-500 text-blue-500 hover:bg-blue-500/10 rounded-none"
+                                : "border-white/30 text-white/70 hover:bg-white/10 rounded-none"
+                              }
+                              data-testid={`button-toggle-manage-${member.id}`}
+                            >
+                              <Shield className="h-4 w-4 mr-1" />
+                              {member.canManageMembers ? 'Remove Manager' : 'Make Manager'}
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to remove ${member.user.firstName} ${member.user.lastName} from this group?`)) {
+                                removeMemberMutation.mutate(member.id);
+                              }
+                            }}
+                            disabled={removeMemberMutation.isPending}
+                            className="border-red-500 text-red-500 hover:bg-red-500/10 rounded-none"
+                            data-testid={`button-remove-${member.id}`}
+                          >
+                            <UserMinus className="h-4 w-4 mr-1" />
+                            Remove
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {approvedMembers.length === 0 && (
+                  <p className="text-white/60 text-center py-4">No members yet</p>
+                )}
+              </CardContent>
+            )}
           </Card>
         )}
 
