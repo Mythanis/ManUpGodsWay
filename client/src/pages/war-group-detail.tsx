@@ -343,18 +343,18 @@ export default function WarGroupDetail() {
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
         <div className="max-w-4xl mx-auto">
           <Link href="/war-groups">
-            <Button variant="ghost" className="text-white hover:text-ministry-gold-exact mb-4 -ml-2">
+            <Button variant="ghost" className="text-white hover:text-ministry-gold-exact mb-4 -ml-2 font-semibold uppercase tracking-wide text-xs">
               <ChevronLeft className="h-4 w-4 mr-1" />
               Back to Groups
             </Button>
           </Link>
-          <h1 className="text-4xl font-black mb-2 tracking-tight">{group.name}</h1>
-          <div className="flex items-center gap-4 text-ministry-gold-exact text-sm font-semibold">
-            <div className="flex items-center gap-1">
+          <h1 className="text-5xl lg:text-6xl font-black mb-3 tracking-tight leading-tight">{group.name}</h1>
+          <div className="flex items-center gap-6 text-ministry-gold-exact font-semibold uppercase tracking-widest text-xs">
+            <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
               {group.city}, {group.state}
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               {group.memberCount} members
             </div>
@@ -365,20 +365,20 @@ export default function WarGroupDetail() {
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Join/Status Card */}
         {!isMember && (
-          <Card className="bg-ministry-gold-exact border-2 border-black">
+          <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.15)]">
             <CardContent className="pt-6">
               {hasPendingRequest ? (
                 <div className="text-center">
-                  <Badge className="bg-black text-white mb-4">Pending Request</Badge>
-                  <p className="text-black font-semibold">Your request to join is pending approval from the group leader</p>
+                  <Badge className="bg-ministry-gold-exact text-black font-black uppercase tracking-widest text-xs mb-4">Pending Request</Badge>
+                  <p className="text-white font-semibold">Your request to join is pending approval from the group leader</p>
                 </div>
               ) : (
                 <div className="text-center">
-                  <p className="text-black font-semibold mb-4">Join this war group to connect with local brothers</p>
+                  <p className="text-white font-semibold mb-4">Join this war group to connect with local brothers</p>
                   <Button 
                     onClick={() => joinMutation.mutate()}
                     disabled={joinMutation.isPending}
-                    className="bg-black text-white hover:bg-gray-900"
+                    className="bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90 font-black uppercase tracking-widest text-xs"
                     data-testid="button-join-group"
                   >
                     {joinMutation.isPending ? 'Sending Request...' : 'Request to Join'}
@@ -390,12 +390,12 @@ export default function WarGroupDetail() {
         )}
 
         {isMember && (
-          <Card className="bg-ministry-gold-exact border-2 border-black">
+          <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.15)]">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Badge className="bg-black text-white">{isLeader ? 'Leader' : 'Member'}</Badge>
-                  <p className="text-black font-semibold">You are a {isLeader ? 'leader' : 'member'} of this group</p>
+                  <Badge className="bg-ministry-gold-exact text-black font-black uppercase tracking-widest text-xs">{isLeader ? 'Leader' : 'Member'}</Badge>
+                  <p className="text-white font-semibold">You are a {isLeader ? 'leader' : 'member'} of this group</p>
                 </div>
                 {!isLeader && (
                   <Button
@@ -403,7 +403,7 @@ export default function WarGroupDetail() {
                     size="sm"
                     onClick={() => leaveMutation.mutate()}
                     disabled={leaveMutation.isPending}
-                    className="border-red-600 text-red-600 hover:bg-red-50"
+                    className="border-red-500 text-red-500 hover:bg-red-500/10 font-semibold uppercase tracking-wide text-xs"
                     data-testid="button-leave-group"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
@@ -417,14 +417,14 @@ export default function WarGroupDetail() {
 
         {/* Pending Requests (Leader Only) */}
         {isLeader && pendingRequests.length > 0 && (
-          <Card className="bg-black border-2 border-ministry-gold-exact">
+          <Card className="bg-black border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]">
             <CardHeader>
-              <CardTitle className="text-ministry-gold-exact flex items-center gap-2">
+              <CardTitle className="text-ministry-gold-exact flex items-center gap-2 text-xl font-black uppercase tracking-tight">
                 <UserPlus className="h-5 w-5" />
-                Pending Membership Requests
-                <Badge className="bg-red-500 text-white ml-2">{pendingRequests.length}</Badge>
+                Pending Requests
+                <Badge className="bg-red-500 text-white ml-2 font-bold">{pendingRequests.length}</Badge>
               </CardTitle>
-              <CardDescription className="text-white/70">
+              <CardDescription className="text-white/70 font-medium">
                 Review and approve members who want to join your group
               </CardDescription>
             </CardHeader>
@@ -480,32 +480,32 @@ export default function WarGroupDetail() {
         )}
 
         {/* Group Info */}
-        <Card className="bg-ministry-gold-exact border-2 border-black">
+        <Card className="bg-black border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]">
           <CardHeader>
-            <CardTitle className="text-black">About This Group</CardTitle>
+            <CardTitle className="text-2xl font-black uppercase tracking-tight text-ministry-gold-exact">About This Group</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             {group.description && (
               <div>
-                <p className="text-black">{group.description}</p>
+                <p className="text-white/90 font-medium leading-relaxed">{group.description}</p>
               </div>
             )}
             
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <User className="h-4 w-4 text-black" />
-                <span className="text-black font-bold">Group Leader</span>
+                <User className="h-4 w-4 text-ministry-gold-exact" />
+                <span className="text-ministry-gold-exact font-bold uppercase tracking-widest text-xs">Group Leader</span>
               </div>
-              <p className="text-black">{group.leader.firstName} {group.leader.lastName}</p>
+              <p className="text-white font-semibold text-lg">{group.leader.firstName} {group.leader.lastName}</p>
             </div>
 
             {group.meetingInfo && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-black" />
-                  <span className="text-black font-bold">Meeting Info</span>
+                  <Calendar className="h-4 w-4 text-ministry-gold-exact" />
+                  <span className="text-ministry-gold-exact font-bold uppercase tracking-widest text-xs">Meeting Info</span>
                 </div>
-                <p className="text-black">{group.meetingInfo}</p>
+                <p className="text-white font-semibold text-lg">{group.meetingInfo}</p>
               </div>
             )}
           </CardContent>
@@ -514,20 +514,20 @@ export default function WarGroupDetail() {
         {/* Tabs for Community */}
         {isMember && (
           <Tabs defaultValue="community" className="w-full">
-            <TabsList className="w-full bg-black rounded-lg">
-              <TabsTrigger value="community" className="flex-1 text-white data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black">Community</TabsTrigger>
-              <TabsTrigger value="info" className="flex-1 text-white data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black">Info</TabsTrigger>
+            <TabsList className="w-full bg-black/90 rounded-lg border border-ministry-gold-exact/40">
+              <TabsTrigger value="community" className="flex-1 text-white font-bold uppercase tracking-widest text-xs data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black">Community</TabsTrigger>
+              <TabsTrigger value="info" className="flex-1 text-white font-bold uppercase tracking-widest text-xs data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black">Info</TabsTrigger>
             </TabsList>
 
             <TabsContent value="community" className="mt-4 space-y-4">
               {/* Create Post */}
-              <Card className="bg-black border-2 border-ministry-gold-exact">
+              <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]">
                 <CardContent className="pt-4">
                   <Textarea
-                    placeholder="Share something with your group..."
+                    placeholder="SHARE SOMETHING WITH YOUR GROUP..."
                     value={newPostContent}
                     onChange={(e) => setNewPostContent(e.target.value)}
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50 resize-none"
+                    className="bg-white/10 border-white/20 text-white font-medium placeholder:text-white/40 placeholder:text-xs placeholder:tracking-widest placeholder:uppercase resize-none"
                     rows={3}
                     data-testid="input-new-post"
                   />
@@ -535,7 +535,7 @@ export default function WarGroupDetail() {
                     <Button
                       onClick={() => createPostMutation.mutate()}
                       disabled={!newPostContent.trim() || createPostMutation.isPending}
-                      className="bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90"
+                      className="bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90 font-black uppercase tracking-widest text-xs"
                       data-testid="button-create-post"
                     >
                       <Send className="h-4 w-4 mr-2" />
@@ -585,29 +585,32 @@ export default function WarGroupDetail() {
             </TabsContent>
 
             <TabsContent value="info" className="mt-4">
-              <Card className="bg-ministry-gold-exact border-2 border-black">
-                <CardContent className="pt-6 space-y-4">
+              <Card className="bg-black border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-black uppercase tracking-tight text-ministry-gold-exact">About This Group</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
                   {group.description && (
                     <div>
-                      <p className="text-black">{group.description}</p>
+                      <p className="text-white/90 font-medium leading-relaxed">{group.description}</p>
                     </div>
                   )}
                   
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <User className="h-4 w-4 text-black" />
-                      <span className="text-black font-bold">Group Leader</span>
+                      <User className="h-4 w-4 text-ministry-gold-exact" />
+                      <span className="text-ministry-gold-exact font-bold uppercase tracking-widest text-xs">Group Leader</span>
                     </div>
-                    <p className="text-black">{group.leader.firstName} {group.leader.lastName}</p>
+                    <p className="text-white font-semibold text-lg">{group.leader.firstName} {group.leader.lastName}</p>
                   </div>
 
                   {group.meetingInfo && (
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <Calendar className="h-4 w-4 text-black" />
-                        <span className="text-black font-bold">Meeting Info</span>
+                        <Calendar className="h-4 w-4 text-ministry-gold-exact" />
+                        <span className="text-ministry-gold-exact font-bold uppercase tracking-widest text-xs">Meeting Info</span>
                       </div>
-                      <p className="text-black">{group.meetingInfo}</p>
+                      <p className="text-white font-semibold text-lg">{group.meetingInfo}</p>
                     </div>
                   )}
                 </CardContent>
@@ -661,16 +664,16 @@ function PostCard({
   });
 
   return (
-    <Card className="bg-black border-2 border-ministry-gold-exact" data-testid={`post-${post.id}`}>
-      <CardContent className="pt-4">
+    <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]" data-testid={`post-${post.id}`}>
+      <CardContent className="p-6">
         {/* Post Header */}
-        <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             {post.user?.profileImageUrl ? (
               <img 
                 src={post.user.profileImageUrl} 
                 alt={post.user.firstName || "User"}
-                className="h-10 w-10 rounded-full object-cover"
+                className="h-10 w-10 rounded-full object-cover ring-2 ring-ministry-gold-exact/30"
               />
             ) : (
               <div className="h-10 w-10 rounded-full bg-ministry-gold-exact flex items-center justify-center">
@@ -678,17 +681,17 @@ function PostCard({
               </div>
             )}
             <div>
-              <p className="text-white font-semibold">
+              <p className="text-ministry-gold-exact font-bold uppercase tracking-wide text-sm">
                 {post.user?.firstName} {post.user?.lastName}
               </p>
-              <p className="text-white/50 text-xs">
+              <p className="text-white/50 text-xs font-medium tracking-wide">
                 {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {post.isPinned && (
-              <Badge className="bg-ministry-gold-exact text-black">
+              <Badge className="bg-ministry-gold-exact text-black font-bold uppercase tracking-wide text-xs">
                 <Pin className="h-3 w-3 mr-1" />
                 Pinned
               </Badge>
@@ -719,15 +722,15 @@ function PostCard({
         </div>
 
         {/* Post Content */}
-        <p className="text-white mb-4 whitespace-pre-wrap">{post.content}</p>
+        <p className="text-white/90 font-medium leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
 
         {/* Post Actions */}
-        <div className="flex items-center gap-4 pt-3 border-t border-white/10">
+        <div className="flex items-center gap-4 pt-4 border-t border-white/10">
           <Button
             variant="ghost"
             size="sm"
             onClick={onLike}
-            className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10"
+            className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10 font-semibold uppercase tracking-wide text-xs"
             data-testid={`button-like-${post.id}`}
           >
             <Heart className="h-4 w-4 mr-1" />
@@ -737,7 +740,7 @@ function PostCard({
             variant="ghost"
             size="sm"
             onClick={onToggleReplies}
-            className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10"
+            className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10 font-semibold uppercase tracking-wide text-xs"
             data-testid={`button-replies-${post.id}`}
           >
             <MessageCircle className="h-4 w-4 mr-1" />
@@ -751,17 +754,17 @@ function PostCard({
             {/* Reply Input */}
             <div className="flex gap-2 mb-4">
               <Textarea
-                placeholder="Write a reply..."
+                placeholder="WRITE A REPLY..."
                 value={replyContent}
                 onChange={(e) => onReplyContentChange(e.target.value)}
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/50 resize-none flex-1"
+                className="bg-white/10 border-white/20 text-white font-medium placeholder:text-white/40 placeholder:text-xs placeholder:tracking-widest placeholder:uppercase resize-none flex-1"
                 rows={2}
                 data-testid={`input-reply-${post.id}`}
               />
               <Button
                 onClick={onSubmitReply}
                 disabled={!replyContent.trim() || isSubmittingReply}
-                className="bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90 self-end"
+                className="bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90 self-end font-bold"
                 data-testid={`button-submit-reply-${post.id}`}
               >
                 <Send className="h-4 w-4" />
@@ -786,14 +789,14 @@ function PostCard({
                     )}
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-white font-semibold text-sm">
+                        <span className="text-ministry-gold-exact font-bold uppercase tracking-wide text-xs">
                           {reply.user?.firstName} {reply.user?.lastName}
                         </span>
-                        <span className="text-white/50 text-xs">
+                        <span className="text-white/50 text-xs font-medium tracking-wide">
                           {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
                         </span>
                       </div>
-                      <p className="text-white/80 text-sm mt-1">{reply.content}</p>
+                      <p className="text-white/80 text-sm font-medium leading-relaxed mt-1">{reply.content}</p>
                     </div>
                   </div>
                 ))}
