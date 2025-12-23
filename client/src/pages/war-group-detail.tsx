@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus, Cross, MessageCircle, Pin, Trash2, Send, Pencil, X, Save } from "lucide-react";
+import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus, Cross, MessageCircle, Pin, Trash2, Send, Pencil, X, Save, Image, Video, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
@@ -60,6 +60,8 @@ interface GroupPost {
   userId: string;
   content: string;
   postType: string;
+  mediaUrls: string[] | null;
+  mediaTypes: string[] | null;
   likes: number;
   replyCount: number;
   isPinned: boolean;
@@ -203,6 +205,11 @@ export default function WarGroupDetail() {
   const [newPostContent, setNewPostContent] = useState("");
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   const [replyContent, setReplyContent] = useState<{ [postId: string]: string }>({});
+  
+  // Media upload state
+  const [uploadedMedia, setUploadedMedia] = useState<{ urls: string[]; types: string[] }>({ urls: [], types: [] });
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Edit Group State
   const [isEditing, setIsEditing] = useState(false);
@@ -215,14 +222,73 @@ export default function WarGroupDetail() {
     enabled: !!id && isMember,
   });
 
+  // Handle media file upload
+  const handleMediaUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    setIsUploading(true);
+    const formData = new FormData();
+    Array.from(files).forEach(file => {
+      formData.append('media', file);
+    });
+    
+    try {
+      const response = await fetch(`/api/war-groups/${id}/upload-media`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+      
+      if (!response.ok) throw new Error('Failed to upload media');
+      
+      const result = await response.json();
+      setUploadedMedia({
+        urls: [...uploadedMedia.urls, ...result.mediaUrls],
+        types: [...uploadedMedia.types, ...result.mediaTypes],
+      });
+      toast({
+        title: "Uploaded",
+        description: `${files.length} file(s) uploaded successfully!`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload media. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+  
+  const removeMedia = (index: number) => {
+    setUploadedMedia({
+      urls: uploadedMedia.urls.filter((_, i) => i !== index),
+      types: uploadedMedia.types.filter((_, i) => i !== index),
+    });
+  };
+
   // Create post mutation
   const createPostMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('POST', `/api/war-groups/${id}/posts`, { content: newPostContent, postType: 'discussion' });
+      const postData: any = { 
+        content: newPostContent, 
+        postType: uploadedMedia.urls.length > 0 ? 'media' : 'discussion' 
+      };
+      if (uploadedMedia.urls.length > 0) {
+        postData.mediaUrls = uploadedMedia.urls;
+        postData.mediaTypes = uploadedMedia.types;
+      }
+      return apiRequest('POST', `/api/war-groups/${id}/posts`, postData);
     },
     onSuccess: () => {
       toast({ title: "Posted", description: "Your post has been shared" });
       setNewPostContent("");
+      setUploadedMedia({ urls: [], types: [] });
       queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${id}/posts`] });
     },
     onError: (error: any) => {
@@ -630,10 +696,71 @@ export default function WarGroupDetail() {
                     rows={3}
                     data-testid="input-new-post"
                   />
-                  <div className="flex justify-end mt-3">
+                  
+                  {/* Media Preview */}
+                  {uploadedMedia.urls.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {uploadedMedia.urls.map((url, index) => (
+                        <div key={index} className="relative group">
+                          {uploadedMedia.types[index] === 'video' ? (
+                            <video 
+                              src={url} 
+                              className="w-20 h-20 object-cover rounded-lg border border-white/20"
+                            />
+                          ) : (
+                            <img 
+                              src={url} 
+                              alt={`Upload ${index + 1}`}
+                              className="w-20 h-20 object-cover rounded-lg border border-white/20"
+                            />
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-5 w-5 bg-red-500 hover:bg-red-600 text-white rounded-full p-0"
+                            onClick={() => removeMedia(index)}
+                            data-testid={`button-remove-media-${index}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-center mt-3">
+                    {/* Media Upload Buttons */}
+                    <div className="flex gap-2">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleMediaUpload}
+                        accept="image/*,video/*"
+                        multiple
+                        className="hidden"
+                        data-testid="input-media-file"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10"
+                        data-testid="button-upload-media"
+                      >
+                        {isUploading ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <Image className="h-4 w-4 mr-1" />
+                        )}
+                        Photo/Video
+                      </Button>
+                    </div>
+                    
                     <Button
                       onClick={() => createPostMutation.mutate()}
-                      disabled={!newPostContent.trim() || createPostMutation.isPending}
+                      disabled={(!newPostContent.trim() && uploadedMedia.urls.length === 0) || createPostMutation.isPending || isUploading}
                       className="bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90 font-black uppercase tracking-widest text-xs"
                       data-testid="button-create-post"
                     >
@@ -822,6 +949,32 @@ function PostCard({
 
         {/* Post Content */}
         <p className="text-white/90 font-medium leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
+
+        {/* Media Display */}
+        {post.mediaUrls && post.mediaUrls.length > 0 && (
+          <div className={`grid gap-2 mb-4 ${post.mediaUrls.length === 1 ? 'grid-cols-1' : post.mediaUrls.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
+            {post.mediaUrls.map((url, index) => (
+              <div key={index} className="relative rounded-lg overflow-hidden">
+                {post.mediaTypes?.[index] === 'video' ? (
+                  <video 
+                    src={url} 
+                    controls
+                    className="w-full h-48 object-cover rounded-lg"
+                    data-testid={`video-${post.id}-${index}`}
+                  />
+                ) : (
+                  <img 
+                    src={url} 
+                    alt={`Media ${index + 1}`}
+                    className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => window.open(url, '_blank')}
+                    data-testid={`image-${post.id}-${index}`}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Post Actions */}
         <div className="flex items-center gap-4 pt-4 border-t border-white/10">

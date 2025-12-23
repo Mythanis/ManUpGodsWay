@@ -7081,17 +7081,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const groupId = req.params.id;
-      const { content, postType } = req.body;
+      const { content, postType, mediaUrls, mediaTypes } = req.body;
       
-      if (!content || content.trim().length === 0) {
-        return res.status(400).json({ message: 'Post content is required' });
+      const hasContent = content && content.trim().length > 0;
+      const hasMedia = Array.isArray(mediaUrls) && mediaUrls.length > 0;
+      
+      if (!hasContent && !hasMedia) {
+        return res.status(400).json({ message: 'Post content or media is required' });
       }
       
-      const post = await warGroupsService.createGroupPost(groupId, userId, content, postType);
+      const validatedMediaUrls = hasMedia ? mediaUrls.filter((url: any) => typeof url === 'string') : undefined;
+      const validatedMediaTypes = hasMedia && Array.isArray(mediaTypes) 
+        ? mediaTypes.filter((type: any) => ['image', 'video', 'gif'].includes(type)) 
+        : undefined;
+      
+      const post = await warGroupsService.createGroupPost(
+        groupId, 
+        userId, 
+        content || '', 
+        postType, 
+        validatedMediaUrls, 
+        validatedMediaTypes
+      );
       res.status(201).json(post);
     } catch (error: any) {
       console.error('Error creating group post:', error);
       res.status(403).json({ message: error.message || 'Failed to create group post' });
+    }
+  });
+
+  // War Group media upload endpoint
+  app.post('/api/war-groups/:id/upload-media', isAuthenticated, communityMediaUpload.array('media', 10), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groupId = req.params.id;
+      
+      const membership = await warGroupsService.getUserGroupMembership(userId, groupId);
+      if (!membership || membership.status !== 'approved') {
+        return res.status(403).json({ message: 'Only approved members can upload media' });
+      }
+      
+      const files = req.files as Express.Multer.File[];
+      if (!files || files.length === 0) {
+        return res.status(400).json({ message: "No files uploaded" });
+      }
+
+      const mediaUrls: string[] = [];
+      const mediaTypes: string[] = [];
+
+      for (const file of files) {
+        const url = `/uploads/community/${file.filename}`;
+        mediaUrls.push(url);
+        
+        if (file.mimetype.startsWith('image/')) {
+          if (file.mimetype === 'image/gif') {
+            mediaTypes.push('gif');
+          } else {
+            mediaTypes.push('image');
+          }
+        } else if (file.mimetype.startsWith('video/')) {
+          mediaTypes.push('video');
+        }
+      }
+
+      res.json({ mediaUrls, mediaTypes });
+    } catch (error) {
+      console.error("Error uploading war group media:", error);
+      res.status(500).json({ message: "Failed to upload media" });
     }
   });
 

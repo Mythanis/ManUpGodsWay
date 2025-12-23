@@ -715,7 +715,14 @@ export class WarGroupsService {
     }));
   }
 
-  async createGroupPost(groupId: string, userId: string, content: string, postType = 'discussion') {
+  async createGroupPost(
+    groupId: string, 
+    userId: string, 
+    content: string, 
+    postType = 'discussion',
+    mediaUrls?: string[],
+    mediaTypes?: string[]
+  ) {
     // Verify user is a member
     const membership = await this.getUserGroupMembership(userId, groupId);
     if (!membership || membership.status !== 'approved') {
@@ -726,7 +733,9 @@ export class WarGroupsService {
       groupId,
       userId,
       content,
-      postType,
+      postType: mediaUrls && mediaUrls.length > 0 ? 'media' : postType,
+      mediaUrls: mediaUrls || null,
+      mediaTypes: mediaTypes || null,
     }).returning();
 
     return newPost;
