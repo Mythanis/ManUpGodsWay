@@ -831,32 +831,42 @@ export default function Community() {
         </Dialog>
       </div>
 
-      {/* Discussion Categories */}
+      {/* Discussion Categories Dropdown */}
       <div className="px-6 mb-4">
-        <h2 className="text-sm font-bold text-white mb-2">Popular Topics</h2>
-        
-        <div className="flex flex-wrap gap-2">
-          {allCategories.map((category) => {
-            const Icon = category.icon;
-            return (
-              <Button
-                key={category.id}
-                variant="outline"
-                size="sm"
-                onClick={() => setSelectedCategory(selectedCategory === category.id ? '' : category.id)}
-                className={`h-7 px-3 py-1 rounded-full border-0 transition-all ${
-                  selectedCategory === category.id 
-                    ? 'bg-ministry-gold-exact text-black ring-2 ring-white' 
-                    : 'bg-gray-800 text-gray-300 hover:bg-ministry-gold-exact hover:text-black'
-                }`}
-                data-testid={`button-category-${category.id}`}
-              >
-                <Icon className="w-3 h-3 mr-1" />
-                <span className="text-xs font-medium">{category.label}</span>
-              </Button>
-            );
-          })}
-        </div>
+        <Select 
+          value={selectedCategory} 
+          onValueChange={(value) => setSelectedCategory(value === 'all' ? '' : value)}
+        >
+          <SelectTrigger 
+            className="w-full bg-gray-800 border-gray-700 text-white h-9"
+            data-testid="select-popular-topics"
+          >
+            <div className="flex items-center">
+              <span className="text-gray-400 text-sm mr-2">Topic:</span>
+              <SelectValue placeholder="All Topics" />
+            </div>
+          </SelectTrigger>
+          <SelectContent className="bg-gray-800 border-gray-700">
+            <SelectItem value="all" className="text-white hover:bg-gray-700">
+              All Topics
+            </SelectItem>
+            {allCategories.map((category) => {
+              const Icon = category.icon;
+              return (
+                <SelectItem 
+                  key={category.id} 
+                  value={category.id}
+                  className="text-white hover:bg-gray-700"
+                >
+                  <div className="flex items-center">
+                    <Icon className="w-4 h-4 mr-2 text-ministry-gold-exact" />
+                    {category.label}
+                  </div>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Search Bar */}
