@@ -530,8 +530,8 @@ export default function Community() {
     <div className="pb-20">
       {/* Header */}
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
-        <h1 className="text-4xl font-black mb-2 tracking-tight" data-testid="text-community-title">Community</h1>
-        <p className="text-[#FCD000] text-lg font-bold tracking-tight" data-testid="text-community-subtitle">
+        <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase" data-testid="text-community-title">Community</h1>
+        <p className="text-[#FCD000] text-xs font-bold tracking-widest uppercase" data-testid="text-community-subtitle">
           Iron Sharpens Iron Among Brothers
         </p>
       </div>
@@ -571,26 +571,26 @@ export default function Community() {
 
       {/* Community Stats */}
       <div className={`px-6 ${activeLiveStream ? '' : '-mt-3'} relative z-10 mb-4`}>
-        <Card className="shadow-lg bg-ministry-gold-exact" data-testid="card-stats">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-ministry-gold-exact border-2 border-black rounded-none" data-testid="card-stats">
           <CardContent className="p-4">
             <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text-2xl font-bold text-black" data-testid="text-total-members">
+              <div className="border-r-2 border-black">
+                <p className="text-2xl font-black text-black" data-testid="text-total-members">
                   {stats.totalMembers.toLocaleString()}
                 </p>
-                <p className="text-xs text-black">Members</p>
+                <p className="text-xs text-black font-bold uppercase tracking-wide">Members</p>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-black" data-testid="text-active-today">
+              <div className="border-r-2 border-black">
+                <p className="text-2xl font-black text-black" data-testid="text-active-today">
                   {stats.activeToday}
                 </p>
-                <p className="text-xs text-black">Active Today</p>
+                <p className="text-xs text-black font-bold uppercase tracking-wide">Active</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-black" data-testid="text-new-posts">
+                <p className="text-2xl font-black text-black" data-testid="text-new-posts">
                   {stats.newPosts}
                 </p>
-                <p className="text-xs text-black">New Posts</p>
+                <p className="text-xs text-black font-bold uppercase tracking-wide">Posts</p>
               </div>
             </div>
           </CardContent>
@@ -599,26 +599,26 @@ export default function Community() {
       
       {/* Facebook-style Quick Post Card */}
       <div className="px-6 mb-4">
-        <Card className="shadow-md bg-black border border-gray-700" data-testid="card-quick-post">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] bg-black border-2 border-black rounded-none" data-testid="card-quick-post">
           <CardContent className="p-3">
             <div className="flex items-center gap-3">
               <img 
                 src={(user as any)?.profileImageUrl || `https://ui-avatars.com/api/?name=${(user as any)?.firstName || 'U'}+${(user as any)?.lastName || ''}&background=FCD000&color=000&size=40`}
                 alt="Your avatar"
-                className="w-10 h-10 rounded-full object-cover"
+                className="w-10 h-10 rounded-none object-cover"
               />
               <button
                 onClick={() => setDialogOpen(true)}
-                className="flex-1 text-left px-4 py-2.5 rounded-full bg-gray-800 text-gray-400 hover:bg-gray-700 transition-colors text-sm"
+                className="flex-1 text-left px-4 py-2.5 rounded-none bg-gray-800 text-gray-400 hover:bg-gray-700 transition-colors text-sm font-medium uppercase tracking-wide border border-gray-600"
                 data-testid="button-quick-post"
               >
                 What's on your mind?
               </button>
             </div>
-            <div className="flex justify-between mt-3 pt-3 border-t border-gray-700">
+            <div className="flex justify-between mt-3 pt-3 border-t-2 border-gray-700">
               <button 
                 onClick={() => { setDialogOpen(true); }}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-lg hover:bg-gray-800 transition-colors text-gray-300 text-sm"
+                className="flex items-center gap-2 px-4 py-1.5 rounded-none hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
                 data-testid="button-quick-photo"
               >
                 <Image className="w-5 h-5 text-green-500" />
@@ -626,7 +626,7 @@ export default function Community() {
               </button>
               <button 
                 onClick={() => { setDialogOpen(true); }}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-lg hover:bg-gray-800 transition-colors text-gray-300 text-sm"
+                className="flex items-center gap-2 px-4 py-1.5 rounded-none hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
                 data-testid="button-quick-video"
               >
                 <Video className="w-5 h-5 text-red-500" />
@@ -634,7 +634,7 @@ export default function Community() {
               </button>
               <button 
                 onClick={() => setDialogOpen(true)}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-lg hover:bg-gray-800 transition-colors text-gray-300 text-sm"
+                className="flex items-center gap-2 px-4 py-1.5 rounded-none hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
                 data-testid="button-quick-post-btn"
               >
                 <Plus className="w-5 h-5 text-ministry-gold" />
@@ -648,9 +648,9 @@ export default function Community() {
       {/* Post Dialog */}
       <div className="px-6">
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-md mx-auto bg-black border-2 border-gray-700" data-testid="dialog-new-discussion">
+          <DialogContent className="max-w-md mx-auto bg-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]" data-testid="dialog-new-discussion">
             <DialogHeader>
-              <DialogTitle className="text-white text-xl font-black">Create Post</DialogTitle>
+              <DialogTitle className="text-white text-xl font-black uppercase tracking-tight">Create Post</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form 
@@ -810,7 +810,7 @@ export default function Community() {
                       setDialogOpen(false);
                       setUploadedMedia({ urls: [], types: [] });
                     }}
-                    className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
+                    className="flex-1 border-2 border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white rounded-none font-black uppercase tracking-wide"
                     data-testid="button-cancel-discussion"
                   >
                     Cancel
@@ -818,7 +818,7 @@ export default function Community() {
                   <Button
                     type="submit"
                     disabled={createDiscussion.isPending || isUploading}
-                    className="flex-1 font-semibold"
+                    className="flex-1 font-black uppercase tracking-wide rounded-none border-2 border-black"
                     style={{ backgroundColor: '#FCD000', color: 'black' }}
                     data-testid="button-create-discussion"
                   >
@@ -838,11 +838,11 @@ export default function Community() {
           onValueChange={(value) => setSelectedCategory(value === 'all' ? '' : value)}
         >
           <SelectTrigger 
-            className="w-full bg-gray-800 border-gray-700 text-white h-9"
+            className="w-full bg-ministry-gold-exact border-2 border-black text-black font-bold h-9 rounded-none"
             data-testid="select-popular-topics"
           >
             <div className="flex items-center">
-              <span className="text-gray-400 text-sm mr-2">Topic:</span>
+              <span className="text-black text-xs font-bold uppercase tracking-wide mr-2">Topic:</span>
               <SelectValue placeholder="All Topics" />
             </div>
           </SelectTrigger>
@@ -872,12 +872,12 @@ export default function Community() {
       {/* Search Bar */}
       <div className="px-6 mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-ministry-slate w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black w-5 h-5" />
           <Input
-            placeholder="Search discussions..."
+            placeholder="SEARCH DISCUSSIONS..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10 border-white"
+            className="pl-10 pr-10 border-2 border-black bg-ministry-gold-exact text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide rounded-none font-medium"
           />
           {searchQuery && (
             <Button
@@ -895,13 +895,13 @@ export default function Community() {
       {/* Recent Discussions */}
       <div className="px-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-white">
-            {searchQuery ? `Search Results for "${searchQuery}"` : 'Recent Discussions'}
+          <h2 className="text-lg font-black text-white tracking-tight uppercase">
+            {searchQuery ? `Results: "${searchQuery}"` : 'Recent Discussions'}
           </h2>
           <div className="flex items-center space-x-2">
-            <ArrowUpDown className="w-4 h-4 text-ministry-slate" />
+            <ArrowUpDown className="w-4 h-4 text-ministry-gold" />
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-32 border-white" data-testid="select-sort-by">
+              <SelectTrigger className="w-32 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-none" data-testid="select-sort-by">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
