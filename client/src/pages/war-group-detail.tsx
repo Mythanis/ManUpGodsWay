@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus, Heart, MessageCircle, Pin, Trash2, Send, Pencil, X, Save } from "lucide-react";
+import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus, Cross, MessageCircle, Pin, Trash2, Send, Pencil, X, Save } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
@@ -832,7 +832,7 @@ function PostCard({
             className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10 font-semibold uppercase tracking-wide text-xs"
             data-testid={`button-like-${post.id}`}
           >
-            <Heart className="h-4 w-4 mr-1" />
+            <Cross className="h-4 w-4 mr-1" />
             {post.likes > 0 && post.likes}
           </Button>
           <Button
