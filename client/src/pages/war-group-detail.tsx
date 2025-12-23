@@ -514,9 +514,9 @@ export default function WarGroupDetail() {
         {/* Tabs for Community */}
         {isMember && (
           <Tabs defaultValue="community" className="w-full">
-            <TabsList className="w-full bg-black/90 rounded-lg border border-ministry-gold-exact/40">
-              <TabsTrigger value="community" className="flex-1 text-white font-bold uppercase tracking-widest text-xs data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black">Community</TabsTrigger>
-              <TabsTrigger value="info" className="flex-1 text-white font-bold uppercase tracking-widest text-xs data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black">Info</TabsTrigger>
+            <TabsList className="w-full bg-black rounded-lg border-2 border-ministry-gold-exact">
+              <TabsTrigger value="community" className="flex-1 text-ministry-gold-exact font-bold uppercase tracking-widest text-xs data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black">Community</TabsTrigger>
+              <TabsTrigger value="info" className="flex-1 text-ministry-gold-exact font-bold uppercase tracking-widest text-xs data-[state=active]:bg-ministry-gold-exact data-[state=active]:text-black">Info</TabsTrigger>
             </TabsList>
 
             <TabsContent value="community" className="mt-4 space-y-4">
