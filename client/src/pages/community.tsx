@@ -833,31 +833,26 @@ export default function Community() {
 
       {/* Discussion Categories */}
       <div className="px-6 mb-4">
-        <h2 className="text-base font-bold text-white mb-2">Popular Topics</h2>
+        <h2 className="text-sm font-bold text-white mb-2">Popular Topics</h2>
         
-        <div className="grid grid-cols-3 gap-2">
+        <div className="flex flex-wrap gap-2">
           {allCategories.map((category) => {
             const Icon = category.icon;
             return (
               <Button
                 key={category.id}
                 variant="outline"
+                size="sm"
                 onClick={() => setSelectedCategory(selectedCategory === category.id ? '' : category.id)}
-                className={`h-auto p-2 bg-ministry-gold-exact hover:bg-ministry-gold-exact/30 hover:shadow-md transition-all border-0 ${
-                  selectedCategory === category.id ? 'ring-2 ring-ministry-gold bg-ministry-gold-exact/30' : ''
+                className={`h-7 px-3 py-1 rounded-full border-0 transition-all ${
+                  selectedCategory === category.id 
+                    ? 'bg-ministry-gold-exact text-black ring-2 ring-white' 
+                    : 'bg-gray-800 text-gray-300 hover:bg-ministry-gold-exact hover:text-black'
                 }`}
                 data-testid={`button-category-${category.id}`}
               >
-                <div className="flex flex-col items-center space-y-1 w-full">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    selectedCategory === category.id ? 'bg-ministry-gold' : 'bg-ministry-gold-exact/40'
-                  }`}>
-                    <Icon className="w-4 h-4 text-black" />
-                  </div>
-                  <div className="text-center">
-                    <h3 className="font-semibold text-xs text-black">{category.label}</h3>
-                  </div>
-                </div>
+                <Icon className="w-3 h-3 mr-1" />
+                <span className="text-xs font-medium">{category.label}</span>
               </Button>
             );
           })}
