@@ -49,6 +49,10 @@ export default function WarGroups() {
   const [debouncedState, setDebouncedState] = useState("");
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
       setDebouncedCity(cityFilter);
