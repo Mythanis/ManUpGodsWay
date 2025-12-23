@@ -543,47 +543,45 @@ export default function Admin() {
   }
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 bg-ministry-light-gray min-h-screen">
       {/* Admin Header */}
-      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
-        <h1 className="text-2xl font-bold mb-2" data-testid="text-admin-title">Admin Panel</h1>
-        <p className="text-blue-100 text-sm" data-testid="text-admin-subtitle">
+      <div className="bg-black text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
+        <h1 className="text-4xl font-black tracking-tighter uppercase" data-testid="text-admin-title">
+          Owner <span className="text-ministry-gold-exact">Dashboard</span>
+        </h1>
+        <p className="text-ministry-gold-exact text-sm font-bold uppercase tracking-wide" data-testid="text-admin-subtitle">
           Content & User Management
         </p>
       </div>
 
       {/* Quick Stats */}
-      <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-lg bg-ministry-gold-exact" data-testid="card-admin-stats">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-black" data-testid="text-total-users">
-                  {(stats as any)?.totalUsers || 0}
-                </p>
-                <p className="text-xs text-black">Total Users</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-black" data-testid="text-total-studies">
-                  {(stats as any)?.totalStudies || 0}
-                </p>
-                <p className="text-xs text-black">Studies</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-black" data-testid="text-active-today">
-                  {(stats as any)?.activeToday || 0}
-                </p>
-                <p className="text-xs text-black">Active Today</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-black" data-testid="text-new-posts">
-                  {(stats as any)?.newPosts || 0}
-                </p>
-                <p className="text-xs text-black">New Posts</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="px-6 py-6">
+        <div className="grid grid-cols-2 gap-4" data-testid="card-admin-stats">
+          <div className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 text-center">
+            <p className="text-3xl font-black text-black" data-testid="text-total-users">
+              {(stats as any)?.totalUsers || 0}
+            </p>
+            <p className="text-xs font-bold uppercase tracking-wide text-black">Total Users</p>
+          </div>
+          <div className="bg-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(212,175,55,1)] p-4 text-center">
+            <p className="text-3xl font-black text-ministry-gold-exact" data-testid="text-total-studies">
+              {(stats as any)?.totalStudies || 0}
+            </p>
+            <p className="text-xs font-bold uppercase tracking-wide text-white">Studies</p>
+          </div>
+          <div className="bg-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(212,175,55,1)] p-4 text-center">
+            <p className="text-3xl font-black text-ministry-gold-exact" data-testid="text-active-today">
+              {(stats as any)?.activeToday || 0}
+            </p>
+            <p className="text-xs font-bold uppercase tracking-wide text-white">Active Today</p>
+          </div>
+          <div className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 text-center">
+            <p className="text-3xl font-black text-black" data-testid="text-new-posts">
+              {(stats as any)?.newPosts || 0}
+            </p>
+            <p className="text-xs font-bold uppercase tracking-wide text-black">New Posts</p>
+          </div>
+        </div>
       </div>
 
       {/* Admin Management Tabs */}
@@ -593,7 +591,7 @@ export default function Admin() {
           {canScrollLeft && (
             <button
               onClick={scrollLeft}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-ministry-charcoal text-white rounded-full p-2 shadow-lg hover:bg-ministry-steel transition-colors"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black text-white rounded-none p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(212,175,55,1)]"
               aria-label="Scroll left"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -604,7 +602,7 @@ export default function Admin() {
           {canScrollRight && (
             <button
               onClick={scrollRight}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-ministry-charcoal text-white rounded-full p-2 shadow-lg hover:bg-ministry-steel transition-colors"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black text-white rounded-none p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(212,175,55,1)]"
               aria-label="Scroll right"
             >
               <ChevronRight className="w-5 h-5" />
@@ -617,28 +615,16 @@ export default function Admin() {
           >
           {adminTabs.map((tab) => {
             const IconComponent = tab.icon;
+            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                style={{
-                  backgroundColor: activeTab === tab.id 
-                    ? 'hsl(0 0% 0%)' 
-                    : effectiveTheme === 'dark' 
-                      ? 'hsl(220 8% 26%)' 
-                      : 'hsl(240 1.9608% 90%)',
-                  color: activeTab === tab.id 
-                    ? 'white' 
-                    : effectiveTheme === 'dark' 
-                      ? 'hsl(0 0% 95%)' 
-                      : 'hsl(210 25% 7.8431%)',
-                  borderColor: activeTab === tab.id 
-                    ? 'hsl(49, 100%, 49%)' 
-                    : effectiveTheme === 'dark' 
-                      ? 'hsl(210 5.2632% 14.9020%)' 
-                      : 'hsl(201.4286 30.4348% 90.9804%)'
-                }}
-                className="px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start border cursor-pointer transition-colors flex items-center space-x-2"
+                className={`px-4 py-2 rounded-none text-sm font-bold uppercase tracking-wide whitespace-nowrap flex-shrink-0 snap-start border-2 border-black cursor-pointer transition-all flex items-center space-x-2 ${
+                  isActive 
+                    ? 'bg-ministry-gold-exact text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]' 
+                    : 'bg-black text-white hover:bg-gray-800'
+                }`}
                 data-testid={`tab-${tab.id}`}
               >
                 <IconComponent className="w-4 h-4" />
