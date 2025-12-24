@@ -31,7 +31,8 @@ import AdminWordEditor from "@/pages/admin-word-editor";
 import UserProfile from "@/pages/user-profile";
 import NotificationPreferences from "@/pages/notification-preferences";
 import MoreManUp from "@/pages/more-man-up";
-import Discipleship from "@/pages/discipleship";
+import Blog from "@/pages/blog";
+import BlogDetail from "@/pages/blog-detail";
 import HurdleWall from "@/pages/hurdle-wall";
 import WarGroups from "@/pages/war-groups";
 import WarGroupDetail from "@/pages/war-group-detail";
@@ -123,7 +124,8 @@ function Router() {
             <Route path="/studies/:id/word" component={WordViewer} />
             <Route path="/users/:userId" component={UserProfile} />
             <Route path="/notification-preferences" component={NotificationPreferences} />
-            <Route path="/discipleship" component={Discipleship} />
+            <Route path="/blog" component={Blog} />
+            <Route path="/blog/:slug" component={BlogDetail} />
             <Route path="/hurdle-wall" component={HurdleWall} />
             <Route path="/war-groups" component={WarGroups} />
             <Route path="/war-groups/register" component={WarGroupRegister} />

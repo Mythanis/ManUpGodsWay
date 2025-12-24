@@ -27,11 +27,12 @@ import FitnessManagement from "@/components/admin/fitness-management";
 import EventManagement from "@/components/admin/event-management";
 import TierPricingManagement from "@/components/admin/tier-pricing-management";
 import CarouselManagement from "@/components/admin/carousel-management";
+import BlogManagement from "@/components/admin/blog-management";
 import WarGroupsManagement from "@/components/admin/war-groups-management";
 import WarGroupRegistrationsManagement from "@/components/admin/war-group-registrations-management";
 import LiveStreamManagement from "@/components/admin/live-stream-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio, FileText } from "lucide-react";
 
 interface Study {
   id: string;
@@ -60,6 +61,7 @@ const adminTabs = [
   { id: "videos", label: "Videos", icon: Video },
   { id: "podcasts", label: "Podcasts", icon: Headphones },
   { id: "live-streams", label: "Live", icon: Radio },
+  { id: "blogs", label: "Blogs", icon: FileText },
   { id: "challenges", label: "Challenges", icon: Trophy },
   { id: "carousel", label: "Carousel", icon: ImagePlus },
   { id: "fitness", label: "Fitness", icon: Dumbbell },
@@ -724,6 +726,12 @@ export default function Admin() {
           {activeTab === "challenges" && (
             <div>
               <ChallengeManagement />
+            </div>
+          )}
+
+          {activeTab === "blogs" && (
+            <div>
+              <BlogManagement />
             </div>
           )}
 

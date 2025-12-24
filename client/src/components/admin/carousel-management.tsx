@@ -35,7 +35,7 @@ const PAGE_LINK_TYPES = [
   { value: "page_events", label: "Events Page", path: "/events" },
   { value: "page_community", label: "Community Page", path: "/community" },
   { value: "page_brothers", label: "Brothers Page", path: "/brothers" },
-  { value: "page_discipleship", label: "Discipleship Page", path: "/discipleship" },
+  { value: "page_blog", label: "Blog Page", path: "/blog" },
   { value: "page_war_room", label: "War Room Page", path: "/hurdle-wall" },
   { value: "page_war_groups", label: "War Groups Page", path: "/war-groups" },
   { value: "page_bible", label: "Bible Page", path: "/bible" },
@@ -49,6 +49,7 @@ const CONTENT_LINK_TYPES = [
   { value: "devotional", label: "Specific Devotional" },
   { value: "challenge", label: "Specific Challenge" },
   { value: "event", label: "Specific Event" },
+  { value: "blog", label: "Specific Blog Post" },
 ];
 
 export default function CarouselManagement() {
@@ -100,6 +101,11 @@ export default function CarouselManagement() {
   const { data: events = [] } = useQuery({
     queryKey: ['/api/events'],
     enabled: formData.linkType === 'event',
+  });
+
+  const { data: blogs = [] } = useQuery({
+    queryKey: ['/api/blogs'],
+    enabled: formData.linkType === 'blog',
   });
 
   const createMutation = useMutation({
@@ -219,7 +225,7 @@ export default function CarouselManagement() {
   };
 
   const isPageLink = formData.linkType.startsWith('page_');
-  const isContentLink = ['study', 'video', 'podcast', 'devotional', 'challenge', 'event'].includes(formData.linkType);
+  const isContentLink = ['study', 'video', 'podcast', 'devotional', 'challenge', 'event', 'blog'].includes(formData.linkType);
   
   const getPagePath = (linkType: string) => {
     const page = PAGE_LINK_TYPES.find(p => p.value === linkType);
@@ -661,6 +667,28 @@ export default function CarouselManagement() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-ministry-slate mt-1">Leave empty to link to the Events page</p>
+              </div>
+            )}
+
+            {formData.linkType === "blog" && (
+              <div>
+                <Label htmlFor="carousel-content">Select Blog Post (Optional)</Label>
+                <Select
+                  value={formData.linkId}
+                  onValueChange={(value) => setFormData({ ...formData, linkId: value })}
+                >
+                  <SelectTrigger id="carousel-content" data-testid="select-carousel-content">
+                    <SelectValue placeholder="Choose a blog post (or leave blank for Blog page)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(blogs as any[]).map((blog: any) => (
+                      <SelectItem key={blog.id} value={blog.slug}>
+                        {blog.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-ministry-slate mt-1">Leave empty to link to the Blog page</p>
               </div>
             )}
 

@@ -53,6 +53,9 @@ export default function HomeCarousel() {
         // Events: link to specific event if ID provided, otherwise events page
         // Add from=carousel to track where user came from
         return item.linkId ? `/events?id=${item.linkId}&from=carousel` : "/events";
+      case "blog":
+        // Blogs: link to specific blog post if slug provided, otherwise blog page
+        return item.linkId ? `/blog/${item.linkId}` : "/blog";
       default:
         return "/home";
     }
