@@ -6575,6 +6575,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { title, slug, excerpt, content, coverImageUrl, category, isPublished, isFeatured } = req.body;
       
+      console.log('Blog update request:', { id: req.params.id, hasFile: !!req.file, coverImageUrl });
+      
       const existingBlog = await db.select().from(schema.blogPosts).where(eq(schema.blogPosts.id, req.params.id)).limit(1);
       if (!existingBlog.length) {
         return res.status(404).json({ message: 'Blog not found' });
@@ -6584,6 +6586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let finalCoverImageUrl = existingBlog[0].coverImageUrl;
       if (req.file) {
         finalCoverImageUrl = `/uploads/blog-thumbnails/${req.file.filename}`;
+        console.log('Blog thumbnail uploaded:', finalCoverImageUrl);
       } else if (coverImageUrl !== undefined) {
         finalCoverImageUrl = coverImageUrl || null;
       }
