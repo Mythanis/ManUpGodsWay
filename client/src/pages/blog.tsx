@@ -5,7 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, User, Search, Star, FileText, Share2 } from "lucide-react";
+import { Calendar, User, Search, Star, FileText, Share2, Mail } from "lucide-react";
+import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { BlogPost } from "@shared/schema";
 
 const CATEGORIES = [
@@ -208,18 +210,63 @@ function BlogCard({ blog, featured, formatDate }: {
               }`}>
                 {blog.category}
               </span>
-              <button
-                onClick={handleShare}
-                className={`text-xs font-bold uppercase px-2 py-1 flex items-center gap-1 hover:opacity-80 ${
-                  featured 
-                    ? 'bg-white/20 text-white' 
-                    : 'bg-black/20 text-black'
-                }`}
-                data-testid={`button-share-blog-${blog.id}`}
-              >
-                <Share2 className="w-3 h-3" />
-                Share
-              </button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    className={`text-xs font-bold uppercase px-2 py-1 flex items-center gap-1 hover:opacity-80 ${
+                      featured 
+                        ? 'bg-white/20 text-white' 
+                        : 'bg-black/20 text-black'
+                    }`}
+                    data-testid={`button-share-blog-${blog.id}`}
+                  >
+                    <Share2 className="w-3 h-3" />
+                    Share
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent 
+                  className="w-auto p-2 bg-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex gap-2">
+                    <a
+                      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${window.location.origin}/blog/${blog.slug}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-[#1877F2] text-white rounded-none hover:opacity-80 transition-opacity"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <SiFacebook className="w-5 h-5" />
+                    </a>
+                    <a
+                      href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${blog.title} - Check out this article from Man Up God's Way!`)}&url=${encodeURIComponent(`${window.location.origin}/blog/${blog.slug}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-black text-white border border-white rounded-none hover:opacity-80 transition-opacity"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <SiX className="w-5 h-5" />
+                    </a>
+                    <a
+                      href={`https://wa.me/?text=${encodeURIComponent(`${blog.title} - Check out this article from Man Up God's Way! ${window.location.origin}/blog/${blog.slug}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-[#25D366] text-white rounded-none hover:opacity-80 transition-opacity"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <SiWhatsapp className="w-5 h-5" />
+                    </a>
+                    <a
+                      href={`mailto:?subject=${encodeURIComponent(blog.title)}&body=${encodeURIComponent(`Check out this article from Man Up God's Way:\n\n${blog.title}\n\n${window.location.origin}/blog/${blog.slug}`)}`}
+                      className="p-2 bg-gray-600 text-white rounded-none hover:opacity-80 transition-opacity"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Mail className="w-5 h-5" />
+                    </a>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
             
             <h3 className={`text-xl font-black uppercase tracking-tight mb-2 ${

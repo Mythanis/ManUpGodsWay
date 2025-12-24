@@ -16,7 +16,9 @@ import UpgradeModal from "@/components/upgrade-modal";
 import HomeCarousel from "@/components/home-carousel";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
-import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart } from "lucide-react";
+import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail } from "lucide-react";
+import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 
@@ -984,32 +986,52 @@ export default function Home() {
                   <span>{isLiked ? 'Favorited' : 'Favorite'}</span>
                 </Button>
                 
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center justify-center space-x-2 bg-gray-800 text-white hover:bg-gray-700 rounded-none border-2 border-black font-bold uppercase text-xs"
-                  onClick={() => {
-                    const shareText = `${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n${devotional.content}`;
-                    
-                    if (navigator.share) {
-                      navigator.share({
-                        title: devotional.title,
-                        text: shareText,
-                        url: window.location.origin,
-                      }).catch(console.error);
-                    } else {
-                      navigator.clipboard.writeText(shareText).then(() => {
-                        toast({
-                          title: "Copied to clipboard",
-                          description: "Devotional text copied to clipboard for sharing",
-                        });
-                      });
-                    }
-                  }}
-                >
-                  <Share2 className="w-4 h-4" />
-                  <span>Share</span>
-                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="flex items-center justify-center space-x-2 bg-gray-800 text-white hover:bg-gray-700 rounded-none border-2 border-black font-bold uppercase text-xs"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      <span>Share</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-2 bg-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="flex gap-2">
+                      <a
+                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}&quote=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 bg-[#1877F2] text-white rounded-none hover:opacity-80 transition-opacity"
+                      >
+                        <SiFacebook className="w-5 h-5" />
+                      </a>
+                      <a
+                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\nFrom Man Up God's Way`)}&url=${encodeURIComponent(window.location.origin)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 bg-black text-white border border-white rounded-none hover:opacity-80 transition-opacity"
+                      >
+                        <SiX className="w-5 h-5" />
+                      </a>
+                      <a
+                        href={`https://wa.me/?text=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\nFrom Man Up God's Way: ${window.location.origin}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 bg-[#25D366] text-white rounded-none hover:opacity-80 transition-opacity"
+                      >
+                        <SiWhatsapp className="w-5 h-5" />
+                      </a>
+                      <a
+                        href={`mailto:?subject=${encodeURIComponent(devotional.title)}&body=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n${devotional.content}\n\nFrom Man Up God's Way: ${window.location.origin}`)}`}
+                        className="p-2 bg-gray-600 text-white rounded-none hover:opacity-80 transition-opacity"
+                      >
+                        <Mail className="w-5 h-5" />
+                      </a>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 
                 <Button 
                   size="sm"

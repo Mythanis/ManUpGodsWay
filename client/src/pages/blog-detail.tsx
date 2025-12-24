@@ -2,7 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, User, ExternalLink, Share2, FileText } from "lucide-react";
+import { ArrowLeft, Calendar, User, ExternalLink, Share2, FileText, Mail } from "lucide-react";
+import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { BlogPost } from "@shared/schema";
 
 export default function BlogDetail() {
@@ -155,16 +157,57 @@ export default function BlogDetail() {
                 <span>{formatDate(blog.publishedAt)}</span>
               </div>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleShare}
-              className="text-ministry-gold-exact hover:bg-white/10 rounded-none font-bold uppercase"
-              data-testid="button-share-blog"
-            >
-              <Share2 className="w-4 h-4 mr-1" />
-              Share
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-ministry-gold-exact hover:bg-white/10 rounded-none font-bold uppercase"
+                  data-testid="button-share-blog"
+                >
+                  <Share2 className="w-4 h-4 mr-1" />
+                  Share
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-2 bg-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <div className="flex gap-2">
+                  <a
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 bg-[#1877F2] text-white rounded-none hover:opacity-80 transition-opacity"
+                    data-testid="share-facebook"
+                  >
+                    <SiFacebook className="w-5 h-5" />
+                  </a>
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${blog?.title} - Check out this article from Man Up God's Way!`)}&url=${encodeURIComponent(window.location.href)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 bg-black text-white border border-white rounded-none hover:opacity-80 transition-opacity"
+                    data-testid="share-twitter"
+                  >
+                    <SiX className="w-5 h-5" />
+                  </a>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`${blog?.title} - Check out this article from Man Up God's Way! ${window.location.href}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 bg-[#25D366] text-white rounded-none hover:opacity-80 transition-opacity"
+                    data-testid="share-whatsapp"
+                  >
+                    <SiWhatsapp className="w-5 h-5" />
+                  </a>
+                  <a
+                    href={`mailto:?subject=${encodeURIComponent(blog?.title || '')}&body=${encodeURIComponent(`Check out this article from Man Up God's Way:\n\n${blog?.title}\n\n${window.location.href}`)}`}
+                    className="p-2 bg-gray-600 text-white rounded-none hover:opacity-80 transition-opacity"
+                    data-testid="share-email"
+                  >
+                    <Mail className="w-5 h-5" />
+                  </a>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </div>
