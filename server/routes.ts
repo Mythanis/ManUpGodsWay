@@ -13,7 +13,7 @@ import { warGroupsService } from "./warGroupsService";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
 import * as schema from "@shared/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 import { 
   insertStudySchema, 
   insertStudySeriesSchema,
@@ -6429,6 +6429,256 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error creating payment intent:', error);
       res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Blog routes
+  app.get('/api/blogs', async (req, res) => {
+    try {
+      const blogs = await db.select().from(schema.blogPosts)
+        .where(eq(schema.blogPosts.isPublished, true))
+        .orderBy(desc(schema.blogPosts.publishedAt));
+      res.json(blogs);
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/blogs/featured', async (req, res) => {
+    try {
+      const featured = await db.select().from(schema.blogPosts)
+        .where(and(eq(schema.blogPosts.isPublished, true), eq(schema.blogPosts.isFeatured, true)))
+        .orderBy(desc(schema.blogPosts.publishedAt))
+        .limit(5);
+      res.json(featured);
+    } catch (error) {
+      console.error('Error fetching featured blogs:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/blogs/:slug', async (req, res) => {
+    try {
+      const blog = await db.select().from(schema.blogPosts)
+        .where(eq(schema.blogPosts.slug, req.params.slug))
+        .limit(1);
+      
+      if (!blog.length) {
+        return res.status(404).json({ message: 'Blog post not found' });
+      }
+      res.json(blog[0]);
+    } catch (error) {
+      console.error('Error fetching blog:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Admin blog routes
+  app.get('/api/admin/blogs', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const blogs = await db.select().from(schema.blogPosts)
+        .orderBy(desc(schema.blogPosts.createdAt));
+      res.json(blogs);
+    } catch (error) {
+      console.error('Error fetching admin blogs:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/admin/blogs', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { title, slug, excerpt, content, coverImageUrl, category, isPublished, isFeatured } = req.body;
+      
+      if (!title || !content) {
+        return res.status(400).json({ message: "Title and content are required" });
+      }
+
+      // Generate slug if not provided
+      const finalSlug = slug || title.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
+      const newBlog = await db.insert(schema.blogPosts).values({
+        title,
+        slug: finalSlug,
+        excerpt: excerpt || null,
+        content,
+        coverImageUrl: coverImageUrl || null,
+        category: category || 'general',
+        authorId: user.id,
+        authorName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Admin',
+        isPublished: isPublished || false,
+        isFeatured: isFeatured || false,
+        publishedAt: isPublished ? new Date() : null,
+      }).returning();
+
+      res.json(newBlog[0]);
+    } catch (error) {
+      console.error('Error creating blog:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/admin/blogs/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { title, slug, excerpt, content, coverImageUrl, category, isPublished, isFeatured } = req.body;
+      
+      const existingBlog = await db.select().from(schema.blogPosts).where(eq(schema.blogPosts.id, req.params.id)).limit(1);
+      if (!existingBlog.length) {
+        return res.status(404).json({ message: 'Blog not found' });
+      }
+
+      const wasPublished = existingBlog[0].isPublished;
+      const publishedAt = isPublished && !wasPublished ? new Date() : existingBlog[0].publishedAt;
+
+      const updated = await db.update(schema.blogPosts)
+        .set({
+          title,
+          slug,
+          excerpt,
+          content,
+          coverImageUrl,
+          category,
+          isPublished,
+          isFeatured,
+          publishedAt,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.blogPosts.id, req.params.id))
+        .returning();
+
+      res.json(updated[0]);
+    } catch (error) {
+      console.error('Error updating blog:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/admin/blogs/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      await db.delete(schema.blogPosts).where(eq(schema.blogPosts.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting blog:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Import blogs from RSS feed (admin only)
+  app.post('/api/admin/blogs/import-rss', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { feedUrl } = req.body;
+      if (!feedUrl) {
+        return res.status(400).json({ message: "RSS feed URL is required" });
+      }
+
+      const parser = new Parser();
+      const feed = await parser.parseURL(feedUrl);
+      const importedBlogs: any[] = [];
+      const skippedBlogs: any[] = [];
+
+      // Fetch existing blogs to check for duplicates
+      const existingBlogs = await db.select().from(schema.blogPosts);
+      const existingGuids = new Set(existingBlogs.filter(b => b.rssGuid).map(b => b.rssGuid));
+      const existingSlugs = new Set(existingBlogs.map(b => b.slug));
+
+      for (const item of feed.items) {
+        try {
+          const guid = item.guid || item.link || item.title;
+          
+          // Check if already imported
+          if (existingGuids.has(guid)) {
+            skippedBlogs.push({ title: item.title, reason: 'Already imported (matching GUID)' });
+            continue;
+          }
+
+          // Generate slug
+          let baseSlug = (item.title || 'untitled').toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
+          
+          let slug = baseSlug;
+          let counter = 1;
+          while (existingSlugs.has(slug)) {
+            slug = `${baseSlug}-${counter}`;
+            counter++;
+          }
+
+          // Get content - try multiple RSS content fields
+          const content = (item as any)['content:encoded'] || item.content || item.contentSnippet || item.summary || '';
+          const excerpt = item.contentSnippet || item.summary || content.substring(0, 300);
+
+          const blogData = {
+            title: item.title || 'Untitled',
+            slug,
+            excerpt: excerpt.length > 300 ? excerpt.substring(0, 297) + '...' : excerpt,
+            content,
+            coverImageUrl: item.enclosure?.url || null,
+            authorName: item.creator || (item as any).author || 'External',
+            isPublished: true,
+            isFeatured: false,
+            publishedAt: item.pubDate ? new Date(item.pubDate) : new Date(),
+            externalSource: feedUrl,
+            rssGuid: guid,
+            externalUrl: item.link || null,
+            category: 'general',
+          };
+
+          const newBlog = await db.insert(schema.blogPosts).values(blogData).returning();
+          importedBlogs.push(newBlog[0]);
+          
+          existingGuids.add(guid);
+          existingSlugs.add(slug);
+        } catch (error) {
+          console.error('Error importing blog:', item.title, error);
+          skippedBlogs.push({ 
+            title: item.title || 'Unknown', 
+            reason: error instanceof Error ? error.message : 'Unknown error' 
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        imported: importedBlogs.length,
+        skipped: skippedBlogs.length,
+        details: {
+          importedBlogs: importedBlogs.map(b => ({ id: b.id, title: b.title })),
+          skippedBlogs
+        }
+      });
+    } catch (error) {
+      console.error('Error importing RSS feed:', error);
+      res.status(500).json({ 
+        message: 'Failed to import RSS feed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
