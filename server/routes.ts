@@ -6759,7 +6759,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Sync thumbnails from RSS feed to existing blogs (admin only)
+  // Sync thumbnails by fetching images from blog pages (admin only)
   app.post('/api/admin/blogs/sync-thumbnails', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
@@ -6767,96 +6767,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const { feedUrl } = req.body;
-      if (!feedUrl) {
-        return res.status(400).json({ message: "RSS feed URL is required" });
-      }
-
-      const parser = new Parser();
-      const feed = await parser.parseURL(feedUrl);
-      
-      // Get existing blogs without thumbnails
-      const existingBlogs = await db.select().from(schema.blogPosts);
-      const blogsWithoutThumbnails = existingBlogs.filter(b => !b.coverImageUrl);
-      
-      // Build lookup maps
-      const blogsByGuid = new Map(existingBlogs.filter(b => b.rssGuid).map(b => [b.rssGuid, b]));
-      const blogsBySlug = new Map(existingBlogs.map(b => [b.slug, b]));
+      // Get blogs without thumbnails that have external URLs
+      const blogsWithoutThumbnails = await db.select().from(schema.blogPosts)
+        .where(sql`${schema.blogPosts.coverImageUrl} IS NULL AND ${schema.blogPosts.externalUrl} IS NOT NULL`);
       
       const updatedBlogs: any[] = [];
       const skippedItems: any[] = [];
 
-      for (const item of feed.items) {
+      for (const blog of blogsWithoutThumbnails) {
         try {
-          const guid = item.guid || item.link || item.title;
-          
-          // Find matching blog
-          let matchingBlog = blogsByGuid.get(guid);
-          if (!matchingBlog) {
-            // Try matching by slug
-            const itemSlug = (item.title || '').toLowerCase()
-              .replace(/[^a-z0-9]+/g, '-')
-              .replace(/(^-|-$)/g, '');
-            matchingBlog = blogsBySlug.get(itemSlug);
-          }
-          
-          if (!matchingBlog) {
-            continue; // No matching blog found
-          }
-          
-          // Skip if already has a thumbnail
-          if (matchingBlog.coverImageUrl) {
-            skippedItems.push({ title: item.title, reason: 'Already has thumbnail' });
+          if (!blog.externalUrl) {
+            skippedItems.push({ title: blog.title, reason: 'No external URL' });
             continue;
           }
 
-          // Extract image from various RSS sources
-          let coverImageUrl = null;
-          const content = (item as any)['content:encoded'] || item.content || item.contentSnippet || item.summary || '';
+          console.log(`Fetching page for: ${blog.title} from ${blog.externalUrl}`);
           
-          // Try enclosure (common for media)
-          if (item.enclosure?.url && item.enclosure.type?.startsWith('image/')) {
-            coverImageUrl = item.enclosure.url;
+          // Fetch the actual blog page
+          const response = await fetch(blog.externalUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (compatible; BlogThumbnailFetcher/1.0)'
+            }
+          });
+          
+          if (!response.ok) {
+            skippedItems.push({ title: blog.title, reason: `Failed to fetch page: ${response.status}` });
+            continue;
           }
-          // Try iTunes image
-          if (!coverImageUrl && (item as any)['itunes:image']) {
-            coverImageUrl = (item as any)['itunes:image'].$?.href || (item as any)['itunes:image'];
+
+          const html = await response.text();
+          let coverImageUrl = null;
+
+          // Try og:image meta tag first (most reliable for thumbnails)
+          const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+                               html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+          if (ogImageMatch && ogImageMatch[1]) {
+            coverImageUrl = ogImageMatch[1];
           }
-          // Try media:content or media:thumbnail
-          if (!coverImageUrl && (item as any)['media:content']?.$?.url) {
-            coverImageUrl = (item as any)['media:content'].$.url;
-          }
-          if (!coverImageUrl && (item as any)['media:thumbnail']?.$?.url) {
-            coverImageUrl = (item as any)['media:thumbnail'].$.url;
-          }
-          // Try to extract first image from content
-          if (!coverImageUrl && content) {
-            const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
-            if (imgMatch && imgMatch[1]) {
-              coverImageUrl = imgMatch[1];
+
+          // Try twitter:image
+          if (!coverImageUrl) {
+            const twitterImageMatch = html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i) ||
+                                      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i);
+            if (twitterImageMatch && twitterImageMatch[1]) {
+              coverImageUrl = twitterImageMatch[1];
             }
           }
-          // Fall back to feed-level image
-          if (!coverImageUrl && feed.image?.url) {
-            coverImageUrl = feed.image.url;
+
+          // Try first image in article/main content
+          if (!coverImageUrl) {
+            const articleImgMatch = html.match(/<article[^>]*>[\s\S]*?<img[^>]+src=["']([^"']+)["']/i) ||
+                                    html.match(/<main[^>]*>[\s\S]*?<img[^>]+src=["']([^"']+)["']/i);
+            if (articleImgMatch && articleImgMatch[1]) {
+              coverImageUrl = articleImgMatch[1];
+            }
+          }
+
+          // Try any image with common blog image classes
+          if (!coverImageUrl) {
+            const featuredImgMatch = html.match(/<img[^>]+class=["'][^"']*(?:featured|hero|banner|post-image|entry-image)[^"']*["'][^>]+src=["']([^"']+)["']/i);
+            if (featuredImgMatch && featuredImgMatch[1]) {
+              coverImageUrl = featuredImgMatch[1];
+            }
           }
 
           if (!coverImageUrl) {
-            skippedItems.push({ title: item.title, reason: 'No image found in RSS' });
+            skippedItems.push({ title: blog.title, reason: 'No image found on page' });
             continue;
+          }
+
+          // Make relative URLs absolute
+          if (coverImageUrl.startsWith('/')) {
+            const baseUrl = new URL(blog.externalUrl);
+            coverImageUrl = `${baseUrl.protocol}//${baseUrl.host}${coverImageUrl}`;
           }
 
           // Update the blog with the thumbnail
           await db.update(schema.blogPosts)
             .set({ coverImageUrl })
-            .where(eq(schema.blogPosts.id, matchingBlog.id));
+            .where(eq(schema.blogPosts.id, blog.id));
           
-          updatedBlogs.push({ id: matchingBlog.id, title: matchingBlog.title, coverImageUrl });
-          console.log(`Updated thumbnail for blog: ${matchingBlog.title}`);
+          updatedBlogs.push({ id: blog.id, title: blog.title, coverImageUrl });
+          console.log(`Updated thumbnail for blog: ${blog.title} -> ${coverImageUrl}`);
         } catch (error) {
-          console.error('Error syncing thumbnail:', item.title, error);
+          console.error('Error syncing thumbnail:', blog.title, error);
           skippedItems.push({ 
-            title: item.title || 'Unknown', 
+            title: blog.title, 
             reason: error instanceof Error ? error.message : 'Unknown error' 
           });
         }
@@ -6874,7 +6870,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error syncing thumbnails:', error);
       res.status(500).json({ 
-        message: 'Failed to sync thumbnails from RSS feed',
+        message: 'Failed to sync thumbnails',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }

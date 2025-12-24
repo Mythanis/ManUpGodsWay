@@ -127,7 +127,7 @@ export default function BlogManagement() {
   });
 
   const syncThumbnailsMutation = useMutation({
-    mutationFn: (feedUrl: string) => apiRequest('POST', '/api/admin/blogs/sync-thumbnails', { feedUrl }),
+    mutationFn: () => apiRequest('POST', '/api/admin/blogs/sync-thumbnails', {}),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/blogs'] });
       queryClient.invalidateQueries({ queryKey: ['/api/blogs'] });
@@ -263,10 +263,7 @@ export default function BlogManagement() {
             Import RSS
           </Button>
           <Button
-            onClick={() => {
-              const feedUrl = 'https://manupgodsway.podomatic.com/rss2.xml';
-              syncThumbnailsMutation.mutate(feedUrl);
-            }}
+            onClick={() => syncThumbnailsMutation.mutate()}
             variant="outline"
             disabled={syncThumbnailsMutation.isPending}
             className="bg-ministry-gold-exact text-black border-2 border-black rounded-none font-bold uppercase tracking-wide hover:bg-yellow-400"
