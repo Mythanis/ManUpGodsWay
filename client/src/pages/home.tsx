@@ -16,7 +16,7 @@ import UpgradeModal from "@/components/upgrade-modal";
 import HomeCarousel from "@/components/home-carousel";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
-import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2 } from "lucide-react";
+import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest } from "@/lib/queryClient";
@@ -638,6 +638,24 @@ export default function Home() {
                 <MessageSquare className="w-6 h-6 text-white" />
               </div>
               <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide">Join Discussion</span>
+              <div className="pr-4">
+                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </div>
+            </Button>
+          </Link>
+
+          <Link href="/blog" className="block">
+            <Button 
+              variant="outline"
+              className="h-16 w-full flex items-center justify-between bg-ministry-gold-exact hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+              data-testid="button-blog"
+            >
+              <div className="h-full w-16 bg-black flex items-center justify-center flex-shrink-0">
+                <Newspaper className="w-6 h-6 text-white" />
+              </div>
+              <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide">Blog</span>
               <div className="pr-4">
                 <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
