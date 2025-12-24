@@ -184,7 +184,7 @@ export default function BlogDetail() {
       </div>
 
       <div className="px-6 py-6 max-w-3xl mx-auto">
-        <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <Card className="bg-white border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <CardContent className="p-6 md:p-8">
             <div 
               className="prose prose-lg max-w-none text-black prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-a:text-black prose-a:underline prose-strong:text-black"

@@ -164,7 +164,7 @@ function BlogCard({ blog, featured, formatDate }: {
     >
       <CardContent className="p-0">
         <div className="flex flex-col md:flex-row">
-          <div className={`w-full md:w-48 h-48 md:h-auto min-h-[120px] flex-shrink-0 border-b-2 md:border-b-0 md:border-r-2 border-black overflow-hidden ${
+          <div className={`w-full md:w-32 h-32 flex-shrink-0 border-b-2 md:border-b-0 md:border-r-2 border-black overflow-hidden ${
             !blog.coverImageUrl ? (featured ? 'bg-ministry-gold-exact' : 'bg-black') : ''
           }`}>
             {blog.coverImageUrl ? (
@@ -175,7 +175,7 @@ function BlogCard({ blog, featured, formatDate }: {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <FileText className={`w-16 h-16 ${featured ? 'text-black/30' : 'text-white/30'}`} />
+                <FileText className={`w-12 h-12 ${featured ? 'text-black/30' : 'text-white/30'}`} />
               </div>
             )}
           </div>
