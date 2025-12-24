@@ -408,7 +408,7 @@ export default function Home() {
         
         <div className="mb-6">
           <h1 className="text-4xl font-black tracking-tighter uppercase" data-testid="text-greeting">
-            Welcome, {user?.firstName || 'Brother'}
+            <span className="text-white">Welcome,</span> <span className="text-ministry-gold-exact">{user?.firstName || 'Brother'}</span>
           </h1>
           <p className="text-[#FCD000] text-xs font-bold tracking-widest uppercase" data-testid="text-motivation">
             {systemSettings?.homepageTagline || "Ready to grow in God's strength?"}
