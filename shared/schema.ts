@@ -1845,3 +1845,33 @@ export type WarGroupAnnouncement = typeof warGroupAnnouncements.$inferSelect;
 export type InsertWarGroupAnnouncement = z.infer<typeof insertWarGroupAnnouncementSchema>;
 export type WarGroupRegistration = typeof warGroupRegistrations.$inferSelect;
 export type InsertWarGroupRegistration = z.infer<typeof insertWarGroupRegistrationSchema>;
+
+// Blog posts table
+export const blogPosts = pgTable("blog_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: varchar("slug").notNull().unique(),
+  title: varchar("title").notNull(),
+  excerpt: text("excerpt"),
+  content: text("content").notNull(),
+  coverImageUrl: varchar("cover_image_url"),
+  authorId: varchar("author_id").references(() => users.id),
+  authorName: varchar("author_name"), // For RSS imported posts without local author
+  isPublished: boolean("is_published").default(false),
+  isFeatured: boolean("is_featured").default(false),
+  publishedAt: timestamp("published_at"),
+  externalSource: varchar("external_source"), // RSS feed URL if imported
+  rssGuid: varchar("rss_guid"), // Unique identifier from RSS to prevent duplicates
+  externalUrl: varchar("external_url"), // Link to original post if imported
+  category: varchar("category").default("general"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
