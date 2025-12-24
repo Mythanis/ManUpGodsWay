@@ -143,6 +143,36 @@ const thumbnailUpload = multer({
   }
 });
 
+// Configure multer for blog thumbnail uploads with disk storage
+const blogThumbnailStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(process.cwd(), 'uploads', 'blog-thumbnails');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const filename = `blog_${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    cb(null, filename);
+  }
+});
+
+const blogThumbnailUpload = multer({
+  storage: blogThumbnailStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit for images
+  },
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPEG, PNG, WebP, and GIF images are allowed!'));
+    }
+  }
+});
+
 // Configure multer for document uploads (PDF/Word) with disk storage
 const documentStorage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -6491,7 +6521,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/blogs', isAuthenticated, async (req: any, res) => {
+  app.post('/api/admin/blogs', isAuthenticated, blogThumbnailUpload.single('thumbnail'), async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
       if (!user || !isAdmin(user)) {
@@ -6509,18 +6539,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '');
 
+      // Handle thumbnail upload or URL
+      let finalCoverImageUrl = coverImageUrl || null;
+      if (req.file) {
+        finalCoverImageUrl = `/uploads/blog-thumbnails/${req.file.filename}`;
+      }
+
       const newBlog = await db.insert(schema.blogPosts).values({
         title,
         slug: finalSlug,
         excerpt: excerpt || null,
         content,
-        coverImageUrl: coverImageUrl || null,
+        coverImageUrl: finalCoverImageUrl,
         category: category || 'general',
         authorId: user.id,
         authorName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Admin',
-        isPublished: isPublished || false,
-        isFeatured: isFeatured || false,
-        publishedAt: isPublished ? new Date() : null,
+        isPublished: isPublished === 'true' || isPublished === true,
+        isFeatured: isFeatured === 'true' || isFeatured === true,
+        publishedAt: (isPublished === 'true' || isPublished === true) ? new Date() : null,
       }).returning();
 
       res.json(newBlog[0]);
@@ -6530,7 +6566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/blogs/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/admin/blogs/:id', isAuthenticated, blogThumbnailUpload.single('thumbnail'), async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
       if (!user || !isAdmin(user)) {
@@ -6544,8 +6580,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Blog not found' });
       }
 
+      // Handle thumbnail upload or URL
+      let finalCoverImageUrl = existingBlog[0].coverImageUrl;
+      if (req.file) {
+        finalCoverImageUrl = `/uploads/blog-thumbnails/${req.file.filename}`;
+      } else if (coverImageUrl !== undefined) {
+        finalCoverImageUrl = coverImageUrl || null;
+      }
+
       const wasPublished = existingBlog[0].isPublished;
-      const publishedAt = isPublished && !wasPublished ? new Date() : existingBlog[0].publishedAt;
+      const isNowPublished = isPublished === 'true' || isPublished === true;
+      const publishedAt = isNowPublished && !wasPublished ? new Date() : existingBlog[0].publishedAt;
 
       const updated = await db.update(schema.blogPosts)
         .set({
@@ -6553,10 +6598,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           slug,
           excerpt,
           content,
-          coverImageUrl,
+          coverImageUrl: finalCoverImageUrl,
           category,
-          isPublished,
-          isFeatured,
+          isPublished: isNowPublished,
+          isFeatured: isFeatured === 'true' || isFeatured === true,
           publishedAt,
           updatedAt: new Date(),
         })

@@ -9,9 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Edit, Trash2, Plus, Eye, EyeOff, Rss, ExternalLink, Star } from "lucide-react";
+import { Edit, Trash2, Plus, Eye, EyeOff, Rss, ExternalLink, Star, Upload, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { BlogPost } from "@shared/schema";
+
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
 
 const CATEGORIES = [
   { value: "general", label: "General" },
@@ -30,6 +32,8 @@ export default function BlogManagement() {
   const [showRssDialog, setShowRssDialog] = useState(false);
   const [editingBlog, setEditingBlog] = useState<BlogPost | null>(null);
   const [rssUrl, setRssUrl] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -46,7 +50,15 @@ export default function BlogManagement() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('POST', '/api/admin/blogs', data),
+    mutationFn: async (data: FormData) => {
+      const res = await fetch('/api/admin/blogs', {
+        method: 'POST',
+        credentials: 'include',
+        body: data,
+      });
+      if (!res.ok) throw new Error('Failed to create blog post');
+      return res.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/blogs'] });
       queryClient.invalidateQueries({ queryKey: ['/api/blogs'] });
@@ -60,8 +72,15 @@ export default function BlogManagement() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => 
-      apiRequest('PUT', `/api/admin/blogs/${id}`, data),
+    mutationFn: async ({ id, data }: { id: string; data: FormData }) => {
+      const res = await fetch(`/api/admin/blogs/${id}`, {
+        method: 'PUT',
+        credentials: 'include',
+        body: data,
+      });
+      if (!res.ok) throw new Error('Failed to update blog post');
+      return res.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/blogs'] });
       queryClient.invalidateQueries({ queryKey: ['/api/blogs'] });
@@ -119,6 +138,34 @@ export default function BlogManagement() {
       isFeatured: false,
     });
     setEditingBlog(null);
+    setImageFile(null);
+    setImagePreview(null);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload a JPEG, PNG, WebP, or GIF image",
+          variant: "destructive",
+        });
+        return;
+      }
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setFormData({ ...formData, coverImageUrl: "" });
   };
 
   const handleEdit = (blog: BlogPost) => {
@@ -133,6 +180,8 @@ export default function BlogManagement() {
       isPublished: blog.isPublished || false,
       isFeatured: blog.isFeatured || false,
     });
+    setImageFile(null);
+    setImagePreview(blog.coverImageUrl || null);
     setShowDialog(true);
   };
 
@@ -142,10 +191,25 @@ export default function BlogManagement() {
       return;
     }
 
+    const data = new FormData();
+    data.append('title', formData.title);
+    data.append('slug', formData.slug);
+    data.append('excerpt', formData.excerpt);
+    data.append('content', formData.content);
+    data.append('category', formData.category);
+    data.append('isPublished', String(formData.isPublished));
+    data.append('isFeatured', String(formData.isFeatured));
+    
+    if (imageFile) {
+      data.append('thumbnail', imageFile);
+    } else if (formData.coverImageUrl) {
+      data.append('coverImageUrl', formData.coverImageUrl);
+    }
+
     if (editingBlog) {
-      updateMutation.mutate({ id: editingBlog.id, data: formData });
+      updateMutation.mutate({ id: editingBlog.id, data });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(data);
     }
   };
 
@@ -365,15 +429,41 @@ export default function BlogManagement() {
             </div>
 
             <div>
-              <Label htmlFor="blog-cover" className="font-bold uppercase text-black">Cover Image URL</Label>
-              <Input
-                id="blog-cover"
-                value={formData.coverImageUrl}
-                onChange={(e) => setFormData({ ...formData, coverImageUrl: e.target.value })}
-                placeholder="https://example.com/image.jpg"
-                className="rounded-none border-2 border-black"
-                data-testid="input-blog-cover"
-              />
+              <Label htmlFor="blog-thumbnail" className="font-bold uppercase text-black">Thumbnail Image</Label>
+              <div className="space-y-3">
+                {(imagePreview || formData.coverImageUrl) && (
+                  <div className="relative w-full h-40 border-2 border-black overflow-hidden">
+                    <img
+                      src={imagePreview || formData.coverImageUrl}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={removeImage}
+                      className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-none border-2 border-black p-1 h-8 w-8"
+                      data-testid="button-remove-thumbnail"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="blog-thumbnail"
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                    onChange={handleImageChange}
+                    className="rounded-none border-2 border-black file:mr-2 file:py-1 file:px-3 file:rounded-none file:border-0 file:font-bold file:bg-black file:text-white file:uppercase file:text-xs"
+                    data-testid="input-blog-thumbnail"
+                  />
+                </div>
+                {editingBlog && !imageFile && formData.coverImageUrl && (
+                  <p className="text-xs text-black/60">Leave empty to keep current image</p>
+                )}
+                <p className="text-xs text-black/60">Accepted formats: JPEG, PNG, WebP, GIF</p>
+              </div>
             </div>
 
             <div>
