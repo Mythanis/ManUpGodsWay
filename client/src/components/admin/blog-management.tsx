@@ -224,16 +224,18 @@ export default function BlogManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4">
         <div>
-          <h2 className="text-2xl font-black uppercase tracking-tighter text-black">Blog Management</h2>
-          <p className="text-sm text-black/70 font-medium">Create and manage blog posts</p>
+          <h2 className="text-2xl font-black uppercase tracking-tighter">
+            <span className="text-white">Blog</span> <span className="text-ministry-gold-exact">Management</span>
+          </h2>
+          <p className="text-sm text-white/70 font-medium">Create and manage blog posts</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => setShowRssDialog(true)}
             variant="outline"
-            className="bg-black text-white border-2 border-black rounded-none font-bold uppercase tracking-wide hover:bg-gray-800"
+            className="bg-ministry-gold-exact text-black border-2 border-black rounded-none font-bold uppercase tracking-wide hover:bg-yellow-400"
             data-testid="button-import-rss"
           >
             <Rss className="w-4 h-4 mr-2" />
@@ -244,7 +246,7 @@ export default function BlogManagement() {
               resetForm();
               setShowDialog(true);
             }}
-            className="bg-ministry-gold-exact text-black border-2 border-black rounded-none font-bold uppercase tracking-wide hover:bg-yellow-400 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+            className="bg-black text-white border-2 border-black rounded-none font-bold uppercase tracking-wide hover:bg-gray-800 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)]"
             data-testid="button-add-blog"
           >
             <Plus className="w-4 h-4 mr-2" />
