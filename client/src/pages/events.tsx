@@ -107,7 +107,7 @@ export default function Events() {
       {/* Header - neo-brutalist style */}
       <div className="bg-black text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase">Ministry Events</h1>
+          <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase"><span className="text-white">Ministry</span> <span className="text-ministry-gold-exact">Events</span></h1>
           <p className="text-ministry-gold-exact text-sm font-bold uppercase tracking-wide">Join Us For Special Events And Gatherings</p>
         </div>
       </div>
