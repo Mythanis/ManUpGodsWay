@@ -247,7 +247,7 @@ export default function Videos() {
     <div className="pb-20">
       {/* Header */}
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
-        <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase">Video Library</h1>
+        <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase"><span className="text-white">Video</span> <span className="text-ministry-gold-exact">Library</span></h1>
         <p className="text-[#FCD000] text-xs font-bold tracking-widest uppercase">
           Watch Inspiring Content And Grow In Faith
         </p>
