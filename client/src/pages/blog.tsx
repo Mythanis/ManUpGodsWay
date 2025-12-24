@@ -5,10 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, User, Search, Star, FileText, Share2, Mail } from "lucide-react";
+import { Calendar, User, Search, Star, FileText, Share2, Mail, Link2 } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { BlogPost } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 const CATEGORIES = [
   { value: "all", label: "All Categories" },
@@ -155,6 +156,7 @@ function BlogCard({ blog, featured, formatDate }: {
   formatDate: (date: string | Date | null) => string;
 }) {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -264,6 +266,16 @@ function BlogCard({ blog, featured, formatDate }: {
                     >
                       <Mail className="w-5 h-5" />
                     </a>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(`${window.location.origin}/blog/${blog.slug}`);
+                        toast({ title: "Link copied!", description: "The link has been copied to your clipboard" });
+                      }}
+                      className="p-2 bg-ministry-gold-exact text-black rounded-none hover:opacity-80 transition-opacity"
+                    >
+                      <Link2 className="w-5 h-5" />
+                    </button>
                   </div>
                 </PopoverContent>
               </Popover>

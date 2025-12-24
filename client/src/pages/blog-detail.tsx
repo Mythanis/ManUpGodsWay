@@ -2,14 +2,16 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, User, ExternalLink, Share2, FileText, Mail } from "lucide-react";
+import { ArrowLeft, Calendar, User, ExternalLink, Share2, FileText, Mail, Link2 } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { BlogPost } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 export default function BlogDetail() {
   const { slug } = useParams();
   const [, navigate] = useLocation();
+  const { toast } = useToast();
 
   const { data: blog, isLoading, error } = useQuery<BlogPost>({
     queryKey: ['/api/blogs', slug],
@@ -205,6 +207,16 @@ export default function BlogDetail() {
                   >
                     <Mail className="w-5 h-5" />
                   </a>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast({ title: "Link copied!", description: "The link has been copied to your clipboard" });
+                    }}
+                    className="p-2 bg-ministry-gold-exact text-black rounded-none hover:opacity-80 transition-opacity"
+                    data-testid="share-copy-link"
+                  >
+                    <Link2 className="w-5 h-5" />
+                  </button>
                 </div>
               </PopoverContent>
             </Popover>

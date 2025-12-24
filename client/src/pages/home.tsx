@@ -16,7 +16,7 @@ import UpgradeModal from "@/components/upgrade-modal";
 import HomeCarousel from "@/components/home-carousel";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
-import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail } from "lucide-react";
+import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2 } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest } from "@/lib/queryClient";
@@ -1029,6 +1029,15 @@ export default function Home() {
                       >
                         <Mail className="w-5 h-5" />
                       </a>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(window.location.origin);
+                          toast({ title: "Link copied!", description: "The link has been copied to your clipboard" });
+                        }}
+                        className="p-2 bg-ministry-gold-exact text-black rounded-none hover:opacity-80 transition-opacity"
+                      >
+                        <Link2 className="w-5 h-5" />
+                      </button>
                     </div>
                   </PopoverContent>
                 </Popover>
