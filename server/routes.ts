@@ -6759,6 +6759,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sync thumbnails from RSS feed to existing blogs (admin only)
+  app.post('/api/admin/blogs/sync-thumbnails', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { feedUrl } = req.body;
+      if (!feedUrl) {
+        return res.status(400).json({ message: "RSS feed URL is required" });
+      }
+
+      const parser = new Parser();
+      const feed = await parser.parseURL(feedUrl);
+      
+      // Get existing blogs without thumbnails
+      const existingBlogs = await db.select().from(schema.blogPosts);
+      const blogsWithoutThumbnails = existingBlogs.filter(b => !b.coverImageUrl);
+      
+      // Build lookup maps
+      const blogsByGuid = new Map(existingBlogs.filter(b => b.rssGuid).map(b => [b.rssGuid, b]));
+      const blogsBySlug = new Map(existingBlogs.map(b => [b.slug, b]));
+      
+      const updatedBlogs: any[] = [];
+      const skippedItems: any[] = [];
+
+      for (const item of feed.items) {
+        try {
+          const guid = item.guid || item.link || item.title;
+          
+          // Find matching blog
+          let matchingBlog = blogsByGuid.get(guid);
+          if (!matchingBlog) {
+            // Try matching by slug
+            const itemSlug = (item.title || '').toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/(^-|-$)/g, '');
+            matchingBlog = blogsBySlug.get(itemSlug);
+          }
+          
+          if (!matchingBlog) {
+            continue; // No matching blog found
+          }
+          
+          // Skip if already has a thumbnail
+          if (matchingBlog.coverImageUrl) {
+            skippedItems.push({ title: item.title, reason: 'Already has thumbnail' });
+            continue;
+          }
+
+          // Extract image from various RSS sources
+          let coverImageUrl = null;
+          const content = (item as any)['content:encoded'] || item.content || item.contentSnippet || item.summary || '';
+          
+          // Try enclosure (common for media)
+          if (item.enclosure?.url && item.enclosure.type?.startsWith('image/')) {
+            coverImageUrl = item.enclosure.url;
+          }
+          // Try iTunes image
+          if (!coverImageUrl && (item as any)['itunes:image']) {
+            coverImageUrl = (item as any)['itunes:image'].$?.href || (item as any)['itunes:image'];
+          }
+          // Try media:content or media:thumbnail
+          if (!coverImageUrl && (item as any)['media:content']?.$?.url) {
+            coverImageUrl = (item as any)['media:content'].$.url;
+          }
+          if (!coverImageUrl && (item as any)['media:thumbnail']?.$?.url) {
+            coverImageUrl = (item as any)['media:thumbnail'].$.url;
+          }
+          // Try to extract first image from content
+          if (!coverImageUrl && content) {
+            const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+            if (imgMatch && imgMatch[1]) {
+              coverImageUrl = imgMatch[1];
+            }
+          }
+          // Fall back to feed-level image
+          if (!coverImageUrl && feed.image?.url) {
+            coverImageUrl = feed.image.url;
+          }
+
+          if (!coverImageUrl) {
+            skippedItems.push({ title: item.title, reason: 'No image found in RSS' });
+            continue;
+          }
+
+          // Update the blog with the thumbnail
+          await db.update(schema.blogPosts)
+            .set({ coverImageUrl })
+            .where(eq(schema.blogPosts.id, matchingBlog.id));
+          
+          updatedBlogs.push({ id: matchingBlog.id, title: matchingBlog.title, coverImageUrl });
+          console.log(`Updated thumbnail for blog: ${matchingBlog.title}`);
+        } catch (error) {
+          console.error('Error syncing thumbnail:', item.title, error);
+          skippedItems.push({ 
+            title: item.title || 'Unknown', 
+            reason: error instanceof Error ? error.message : 'Unknown error' 
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        updated: updatedBlogs.length,
+        skipped: skippedItems.length,
+        details: {
+          updatedBlogs,
+          skippedItems
+        }
+      });
+    } catch (error) {
+      console.error('Error syncing thumbnails:', error);
+      res.status(500).json({ 
+        message: 'Failed to sync thumbnails from RSS feed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Hurdle Wall routes

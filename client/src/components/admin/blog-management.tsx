@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Edit, Trash2, Plus, Eye, EyeOff, Rss, ExternalLink, Star, Upload, X, FileText } from "lucide-react";
+import { Edit, Trash2, Plus, Eye, EyeOff, Rss, ExternalLink, Star, Upload, X, FileText, RefreshCw } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { BlogPost } from "@shared/schema";
 
@@ -121,6 +121,27 @@ export default function BlogManagement() {
       toast({ 
         title: "Import Failed", 
         description: error.message || "Failed to import RSS feed", 
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const syncThumbnailsMutation = useMutation({
+    mutationFn: (feedUrl: string) => apiRequest('POST', '/api/admin/blogs/sync-thumbnails', { feedUrl }),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/blogs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/blogs'] });
+      toast({ 
+        title: "Thumbnails Synced", 
+        description: `Updated ${data.updated} blogs, skipped ${data.skipped}` 
+      });
+      setShowRssDialog(false);
+      setRssUrl("");
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Sync Failed", 
+        description: error.message || "Failed to sync thumbnails", 
         variant: "destructive" 
       });
     },
@@ -240,6 +261,19 @@ export default function BlogManagement() {
           >
             <Rss className="w-4 h-4 mr-2" />
             Import RSS
+          </Button>
+          <Button
+            onClick={() => {
+              const feedUrl = 'https://manupgodsway.podomatic.com/rss2.xml';
+              syncThumbnailsMutation.mutate(feedUrl);
+            }}
+            variant="outline"
+            disabled={syncThumbnailsMutation.isPending}
+            className="bg-ministry-gold-exact text-black border-2 border-black rounded-none font-bold uppercase tracking-wide hover:bg-yellow-400"
+            data-testid="button-sync-thumbnails"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${syncThumbnailsMutation.isPending ? 'animate-spin' : ''}`} />
+            {syncThumbnailsMutation.isPending ? 'Syncing...' : 'Sync Thumbnails'}
           </Button>
           <Button
             onClick={() => {
