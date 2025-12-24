@@ -104,7 +104,7 @@ export default function Library() {
     <div className="pb-20">
       {/* Header */}
       <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
-        <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase" data-testid="text-library-title">Study Library</h1>
+        <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase" data-testid="text-library-title"><span className="text-white">Study</span> <span className="text-ministry-gold-exact">Library</span></h1>
         <p className="text-ministry-gold-exact text-xs font-bold tracking-widest uppercase" data-testid="text-library-subtitle">
           Grow Stronger In Faith And Character
         </p>
