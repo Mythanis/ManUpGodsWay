@@ -80,7 +80,12 @@ const bibleBooks = [
 ];
 
 export default function Bible() {
-  const [selectedVersion, setSelectedVersion] = useState("ESV");
+  const [selectedVersion, setSelectedVersion] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('preferredBibleVersion') || "ESV";
+    }
+    return "ESV";
+  });
   const [selectedBook, setSelectedBook] = useState("John");
   const [selectedChapter, setSelectedChapter] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -90,6 +95,12 @@ export default function Bible() {
   const [isLoading, setIsLoading] = useState(false);
   const [apiStatus, setApiStatus] = useState<"connected" | "fallback" | "error">("connected");
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+
+  // Save preferred version to localStorage when changed
+  const handleVersionChange = (version: string) => {
+    setSelectedVersion(version);
+    localStorage.setItem('preferredBibleVersion', version);
+  };
 
   const bibleVersions = [
     { id: "LSB", name: "Legacy Standard Bible", description: "Faithful to the original text (uses ESV as reference)" },
@@ -439,7 +450,7 @@ export default function Bible() {
           <CardContent className="p-3 space-y-3">
             {/* Row 1: Version, Book, Chapter selectors */}
             <div className="grid grid-cols-3 gap-2">
-              <Select value={selectedVersion} onValueChange={setSelectedVersion}>
+              <Select value={selectedVersion} onValueChange={handleVersionChange}>
                 <SelectTrigger className="bg-black border-2 border-black text-white rounded-none font-semibold h-9 text-sm" data-testid="select-bible-version">
                   <SelectValue placeholder="Version" />
                 </SelectTrigger>
