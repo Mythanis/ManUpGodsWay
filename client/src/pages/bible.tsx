@@ -436,7 +436,7 @@ export default function Bible() {
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
             <Book className="h-8 w-8 text-ministry-gold-exact" />
-            <h1 className="text-4xl font-black tracking-tighter uppercase">Bible Reader</h1>
+            <h1 className="text-4xl font-black tracking-tighter uppercase"><span className="text-white">Bible</span> <span className="text-ministry-gold-exact">Reader</span></h1>
           </div>
           <p className="text-ministry-gold-exact text-sm font-bold uppercase tracking-widest">
             Read God's Word In Multiple Translations
