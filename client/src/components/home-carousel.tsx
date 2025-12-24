@@ -49,6 +49,10 @@ export default function HomeCarousel() {
         // Challenges: link to specific challenge if ID provided, otherwise challenges page
         // Add from=carousel to track where user came from
         return item.linkId ? `/challenges?id=${item.linkId}&from=carousel` : "/challenges";
+      case "event":
+        // Events: link to specific event if ID provided, otherwise events page
+        // Add from=carousel to track where user came from
+        return item.linkId ? `/events?id=${item.linkId}&from=carousel` : "/events";
       default:
         return "/home";
     }

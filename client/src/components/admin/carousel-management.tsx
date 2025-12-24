@@ -48,6 +48,7 @@ const CONTENT_LINK_TYPES = [
   { value: "podcast", label: "Specific Podcast" },
   { value: "devotional", label: "Specific Devotional" },
   { value: "challenge", label: "Specific Challenge" },
+  { value: "event", label: "Specific Event" },
 ];
 
 export default function CarouselManagement() {
@@ -94,6 +95,11 @@ export default function CarouselManagement() {
   const { data: challenges = [] } = useQuery({
     queryKey: ['/api/challenges'],
     enabled: formData.linkType === 'challenge',
+  });
+
+  const { data: events = [] } = useQuery({
+    queryKey: ['/api/events'],
+    enabled: formData.linkType === 'event',
   });
 
   const createMutation = useMutation({
@@ -213,7 +219,7 @@ export default function CarouselManagement() {
   };
 
   const isPageLink = formData.linkType.startsWith('page_');
-  const isContentLink = ['study', 'video', 'podcast', 'devotional', 'challenge'].includes(formData.linkType);
+  const isContentLink = ['study', 'video', 'podcast', 'devotional', 'challenge', 'event'].includes(formData.linkType);
   
   const getPagePath = (linkType: string) => {
     const page = PAGE_LINK_TYPES.find(p => p.value === linkType);
@@ -633,6 +639,28 @@ export default function CarouselManagement() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-ministry-slate mt-1">Leave empty to link to the Challenges page</p>
+              </div>
+            )}
+
+            {formData.linkType === "event" && (
+              <div>
+                <Label htmlFor="carousel-content">Select Event (Optional)</Label>
+                <Select
+                  value={formData.linkId}
+                  onValueChange={(value) => setFormData({ ...formData, linkId: value })}
+                >
+                  <SelectTrigger id="carousel-content" data-testid="select-carousel-content">
+                    <SelectValue placeholder="Choose an event (or leave blank for Events page)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(events as any[]).map((event: any) => (
+                      <SelectItem key={event.id} value={event.id}>
+                        {event.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-ministry-slate mt-1">Leave empty to link to the Events page</p>
               </div>
             )}
 
