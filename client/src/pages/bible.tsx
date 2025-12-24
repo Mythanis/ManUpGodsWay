@@ -434,129 +434,106 @@ export default function Bible() {
       </div>
 
       <div className="max-w-6xl mx-auto p-4 space-y-6">
-        {/* Bible Controls */}
+        {/* Bible Controls - Compact */}
         <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-black font-black uppercase tracking-tight text-xl">Bible Navigation</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Version Selector - Full Width at Top */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-black">Bible Version</label>
+          <CardContent className="p-3 space-y-3">
+            {/* Row 1: Version, Book, Chapter selectors */}
+            <div className="grid grid-cols-3 gap-2">
               <Select value={selectedVersion} onValueChange={setSelectedVersion}>
-                <SelectTrigger className="bg-black border-2 border-black text-white w-full rounded-none font-semibold" data-testid="select-bible-version">
-                  <SelectValue placeholder="Select Bible version" />
+                <SelectTrigger className="bg-black border-2 border-black text-white rounded-none font-semibold h-9 text-sm" data-testid="select-bible-version">
+                  <SelectValue placeholder="Version" />
                 </SelectTrigger>
                 <SelectContent className="rounded-none border-2 border-black">
                   {bibleVersions.map((version) => (
                     <SelectItem key={version.id} value={version.id}>
-                      <div className="flex flex-col">
-                        <span className="font-bold">{version.id} - {version.name}</span>
-                        <span className="text-xs text-muted-foreground">{version.description}</span>
-                      </div>
+                      <span className="font-bold">{version.id}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedBook} onValueChange={setSelectedBook}>
+                <SelectTrigger className="bg-black border-2 border-black text-white rounded-none font-semibold h-9 text-sm" data-testid="select-bible-book">
+                  <SelectValue placeholder="Book" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 rounded-none border-2 border-black">
+                  <div className="px-2 py-1 text-xs font-black uppercase tracking-widest text-ministry-gold-exact bg-black">Old Testament</div>
+                  {bibleBooks.filter(book => book.testament === "Old").map((book) => (
+                    <SelectItem key={book.name} value={book.name}>
+                      {book.name}
+                    </SelectItem>
+                  ))}
+                  <div className="px-2 py-1 text-xs font-black uppercase tracking-widest text-ministry-gold-exact bg-black border-t-2 border-black mt-1 pt-2">New Testament</div>
+                  {bibleBooks.filter(book => book.testament === "New").map((book) => (
+                    <SelectItem key={book.name} value={book.name}>
+                      {book.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedChapter.toString()} onValueChange={(value) => setSelectedChapter(parseInt(value))}>
+                <SelectTrigger className="bg-black border-2 border-black text-white rounded-none font-semibold h-9 text-sm" data-testid="select-bible-chapter">
+                  <SelectValue placeholder="Ch" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 rounded-none border-2 border-black">
+                  {chapterOptions.map((chapter) => (
+                    <SelectItem key={chapter} value={chapter.toString()}>
+                      {chapter}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Book and Chapter - Two Columns */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Book Selector */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-black">Book</label>
-                <Select value={selectedBook} onValueChange={setSelectedBook}>
-                  <SelectTrigger className="bg-black border-2 border-black text-white rounded-none font-semibold" data-testid="select-bible-book">
-                    <SelectValue placeholder="Select book" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 rounded-none border-2 border-black">
-                    <div className="px-2 py-1 text-xs font-black uppercase tracking-widest text-ministry-gold-exact bg-black">Old Testament</div>
-                    {bibleBooks.filter(book => book.testament === "Old").map((book) => (
-                      <SelectItem key={book.name} value={book.name}>
-                        {book.name}
-                      </SelectItem>
-                    ))}
-                    <div className="px-2 py-1 text-xs font-black uppercase tracking-widest text-ministry-gold-exact bg-black border-t-2 border-black mt-1 pt-2">New Testament</div>
-                    {bibleBooks.filter(book => book.testament === "New").map((book) => (
-                      <SelectItem key={book.name} value={book.name}>
-                        {book.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {/* Row 2: Search and Navigation */}
+            <div className="flex gap-2 items-center">
+              <div className="relative flex-1">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
+                <Input
+                  placeholder="Search verses..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  className="pl-8 h-9 bg-black border-2 border-black text-white placeholder:text-white/50 rounded-none font-medium text-sm"
+                  data-testid="input-bible-search"
+                />
               </div>
-
-              {/* Chapter Selector */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-black">Chapter</label>
-                <Select value={selectedChapter.toString()} onValueChange={(value) => setSelectedChapter(parseInt(value))}>
-                  <SelectTrigger className="bg-black border-2 border-black text-white rounded-none font-semibold" data-testid="select-bible-chapter">
-                    <SelectValue placeholder="Chapter" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 rounded-none border-2 border-black">
-                    {chapterOptions.map((chapter) => (
-                      <SelectItem key={chapter} value={chapter.toString()}>
-                        Chapter {chapter}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Search - Full Width Below */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-black">Search Verses</label>
-              <div className="flex gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
-                  <Input
-                    placeholder="Search for verses containing..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="pl-10 bg-black border-2 border-black text-white placeholder:text-white/50 rounded-none font-medium"
-                    data-testid="input-bible-search"
-                  />
-                </div>
-                <Button 
-                  onClick={handleSearch}
-                  disabled={!searchTerm.trim() || isSearching}
-                  className="px-6 bg-black hover:bg-black/80 text-ministry-gold-exact font-black uppercase tracking-wide rounded-none border-2 border-black"
-                  data-testid="button-bible-search"
+              <Button 
+                onClick={handleSearch}
+                disabled={!searchTerm.trim() || isSearching}
+                size="sm"
+                className="h-9 px-3 bg-black hover:bg-black/80 text-ministry-gold-exact font-bold uppercase text-xs rounded-none border-2 border-black"
+                data-testid="button-bible-search"
+              >
+                {isSearching ? "..." : "Search"}
+              </Button>
+              
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigateChapter('prev')}
+                  disabled={selectedChapter <= 1}
+                  className="h-9 w-9 p-0 bg-black border-2 border-black text-white hover:bg-black/80 rounded-none"
+                  data-testid="button-prev-chapter"
                 >
-                  {isSearching ? "Searching..." : "Search"}
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Badge className="px-2 py-1 text-xs bg-black text-ministry-gold-exact font-bold rounded-none border-2 border-black whitespace-nowrap">
+                  {currentBook?.abbrev || selectedBook} {selectedChapter}
+                </Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigateChapter('next')}
+                  disabled={!currentBook || selectedChapter >= currentBook.chapters}
+                  className="h-9 w-9 p-0 bg-black border-2 border-black text-white hover:bg-black/80 rounded-none"
+                  data-testid="button-next-chapter"
+                >
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
-
-            {/* Chapter Navigation */}
-            <div className="flex items-center justify-center gap-4 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => navigateChapter('prev')}
-                disabled={selectedChapter <= 1}
-                className="flex items-center gap-2 bg-black border-2 border-black text-white hover:bg-black/80 rounded-none font-bold uppercase tracking-wide"
-                data-testid="button-prev-chapter"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </Button>
-              
-              <Badge className="px-4 py-2 text-sm bg-black text-ministry-gold-exact font-black uppercase tracking-wide rounded-none border-2 border-black">
-                {selectedBook} {selectedChapter}
-              </Badge>
-              
-              <Button
-                variant="outline"
-                onClick={() => navigateChapter('next')}
-                disabled={!currentBook || selectedChapter >= currentBook.chapters}
-                className="flex items-center gap-2 bg-black border-2 border-black text-white hover:bg-black/80 rounded-none font-bold uppercase tracking-wide"
-                data-testid="button-next-chapter"
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
             </div>
           </CardContent>
         </Card>
