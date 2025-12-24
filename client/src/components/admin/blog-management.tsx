@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Edit, Trash2, Plus, Eye, EyeOff, Rss, ExternalLink, Star, Upload, X } from "lucide-react";
+import { Edit, Trash2, Plus, Eye, EyeOff, Rss, ExternalLink, Star, Upload, X, FileText } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { BlogPost } from "@shared/schema";
 
@@ -290,15 +290,21 @@ export default function BlogManagement() {
               }`}
             >
               <CardContent className="p-3 flex items-center gap-4">
-                {blog.coverImageUrl && (
-                  <div className="relative w-16 h-16 flex-shrink-0 overflow-hidden border-2 border-black">
+                <div className={`relative w-16 h-16 flex-shrink-0 overflow-hidden border-2 border-black ${
+                  !blog.coverImageUrl ? (blog.isPublished ? 'bg-black' : 'bg-ministry-gold-exact') : ''
+                }`}>
+                  {blog.coverImageUrl ? (
                     <img
                       src={blog.coverImageUrl}
                       alt={blog.title}
                       className="w-full h-full object-cover"
                     />
-                  </div>
-                )}
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <FileText className={`w-8 h-8 ${blog.isPublished ? 'text-ministry-gold-exact/50' : 'text-black/50'}`} />
+                    </div>
+                  )}
+                </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">

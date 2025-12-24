@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Calendar, User, ExternalLink, Search, Star } from "lucide-react";
+import { ArrowLeft, Calendar, User, ExternalLink, Search, Star, FileText } from "lucide-react";
 import type { BlogPost } from "@shared/schema";
 
 const CATEGORIES = [
@@ -164,15 +164,21 @@ function BlogCard({ blog, featured, formatDate }: {
     >
       <CardContent className="p-0">
         <div className="flex flex-col md:flex-row">
-          {blog.coverImageUrl && (
-            <div className="w-full md:w-48 h-48 md:h-auto flex-shrink-0 border-b-2 md:border-b-0 md:border-r-2 border-black overflow-hidden">
+          <div className={`w-full md:w-48 h-48 md:h-auto min-h-[120px] flex-shrink-0 border-b-2 md:border-b-0 md:border-r-2 border-black overflow-hidden ${
+            !blog.coverImageUrl ? (featured ? 'bg-ministry-gold-exact' : 'bg-black') : ''
+          }`}>
+            {blog.coverImageUrl ? (
               <img
                 src={blog.coverImageUrl}
                 alt={blog.title}
                 className="w-full h-full object-cover"
               />
-            </div>
-          )}
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <FileText className={`w-16 h-16 ${featured ? 'text-black/30' : 'text-white/30'}`} />
+              </div>
+            )}
+          </div>
           <div className="p-6 flex-1">
             <div className="flex flex-wrap gap-2 mb-3">
               <span className={`text-xs font-black uppercase px-2 py-1 ${

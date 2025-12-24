@@ -6679,12 +6679,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const content = (item as any)['content:encoded'] || item.content || item.contentSnippet || item.summary || '';
           const excerpt = item.contentSnippet || item.summary || content.substring(0, 300);
 
+          // Extract image from various RSS sources
+          let coverImageUrl = null;
+          // Try enclosure (common for media)
+          if (item.enclosure?.url && item.enclosure.type?.startsWith('image/')) {
+            coverImageUrl = item.enclosure.url;
+          }
+          // Try iTunes image
+          if (!coverImageUrl && (item as any)['itunes:image']) {
+            coverImageUrl = (item as any)['itunes:image'].$ ?.href || (item as any)['itunes:image'];
+          }
+          // Try media:content or media:thumbnail
+          if (!coverImageUrl && (item as any)['media:content']?.$?.url) {
+            coverImageUrl = (item as any)['media:content'].$.url;
+          }
+          if (!coverImageUrl && (item as any)['media:thumbnail']?.$?.url) {
+            coverImageUrl = (item as any)['media:thumbnail'].$.url;
+          }
+          // Try to extract first image from content
+          if (!coverImageUrl && content) {
+            const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+            if (imgMatch && imgMatch[1]) {
+              coverImageUrl = imgMatch[1];
+            }
+          }
+          // Fall back to feed-level image
+          if (!coverImageUrl && feed.image?.url) {
+            coverImageUrl = feed.image.url;
+          }
+
           const blogData = {
             title: item.title || 'Untitled',
             slug,
             excerpt: excerpt.length > 300 ? excerpt.substring(0, 297) + '...' : excerpt,
             content,
-            coverImageUrl: item.enclosure?.url || null,
+            coverImageUrl,
             authorName: item.creator || (item as any).author || 'External',
             isPublished: true,
             isFeatured: false,

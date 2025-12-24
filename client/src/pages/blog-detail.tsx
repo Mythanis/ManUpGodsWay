@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, User, ExternalLink, Share2 } from "lucide-react";
+import { ArrowLeft, Calendar, User, ExternalLink, Share2, FileText } from "lucide-react";
 import type { BlogPost } from "@shared/schema";
 
 export default function BlogDetail() {
@@ -167,17 +167,21 @@ export default function BlogDetail() {
         </div>
       </div>
 
-      {blog.coverImageUrl && (
-        <div className="max-w-3xl mx-auto px-6 -mt-4">
-          <div className="border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+      <div className="max-w-3xl mx-auto px-6 -mt-4">
+        <div className="border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+          {blog.coverImageUrl ? (
             <img
               src={blog.coverImageUrl}
               alt={blog.title}
               className="w-full h-64 md:h-96 object-cover"
             />
-          </div>
+          ) : (
+            <div className="w-full h-48 md:h-64 bg-black flex items-center justify-center">
+              <FileText className="w-24 h-24 text-ministry-gold-exact/30" />
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       <div className="px-6 py-6 max-w-3xl mx-auto">
         <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
