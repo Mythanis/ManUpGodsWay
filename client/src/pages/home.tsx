@@ -920,20 +920,24 @@ export default function Home() {
 
       {/* Full Devotional Modal */}
       <Dialog open={showFullDevotional} onOpenChange={setShowFullDevotional}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-black border-2 border-black">
-          <DialogHeader>
-            <DialogTitle className="text-white text-xl font-black">{devotional?.title}</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85vh] overflow-y-auto bg-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-0">
+          <div className="bg-ministry-gold-exact p-4 border-b-2 border-black">
+            <DialogHeader>
+              <DialogTitle className="text-black text-lg font-black uppercase tracking-tight">
+                {devotional?.title}
+              </DialogTitle>
+            </DialogHeader>
+          </div>
           
           {devotional && (
-            <div className="space-y-4">
+            <div className="p-4 space-y-4">
               {/* Full Image */}
               {devotional.imageUrl && (
-                <div className="rounded-lg overflow-hidden">
+                <div className="overflow-hidden border-2 border-black rounded-none">
                   <img 
                     src={devotional.imageUrl} 
                     alt={devotional.title}
-                    className="w-full h-64 object-cover"
+                    className="w-full h-48 object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
@@ -942,74 +946,75 @@ export default function Home() {
               )}
               
               {/* Verse */}
-              <div className="bg-gray-800 rounded-lg p-4 border border-ministry-gold-exact">
-                <p className="text-ministry-gold-exact font-semibold text-base">
-                  "{devotional.verse}" - {devotional.verseReference}
+              <div className="bg-ministry-gold-exact p-4 border-2 border-black rounded-none">
+                <p className="text-black font-bold text-sm">
+                  "{devotional.verse}"
+                </p>
+                <p className="text-black font-black text-xs mt-1 uppercase tracking-wide">
+                  — {devotional.verseReference}
                 </p>
               </div>
               
               {/* Full Content */}
-              <div className="prose prose-sm max-w-none prose-invert">
-                <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+              <div className="bg-gray-900 p-4 border-2 border-black rounded-none">
+                <p className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">
                   {devotional.content}
                 </p>
               </div>
               
               {/* Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-700">
-                <div className="flex items-center space-x-3">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className={`flex items-center space-x-2 ${
-                      isLiked 
-                        ? 'text-red-500 hover:text-red-600' 
-                        : 'text-gray-400 hover:text-white'
-                    }`}
-                    onClick={() => {
-                      setIsLiked(!isLiked);
-                      toast({
-                        title: isLiked ? "Removed from favorites" : "Added to favorites",
-                        description: isLiked ? "Devotional removed from your favorites" : "Devotional saved to your favorites",
-                      });
-                    }}
-                  >
-                    <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                    <span>{isLiked ? 'Favorited' : 'Add to Favorites'}</span>
-                  </Button>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="flex items-center space-x-2 text-gray-400 hover:text-white"
-                    onClick={() => {
-                      const shareText = `${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n${devotional.content}`;
-                      
-                      if (navigator.share) {
-                        navigator.share({
-                          title: devotional.title,
-                          text: shareText,
-                          url: window.location.origin,
-                        }).catch(console.error);
-                      } else {
-                        navigator.clipboard.writeText(shareText).then(() => {
-                          toast({
-                            title: "Copied to clipboard",
-                            description: "Devotional text copied to clipboard for sharing",
-                          });
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2 border-t-2 border-black">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className={`flex items-center justify-center space-x-2 rounded-none border-2 border-black font-bold uppercase text-xs ${
+                    isLiked 
+                      ? 'bg-red-500 text-white hover:bg-red-600' 
+                      : 'bg-gray-800 text-white hover:bg-gray-700'
+                  }`}
+                  onClick={() => {
+                    setIsLiked(!isLiked);
+                    toast({
+                      title: isLiked ? "Removed from favorites" : "Added to favorites",
+                      description: isLiked ? "Devotional removed from your favorites" : "Devotional saved to your favorites",
+                    });
+                  }}
+                >
+                  <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                  <span>{isLiked ? 'Favorited' : 'Favorite'}</span>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center justify-center space-x-2 bg-gray-800 text-white hover:bg-gray-700 rounded-none border-2 border-black font-bold uppercase text-xs"
+                  onClick={() => {
+                    const shareText = `${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n${devotional.content}`;
+                    
+                    if (navigator.share) {
+                      navigator.share({
+                        title: devotional.title,
+                        text: shareText,
+                        url: window.location.origin,
+                      }).catch(console.error);
+                    } else {
+                      navigator.clipboard.writeText(shareText).then(() => {
+                        toast({
+                          title: "Copied to clipboard",
+                          description: "Devotional text copied to clipboard for sharing",
                         });
-                      }
-                    }}
-                  >
-                    <Share2 className="w-4 h-4" />
-                    <span>Share</span>
-                  </Button>
-                </div>
+                      });
+                    }
+                  }}
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>Share</span>
+                </Button>
                 
                 <Button 
                   size="sm"
                   onClick={() => setShowFullDevotional(false)}
-                  className="bg-ministry-gold-exact text-black hover:bg-ministry-gold font-semibold"
+                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400 rounded-none border-2 border-black font-black uppercase text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                 >
                   Close
                 </Button>
