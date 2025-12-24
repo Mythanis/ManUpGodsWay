@@ -254,14 +254,18 @@ export default function BlogManagement() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <CardContent className="p-4">
-                <div className="animate-pulse space-y-3">
-                  <div className="h-4 bg-black/20 rounded-none w-3/4"></div>
-                  <div className="h-3 bg-black/20 rounded-none w-full"></div>
-                  <div className="h-3 bg-black/20 rounded-none w-2/3"></div>
+        <div className="flex flex-col gap-3">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+              <CardContent className="p-3 flex items-center gap-4">
+                <div className="w-16 h-16 bg-black/20 animate-pulse flex-shrink-0"></div>
+                <div className="flex-1 animate-pulse space-y-2">
+                  <div className="h-4 bg-black/20 w-1/2"></div>
+                  <div className="h-3 bg-black/20 w-1/3"></div>
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <div className="h-8 w-16 bg-black/20 animate-pulse"></div>
+                  <div className="h-8 w-8 bg-black/20 animate-pulse"></div>
                 </div>
               </CardContent>
             </Card>
@@ -277,73 +281,63 @@ export default function BlogManagement() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex flex-col gap-3">
           {blogs.map((blog) => (
             <Card 
               key={blog.id} 
-              className={`border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${
+              className={`border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
                 blog.isPublished ? 'bg-ministry-gold-exact' : 'bg-black text-white'
               }`}
             >
-              {blog.coverImageUrl && (
-                <div className="relative h-32 overflow-hidden border-b-2 border-black">
-                  <img
-                    src={blog.coverImageUrl}
-                    alt={blog.title}
-                    className="w-full h-full object-cover"
-                  />
-                  {blog.isFeatured && (
-                    <div className="absolute top-2 right-2 bg-ministry-gold-exact text-black px-2 py-1 rounded-none text-xs font-black uppercase border border-black">
-                      <Star className="w-3 h-3 inline mr-1" />
-                      Featured
-                    </div>
-                  )}
-                </div>
-              )}
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className={`font-black text-lg uppercase tracking-tight line-clamp-2 ${
-                    blog.isPublished ? 'text-black' : 'text-white'
-                  }`}>
-                    {blog.title}
-                  </h3>
-                  {!blog.isPublished && (
-                    <span className="text-xs bg-white/20 text-white px-2 py-1 rounded-none font-bold uppercase">
-                      Draft
-                    </span>
-                  )}
-                </div>
-                
-                {blog.excerpt && (
-                  <p className={`text-sm mb-3 line-clamp-2 ${
-                    blog.isPublished ? 'text-black/70' : 'text-white/70'
-                  }`}>
-                    {blog.excerpt}
-                  </p>
+              <CardContent className="p-3 flex items-center gap-4">
+                {blog.coverImageUrl && (
+                  <div className="relative w-16 h-16 flex-shrink-0 overflow-hidden border-2 border-black">
+                    <img
+                      src={blog.coverImageUrl}
+                      alt={blog.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 )}
                 
-                <div className={`text-xs mb-3 space-y-1 ${
-                  blog.isPublished ? 'text-black/60' : 'text-white/60'
-                }`}>
-                  <div>Category: <span className="font-bold uppercase">{blog.category}</span></div>
-                  <div>Published: {formatDate(blog.publishedAt)}</div>
-                  {blog.externalSource && (
-                    <div className="flex items-center gap-1">
-                      <ExternalLink className="w-3 h-3" />
-                      <span>Imported from RSS</span>
-                    </div>
-                  )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className={`font-black text-sm uppercase tracking-tight truncate ${
+                      blog.isPublished ? 'text-black' : 'text-white'
+                    }`}>
+                      {blog.title}
+                    </h3>
+                    {blog.isFeatured && (
+                      <Star className="w-4 h-4 text-black flex-shrink-0" fill="currentColor" />
+                    )}
+                    {!blog.isPublished && (
+                      <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-none font-bold uppercase flex-shrink-0">
+                        Draft
+                      </span>
+                    )}
+                  </div>
+                  <div className={`text-xs flex items-center gap-3 ${
+                    blog.isPublished ? 'text-black/60' : 'text-white/60'
+                  }`}>
+                    <span className="font-bold uppercase">{blog.category}</span>
+                    <span>{formatDate(blog.publishedAt)}</span>
+                    {blog.externalSource && (
+                      <span className="flex items-center gap-1">
+                        <ExternalLink className="w-3 h-3" />
+                        RSS
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-shrink-0">
                   <Button
                     size="sm"
-                    variant="outline"
                     onClick={() => handleEdit(blog)}
-                    className={`rounded-none border-2 ${
+                    className={`rounded-none border-2 font-bold ${
                       blog.isPublished 
-                        ? 'border-black text-black hover:bg-black hover:text-white' 
-                        : 'border-white text-white hover:bg-white hover:text-black'
+                        ? 'border-black bg-black text-white hover:bg-gray-800' 
+                        : 'border-white bg-white text-black hover:bg-gray-200'
                     }`}
                     data-testid={`button-edit-blog-${blog.id}`}
                   >
@@ -358,7 +352,7 @@ export default function BlogManagement() {
                         deleteMutation.mutate(blog.id);
                       }
                     }}
-                    className="rounded-none border-2 border-black bg-red-600 hover:bg-red-700"
+                    className="rounded-none border-2 border-black bg-red-600 hover:bg-red-700 text-white"
                     data-testid={`button-delete-blog-${blog.id}`}
                   >
                     <Trash2 className="w-3 h-3" />
