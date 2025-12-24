@@ -531,8 +531,8 @@ export default function Bible() {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Badge className="px-2 py-1 text-xs bg-black text-ministry-gold-exact font-bold rounded-none border-2 border-black whitespace-nowrap">
-                  {currentBook?.abbrev || selectedBook} {selectedChapter}
+                <Badge className="px-2 py-1 text-xs bg-black font-bold rounded-none border-2 border-black whitespace-nowrap">
+                  <span className="text-white">{currentBook?.abbrev || selectedBook}</span> <span className="text-ministry-gold-exact">{selectedChapter}</span>
                 </Badge>
                 <Button
                   variant="outline"
@@ -553,8 +553,8 @@ export default function Bible() {
         <Card className="bg-black border-2 border-ministry-gold-exact rounded-none shadow-[0_0_20px_rgba(252,208,0,0.15)]">
           <CardHeader>
             <div className="flex flex-wrap justify-between items-center gap-3">
-              <CardTitle className="text-ministry-gold-exact font-black uppercase tracking-tight text-xl">
-                {selectedBook} Chapter {selectedChapter} ({selectedVersion})
+              <CardTitle className="font-black uppercase tracking-tight text-xl">
+                <span className="text-white">{selectedBook}</span> <span className="text-ministry-gold-exact">Chapter {selectedChapter}</span> <span className="text-white/60">({selectedVersion})</span>
               </CardTitle>
               <div className="flex gap-2">
                 <Badge className="bg-ministry-gold-exact text-black font-bold uppercase tracking-wide rounded-none border-2 border-black">
