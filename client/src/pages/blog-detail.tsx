@@ -29,18 +29,20 @@ export default function BlogDetail() {
   };
 
   const handleShare = async () => {
+    const shareText = `${blog?.title} - Check out this article from Man Up God's Way, a faith-based platform helping men grow in their walk with Christ.`;
+    
     if (navigator.share) {
       try {
         await navigator.share({
           title: blog?.title,
-          text: blog?.excerpt || '',
+          text: shareText,
           url: window.location.href,
         });
       } catch (err) {
         console.log('Share cancelled');
       }
     } else {
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(`${shareText}\n\n${window.location.href}`);
     }
   };
 

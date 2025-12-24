@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Calendar, User, ExternalLink, Search, Star, FileText } from "lucide-react";
+import { Calendar, User, Search, Star, FileText, Share2 } from "lucide-react";
 import type { BlogPost } from "@shared/schema";
 
 const CATEGORIES = [
@@ -154,6 +154,26 @@ function BlogCard({ blog, featured, formatDate }: {
 }) {
   const [, navigate] = useLocation();
 
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const shareUrl = `${window.location.origin}/blog/${blog.slug}`;
+    const shareText = `${blog.title} - Check out this article from Man Up God's Way, a faith-based platform helping men grow in their walk with Christ.`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: blog.title,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (err) {
+        console.log('Share cancelled');
+      }
+    } else {
+      navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+    }
+  };
+
   return (
     <Card 
       className={`border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-shadow ${
@@ -188,16 +208,18 @@ function BlogCard({ blog, featured, formatDate }: {
               }`}>
                 {blog.category}
               </span>
-              {blog.externalUrl && (
-                <span className={`text-xs font-bold uppercase px-2 py-1 flex items-center gap-1 ${
+              <button
+                onClick={handleShare}
+                className={`text-xs font-bold uppercase px-2 py-1 flex items-center gap-1 hover:opacity-80 ${
                   featured 
                     ? 'bg-white/20 text-white' 
                     : 'bg-black/20 text-black'
-                }`}>
-                  <ExternalLink className="w-3 h-3" />
-                  External
-                </span>
-              )}
+                }`}
+                data-testid={`button-share-blog-${blog.id}`}
+              >
+                <Share2 className="w-3 h-3" />
+                Share
+              </button>
             </div>
             
             <h3 className={`text-xl font-black uppercase tracking-tight mb-2 ${
