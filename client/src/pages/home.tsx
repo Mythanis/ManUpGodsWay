@@ -387,8 +387,8 @@ export default function Home() {
 
   return (
     <div className="pb-20">
-      {/* Header Section - Liquid Effect */}
-      <div className="liquid-header text-white px-6 pt-12 pb-8">
+      {/* Header Section */}
+      <div className="bg-black text-white px-6 pt-12 pb-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             {/* User Profile Picture */}
