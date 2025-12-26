@@ -63,32 +63,39 @@ export default function WarGroupRegister() {
   const handleCityChange = (value: string) => {
     setCityInput(value);
     form.setValue("city", value);
-    // Auto-update name field
     if (value) {
       form.setValue("name", `Man Up God's Way - ${value}`);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-charcoal to-charcoal-light pb-24">
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/war-groups")}
-          className="mb-6 text-gold hover:text-gold-light"
-          data-testid="button-back"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to War Groups
-        </Button>
-
-        <Card className="bg-charcoal-light border-gold/20">
-          <CardHeader>
-            <div className="flex items-center gap-3 mb-2">
-              <Shield className="h-8 w-8 text-gold" />
-              <CardTitle className="text-2xl text-white">Register a War Group</CardTitle>
+    <div className="min-h-screen bg-white pb-24">
+      {/* Header */}
+      <div className="liquid-header text-white px-6 pt-12 pb-6">
+        <div className="max-w-4xl mx-auto">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/war-groups")}
+            className="mb-4 text-ministry-gold-exact hover:text-yellow-300 hover:bg-white/10 rounded-none font-black uppercase tracking-wide text-xs"
+            data-testid="button-back"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to War Groups
+          </Button>
+          <div className="flex items-center gap-3">
+            <Shield className="h-8 w-8 text-ministry-gold-exact" />
+            <div>
+              <h1 className="text-3xl font-black tracking-tighter uppercase">Register a War Group</h1>
+              <p className="text-ministry-gold-exact text-xs font-bold tracking-widest uppercase mt-1">Start a Licensed Discipleship Group</p>
             </div>
-            <CardDescription className="text-slate-light">
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <Card className="liquid-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
+          <CardHeader>
+            <CardDescription className="text-gray-300 relative z-10">
               Apply to start a licensed "Man Up God's Way" discipleship group in your city.
               All registrations are reviewed by our team before approval.
             </CardDescription>
@@ -111,11 +118,11 @@ export default function WarGroupRegister() {
                     });
                   }
                 )}
-                className="space-y-6"
+                className="space-y-8"
               >
                 {/* Location Section */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gold flex items-center gap-2">
+                  <h3 className="text-lg font-black text-ministry-gold-exact flex items-center gap-2 uppercase tracking-tight relative z-10">
                     <MapPin className="h-5 w-5" />
                     Location Information
                   </h3>
@@ -125,13 +132,13 @@ export default function WarGroupRegister() {
                     name="city"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">City</FormLabel>
+                        <FormLabel className="text-white font-bold uppercase text-xs tracking-wide relative z-10">City</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             onChange={(e) => handleCityChange(e.target.value)}
                             placeholder="e.g., Dallas"
-                            className="bg-charcoal border-slate text-black"
+                            className="bg-white border-2 border-black text-black rounded-none font-medium placeholder:text-black/50"
                             data-testid="input-city"
                           />
                         </FormControl>
@@ -145,16 +152,16 @@ export default function WarGroupRegister() {
                     name="state"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">State</FormLabel>
+                        <FormLabel className="text-white font-bold uppercase text-xs tracking-wide relative z-10">State</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             placeholder="e.g., TX"
-                            className="bg-charcoal border-slate text-black"
+                            className="bg-white border-2 border-black text-black rounded-none font-medium placeholder:text-black/50"
                             data-testid="input-state"
                           />
                         </FormControl>
-                        <FormDescription className="text-slate-light">
+                        <FormDescription className="text-gray-400 text-xs relative z-10">
                           Use 2-letter state code (e.g., TX, CA, NY)
                         </FormDescription>
                         <FormMessage />
@@ -167,16 +174,16 @@ export default function WarGroupRegister() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Group Name</FormLabel>
+                        <FormLabel className="text-white font-bold uppercase text-xs tracking-wide relative z-10">Group Name</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             readOnly
-                            className="bg-charcoal/50 border-slate text-black cursor-not-allowed"
+                            className="bg-gray-200 border-2 border-black text-black rounded-none font-medium cursor-not-allowed"
                             data-testid="input-name"
                           />
                         </FormControl>
-                        <FormDescription className="text-slate-light">
+                        <FormDescription className="text-gray-400 text-xs relative z-10">
                           Auto-generated based on city name
                         </FormDescription>
                         <FormMessage />
@@ -187,7 +194,7 @@ export default function WarGroupRegister() {
 
                 {/* Group Details Section */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gold flex items-center gap-2">
+                  <h3 className="text-lg font-black text-ministry-gold-exact flex items-center gap-2 uppercase tracking-tight relative z-10">
                     <Users className="h-5 w-5" />
                     Group Details
                   </h3>
@@ -197,12 +204,13 @@ export default function WarGroupRegister() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Description</FormLabel>
+                        <FormLabel className="text-white font-bold uppercase text-xs tracking-wide relative z-10">Description</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
+                            value={field.value || ""}
                             placeholder="Describe your vision for this war group..."
-                            className="bg-charcoal border-slate text-black min-h-[100px]"
+                            className="bg-white border-2 border-black text-black rounded-none font-medium min-h-[100px] placeholder:text-black/50"
                             data-testid="input-description"
                           />
                         </FormControl>
@@ -216,12 +224,13 @@ export default function WarGroupRegister() {
                     name="meetingInfo"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Proposed Meeting Information</FormLabel>
+                        <FormLabel className="text-white font-bold uppercase text-xs tracking-wide relative z-10">Proposed Meeting Information</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
+                            value={field.value || ""}
                             placeholder="When and where do you plan to meet? (e.g., Every Tuesday 7pm at Community Center)"
-                            className="bg-charcoal border-slate text-black min-h-[80px]"
+                            className="bg-white border-2 border-black text-black rounded-none font-medium min-h-[80px] placeholder:text-black/50"
                             data-testid="input-meeting-info"
                           />
                         </FormControl>
@@ -233,7 +242,7 @@ export default function WarGroupRegister() {
 
                 {/* Contact Information Section */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gold flex items-center gap-2">
+                  <h3 className="text-lg font-black text-ministry-gold-exact flex items-center gap-2 uppercase tracking-tight relative z-10">
                     <Mail className="h-5 w-5" />
                     Contact Information
                   </h3>
@@ -243,13 +252,13 @@ export default function WarGroupRegister() {
                     name="contactEmail"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Contact Email</FormLabel>
+                        <FormLabel className="text-white font-bold uppercase text-xs tracking-wide relative z-10">Contact Email</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             type="email"
                             placeholder="your@email.com"
-                            className="bg-charcoal border-slate text-black"
+                            className="bg-white border-2 border-black text-black rounded-none font-medium placeholder:text-black/50"
                             data-testid="input-contact-email"
                           />
                         </FormControl>
@@ -263,13 +272,14 @@ export default function WarGroupRegister() {
                     name="contactPhone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Contact Phone (Optional)</FormLabel>
+                        <FormLabel className="text-white font-bold uppercase text-xs tracking-wide relative z-10">Contact Phone (Optional)</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
+                            value={field.value || ""}
                             type="tel"
                             placeholder="(555) 123-4567"
-                            className="bg-charcoal border-slate text-black"
+                            className="bg-white border-2 border-black text-black rounded-none font-medium placeholder:text-black/50"
                             data-testid="input-contact-phone"
                           />
                         </FormControl>
@@ -281,7 +291,7 @@ export default function WarGroupRegister() {
 
                 {/* Leadership Information Section */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gold flex items-center gap-2">
+                  <h3 className="text-lg font-black text-ministry-gold-exact flex items-center gap-2 uppercase tracking-tight relative z-10">
                     <FileText className="h-5 w-5" />
                     Leadership Information
                   </h3>
@@ -291,12 +301,13 @@ export default function WarGroupRegister() {
                     name="leadershipExperience"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Leadership Experience</FormLabel>
+                        <FormLabel className="text-white font-bold uppercase text-xs tracking-wide relative z-10">Leadership Experience</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
+                            value={field.value || ""}
                             placeholder="Share your leadership background and experience in ministry or discipleship..."
-                            className="bg-charcoal border-slate text-black min-h-[100px]"
+                            className="bg-white border-2 border-black text-black rounded-none font-medium min-h-[100px] placeholder:text-black/50"
                             data-testid="input-leadership-experience"
                           />
                         </FormControl>
@@ -310,12 +321,13 @@ export default function WarGroupRegister() {
                     name="motivation"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Why do you want to start this war group?</FormLabel>
+                        <FormLabel className="text-white font-bold uppercase text-xs tracking-wide relative z-10">Why do you want to start this war group?</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
+                            value={field.value || ""}
                             placeholder="What's your vision and motivation for leading this group?"
-                            className="bg-charcoal border-slate text-black min-h-[100px]"
+                            className="bg-white border-2 border-black text-black rounded-none font-medium min-h-[100px] placeholder:text-black/50"
                             data-testid="input-motivation"
                           />
                         </FormControl>
@@ -330,7 +342,7 @@ export default function WarGroupRegister() {
                     type="button"
                     variant="outline"
                     onClick={() => navigate("/war-groups")}
-                    className="flex-1"
+                    className="flex-1 bg-white text-black border-2 border-black rounded-none font-black uppercase tracking-wide hover:bg-gray-100 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                     data-testid="button-cancel"
                   >
                     Cancel
@@ -338,10 +350,12 @@ export default function WarGroupRegister() {
                   <Button
                     type="submit"
                     disabled={registerMutation.isPending}
-                    className="flex-1 bg-gold text-charcoal hover:bg-gold-light"
+                    className="flex-1 liquid-gold-card text-black border-2 border-black rounded-none font-black uppercase tracking-wide hover:brightness-110 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden"
                     data-testid="button-submit-registration"
                   >
-                    {registerMutation.isPending ? "Submitting..." : "Submit Registration"}
+                    <span className="relative z-10">
+                      {registerMutation.isPending ? "Submitting..." : "Submit Registration"}
+                    </span>
                   </Button>
                 </div>
               </form>
