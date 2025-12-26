@@ -116,28 +116,31 @@ export default function Events() {
         {eventsLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <Card key={i} className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                <CardHeader>
-                  <div className="animate-pulse">
-                    <div className="h-4 bg-gray-300 rounded-none w-3/4 mb-2"></div>
-                    <div className="h-3 bg-gray-300 rounded-none w-1/2"></div>
+              <Card key={i} className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                <CardHeader className="relative">
+                  <div className="flex items-start gap-4 relative z-10">
+                    <div className="w-16 h-16 liquid-black flex-shrink-0 border-2 border-black animate-pulse"></div>
+                    <div className="flex-1 animate-pulse">
+                      <div className="h-5 bg-black/20 rounded-none w-3/4 mb-3"></div>
+                      <div className="h-3 bg-black/20 rounded-none w-1/2"></div>
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="animate-pulse space-y-2">
-                    <div className="h-3 bg-gray-300 rounded-none w-full"></div>
-                    <div className="h-3 bg-gray-300 rounded-none w-2/3"></div>
+                <CardContent className="relative">
+                  <div className="animate-pulse space-y-2 relative z-10">
+                    <div className="h-3 bg-black/20 rounded-none w-full"></div>
+                    <div className="h-3 bg-black/20 rounded-none w-2/3"></div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : events.length === 0 ? (
-          <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center py-12">
-            <CardContent>
-              <Calendar className="mx-auto mb-4 h-16 w-16 text-black" />
-              <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-black">No Events Scheduled</h3>
-              <p className="text-black/80 font-medium">
+          <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center py-12 overflow-hidden">
+            <CardContent className="relative">
+              <Calendar className="mx-auto mb-4 h-16 w-16 text-black relative z-10" />
+              <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-black relative z-10">No Events Scheduled</h3>
+              <p className="text-black/80 font-medium relative z-10">
                 There are no upcoming events at this time. Check back soon for new announcements!
               </p>
             </CardContent>
@@ -150,80 +153,87 @@ export default function Events() {
               const isPastEvent = eventDate < new Date();
               
               return (
-                <Card key={event.id} className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-200">
-                  <CardHeader>
-                    <div className="flex items-start justify-between flex-wrap gap-2">
-                      <div className="flex-1">
-                        <CardTitle className="text-xl mb-2 text-black font-black uppercase tracking-tighter">
-                          {event.title}
-                        </CardTitle>
-                        <div className="flex flex-wrap gap-3 text-sm text-black/70 font-medium">
+                <Card key={event.id} className={`${isPastEvent ? 'liquid-black' : 'liquid-gold-card'} border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 overflow-hidden`}>
+                  <CardHeader className="relative">
+                    <div className="flex items-start gap-4 relative z-10">
+                      {/* Icon Box - like Popular section */}
+                      <div className={`w-16 h-16 ${isPastEvent ? 'liquid-gold-card' : 'liquid-black'} flex-shrink-0 flex items-center justify-center border-2 border-black`}>
+                        <Calendar className={`h-7 w-7 ${isPastEvent ? 'text-black' : 'text-white'} relative z-10`} />
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between flex-wrap gap-2">
+                          <CardTitle className={`text-xl mb-2 font-black uppercase tracking-tighter ${isPastEvent ? 'text-white' : 'text-black'}`}>
+                            {event.title}
+                          </CardTitle>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {isPastEvent && (
+                              <Badge className="bg-ministry-gold-exact text-black font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
+                                Past Event
+                              </Badge>
+                            )}
+                            {isRegistered && (
+                              <Badge className={`font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black ${isPastEvent ? 'bg-ministry-gold-exact text-black' : 'bg-black text-white'}`}>
+                                <Users className="h-3 w-3 mr-1" />
+                                Registered
+                              </Badge>
+                            )}
+                            {event.requiresPurchase && !isPastEvent && (
+                              <Badge className="bg-black text-ministry-gold-exact font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
+                                Paid Event
+                              </Badge>
+                            )}
+                            {!event.requiresPurchase && !isPastEvent && (
+                              <Badge className="bg-black text-ministry-gold-exact font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
+                                Free Event
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className={`flex flex-wrap gap-3 text-sm font-medium ${isPastEvent ? 'text-gray-300' : 'text-black/70'}`}>
                           <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4 text-black" />
+                            <Calendar className={`h-4 w-4 ${isPastEvent ? 'text-ministry-gold-exact' : 'text-black'}`} />
                             <span>{formatDate(event.eventDate)}</span>
                           </div>
                           {event.eventTime && (
                             <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4 text-black" />
+                              <Clock className={`h-4 w-4 ${isPastEvent ? 'text-ministry-gold-exact' : 'text-black'}`} />
                               <span>{formatTime(event.eventTime)}</span>
                             </div>
                           )}
                           {event.location && (
                             <div className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4 text-black" />
+                              <MapPin className={`h-4 w-4 ${isPastEvent ? 'text-ministry-gold-exact' : 'text-black'}`} />
                               <span className="truncate max-w-48">{event.location}</span>
                             </div>
                           )}
                           {event.requiresPurchase && event.price && (
                             <div className="flex items-center gap-1">
-                              <DollarSign className="h-4 w-4 text-black" />
+                              <DollarSign className={`h-4 w-4 ${isPastEvent ? 'text-ministry-gold-exact' : 'text-black'}`} />
                               <span>${event.price}</span>
                             </div>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {isPastEvent && (
-                          <Badge className="bg-gray-600 text-white font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
-                            Past Event
-                          </Badge>
-                        )}
-                        {isRegistered && (
-                          <Badge className="bg-black text-white font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
-                            <Users className="h-3 w-3 mr-1" />
-                            Registered
-                          </Badge>
-                        )}
-                        {event.requiresPurchase && !isPastEvent && (
-                          <Badge className="bg-black text-white font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
-                            Paid Event
-                          </Badge>
-                        )}
-                        {!event.requiresPurchase && !isPastEvent && (
-                          <Badge className="bg-black text-white font-bold uppercase tracking-wide text-xs rounded-none border-2 border-black">
-                            Free Event
-                          </Badge>
-                        )}
-                      </div>
                     </div>
                   </CardHeader>
                   
                   {event.description && (
-                    <CardContent className="pt-0">
-                      <CardDescription className="text-black/70 leading-relaxed font-medium">
+                    <CardContent className="pt-0 relative">
+                      <CardDescription className={`leading-relaxed font-medium relative z-10 ${isPastEvent ? 'text-gray-300' : 'text-black/70'}`}>
                         {event.description}
                       </CardDescription>
                     </CardContent>
                   )}
                   
-                  <CardContent className="pt-0">
-                    <div className="flex flex-wrap gap-3">
+                  <CardContent className="pt-0 relative">
+                    <div className="flex flex-wrap gap-3 relative z-10">
                       {event.eventUrl && (
                         <Button
                           variant="outline"
                           size="sm"
                           asChild
-                          className="bg-white border-2 border-black text-black hover:bg-gray-100 rounded-none font-bold uppercase tracking-wide"
+                          className={`border-2 border-black rounded-none font-bold uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${isPastEvent ? 'bg-ministry-gold-exact text-black hover:bg-yellow-400' : 'bg-white text-black hover:bg-gray-100'}`}
                         >
                           <a href={event.eventUrl} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-4 w-4 mr-2" />
@@ -236,7 +246,7 @@ export default function Events() {
                         <Button
                           onClick={() => registerMutation.mutate(event.id)}
                           disabled={registerMutation.isPending}
-                          className="bg-black text-white hover:bg-gray-900 font-black uppercase tracking-wide rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(255,255,255,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.5)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                          className="bg-black text-ministry-gold-exact hover:bg-gray-900 font-black uppercase tracking-wide rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                           size="sm"
                           data-testid={`button-register-${event.id}`}
                         >
@@ -246,7 +256,7 @@ export default function Events() {
                       
                       {!isPastEvent && !isRegistered && event.requiresPurchase && (
                         <Button
-                          className="bg-black text-white hover:bg-gray-900 font-black uppercase tracking-wide rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(255,255,255,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.5)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                          className="bg-black text-ministry-gold-exact hover:bg-gray-900 font-black uppercase tracking-wide rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                           size="sm"
                           data-testid={`button-purchase-${event.id}`}
                         >
