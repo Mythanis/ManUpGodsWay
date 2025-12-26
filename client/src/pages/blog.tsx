@@ -95,22 +95,25 @@ export default function Blog() {
         {isLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <Card key={i} className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                <CardContent className="p-6">
-                  <div className="animate-pulse space-y-3">
-                    <div className="h-6 bg-black/20 rounded-none w-3/4"></div>
-                    <div className="h-4 bg-black/20 rounded-none w-full"></div>
-                    <div className="h-4 bg-black/20 rounded-none w-2/3"></div>
+              <Card key={i} className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                <CardContent className="p-3 relative z-10">
+                  <div className="animate-pulse flex gap-3">
+                    <div className="w-20 h-20 bg-black/20 flex-shrink-0"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-black/20 w-3/4"></div>
+                      <div className="h-3 bg-black/20 w-full"></div>
+                      <div className="h-3 bg-black/20 w-1/2"></div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : filteredBlogs.length === 0 ? (
-          <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center py-12">
-            <CardContent>
-              <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-black">No Blog Posts Found</h3>
-              <p className="text-black/80 font-medium">
+          <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center py-8 overflow-hidden">
+            <CardContent className="relative z-10">
+              <h3 className="text-lg font-black uppercase tracking-tighter mb-2 text-black">No Blog Posts Found</h3>
+              <p className="text-black/80 font-medium text-sm">
                 {searchQuery || selectedCategory !== "all" 
                   ? "Try adjusting your search or filter criteria."
                   : "Check back soon for new content!"}
@@ -180,15 +183,15 @@ function BlogCard({ blog, featured, formatDate }: {
 
   return (
     <Card 
-      className={`border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-shadow ${
-        featured ? 'bg-black text-white' : 'bg-ministry-gold-exact text-black'
+      className={`border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden ${
+        featured ? 'liquid-black text-white' : 'liquid-gold-card text-black'
       }`}
       onClick={() => navigate(`/blog/${blog.slug}`)}
       data-testid={`card-blog-${blog.id}`}
     >
       <CardContent className="p-0">
-        <div className="flex flex-col md:flex-row">
-          <div className={`w-full md:w-32 h-32 flex-shrink-0 border-b-2 md:border-b-0 md:border-r-2 border-black overflow-hidden ${
+        <div className="flex flex-row relative z-10">
+          <div className={`w-20 h-20 flex-shrink-0 border-r-2 border-black overflow-hidden ${
             !blog.coverImageUrl ? (featured ? 'bg-ministry-gold-exact' : 'bg-black') : ''
           }`}>
             {blog.coverImageUrl ? (
@@ -199,13 +202,13 @@ function BlogCard({ blog, featured, formatDate }: {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <FileText className={`w-12 h-12 ${featured ? 'text-black/30' : 'text-white/30'}`} />
+                <FileText className={`w-8 h-8 ${featured ? 'text-black/30' : 'text-white/30'}`} />
               </div>
             )}
           </div>
-          <div className="p-6 flex-1">
-            <div className="flex flex-wrap gap-2 mb-3">
-              <span className={`text-xs font-black uppercase px-2 py-1 ${
+          <div className="p-3 flex-1 min-w-0">
+            <div className="flex flex-wrap gap-2 mb-2">
+              <span className={`text-xs font-black uppercase px-2 py-0.5 rounded-none ${
                 featured 
                   ? 'bg-ministry-gold-exact text-black' 
                   : 'bg-black text-white'
@@ -281,21 +284,21 @@ function BlogCard({ blog, featured, formatDate }: {
               </Popover>
             </div>
             
-            <h3 className={`text-xl font-black uppercase tracking-tight mb-2 ${
+            <h3 className={`text-base font-black uppercase tracking-tight mb-1 truncate ${
               featured ? 'text-white' : 'text-black'
             }`}>
               {blog.title}
             </h3>
             
             {blog.excerpt && (
-              <p className={`text-sm mb-4 line-clamp-2 ${
+              <p className={`text-xs mb-2 line-clamp-1 ${
                 featured ? 'text-white/80' : 'text-black/70'
               }`}>
                 {blog.excerpt}
               </p>
             )}
             
-            <div className={`flex flex-wrap items-center gap-4 text-xs ${
+            <div className={`flex flex-wrap items-center gap-3 text-xs ${
               featured ? 'text-white/60' : 'text-black/60'
             }`}>
               {blog.authorName && (
