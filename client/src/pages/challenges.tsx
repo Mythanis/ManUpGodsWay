@@ -161,7 +161,7 @@ export default function Challenges() {
       return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
     });
 
-  const uniqueTopics: string[] = Array.from(new Set(challenges.map((c: Challenge) => c.topic as string))).sort();
+  const uniqueTopics = Array.from(new Set(challenges.map((c: Challenge) => c.topic))).sort() as string[];
 
   const formatChallengeDate = (releaseDate: string) => {
     const date = new Date(releaseDate);
@@ -175,14 +175,14 @@ export default function Challenges() {
 
   const ChallengeCard = ({ challenge, isCurrentWeek = false }: { challenge: Challenge; isCurrentWeek?: boolean }) => (
     <Card 
-      className={`bg-black border-2 border-black cursor-pointer hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-none ${isCurrentWeek ? 'ring-2 ring-ministry-gold' : ''}`}
+      className={`${isCurrentWeek ? 'liquid-gold-card' : 'liquid-black'} border-2 border-black cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-none overflow-hidden`}
       onClick={() => openChallengeDialog(challenge)}
     >
-      <CardContent className="p-6">
+      <CardContent className="p-6 relative">
         <div className="flex items-start space-x-4">
-          <div className="flex-shrink-0">
-            <div className={`w-16 h-16 rounded-none flex items-center justify-center ${
-              isCurrentWeek ? 'bg-ministry-gold text-black' : 'bg-gray-800 text-ministry-gold'
+          <div className="flex-shrink-0 relative z-10">
+            <div className={`w-16 h-16 rounded-none flex items-center justify-center border-2 border-black ${
+              isCurrentWeek ? 'bg-black text-ministry-gold-exact' : 'bg-ministry-gold-exact text-black'
             }`}>
               {isCurrentWeek ? (
                 <Star className="w-8 h-8 fill-current" />
@@ -192,19 +192,19 @@ export default function Challenges() {
             </div>
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 relative z-10">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <h3 className="font-black text-lg mb-1 text-white tracking-tight">
+                <h3 className={`font-black text-lg mb-1 tracking-tight ${isCurrentWeek ? 'text-black' : 'text-white'}`}>
                   {challenge.title}
                   {isCurrentWeek && (
-                    <Badge className="ml-2 bg-ministry-gold-exact text-black font-black rounded-none uppercase tracking-wide text-xs">
+                    <Badge className="ml-2 bg-black text-ministry-gold-exact font-black rounded-none uppercase tracking-wide text-xs">
                       Current Week
                     </Badge>
                   )}
                 </h3>
-                <div className="flex items-center space-x-3 text-sm text-gray-400 mb-2">
-                  <Badge className="bg-ministry-gold-exact text-black font-bold text-xs uppercase tracking-wide border-0 rounded-none">
+                <div className={`flex items-center flex-wrap gap-2 text-sm mb-2 ${isCurrentWeek ? 'text-black/70' : 'text-gray-400'}`}>
+                  <Badge className={`font-bold text-xs uppercase tracking-wide border-2 border-black rounded-none ${isCurrentWeek ? 'bg-black text-ministry-gold-exact' : 'bg-ministry-gold-exact text-black'}`}>
                     {challenge.topic}
                   </Badge>
                   <div className="flex items-center">
@@ -216,30 +216,30 @@ export default function Challenges() {
             </div>
 
             {challenge.description && (
-              <p className="text-gray-300 text-sm line-clamp-2 mb-2">
+              <p className={`text-sm line-clamp-2 mb-2 ${isCurrentWeek ? 'text-black/80' : 'text-gray-300'}`}>
                 {challenge.description}
               </p>
             )}
 
-            <div className="flex items-center text-ministry-gold text-sm">
+            <div className={`flex items-center text-sm ${isCurrentWeek ? 'text-black font-bold' : 'text-ministry-gold-exact'}`}>
               <Eye className="w-4 h-4 mr-1" />
               <span>Tap to view details</span>
             </div>
 
             {/* Accept Challenge Section - Only for current week */}
             {isCurrentWeek && (
-              <div className="mt-4 pt-4 border-t border-gray-700">
+              <div className="mt-4 pt-4 border-t-2 border-black">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div className="flex items-center space-x-2">
-                    <Users className="w-5 h-5 text-ministry-gold flex-shrink-0" />
-                    <span className="text-sm text-gray-300">
+                    <Users className="w-5 h-5 text-black flex-shrink-0" />
+                    <span className="text-sm text-black font-bold">
                       {participantCount?.count || 0} accepted
                     </span>
                   </div>
                   {user ? (
                     <Button
                       size="sm"
-                      className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide"
+                      className="bg-black hover:bg-black/90 text-ministry-gold-exact font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                       onClick={(e) => {
                         e.stopPropagation();
                         acceptChallengeMutation.mutate(challenge.id);
@@ -261,7 +261,7 @@ export default function Challenges() {
                   ) : (
                     <Button
                       size="sm"
-                      className="bg-gray-700 text-gray-400"
+                      className="bg-black/50 text-white/50 rounded-none"
                       disabled
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -317,11 +317,11 @@ export default function Challenges() {
               <Target className="w-6 h-6 text-ministry-gold mr-2" />
               <h2 className="text-xl font-black text-white tracking-tight uppercase">This Week's Challenge</h2>
             </div>
-            <Card className="text-center py-12 bg-black border-2 border-black rounded-none">
-              <CardContent>
-                <Clock className="w-12 h-12 mx-auto text-ministry-gold mb-4" />
-                <h3 className="text-lg font-medium text-white mb-2">No Current Challenge</h3>
-                <p className="text-gray-400">Check back soon for this week's challenge!</p>
+            <Card className="text-center py-12 liquid-black border-2 border-black rounded-none overflow-hidden">
+              <CardContent className="relative">
+                <Clock className="w-12 h-12 mx-auto text-ministry-gold-exact mb-4 relative z-10" />
+                <h3 className="text-lg font-black text-white mb-2 relative z-10 uppercase tracking-tight">No Current Challenge</h3>
+                <p className="text-gray-400 relative z-10">Check back soon for this week's challenge!</p>
               </CardContent>
             </Card>
           </div>
@@ -398,13 +398,13 @@ export default function Challenges() {
 
         {/* Previous Challenges List */}
         {processedChallenges.length === 0 ? (
-          <Card className="text-center py-12 bg-black border-2 border-black">
-            <CardContent>
-              <Trophy className="w-12 h-12 mx-auto text-ministry-gold mb-4" />
-              <h3 className="text-lg font-medium text-white mb-2">
+          <Card className="text-center py-12 liquid-black border-2 border-black rounded-none overflow-hidden">
+            <CardContent className="relative">
+              <Trophy className="w-12 h-12 mx-auto text-ministry-gold-exact mb-4 relative z-10" />
+              <h3 className="text-lg font-black text-white mb-2 relative z-10 uppercase tracking-tight">
                 {filterTopic !== 'all' ? 'No challenges found for this topic' : 'No previous challenges yet'}
               </h3>
-              <p className="text-gray-400">
+              <p className="text-gray-400 relative z-10">
                 {filterTopic !== 'all' 
                   ? 'Try selecting a different topic or clear the filter' 
                   : 'Check back as more challenges are added!'}
@@ -422,55 +422,55 @@ export default function Challenges() {
 
       {/* Challenge Detail Dialog */}
       <Dialog open={showChallengeDialog} onOpenChange={setShowChallengeDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-zinc-900 border-2 border-black rounded-none shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
-              <Target className="w-5 h-5 text-ministry-gold" />
-              <span className="text-black">Challenge Details</span>
+              <Target className="w-5 h-5 text-ministry-gold-exact" />
+              <span className="text-white font-black uppercase tracking-tight">Challenge Details</span>
             </DialogTitle>
           </DialogHeader>
           
           {selectedChallenge && (
             <div className="space-y-4">
               {/* Challenge Header */}
-              <div className="bg-black text-white p-6 rounded-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="inline-flex items-center bg-ministry-gold-exact text-black px-3 py-1 rounded-full text-xs font-medium">
+              <div className="liquid-black text-white p-6 rounded-none border-2 border-black overflow-hidden">
+                <div className="flex items-center justify-between mb-4 relative z-10 flex-wrap gap-2">
+                  <div className="inline-flex items-center bg-ministry-gold-exact text-black px-3 py-1 rounded-none text-xs font-black uppercase tracking-wide border-2 border-black">
                     <Target className="w-3 h-3 mr-1" fill="currentColor" />
                     Week of {formatChallengeDate(selectedChallenge.releaseDate)}
                   </div>
-                  <Badge className="bg-ministry-gold-exact text-black font-semibold capitalize">
+                  <Badge className="bg-ministry-gold-exact text-black font-black capitalize rounded-none border-2 border-black">
                     {selectedChallenge.topic}
                   </Badge>
                 </div>
                 
-                <h3 className="text-xl font-bold mb-3">
+                <h3 className="text-xl font-black mb-3 relative z-10 uppercase tracking-tight">
                   {selectedChallenge.title}
                   {isSelectedCurrentWeek && (
-                    <Badge className="ml-2 bg-ministry-gold text-black">
+                    <Badge className="ml-2 bg-ministry-gold-exact text-black rounded-none border-2 border-black font-black">
                       Current Week
                     </Badge>
                   )}
                 </h3>
                 
-                <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">
+                <p className="text-gray-200 leading-relaxed whitespace-pre-wrap relative z-10">
                   {selectedChallenge.description || "No description available for this challenge."}
                 </p>
               </div>
 
               {/* Participant Count Banner */}
-              <div className="bg-ministry-gold-exact border border-ministry-gold rounded-lg p-4">
-                <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="liquid-gold-card border-2 border-black rounded-none p-4 overflow-hidden">
+                <div className="flex items-center justify-between flex-wrap gap-3 relative z-10">
                   <div className="flex items-center space-x-2">
                     <Users className="w-5 h-5 text-black" />
-                    <span className="text-sm font-medium text-black">
+                    <span className="text-sm font-black text-black uppercase tracking-wide">
                       {selectedParticipantCount?.count || 0} {(selectedParticipantCount?.count || 0) === 1 ? 'brother has' : 'brothers have'} taken this challenge
                     </span>
                   </div>
                   {user ? (
                     <Button 
                       size="sm"
-                      className="bg-black hover:bg-gray-800 text-white font-bold whitespace-nowrap"
+                      className="bg-black hover:bg-black/90 text-ministry-gold-exact font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                       onClick={() => acceptChallengeMutation.mutate(selectedChallenge.id)}
                       disabled={selectedUserAccepted?.hasAccepted || acceptChallengeMutation.isPending}
                       data-testid="button-accept-challenge-dialog"
@@ -489,7 +489,7 @@ export default function Challenges() {
                   ) : (
                     <Button
                       size="sm"
-                      className="bg-gray-700 text-gray-400"
+                      className="bg-black/50 text-white/50 rounded-none"
                       disabled
                     >
                       Login to Accept
@@ -501,7 +501,7 @@ export default function Challenges() {
               {/* Close Button */}
               <div className="flex justify-end pt-2">
                 <Button 
-                  variant="outline"
+                  className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                   onClick={() => setShowChallengeDialog(false)}
                 >
                   Close
