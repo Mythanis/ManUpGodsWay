@@ -487,18 +487,19 @@
   }
 }
 
-/* Liquid gradient header - Black base with subtle animation */
+/* Liquid gradient header - Black base with visible animation */
 .liquid-header {
   background: linear-gradient(
     135deg,
     #000000 0%,
-    #0a0a0a 25%,
-    #111111 50%,
-    #0a0a0a 75%,
+    #1a1a1a 20%,
+    #0d0d0d 40%,
+    #1f1f1f 60%,
+    #0a0a0a 80%,
     #000000 100%
   );
-  background-size: 400% 400%;
-  animation: liquidFlow 15s ease infinite;
+  background-size: 300% 300%;
+  animation: liquidFlow 8s ease infinite;
   position: relative;
   overflow: hidden;
 }
@@ -511,15 +512,16 @@
   right: 0;
   bottom: 0;
   background: radial-gradient(
-    ellipse at 30% 20%,
-    rgba(252, 208, 0, 0.12) 0%,
+    ellipse at 20% 30%,
+    rgba(252, 208, 0, 0.25) 0%,
     transparent 50%
   ),
   radial-gradient(
-    ellipse at 70% 80%,
-    rgba(252, 208, 0, 0.08) 0%,
-    transparent 40%
+    ellipse at 80% 70%,
+    rgba(252, 208, 0, 0.15) 0%,
+    transparent 45%
   );
+  animation: pulse-glow 3s ease-in-out infinite;
   pointer-events: none;
 }
 
