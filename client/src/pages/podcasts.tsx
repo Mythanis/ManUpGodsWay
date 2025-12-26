@@ -458,8 +458,8 @@ export default function Podcasts() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold"></div>
           </div>
         ) : filteredPodcasts.length === 0 ? (
-          <Card className="text-center py-12 bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <CardContent>
+          <Card className="text-center py-12 liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+            <CardContent className="relative z-10">
               <Headphones className="w-12 h-12 mx-auto text-black mb-4" />
               <h3 className="text-lg font-black text-black mb-2 tracking-tight">No Podcasts Found</h3>
               <p className="text-ministry-slate">
@@ -470,9 +470,9 @@ export default function Podcasts() {
         ) : (
           <div className="space-y-4">
             {filteredPodcasts.map((podcast: Podcast) => (
-              <Card key={podcast.id} className="hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all bg-ministry-gold-exact border-2 border-black rounded-none">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-start space-x-4">
+              <Card key={podcast.id} className="liquid-gold-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-none overflow-hidden">
+                <CardContent className="p-4 sm:p-6 relative">
+                  <div className="flex items-start space-x-4 relative z-10">
                     {/* Thumbnail/Icon */}
                     <div className="flex-shrink-0">
                       {podcast.type === 'video' ? (
