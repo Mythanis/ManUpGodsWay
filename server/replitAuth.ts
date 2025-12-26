@@ -7,6 +7,7 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import { subscribeToMailchimp } from "./mailchimpService";
 
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
@@ -70,7 +71,22 @@ async function upsertUser(
     userData.role = claims["role"];
   }
   
+  // Check if this is a new user before upserting
+  const existingUser = await storage.getUser(claims["sub"]);
+  const isNewUser = !existingUser;
+  
   await storage.upsertUser(userData);
+  
+  // Subscribe new users to Mailchimp mailing list
+  if (isNewUser && claims["email"]) {
+    subscribeToMailchimp({
+      email: claims["email"],
+      firstName: claims["first_name"],
+      lastName: claims["last_name"],
+    }).catch(err => {
+      console.error("Failed to subscribe to Mailchimp:", err);
+    });
+  }
 }
 
 export async function setupAuth(app: Express) {
