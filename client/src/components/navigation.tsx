@@ -111,7 +111,7 @@ export default function Navigation() {
           <DropdownMenuContent 
             align="end" 
             side="top"
-            className="w-48 mb-2"
+            className="w-52 mb-2 bg-zinc-900 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-1"
             data-testid="dropdown-more-menu"
           >
             {dropdownItems.map((item) => {
@@ -122,10 +122,10 @@ export default function Navigation() {
                 <DropdownMenuItem
                   key={item.id}
                   onClick={() => setLocation(item.path)}
-                  className={`cursor-pointer ${
+                  className={`cursor-pointer rounded-none font-bold uppercase text-xs tracking-wide ${
                     active 
-                      ? 'text-ministry-gold bg-ministry-gold/10 font-semibold' 
-                      : ''
+                      ? 'text-black bg-ministry-gold-exact' 
+                      : 'text-white hover:bg-ministry-gold-exact hover:text-black'
                   }`}
                   data-testid={`dropdown-nav-${item.id}`}
                 >
