@@ -280,13 +280,13 @@ export default function DiscussionCard({
   };
 
   return (
-    <Card className="shadow-sm border border-black bg-black hover:shadow-md transition-shadow" data-testid="discussion-card">
-      <CardContent className="p-4">
-        <div className="flex items-start space-x-3">
+    <Card className="liquid-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden" data-testid="discussion-card">
+      <CardContent className="p-4 relative">
+        <div className="flex items-start space-x-3 relative z-10">
           <img 
             src={discussion.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${discussion.user?.firstName}+${discussion.user?.lastName}&background=4A90B8&color=fff`}
             alt={`${discussion.user?.firstName} ${discussion.user?.lastName}`}
-            className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-gold-exact"
+            className="w-12 h-12 rounded-none object-cover cursor-pointer border-2 border-ministry-gold-exact hover:border-white transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               setLocation(`/users/${discussion.userId}`);
@@ -294,33 +294,33 @@ export default function DiscussionCard({
             data-testid="img-user-avatar"
           />
           <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-2">
-              <h3 className="font-semibold text-sm text-white" data-testid="text-user-name">
+            <div className="flex items-center flex-wrap gap-2 mb-2">
+              <h3 className="font-black text-sm text-white uppercase tracking-wide" data-testid="text-user-name">
                 {discussion.user?.firstName} {discussion.user?.lastName?.charAt(0)}.
               </h3>
               {getTierBadge(discussion.user?.subscriptionTier)}
-              <span className="text-xs text-gray-400" data-testid="text-time-ago">
+              <span className="text-xs text-gray-400 font-medium" data-testid="text-time-ago">
                 • {getTimeAgo(discussion.createdAt)}
               </span>
             </div>
             
-            <div className="flex items-center space-x-2 mb-2">
-              <h4 className="font-medium text-white" data-testid="text-discussion-title">
+            <div className="flex items-center flex-wrap gap-2 mb-2">
+              <h4 className="font-black text-white text-lg tracking-tight" data-testid="text-discussion-title">
                 {discussion.title}
               </h4>
               {discussion.studyId && (
-                <Badge variant="default" className="text-xs bg-ministry-gold-exact text-black">
+                <Badge className="text-xs bg-ministry-gold-exact text-black font-bold uppercase tracking-wide rounded-none border-2 border-black">
                   📚 Study
                 </Badge>
               )}
               {discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' && (
-                <Badge variant="outline" className="text-xs border-ministry-gold-exact text-ministry-gold-exact">
+                <Badge className="text-xs bg-black text-ministry-gold-exact font-bold uppercase tracking-wide rounded-none border-2 border-ministry-gold-exact">
                   {discussion.study.requiredTier.charAt(0).toUpperCase() + discussion.study.requiredTier.slice(1)} Only
                 </Badge>
               )}
             </div>
             
-            <p className="text-sm text-gray-300 mb-3 line-clamp-3" data-testid="text-discussion-content">
+            <p className="text-sm text-gray-300 mb-3 line-clamp-3 leading-relaxed" data-testid="text-discussion-content">
               {discussion.content}
             </p>
             
@@ -358,108 +358,105 @@ export default function DiscussionCard({
               </div>
             )}
             
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+            <div className="flex items-center justify-between pt-3 mt-3 border-t-2 border-gray-700">
+              <div className="flex items-center space-x-3">
                 <Button 
                   variant="ghost"
                   size="sm"
                   onClick={() => toggleLike.mutate()}
-                  className={`flex items-center space-x-1 p-1 ${
-                    userHasLiked ? 'text-ministry-gold-exact' : 'text-gray-300'
-                  } hover:text-ministry-gold-exact`}
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-none font-bold uppercase tracking-wide text-xs ${
+                    userHasLiked ? 'bg-ministry-gold-exact text-black' : 'bg-gray-800 text-gray-300 hover:bg-ministry-gold-exact hover:text-black'
+                  } border-2 border-black transition-all`}
                   data-testid="button-like-discussion"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M10.5 1h3v6h6v3.5h-6v12.5h-3V10.5h-6V7h6V1z"/>
                   </svg>
-                  <span className="text-xs">{likeCount}</span>
+                  <span>{likeCount}</span>
                 </Button>
                 
                 <Button 
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowReplies(!showReplies)}
-                  className="flex items-center space-x-1 text-gray-300 hover:text-white p-1"
+                  className="flex items-center space-x-1 px-3 py-2 bg-gray-800 text-gray-300 hover:bg-ministry-gold-exact hover:text-black rounded-none font-bold uppercase tracking-wide text-xs border-2 border-black transition-all"
                   data-testid="button-replies"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  <span className="text-xs">{discussion.replyCount || 0} replies</span>
+                  <span>{discussion.replyCount || 0}</span>
                   {discussion.replyCount > 0 && (
                     showReplies ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />
                   )}
                 </Button>
               </div>
               
-              <Button 
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  // Check tier access for study discussions
-                  if (discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free') {
-                    const hasAccess = (discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
-                                     (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip');
-                    
-                    if (!hasAccess) {
-                      toast({
-                        title: "Access Restricted",
-                        description: `This study discussion requires ${discussion.study.requiredTier} subscription to participate.`,
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-                  }
-                  setShowReplyForm(!showReplyForm);
-                }}
-                className={`text-xs font-medium p-1 ${
-                  discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' &&
-                  !((discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
-                    (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip'))
-                    ? 'text-gray-500 cursor-not-allowed'
-                    : 'text-ministry-gold-exact hover:text-white'
-                }`}
-                data-testid="button-reply"
-              >
-                {discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' &&
-                 !((discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
-                   (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip'))
-                  ? `${discussion.study.requiredTier.charAt(0).toUpperCase() + discussion.study.requiredTier.slice(1)} Required` 
-                  : 'Reply'
-                }
-              </Button>
-              
-              {/* Edit Button - Only for post owner */}
-              {isOwner && (
+              <div className="flex items-center space-x-2">
                 <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-gray-400 hover:text-ministry-gold-exact p-1"
+                  size="sm"
                   onClick={() => {
-                    editForm.reset({
-                      title: discussion.title || '',
-                      content: discussion.content || '',
-                    });
-                    setShowEditDialog(true);
+                    if (discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free') {
+                      const hasAccess = (discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
+                                       (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip');
+                      
+                      if (!hasAccess) {
+                        toast({
+                          title: "Access Restricted",
+                          description: `This study discussion requires ${discussion.study.requiredTier} subscription to participate.`,
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                    }
+                    setShowReplyForm(!showReplyForm);
                   }}
-                  data-testid="button-edit-discussion"
+                  className={`px-3 py-2 rounded-none font-bold uppercase tracking-wide text-xs border-2 border-black transition-all ${
+                    discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' &&
+                    !((discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
+                      (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip'))
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : 'bg-ministry-gold-exact text-black hover:bg-yellow-400'
+                  }`}
+                  data-testid="button-reply"
                 >
-                  <Edit className="h-4 w-4" />
+                  {discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' &&
+                   !((discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
+                     (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip'))
+                    ? `${discussion.study.requiredTier.charAt(0).toUpperCase() + discussion.study.requiredTier.slice(1)}` 
+                    : 'Reply'
+                  }
                 </Button>
-              )}
+              
+                {/* Edit Button - Only for post owner */}
+                {isOwner && (
+                  <Button 
+                    size="sm" 
+                    className="bg-gray-800 text-gray-300 hover:bg-ministry-gold-exact hover:text-black px-2 py-2 rounded-none border-2 border-black transition-all"
+                    onClick={() => {
+                      editForm.reset({
+                        title: discussion.title || '',
+                        content: discussion.content || '',
+                      });
+                      setShowEditDialog(true);
+                    }}
+                    data-testid="button-edit-discussion"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                )}
 
-              {/* Share Button */}
-              <div className="relative">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-gray-400 hover:text-ministry-gold-exact p-1"
-                  onClick={() => setShowShareMenu(!showShareMenu)}
-                  data-testid="button-share-discussion"
-                >
-                  <Share2 className="h-4 w-4" />
-                </Button>
-                
-                {showShareMenu && (
-                  <div className="absolute right-0 bottom-full mb-2 bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-2 z-50 min-w-[160px]">
+                {/* Share Button */}
+                <div className="relative">
+                  <Button 
+                    size="sm" 
+                    className="bg-gray-800 text-gray-300 hover:bg-ministry-gold-exact hover:text-black px-2 py-2 rounded-none border-2 border-black transition-all"
+                    onClick={() => setShowShareMenu(!showShareMenu)}
+                    data-testid="button-share-discussion"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                  
+                  {showShareMenu && (
+                    <div className="absolute right-0 bottom-full mb-2 bg-zinc-900 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-2 z-50 min-w-[160px]">
                     <div className="text-xs text-gray-400 font-medium mb-2 px-2">Share to:</div>
                     <Button
                       variant="ghost"
@@ -516,30 +513,31 @@ export default function DiscussionCard({
                 )}
               </div>
 
-              {/* Flag Discussion Button */}
-              <FlagContentDialog 
-                contentType="discussion" 
-                contentId={discussion.id}
-                triggerElement={
-                  <Button variant="ghost" size="sm" className="text-gray-400 hover:text-red-600 p-1">
-                    <Flag className="h-4 w-4" />
-                  </Button>
-                }
-              />
+                {/* Flag Discussion Button */}
+                <FlagContentDialog 
+                  contentType="discussion" 
+                  contentId={discussion.id}
+                  triggerElement={
+                    <Button size="sm" className="bg-gray-800 text-gray-300 hover:bg-red-600 hover:text-white px-2 py-2 rounded-none border-2 border-black transition-all">
+                      <Flag className="h-4 w-4" />
+                    </Button>
+                  }
+                />
+              </div>
             </div>
           </div>
         </div>
         
         {/* Show replies if expanded */}
         {showReplies && discussion.replyCount > 0 && (
-          <div className="mt-4 pt-4 border-t border-gray-700">
+          <div className="mt-4 pt-4 border-t-2 border-gray-700 relative z-10">
             <div className="space-y-3">
               {(replies as any[])?.map((reply: any) => (
-                <div key={reply.id} className="flex items-start space-x-3 ml-4 p-3 bg-gray-800 rounded-lg">
+                <div key={reply.id} className="flex items-start space-x-3 ml-4 p-3 bg-zinc-800 rounded-none border-2 border-gray-700">
                   <img 
                     src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=4A90B8&color=fff&size=32`}
                     alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
-                    className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-ministry-gold-exact"
+                    className="w-8 h-8 rounded-none object-cover cursor-pointer border-2 border-ministry-gold-exact hover:border-white transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       setLocation(`/users/${reply.userId}`);
@@ -547,14 +545,14 @@ export default function DiscussionCard({
                   />
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className="font-medium text-xs text-white">
+                      <span className="font-black text-xs text-white uppercase tracking-wide">
                         {reply.user?.firstName} {reply.user?.lastName?.charAt(0)}.
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-400 font-medium">
                         • {getTimeAgo(reply.createdAt)}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-300">{reply.content}</p>
+                    <p className="text-sm text-gray-300 leading-relaxed">{reply.content}</p>
                     
                     {/* Like and Flag Reply Buttons */}
                     <div className="flex justify-between items-center mt-2">
