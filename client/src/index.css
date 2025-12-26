@@ -525,18 +525,30 @@
   pointer-events: none;
 }
 
-/* Glossy gold card effect */
+/* Glossy gold card effect - Enhanced liquid look */
 .liquid-gold-card {
   background: linear-gradient(
     145deg,
     #FCD000 0%,
-    #ffd633 30%,
-    #FCD000 50%,
-    #e6bc00 80%,
-    #FCD000 100%
+    #ffe14d 15%,
+    #FCD000 35%,
+    #e6bc00 55%,
+    #FCD000 75%,
+    #ffe14d 100%
   ) !important;
+  background-size: 200% 200%;
+  animation: liquidGold 4s ease infinite;
   position: relative;
   overflow: hidden;
+}
+
+@keyframes liquidGold {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .liquid-gold-card::before {
@@ -544,15 +556,15 @@
   position: absolute;
   top: 0;
   left: -100%;
-  width: 50%;
+  width: 60%;
   height: 100%;
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.4),
+    rgba(255, 255, 255, 0.5),
     transparent
   );
-  animation: shimmer 3s ease-in-out infinite;
+  animation: shimmer 2.5s ease-in-out infinite;
   pointer-events: none;
 }
 
@@ -565,22 +577,34 @@
   height: 50%;
   background: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.35) 0%,
     transparent 100%
   );
   pointer-events: none;
 }
 
-/* Glossy black button/icon area */
+/* Glossy black button/icon area - Enhanced liquid look */
 .liquid-black {
   background: linear-gradient(
     145deg,
-    #2d2d2d 0%,
+    #3a3a3a 0%,
+    #252525 25%,
     #1a1a1a 50%,
     #0d0d0d 100%
   ) !important;
+  background-size: 200% 200%;
+  animation: liquidBlack 5s ease infinite;
   position: relative;
   overflow: hidden;
+}
+
+@keyframes liquidBlack {
+  0%, 100% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
 }
 
 .liquid-black::before {
@@ -589,10 +613,10 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 40%;
+  height: 50%;
   background: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.2) 0%,
     transparent 100%
   );
   pointer-events: none;
