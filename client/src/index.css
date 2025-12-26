@@ -456,3 +456,241 @@
 .tab-active {
   color: var(--ministry-navy);
 }
+
+/* ========== LIQUID / GLOSSY EFFECTS ========== */
+
+/* Animated liquid gradient background */
+@keyframes liquidFlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Liquid gradient header */
+.liquid-header {
+  background: linear-gradient(
+    135deg,
+    #1a1a2e 0%,
+    #16213e 25%,
+    #0f0f23 50%,
+    #1a1a2e 75%,
+    #16213e 100%
+  );
+  background-size: 400% 400%;
+  animation: liquidFlow 15s ease infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    ellipse at 30% 20%,
+    rgba(252, 208, 0, 0.15) 0%,
+    transparent 50%
+  ),
+  radial-gradient(
+    ellipse at 70% 80%,
+    rgba(252, 208, 0, 0.1) 0%,
+    transparent 40%
+  );
+  pointer-events: none;
+}
+
+/* Glossy gold card effect */
+.liquid-gold-card {
+  background: linear-gradient(
+    145deg,
+    #FCD000 0%,
+    #ffd633 30%,
+    #FCD000 50%,
+    #e6bc00 80%,
+    #FCD000 100%
+  ) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-gold-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.liquid-gold-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.25) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Glossy black button/icon area */
+.liquid-black {
+  background: linear-gradient(
+    145deg,
+    #2d2d2d 0%,
+    #1a1a1a 50%,
+    #0d0d0d 100%
+  ) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-black::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Glass morphism effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Liquid button with hover glow */
+.liquid-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.liquid-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.liquid-button:hover::before {
+  left: 100%;
+}
+
+.liquid-button:hover {
+  box-shadow: 0 0 20px rgba(252, 208, 0, 0.4),
+              0 0 40px rgba(252, 208, 0, 0.2);
+}
+
+/* Glowing gold accent */
+.glow-gold {
+  box-shadow: 0 4px 15px rgba(252, 208, 0, 0.3),
+              0 0 30px rgba(252, 208, 0, 0.15);
+}
+
+/* Pulsing gold glow for emphasis */
+.pulse-gold {
+  animation: pulse-glow 2s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(252, 208, 0, 0.4);
+}
+
+/* Liquid section divider */
+.liquid-divider {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #FCD000 20%,
+    #ffd633 50%,
+    #FCD000 80%,
+    transparent 100%
+  );
+  margin: 1.5rem 0;
+}
+
+/* Floating orbs background decoration */
+.liquid-orbs {
+  position: relative;
+}
+
+.liquid-orbs::before,
+.liquid-orbs::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.4;
+  animation: pulse-glow 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.liquid-orbs::before {
+  width: 150px;
+  height: 150px;
+  background: #FCD000;
+  top: -50px;
+  right: -30px;
+}
+
+.liquid-orbs::after {
+  width: 100px;
+  height: 100px;
+  background: #FCD000;
+  bottom: 50px;
+  left: -20px;
+  animation-delay: 2s;
+}
