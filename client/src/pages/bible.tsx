@@ -446,8 +446,8 @@ export default function Bible() {
 
       <div className="max-w-6xl mx-auto p-4 space-y-6">
         {/* Bible Controls - Compact */}
-        <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <CardContent className="p-3 space-y-3">
+        <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+          <CardContent className="p-3 space-y-3 relative z-10">
             {/* Row 1: Version, Book, Chapter selectors */}
             <div className="grid grid-cols-3 gap-2">
               <Select value={selectedVersion} onValueChange={handleVersionChange}>
@@ -550,8 +550,8 @@ export default function Bible() {
         </Card>
 
         {/* Bible Text Display */}
-        <Card className="bg-black border-2 border-ministry-gold-exact rounded-none shadow-[0_0_20px_rgba(252,208,0,0.15)]">
-          <CardHeader>
+        <Card className="liquid-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+          <CardHeader className="relative z-10">
             <div className="flex flex-wrap justify-between items-center gap-3">
               <CardTitle className="font-black uppercase tracking-tight text-xl">
                 <span className="text-white">{selectedBook}</span> <span className="text-ministry-gold-exact">Chapter {selectedChapter}</span> <span className="text-white/60">({selectedVersion})</span>
@@ -574,7 +574,7 @@ export default function Bible() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative z-10">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin h-8 w-8 border-4 border-ministry-gold-exact border-t-transparent"></div>
@@ -600,8 +600,8 @@ export default function Bible() {
 
 
         {/* API Status and Version Information */}
-        <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <CardHeader>
+        <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+          <CardHeader className="relative z-10">
             <CardTitle className="text-black font-black uppercase tracking-tight text-xl">Bible API Status & Versions</CardTitle>
             <CardDescription className="text-black/70 font-semibold">
               {apiStatus === "connected" && "Connected to live Bible API services for authentic scripture text."}
@@ -609,7 +609,7 @@ export default function Bible() {
               {apiStatus === "error" && "Bible API services temporarily unavailable. Showing cached content."}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative z-10">
             <div className="space-y-4">
               {/* API Status Indicator */}
               <div className="p-3 border-2 border-black bg-black rounded-none">
