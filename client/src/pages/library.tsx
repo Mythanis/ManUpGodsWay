@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+// Card is used for search bar only
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, BookOpen, ChevronRight, Layers } from "lucide-react";
@@ -173,51 +174,29 @@ export default function Library() {
                   <Layers className="w-5 h-5 text-ministry-gold-exact" />
                   Study Series
                 </h2>
-                <div className="space-y-4">
+                <div className="space-y-2">
                   {filteredSeries.map((s) => (
                     <Link key={s.id} href={`/series/${s.id}`}>
-                      <Card 
-                        className="bg-black border-2 border-ministry-gold-exact/50 hover:border-ministry-gold-exact hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer rounded-none"
+                      <Button 
+                        variant="outline"
+                        className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
                         data-testid={`series-card-${s.id}`}
                       >
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-4">
-                            <div className="flex-shrink-0 w-16 h-16 bg-gray-800 rounded-none flex items-center justify-center overflow-hidden border border-ministry-gold-exact/30">
-                              {s.thumbnailUrl ? (
-                                <img 
-                                  src={s.thumbnailUrl} 
-                                  alt={s.title}
-                                  className="w-full h-full object-cover grayscale-[30%] contrast-[1.1]"
-                                />
-                              ) : (
-                                <Layers className="w-8 h-8 text-ministry-gold-exact" />
-                              )}
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-white font-black text-lg mb-1 line-clamp-1 tracking-tight" data-testid={`text-series-title-${s.id}`}>
-                                {s.title}
-                              </h3>
-                              <p className="text-gray-400 text-sm mb-3 line-clamp-2">
-                                {s.description}
-                              </p>
-                              <div className="flex items-center gap-4 text-xs text-gray-400 font-medium">
-                                <span className="flex items-center gap-1 bg-white/10 px-2 py-0.5">
-                                  <BookOpen className="w-3.5 h-3.5" />
-                                  {s.studyCount} {s.studyCount === 1 ? 'Study' : 'Studies'}
-                                </span>
-                                <span className="bg-white/10 px-2 py-0.5">
-                                  {s.totalLessons} {s.totalLessons === 1 ? 'Lesson' : 'Lessons'}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex-shrink-0 self-center">
-                              <ChevronRight className="w-5 h-5 text-ministry-gold-exact" />
-                            </div>
+                        <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                          <Layers className="w-6 h-6 text-white relative z-10" />
+                        </div>
+                        <div className="flex-1 text-left px-4">
+                          <span className="font-black text-sm text-black uppercase tracking-wide relative z-10 line-clamp-1" data-testid={`text-series-title-${s.id}`}>{s.title}</span>
+                          <div className="flex items-center gap-2 text-xs text-black/70 font-medium mt-0.5">
+                            <span>{s.studyCount} {s.studyCount === 1 ? 'Study' : 'Studies'}</span>
+                            <span>•</span>
+                            <span>{s.totalLessons} Lessons</span>
                           </div>
-                        </CardContent>
-                      </Card>
+                        </div>
+                        <div className="pr-4">
+                          <ChevronRight className="w-6 h-6 text-black" />
+                        </div>
+                      </Button>
                     </Link>
                   ))}
                 </div>
@@ -231,71 +210,44 @@ export default function Library() {
                   <BookOpen className="w-5 h-5 text-ministry-gold-exact" />
                   Individual Studies
                 </h2>
-                <div className="space-y-4">
+                <div className="space-y-2">
                   {filteredStudies.map((study: Study) => {
                     const progress = (userProgress as any[]).find((p: any) => p.studyId === study.id);
                     const isCompleted = progress?.isCompleted || false;
                     const hasStarted = !!progress && !isCompleted;
                     
-                    const getTierBadge = (tier: string) => {
+                    const getTierLabel = (tier: string) => {
                       switch (tier) {
-                        case 'premium':
-                          return <span className="text-xs bg-ministry-steel/20 text-ministry-steel px-2 py-0.5 rounded-none font-bold uppercase tracking-wide">Premium</span>;
-                        case 'vip':
-                          return <span className="text-xs bg-ministry-gold-exact text-black px-2 py-0.5 rounded-none font-black uppercase tracking-wide">VIP</span>;
-                        default:
-                          return <span className="text-xs bg-white/10 text-gray-400 px-2 py-0.5 rounded-none font-bold uppercase tracking-wide">Free</span>;
+                        case 'premium': return 'Premium';
+                        case 'vip': return 'VIP';
+                        default: return 'Free';
                       }
                     };
                     
                     return (
                       <Link key={study.id} href={`/studies/${study.id}`}>
-                        <Card 
-                          className="bg-black border-2 border-ministry-gold-exact/50 hover:border-ministry-gold-exact hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer rounded-none"
+                        <Button 
+                          variant="outline"
+                          className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
                           data-testid={`study-card-${study.id}`}
                         >
-                          <CardContent className="p-4">
-                            <div className="flex items-start gap-4">
-                              <div className="flex-shrink-0 w-16 h-16 bg-gray-800 rounded-none flex items-center justify-center overflow-hidden border border-ministry-gold-exact/30">
-                                {study.thumbnailUrl ? (
-                                  <img 
-                                    src={study.thumbnailUrl} 
-                                    alt={study.title}
-                                    className="w-full h-full object-cover grayscale-[30%] contrast-[1.1]"
-                                  />
-                                ) : (
-                                  <BookOpen className="w-8 h-8 text-ministry-gold-exact" />
-                                )}
-                              </div>
-
-                              <div className="flex-1 min-w-0">
-                                <h3 className="text-white font-black text-lg mb-1 line-clamp-1 tracking-tight" data-testid={`text-study-title-${study.id}`}>
-                                  {study.title}
-                                </h3>
-                                <p className="text-gray-400 text-sm mb-3 line-clamp-2">
-                                  {study.description}
-                                </p>
-                                <div className="flex items-center gap-4 text-xs text-gray-400 font-medium">
-                                  <span className="flex items-center gap-1">
-                                    <BookOpen className="w-3.5 h-3.5" />
-                                    {study.totalDays} {study.totalDays === 1 ? 'Day' : 'Days'}
-                                  </span>
-                                  {getTierBadge(study.requiredTier)}
-                                  {isCompleted && (
-                                    <span className="text-ministry-gold-exact font-medium">✓ Completed</span>
-                                  )}
-                                  {hasStarted && !isCompleted && (
-                                    <span className="text-ministry-gold-exact font-medium">In Progress</span>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="flex-shrink-0 self-center">
-                                <ChevronRight className="w-5 h-5 text-gray-500" />
-                              </div>
+                          <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                            <BookOpen className="w-6 h-6 text-white relative z-10" />
+                          </div>
+                          <div className="flex-1 text-left px-4">
+                            <span className="font-black text-sm text-black uppercase tracking-wide relative z-10 line-clamp-1" data-testid={`text-study-title-${study.id}`}>{study.title}</span>
+                            <div className="flex items-center gap-2 text-xs text-black/70 font-medium mt-0.5">
+                              <span>{study.totalDays} {study.totalDays === 1 ? 'Day' : 'Days'}</span>
+                              <span>•</span>
+                              <span>{getTierLabel(study.requiredTier)}</span>
+                              {isCompleted && <span className="text-green-700 font-bold">✓</span>}
+                              {hasStarted && !isCompleted && <span className="text-black/50">In Progress</span>}
                             </div>
-                          </CardContent>
-                        </Card>
+                          </div>
+                          <div className="pr-4">
+                            <ChevronRight className="w-6 h-6 text-black" />
+                          </div>
+                        </Button>
                       </Link>
                     );
                   })}
