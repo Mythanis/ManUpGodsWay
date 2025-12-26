@@ -280,7 +280,7 @@ export default function DiscussionCard({
   };
 
   return (
-    <Card className="liquid-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden" data-testid="discussion-card">
+    <Card className="liquid-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden mx-auto max-w-2xl" data-testid="discussion-card">
       <CardContent className="p-4 relative">
         <div className="flex items-start space-x-3 relative z-10">
           <img 
