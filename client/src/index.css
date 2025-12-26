@@ -487,15 +487,15 @@
   }
 }
 
-/* Liquid gradient header */
+/* Liquid gradient header - Black base with subtle animation */
 .liquid-header {
   background: linear-gradient(
     135deg,
-    #1a1a2e 0%,
-    #16213e 25%,
-    #0f0f23 50%,
-    #1a1a2e 75%,
-    #16213e 100%
+    #000000 0%,
+    #0a0a0a 25%,
+    #111111 50%,
+    #0a0a0a 75%,
+    #000000 100%
   );
   background-size: 400% 400%;
   animation: liquidFlow 15s ease infinite;
@@ -512,12 +512,12 @@
   bottom: 0;
   background: radial-gradient(
     ellipse at 30% 20%,
-    rgba(252, 208, 0, 0.15) 0%,
+    rgba(252, 208, 0, 0.12) 0%,
     transparent 50%
   ),
   radial-gradient(
     ellipse at 70% 80%,
-    rgba(252, 208, 0, 0.1) 0%,
+    rgba(252, 208, 0, 0.08) 0%,
     transparent 40%
   );
   pointer-events: none;
