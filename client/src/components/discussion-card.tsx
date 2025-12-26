@@ -358,18 +358,18 @@ export default function DiscussionCard({
               </div>
             )}
             
-            <div className="flex items-center justify-between pt-3 mt-3 border-t-2 border-gray-700">
-              <div className="flex items-center space-x-3">
+            <div className="flex flex-wrap items-center gap-2 pt-3 mt-3 border-t-2 border-gray-700">
+              <div className="flex items-center gap-1">
                 <Button 
                   variant="ghost"
                   size="sm"
                   onClick={() => toggleLike.mutate()}
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-none font-bold uppercase tracking-wide text-xs ${
+                  className={`flex items-center gap-1 px-2 py-1 rounded-none font-bold text-xs ${
                     userHasLiked ? 'bg-ministry-gold-exact text-black' : 'bg-gray-800 text-gray-300 hover:bg-ministry-gold-exact hover:text-black'
                   } border-2 border-black transition-all`}
                   data-testid="button-like-discussion"
                 >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M10.5 1h3v6h6v3.5h-6v12.5h-3V10.5h-6V7h6V1z"/>
                   </svg>
                   <span>{likeCount}</span>
@@ -379,18 +379,18 @@ export default function DiscussionCard({
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowReplies(!showReplies)}
-                  className="flex items-center space-x-1 px-3 py-2 bg-gray-800 text-gray-300 hover:bg-ministry-gold-exact hover:text-black rounded-none font-bold uppercase tracking-wide text-xs border-2 border-black transition-all"
+                  className="flex items-center gap-1 px-2 py-1 bg-gray-800 text-gray-300 hover:bg-ministry-gold-exact hover:text-black rounded-none font-bold text-xs border-2 border-black transition-all"
                   data-testid="button-replies"
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <MessageCircle className="w-3 h-3" />
                   <span>{discussion.replyCount || 0}</span>
                   {discussion.replyCount > 0 && (
-                    showReplies ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />
+                    showReplies ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
                   )}
                 </Button>
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2 ml-auto">
                 <Button 
                   size="sm"
                   onClick={() => {
@@ -409,7 +409,7 @@ export default function DiscussionCard({
                     }
                     setShowReplyForm(!showReplyForm);
                   }}
-                  className={`px-3 py-2 rounded-none font-bold uppercase tracking-wide text-xs border-2 border-black transition-all ${
+                  className={`px-2 py-1 rounded-none font-bold uppercase tracking-wide text-xs border-2 border-black transition-all ${
                     discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' &&
                     !((discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
                       (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip'))
@@ -430,7 +430,7 @@ export default function DiscussionCard({
                 {isOwner && (
                   <Button 
                     size="sm" 
-                    className="bg-gray-800 text-gray-300 hover:bg-ministry-gold-exact hover:text-black px-2 py-2 rounded-none border-2 border-black transition-all"
+                    className="bg-gray-800 text-gray-300 hover:bg-ministry-gold-exact hover:text-black p-1 rounded-none border-2 border-black transition-all"
                     onClick={() => {
                       editForm.reset({
                         title: discussion.title || '',
@@ -440,7 +440,7 @@ export default function DiscussionCard({
                     }}
                     data-testid="button-edit-discussion"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-3 w-3" />
                   </Button>
                 )}
 
@@ -448,11 +448,11 @@ export default function DiscussionCard({
                 <div className="relative">
                   <Button 
                     size="sm" 
-                    className="bg-gray-800 text-gray-300 hover:bg-ministry-gold-exact hover:text-black px-2 py-2 rounded-none border-2 border-black transition-all"
+                    className="bg-gray-800 text-gray-300 hover:bg-ministry-gold-exact hover:text-black p-1 rounded-none border-2 border-black transition-all"
                     onClick={() => setShowShareMenu(!showShareMenu)}
                     data-testid="button-share-discussion"
                   >
-                    <Share2 className="h-4 w-4" />
+                    <Share2 className="h-3 w-3" />
                   </Button>
                   
                   {showShareMenu && (
@@ -518,8 +518,8 @@ export default function DiscussionCard({
                   contentType="discussion" 
                   contentId={discussion.id}
                   triggerElement={
-                    <Button size="sm" className="bg-gray-800 text-gray-300 hover:bg-red-600 hover:text-white px-2 py-2 rounded-none border-2 border-black transition-all">
-                      <Flag className="h-4 w-4" />
+                    <Button size="sm" className="bg-gray-800 text-gray-300 hover:bg-red-600 hover:text-white p-1 rounded-none border-2 border-black transition-all">
+                      <Flag className="h-3 w-3" />
                     </Button>
                   }
                 />
