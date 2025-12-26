@@ -7,7 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Search, MapPin, Users, User, Map, List, Mail, Plus, Shield, BookOpen, Award, Headphones, CheckCircle, ShoppingBag } from "lucide-react";
+import { Search, MapPin, Users, User, Map, List, Mail, Plus, Shield, BookOpen, Award, Headphones, CheckCircle, ShoppingBag, Play } from "lucide-react";
+
+interface SystemSettings {
+  warGroupsVideoUrl: string | null;
+  warGroupsVideoTitle: string | null;
+}
 
 const WarGroupsMap = lazy(() => import("@/components/WarGroupsMap"));
 
@@ -86,6 +91,27 @@ export default function WarGroups() {
   const { data: myGroups = [], isLoading: myGroupsLoading } = useQuery<WarGroup[]>({
     queryKey: ['/api/user/war-groups'],
   });
+
+  // Fetch system settings for video
+  const { data: systemSettings } = useQuery<SystemSettings>({
+    queryKey: ['/api/system-settings'],
+  });
+
+  // Helper to extract YouTube/Vimeo embed URL
+  const getEmbedUrl = (url: string): string | null => {
+    if (!url) return null;
+    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = url.match(youtubeRegex);
+    if (match && match[1]) {
+      return `https://www.youtube.com/embed/${match[1]}`;
+    }
+    const vimeoRegex = /vimeo\.com\/(?:.*\/)?(\d+)/;
+    const vimeoMatch = url.match(vimeoRegex);
+    if (vimeoMatch && vimeoMatch[1]) {
+      return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    }
+    return url;
+  };
 
   const initialLoading = isLoading && myGroupsLoading && groups.length === 0;
 
@@ -180,6 +206,34 @@ export default function WarGroups() {
         {/* About War Groups Content */}
         {activeTab === 'about' && (
           <div className="space-y-6">
+            {/* Explainer Video Section */}
+            {systemSettings?.warGroupsVideoUrl && getEmbedUrl(systemSettings.warGroupsVideoUrl) && (
+              <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="liquid-black w-12 h-12 flex items-center justify-center border-2 border-black">
+                      <Play className="h-6 w-6 text-ministry-gold-exact relative z-10" />
+                    </div>
+                    <CardTitle className="text-xl text-black font-black tracking-tight uppercase relative z-10">
+                      {systemSettings.warGroupsVideoTitle || "Watch This First"}
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="aspect-video bg-black border-2 border-black overflow-hidden">
+                    <iframe
+                      src={getEmbedUrl(systemSettings.warGroupsVideoUrl) || ""}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      title={systemSettings.warGroupsVideoTitle || "War Groups Explainer Video"}
+                      data-testid="video-war-groups-explainer"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="liquid-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
               <CardHeader>
                 <div className="flex items-center gap-3 mb-2">

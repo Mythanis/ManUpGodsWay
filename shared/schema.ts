@@ -1113,6 +1113,8 @@ export type InsertHeaderLogoSettings = z.infer<typeof insertHeaderLogoSettingsSc
 export const systemSettings = pgTable("system_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   homepageTagline: text("homepage_tagline").default("Ready to grow in God's strength?"),
+  warGroupsVideoUrl: text("war_groups_video_url"),
+  warGroupsVideoTitle: text("war_groups_video_title").default("Welcome to War Groups"),
   updatedBy: varchar("updated_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
