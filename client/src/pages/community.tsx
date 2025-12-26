@@ -571,7 +571,7 @@ export default function Community() {
 
       {/* Community Stats */}
       <div className={`px-6 ${activeLiveStream ? '' : '-mt-3'} relative z-10 mb-4`}>
-        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-ministry-gold-exact border-2 border-black rounded-none" data-testid="card-stats">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] liquid-gold-card border-2 border-black rounded-none" data-testid="card-stats">
           <CardContent className="p-4">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div className="border-r-2 border-black">
@@ -599,7 +599,7 @@ export default function Community() {
       
       {/* Facebook-style Quick Post Card */}
       <div className="px-6 mb-4">
-        <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] bg-black border-2 border-black rounded-none" data-testid="card-quick-post">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] liquid-black border-2 border-ministry-gold-exact rounded-none" data-testid="card-quick-post">
           <CardContent className="p-3">
             <div className="flex items-center gap-3">
               <img 
@@ -838,7 +838,7 @@ export default function Community() {
           onValueChange={(value) => setSelectedCategory(value === 'all' ? '' : value)}
         >
           <SelectTrigger 
-            className="w-full bg-ministry-gold-exact border-2 border-black text-black font-bold h-9 rounded-none"
+            className="w-full liquid-gold-card border-2 border-black text-black font-bold h-9 rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
             data-testid="select-popular-topics"
           >
             <div className="flex items-center">
@@ -872,12 +872,12 @@ export default function Community() {
       {/* Search Bar */}
       <div className="px-6 mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black w-5 h-5 z-10" />
           <Input
             placeholder="SEARCH DISCUSSIONS..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10 border-2 border-black bg-ministry-gold-exact text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide rounded-none font-medium"
+            className="pl-10 pr-10 border-2 border-black liquid-gold-card text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide rounded-none font-medium shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
           />
           {searchQuery && (
             <Button
