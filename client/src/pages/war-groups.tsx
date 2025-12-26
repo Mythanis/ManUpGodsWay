@@ -147,19 +147,19 @@ export default function WarGroups() {
           <div className="space-y-2">
             {myGroups.map((group) => (
               <Link key={group.id} href={`/war-groups/${group.id}`}>
-                <Card className="bg-ministry-gold-exact border-2 border-black rounded-none hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer">
+                <Card className="liquid-gold-card border-2 border-black rounded-none hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                   <CardContent className="py-3 px-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex flex-col">
-                          <span className="font-black text-black text-sm tracking-tight">{getGroupDisplayName(group)}</span>
-                          <span className="text-xs text-black/70 flex items-center gap-1 font-medium">
+                          <span className="font-black text-black text-sm tracking-tight relative z-10">{getGroupDisplayName(group)}</span>
+                          <span className="text-xs text-black/70 flex items-center gap-1 font-medium relative z-10">
                             <MapPin className="h-3 w-3" />
                             {group.city}, {group.state}
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 relative z-10">
                         <span className="text-xs text-black flex items-center gap-1 font-bold bg-black/10 px-2 py-0.5">
                           <Users className="h-3 w-3" />
                           {group.memberCount}
@@ -180,11 +180,11 @@ export default function WarGroups() {
         {/* About War Groups Content */}
         {activeTab === 'about' && (
           <div className="space-y-6">
-            <Card className="bg-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
+            <Card className="liquid-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
               <CardHeader>
                 <div className="flex items-center gap-3 mb-2">
-                  <Shield className="h-8 w-8 text-ministry-gold-exact" />
-                  <CardTitle className="text-2xl text-white font-black tracking-tight uppercase">Welcome to War Groups</CardTitle>
+                  <Shield className="h-8 w-8 text-ministry-gold-exact relative z-10" />
+                  <CardTitle className="text-2xl text-white font-black tracking-tight uppercase relative z-10">Welcome to War Groups</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="space-y-6 text-gray-300">
@@ -288,7 +288,7 @@ export default function WarGroups() {
             {/* Search Section */}
             <div className="relative z-10">
               <h2 className="text-xl font-black mb-4 tracking-tight uppercase">Discover Groups</h2>
-          <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <CardContent className="pt-6">
               <div className="space-y-3">
                 <div className="relative">
@@ -320,9 +320,9 @@ export default function WarGroups() {
                     data-testid="input-filter-state"
                   />
                 </div>
-                <div className="bg-black p-4 border-2 border-black">
+                <div className="liquid-black p-4 border-2 border-black">
                   <div className="flex items-center justify-between mb-3">
-                    <label className="text-white font-black text-xs uppercase tracking-wide">
+                    <label className="text-white font-black text-xs uppercase tracking-wide relative z-10">
                       Search Distance
                     </label>
                     <span className="bg-ministry-gold-exact text-black px-3 py-1 font-black text-sm" data-testid="text-distance-value">
@@ -404,16 +404,16 @@ export default function WarGroups() {
             </div>
           ) : groups.length === 0 ? (
             <div className="space-y-4">
-              <Card className="bg-ministry-gold-exact border-2 border-black rounded-none">
+              <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                 <CardContent className="text-center py-12">
-                  <MapPin className="h-12 w-12 text-black mx-auto mb-4" />
-                  <p className="text-black font-black text-lg mb-2 uppercase tracking-tight">No groups found in your area</p>
-                  <p className="text-sm text-black font-medium">Try adjusting your search filters</p>
+                  <MapPin className="h-12 w-12 text-black mx-auto mb-4 relative z-10" />
+                  <p className="text-black font-black text-lg mb-2 uppercase tracking-tight relative z-10">No groups found in your area</p>
+                  <p className="text-sm text-black font-medium relative z-10">Try adjusting your search filters</p>
                 </CardContent>
               </Card>
               
               {/* Start a Group Section */}
-              <Card className="bg-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
+              <Card className="liquid-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
                 <CardContent className="py-8">
                   <div className="text-center">
                     <h3 className="text-ministry-gold-exact text-2xl font-black mb-3 uppercase tracking-tight">
@@ -453,19 +453,19 @@ export default function WarGroups() {
             <div className="space-y-2">
               {groups.map((group) => (
                 <Link key={group.id} href={`/war-groups/${group.id}`}>
-                  <Card className="bg-ministry-gold-exact border-2 border-black rounded-none hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer">
+                  <Card className="liquid-gold-card border-2 border-black rounded-none hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                     <CardContent className="py-3 px-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="flex flex-col">
-                            <span className="font-black text-black text-sm tracking-tight">{getGroupDisplayName(group)}</span>
-                            <span className="text-xs text-black/70 flex items-center gap-1 font-medium">
+                            <span className="font-black text-black text-sm tracking-tight relative z-10">{getGroupDisplayName(group)}</span>
+                            <span className="text-xs text-black/70 flex items-center gap-1 font-medium relative z-10">
                               <MapPin className="h-3 w-3" />
                               {group.city}, {group.state}
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 relative z-10">
                           <span className="text-xs text-black flex items-center gap-1 font-semibold">
                             <User className="h-3 w-3" />
                             {group.leader.firstName} {group.leader.lastName}
