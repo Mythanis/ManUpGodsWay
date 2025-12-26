@@ -403,7 +403,7 @@ export default function Messages() {
       {/* Conversations List */}
       {!selectedConversation ? (
         <div className="w-full">
-          <div className="bg-black text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
+          <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
             <div className="flex items-center justify-between mb-2">
               <div>
                 <h1 className="text-4xl font-black tracking-tighter uppercase" data-testid="text-messages-title">Messages</h1>

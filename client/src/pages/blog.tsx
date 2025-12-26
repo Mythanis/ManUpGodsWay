@@ -52,7 +52,7 @@ export default function Blog() {
 
   return (
     <div className="min-h-screen bg-ministry-light-gray pb-20">
-      <div className="bg-black text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
+      <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase">
             <span className="text-white">Ministry</span> <span className="text-ministry-gold-exact">Blog</span>

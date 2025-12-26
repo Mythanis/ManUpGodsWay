@@ -547,7 +547,7 @@ export default function Admin() {
   return (
     <div className="pb-20 bg-ministry-light-gray min-h-screen">
       {/* Admin Header */}
-      <div className="bg-black text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
+      <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
         <h1 className="text-4xl font-black tracking-tighter uppercase" data-testid="text-admin-title">
           Owner <span className="text-ministry-gold-exact">Dashboard</span>
         </h1>

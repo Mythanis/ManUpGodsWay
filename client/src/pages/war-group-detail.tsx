@@ -478,7 +478,7 @@ export default function WarGroupDetail() {
   if (isLoading) {
     return (
       <div className="pb-20">
-        <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+        <div className="liquid-header text-white px-6 pt-12 pb-6">
           <div className="max-w-4xl mx-auto">
             <div className="animate-pulse">
               <div className="h-8 bg-ministry-gold-exact rounded w-2/3 mb-2"></div>
@@ -499,7 +499,7 @@ export default function WarGroupDetail() {
   if (!group) {
     return (
       <div className="pb-20">
-        <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+        <div className="liquid-header text-white px-6 pt-12 pb-6">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl font-black mb-2 tracking-tight">Group Not Found</h1>
           </div>
@@ -523,7 +523,7 @@ export default function WarGroupDetail() {
   return (
     <div className="pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+      <div className="liquid-header text-white px-6 pt-12 pb-6">
         <div className="max-w-4xl mx-auto">
           <Link href="/war-groups">
             <Button variant="ghost" className="text-white hover:text-ministry-gold-exact mb-4 -ml-2 font-semibold uppercase tracking-wide text-xs">

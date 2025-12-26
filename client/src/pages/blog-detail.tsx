@@ -53,7 +53,7 @@ export default function BlogDetail() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-ministry-light-gray pb-20">
-        <div className="bg-black text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
+        <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
           <div className="max-w-3xl mx-auto">
             <div className="animate-pulse">
               <div className="h-8 bg-white/20 rounded-none w-3/4 mb-4"></div>
@@ -79,7 +79,7 @@ export default function BlogDetail() {
   if (error || !blog) {
     return (
       <div className="min-h-screen bg-ministry-light-gray pb-20">
-        <div className="bg-black text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
+        <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
           <div className="max-w-3xl mx-auto">
             <Button
               variant="ghost"
@@ -113,7 +113,7 @@ export default function BlogDetail() {
 
   return (
     <div className="min-h-screen bg-ministry-light-gray pb-20">
-      <div className="bg-black text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
+      <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
         <div className="max-w-3xl mx-auto">
           <Button
             variant="ghost"

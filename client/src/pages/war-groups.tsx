@@ -92,7 +92,7 @@ export default function WarGroups() {
   return (
     <div className="pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-4">
+      <div className="liquid-header text-white px-6 pt-12 pb-4">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-start justify-between gap-4 mb-4">
             <div>

@@ -38,7 +38,7 @@ export default function MoreManUp() {
   return (
     <div className="min-h-screen bg-ministry-light-gray pb-20">
       {/* Header */}
-      <div className="bg-black text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
+      <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
         <div className="max-w-md mx-auto">
           <h1 className="text-4xl font-black tracking-tighter uppercase">
             More <span className="text-ministry-gold-exact">Man Up</span>

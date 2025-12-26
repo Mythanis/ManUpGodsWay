@@ -396,7 +396,7 @@ export default function StudyDetail() {
     <div className="pb-20">
       <BackButton fallbackPath="/library" />
       {/* Header */}
-      <div className="bg-black text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
+      <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
         <div className="flex items-center mb-4">
           <Link href="/library">
             <Button 

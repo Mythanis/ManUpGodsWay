@@ -279,7 +279,7 @@ export default function HurdleWall() {
   if (isLoading) {
     return (
       <div className="pb-20">
-        <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+        <div className="liquid-header text-white px-6 pt-12 pb-6">
           <div className="max-w-2xl mx-auto">
             <h1 className="text-4xl font-black mb-2 tracking-tight">War Room</h1>
             <p className="text-ministry-gold-exact text-sm font-semibold">A Sacred Space For Prayer Requests</p>
@@ -300,7 +300,7 @@ export default function HurdleWall() {
   return (
     <div className="pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+      <div className="liquid-header text-white px-6 pt-12 pb-6">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase">War Room</h1>
           <p className="text-ministry-gold-exact text-xs font-bold tracking-widest uppercase">A Sacred Space For Prayer Requests</p>

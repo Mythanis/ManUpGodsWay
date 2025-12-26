@@ -529,7 +529,7 @@ export default function Community() {
   return (
     <div className="pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal dark:from-header-dark dark:to-ministry-navy text-white px-6 pt-12 pb-6">
+      <div className="liquid-header text-white px-6 pt-12 pb-6">
         <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase" data-testid="text-community-title">Community</h1>
         <p className="text-[#FCD000] text-xs font-bold tracking-widest uppercase" data-testid="text-community-subtitle">
           Iron Sharpens Iron Among Brothers
