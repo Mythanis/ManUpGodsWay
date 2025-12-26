@@ -74,7 +74,7 @@ export default function WarGroupsMap({ groups }: WarGroupsMapProps) {
     : { lat: 39.8283, lng: -98.5795 };
 
   return (
-    <div className="h-[500px] w-full rounded-lg overflow-hidden border-2 border-black" data-testid="map-war-groups">
+    <div className="h-[500px] w-full rounded-lg overflow-hidden border-2 border-black relative z-0" data-testid="map-war-groups">
       <MapContainer
         center={[center.lat, center.lng]}
         zoom={groupsWithCoords.length > 1 ? 4 : 6}

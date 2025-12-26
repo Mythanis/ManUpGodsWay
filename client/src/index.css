@@ -720,3 +720,18 @@
   left: -20px;
   animation-delay: 2s;
 }
+
+/* Leaflet map z-index fix - keep below bottom navigation */
+.leaflet-container {
+  z-index: 0 !important;
+}
+
+.leaflet-pane,
+.leaflet-control {
+  z-index: auto !important;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 10 !important;
+}
