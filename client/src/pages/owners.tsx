@@ -805,39 +805,38 @@ export default function Owners() {
         </div>
 
         {/* Owner Management Tabs */}
-        <div className="px-6 mb-6">
+        <div className="mb-6">
           <div 
             ref={scrollContainerRef}
             className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2"
           >
             {ownerTabs.map((tab) => {
               const IconComponent = tab.icon;
+              const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  style={{
-                    backgroundColor: activeTab === tab.id 
-                      ? 'hsl(0 0% 0%)' 
-                      : effectiveTheme === 'dark' 
-                        ? 'hsl(220 8% 26%)' 
-                        : 'hsl(240 1.9608% 90%)',
-                    color: activeTab === tab.id 
-                      ? 'white' 
-                      : effectiveTheme === 'dark' 
-                        ? 'hsl(0 0% 95%)' 
-                        : 'hsl(210 25% 7.8431%)',
-                    borderColor: activeTab === tab.id 
-                      ? 'hsl(49, 100%, 49%)' 
-                      : effectiveTheme === 'dark' 
-                        ? 'hsl(210 5.2632% 14.9020%)' 
-                        : 'hsl(201.4286 30.4348% 90.9804%)'
-                  }}
-                  className="px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 snap-start border cursor-pointer transition-colors flex items-center space-x-2"
+                  className={`h-14 min-w-[200px] flex items-center justify-between border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all flex-shrink-0 cursor-pointer ${
+                    isActive 
+                      ? 'liquid-black border-ministry-gold-exact shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]' 
+                      : 'liquid-gold-card'
+                  }`}
                   data-testid={`tab-${tab.id}`}
                 >
-                  <IconComponent className="w-4 h-4" />
-                  <span>{tab.label}</span>
+                  <div className={`h-full w-14 flex items-center justify-center flex-shrink-0 ${
+                    isActive ? 'liquid-gold-card' : 'liquid-black'
+                  }`}>
+                    <IconComponent className={`w-5 h-5 relative z-10 ${isActive ? 'text-black' : 'text-white'}`} />
+                  </div>
+                  <span className={`flex-1 font-black text-xs text-left px-3 uppercase tracking-wide relative z-10 ${
+                    isActive ? 'text-ministry-gold-exact' : 'text-black'
+                  }`}>{tab.label}</span>
+                  <div className="pr-3">
+                    <svg className={`w-5 h-5 ${isActive ? 'text-ministry-gold-exact' : 'text-black'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                  </div>
                 </button>
               );
             })}
