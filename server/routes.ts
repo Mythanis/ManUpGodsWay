@@ -1041,8 +1041,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await mammoth.extractRawText({ path: filePath });
       const text = result.value;
       
-      // Parse daily lessons - look for "Day X:" patterns
-      const dayPattern = /Day\s+(\d+)\s*[:\-–—]\s*([^\n]*)/gi;
+      console.log("Parsed Word document text length:", text.length);
+      console.log("First 500 chars:", text.substring(0, 500));
+      
+      // Parse daily lessons - look for various "Day X" patterns
+      // Supports: "Day 1:", "Day 1 -", "DAY 1", "Day One:", "Day 1.", "Day 1)", etc.
+      const dayPatterns = [
+        /Day\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,  // Day 1: Title, Day 1 - Title, Day 1. Title
+        /DAY\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,  // DAY 1: Title
+        /^(\d+)\s*[:\-–—.)\]]\s*([^\n]*Day[^\n]*)/gim,  // 1: Day of Rest, 1. The Day...
+        /Lesson\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,  // Lesson 1: Title
+        /Week\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,  // Week 1: Title
+        /Session\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,  // Session 1: Title
+      ];
+      
       const lessons: Array<{
         dayNumber: number;
         title: string;
@@ -1051,57 +1063,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
         keyTakeaway?: string;
       }> = [];
       
-      let matches = [...text.matchAll(dayPattern)];
+      // Try each pattern until we find matches
+      let matches: RegExpMatchArray[] = [];
+      for (const pattern of dayPatterns) {
+        matches = [...text.matchAll(pattern)];
+        if (matches.length > 0) {
+          console.log("Found matches with pattern:", pattern.source, "Count:", matches.length);
+          break;
+        }
+      }
       
-      for (let i = 0; i < matches.length; i++) {
-        const match = matches[i];
-        const dayNumber = parseInt(match[1], 10);
-        const title = match[2]?.trim() || `Day ${dayNumber}`;
-        
-        // Get content between this day and the next day (or end of text)
-        const startIndex = match.index! + match[0].length;
-        const endIndex = i < matches.length - 1 ? matches[i + 1].index! : text.length;
-        let content = text.substring(startIndex, endIndex).trim();
-        
-        // Try to extract scripture reference (look for common patterns)
-        let scripture: string | undefined;
-        const scripturePatterns = [
-          /Scripture[:\s]+([^\n]+)/i,
-          /Read[:\s]+([^\n]+)/i,
-          /Text[:\s]+([^\n]+)/i,
-          /Verse[:\s]+([^\n]+)/i,
-        ];
-        for (const pattern of scripturePatterns) {
-          const scriptureMatch = content.match(pattern);
-          if (scriptureMatch) {
-            scripture = scriptureMatch[1].trim();
-            break;
-          }
+      // If no structured patterns found, try splitting by common dividers
+      if (matches.length === 0) {
+        console.log("No day patterns found, trying alternative parsing...");
+        // Try splitting by double newlines or horizontal rules
+        const sections = text.split(/\n{3,}|\r\n{3,}|_{5,}|-{5,}|={5,}/);
+        if (sections.length > 1) {
+          sections.forEach((section, index) => {
+            const trimmed = section.trim();
+            if (trimmed.length > 50) {  // Only include substantial sections
+              const firstLine = trimmed.split('\n')[0].trim();
+              lessons.push({
+                dayNumber: index + 1,
+                title: firstLine.substring(0, 100) || `Day ${index + 1}`,
+                content: trimmed,
+              });
+            }
+          });
+          console.log("Alternative parsing found", lessons.length, "sections");
         }
-        
-        // Try to extract key takeaway
-        let keyTakeaway: string | undefined;
-        const takeawayPatterns = [
-          /Key\s*Takeaway[:\s]+([^\n]+)/i,
-          /Takeaway[:\s]+([^\n]+)/i,
-          /Summary[:\s]+([^\n]+)/i,
-          /Application[:\s]+([^\n]+)/i,
-        ];
-        for (const pattern of takeawayPatterns) {
-          const takeawayMatch = content.match(pattern);
-          if (takeawayMatch) {
-            keyTakeaway = takeawayMatch[1].trim();
-            break;
+      }
+      
+      // Only process pattern matches if we didn't already find lessons via alternative parsing
+      if (lessons.length === 0 && matches.length > 0) {
+        for (let i = 0; i < matches.length; i++) {
+          const match = matches[i];
+          const dayNumber = parseInt(match[1], 10);
+          const title = match[2]?.trim() || `Day ${dayNumber}`;
+          
+          // Get content between this day and the next day (or end of text)
+          const startIndex = match.index! + match[0].length;
+          const endIndex = i < matches.length - 1 ? matches[i + 1].index! : text.length;
+          let content = text.substring(startIndex, endIndex).trim();
+          
+          // Try to extract scripture reference (look for common patterns)
+          let scripture: string | undefined;
+          const scripturePatterns = [
+            /Scripture[:\s]+([^\n]+)/i,
+            /Read[:\s]+([^\n]+)/i,
+            /Text[:\s]+([^\n]+)/i,
+            /Verse[:\s]+([^\n]+)/i,
+          ];
+          for (const pattern of scripturePatterns) {
+            const scriptureMatch = content.match(pattern);
+            if (scriptureMatch) {
+              scripture = scriptureMatch[1].trim();
+              break;
+            }
           }
+          
+          // Try to extract key takeaway
+          let keyTakeaway: string | undefined;
+          const takeawayPatterns = [
+            /Key\s*Takeaway[:\s]+([^\n]+)/i,
+            /Takeaway[:\s]+([^\n]+)/i,
+            /Summary[:\s]+([^\n]+)/i,
+            /Application[:\s]+([^\n]+)/i,
+          ];
+          for (const pattern of takeawayPatterns) {
+            const takeawayMatch = content.match(pattern);
+            if (takeawayMatch) {
+              keyTakeaway = takeawayMatch[1].trim();
+              break;
+            }
+          }
+          
+          lessons.push({
+            dayNumber,
+            title,
+            content,
+            scripture,
+            keyTakeaway,
+          });
         }
-        
-        lessons.push({
-          dayNumber,
-          title,
-          content,
-          scripture,
-          keyTakeaway,
-        });
       }
       
       // Clean up the temporary file
