@@ -331,12 +331,13 @@ export default function UploadStudyForm() {
   });
 
   const onSubmit = (data: any) => {
-    // Validate that either content is provided or documents are uploaded
+    // Validate that either content is provided, documents are uploaded, or lessons are parsed
     const hasDocuments = pdfFile || wordFile;
-    if ((!data.content || data.content.trim().length < 50) && !hasDocuments) {
+    const hasParsedLessons = bulkImportMode && parsedLessons.length > 0;
+    if ((!data.content || data.content.trim().length < 50) && !hasDocuments && !hasParsedLessons) {
       toast({
         title: "Validation Error",
-        description: "Please provide either study content (50+ characters) or upload a document (PDF/Word).",
+        description: "Please provide either study content (50+ characters), upload a document, or import lessons from a Word file.",
         variant: "destructive",
       });
       return;
