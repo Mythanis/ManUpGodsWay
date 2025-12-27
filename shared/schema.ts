@@ -857,7 +857,7 @@ export const insertStudySchema = createInsertSchema(studies, {
   purchaseRequiredTiers: z.array(z.enum(["free", "premium", "vip"])).default([]),
   isPublished: z.boolean().default(false),
   videoId: z.string().optional(),
-  seriesId: z.string().optional(),
+  seriesId: z.string().nullable().optional(),
   seriesOrder: z.number().int().default(0),
 }).omit({ 
   id: true, 
