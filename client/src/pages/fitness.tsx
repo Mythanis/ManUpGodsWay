@@ -31,7 +31,8 @@ import {
   Edit,
   Trash2,
   Settings,
-  X
+  X,
+  Info
 } from "lucide-react";
 import { format, isToday, isPast, isFuture } from "date-fns";
 import { Link } from "wouter";
@@ -161,6 +162,9 @@ export default function Fitness() {
   // Modal state for viewing today's exercises
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [selectedPlanForView, setSelectedPlanForView] = useState<FitnessPlan | null>(null);
+  
+  // Fitness Pillar dialog state
+  const [showFitnessPillarDialog, setShowFitnessPillarDialog] = useState(false);
   
   // Exercise completion tracking
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
@@ -1294,10 +1298,94 @@ export default function Fitness() {
           <h1 className="text-3xl font-black text-black mb-2 uppercase tracking-wide relative z-10">
             Fitness Center
           </h1>
-          <p className="text-black font-medium relative z-10">
+          <p className="text-black font-medium relative z-10 mb-4">
             Build physical strength to complement your spiritual growth
           </p>
+          <button
+            onClick={() => setShowFitnessPillarDialog(true)}
+            className="liquid-black px-6 py-3 rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-[#FCD000] font-black uppercase text-sm flex items-center mx-auto relative z-10"
+            data-testid="button-fitness-pillar"
+          >
+            <Info className="w-5 h-5 mr-2" />
+            Fitness Pillar
+          </button>
         </div>
+
+        {/* Fitness Pillar Dialog */}
+        <Dialog open={showFitnessPillarDialog} onOpenChange={setShowFitnessPillarDialog}>
+          <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85vh] flex flex-col p-0 rounded-none border-2 border-black bg-black">
+            <DialogHeader className="px-6 py-4 border-b border-[#FCD000] flex-shrink-0 liquid-gold-card">
+              <DialogTitle className="text-xl font-black uppercase tracking-wide text-black relative z-10">
+                Man Up God's Way Fitness Pillar
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-black">
+              <h2 className="text-2xl font-black text-[#FCD000] uppercase tracking-wide text-center">
+                Strength for the Glory of God
+              </h2>
+              
+              <p className="text-white leading-relaxed">
+                At Man Up God's Way, we believe physical strength is not optional for a godly man. The body is not separate from faith. It is a stewardship entrusted by God and a tool He uses to form discipline, endurance, and leadership.
+              </p>
+              
+              <p className="text-white leading-relaxed">
+                Scripture is clear that the Christian life requires training, self-control, and perseverance. While godliness is of greatest value, Scripture also affirms the discipline of the body when it serves obedience and purpose.
+              </p>
+              
+              <blockquote className="liquid-gold-card p-4 rounded-none border-l-4 border-black overflow-hidden">
+                <p className="text-black font-medium italic relative z-10">
+                  "For bodily training is only of little profit, but godliness is profitable for all things."
+                </p>
+                <cite className="text-black font-black text-sm relative z-10 mt-2 block">
+                  — 1 Timothy 4:8 (LSB)
+                </cite>
+              </blockquote>
+              
+              <p className="text-white leading-relaxed">
+                We do not train for vanity, comparison, or self-glory. We train to honor God, keep our word, and lead our families with strength, energy, and consistency.
+              </p>
+              
+              <blockquote className="liquid-gold-card p-4 rounded-none border-l-4 border-black overflow-hidden">
+                <p className="text-black font-medium italic relative z-10">
+                  "Do you not know that your body is a temple of the Holy Spirit who is in you, whom you have from God, and that you are not your own?"
+                </p>
+                <cite className="text-black font-black text-sm relative z-10 mt-2 block">
+                  — 1 Corinthians 6:19 (LSB)
+                </cite>
+              </blockquote>
+              
+              <p className="text-white leading-relaxed">
+                Physical discipline reinforces spiritual discipline. A man who cannot govern his body will struggle to govern his habits, his home, and his calling. Strength training, proper nutrition, and daily movement are expressions of self-control, not obsession.
+              </p>
+              
+              <blockquote className="liquid-gold-card p-4 rounded-none border-l-4 border-black overflow-hidden">
+                <p className="text-black font-medium italic relative z-10">
+                  "Everyone who competes in the games exercises self-control in all things."
+                </p>
+                <cite className="text-black font-black text-sm relative z-10 mt-2 block">
+                  — 1 Corinthians 9:25 (LSB)
+                </cite>
+              </blockquote>
+              
+              <p className="text-white leading-relaxed">
+                This pillar is about becoming dependable men. Men who show up. Men who endure. Men who are not ruled by comfort, excuses, or excess. Men who understand that faithfulness is proven in daily obedience.
+              </p>
+              
+              <blockquote className="liquid-gold-card p-4 rounded-none border-l-4 border-black overflow-hidden">
+                <p className="text-black font-medium italic relative z-10">
+                  "But I discipline my body and make it my slave."
+                </p>
+                <cite className="text-black font-black text-sm relative z-10 mt-2 block">
+                  — 1 Corinthians 9:27 (LSB)
+                </cite>
+              </blockquote>
+              
+              <p className="text-white leading-relaxed font-bold">
+                Man Up God's Way calls men to train their bodies as servants of righteousness, not masters of desire, so that every area of life reflects strength under control.
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Tab Navigation */}
         <Tabs defaultValue="workout" className="w-full">
