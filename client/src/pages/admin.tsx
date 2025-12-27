@@ -586,42 +586,47 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* Admin Management Tabs */}
+      {/* Admin Management - Sidebar Layout */}
       <div className="px-6 mb-6">
-        <div className="space-y-2">
-          {adminTabs.map((tab) => {
-            const IconComponent = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`h-16 w-full flex items-center justify-between border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer ${
-                  isActive 
-                    ? 'liquid-black border-ministry-gold-exact shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]' 
-                    : 'liquid-gold-card'
-                }`}
-                data-testid={`tab-${tab.id}`}
-              >
-                <div className={`h-full w-16 flex items-center justify-center flex-shrink-0 ${
-                  isActive ? 'liquid-gold-card' : 'liquid-black'
-                }`}>
-                  <IconComponent className={`w-6 h-6 relative z-10 ${isActive ? 'text-black' : 'text-white'}`} />
-                </div>
-                <span className={`flex-1 font-black text-sm text-left px-4 uppercase tracking-wide relative z-10 ${
-                  isActive ? 'text-ministry-gold-exact' : 'text-black'
-                }`}>{tab.label}</span>
-                <div className="pr-4">
-                  <svg className={`w-6 h-6 ${isActive ? 'text-ministry-gold-exact' : 'text-black'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                  </svg>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar Navigation */}
+          <div className="lg:w-72 flex-shrink-0">
+            <div className="space-y-2 lg:sticky lg:top-6">
+              {adminTabs.map((tab) => {
+                const IconComponent = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`h-14 w-full flex items-center justify-between border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer ${
+                      isActive 
+                        ? 'liquid-black border-ministry-gold-exact shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]' 
+                        : 'liquid-gold-card'
+                    }`}
+                    data-testid={`tab-${tab.id}`}
+                  >
+                    <div className={`h-full w-12 flex items-center justify-center flex-shrink-0 ${
+                      isActive ? 'liquid-gold-card' : 'liquid-black'
+                    }`}>
+                      <IconComponent className={`w-5 h-5 relative z-10 ${isActive ? 'text-black' : 'text-white'}`} />
+                    </div>
+                    <span className={`flex-1 font-black text-xs text-left px-3 uppercase tracking-wide relative z-10 ${
+                      isActive ? 'text-ministry-gold-exact' : 'text-black'
+                    }`}>{tab.label}</span>
+                    <div className="pr-3">
+                      <svg className={`w-4 h-4 ${isActive ? 'text-ministry-gold-exact' : 'text-black'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-        <div className="mt-6">
+          {/* Main Content Area */}
+          <div className="flex-1 min-w-0">
           {activeTab === "content" && (
             <div className="space-y-4">
             <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Content Management</h2>
@@ -781,6 +786,7 @@ export default function Admin() {
               <UserManagement />
             </div>
           )}
+          </div>
         </div>
       </div>
 
