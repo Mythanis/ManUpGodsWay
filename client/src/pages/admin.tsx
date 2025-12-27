@@ -622,15 +622,26 @@ export default function Admin() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-none text-sm font-bold uppercase tracking-wide whitespace-nowrap flex-shrink-0 snap-start border-2 border-black cursor-pointer transition-all flex items-center space-x-2 ${
+                className={`h-14 min-w-[140px] flex items-center justify-between border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all flex-shrink-0 cursor-pointer ${
                   isActive 
-                    ? 'bg-ministry-gold-exact text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]' 
-                    : 'bg-black text-white hover:bg-gray-800'
+                    ? 'liquid-black border-ministry-gold-exact shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]' 
+                    : 'liquid-gold-card'
                 }`}
                 data-testid={`tab-${tab.id}`}
               >
-                <IconComponent className="w-4 h-4" />
-                <span>{tab.label}</span>
+                <div className={`h-full w-12 flex items-center justify-center flex-shrink-0 ${
+                  isActive ? 'liquid-gold-card' : 'liquid-black'
+                }`}>
+                  <IconComponent className={`w-5 h-5 relative z-10 ${isActive ? 'text-black' : 'text-white'}`} />
+                </div>
+                <span className={`flex-1 font-black text-xs text-left px-2 uppercase tracking-wide relative z-10 ${
+                  isActive ? 'text-ministry-gold-exact' : 'text-black'
+                }`}>{tab.label}</span>
+                <div className="pr-2">
+                  <svg className={`w-4 h-4 ${isActive ? 'text-ministry-gold-exact' : 'text-black'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </div>
               </button>
             );
           })}
