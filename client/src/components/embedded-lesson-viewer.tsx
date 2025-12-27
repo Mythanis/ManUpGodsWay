@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronLeft, ChevronRight, CheckCircle, Circle, Printer } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle, Circle, Printer, StickyNote, Save, Loader2 } from "lucide-react";
 
 interface StudyLesson {
   id: string;
@@ -28,6 +28,7 @@ interface LessonProgress {
   lessonId: string;
   completedAt: Date | null;
   answers?: Record<string, string>;
+  notes?: string;
 }
 
 interface EmbeddedLessonViewerProps {
@@ -41,6 +42,8 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
   const queryClient = useQueryClient();
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [notes, setNotes] = useState<string>("");
+  const [notesExpanded, setNotesExpanded] = useState(false);
 
   // Fetch all lessons for this study
   const { data: lessons = [], isLoading: lessonsLoading } = useQuery<StudyLesson[]>({
@@ -91,6 +94,42 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
     },
   });
 
+  // Save notes mutation
+  const saveNotesMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", `/api/studies/${studyId}/lessons/${currentLesson.id}/notes`, {
+        notes: notes,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/lesson-progress`] });
+      toast({
+        title: "Notes Saved",
+        description: "Your study notes have been saved",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save notes",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Load existing notes and answers when lesson changes
+  useEffect(() => {
+    if (currentProgress) {
+      setNotes(currentProgress.notes || "");
+      if (currentProgress.answers) {
+        setAnswers(currentProgress.answers);
+      }
+    } else {
+      setNotes("");
+      setAnswers({});
+    }
+  }, [currentLesson?.id, currentProgress]);
+
   const handlePrint = () => {
     window.print();
   };
@@ -98,14 +137,12 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
   const goToPreviousDay = () => {
     if (currentDayIndex > 0) {
       setCurrentDayIndex(currentDayIndex - 1);
-      setAnswers({});
     }
   };
 
   const goToNextDay = () => {
     if (currentDayIndex < lessons.length - 1) {
       setCurrentDayIndex(currentDayIndex + 1);
-      setAnswers({});
     }
   };
 
@@ -388,6 +425,53 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
               </p>
             </div>
           )}
+
+          {/* Personal Study Notes */}
+          <div className="border rounded-lg print:hidden">
+            <button
+              onClick={() => setNotesExpanded(!notesExpanded)}
+              className="w-full p-4 flex items-center justify-between text-left hover:bg-muted/50 transition-colors"
+              data-testid="button-toggle-notes"
+            >
+              <div className="flex items-center gap-2">
+                <StickyNote className="w-5 h-5 text-ministry-gold" />
+                <span className="font-medium">My Study Notes</span>
+                {notes && <Badge variant="outline" className="text-xs">Has notes</Badge>}
+              </div>
+              <ChevronRight className={`w-4 h-4 transition-transform ${notesExpanded ? 'rotate-90' : ''}`} />
+            </button>
+            {notesExpanded && (
+              <div className="px-4 pb-4 space-y-3">
+                <Textarea
+                  placeholder="Write your personal notes, thoughts, and reflections here..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={6}
+                  className="resize-y"
+                  data-testid="textarea-study-notes"
+                />
+                <Button
+                  size="sm"
+                  onClick={() => saveNotesMutation.mutate()}
+                  disabled={saveNotesMutation.isPending}
+                  className="bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal"
+                  data-testid="button-save-notes"
+                >
+                  {saveNotesMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Notes
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
 
           {/* Reflection Questions */}
           {currentLesson.questions && currentLesson.questions.length > 0 && (

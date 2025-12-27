@@ -195,6 +195,7 @@ export interface IStorage {
   // Lesson progress operations
   getUserLessonProgress(userId: string, studyId?: string): Promise<UserLessonProgress[]>;
   markLessonComplete(userId: string, lessonId: string, answers?: Record<string, string>): Promise<UserLessonProgress>;
+  saveLessonNotes(userId: string, lessonId: string, notes: string): Promise<UserLessonProgress>;
   
   // Purchase operations
   checkUserPurchase(userId: string, studyId: string): Promise<boolean>;
@@ -1072,6 +1073,48 @@ export class DatabaseStorage implements IStorage {
     await this.updateUserStreak(userId, now);
 
     return result;
+  }
+
+  async saveLessonNotes(userId: string, lessonId: string, notes: string): Promise<UserLessonProgress> {
+    // Check if progress already exists
+    const [existing] = await db
+      .select()
+      .from(userLessonProgress)
+      .where(and(
+        eq(userLessonProgress.userId, userId),
+        eq(userLessonProgress.lessonId, lessonId)
+      ));
+
+    const now = new Date();
+
+    if (existing) {
+      // Update existing progress with notes
+      const [updated] = await db
+        .update(userLessonProgress)
+        .set({
+          notes,
+          updatedAt: now,
+        })
+        .where(and(
+          eq(userLessonProgress.userId, userId),
+          eq(userLessonProgress.lessonId, lessonId)
+        ))
+        .returning();
+      
+      return updated;
+    } else {
+      // Create new progress record with notes
+      const [newProgress] = await db
+        .insert(userLessonProgress)
+        .values({
+          userId,
+          lessonId,
+          notes,
+        })
+        .returning();
+      
+      return newProgress;
+    }
   }
 
   // Purchase operations

@@ -2576,6 +2576,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Save lesson notes
+  app.post('/api/studies/:studyId/lessons/:lessonId/notes', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { lessonId } = req.params;
+      const { notes } = req.body;
+
+      const progress = await storage.saveLessonNotes(userId, lessonId, notes);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error saving lesson notes:", error);
+      res.status(500).json({ message: "Failed to save notes" });
+    }
+  });
+
   // Get user's lesson progress
   app.get('/api/users/:userId/lesson-progress', isAuthenticated, async (req: any, res) => {
     try {
