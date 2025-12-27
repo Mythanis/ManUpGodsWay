@@ -690,17 +690,17 @@ export default function Fitness() {
   };
 
   const FitnessChallengeCard = ({ challenge, isToday = false }: { challenge: FitnessChallenge; isToday?: boolean }) => (
-    <Card className={`hover:shadow-md transition-shadow bg-ministry-gold-exact ${isToday ? 'ring-2 ring-ministry-gold bg-ministry-gold-exact/30' : ''}`}>
-      <CardContent className="p-6">
-        <div className="flex items-start space-x-4">
+    <div className={`${isToday ? 'liquid-gold-card' : 'liquid-black'} rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all`}>
+      <div className="p-6">
+        <div className="flex items-start space-x-4 relative z-10">
           <div className="flex-shrink-0">
-            <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
-              isToday ? 'bg-ministry-gold text-black' : 'bg-ministry-gold-exact text-ministry-gold'
+            <div className={`w-16 h-16 rounded-none flex items-center justify-center border-2 border-black ${
+              isToday ? 'liquid-black' : 'liquid-gold-card'
             }`}>
               {isToday ? (
-                <Star className="w-8 h-8 fill-current" />
+                <Star className="w-8 h-8 fill-current text-[#FCD000] relative z-10" />
               ) : (
-                <Dumbbell className="w-8 h-8" />
+                <Dumbbell className="w-8 h-8 text-black relative z-10" />
               )}
             </div>
           </div>
@@ -708,19 +708,19 @@ export default function Fitness() {
           <div className="flex-1">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <h3 className="font-semibold text-lg mb-1 text-black">
+                <h3 className={`font-black text-lg mb-1 uppercase ${isToday ? 'text-black' : 'text-white'}`}>
                   {challenge.title}
                   {isToday && (
-                    <Badge className="ml-2 bg-ministry-gold text-black">
+                    <Badge className="ml-2 bg-black text-[#FCD000] font-bold rounded-none border-none">
                       Today's Challenge
                     </Badge>
                   )}
                 </h3>
-                <div className="flex items-center space-x-3 text-sm text-black mb-2">
-                  <Badge className={`text-xs capitalize border ${getCategoryColor(challenge.category)}`}>
+                <div className={`flex items-center flex-wrap gap-2 text-sm mb-2 ${isToday ? 'text-black' : 'text-white'}`}>
+                  <Badge className="text-xs capitalize bg-black text-[#FCD000] border-none rounded-none font-bold">
                     {challenge.category}
                   </Badge>
-                  <Badge className={`text-xs capitalize border ${getDifficultyColor(challenge.difficulty)}`}>
+                  <Badge className="text-xs capitalize bg-[#FCD000] text-black border-none rounded-none font-bold">
                     {challenge.difficulty}
                   </Badge>
                   <div className="flex items-center">
@@ -735,64 +735,63 @@ export default function Fitness() {
               </div>
             </div>
 
-            <p className="text-black text-sm line-clamp-2 mb-3">
+            <p className={`text-sm line-clamp-2 mb-3 ${isToday ? 'text-black' : 'text-white/90'}`}>
               {challenge.description}
             </p>
 
             {challenge.equipment && (
-              <div className="flex items-center text-sm text-black mb-3">
+              <div className={`flex items-center text-sm mb-3 ${isToday ? 'text-black' : 'text-white'}`}>
                 <Activity className="w-4 h-4 mr-1" />
-                <span className="font-medium">Equipment: </span>
+                <span className="font-bold">Equipment: </span>
                 <span className="ml-1">{challenge.equipment}</span>
               </div>
             )}
 
             {(challenge.videoId || challenge.videoUrl) && (
-              <Button 
-                size="sm" 
-                className="bg-ministry-navy text-white hover:bg-ministry-charcoal"
+              <button 
+                className="liquid-black px-4 py-2 rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-white font-bold uppercase text-sm flex items-center"
                 data-testid={`button-watch-video-${challenge.id}`}
               >
                 <Play className="w-4 h-4 mr-2" />
                 Watch Video
-              </Button>
+              </button>
             )}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 
   const ExerciseCard = ({ exercise, showRemove = false }: { exercise: Exercise; showRemove?: boolean }) => (
-    <Card className="hover:shadow-md transition-shadow bg-ministry-gold-exact">
-      <CardContent className="p-4">
+    <div className="liquid-gold-card rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all p-4">
+      <div className="relative z-10">
         <div className="flex items-start">
           <div className="flex-1">
-            <h3 className="font-semibold text-lg mb-2 text-black capitalize">
+            <h3 className="font-black text-lg mb-2 text-black capitalize uppercase">
               {exercise.name.replace(/_/g, ' ')}
             </h3>
             
             <div className="flex flex-wrap gap-2 mb-3">
-              <Badge className="text-xs capitalize bg-blue-100 text-blue-800 border-blue-200">
+              <Badge className="text-xs capitalize bg-black text-[#FCD000] border-none rounded-none font-bold">
                 {exercise.bodyPart}
               </Badge>
-              <Badge className="text-xs capitalize bg-green-100 text-green-800 border-green-200">
+              <Badge className="text-xs capitalize bg-black/80 text-white border-none rounded-none font-bold">
                 {exercise.level || 'Beginner'}
               </Badge>
-              <Badge className="text-xs capitalize bg-purple-100 text-purple-800 border-purple-200">
+              <Badge className="text-xs capitalize bg-black/60 text-white border-none rounded-none font-bold">
                 {exercise.equipment}
               </Badge>
             </div>
             
             <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant={showRemove ? "destructive" : (isFavorite(exercise.exerciseId || exercise.id || '') ? "default" : "outline")}
+              <button
                 onClick={() => handleToggleFavorite(exercise)}
-                className={showRemove ? 'bg-red-600 hover:bg-red-700 text-white' : `${isFavorite(exercise.exerciseId || exercise.id || '') 
-                  ? 'bg-ministry-gold hover:bg-ministry-gold/90 text-black' 
-                  : 'border-ministry-gold text-ministry-gold hover:bg-ministry-gold hover:text-black'
-                }`}
+                className={showRemove 
+                  ? 'bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold uppercase text-sm flex items-center' 
+                  : `${isFavorite(exercise.exerciseId || exercise.id || '') 
+                    ? 'liquid-black text-[#FCD000] px-3 py-1.5 rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,1)] font-bold uppercase text-sm flex items-center' 
+                    : 'bg-transparent text-black px-3 py-1.5 rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-[#FCD000] font-bold uppercase text-sm flex items-center transition-all'
+                  }`}
                 data-testid={`button-favorite-${exercise.exerciseId || exercise.id || ''}`}
               >
                 {showRemove ? (
@@ -806,14 +805,14 @@ export default function Fitness() {
                     {isFavorite(exercise.exerciseId || exercise.id || '') ? 'Favorited' : 'Favorite'}
                   </>
                 )}
-              </Button>
+              </button>
               
               {fitnessPlans.length > 0 && (
                 <Select onValueChange={(planId) => addToPlanMutation.mutate({ planId, exercise })}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-32 rounded-none border-2 border-black bg-white text-black font-bold">
                     <SelectValue placeholder="Add to Plan" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-none border-2 border-black">
                     {fitnessPlans.map((plan: FitnessPlan) => (
                       <SelectItem key={plan.id} value={plan.id}>
                         {plan.name}
@@ -825,8 +824,8 @@ export default function Fitness() {
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 
   // Dynamic plan generation using local exercise database
@@ -1275,10 +1274,12 @@ export default function Fitness() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900" style={{ backgroundColor: 'black' }}>
-        <div className="px-6 pt-6">
+      <div className="min-h-screen bg-black">
+        <div className="px-4 pt-6">
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ministry-gold"></div>
+            <div className="liquid-gold-card p-8 rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+              <div className="animate-spin rounded-none h-12 w-12 border-4 border-black border-t-transparent relative z-10"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1286,50 +1287,50 @@ export default function Fitness() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20" style={{ backgroundColor: 'black' }}>
-      <div className="px-6 pt-6 space-y-6">
+    <div className="min-h-screen bg-black pb-20">
+      <div className="px-4 pt-6 space-y-6">
         {/* Header */}
-        <div className="text-center mb-8 bg-black p-6 rounded-lg">
-          <h1 className="text-3xl font-bold text-white mb-2">
+        <div className="text-center mb-8 liquid-gold-card p-6 rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+          <h1 className="text-3xl font-black text-black mb-2 uppercase tracking-wide relative z-10">
             Fitness Center
           </h1>
-          <p className="text-white">
+          <p className="text-black font-medium relative z-10">
             Build physical strength to complement your spiritual growth
           </p>
         </div>
 
         {/* Tab Navigation */}
         <Tabs defaultValue="workout" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-ministry-gold-exact">
-            <TabsTrigger value="workout" className="flex items-center gap-2 data-[state=active]:bg-ministry-gold data-[state=active]:text-black">
+          <TabsList className="grid w-full grid-cols-5 liquid-black rounded-none border-2 border-black h-auto p-1 overflow-hidden">
+            <TabsTrigger value="workout" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-none font-bold uppercase py-2">
               <Dumbbell className="w-4 h-4" />
-              Workout
+              <span className="hidden sm:inline">Workout</span>
             </TabsTrigger>
-            <TabsTrigger value="exercises" className="flex items-center gap-2 data-[state=active]:bg-ministry-gold data-[state=active]:text-black">
+            <TabsTrigger value="exercises" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-none font-bold uppercase py-2">
               <Search className="w-4 h-4" />
-              Exercises
+              <span className="hidden sm:inline">Exercises</span>
             </TabsTrigger>
-            <TabsTrigger value="favorites" className="flex items-center gap-2 data-[state=active]:bg-ministry-gold data-[state=active]:text-black">
+            <TabsTrigger value="favorites" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-none font-bold uppercase py-2">
               <Heart className="w-4 h-4" />
-              Favorites
+              <span className="hidden sm:inline">Favorites</span>
             </TabsTrigger>
-            <TabsTrigger value="pre-built-plans" className="flex items-center gap-2 data-[state=active]:bg-ministry-gold data-[state=active]:text-black">
+            <TabsTrigger value="pre-built-plans" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-none font-bold uppercase py-2">
               <BookOpen className="w-4 h-4" />
-              Plans
+              <span className="hidden sm:inline">Plans</span>
             </TabsTrigger>
-            <TabsTrigger value="my-plans" className="flex items-center gap-2 data-[state=active]:bg-ministry-gold data-[state=active]:text-black">
+            <TabsTrigger value="my-plans" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-none font-bold uppercase py-2">
               <List className="w-4 h-4" />
-              My Plans
+              <span className="hidden sm:inline">My Plans</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Daily Workout Tab */}
           <TabsContent value="workout" className="space-y-6">
             {/* Today's Workout Header */}
-            <div className="flex items-center mb-6">
-              <Dumbbell className="w-6 h-6 text-ministry-gold mr-2" />
-              <h2 className="text-xl font-bold text-white">Today's Workout</h2>
-              <div className="ml-auto text-sm text-ministry-gold">
+            <div className="flex items-center mb-6 liquid-black p-4 rounded-none border-2 border-black overflow-hidden">
+              <Dumbbell className="w-6 h-6 text-[#FCD000] mr-2 relative z-10" />
+              <h2 className="text-xl font-black text-white uppercase tracking-wide relative z-10">Today's Workout</h2>
+              <div className="ml-auto text-sm text-[#FCD000] font-bold relative z-10">
                 {getCurrentDayOfWeek().charAt(0).toUpperCase() + getCurrentDayOfWeek().slice(1)}
               </div>
             </div>
@@ -1339,112 +1340,106 @@ export default function Fitness() {
               
               if (todaysExercises.length === 0) {
                 return (
-                  <Card className="text-center py-12 bg-ministry-gold-exact">
-                    <CardContent>
-                      <Calendar className="w-12 h-12 mx-auto text-ministry-steel mb-4" />
-                      <h3 className="text-lg font-medium text-black mb-2">No Workout Today</h3>
-                      <p className="text-black">
-                        You have no exercises scheduled for today. Create a fitness plan to get started!
-                      </p>
-                    </CardContent>
-                  </Card>
+                  <div className="text-center py-12 liquid-gold-card rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                    <Calendar className="w-12 h-12 mx-auto text-black mb-4 relative z-10" />
+                    <h3 className="text-lg font-black text-black mb-2 uppercase relative z-10">No Workout Today</h3>
+                    <p className="text-black relative z-10">
+                      You have no exercises scheduled for today. Create a fitness plan to get started!
+                    </p>
+                  </div>
                 );
               }
 
               return (
                 <div className="space-y-4">
                   {todaysExercises.map((exercise, index) => (
-                    <Card key={`${exercise.planId}-${exercise.exerciseId}`} className="border border-ministry-charcoal bg-ministry-gold-exact/10">
-                      <CardContent className="p-4">
-                        <div className="flex gap-6">
-                          {/* Exercise Details */}
-                          <div className="flex-grow">
-                            <div className="flex items-start justify-between mb-2">
-                              <div>
-                                <h4 className="font-medium text-white mb-1" data-testid={`text-workout-exercise-name-${exercise.exerciseId}`}>
-                                  {exercise.exerciseName}
-                                </h4>
-                                <p className="text-xs text-ministry-gold">
-                                  From: {exercise.planName}
-                                </p>
-                              </div>
-                              
-                              {/* Completion Checkbox */}
-                              <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`exercise-${exercise.exerciseId}`}
-                                  checked={completedExercises.has(exercise.exerciseId)}
-                                  onCheckedChange={() => toggleExerciseCompletion(exercise.exerciseId)}
-                                  className="data-[state=checked]:bg-ministry-gold data-[state=checked]:border-ministry-gold"
-                                  data-testid={`checkbox-complete-${exercise.exerciseId}`}
-                                />
-                                <label 
-                                  htmlFor={`exercise-${exercise.exerciseId}`} 
-                                  className="text-sm text-white cursor-pointer"
-                                >
-                                  {completedExercises.has(exercise.exerciseId) ? 'Completed' : 'Complete'}
-                                </label>
-                              </div>
+                    <div key={`${exercise.planId}-${exercise.exerciseId}`} className="liquid-black rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(252,208,0,0.5)] overflow-hidden p-4">
+                      <div className="flex gap-6 relative z-10">
+                        {/* Exercise Details */}
+                        <div className="flex-grow">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h4 className="font-bold text-white mb-1" data-testid={`text-workout-exercise-name-${exercise.exerciseId}`}>
+                                {exercise.exerciseName}
+                              </h4>
+                              <p className="text-xs text-[#FCD000]">
+                                From: {exercise.planName}
+                              </p>
                             </div>
                             
-                            {/* Exercise Parameters */}
-                            <div className="grid grid-cols-3 gap-4 text-sm">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-white">Sets:</span>
-                                <span className="text-ministry-gold" data-testid={`text-workout-sets-${exercise.exerciseId}`}>
-                                  {exercise.sets}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-white">Reps:</span>
-                                <span className="text-ministry-gold" data-testid={`text-workout-reps-${exercise.exerciseId}`}>
-                                  {exercise.reps}
-                                </span>
-                              </div>
-                              {exercise.duration && (
-                                <div className="flex items-center gap-2">
-                                  <Clock className="w-4 h-4 text-white" />
-                                  <span className="font-medium text-white">Time:</span>
-                                  <span className="text-ministry-gold" data-testid={`text-workout-duration-${exercise.exerciseId}`}>
-                                    {exercise.duration} min
-                                  </span>
-                                </div>
-                              )}
+                            {/* Completion Checkbox */}
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`exercise-${exercise.exerciseId}`}
+                                checked={completedExercises.has(exercise.exerciseId)}
+                                onCheckedChange={() => toggleExerciseCompletion(exercise.exerciseId)}
+                                className="data-[state=checked]:bg-[#FCD000] data-[state=checked]:border-[#FCD000] border-[#FCD000]"
+                                data-testid={`checkbox-complete-${exercise.exerciseId}`}
+                              />
+                              <label 
+                                htmlFor={`exercise-${exercise.exerciseId}`} 
+                                className="text-sm text-white cursor-pointer font-medium"
+                              >
+                                {completedExercises.has(exercise.exerciseId) ? 'Completed' : 'Complete'}
+                              </label>
                             </div>
-
-                            {/* Notes */}
-                            {exercise.notes && (
-                              <div className="mt-3 p-2 bg-ministry-gold-exact rounded">
-                                <p className="text-sm text-white">
-                                  <strong>Notes:</strong> {exercise.notes}
-                                </p>
+                          </div>
+                          
+                          {/* Exercise Parameters */}
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-white">Sets:</span>
+                              <span className="text-[#FCD000]" data-testid={`text-workout-sets-${exercise.exerciseId}`}>
+                                {exercise.sets}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-white">Reps:</span>
+                              <span className="text-[#FCD000]" data-testid={`text-workout-reps-${exercise.exerciseId}`}>
+                                {exercise.reps}
+                              </span>
+                            </div>
+                            {exercise.duration && (
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-white" />
+                                <span className="font-bold text-white">Time:</span>
+                                <span className="text-[#FCD000]" data-testid={`text-workout-duration-${exercise.exerciseId}`}>
+                                  {exercise.duration} min
+                                </span>
                               </div>
                             )}
                           </div>
+
+                          {/* Notes */}
+                          {exercise.notes && (
+                            <div className="mt-3 p-2 bg-[#FCD000]/20 rounded-none border border-[#FCD000]">
+                              <p className="text-sm text-white">
+                                <strong className="text-[#FCD000]">Notes:</strong> {exercise.notes}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   ))}
                   
                   {/* Workout Summary */}
-                  <Card className="bg-ministry-gold text-black mt-6">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">Today's Progress</h4>
-                          <p className="text-sm">
-                            {completedExercises.size} of {todaysExercises.length} exercises completed
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold">
-                            {todaysExercises.length > 0 ? Math.round((completedExercises.size / todaysExercises.length) * 100) : 0}%
-                          </div>
-                          <div className="text-xs">Complete</div>
-                        </div>
+                  <div className="liquid-gold-card rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden p-4 mt-6">
+                    <div className="flex items-center justify-between relative z-10">
+                      <div>
+                        <h4 className="font-black text-black uppercase">Today's Progress</h4>
+                        <p className="text-sm text-black">
+                          {completedExercises.size} of {todaysExercises.length} exercises completed
+                        </p>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <div className="text-right">
+                        <div className="text-2xl font-black text-black">
+                          {todaysExercises.length > 0 ? Math.round((completedExercises.size / todaysExercises.length) * 100) : 0}%
+                        </div>
+                        <div className="text-xs font-bold text-black uppercase">Complete</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               );
             })()}
