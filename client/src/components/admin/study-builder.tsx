@@ -422,14 +422,14 @@ export default function StudyBuilder() {
                 <div className="space-y-2">
                   <Label>Add to Series (optional)</Label>
                   <Select
-                    value={formData.seriesId}
-                    onValueChange={(v) => setFormData({ ...formData, seriesId: v })}
+                    value={formData.seriesId || "_none"}
+                    onValueChange={(v) => setFormData({ ...formData, seriesId: v === "_none" ? "" : v })}
                   >
                     <SelectTrigger data-testid="select-series">
                       <SelectValue placeholder="None (standalone study)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None (standalone study)</SelectItem>
+                      <SelectItem value="_none">None (standalone study)</SelectItem>
                       {seriesList.map((series) => (
                         <SelectItem key={series.id} value={series.id}>{series.title}</SelectItem>
                       ))}
