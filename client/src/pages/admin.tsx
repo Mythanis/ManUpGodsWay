@@ -630,8 +630,6 @@ export default function Admin() {
             <div className="space-y-4">
             <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Content Management</h2>
             <div className="space-y-4">
-              <UploadStudyForm />
-              
               <button 
                 onClick={() => setActiveTab("videos")}
                 className="p-4 rounded-2xl transition-colors flex items-center space-x-3 w-full cursor-pointer border-none"
@@ -666,8 +664,9 @@ export default function Admin() {
           )}
 
           {activeTab === "studies" && (
-            <div>
+            <div className="space-y-6">
               <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Study Management</h2>
+              <UploadStudyForm />
               <StudyManagement />
             </div>
           )}
