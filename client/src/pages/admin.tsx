@@ -619,13 +619,13 @@ export default function Admin() {
 
       {/* Content Dialog */}
       <Dialog open={showContentDialog} onOpenChange={setShowContentDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="w-[95vw] max-w-4xl h-[85vh] flex flex-col p-0">
+          <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
             <DialogTitle className="text-xl font-black uppercase tracking-wide">
               {adminTabs.find(t => t.id === activeTab)?.label || 'Management'}
             </DialogTitle>
           </DialogHeader>
-          <div className="py-4">
+          <div className="flex-1 overflow-y-auto px-6 py-4">
           {activeTab === "content" && (
             <div className="space-y-4">
             <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Content Management</h2>
