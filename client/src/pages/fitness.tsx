@@ -32,10 +32,12 @@ import {
   Trash2,
   Settings,
   X,
-  Info
+  Info,
+  User
 } from "lucide-react";
 import { format, isToday, isPast, isFuture } from "date-fns";
 import { Link } from "wouter";
+import seanMcManusPhoto from "@assets/531400631_10229732604879918_951068179454150284_n_1766855745199.jpeg";
 
 interface FitnessChallenge {
   id: string;
@@ -165,6 +167,9 @@ export default function Fitness() {
   
   // Fitness Pillar dialog state
   const [showFitnessPillarDialog, setShowFitnessPillarDialog] = useState(false);
+  
+  // Fitness Coach dialog state
+  const [showFitnessCoachDialog, setShowFitnessCoachDialog] = useState(false);
   
   // Exercise completion tracking
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
@@ -1301,14 +1306,24 @@ export default function Fitness() {
           <p className="text-black font-medium relative z-10 mb-4">
             Build physical strength to complement your spiritual growth
           </p>
-          <button
-            onClick={() => setShowFitnessPillarDialog(true)}
-            className="liquid-black px-6 py-3 rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-[#FCD000] font-black uppercase text-sm flex items-center mx-auto relative z-10"
-            data-testid="button-fitness-pillar"
-          >
-            <Info className="w-5 h-5 mr-2" />
-            Fitness Pillar
-          </button>
+          <div className="flex flex-wrap justify-center gap-3 relative z-10">
+            <button
+              onClick={() => setShowFitnessPillarDialog(true)}
+              className="liquid-black px-6 py-3 rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-[#FCD000] font-black uppercase text-sm flex items-center"
+              data-testid="button-fitness-pillar"
+            >
+              <Info className="w-5 h-5 mr-2" />
+              Fitness Pillar
+            </button>
+            <button
+              onClick={() => setShowFitnessCoachDialog(true)}
+              className="liquid-black px-6 py-3 rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-[#FCD000] font-black uppercase text-sm flex items-center"
+              data-testid="button-fitness-coach"
+            >
+              <User className="w-5 h-5 mr-2" />
+              Fitness Coach
+            </button>
+          </div>
         </div>
 
         {/* Fitness Pillar Dialog */}
@@ -1383,6 +1398,62 @@ export default function Fitness() {
               <p className="text-white leading-relaxed font-bold">
                 Man Up God's Way calls men to train their bodies as servants of righteousness, not masters of desire, so that every area of life reflects strength under control.
               </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Fitness Coach Dialog */}
+        <Dialog open={showFitnessCoachDialog} onOpenChange={setShowFitnessCoachDialog}>
+          <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85vh] flex flex-col p-0 rounded-none border-2 border-black bg-black">
+            <DialogHeader className="px-6 py-4 border-b border-[#FCD000] flex-shrink-0 liquid-gold-card">
+              <DialogTitle className="text-xl font-black uppercase tracking-wide text-black relative z-10">
+                Meet Your Fitness Coach
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-black">
+              {/* Coach Photo and Name */}
+              <div className="text-center">
+                <div className="w-40 h-40 mx-auto mb-4 rounded-none border-4 border-[#FCD000] overflow-hidden shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+                  <img 
+                    src={seanMcManusPhoto} 
+                    alt="Sean McManus" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <h2 className="text-2xl font-black text-[#FCD000] uppercase tracking-wide">
+                  Sean McManus
+                </h2>
+                <p className="text-white font-medium mt-1">
+                  Strength and Nutrition Coach for Christian Men
+                </p>
+              </div>
+              
+              <p className="text-white leading-relaxed">
+                Sean McManus is part of the Man Up God's Way team and serves as the Lead Fitness Director for USD and the Man Up God's Way app, helping men pursue physical strength as a vital part of biblical discipleship.
+              </p>
+              
+              <p className="text-white leading-relaxed">
+                He helps men lose fat, build strength, and reclaim confidence without extremes, gimmicks, or confusion. His coaching is built on proven fundamentals and steady accountability through strength training, protein-focused nutrition, and disciplined daily habits that actually fit real life.
+              </p>
+              
+              <div className="liquid-gold-card p-4 rounded-none border-l-4 border-black overflow-hidden">
+                <p className="text-black font-bold relative z-10">
+                  Sean believes the body is not separate from faith. It is one of the primary tools God uses to shape discipline, consistency, and leadership in a man's life.
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-[#FCD000] font-black uppercase">This is not about vanity.</p>
+                <p className="text-white leading-relaxed">
+                  It is about honoring God, keeping your word, and leading your family with strength, energy, and conviction.
+                </p>
+              </div>
+              
+              <div className="liquid-gold-card p-4 rounded-none border-l-4 border-black overflow-hidden">
+                <p className="text-black font-bold relative z-10">
+                  If you are done starting over and ready to become a man others can rely on, Sean would be honored to coach you.
+                </p>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
