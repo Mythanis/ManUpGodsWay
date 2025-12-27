@@ -5592,7 +5592,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.user?.claims?.sub) {
         const user = await storage.getUser(req.user.claims.sub);
         if (user) {
-          userTier = user.tier || 'free';
+          userTier = user.subscriptionTier || 'free';
         }
       }
       
@@ -5798,7 +5798,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check tier access
       const tierHierarchy: Record<string, number> = { free: 0, premium: 1, vip: 2 };
-      const userTierLevel = tierHierarchy[user.tier || 'free'] || 0;
+      const userTierLevel = tierHierarchy[user.subscriptionTier || 'free'] || 0;
       const planTierLevel = tierHierarchy[plan.tier || 'free'] || 0;
       
       if (userTierLevel < planTierLevel) {

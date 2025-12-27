@@ -21,7 +21,11 @@ import {
   EyeOff,
   Timer,
   Target,
-  Upload
+  Upload,
+  Download,
+  FileText,
+  Crown,
+  Star
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -53,11 +57,55 @@ interface FitnessChallengeFormData {
   videoUrl: string;
 }
 
+interface PreBuiltFitnessPlan {
+  id: string;
+  title: string;
+  description?: string;
+  category: 'strength' | 'cardio' | 'flexibility' | 'general';
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  duration: number;
+  equipment?: string;
+  tier: 'free' | 'premium' | 'vip';
+  thumbnailUrl?: string;
+  downloadUrl?: string;
+  downloadFileName?: string;
+  isPublished: boolean;
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PreBuiltPlanFormData {
+  title: string;
+  description: string;
+  category: 'strength' | 'cardio' | 'flexibility' | 'general';
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  duration: number;
+  equipment: string;
+  tier: 'free' | 'premium' | 'vip';
+}
+
 export default function FitnessManagement() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState<FitnessChallenge | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  
+  // Pre-built plans state
+  const [showPlanCreateDialog, setShowPlanCreateDialog] = useState(false);
+  const [showPlanEditDialog, setShowPlanEditDialog] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<PreBuiltFitnessPlan | null>(null);
+  const [planFormData, setPlanFormData] = useState<PreBuiltPlanFormData>({
+    title: '',
+    description: '',
+    category: 'general',
+    difficulty: 'beginner',
+    duration: 60,
+    equipment: '',
+    tier: 'free'
+  });
+  const [uploadingPlanId, setUploadingPlanId] = useState<string | null>(null);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -247,6 +295,199 @@ export default function FitnessManagement() {
     },
   });
 
+  // ============================================
+  // PRE-BUILT FITNESS PLANS QUERIES & MUTATIONS
+  // ============================================
+
+  // Fetch all pre-built fitness plans (admin view)
+  const { data: preBuiltPlans = [], isLoading: isLoadingPlans } = useQuery({
+    queryKey: ['api', 'admin', 'pre-built-fitness-plans'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/pre-built-fitness-plans', { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch pre-built fitness plans');
+      return response.json();
+    },
+  });
+
+  // Create pre-built plan mutation
+  const createPlanMutation = useMutation({
+    mutationFn: async (data: PreBuiltPlanFormData) => {
+      const response = await fetch('/api/pre-built-fitness-plans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create plan');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['api', 'admin', 'pre-built-fitness-plans'] });
+      setShowPlanCreateDialog(false);
+      resetPlanForm();
+      toast({ title: "Success", description: "Fitness plan created successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Update pre-built plan mutation
+  const updatePlanMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: PreBuiltPlanFormData }) => {
+      const response = await fetch(`/api/pre-built-fitness-plans/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update plan');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['api', 'admin', 'pre-built-fitness-plans'] });
+      setShowPlanEditDialog(false);
+      setSelectedPlan(null);
+      resetPlanForm();
+      toast({ title: "Success", description: "Fitness plan updated successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Delete pre-built plan mutation
+  const deletePlanMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/pre-built-fitness-plans/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to delete plan');
+      return;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['api', 'admin', 'pre-built-fitness-plans'] });
+      toast({ title: "Success", description: "Fitness plan deleted successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Toggle publish status for pre-built plan
+  const togglePlanPublishMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/pre-built-fitness-plans/${id}/publish`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to update publication status');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['api', 'admin', 'pre-built-fitness-plans'] });
+      toast({ title: "Success", description: "Publication status updated" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Upload document for pre-built plan
+  const uploadPlanDocument = async (planId: string, file: File) => {
+    try {
+      setUploadingPlanId(planId);
+      const formData = new FormData();
+      formData.append('document', file);
+      
+      const response = await fetch(`/api/pre-built-fitness-plans/${planId}/upload`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+      
+      if (!response.ok) throw new Error('Failed to upload document');
+      
+      queryClient.invalidateQueries({ queryKey: ['api', 'admin', 'pre-built-fitness-plans'] });
+      toast({ title: "Success", description: "Document uploaded successfully" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to upload document", variant: "destructive" });
+    } finally {
+      setUploadingPlanId(null);
+    }
+  };
+
+  const resetPlanForm = () => {
+    setPlanFormData({
+      title: '',
+      description: '',
+      category: 'general',
+      difficulty: 'beginner',
+      duration: 60,
+      equipment: '',
+      tier: 'free'
+    });
+  };
+
+  const handlePlanCreate = () => {
+    setShowPlanCreateDialog(true);
+    resetPlanForm();
+  };
+
+  const handlePlanEdit = (plan: PreBuiltFitnessPlan) => {
+    setSelectedPlan(plan);
+    setPlanFormData({
+      title: plan.title,
+      description: plan.description || '',
+      category: plan.category,
+      difficulty: plan.difficulty,
+      duration: plan.duration,
+      equipment: plan.equipment || '',
+      tier: plan.tier
+    });
+    setShowPlanEditDialog(true);
+  };
+
+  const handlePlanSubmit = () => {
+    if (!planFormData.title) {
+      toast({ title: "Error", description: "Title is required", variant: "destructive" });
+      return;
+    }
+    if (selectedPlan) {
+      updatePlanMutation.mutate({ id: selectedPlan.id, data: planFormData });
+    } else {
+      createPlanMutation.mutate(planFormData);
+    }
+  };
+
+  const handlePlanDelete = (plan: PreBuiltFitnessPlan) => {
+    if (confirm(`Are you sure you want to delete "${plan.title}"?`)) {
+      deletePlanMutation.mutate(plan.id);
+    }
+  };
+
+  const getTierColor = (tier: string) => {
+    const colors: Record<string, string> = {
+      free: 'bg-gray-100 text-gray-800',
+      premium: 'bg-yellow-100 text-yellow-800',
+      vip: 'bg-purple-100 text-purple-800',
+    };
+    return colors[tier] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getTierIcon = (tier: string) => {
+    if (tier === 'vip') return <Crown className="w-3 h-3 mr-1" />;
+    if (tier === 'premium') return <Star className="w-3 h-3 mr-1" />;
+    return null;
+  };
+
   const resetForm = () => {
     setFormData({
       title: '',
@@ -368,6 +609,307 @@ export default function FitnessManagement() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* ============================================ */}
+      {/* PRE-BUILT FITNESS PLANS SECTION */}
+      {/* ============================================ */}
+      
+      {/* Pre-built Plans Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-ministry-charcoal">Pre-built Fitness Plans</h2>
+          <p className="text-ministry-slate">Create downloadable workout plans with tier access</p>
+        </div>
+        <Button 
+          onClick={handlePlanCreate}
+          className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+          data-testid="button-create-plan"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create Plan
+        </Button>
+      </div>
+
+      {/* Pre-built Plans List */}
+      {isLoadingPlans ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-ministry-gold"></div>
+        </div>
+      ) : preBuiltPlans.length === 0 ? (
+        <Card className="text-center py-8">
+          <CardContent>
+            <FileText className="w-10 h-10 mx-auto text-ministry-steel mb-3" />
+            <h3 className="text-lg font-medium text-ministry-charcoal mb-2">No Pre-built Plans Yet</h3>
+            <p className="text-ministry-slate mb-4">Create downloadable workout plans for your members</p>
+            <Button onClick={handlePlanCreate} className="bg-ministry-gold hover:bg-ministry-gold/90 text-black">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Plan
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {preBuiltPlans.map((plan: PreBuiltFitnessPlan) => (
+            <Card key={plan.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4 flex-1">
+                    <div className="w-12 h-12 rounded-lg bg-ministry-gold/20 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-6 h-6 text-ministry-gold" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-ministry-charcoal truncate">{plan.title}</h3>
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        <Badge className={`text-xs capitalize flex items-center ${getTierColor(plan.tier)}`}>
+                          {getTierIcon(plan.tier)}
+                          {plan.tier}
+                        </Badge>
+                        <Badge className={`text-xs capitalize ${getDifficultyColor(plan.difficulty)}`}>
+                          {plan.difficulty}
+                        </Badge>
+                        <Badge className={`text-xs capitalize ${getCategoryColor(plan.category)}`}>
+                          {plan.category}
+                        </Badge>
+                        <span className="text-xs text-ministry-slate flex items-center">
+                          <Timer className="w-3 h-3 mr-1" />
+                          {plan.duration} min
+                        </span>
+                        {plan.isPublished ? (
+                          <Badge className="bg-green-100 text-green-800 text-xs">Published</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">Draft</Badge>
+                        )}
+                        {plan.downloadUrl && (
+                          <Badge className="bg-blue-100 text-blue-800 text-xs flex items-center">
+                            <Download className="w-3 h-3 mr-1" />
+                            Has Document
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 ml-4">
+                    {/* Upload Document Button */}
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) uploadPlanDocument(plan.id, file);
+                          e.target.value = '';
+                        }}
+                        disabled={uploadingPlanId === plan.id}
+                        data-testid={`upload-plan-${plan.id}`}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={uploadingPlanId === plan.id}
+                        className="border-ministry-charcoal text-ministry-charcoal"
+                      >
+                        {uploadingPlanId === plan.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-ministry-charcoal" />
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 mr-1" />
+                            Upload
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    
+                    {/* Download Link */}
+                    {plan.downloadUrl && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-blue-500 text-blue-500"
+                        onClick={() => window.open(plan.downloadUrl!, '_blank')}
+                        data-testid={`download-plan-${plan.id}`}
+                      >
+                        <Download className="w-4 h-4 mr-1" />
+                        View
+                      </Button>
+                    )}
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePlanEdit(plan)}
+                      className="border-ministry-charcoal text-ministry-charcoal"
+                      data-testid={`edit-plan-${plan.id}`}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => togglePlanPublishMutation.mutate(plan.id)}
+                      className="border-ministry-gold text-ministry-gold"
+                      disabled={togglePlanPublishMutation.isPending}
+                      data-testid={`publish-plan-${plan.id}`}
+                    >
+                      {plan.isPublished ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePlanDelete(plan)}
+                      className="border-red-500 text-red-500"
+                      disabled={deletePlanMutation.isPending}
+                      data-testid={`delete-plan-${plan.id}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Pre-built Plan Create/Edit Dialog */}
+      <Dialog open={showPlanCreateDialog || showPlanEditDialog} onOpenChange={(open) => {
+        if (!open) {
+          setShowPlanCreateDialog(false);
+          setShowPlanEditDialog(false);
+          setSelectedPlan(null);
+          resetPlanForm();
+        }
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedPlan ? 'Edit Fitness Plan' : 'Create New Fitness Plan'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="plan-title">Title *</Label>
+              <Input
+                id="plan-title"
+                value={planFormData.title}
+                onChange={(e) => setPlanFormData({ ...planFormData, title: e.target.value })}
+                placeholder="Plan title"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="plan-description">Description</Label>
+              <Textarea
+                id="plan-description"
+                value={planFormData.description}
+                onChange={(e) => setPlanFormData({ ...planFormData, description: e.target.value })}
+                placeholder="Plan description"
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="plan-tier">Tier Access *</Label>
+                <Select value={planFormData.tier} onValueChange={(value: any) => setPlanFormData({ ...planFormData, tier: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="vip">VIP</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="plan-duration">Duration (minutes)</Label>
+                <Input
+                  id="plan-duration"
+                  type="number"
+                  min="1"
+                  value={planFormData.duration}
+                  onChange={(e) => setPlanFormData({ ...planFormData, duration: parseInt(e.target.value) || 60 })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="plan-category">Category</Label>
+                <Select value={planFormData.category} onValueChange={(value: any) => setPlanFormData({ ...planFormData, category: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="strength">Strength</SelectItem>
+                    <SelectItem value="cardio">Cardio</SelectItem>
+                    <SelectItem value="flexibility">Flexibility</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="plan-difficulty">Difficulty</Label>
+                <Select value={planFormData.difficulty} onValueChange={(value: any) => setPlanFormData({ ...planFormData, difficulty: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beginner">Beginner</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="plan-equipment">Equipment (optional)</Label>
+              <Input
+                id="plan-equipment"
+                value={planFormData.equipment}
+                onChange={(e) => setPlanFormData({ ...planFormData, equipment: e.target.value })}
+                placeholder="Required equipment"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowPlanCreateDialog(false);
+                setShowPlanEditDialog(false);
+                setSelectedPlan(null);
+                resetPlanForm();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handlePlanSubmit}
+              disabled={createPlanMutation.isPending || updatePlanMutation.isPending}
+              className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+            >
+              {createPlanMutation.isPending || updatePlanMutation.isPending 
+                ? 'Saving...' 
+                : selectedPlan ? 'Update Plan' : 'Create Plan'
+              }
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ============================================ */}
+      {/* FITNESS CHALLENGES SECTION */}
+      {/* ============================================ */}
 
       {/* Header */}
       <div className="flex items-center justify-between">
