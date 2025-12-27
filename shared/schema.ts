@@ -346,6 +346,26 @@ export const fitnessChallenge = pgTable("fitness_challenges", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Admin-managed pre-built fitness plans with tier access and downloads
+export const preBuiltFitnessPlans = pgTable("pre_built_fitness_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  category: varchar("category").default("general"), // strength, cardio, flexibility, general
+  difficulty: varchar("difficulty").default("beginner"), // beginner, intermediate, advanced
+  duration: integer("duration").default(60), // in minutes
+  equipment: text("equipment"), // equipment needed
+  tier: varchar("tier").default("free"), // free, premium, vip
+  thumbnailUrl: varchar("thumbnail_url"),
+  downloadUrl: varchar("download_url"), // URL to downloadable PDF/document
+  downloadFileName: varchar("download_file_name"), // Original filename for download
+  isPublished: boolean("is_published").default(false),
+  publishedAt: timestamp("published_at"),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // User favorite exercises from ExerciseDB API
 export const favoriteExercises = pgTable("favorite_exercises", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -447,6 +467,28 @@ export const insertFitnessChallengeSchema = createInsertSchema(fitnessChallenge,
 
 export type FitnessChallenge = typeof fitnessChallenge.$inferSelect;
 export type InsertFitnessChallenge = z.infer<typeof insertFitnessChallengeSchema>;
+
+// Pre-built fitness plans schema
+export const insertPreBuiltFitnessPlanSchema = createInsertSchema(preBuiltFitnessPlans, {
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  category: z.enum(["strength", "cardio", "flexibility", "general"]).default("general"),
+  difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
+  tier: z.enum(["free", "premium", "vip"]).default("free"),
+  duration: z.number().int().min(1).default(60),
+  equipment: z.string().optional(),
+  thumbnailUrl: z.string().optional(),
+  downloadUrl: z.string().optional(),
+  downloadFileName: z.string().optional(),
+}).omit({
+  id: true,
+  publishedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type PreBuiltFitnessPlan = typeof preBuiltFitnessPlans.$inferSelect;
+export type InsertPreBuiltFitnessPlan = z.infer<typeof insertPreBuiltFitnessPlanSchema>;
 
 // Favorite exercises schema
 export const insertFavoriteExerciseSchema = createInsertSchema(favoriteExercises, {
