@@ -13,8 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import UploadStudyForm from "@/components/admin/upload-study-form";
-import StudyManagement from "@/components/admin/study-management";
+import StudyBuilder from "@/components/admin/study-builder";
 import UserManagement from "@/components/admin/user-management";
 import DevotionalManagement from "@/components/admin/devotional-management";
 import VideoManagement from "@/components/admin/video-management";
@@ -666,8 +665,7 @@ export default function Admin() {
           {activeTab === "studies" && (
             <div className="space-y-6">
               <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Study Management</h2>
-              <UploadStudyForm />
-              <StudyManagement />
+              <StudyBuilder />
             </div>
           )}
 
