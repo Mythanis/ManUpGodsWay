@@ -1037,12 +1037,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const uploadsDir = path.resolve(process.cwd(), 'uploads', 'documents');
       const filePath = path.resolve(uploadsDir, file.filename);
       
-      // Convert Word to text for easier parsing
-      const result = await mammoth.extractRawText({ path: filePath });
-      const text = result.value;
+      // Convert Word to HTML to preserve formatting (paragraphs, bold, etc.)
+      const htmlResult = await mammoth.convertToHtml({ path: filePath });
+      const htmlContent = htmlResult.value;
+      
+      // Also get raw text for pattern matching
+      const textResult = await mammoth.extractRawText({ path: filePath });
+      const text = textResult.value;
       
       console.log("Parsed Word document text length:", text.length);
-      console.log("First 500 chars:", text.substring(0, 500));
+      console.log("HTML content length:", htmlContent.length);
+      console.log("First 500 chars of text:", text.substring(0, 500));
       
       // Parse daily lessons - look for various "Day X" patterns
       // Supports: "Day 1:", "Day 1 -", "DAY 1", "Day One:", "Day 1.", "Day 1)", etc.
@@ -1073,22 +1078,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Helper function to extract HTML content for a text range
+      const getHtmlContentForSection = (textStart: number, textEnd: number): string => {
+        // Find corresponding position in HTML by matching text content
+        const sectionText = text.substring(textStart, textEnd).trim();
+        if (!sectionText) return '';
+        
+        // Find the first unique phrase from this section in HTML
+        const firstWords = sectionText.substring(0, Math.min(50, sectionText.length)).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const htmlStartMatch = htmlContent.match(new RegExp(firstWords.substring(0, 30), 'i'));
+        
+        if (htmlStartMatch && htmlStartMatch.index !== undefined) {
+          // Find a phrase near the end
+          const lastWords = sectionText.substring(Math.max(0, sectionText.length - 50)).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const searchFrom = htmlStartMatch.index;
+          const remainingHtml = htmlContent.substring(searchFrom);
+          const htmlEndMatch = remainingHtml.match(new RegExp(lastWords.substring(lastWords.length - 30), 'i'));
+          
+          if (htmlEndMatch && htmlEndMatch.index !== undefined) {
+            const endPos = searchFrom + htmlEndMatch.index + htmlEndMatch[0].length;
+            // Find the closing tag after this position
+            const closingTagMatch = htmlContent.substring(endPos).match(/<\/p>/);
+            const finalEnd = closingTagMatch ? endPos + closingTagMatch.index! + 4 : endPos + 100;
+            return htmlContent.substring(searchFrom, Math.min(finalEnd, htmlContent.length));
+          }
+          // Fallback: take a chunk from the start position
+          return htmlContent.substring(searchFrom, Math.min(searchFrom + sectionText.length * 2, htmlContent.length));
+        }
+        
+        // Fallback: convert plain text to HTML with paragraph breaks
+        return sectionText.split(/\n\n+/).map(p => `<p>${p.trim()}</p>`).join('');
+      };
+      
       // If no structured patterns found, try splitting by common dividers
       if (matches.length === 0) {
         console.log("No day patterns found, trying alternative parsing...");
         // Try splitting by double newlines or horizontal rules
         const sections = text.split(/\n{3,}|\r\n{3,}|_{5,}|-{5,}|={5,}/);
         if (sections.length > 1) {
+          let textPosition = 0;
           sections.forEach((section, index) => {
             const trimmed = section.trim();
             if (trimmed.length > 50) {  // Only include substantial sections
               const firstLine = trimmed.split('\n')[0].trim();
+              // Convert section to HTML with paragraph breaks
+              const htmlSection = trimmed.split(/\n\n+/).map(p => `<p>${p.trim().replace(/\n/g, '<br>')}</p>`).join('');
               lessons.push({
                 dayNumber: index + 1,
                 title: firstLine.substring(0, 100) || `Day ${index + 1}`,
-                content: trimmed,
+                content: htmlSection,
               });
             }
+            textPosition += section.length;
           });
           console.log("Alternative parsing found", lessons.length, "sections");
         }
@@ -1104,7 +1145,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Get content between this day and the next day (or end of text)
           const startIndex = match.index! + match[0].length;
           const endIndex = i < matches.length - 1 ? matches[i + 1].index! : text.length;
-          let content = text.substring(startIndex, endIndex).trim();
+          const rawContent = text.substring(startIndex, endIndex).trim();
+          
+          // Convert to HTML preserving paragraph structure
+          let content = rawContent.split(/\n\n+/).map(p => `<p>${p.trim().replace(/\n/g, '<br>')}</p>`).join('');
           
           // Try to extract scripture reference (look for common patterns)
           let scripture: string | undefined;
@@ -1115,7 +1159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             /Verse[:\s]+([^\n]+)/i,
           ];
           for (const pattern of scripturePatterns) {
-            const scriptureMatch = content.match(pattern);
+            const scriptureMatch = rawContent.match(pattern);
             if (scriptureMatch) {
               scripture = scriptureMatch[1].trim();
               break;
@@ -1131,7 +1175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             /Application[:\s]+([^\n]+)/i,
           ];
           for (const pattern of takeawayPatterns) {
-            const takeawayMatch = content.match(pattern);
+            const takeawayMatch = rawContent.match(pattern);
             if (takeawayMatch) {
               keyTakeaway = takeawayMatch[1].trim();
               break;
