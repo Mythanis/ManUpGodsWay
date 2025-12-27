@@ -980,15 +980,15 @@ export default function StudyManagement() {
   return (
     <div className="space-y-4">
       <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
-        <div className="flex items-center justify-between mb-4">
-          <TabsList>
-            <TabsTrigger value="all" data-testid="tab-all-studies">
-              All Studies ({studies.length})
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <TabsList className="w-full sm:w-auto overflow-x-auto">
+            <TabsTrigger value="all" data-testid="tab-all-studies" className="text-xs sm:text-sm">
+              All ({studies.length})
             </TabsTrigger>
-            <TabsTrigger value="series" data-testid="tab-series">
+            <TabsTrigger value="series" data-testid="tab-series" className="text-xs sm:text-sm">
               Series ({allSeries.length})
             </TabsTrigger>
-            <TabsTrigger value="individual" data-testid="tab-individual">
+            <TabsTrigger value="individual" data-testid="tab-individual" className="text-xs sm:text-sm">
               Individual ({individualStudies.length})
             </TabsTrigger>
           </TabsList>
@@ -998,7 +998,7 @@ export default function StudyManagement() {
                 resetSeriesForm();
                 setShowCreateSeriesDialog(true);
               }}
-              className="bg-ministry-gold-exact text-black hover:bg-yellow-500"
+              className="bg-ministry-gold-exact text-black hover:bg-yellow-500 w-full sm:w-auto"
               data-testid="button-create-series"
             >
               <Plus className="w-4 h-4 mr-2" />
