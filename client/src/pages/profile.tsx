@@ -146,17 +146,17 @@ export default function Profile() {
 
       {/* Account Management */}
       <div className="px-6 -mt-6 relative z-10 mb-6">
-        <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] bg-black border-2 border-black rounded-none" data-testid="card-account">
-          <CardContent className="p-6">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] liquid-black border-2 border-ministry-gold-exact rounded-none overflow-hidden" data-testid="card-account">
+          <CardContent className="p-6 relative z-10">
             <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Account & Subscription</h2>
             
             <div className="space-y-4">
-              <div className={`flex items-center justify-between p-4 rounded-none border-2 border-black ${
+              <div className={`flex items-center justify-between p-4 rounded-none border-2 border-black overflow-hidden relative ${
                 user?.subscriptionTier === 'free' 
-                  ? 'bg-ministry-gold-exact' 
+                  ? 'liquid-gold-card' 
                   : 'bg-ministry-steel/10'
               }`}>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 relative z-10">
                   <Crown className="w-5 h-5 text-black" />
                   <div>
                     <h3 className="font-black text-foreground uppercase tracking-wide">
@@ -173,7 +173,7 @@ export default function Profile() {
                 </div>
                 <Button 
                   variant="ghost"
-                  className="text-ministry-steel font-medium text-sm hover:text-ministry-navy"
+                  className="text-black font-black text-sm hover:bg-black/10 relative z-10 uppercase tracking-wide"
                   data-testid="button-manage-subscription"
                   onClick={() => {
                     if (user?.subscriptionTier === 'free') {
@@ -189,7 +189,7 @@ export default function Profile() {
               <EditProfileDialog>
                 <Button 
                   variant="outline"
-                  className="w-full justify-between p-4 h-auto border-2 border-black hover:bg-gray-800 bg-gray-800 rounded-none"
+                  className="w-full justify-between p-4 h-auto border-2 border-ministry-gold-exact hover:bg-gray-700 bg-gray-800 rounded-none shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(252,208,0,1)] transition-all"
                   data-testid="button-edit-profile"
                 >
                   <div className="flex items-center space-x-3">
@@ -198,7 +198,7 @@ export default function Profile() {
                     </div>
                     <span className="font-bold text-white uppercase tracking-wide">Edit Profile</span>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-ministry-gold-exact" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                   </svg>
                 </Button>
@@ -212,14 +212,14 @@ export default function Profile() {
       <div className="px-6 mb-6">
         <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Settings</h2>
         
-        <Card className="bg-black border-2 border-black overflow-hidden rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]" data-testid="card-settings">
-          <CardContent className="p-0">
+        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]" data-testid="card-settings">
+          <CardContent className="p-0 relative z-10">
             <NotificationPanel variant="button" />
             
             {/* Notification Preferences */}
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-gray-700 rounded-none"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-none"
               onClick={() => setLocation('/notification-preferences')}
               data-testid="button-notification-preferences"
             >
@@ -229,7 +229,7 @@ export default function Profile() {
                 </div>
                 <span className="font-bold text-white uppercase tracking-wide">Notification Preferences</span>
               </div>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-ministry-gold-exact" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </Button>
@@ -240,7 +240,7 @@ export default function Profile() {
             
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-gray-700 rounded-none"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-none"
               data-testid="button-privacy"
             >
               <div className="flex items-center space-x-3">
@@ -249,14 +249,14 @@ export default function Profile() {
                 </div>
                 <span className="font-bold text-white uppercase tracking-wide">Privacy & Security</span>
               </div>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-ministry-gold-exact" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </Button>
             
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-gray-700 rounded-none"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-none"
               data-testid="button-help"
             >
               <div className="flex items-center space-x-3">
@@ -265,14 +265,14 @@ export default function Profile() {
                 </div>
                 <span className="font-bold text-white uppercase tracking-wide">Help & Support</span>
               </div>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-ministry-gold-exact" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </Button>
             
             <button
               onClick={() => setShowFeedbackDialog(true)}
-              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-gray-700 cursor-pointer transition-colors flex bg-transparent"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 cursor-pointer transition-colors flex bg-transparent"
               data-testid="button-feedback"
             >
               <div className="flex items-center space-x-3">
@@ -281,7 +281,7 @@ export default function Profile() {
                 </div>
                 <span className="font-bold text-white uppercase tracking-wide">Send Feedback</span>
               </div>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-ministry-gold-exact" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </button>
@@ -289,16 +289,16 @@ export default function Profile() {
             <Button 
               variant="ghost"
               onClick={() => window.location.href = '/api/logout'}
-              className="w-full justify-between p-4 h-auto hover:bg-gray-800 rounded-none"
+              className="w-full justify-between p-4 h-auto hover:bg-red-900/30 rounded-none"
               data-testid="button-logout"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-none bg-red-900/50 flex items-center justify-center">
-                  <LogOut className="w-4 h-4 text-red-400" />
+                <div className="w-8 h-8 rounded-none bg-red-600 flex items-center justify-center">
+                  <LogOut className="w-4 h-4 text-white" />
                 </div>
                 <span className="font-bold text-red-400 uppercase tracking-wide">Sign Out</span>
               </div>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </Button>
@@ -310,16 +310,16 @@ export default function Profile() {
       <div className="px-6">
         <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Your Journey</h2>
         
-        <Card className="border-2 border-black bg-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-progress">
-          <CardContent className="p-6">
+        <Card className="border-2 border-black liquid-gold-card rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden" data-testid="card-progress">
+          <CardContent className="p-6 relative z-10">
             {currentStudies.length === 0 && completedStudies.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-black mb-4 font-medium">You haven't started any studies yet</p>
                 <Button 
-                  className="bg-black text-white hover:bg-gray-900 rounded-none font-black uppercase tracking-wide"
+                  className="liquid-black text-ministry-gold-exact hover:opacity-90 rounded-none font-black uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] h-12 px-6"
                   data-testid="button-start-journey"
                 >
-                  Start Your Journey
+                  <span className="relative z-10">Start Your Journey</span>
                 </Button>
               </div>
             ) : (
