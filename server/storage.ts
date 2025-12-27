@@ -1287,12 +1287,16 @@ export class DatabaseStorage implements IStorage {
         studyId: userProgress.studyId,
         currentDay: userProgress.currentDay,
         status: userProgress.status,
-        isCompleted: userProgress.isCompleted,
         documentScrollPosition: userProgress.documentScrollPosition,
         lastAccessedAt: userProgress.lastAccessedAt,
         completedAt: userProgress.completedAt,
         createdAt: userProgress.createdAt,
-        study: studies,
+        studyTitle: studies.title,
+        studyDescription: studies.description,
+        studyCategory: studies.category,
+        studyTotalDays: studies.totalDays,
+        studyThumbnail: studies.thumbnailUrl,
+        studyRequiredTier: studies.requiredTier,
       })
       .from(userProgress)
       .leftJoin(studies, eq(userProgress.studyId, studies.id))
@@ -1322,8 +1326,28 @@ export class DatabaseStorage implements IStorage {
         const completedLessons = Number(completedResult[0]?.count || 0);
         const totalLessons = Number(totalResult[0]?.count || 0);
         
+        // Reconstruct the study object from individual fields (or null if study was deleted)
+        const study = record.studyTitle ? {
+          id: record.studyId,
+          title: record.studyTitle,
+          description: record.studyDescription,
+          category: record.studyCategory,
+          totalDays: record.studyTotalDays,
+          thumbnailUrl: record.studyThumbnail,
+          requiredTier: record.studyRequiredTier,
+        } : null;
+        
         return {
-          ...record,
+          id: record.id,
+          userId: record.userId,
+          studyId: record.studyId,
+          currentDay: record.currentDay,
+          status: record.status,
+          documentScrollPosition: record.documentScrollPosition,
+          lastAccessedAt: record.lastAccessedAt,
+          completedAt: record.completedAt,
+          createdAt: record.createdAt,
+          study,
           completedLessons,
           totalLessons,
         };
