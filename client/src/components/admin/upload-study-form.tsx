@@ -15,8 +15,15 @@ import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertStudySchema } from "@shared/schema";
-import { Plus } from "lucide-react";
+import { Plus, Layers } from "lucide-react";
 import { z } from "zod";
+
+interface StudySeries {
+  id: string;
+  title: string;
+  description?: string;
+  category?: string;
+}
 
 const categories = [
   { id: 'leadership', label: 'Leadership' },
@@ -60,6 +67,8 @@ export default function UploadStudyForm() {
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [uploadingWord, setUploadingWord] = useState(false);
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [addToSeries, setAddToSeries] = useState(false);
+  const [selectedSeriesId, setSelectedSeriesId] = useState<string>("");
   const { toast } = useToast();
   const { effectiveTheme } = useTheme();
   const queryClient = useQueryClient();
@@ -70,6 +79,11 @@ export default function UploadStudyForm() {
     processingStatus: string;
   }>>({
     queryKey: ["/api/admin/videos"],
+    retry: false,
+  });
+
+  const { data: allSeries = [] } = useQuery<StudySeries[]>({
+    queryKey: ["/api/admin/study-series"],
     retry: false,
   });
 
@@ -189,6 +203,7 @@ export default function UploadStudyForm() {
 
       queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
       toast({
         title: "Success",
         description: "Study created successfully!",
@@ -198,6 +213,8 @@ export default function UploadStudyForm() {
       setPdfFile(null);
       setWordFile(null);
       setThumbnailFile(null);
+      setAddToSeries(false);
+      setSelectedSeriesId("");
     },
     onError: (error: any) => {
       console.error('Study creation error:', error);
@@ -243,7 +260,9 @@ export default function UploadStudyForm() {
       ...data,
       videoId: data.videoId === 'none' ? undefined : data.videoId,
       // Convert price to proper format - null if not required for purchase, or empty/invalid
-      price: data.requiresPurchase && data.price && data.price.trim() !== '' ? data.price : null
+      price: data.requiresPurchase && data.price && data.price.trim() !== '' ? data.price : null,
+      // Add seriesId if adding to a series
+      seriesId: addToSeries && selectedSeriesId ? selectedSeriesId : null,
     };
     createStudy.mutate(submitData);
   };
@@ -386,6 +405,48 @@ export default function UploadStudyForm() {
                 )}
               />
             </div>
+
+            {/* Add to Series Section */}
+            {allSeries.length > 0 && (
+              <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <div className="text-sm font-medium flex items-center gap-2">
+                    <Layers className="w-4 h-4" />
+                    Add to Series
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Include this study in an existing series
+                  </div>
+                </div>
+                <Switch
+                  checked={addToSeries}
+                  onCheckedChange={(checked) => {
+                    setAddToSeries(checked);
+                    if (!checked) setSelectedSeriesId("");
+                  }}
+                  data-testid="switch-add-to-series"
+                />
+              </div>
+            )}
+
+            {/* Series Dropdown - only show when addToSeries is true */}
+            {addToSeries && allSeries.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Select Series</label>
+                <Select value={selectedSeriesId} onValueChange={setSelectedSeriesId}>
+                  <SelectTrigger data-testid="select-study-series">
+                    <SelectValue placeholder="Choose a series" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allSeries.map((series) => (
+                      <SelectItem key={series.id} value={series.id}>
+                        {series.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Purchase Options Section */}
             <FormField
