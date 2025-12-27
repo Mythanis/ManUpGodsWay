@@ -31,6 +31,7 @@ import {
   insertContentFlagSchema,
   insertTestimonySchema,
   insertFitnessChallengeSchema,
+  insertPreBuiltFitnessPlanSchema,
   insertFavoriteExerciseSchema,
   insertFitnessPlanSchema,
   insertFitnessPlanExerciseSchema,
@@ -5574,6 +5575,247 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(challenge);
     } catch (error) {
       console.error('Error publishing fitness challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // ============================================
+  // PRE-BUILT FITNESS PLANS ROUTES
+  // ============================================
+
+  // Get all published pre-built fitness plans (public, filtered by user tier)
+  app.get('/api/pre-built-fitness-plans', async (req: any, res) => {
+    try {
+      let userTier = 'free';
+      
+      // Check if user is authenticated to get their tier
+      if (req.user?.claims?.sub) {
+        const user = await storage.getUser(req.user.claims.sub);
+        if (user) {
+          userTier = user.tier || 'free';
+        }
+      }
+      
+      const plans = await db.select()
+        .from(schema.preBuiltFitnessPlans)
+        .where(eq(schema.preBuiltFitnessPlans.isPublished, true))
+        .orderBy(desc(schema.preBuiltFitnessPlans.createdAt));
+      
+      // Filter by tier access
+      const tierHierarchy: Record<string, number> = { free: 0, premium: 1, vip: 2 };
+      const userTierLevel = tierHierarchy[userTier] || 0;
+      
+      const accessiblePlans = plans.map(plan => {
+        const planTierLevel = tierHierarchy[plan.tier || 'free'] || 0;
+        const hasAccess = userTierLevel >= planTierLevel;
+        return {
+          ...plan,
+          hasAccess,
+          downloadUrl: hasAccess ? plan.downloadUrl : null // Hide download URL if no access
+        };
+      });
+      
+      res.json(accessiblePlans);
+    } catch (error) {
+      console.error('Error fetching pre-built fitness plans:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Admin: Get all pre-built fitness plans (including unpublished)
+  app.get('/api/admin/pre-built-fitness-plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const plans = await db.select()
+        .from(schema.preBuiltFitnessPlans)
+        .orderBy(desc(schema.preBuiltFitnessPlans.createdAt));
+      
+      res.json(plans);
+    } catch (error) {
+      console.error('Error fetching admin pre-built fitness plans:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Admin: Create pre-built fitness plan
+  app.post('/api/pre-built-fitness-plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const planData = insertPreBuiltFitnessPlanSchema.parse({
+        ...req.body,
+        createdBy: user.id
+      });
+      
+      const [plan] = await db.insert(schema.preBuiltFitnessPlans)
+        .values(planData)
+        .returning();
+      
+      res.status(201).json(plan);
+    } catch (error) {
+      console.error('Error creating pre-built fitness plan:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid plan data", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Admin: Update pre-built fitness plan
+  app.put('/api/pre-built-fitness-plans/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const [plan] = await db.update(schema.preBuiltFitnessPlans)
+        .set({
+          ...req.body,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.preBuiltFitnessPlans.id, req.params.id))
+        .returning();
+      
+      if (!plan) {
+        return res.status(404).json({ message: 'Plan not found' });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      console.error('Error updating pre-built fitness plan:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Admin: Delete pre-built fitness plan
+  app.delete('/api/pre-built-fitness-plans/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      await db.delete(schema.preBuiltFitnessPlans)
+        .where(eq(schema.preBuiltFitnessPlans.id, req.params.id));
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting pre-built fitness plan:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Admin: Toggle publish status for pre-built fitness plan
+  app.post('/api/pre-built-fitness-plans/:id/publish', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Get current plan
+      const [existingPlan] = await db.select()
+        .from(schema.preBuiltFitnessPlans)
+        .where(eq(schema.preBuiltFitnessPlans.id, req.params.id));
+      
+      if (!existingPlan) {
+        return res.status(404).json({ message: 'Plan not found' });
+      }
+      
+      const [plan] = await db.update(schema.preBuiltFitnessPlans)
+        .set({
+          isPublished: !existingPlan.isPublished,
+          publishedAt: !existingPlan.isPublished ? new Date() : null,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.preBuiltFitnessPlans.id, req.params.id))
+        .returning();
+      
+      res.json(plan);
+    } catch (error) {
+      console.error('Error toggling pre-built fitness plan publish status:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Admin: Upload fitness plan document
+  app.post('/api/pre-built-fitness-plans/:id/upload', isAuthenticated, upload.single('document'), async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+      
+      const downloadUrl = `/uploads/fitness-plans/${req.file.filename}`;
+      
+      const [plan] = await db.update(schema.preBuiltFitnessPlans)
+        .set({
+          downloadUrl,
+          downloadFileName: req.file.originalname,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.preBuiltFitnessPlans.id, req.params.id))
+        .returning();
+      
+      if (!plan) {
+        return res.status(404).json({ message: 'Plan not found' });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      console.error('Error uploading fitness plan document:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Download fitness plan document (with tier check)
+  app.get('/api/pre-built-fitness-plans/:id/download', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      const [plan] = await db.select()
+        .from(schema.preBuiltFitnessPlans)
+        .where(eq(schema.preBuiltFitnessPlans.id, req.params.id));
+      
+      if (!plan) {
+        return res.status(404).json({ message: 'Plan not found' });
+      }
+      
+      // Check tier access
+      const tierHierarchy: Record<string, number> = { free: 0, premium: 1, vip: 2 };
+      const userTierLevel = tierHierarchy[user.tier || 'free'] || 0;
+      const planTierLevel = tierHierarchy[plan.tier || 'free'] || 0;
+      
+      if (userTierLevel < planTierLevel) {
+        return res.status(403).json({ 
+          message: `This plan requires ${plan.tier} tier access`,
+          requiredTier: plan.tier
+        });
+      }
+      
+      if (!plan.downloadUrl) {
+        return res.status(404).json({ message: 'No document available for download' });
+      }
+      
+      // Redirect to the file
+      res.redirect(plan.downloadUrl);
+    } catch (error) {
+      console.error('Error downloading fitness plan:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
