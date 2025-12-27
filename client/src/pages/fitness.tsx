@@ -1429,7 +1429,7 @@ export default function Fitness() {
               </div>
               
               <p className="text-white leading-relaxed">
-                Sean McManus is part of the Man Up God's Way team and serves as the Lead Fitness Director for USD and the Man Up God's Way app, helping men pursue physical strength as a vital part of biblical discipleship.
+                Sean McManus is part of the Man Up God's Way team and serves as the Lead Fitness Director for the Man Up God's Way app, helping men pursue physical strength as a vital part of biblical discipleship.
               </p>
               
               <p className="text-white leading-relaxed">
