@@ -130,6 +130,12 @@ export default function StudyManagement() {
     category: "",
     thumbnailUrl: "",
   });
+  
+  // Bulk series upload state
+  const [bulkSeriesMode, setBulkSeriesMode] = useState(false);
+  const [bulkSeriesText, setBulkSeriesText] = useState("");
+  const [parsedSeries, setParsedSeries] = useState<Array<{ title: string; description: string; category: string }>>([]);
+  const [isCreatingBulkSeries, setIsCreatingBulkSeries] = useState(false);
 
   // Fetch all studies
   const { data: studies = [], isLoading, refetch } = useQuery<Study[]>({
@@ -327,6 +333,79 @@ export default function StudyManagement() {
 
   const resetSeriesForm = () => {
     setSeriesFormData({ title: "", description: "", category: "", thumbnailUrl: "" });
+  };
+
+  // Parse bulk series text
+  const parseBulkSeriesText = (text: string) => {
+    const entries = text.split(/---+/).filter(entry => entry.trim());
+    const parsed: Array<{ title: string; description: string; category: string }> = [];
+    
+    entries.forEach(entry => {
+      const lines = entry.trim().split('\n');
+      let title = "";
+      let description = "";
+      let category = "";
+      
+      lines.forEach(line => {
+        const trimmedLine = line.trim();
+        if (trimmedLine.toLowerCase().startsWith('title:')) {
+          title = trimmedLine.substring(6).trim();
+        } else if (trimmedLine.toLowerCase().startsWith('description:')) {
+          description = trimmedLine.substring(12).trim();
+        } else if (trimmedLine.toLowerCase().startsWith('category:')) {
+          category = trimmedLine.substring(9).trim().toLowerCase();
+        }
+      });
+      
+      if (title) {
+        parsed.push({ title, description, category: category || "leadership" });
+      }
+    });
+    
+    return parsed;
+  };
+
+  // Handle bulk series text change
+  const handleBulkSeriesTextChange = (text: string) => {
+    setBulkSeriesText(text);
+    const parsed = parseBulkSeriesText(text);
+    setParsedSeries(parsed);
+  };
+
+  // Handle bulk series create
+  const handleBulkSeriesCreate = async () => {
+    if (parsedSeries.length === 0) return;
+    
+    setIsCreatingBulkSeries(true);
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (const series of parsedSeries) {
+      try {
+        await apiRequest("POST", "/api/admin/study-series", series);
+        successCount++;
+      } catch (error) {
+        errorCount++;
+        console.error("Failed to create series:", series.title, error);
+      }
+    }
+    
+    setIsCreatingBulkSeries(false);
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
+    
+    if (successCount > 0) {
+      toast({
+        title: "Bulk Import Complete",
+        description: `Created ${successCount} series${errorCount > 0 ? `, ${errorCount} failed` : ""}`,
+      });
+    }
+    
+    if (errorCount === 0) {
+      setShowCreateSeriesDialog(false);
+      setBulkSeriesMode(false);
+      setBulkSeriesText("");
+      setParsedSeries([]);
+    }
   };
 
   const handleEditSeries = (series: StudySeries) => {
@@ -1141,58 +1220,142 @@ export default function StudyManagement() {
       </Tabs>
 
       {/* Create Series Dialog */}
-      <Dialog open={showCreateSeriesDialog} onOpenChange={setShowCreateSeriesDialog}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={showCreateSeriesDialog} onOpenChange={(open) => {
+        setShowCreateSeriesDialog(open);
+        if (!open) {
+          setBulkSeriesMode(false);
+          setBulkSeriesText("");
+          setParsedSeries([]);
+        }
+      }}>
+        <DialogContent className={bulkSeriesMode ? "sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col" : "sm:max-w-md"}>
           <DialogHeader>
             <DialogTitle>Create New Series</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="series-title">Title</Label>
-              <Input
-                id="series-title"
-                value={seriesFormData.title}
-                onChange={(e) => setSeriesFormData({ ...seriesFormData, title: e.target.value })}
-                placeholder="e.g., Holy Spirit Series"
-                data-testid="input-series-title"
-              />
+          
+          {/* Mode Toggle */}
+          <div className="flex items-center justify-between p-3 rounded-lg border bg-gray-50">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-medium">Bulk Upload Mode</Label>
+              <p className="text-xs text-muted-foreground">Create multiple series at once</p>
             </div>
-            <div>
-              <Label htmlFor="series-description">Description</Label>
-              <Textarea
-                id="series-description"
-                value={seriesFormData.description}
-                onChange={(e) => setSeriesFormData({ ...seriesFormData, description: e.target.value })}
-                placeholder="Brief description..."
-                rows={3}
-                data-testid="input-series-description"
-              />
-            </div>
-            <div>
-              <Label htmlFor="series-category">Category</Label>
-              <Select value={seriesFormData.category} onValueChange={(val) => setSeriesFormData({ ...seriesFormData, category: val })}>
-                <SelectTrigger data-testid="select-series-category">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Switch
+              checked={bulkSeriesMode}
+              onCheckedChange={setBulkSeriesMode}
+              data-testid="switch-bulk-series-mode"
+            />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateSeriesDialog(false)}>Cancel</Button>
-            <Button
-              onClick={() => createSeriesMutation.mutate(seriesFormData)}
-              disabled={!seriesFormData.title || createSeriesMutation.isPending}
-              className="bg-ministry-gold-exact text-black hover:bg-yellow-500"
-              data-testid="button-save-series"
-            >
-              {createSeriesMutation.isPending ? "Creating..." : "Create Series"}
-            </Button>
-          </DialogFooter>
+
+          {!bulkSeriesMode ? (
+            <>
+              {/* Single Series Form */}
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="series-title">Title</Label>
+                  <Input
+                    id="series-title"
+                    value={seriesFormData.title}
+                    onChange={(e) => setSeriesFormData({ ...seriesFormData, title: e.target.value })}
+                    placeholder="e.g., Holy Spirit Series"
+                    data-testid="input-series-title"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="series-description">Description</Label>
+                  <Textarea
+                    id="series-description"
+                    value={seriesFormData.description}
+                    onChange={(e) => setSeriesFormData({ ...seriesFormData, description: e.target.value })}
+                    placeholder="Brief description..."
+                    rows={3}
+                    data-testid="input-series-description"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="series-category">Category</Label>
+                  <Select value={seriesFormData.category} onValueChange={(val) => setSeriesFormData({ ...seriesFormData, category: val })}>
+                    <SelectTrigger data-testid="select-series-category">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowCreateSeriesDialog(false)}>Cancel</Button>
+                <Button
+                  onClick={() => createSeriesMutation.mutate(seriesFormData)}
+                  disabled={!seriesFormData.title || createSeriesMutation.isPending}
+                  className="bg-ministry-gold-exact text-black hover:bg-yellow-500"
+                  data-testid="button-save-series"
+                >
+                  {createSeriesMutation.isPending ? "Creating..." : "Create Series"}
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              {/* Bulk Series Form */}
+              <div className="flex-1 overflow-y-auto space-y-4">
+                <div>
+                  <Label>Bulk Series Text</Label>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Enter series using the format below. Separate each series with --- 
+                  </p>
+                  <Textarea
+                    value={bulkSeriesText}
+                    onChange={(e) => handleBulkSeriesTextChange(e.target.value)}
+                    placeholder={`Title: Holy Spirit Series\nDescription: A deep dive into the Holy Spirit\nCategory: leadership\n---\nTitle: Marriage Series\nDescription: Biblical principles for marriage\nCategory: marriage\n---\nTitle: Fatherhood Series\nDescription: Being a godly father\nCategory: fatherhood`}
+                    rows={8}
+                    className="font-mono text-sm"
+                    data-testid="textarea-bulk-series"
+                  />
+                </div>
+
+                {/* Preview Section */}
+                {parsedSeries.length > 0 && (
+                  <div>
+                    <Label className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-green-500" />
+                      Preview ({parsedSeries.length} series found)
+                    </Label>
+                    <div className="mt-2 max-h-48 overflow-y-auto border rounded-lg divide-y">
+                      {parsedSeries.map((series, index) => (
+                        <div key={index} className="p-3 bg-gray-50">
+                          <div className="font-medium">{series.title}</div>
+                          <div className="text-sm text-muted-foreground">{series.description || "No description"}</div>
+                          <Badge variant="outline" className="mt-1 text-xs">{series.category}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {bulkSeriesText && parsedSeries.length === 0 && (
+                  <p className="text-sm text-amber-600">No valid series found. Make sure each entry has a Title: line.</p>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => {
+                  setBulkSeriesMode(false);
+                  setBulkSeriesText("");
+                  setParsedSeries([]);
+                }}>Cancel</Button>
+                <Button
+                  onClick={handleBulkSeriesCreate}
+                  disabled={parsedSeries.length === 0 || isCreatingBulkSeries}
+                  className="bg-ministry-gold-exact text-black hover:bg-yellow-500"
+                  data-testid="button-bulk-create-series"
+                >
+                  {isCreatingBulkSeries ? "Creating..." : `Create ${parsedSeries.length} Series`}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
