@@ -288,14 +288,14 @@ function StripeConfiguration() {
   );
 }
 
-// Define Owner tabs
+// Define Owner tabs - ordered like bottom nav: Home, Studies, Community, War Groups, More
 const ownerTabs = [
-  { id: "overview", label: "System Overview Dashboard", icon: Activity },
-  { id: "users", label: "User Management & Administration", icon: Users },
+  { id: "overview", label: "System Overview Dashboard", icon: Activity },       // Home
+  { id: "analytics", label: "Analytics Dashboard & Reports", icon: Crown },     // Studies (content metrics)
+  { id: "users", label: "User Management & Administration", icon: Users },      // Community
+  { id: "security", label: "Security & Access Control", icon: Shield },         // War Groups (protection)
+  { id: "stripe", label: "Payment Gateway & Billing", icon: CreditCard },       // More
   { id: "system", label: "System Settings & Configuration", icon: Database },
-  { id: "security", label: "Security & Access Control", icon: Shield },
-  { id: "stripe", label: "Payment Gateway & Billing", icon: CreditCard },
-  { id: "analytics", label: "Analytics Dashboard & Reports", icon: Crown },
   { id: "backup", label: "Backup & Recovery Management", icon: Settings },
   { id: "integrations", label: "API Integrations & Webhooks", icon: UserCog }
 ];
