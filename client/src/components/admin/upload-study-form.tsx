@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertStudySchema } from "@shared/schema";
-import { Plus, Layers } from "lucide-react";
+import { Plus, Layers, FileText, Upload, Check, Loader2 } from "lucide-react";
 import { z } from "zod";
 
 interface StudySeries {
@@ -69,6 +69,19 @@ export default function UploadStudyForm() {
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [addToSeries, setAddToSeries] = useState(false);
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>("");
+  
+  // Bulk import state
+  const [bulkImportMode, setBulkImportMode] = useState(false);
+  const [bulkWordFile, setBulkWordFile] = useState<File | null>(null);
+  const [parsingWordFile, setParsingWordFile] = useState(false);
+  const [parsedLessons, setParsedLessons] = useState<Array<{
+    dayNumber: number;
+    title: string;
+    content: string;
+    scripture?: string;
+    keyTakeaway?: string;
+  }>>([]);
+  
   const { toast } = useToast();
   const { effectiveTheme } = useTheme();
   const queryClient = useQueryClient();
@@ -140,6 +153,54 @@ export default function UploadStudyForm() {
     return () => clearTimeout(timeoutId);
   }, [watchedTitle, checkTitleExists]);
 
+  // Parse Word file for bulk import
+  const handleBulkWordFileChange = async (file: File | null) => {
+    setBulkWordFile(file);
+    setParsedLessons([]);
+    
+    if (!file) return;
+    
+    setParsingWordFile(true);
+    try {
+      const formData = new FormData();
+      formData.append('word', file);
+      
+      const response = await fetch('/api/parse-word-lessons', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setParsedLessons(data.lessons || []);
+        if (data.lessons?.length > 0) {
+          toast({
+            title: "Document Parsed",
+            description: `Found ${data.lessons.length} daily lessons`,
+          });
+        } else {
+          toast({
+            title: "No Lessons Found",
+            description: "Could not find daily lessons in the document. Make sure each day starts with 'Day 1:', 'Day 2:', etc.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        throw new Error('Failed to parse document');
+      }
+    } catch (error) {
+      console.error('Error parsing Word file:', error);
+      toast({
+        title: "Error",
+        description: "Failed to parse Word document",
+        variant: "destructive",
+      });
+    } finally {
+      setParsingWordFile(false);
+    }
+  };
+
   const createStudy = useMutation({
     mutationFn: async (data: z.infer<typeof createStudySchema>) => {
       const study = await apiRequest('POST', '/api/studies', data);
@@ -201,13 +262,35 @@ export default function UploadStudyForm() {
         }
       }
 
+      // If bulk import mode, create all the lessons
+      if (bulkImportMode && parsedLessons.length > 0) {
+        let lessonCount = 0;
+        for (const lesson of parsedLessons) {
+          try {
+            await apiRequest('POST', `/api/studies/${study.id}/lessons`, {
+              ...lesson,
+              displayOrder: lesson.dayNumber,
+              estimatedMinutes: 15,
+            });
+            lessonCount++;
+          } catch (error) {
+            console.error('Error creating lesson:', error);
+          }
+        }
+        toast({
+          title: "Success",
+          description: `Study created with ${lessonCount} daily lessons!`,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Study created successfully!",
+        });
+      }
+
       queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
-      toast({
-        title: "Success",
-        description: "Study created successfully!",
-      });
       setDialogOpen(false);
       form.reset();
       setPdfFile(null);
@@ -215,6 +298,9 @@ export default function UploadStudyForm() {
       setThumbnailFile(null);
       setAddToSeries(false);
       setSelectedSeriesId("");
+      setBulkImportMode(false);
+      setBulkWordFile(null);
+      setParsedLessons([]);
     },
     onError: (error: any) => {
       console.error('Study creation error:', error);
@@ -602,57 +688,141 @@ export default function UploadStudyForm() {
               )}
             />
 
-            <div className="space-y-4 border rounded-lg p-4 bg-muted/10">
-              <h3 className="font-semibold text-sm">File Uploads</h3>
-              
-              <div className="space-y-2">
-                <FormLabel>Thumbnail Image (replaces URL if provided)</FormLabel>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
-                  data-testid="input-thumbnail-file"
-                />
-                {thumbnailFile && (
-                  <p className="text-sm text-muted-foreground">
-                    Selected: {thumbnailFile.name}
-                  </p>
-                )}
+            {/* Bulk Import from Word Document */}
+            <div className="flex flex-row items-center justify-between rounded-lg border p-4 bg-blue-50 dark:bg-blue-950">
+              <div className="space-y-0.5">
+                <div className="text-sm font-medium flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Bulk Import Daily Lessons
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Upload a Word doc with daily lessons (Day 1:, Day 2:, etc.)
+                </div>
               </div>
-
-              <div className="space-y-2">
-                <FormLabel>PDF Document (optional)</FormLabel>
-                <Input
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-                  data-testid="input-pdf-file"
-                />
-                {pdfFile && (
-                  <p className="text-sm text-muted-foreground">
-                    Selected: {pdfFile.name}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <FormLabel>Word Document (.docx only, optional)</FormLabel>
-                <Input
-                  type="file"
-                  accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                  onChange={(e) => setWordFile(e.target.files?.[0] || null)}
-                  data-testid="input-word-file"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Only .docx files are supported for interactive viewing.
-                </p>
-                {wordFile && (
-                  <p className="text-sm text-muted-foreground">
-                    Selected: {wordFile.name}
-                  </p>
-                )}
-              </div>
+              <Switch
+                checked={bulkImportMode}
+                onCheckedChange={(checked) => {
+                  setBulkImportMode(checked);
+                  if (!checked) {
+                    setBulkWordFile(null);
+                    setParsedLessons([]);
+                  }
+                }}
+                data-testid="switch-bulk-import-mode"
+              />
             </div>
+
+            {/* Bulk Import Word Upload */}
+            {bulkImportMode && (
+              <div className="space-y-4 border rounded-lg p-4 bg-blue-50/50 dark:bg-blue-950/50">
+                <div className="space-y-2">
+                  <FormLabel className="flex items-center gap-2">
+                    <Upload className="w-4 h-4" />
+                    Upload Word Document with Daily Lessons
+                  </FormLabel>
+                  <Input
+                    type="file"
+                    accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={(e) => handleBulkWordFileChange(e.target.files?.[0] || null)}
+                    data-testid="input-bulk-word-file"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Format each day as: <strong>Day 1: Title</strong> followed by content. 
+                    The system will split lessons where it finds "Day X:" patterns.
+                  </p>
+                </div>
+
+                {parsingWordFile && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Parsing document...
+                  </div>
+                )}
+
+                {parsedLessons.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-green-600">
+                      <Check className="w-4 h-4" />
+                      Found {parsedLessons.length} daily lessons
+                    </div>
+                    <div className="max-h-48 overflow-y-auto border rounded-lg divide-y bg-white dark:bg-gray-900">
+                      {parsedLessons.map((lesson, index) => (
+                        <div key={index} className="p-3">
+                          <div className="font-medium text-sm">Day {lesson.dayNumber}: {lesson.title}</div>
+                          <div className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                            {lesson.content.substring(0, 150)}...
+                          </div>
+                          {lesson.scripture && (
+                            <div className="text-xs text-blue-600 mt-1">Scripture: {lesson.scripture}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {bulkWordFile && !parsingWordFile && parsedLessons.length === 0 && (
+                  <p className="text-sm text-amber-600">
+                    No daily lessons found. Make sure each day starts with "Day 1:", "Day 2:", etc.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Standard File Uploads - hidden in bulk mode */}
+            {!bulkImportMode && (
+              <div className="space-y-4 border rounded-lg p-4 bg-muted/10">
+                <h3 className="font-semibold text-sm">File Uploads</h3>
+                
+                <div className="space-y-2">
+                  <FormLabel>Thumbnail Image (replaces URL if provided)</FormLabel>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+                    data-testid="input-thumbnail-file"
+                  />
+                  {thumbnailFile && (
+                    <p className="text-sm text-muted-foreground">
+                      Selected: {thumbnailFile.name}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <FormLabel>PDF Document (optional)</FormLabel>
+                  <Input
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                    data-testid="input-pdf-file"
+                  />
+                  {pdfFile && (
+                    <p className="text-sm text-muted-foreground">
+                      Selected: {pdfFile.name}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <FormLabel>Word Document (.docx only, optional)</FormLabel>
+                  <Input
+                    type="file"
+                    accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={(e) => setWordFile(e.target.files?.[0] || null)}
+                    data-testid="input-word-file"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Only .docx files are supported for interactive viewing.
+                  </p>
+                  {wordFile && (
+                    <p className="text-sm text-muted-foreground">
+                      Selected: {wordFile.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             <FormField
               control={form.control}

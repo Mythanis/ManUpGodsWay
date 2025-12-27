@@ -1015,6 +1015,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Parse Word document to extract daily lessons
+  app.post('/api/parse-word-lessons', isAuthenticated, documentUpload.single('word'), async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "Word document is required" });
+      }
+
+      // Check if file is .docx
+      if (!file.originalname.toLowerCase().endsWith('.docx')) {
+        return res.status(400).json({ message: "Only .docx files are supported" });
+      }
+
+      const mammoth = require('mammoth');
+      const uploadsDir = path.resolve(process.cwd(), 'uploads', 'documents');
+      const filePath = path.resolve(uploadsDir, file.filename);
+      
+      // Convert Word to text for easier parsing
+      const result = await mammoth.extractRawText({ path: filePath });
+      const text = result.value;
+      
+      // Parse daily lessons - look for "Day X:" patterns
+      const dayPattern = /Day\s+(\d+)\s*[:\-–—]\s*([^\n]*)/gi;
+      const lessons: Array<{
+        dayNumber: number;
+        title: string;
+        content: string;
+        scripture?: string;
+        keyTakeaway?: string;
+      }> = [];
+      
+      let matches = [...text.matchAll(dayPattern)];
+      
+      for (let i = 0; i < matches.length; i++) {
+        const match = matches[i];
+        const dayNumber = parseInt(match[1], 10);
+        const title = match[2]?.trim() || `Day ${dayNumber}`;
+        
+        // Get content between this day and the next day (or end of text)
+        const startIndex = match.index! + match[0].length;
+        const endIndex = i < matches.length - 1 ? matches[i + 1].index! : text.length;
+        let content = text.substring(startIndex, endIndex).trim();
+        
+        // Try to extract scripture reference (look for common patterns)
+        let scripture: string | undefined;
+        const scripturePatterns = [
+          /Scripture[:\s]+([^\n]+)/i,
+          /Read[:\s]+([^\n]+)/i,
+          /Text[:\s]+([^\n]+)/i,
+          /Verse[:\s]+([^\n]+)/i,
+        ];
+        for (const pattern of scripturePatterns) {
+          const scriptureMatch = content.match(pattern);
+          if (scriptureMatch) {
+            scripture = scriptureMatch[1].trim();
+            break;
+          }
+        }
+        
+        // Try to extract key takeaway
+        let keyTakeaway: string | undefined;
+        const takeawayPatterns = [
+          /Key\s*Takeaway[:\s]+([^\n]+)/i,
+          /Takeaway[:\s]+([^\n]+)/i,
+          /Summary[:\s]+([^\n]+)/i,
+          /Application[:\s]+([^\n]+)/i,
+        ];
+        for (const pattern of takeawayPatterns) {
+          const takeawayMatch = content.match(pattern);
+          if (takeawayMatch) {
+            keyTakeaway = takeawayMatch[1].trim();
+            break;
+          }
+        }
+        
+        lessons.push({
+          dayNumber,
+          title,
+          content,
+          scripture,
+          keyTakeaway,
+        });
+      }
+      
+      // Clean up the temporary file
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      
+      res.json({ lessons, totalFound: lessons.length });
+    } catch (error) {
+      console.error("Error parsing Word document:", error);
+      res.status(500).json({ message: "Failed to parse Word document" });
+    }
+  });
+
   // Delete PDF document for study
   app.delete('/api/studies/:id/delete-pdf', isAuthenticated, async (req: any, res) => {
     try {
