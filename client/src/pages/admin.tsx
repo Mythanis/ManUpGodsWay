@@ -588,33 +588,7 @@ export default function Admin() {
 
       {/* Admin Management Tabs */}
       <div className="px-6 mb-6">
-        <div className="relative">
-          {/* Left scroll arrow */}
-          {canScrollLeft && (
-            <button
-              onClick={scrollLeft}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black text-white rounded-none p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(212,175,55,1)]"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-          )}
-
-          {/* Right scroll arrow */}
-          {canScrollRight && (
-            <button
-              onClick={scrollRight}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black text-white rounded-none p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(212,175,55,1)]"
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          )}
-
-          <div 
-            ref={scrollContainerRef}
-            className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2"
-          >
+        <div className="space-y-2">
           {adminTabs.map((tab) => {
             const IconComponent = tab.icon;
             const isActive = activeTab === tab.id;
@@ -622,30 +596,29 @@ export default function Admin() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`h-14 min-w-[140px] flex items-center justify-between border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all flex-shrink-0 cursor-pointer ${
+                className={`h-16 w-full flex items-center justify-between border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer ${
                   isActive 
                     ? 'liquid-black border-ministry-gold-exact shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]' 
                     : 'liquid-gold-card'
                 }`}
                 data-testid={`tab-${tab.id}`}
               >
-                <div className={`h-full w-12 flex items-center justify-center flex-shrink-0 ${
+                <div className={`h-full w-16 flex items-center justify-center flex-shrink-0 ${
                   isActive ? 'liquid-gold-card' : 'liquid-black'
                 }`}>
-                  <IconComponent className={`w-5 h-5 relative z-10 ${isActive ? 'text-black' : 'text-white'}`} />
+                  <IconComponent className={`w-6 h-6 relative z-10 ${isActive ? 'text-black' : 'text-white'}`} />
                 </div>
-                <span className={`flex-1 font-black text-xs text-left px-2 uppercase tracking-wide relative z-10 ${
+                <span className={`flex-1 font-black text-sm text-left px-4 uppercase tracking-wide relative z-10 ${
                   isActive ? 'text-ministry-gold-exact' : 'text-black'
                 }`}>{tab.label}</span>
-                <div className="pr-2">
-                  <svg className={`w-4 h-4 ${isActive ? 'text-ministry-gold-exact' : 'text-black'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="pr-4">
+                  <svg className={`w-6 h-6 ${isActive ? 'text-ministry-gold-exact' : 'text-black'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                   </svg>
                 </div>
               </button>
             );
           })}
-          </div>
         </div>
 
         <div className="mt-6">
