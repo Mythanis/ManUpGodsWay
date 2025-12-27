@@ -137,9 +137,9 @@ export default function StudyManagement() {
     retry: false,
   });
 
-  // Fetch all series for assignment dropdown
+  // Fetch all series for admin (including unpublished)
   const { data: allSeries = [] } = useQuery<StudySeries[]>({
-    queryKey: ["/api/study-series"],
+    queryKey: ["/api/admin/study-series"],
     retry: false,
   });
 
@@ -268,7 +268,7 @@ export default function StudyManagement() {
       return await apiRequest("POST", "/api/admin/study-series", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
       setShowCreateSeriesDialog(false);
       resetSeriesForm();
       toast({ title: "Success", description: "Series created successfully" });
@@ -283,7 +283,7 @@ export default function StudyManagement() {
       return await apiRequest("PUT", `/api/admin/study-series/${data.id}`, data.updates);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
       setShowEditSeriesDialog(false);
       setEditingSeriesData(null);
       resetSeriesForm();
@@ -299,7 +299,7 @@ export default function StudyManagement() {
       return await apiRequest("DELETE", `/api/admin/study-series/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
       queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
       toast({ title: "Success", description: "Series deleted. Studies are now individual." });
     },
@@ -316,7 +316,7 @@ export default function StudyManagement() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
       queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
       toast({ title: "Success", description: "Study assignment updated" });
     },
@@ -418,7 +418,7 @@ export default function StudyManagement() {
     };
 
     updateStudyMutation.mutate({ id: editingStudy.id, updates });
-    queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
   };
 
   const handleDelete = (studyId: string) => {
