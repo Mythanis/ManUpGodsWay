@@ -312,6 +312,9 @@ export default function StudyBuilder() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/progress"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
       toast({ title: "Study deleted" });
     },
   });
