@@ -237,27 +237,64 @@ export default function StudyBuilder() {
   });
 
   const createSeriesMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
+    mutationFn: async (data: typeof formData & { lessons?: ParsedLesson[] }) => {
       return await apiRequest('POST', '/api/admin/study-series', data);
     },
     onSuccess: async (series) => {
-      if (thumbnailFile) {
-        const formDataUpload = new FormData();
-        formDataUpload.append('thumbnail', thumbnailFile);
-        await fetch(`/api/admin/study-series/${series.id}/upload-thumbnail`, {
-          method: 'POST',
-          body: formDataUpload,
-          credentials: 'include',
+      setUploading(true);
+      try {
+        if (thumbnailFile) {
+          const formDataUpload = new FormData();
+          formDataUpload.append('thumbnail', thumbnailFile);
+          await fetch(`/api/admin/study-series/${series.id}/upload-thumbnail`, {
+            method: 'POST',
+            body: formDataUpload,
+            credentials: 'include',
+          });
+        }
+        
+        // If lessons were parsed from Word document, create a study with those lessons
+        if (parsedLessons.length > 0) {
+          // Create a study within this series
+          const study = await apiRequest('POST', '/api/studies', {
+            title: formData.title,
+            description: formData.description,
+            category: formData.category,
+            requiredTier: 'free',
+            seriesId: series.id,
+            seriesOrder: 1,
+            isPublished: true,
+          });
+          
+          // Add lessons to the study
+          for (const lesson of parsedLessons) {
+            await apiRequest('POST', `/api/studies/${study.id}/lessons`, {
+              ...lesson,
+              displayOrder: lesson.dayNumber,
+              estimatedMinutes: 15,
+            });
+          }
+        }
+        
+        toast({
+          title: "Success",
+          description: parsedLessons.length > 0 
+            ? `Series created with study and ${parsedLessons.length} lessons!`
+            : "Series created successfully!",
         });
+      } catch (error) {
+        toast({
+          title: "Warning",
+          description: "Series created but some content failed to add",
+          variant: "destructive",
+        });
+      } finally {
+        setUploading(false);
       }
-      
-      toast({
-        title: "Success",
-        description: "Series created successfully!",
-      });
       
       queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
       queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
       resetForm();
     },
     onError: (error: any) => {
@@ -478,6 +515,49 @@ export default function StudyBuilder() {
                 </div>
               </div>
 
+              {contentType === "series" && (
+                <div className="border rounded-lg p-4 space-y-4 bg-blue-50 dark:bg-blue-950/30">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Bulk Import Studies from Word
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Upload a Word document with daily lessons. Format each day as "Day 1: Title" etc.
+                    Bold, italic, and paragraph formatting will be preserved. Studies will be created and added to this series.
+                  </p>
+                  <Input
+                    type="file"
+                    accept=".docx,.doc"
+                    onChange={(e) => handleWordFileChange(e.target.files?.[0] || null)}
+                    data-testid="input-word-file-series"
+                  />
+                  
+                  {parsingWord && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Parsing document...
+                    </div>
+                  )}
+                  
+                  {parsedLessons.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-green-600">
+                        <Check className="w-4 h-4" />
+                        Found {parsedLessons.length} lessons
+                      </div>
+                      <div className="max-h-48 overflow-y-auto space-y-1 border rounded p-2">
+                        {parsedLessons.map((lesson, idx) => (
+                          <div key={idx} className="text-sm flex items-center gap-2">
+                            <Badge variant="outline">Day {lesson.dayNumber}</Badge>
+                            <span className="truncate">{lesson.title}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {contentType === "study" && (
                 <>
                   <div className="border rounded-lg p-4 space-y-4">
@@ -505,47 +585,6 @@ export default function StudyBuilder() {
                         />
                       </div>
                     </div>
-                  </div>
-
-                  <div className="border rounded-lg p-4 space-y-4 bg-blue-50 dark:bg-blue-950/30">
-                    <h4 className="font-medium flex items-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      Import Daily Lessons from Word
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      Upload a Word document with daily lessons. Format each day as "Day 1: Title" etc.
-                      Bold, italic, and paragraph formatting will be preserved.
-                    </p>
-                    <Input
-                      type="file"
-                      accept=".docx,.doc"
-                      onChange={(e) => handleWordFileChange(e.target.files?.[0] || null)}
-                      data-testid="input-word-file"
-                    />
-                    
-                    {parsingWord && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Parsing document...
-                      </div>
-                    )}
-                    
-                    {parsedLessons.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-green-600">
-                          <Check className="w-4 h-4" />
-                          Found {parsedLessons.length} lessons
-                        </div>
-                        <div className="max-h-48 overflow-y-auto space-y-1 border rounded p-2">
-                          {parsedLessons.map((lesson, idx) => (
-                            <div key={idx} className="text-sm flex items-center gap-2">
-                              <Badge variant="outline">Day {lesson.dayNumber}</Badge>
-                              <span className="truncate">{lesson.title}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex items-center justify-between border rounded-lg p-4 bg-green-50 dark:bg-green-950/30">
