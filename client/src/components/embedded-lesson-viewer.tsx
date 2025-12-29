@@ -319,21 +319,6 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
       `}} />
       
       <div className="space-y-4 print:space-y-2" data-testid="embedded-lesson-viewer">
-        {/* Progress Bar */}
-        <Card className="print:hidden liquid-gold-card border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-        <CardContent className="p-4 relative z-10">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="font-black text-black uppercase tracking-wide text-xs">Study Progress</span>
-              <span className="text-black/70 font-bold text-xs">
-                {completedLessons} of {lessons.length} completed
-              </span>
-            </div>
-            <Progress value={progressPercentage} className="h-3 bg-black/20" />
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Lesson Navigation */}
       <div className="flex items-center justify-between print:hidden">
         <Button
