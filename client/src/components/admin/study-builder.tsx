@@ -81,6 +81,7 @@ export default function StudyBuilder() {
     seriesId: "",
     requiresPurchase: false,
     price: "",
+    isPublished: true,
   });
   
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -114,6 +115,7 @@ export default function StudyBuilder() {
       seriesId: "",
       requiresPurchase: false,
       price: "",
+      isPublished: true,
     });
     setThumbnailFile(null);
     setVideoFile(null);
@@ -285,6 +287,17 @@ export default function StudyBuilder() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
       queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
       toast({ title: "Series deleted" });
+    },
+  });
+
+  const togglePublishMutation = useMutation({
+    mutationFn: async ({ id, isPublished }: { id: string; isPublished: boolean }) => {
+      return await apiRequest('PATCH', `/api/studies/${id}`, { isPublished });
+    },
+    onSuccess: (_, { isPublished }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
+      toast({ title: isPublished ? "Study published" : "Study unpublished" });
     },
   });
 
@@ -535,6 +548,18 @@ export default function StudyBuilder() {
                     )}
                   </div>
 
+                  <div className="flex items-center justify-between border rounded-lg p-4 bg-green-50 dark:bg-green-950/30">
+                    <div>
+                      <Label>Publish Immediately</Label>
+                      <p className="text-sm text-muted-foreground">Make this study visible to users</p>
+                    </div>
+                    <Switch
+                      checked={formData.isPublished}
+                      onCheckedChange={(v) => setFormData({ ...formData, isPublished: v })}
+                      data-testid="switch-is-published"
+                    />
+                  </div>
+
                   <div className="flex items-center justify-between border rounded-lg p-4">
                     <div>
                       <Label>Requires Purchase</Label>
@@ -606,7 +631,7 @@ export default function StudyBuilder() {
                 <div className="text-center py-8 text-muted-foreground">No studies yet</div>
               ) : (
                 studies.map((study) => (
-                  <Card key={study.id}>
+                  <Card key={study.id} className={!study.isPublished ? "opacity-60" : ""}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -618,7 +643,12 @@ export default function StudyBuilder() {
                             </div>
                           )}
                           <div>
-                            <h4 className="font-medium">{study.title}</h4>
+                            <h4 className="font-medium flex items-center gap-2">
+                              {study.title}
+                              {!study.isPublished && (
+                                <Badge variant="outline" className="text-orange-600 border-orange-300">Draft</Badge>
+                              )}
+                            </h4>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Badge variant="outline">{study.category}</Badge>
                               <Badge variant={study.requiredTier === 'free' ? 'secondary' : 'default'}>
@@ -631,6 +661,25 @@ export default function StudyBuilder() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
+                          <Button
+                            variant={study.isPublished ? "outline" : "default"}
+                            size="sm"
+                            onClick={() => togglePublishMutation.mutate({ id: study.id, isPublished: !study.isPublished })}
+                            disabled={togglePublishMutation.isPending}
+                            data-testid={`btn-toggle-publish-${study.id}`}
+                          >
+                            {study.isPublished ? (
+                              <>
+                                <Eye className="w-4 h-4 mr-1" />
+                                Published
+                              </>
+                            ) : (
+                              <>
+                                <Check className="w-4 h-4 mr-1" />
+                                Publish
+                              </>
+                            )}
+                          </Button>
                           <Button
                             variant="outline"
                             size="icon"
