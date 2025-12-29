@@ -2524,6 +2524,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const newLesson = await storage.createStudyLesson(lessonData);
+      
+      // Update total_days count on the study
+      const lessons = await storage.getStudyLessons(req.params.studyId);
+      await storage.updateStudy(req.params.studyId, { totalDays: lessons.length });
+      
       res.status(201).json(newLesson);
     } catch (error) {
       console.error("Error creating lesson:", error);
@@ -2554,6 +2559,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       await storage.deleteStudyLesson(req.params.lessonId);
+      
+      // Update total_days count on the study
+      const lessons = await storage.getStudyLessons(req.params.studyId);
+      await storage.updateStudy(req.params.studyId, { totalDays: lessons.length });
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting lesson:", error);
