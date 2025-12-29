@@ -597,7 +597,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       </Button>
 
       {showPanel && (
-        <Card className="absolute right-0 top-12 w-[340px] max-h-[80vh] z-[9999] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col bg-white border-2 border-black rounded-none overflow-hidden">
+        <Card className="fixed right-4 top-16 w-[340px] max-h-[80vh] z-[9999] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col bg-white border-2 border-black rounded-none overflow-hidden">
           <CardHeader className="pb-2 flex-shrink-0 bg-[#FCD000] border-b-2 border-black">
             <div className="flex items-center justify-between mb-2">
               <CardTitle className="text-base font-bold uppercase tracking-wide text-black">Notifications</CardTitle>
