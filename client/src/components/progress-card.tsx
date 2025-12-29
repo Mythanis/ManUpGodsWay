@@ -22,8 +22,8 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
       : 0;
 
   return (
-    <Card className="border-2 border-black bg-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="progress-card">
-      <CardContent className="p-6">
+    <Card className="border-2 border-black liquid-gold-card glow-gold rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="progress-card">
+      <CardContent className="p-6 relative z-10">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-black text-xl text-black uppercase tracking-tight" data-testid="text-study-title">
