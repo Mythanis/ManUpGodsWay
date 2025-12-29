@@ -320,42 +320,44 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
       
       <div className="space-y-4 print:space-y-2" data-testid="embedded-lesson-viewer">
       {/* Lesson Navigation */}
-      <div className="flex items-center justify-between print:hidden">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={goToPreviousDay}
-          disabled={currentDayIndex === 0}
-          className="bg-black text-white border-2 border-black rounded-none font-black uppercase tracking-wide text-xs hover:bg-gray-800 disabled:opacity-50"
-          data-testid="button-previous-lesson"
-        >
-          <ChevronLeft className="w-4 h-4 mr-1" />
-          Previous
-        </Button>
-        
-        <div className="flex items-center gap-2">
-          <Badge className="text-sm bg-[#FCD000] text-black font-black uppercase tracking-wide rounded-none px-3 py-1 border-2 border-black" data-testid="badge-day-indicator">
-            Day {currentLesson.dayNumber} of {totalDays || lessons.length}
-          </Badge>
-          {isCompleted && (
-            <Badge className="bg-green-600 text-white font-bold uppercase tracking-wide rounded-none border-2 border-black">
-              <CheckCircle className="w-3 h-3 mr-1" />
-              Completed
-            </Badge>
-          )}
-        </div>
+      <div className="liquid-gold-card border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-3 print:hidden">
+        <div className="flex items-center justify-between gap-2 relative z-10">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={goToPreviousDay}
+            disabled={currentDayIndex === 0}
+            className="bg-black text-white rounded-none font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-2 py-1 h-8 min-w-0"
+            data-testid="button-previous-lesson"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span className="hidden sm:inline ml-1">Prev</span>
+          </Button>
+          
+          <div className="flex flex-col items-center gap-1 flex-1">
+            <span className="text-xs font-black text-black uppercase tracking-wide" data-testid="badge-day-indicator">
+              Day {currentLesson.dayNumber} of {totalDays || lessons.length}
+            </span>
+            {isCompleted && (
+              <span className="text-[10px] font-bold text-green-700 uppercase tracking-wide flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                Completed
+              </span>
+            )}
+          </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={goToNextDay}
-          disabled={currentDayIndex === lessons.length - 1}
-          className="bg-black text-white border-2 border-black rounded-none font-black uppercase tracking-wide text-xs hover:bg-gray-800 disabled:opacity-50"
-          data-testid="button-next-lesson"
-        >
-          Next
-          <ChevronRight className="w-4 h-4 ml-1" />
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={goToNextDay}
+            disabled={currentDayIndex === lessons.length - 1}
+            className="bg-black text-white rounded-none font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-2 py-1 h-8 min-w-0"
+            data-testid="button-next-lesson"
+          >
+            <span className="hidden sm:inline mr-1">Next</span>
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Lesson Content */}
