@@ -533,8 +533,8 @@ export default function Home() {
             {/* Recommended Studies */}
             {recommendedStudies.length > 0 && (
               <>
-                <h3 className="text-md font-black text-white mb-3 uppercase tracking-tight">Recommended for You</h3>
-                <p className="text-xs text-white/80 mb-4 font-medium">{completedCount > 0 ? "Continue your Faith journey" : "Based on your interests"}</p>
+                <h3 className="text-lg font-black text-white mb-2 uppercase tracking-tight">Recommended for You</h3>
+                <p className="text-sm text-[#FCD000] mb-4 font-black uppercase tracking-wide">{completedCount > 0 ? "Continue Your Faith Journey" : "Start Your Growth Today"}</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
                     <Card key={study.id} className="border-2 border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all liquid-gold-card rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
