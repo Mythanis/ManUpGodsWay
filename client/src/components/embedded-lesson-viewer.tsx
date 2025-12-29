@@ -327,11 +327,11 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
             size="sm"
             onClick={goToPreviousDay}
             disabled={currentDayIndex === 0}
-            className="bg-black text-white rounded-none font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-2 py-1 h-8 min-w-0"
+            className="bg-black text-white rounded-none font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-3 py-1 h-8 min-w-0 border-2 border-black"
             data-testid="button-previous-lesson"
           >
-            <ChevronLeft className="w-4 h-4" />
-            <span className="hidden sm:inline ml-1">Prev</span>
+            <ChevronLeft className="w-4 h-4 text-white" />
+            <span className="hidden sm:inline ml-1 text-white">Prev</span>
           </Button>
           
           <div className="flex flex-col items-center gap-1 flex-1">
@@ -351,11 +351,11 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
             size="sm"
             onClick={goToNextDay}
             disabled={currentDayIndex === lessons.length - 1}
-            className="bg-black text-white rounded-none font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-2 py-1 h-8 min-w-0"
+            className="bg-black text-white rounded-none font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-3 py-1 h-8 min-w-0 border-2 border-black"
             data-testid="button-next-lesson"
           >
-            <span className="hidden sm:inline mr-1">Next</span>
-            <ChevronRight className="w-4 h-4" />
+            <span className="hidden sm:inline mr-1 text-white">Next</span>
+            <ChevronRight className="w-4 h-4 text-white" />
           </Button>
         </div>
       </div>
