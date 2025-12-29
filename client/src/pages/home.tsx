@@ -537,28 +537,29 @@ export default function Home() {
                 <p className="text-sm text-[#FCD000] mb-4 font-black uppercase tracking-wide">{completedCount > 0 ? "Continue Your Faith Journey" : "Start Your Growth Today"}</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
-                    <Card key={study.id} className="border-2 border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all liquid-gold-card rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-black text-black text-sm mb-1 uppercase tracking-tight">{study.title}</h4>
-                            <p className="text-xs text-black/70 mb-2 line-clamp-2">{study.description}</p>
-                            <div className="flex items-center space-x-3 text-xs text-black/60 mb-2 font-medium">
-                              <span>{study.estimatedHours}h study</span>
-                              <span className="capitalize">{study.difficulty}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              {renderStars(study.rating || 0)}
-                              <span className="text-xs text-black/60 ml-1">({study.rating || 0})</span>
-                            </div>
+                    <Card key={study.id} className="border-2 border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all liquid-gold-card rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className="flex items-stretch">
+                          <div className="w-14 liquid-black flex items-center justify-center flex-shrink-0">
+                            <Book className="w-6 h-6 text-white relative z-10" />
                           </div>
-                          <Button 
-                            size="sm"
-                            className="bg-black text-white hover:bg-gray-900 rounded-none font-black uppercase tracking-wide text-xs border-2 border-black ml-3"
-                            onClick={() => window.location.href = `/studies/${study.id}`}
-                          >
-                            Start
-                          </Button>
+                          <div className="flex-1 p-3 flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-black text-black text-sm uppercase tracking-wide truncate">{study.title}</h4>
+                              <p className="text-xs text-black/70 line-clamp-1 font-medium">{study.description}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs text-black font-bold uppercase">{study.totalDays || study.estimatedHours || 0} {study.totalDays ? 'Days' : 'Hours'}</span>
+                                <span className="text-xs text-black/60 capitalize font-medium">{study.difficulty || 'All Levels'}</span>
+                              </div>
+                            </div>
+                            <Button 
+                              size="sm"
+                              className="bg-black text-white hover:bg-gray-900 rounded-none font-black uppercase tracking-wide text-xs border-2 border-black ml-3 flex-shrink-0"
+                              onClick={() => window.location.href = `/studies/${study.id}`}
+                            >
+                              Start
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
