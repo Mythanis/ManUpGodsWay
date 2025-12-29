@@ -113,8 +113,8 @@ export default function Library() {
 
       {/* Search Bar */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-ministry-gold-exact border-2 border-black rounded-none" data-testid="card-search">
-          <CardContent className="p-4">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] liquid-gold-card border-2 border-black rounded-none" data-testid="card-search">
+          <CardContent className="p-4 relative z-10">
             <div className="relative">
               <Input
                 type="text"
@@ -135,18 +135,20 @@ export default function Library() {
         <label className="text-xs font-black text-white mb-2 block uppercase tracking-wide">
           Category
         </label>
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-full md:w-64 bg-ministry-gold-exact border-2 border-black text-black font-bold rounded-none" data-testid="select-category">
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id} data-testid={`option-category-${category.id}`}>
-                {category.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="liquid-gold-card border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full md:w-64">
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-full bg-transparent border-0 text-black font-bold rounded-none relative z-10" data-testid="select-category">
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id} data-testid={`option-category-${category.id}`}>
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Content */}
