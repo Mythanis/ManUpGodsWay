@@ -775,6 +775,277 @@ export default function StudyBuilder() {
           </Tabs>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Study Dialog */}
+      <Dialog open={showEditDialog && editingStudy !== null} onOpenChange={(open) => {
+        if (!open) {
+          setShowEditDialog(false);
+          setEditingStudy(null);
+        }
+      }}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Study</DialogTitle>
+          </DialogHeader>
+          {editingStudy && (
+            <EditStudyForm 
+              study={editingStudy} 
+              seriesList={seriesList}
+              onSave={async (data) => {
+                await apiRequest('PATCH', `/api/studies/${editingStudy.id}`, data);
+                queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+                queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
+                toast({ title: "Study updated" });
+                setShowEditDialog(false);
+                setEditingStudy(null);
+              }}
+              onCancel={() => {
+                setShowEditDialog(false);
+                setEditingStudy(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Series Dialog */}
+      <Dialog open={showEditDialog && editingSeries !== null} onOpenChange={(open) => {
+        if (!open) {
+          setShowEditDialog(false);
+          setEditingSeries(null);
+        }
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Series</DialogTitle>
+          </DialogHeader>
+          {editingSeries && (
+            <EditSeriesForm 
+              series={editingSeries}
+              onSave={async (data) => {
+                await apiRequest('PATCH', `/api/admin/study-series/${editingSeries.id}`, data);
+                queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
+                queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+                toast({ title: "Series updated" });
+                setShowEditDialog(false);
+                setEditingSeries(null);
+              }}
+              onCancel={() => {
+                setShowEditDialog(false);
+                setEditingSeries(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function EditStudyForm({ study, seriesList, onSave, onCancel }: {
+  study: Study;
+  seriesList: StudySeries[];
+  onSave: (data: Partial<Study>) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [formData, setFormData] = useState({
+    title: study.title,
+    description: study.description,
+    category: study.category,
+    requiredTier: study.requiredTier || 'free',
+    thumbnailUrl: study.thumbnailUrl || '',
+    videoUrl: study.videoUrl || '',
+    seriesId: study.seriesId || '',
+    isPublished: study.isPublished ?? false,
+    requiresPurchase: study.requiresPurchase ?? false,
+    price: study.price || '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    setSaving(true);
+    try {
+      await onSave({
+        ...formData,
+        seriesId: formData.seriesId || undefined,
+        price: formData.requiresPurchase && formData.price ? formData.price : undefined,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Title</Label>
+        <Input
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Description</Label>
+        <Textarea
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Category</Label>
+          <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Access Tier</Label>
+          <Select value={formData.requiredTier} onValueChange={(v) => setFormData({ ...formData, requiredTier: v })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {tiers.map((tier) => (
+                <SelectItem key={tier.id} value={tier.id}>{tier.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      {seriesList.length > 0 && (
+        <div className="space-y-2">
+          <Label>Series</Label>
+          <Select 
+            value={formData.seriesId || "_none"} 
+            onValueChange={(v) => setFormData({ ...formData, seriesId: v === "_none" ? "" : v })}
+          >
+            <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none">None (standalone)</SelectItem>
+              {seriesList.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      <div className="space-y-2">
+        <Label>Thumbnail URL</Label>
+        <Input
+          value={formData.thumbnailUrl}
+          onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+          placeholder="https://..."
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Video URL</Label>
+        <Input
+          value={formData.videoUrl}
+          onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+          placeholder="https://..."
+        />
+      </div>
+      <div className="flex items-center justify-between border rounded-lg p-3">
+        <Label>Published</Label>
+        <Switch
+          checked={formData.isPublished}
+          onCheckedChange={(v) => setFormData({ ...formData, isPublished: v })}
+        />
+      </div>
+      <div className="flex items-center justify-between border rounded-lg p-3">
+        <Label>Requires Purchase</Label>
+        <Switch
+          checked={formData.requiresPurchase}
+          onCheckedChange={(v) => setFormData({ ...formData, requiresPurchase: v })}
+        />
+      </div>
+      {formData.requiresPurchase && (
+        <div className="space-y-2">
+          <Label>Price ($)</Label>
+          <Input
+            type="number"
+            step="0.01"
+            value={formData.price}
+            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+          />
+        </div>
+      )}
+      <DialogFooter>
+        <Button variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button onClick={handleSubmit} disabled={saving}>
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+        </Button>
+      </DialogFooter>
+    </div>
+  );
+}
+
+function EditSeriesForm({ series, onSave, onCancel }: {
+  series: StudySeries;
+  onSave: (data: Partial<StudySeries>) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [formData, setFormData] = useState({
+    title: series.title,
+    description: series.description,
+    category: series.category,
+    thumbnailUrl: series.thumbnailUrl || '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    setSaving(true);
+    try {
+      await onSave(formData);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Title</Label>
+        <Input
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Description</Label>
+        <Textarea
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Category</Label>
+        <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {categories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label>Thumbnail URL</Label>
+        <Input
+          value={formData.thumbnailUrl}
+          onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+          placeholder="https://..."
+        />
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button onClick={handleSubmit} disabled={saving}>
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+        </Button>
+      </DialogFooter>
     </div>
   );
 }
