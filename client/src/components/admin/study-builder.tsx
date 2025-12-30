@@ -563,6 +563,47 @@ export default function StudyBuilder() {
 
               {contentType === "study" && (
                 <>
+                  <div className="border rounded-lg p-4 space-y-4 bg-blue-50 dark:bg-blue-950/30">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Import Lessons from Word (optional)
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Upload a Word document with daily lessons. Format each day as "Day 1: Title" etc.
+                      Bold, italic, and paragraph formatting will be preserved.
+                    </p>
+                    <Input
+                      type="file"
+                      accept=".docx,.doc"
+                      onChange={(e) => handleWordFileChange(e.target.files?.[0] || null)}
+                      data-testid="input-word-file-study"
+                    />
+                    
+                    {parsingWord && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Parsing document...
+                      </div>
+                    )}
+                    
+                    {parsedLessons.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-green-600">
+                          <Check className="w-4 h-4" />
+                          Found {parsedLessons.length} lessons
+                        </div>
+                        <div className="max-h-48 overflow-y-auto space-y-1 border rounded p-2">
+                          {parsedLessons.map((lesson, idx) => (
+                            <div key={idx} className="text-sm flex items-center gap-2">
+                              <Badge variant="outline">Day {lesson.dayNumber}</Badge>
+                              <span className="truncate">{lesson.title}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="border rounded-lg p-4 space-y-4">
                     <h4 className="font-medium flex items-center gap-2">
                       <Video className="w-4 h-4" />
