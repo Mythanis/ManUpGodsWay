@@ -432,8 +432,8 @@ export default function Bible() {
   return (
     <div className="pb-20 bg-black min-h-screen">
       {/* Header */}
-      <div className="bg-black border-b-4 border-ministry-gold-exact text-white px-6 pt-12 pb-6">
-        <div className="max-w-6xl mx-auto">
+      <div className="liquid-black border-b-4 border-ministry-gold-exact text-white px-6 pt-12 pb-6 overflow-hidden">
+        <div className="max-w-6xl mx-auto relative z-10">
           <div className="flex items-center gap-3 mb-2">
             <Book className="h-8 w-8 text-ministry-gold-exact" />
             <h1 className="text-4xl font-black tracking-tighter uppercase"><span className="text-white">Bible</span> <span className="text-ministry-gold-exact">Reader</span></h1>
