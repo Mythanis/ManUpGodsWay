@@ -89,6 +89,7 @@ export default function StudyBuilder() {
   const [wordFile, setWordFile] = useState<File | null>(null);
   const [parsedLessons, setParsedLessons] = useState<ParsedLesson[]>([]);
   const [parsingWord, setParsingWord] = useState(false);
+  const [wordUploadFailed, setWordUploadFailed] = useState(false); // Track failed uploads
   const [uploading, setUploading] = useState(false);
   
   const [editingStudy, setEditingStudy] = useState<Study | null>(null);
@@ -121,11 +122,13 @@ export default function StudyBuilder() {
     setVideoFile(null);
     setWordFile(null);
     setParsedLessons([]);
+    setWordUploadFailed(false);
   };
 
   const handleWordFileChange = async (file: File | null) => {
     setWordFile(file);
     setParsedLessons([]);
+    setWordUploadFailed(false); // Clear failed state when new file selected
     
     if (!file) return;
     
@@ -164,6 +167,7 @@ export default function StudyBuilder() {
           variant: "destructive",
         });
         setWordFile(null); // Clear the file so user can try again
+        setWordUploadFailed(true); // Mark that upload failed
       }
     } catch (error) {
       toast({
@@ -172,6 +176,7 @@ export default function StudyBuilder() {
         variant: "destructive",
       });
       setWordFile(null);
+      setWordUploadFailed(true); // Mark that upload failed
     } finally {
       setParsingWord(false);
     }
@@ -366,7 +371,16 @@ export default function StudyBuilder() {
       if (wordFile && parsedLessons.length === 0) {
         toast({
           title: "Word Document Error",
-          description: "The Word document could not be parsed. Please make sure it's a .docx file (not .doc). The document will be imported as study content.",
+          description: "The Word document could not be parsed. Please make sure it's a .docx file (not .doc).",
+          variant: "destructive",
+        });
+        return;
+      }
+      // If a Word upload was attempted but failed, block submission
+      if (wordUploadFailed) {
+        toast({
+          title: "Word Upload Failed",
+          description: "Please upload a valid .docx file before creating the study.",
           variant: "destructive",
         });
         return;
