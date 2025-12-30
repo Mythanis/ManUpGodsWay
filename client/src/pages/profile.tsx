@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -72,6 +73,32 @@ export default function Profile() {
   const { data: progress = [] } = useQuery<any[]>({
     queryKey: ["/api/progress"],
     retry: false,
+  });
+
+  // Mutation for opening Stripe billing portal
+  const openBillingPortalMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/create-billing-portal');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.portalUrl) {
+        window.location.href = data.portalUrl;
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to open subscription management",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to open subscription management",
+        variant: "destructive",
+      });
+    },
   });
 
   const completedStudies = progress.filter((p: any) => p.isCompleted);
@@ -175,14 +202,17 @@ export default function Profile() {
                   variant="ghost"
                   className="text-black font-black text-sm hover:bg-black/10 relative z-10 uppercase tracking-wide"
                   data-testid="button-manage-subscription"
+                  disabled={openBillingPortalMutation.isPending}
                   onClick={() => {
                     if (user?.subscriptionTier === 'free') {
                       setShowUpgradeModal(true);
+                    } else {
+                      openBillingPortalMutation.mutate();
                     }
-                    // TODO: Add manage subscription logic for premium/VIP users
                   }}
                 >
-                  {user?.subscriptionTier === 'free' ? 'Upgrade' : 'Manage'}
+                  {openBillingPortalMutation.isPending ? 'Loading...' : 
+                   user?.subscriptionTier === 'free' ? 'Upgrade' : 'Manage'}
                 </Button>
               </div>
               

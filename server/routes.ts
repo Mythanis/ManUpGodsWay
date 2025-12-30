@@ -3688,6 +3688,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create Stripe billing portal session for subscription management
+  app.post('/api/create-billing-portal', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(503).json({ message: "Stripe not configured" });
+      }
+
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      if (!user.stripeCustomerId) {
+        return res.status(400).json({ message: "No subscription found. Please subscribe first." });
+      }
+
+      const { default: Stripe } = await import('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: '2023-10-16',
+      });
+
+      const session = await stripe.billingPortal.sessions.create({
+        customer: user.stripeCustomerId,
+        return_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile`,
+      });
+
+      res.json({ portalUrl: session.url });
+    } catch (error) {
+      console.error("Error creating billing portal session:", error);
+      res.status(500).json({ message: "Failed to create billing portal session" });
+    }
+  });
+
   // Stripe webhook to handle subscription events
   app.post('/api/stripe/webhook', async (req, res) => {
     try {
