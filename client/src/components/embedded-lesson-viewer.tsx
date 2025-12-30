@@ -323,7 +323,6 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
       <div className="liquid-gold-card border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-3 print:hidden">
         <div className="flex items-center justify-between gap-2 relative z-10">
           <Button
-            variant="ghost"
             size="sm"
             onClick={goToPreviousDay}
             disabled={currentDayIndex === 0}
@@ -347,7 +346,6 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           </div>
 
           <Button
-            variant="ghost"
             size="sm"
             onClick={goToNextDay}
             disabled={currentDayIndex === lessons.length - 1}
