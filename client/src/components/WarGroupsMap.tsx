@@ -89,20 +89,20 @@ export default function WarGroupsMap({ groups }: WarGroupsMapProps) {
           <Marker key={group.id} position={[group.lat, group.lng]} icon={goldIcon}>
             <Tooltip 
               direction="top" 
-              offset={[0, -20]} 
+              offset={[0, -36]} 
               opacity={1}
-              permanent={false}
+              sticky
             >
-              <div style={{ minWidth: '200px', padding: '8px', color: 'white' }}>
-                <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '6px', color: '#FCD000' }}>
+              <div style={{ minWidth: '180px', padding: '10px', color: 'white', fontFamily: 'Inter, sans-serif' }}>
+                <div style={{ fontWeight: '800', fontSize: '13px', marginBottom: '8px', color: '#FCD000', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   {getGroupDisplayName(group)}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#d4d4d8', marginBottom: '4px' }}>
-                  <MapPin style={{ width: '12px', height: '12px', color: '#FCD000' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#e4e4e7', marginBottom: '5px' }}>
+                  <span style={{ color: '#FCD000' }}>📍</span>
                   <span>{group.city}, {group.state}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#d4d4d8' }}>
-                  <User style={{ width: '12px', height: '12px', color: '#FCD000' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#e4e4e7' }}>
+                  <span style={{ color: '#FCD000' }}>👤</span>
                   <span>Led by {group.leader.firstName} {group.leader.lastName}</span>
                 </div>
               </div>
