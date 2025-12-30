@@ -16,20 +16,12 @@ import { Label } from "@/components/ui/label";
 import { Search, Star, Filter, Play, Clock, Eye, Crown, Gem, Zap } from "lucide-react";
 import { useLocation } from "wouter";
 
-const categories = [
-  { id: 'all', label: 'All Videos' },
-  { id: 'general', label: 'General' },
-  { id: 'leadership', label: 'Leadership' },
-  { id: 'marriage', label: 'Marriage' },
-  { id: 'fatherhood', label: 'Fatherhood' },
-  { id: 'character', label: 'Character' },
-];
-
 interface Video {
   id: string;
   title: string;
   description?: string;
   category: string;
+  tags?: string[];
   requiredTier: string;
   isFeatured: boolean;
   rating: number;
@@ -45,10 +37,7 @@ export default function Videos() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('recent');
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [showVideoDialog, setShowVideoDialog] = useState(false);
   const [showRatingDialog, setShowRatingDialog] = useState(false);
@@ -56,35 +45,11 @@ export default function Videos() {
   const [review, setReview] = useState('');
   const [videoStreamUrl, setVideoStreamUrl] = useState<string | null>(null);
   const [fromCarousel, setFromCarousel] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // Add mouse wheel horizontal scroll support
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      container.scrollLeft += e.deltaY;
-    };
-
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    return () => container.removeEventListener('wheel', handleWheel);
-  }, []);
 
   const { data: videos = [], isLoading } = useQuery({
-    queryKey: ["/api/videos", { category: selectedCategory, sortBy }],
+    queryKey: ["/api/videos"],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (selectedCategory !== 'all') {
-        params.append('category', selectedCategory);
-      }
-      if (sortBy) {
-        params.append('sortBy', sortBy);
-      }
-      
-      const url = `/api/videos${params.toString() ? `?${params.toString()}` : ''}`;
-      const response = await fetch(url, { credentials: 'include' });
+      const response = await fetch('/api/videos', { credentials: 'include' });
       
       if (!response.ok) {
         throw new Error('Failed to fetch videos');
@@ -93,7 +58,7 @@ export default function Videos() {
       return await response.json();
     },
     retry: false,
-    refetchInterval: 8000, // Real-time updates every 8 seconds for new videos
+    refetchInterval: 8000,
     refetchIntervalInBackground: true,
   });
 
@@ -161,12 +126,15 @@ export default function Videos() {
     }
   };
 
-  // Filter videos based on search
-  const filteredVideos = videos.filter((video: Video) =>
-    searchQuery.length < 2 || 
-    video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (video.description && video.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Filter videos based on search (title, description, and tags)
+  const filteredVideos = videos.filter((video: Video) => {
+    if (searchQuery.length < 2) return true;
+    const query = searchQuery.toLowerCase();
+    const matchesTitle = video.title.toLowerCase().includes(query);
+    const matchesDescription = video.description && video.description.toLowerCase().includes(query);
+    const matchesTags = video.tags && video.tags.some(tag => tag.toLowerCase().includes(query));
+    return matchesTitle || matchesDescription || matchesTags;
+  });
 
   const rateVideoMutation = useMutation({
     mutationFn: async (data: { videoId: string; rating: number; review?: string }) => {
@@ -272,76 +240,6 @@ export default function Videos() {
         </Card>
       </div>
 
-      {/* Categories Filter */}
-      <div className="px-6 mb-4">
-        <div 
-          ref={scrollContainerRef}
-          className="flex space-x-3 overflow-x-auto scrollbar-hide horizontal-scroll pb-2"
-        >
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              style={{
-                backgroundColor: selectedCategory === category.id 
-                  ? 'hsl(0 0% 0%)' 
-                  : effectiveTheme === 'dark' 
-                    ? 'hsl(220 8% 26%)' 
-                    : 'hsl(240 1.9608% 90%)',
-                color: selectedCategory === category.id 
-                  ? 'white' 
-                  : effectiveTheme === 'dark' 
-                    ? 'hsl(0 0% 95%)' 
-                    : 'hsl(210 25% 7.8431%)',
-                borderColor: selectedCategory === category.id 
-                  ? 'hsl(0 0% 0%)' 
-                  : effectiveTheme === 'dark' 
-                    ? 'hsl(210 5.2632% 14.9020%)' 
-                    : 'hsl(201.4286 30.4348% 90.9804%)'
-              }}
-              className="px-6 py-2 rounded-none text-sm font-black uppercase tracking-wide whitespace-nowrap flex-shrink-0 snap-start border-2 border-black cursor-pointer transition-all"
-            >
-              {category.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Sort and Filter */}
-      <div className="px-6 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-ministry-slate">Sort & Filter</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-            className="text-ministry-navy"
-          >
-            <Filter className="w-4 h-4 mr-1" />
-            {showFilters ? 'Hide' : 'Show'} Filters
-          </Button>
-        </div>
-        
-        {showFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-medium text-ministry-slate mb-1 block">
-                Sort By
-              </label>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full h-8 text-sm">
-                  <SelectValue placeholder="Sort by..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="recent">Most Recent</SelectItem>
-                  <SelectItem value="rating">Highest Rated</SelectItem>
-                  <SelectItem value="reviews">Most Reviews</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* Video Grid */}
       <div className="px-6 space-y-4">
@@ -353,8 +251,8 @@ export default function Videos() {
         ) : filteredVideos.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-ministry-slate">
-              {searchQuery.length >= 2 || selectedCategory !== 'all'
-                ? 'No videos found for your filters.'
+              {searchQuery.length >= 2
+                ? 'No videos found for your search.'
                 : 'No videos available.'}
             </p>
           </div>

@@ -3872,8 +3872,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const { title, description, requiredTier = 'free', category = 'general' } = req.body;
+      const { title, description, requiredTier = 'free', category = 'general', tags } = req.body;
       const file = req.file;
+      
+      // Parse tags if provided
+      let parsedTags: string[] = [];
+      if (tags) {
+        try {
+          parsedTags = JSON.parse(tags);
+        } catch (e) {
+          // If tags is already an array or comma-separated string
+          parsedTags = typeof tags === 'string' ? tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
+        }
+      }
       
       console.log('Upload request body:', req.body);
       console.log('Upload file:', file ? { name: file.originalname, size: file.size, type: file.mimetype } : 'No file');
@@ -3899,6 +3910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         uploadedBy: user.id,
         requiredTier: requiredTier,
         category: category,
+        tags: parsedTags,
       };
 
       const video = await storage.createVideo(videoData);

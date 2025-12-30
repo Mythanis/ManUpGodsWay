@@ -48,6 +48,7 @@ export default function VideoManagement() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
+  const [uploadTags, setUploadTags] = useState('');
   const [titleExists, setTitleExists] = useState(false);
   const [checkingTitle, setCheckingTitle] = useState(false);
   const { toast } = useToast();
@@ -326,6 +327,9 @@ export default function VideoManagement() {
     formData.append('description', uploadDescription);
     formData.append('requiredTier', uploadTier);
     formData.append('category', uploadCategory);
+    if (uploadTags.trim()) {
+      formData.append('tags', JSON.stringify(uploadTags.split(',').map(tag => tag.trim()).filter(Boolean)));
+    }
 
     setUploading(true);
     setUploadProgress(0);
@@ -552,21 +556,19 @@ export default function VideoManagement() {
                     </div>
                     
                     <div>
-                      <Label htmlFor="video-category" className="text-sm font-medium">
-                        Category
+                      <Label htmlFor="video-tags" className="text-sm font-medium">
+                        Search Tags
                       </Label>
-                      <Select value={uploadCategory} onValueChange={setUploadCategory}>
-                        <SelectTrigger className="mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="general">General</SelectItem>
-                          <SelectItem value="leadership">Leadership</SelectItem>
-                          <SelectItem value="marriage">Marriage</SelectItem>
-                          <SelectItem value="fatherhood">Fatherhood</SelectItem>
-                          <SelectItem value="character">Character</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Input
+                        id="video-tags"
+                        value={uploadTags}
+                        onChange={(e) => setUploadTags(e.target.value)}
+                        placeholder="Enter tags separated by commas (e.g. leadership, faith, prayer)"
+                        className="mt-1"
+                      />
+                      <p className="text-xs text-ministry-slate mt-1">
+                        Tags help users find this video when searching
+                      </p>
                     </div>
                     
                     <div>
