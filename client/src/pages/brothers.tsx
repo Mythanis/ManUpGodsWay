@@ -288,68 +288,56 @@ export default function Brothers() {
                     className="hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-none bg-ministry-gold-exact"
                     data-testid={`brother-card-${brother.id}`}
                   >
-                    <CardContent className="p-6">
-                      <div className="flex items-start space-x-4">
+                    <CardContent className="p-3">
+                      <div className="flex items-center space-x-3">
                         <Link href={`/users/${brother.id}`} className="flex-shrink-0">
-                          <Avatar className="w-16 h-16 cursor-pointer rounded-none">
-                            <AvatarFallback className="bg-black text-white text-lg font-black rounded-none">
+                          <Avatar className="w-10 h-10 cursor-pointer rounded-none">
+                            <AvatarFallback className="bg-black text-white text-sm font-black rounded-none">
                               {brother.firstName?.[0]}{brother.lastName?.[0]}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
                         <div className="flex-1 min-w-0">
-                          <Link href={`/users/${brother.id}`}>
-                            <h3 className="text-lg font-black cursor-pointer hover:text-ministry-charcoal transition-colors text-black tracking-tight">
-                              {brother.firstName} {brother.lastName}
-                            </h3>
-                          </Link>
-                          <p className="text-sm text-muted-foreground">
-                            @{brother.username}
-                          </p>
-                          
-                          {/* Tag Display */}
-                          {tagInfo && (
-                            <div className={`inline-flex items-center space-x-1 px-2 py-1 rounded-none text-xs font-bold mt-2 uppercase tracking-wide ${tagInfo.bgColor} ${tagInfo.color}`}>
-                              <Tag className="w-3 h-3" />
-                              <span>{tagInfo.label}</span>
-                              <span className="text-xs opacity-75">• {tagInfo.description}</span>
-                            </div>
-                          )}
-                          
-                          <div className="flex items-center justify-between mt-3">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Link href={`/users/${brother.id}`}>
+                              <h3 className="text-sm font-black cursor-pointer hover:text-ministry-charcoal transition-colors text-black tracking-tight">
+                                {brother.firstName} {brother.lastName}
+                              </h3>
+                            </Link>
+                            <span className="text-xs text-muted-foreground">@{brother.username}</span>
+                            {tagInfo && (
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-xs font-bold uppercase ${tagInfo.bgColor} ${tagInfo.color}`}>
+                                <Tag className="w-3 h-3" />
+                                {tagInfo.label}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between mt-1">
                             <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                               <Calendar className="w-3 h-3" />
-                              <span>
-                                Brothers since{" "}
-                                {new Date(brother.createdAt).toLocaleDateString()}
-                              </span>
+                              <span>Since {new Date(brother.createdAt).toLocaleDateString()}</span>
                             </div>
-                            
-                            {/* Tag Selection */}
-                            <div className="flex items-center space-x-2">
-                              <span className="text-xs text-muted-foreground">Tag:</span>
-                              <Select
-                                value={brother.tag || "none"}
-                                onValueChange={(value) => {
-                                  const tag = value === "none" ? null : value;
-                                  updateTagMutation.mutate({ 
-                                    brotherhoodId: brother.brotherhoodId, 
-                                    tag 
-                                  });
-                                }}
-                                disabled={updateTagMutation.isPending}
-                              >
-                                <SelectTrigger className="w-32 h-7 text-xs">
-                                  <SelectValue placeholder="None" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="none">None</SelectItem>
-                                  <SelectItem value="Paul">Paul - Mentor</SelectItem>
-                                  <SelectItem value="Timothy">Timothy - Student</SelectItem>
-                                  <SelectItem value="Barnabas">Barnabas - Encourager</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
+                            <Select
+                              value={brother.tag || "none"}
+                              onValueChange={(value) => {
+                                const tag = value === "none" ? null : value;
+                                updateTagMutation.mutate({ 
+                                  brotherhoodId: brother.brotherhoodId, 
+                                  tag 
+                                });
+                              }}
+                              disabled={updateTagMutation.isPending}
+                            >
+                              <SelectTrigger className="w-28 h-6 text-xs">
+                                <SelectValue placeholder="Tag" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">None</SelectItem>
+                                <SelectItem value="Paul">Paul</SelectItem>
+                                <SelectItem value="Timothy">Timothy</SelectItem>
+                                <SelectItem value="Barnabas">Barnabas</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                         </div>
                       </div>
