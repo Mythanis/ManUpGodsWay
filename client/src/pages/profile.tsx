@@ -96,17 +96,17 @@ export default function Profile() {
   };
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 bg-black min-h-screen">
       {/* Profile Header */}
-      <div className="liquid-header text-white px-6 pt-12 pb-8">
-        <div className="text-center">
+      <div className="liquid-black text-white px-6 pt-12 pb-8 border-b-4 border-ministry-gold-exact overflow-hidden">
+        <div className="text-center relative z-10">
           <img 
             src={(user as any)?.profileImageUrl || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=4A90B8&color=fff`}
             alt="Profile"
             className="w-20 h-20 rounded-none mx-auto mb-4 border-4 border-ministry-gold-exact object-cover"
             data-testid="img-profile"
           />
-          <h1 className="text-4xl font-black mb-1 tracking-tighter uppercase" data-testid="text-user-name">
+          <h1 className="text-4xl font-black mb-1 tracking-tighter uppercase" style={{ fontFamily: "'Inter', sans-serif" }} data-testid="text-user-name">
             {user?.firstName} {user?.lastName}
           </h1>
           <p className="text-ministry-gold-exact text-xs font-bold tracking-widest uppercase mb-4" data-testid="text-member-since">
@@ -148,7 +148,7 @@ export default function Profile() {
       <div className="px-6 -mt-6 relative z-10 mb-6">
         <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] liquid-black border-2 border-ministry-gold-exact rounded-none overflow-hidden" data-testid="card-account">
           <CardContent className="p-6 relative z-10">
-            <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Account & Subscription</h2>
+            <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>Account & Subscription</h2>
             
             <div className="space-y-4">
               <div className={`flex items-center justify-between p-4 rounded-none border-2 border-black overflow-hidden relative ${
@@ -210,7 +210,7 @@ export default function Profile() {
 
       {/* Settings Menu */}
       <div className="px-6 mb-6">
-        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Settings</h2>
+        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>Settings</h2>
         
         <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]" data-testid="card-settings">
           <CardContent className="p-0 relative z-10">
@@ -308,7 +308,7 @@ export default function Profile() {
 
       {/* Progress Summary */}
       <div className="px-6">
-        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Your Journey</h2>
+        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>Your Journey</h2>
         
         <Card className="border-2 border-black liquid-gold-card rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden" data-testid="card-progress">
           <CardContent className="p-6 relative z-10">
@@ -376,7 +376,7 @@ export default function Profile() {
 
       {/* Testimony Section */}
       <div className="px-6 mt-6 mb-6">
-        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Your Testimony</h2>
+        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>Your Testimony</h2>
         <TestimonyForm isOwnProfile={true} />
       </div>
       
