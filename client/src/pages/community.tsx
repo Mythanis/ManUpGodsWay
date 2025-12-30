@@ -609,10 +609,11 @@ export default function Community() {
               />
               <button
                 onClick={() => setDialogOpen(true)}
-                className="flex-1 text-left px-4 py-2.5 rounded-none bg-white text-black hover:bg-gray-100 transition-colors text-sm font-medium uppercase tracking-wide border-2 border-black"
+                className="flex-1 text-left px-4 py-2.5 rounded-none bg-white text-gray-500 hover:bg-gray-100 transition-colors text-sm font-medium uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                 data-testid="button-quick-post"
               >
-                How is God shaping you right now?
+                <span className="block text-black font-black">Post Here</span>
+                <span className="block text-gray-400 text-xs">How is God shaping you right now?</span>
               </button>
             </div>
             <div className="flex justify-between mt-3 pt-3 border-t-2 border-gray-700">
