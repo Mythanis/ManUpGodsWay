@@ -178,29 +178,19 @@ export default function Profile() {
             <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>Account & Subscription</h2>
             
             <div className="space-y-4">
-              <div className={`flex items-center justify-between p-4 rounded-none border-2 border-black overflow-hidden relative ${
-                user?.subscriptionTier === 'free' 
-                  ? 'liquid-gold-card' 
-                  : 'bg-ministry-steel/10'
-              }`}>
-                <div className="flex items-center space-x-3 relative z-10">
-                  <Crown className="w-5 h-5 text-black" />
-                  <div>
-                    <h3 className="font-black text-foreground uppercase tracking-wide">
-                      {user?.subscriptionTier === 'free' ? 'Free Plan' : 
-                       user?.subscriptionTier === 'premium' ? 'Premium Plan' : 'VIP Plan'}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {user?.subscriptionTier === 'free' 
-                        ? 'Limited access to studies and features'
-                        : 'Full access to all studies and community features'
-                      }
-                    </p>
-                  </div>
+              <div className="h-16 w-full flex items-center liquid-gold-card border-2 border-black overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                  <Crown className="w-6 h-6 text-white relative z-10" />
+                </div>
+                <div className="flex-1 px-4 relative z-10">
+                  <span className="font-black text-sm text-black uppercase tracking-wide">
+                    {user?.subscriptionTier === 'free' ? 'Free Plan' : 
+                     user?.subscriptionTier === 'premium' ? 'Premium Plan' : 'VIP Plan'}
+                  </span>
                 </div>
                 <Button 
                   variant="ghost"
-                  className="text-black font-black text-sm hover:bg-black/10 relative z-10 uppercase tracking-wide"
+                  className="text-black font-black text-sm hover:bg-black/10 relative z-10 uppercase tracking-wide pr-4"
                   data-testid="button-manage-subscription"
                   disabled={openBillingPortalMutation.isPending}
                   onClick={() => {
@@ -219,18 +209,18 @@ export default function Profile() {
               <EditProfileDialog>
                 <Button 
                   variant="outline"
-                  className="w-full justify-between p-4 h-auto border-2 border-ministry-gold-exact hover:bg-gray-700 bg-gray-800 rounded-none shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(252,208,0,1)] transition-all"
+                  className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                   data-testid="button-edit-profile"
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-none bg-ministry-gold-exact flex items-center justify-center">
-                      <User className="w-4 h-4 text-black" />
-                    </div>
-                    <span className="font-bold text-white uppercase tracking-wide">Edit Profile</span>
+                  <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                    <User className="w-6 h-6 text-white relative z-10" />
                   </div>
-                  <svg className="w-5 h-5 text-ministry-gold-exact" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                  </svg>
+                  <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Edit Profile</span>
+                  <div className="pr-4">
+                    <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                  </div>
                 </Button>
               </EditProfileDialog>
             </div>
