@@ -2,10 +2,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, BookOpen, Video, MessageCircle, Shield, Target, Flame, ChevronRight } from "lucide-react";
 import logoUrl from "@assets/Man_Up_Logo-Gods_way-White-Yellow_copy_1766440697541.png";
+import warGroupsImageUrl from "@assets/image_1767068818932.png";
 
 export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
+      {/* War Groups Banner */}
+      <div className="w-full">
+        <img 
+          src={warGroupsImageUrl} 
+          alt="War Groups - Step Up & Lead" 
+          className="w-full h-auto object-cover"
+          data-testid="war-groups-banner"
+        />
+      </div>
+
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         {/* Subtle background pattern */}
