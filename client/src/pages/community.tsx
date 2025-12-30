@@ -741,7 +741,7 @@ export default function Community() {
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
-                      className="border-2 border-black text-black hover:bg-black hover:text-white rounded-none font-bold uppercase"
+                      className="bg-black border-2 border-black text-white hover:bg-gray-800 rounded-none font-bold uppercase"
                       data-testid="button-add-photo"
                     >
                       <Image className="w-4 h-4 mr-2" />
@@ -753,7 +753,7 @@ export default function Community() {
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
-                      className="border-2 border-black text-black hover:bg-black hover:text-white rounded-none font-bold uppercase"
+                      className="bg-black border-2 border-black text-white hover:bg-gray-800 rounded-none font-bold uppercase"
                       data-testid="button-add-video"
                     >
                       <Video className="w-4 h-4 mr-2" />
