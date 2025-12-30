@@ -3,11 +3,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { 
   Bell, 
   BookOpen, 
@@ -16,7 +15,8 @@ import {
   MessageCircle, 
   Users, 
   Mail,
-  Shield
+  Shield,
+  Radio
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -72,7 +72,6 @@ export default function NotificationPreferences() {
     },
   });
 
-  // Update form when preferences data loads
   useEffect(() => {
     if (preferences) {
       form.reset({
@@ -114,13 +113,20 @@ export default function NotificationPreferences() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
-          <div className="space-y-4">
-            <div className="h-32 bg-gray-200 rounded"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
+      <div className="min-h-screen bg-black pb-24">
+        <div className="liquid-black border-b-4 border-ministry-gold-exact px-6 pt-12 pb-6 overflow-hidden">
+          <div className="relative z-10">
+            <BackButton fallbackPath="/profile" />
+            <h1 className="text-3xl font-black text-white tracking-tighter uppercase mt-4" style={{ fontFamily: "'Inter', sans-serif" }}>
+              Notification Preferences
+            </h1>
+          </div>
+        </div>
+        <div className="px-6 py-6">
+          <div className="animate-pulse space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-16 bg-gray-800 rounded-none"></div>
+            ))}
           </div>
         </div>
       </div>
@@ -128,45 +134,47 @@ export default function NotificationPreferences() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 pb-24 max-w-2xl">
-      <BackButton fallbackPath="/profile" />
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-ministry-charcoal mb-2">Notification Preferences</h1>
-        <p className="text-ministry-slate">
-          Choose which notifications you'd like to receive. Admin notifications cannot be disabled.
-        </p>
+    <div className="min-h-screen bg-black pb-24">
+      {/* Header */}
+      <div className="liquid-black border-b-4 border-ministry-gold-exact px-6 pt-12 pb-6 overflow-hidden">
+        <div className="relative z-10">
+          <BackButton fallbackPath="/profile" />
+          <h1 className="text-3xl font-black text-white tracking-tighter uppercase mt-4" style={{ fontFamily: "'Inter', sans-serif" }}>
+            Notification Preferences
+          </h1>
+          <p className="text-ministry-gold-exact text-sm font-bold uppercase tracking-widest mt-2">
+            Choose What You Want To Hear About
+          </p>
+        </div>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Content Notifications */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <BookOpen className="w-5 h-5 text-ministry-gold" />
-                <span>Content Updates</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-6 space-y-6">
+          
+          {/* Content Updates Section */}
+          <div>
+            <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>
+              Content Updates
+            </h2>
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name="newStudies"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-ministry-steel p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base font-medium text-ministry-charcoal">
-                        New Bible Studies
-                      </FormLabel>
-                      <FormDescription>
-                        Get notified when new Bible studies are published
-                      </FormDescription>
+                  <FormItem>
+                    <div className="h-16 w-full flex items-center liquid-gold-card border-2 border-black overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                        <BookOpen className="w-6 h-6 text-white relative z-10" />
+                      </div>
+                      <div className="flex-1 px-4 relative z-10">
+                        <span className="font-black text-sm text-black uppercase tracking-wide">New Bible Studies</span>
+                      </div>
+                      <FormControl>
+                        <div className="pr-4 relative z-10">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </div>
+                      </FormControl>
                     </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
                   </FormItem>
                 )}
               />
@@ -175,21 +183,20 @@ export default function NotificationPreferences() {
                 control={form.control}
                 name="newVideos"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-ministry-steel p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base font-medium text-ministry-charcoal">
-                        New Videos
-                      </FormLabel>
-                      <FormDescription>
-                        Get notified when new videos are published
-                      </FormDescription>
+                  <FormItem>
+                    <div className="h-16 w-full flex items-center liquid-gold-card border-2 border-black overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                        <Video className="w-6 h-6 text-white relative z-10" />
+                      </div>
+                      <div className="flex-1 px-4 relative z-10">
+                        <span className="font-black text-sm text-black uppercase tracking-wide">New Videos</span>
+                      </div>
+                      <FormControl>
+                        <div className="pr-4 relative z-10">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </div>
+                      </FormControl>
                     </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
                   </FormItem>
                 )}
               />
@@ -198,21 +205,20 @@ export default function NotificationPreferences() {
                 control={form.control}
                 name="newDevotionals"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-ministry-steel p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base font-medium text-ministry-charcoal">
-                        Daily Devotionals
-                      </FormLabel>
-                      <FormDescription>
-                        Get notified when new daily devotionals are available
-                      </FormDescription>
+                  <FormItem>
+                    <div className="h-16 w-full flex items-center liquid-gold-card border-2 border-black overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                        <Heart className="w-6 h-6 text-white relative z-10" />
+                      </div>
+                      <div className="flex-1 px-4 relative z-10">
+                        <span className="font-black text-sm text-black uppercase tracking-wide">Daily Devotionals</span>
+                      </div>
+                      <FormControl>
+                        <div className="pr-4 relative z-10">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </div>
+                      </FormControl>
                     </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
                   </FormItem>
                 )}
               />
@@ -221,55 +227,50 @@ export default function NotificationPreferences() {
                 control={form.control}
                 name="liveStreamNotifications"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-ministry-steel p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base font-medium text-ministry-charcoal">
-                        Live Stream Notifications
-                      </FormLabel>
-                      <FormDescription>
-                        Get notified when live podcasts start streaming
-                      </FormDescription>
+                  <FormItem>
+                    <div className="h-16 w-full flex items-center liquid-gold-card border-2 border-black overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                        <Radio className="w-6 h-6 text-white relative z-10" />
+                      </div>
+                      <div className="flex-1 px-4 relative z-10">
+                        <span className="font-black text-sm text-black uppercase tracking-wide">Live Streams</span>
+                      </div>
+                      <FormControl>
+                        <div className="pr-4 relative z-10">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </div>
+                      </FormControl>
                     </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
                   </FormItem>
                 )}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Community Notifications */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <MessageCircle className="w-5 h-5 text-ministry-gold" />
-                <span>Community Activity</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          {/* Community Activity Section */}
+          <div>
+            <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>
+              Community Activity
+            </h2>
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name="discussionReplies"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-ministry-steel p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base font-medium text-ministry-charcoal">
-                        Discussion Replies
-                      </FormLabel>
-                      <FormDescription>
-                        Get notified when someone replies to your discussions
-                      </FormDescription>
+                  <FormItem>
+                    <div className="h-16 w-full flex items-center liquid-gold-card border-2 border-black overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                        <MessageCircle className="w-6 h-6 text-white relative z-10" />
+                      </div>
+                      <div className="flex-1 px-4 relative z-10">
+                        <span className="font-black text-sm text-black uppercase tracking-wide">Discussion Replies</span>
+                      </div>
+                      <FormControl>
+                        <div className="pr-4 relative z-10">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </div>
+                      </FormControl>
                     </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
                   </FormItem>
                 )}
               />
@@ -278,21 +279,20 @@ export default function NotificationPreferences() {
                 control={form.control}
                 name="directMessages"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-ministry-steel p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base font-medium text-ministry-charcoal">
-                        Direct Messages
-                      </FormLabel>
-                      <FormDescription>
-                        Get notified when you receive direct messages
-                      </FormDescription>
+                  <FormItem>
+                    <div className="h-16 w-full flex items-center liquid-gold-card border-2 border-black overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                        <Mail className="w-6 h-6 text-white relative z-10" />
+                      </div>
+                      <div className="flex-1 px-4 relative z-10">
+                        <span className="font-black text-sm text-black uppercase tracking-wide">Direct Messages</span>
+                      </div>
+                      <FormControl>
+                        <div className="pr-4 relative z-10">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </div>
+                      </FormControl>
                     </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
                   </FormItem>
                 )}
               />
@@ -301,72 +301,66 @@ export default function NotificationPreferences() {
                 control={form.control}
                 name="groupMessages"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-ministry-steel p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base font-medium text-ministry-charcoal">
-                        Group Messages
-                      </FormLabel>
-                      <FormDescription>
-                        Get notified about activity in your group conversations
-                      </FormDescription>
+                  <FormItem>
+                    <div className="h-16 w-full flex items-center liquid-gold-card border-2 border-black overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                        <Users className="w-6 h-6 text-white relative z-10" />
+                      </div>
+                      <div className="flex-1 px-4 relative z-10">
+                        <span className="font-black text-sm text-black uppercase tracking-wide">Group Messages</span>
+                      </div>
+                      <FormControl>
+                        <div className="pr-4 relative z-10">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </div>
+                      </FormControl>
                     </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
                   </FormItem>
                 )}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Digest Notifications */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Mail className="w-5 h-5 text-ministry-gold" />
-                <span>Weekly Summary</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          {/* Weekly Summary Section */}
+          <div>
+            <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>
+              Weekly Summary
+            </h2>
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name="weeklyDigest"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-ministry-steel p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base font-medium text-ministry-charcoal">
-                        Weekly Digest
-                      </FormLabel>
-                      <FormDescription>
-                        Get a weekly summary of new content and community activity
-                      </FormDescription>
+                  <FormItem>
+                    <div className="h-16 w-full flex items-center liquid-gold-card border-2 border-black overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                        <Bell className="w-6 h-6 text-white relative z-10" />
+                      </div>
+                      <div className="flex-1 px-4 relative z-10">
+                        <span className="font-black text-sm text-black uppercase tracking-wide">Weekly Digest</span>
+                      </div>
+                      <FormControl>
+                        <div className="pr-4 relative z-10">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </div>
+                      </FormControl>
                     </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
                   </FormItem>
                 )}
               />
-            </CardContent>
-          </Card>
-
+            </div>
+          </div>
 
           {/* Admin Notice */}
-          <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">
-            <CardContent className="pt-6">
+          <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+            <CardContent className="p-4 relative z-10">
               <div className="flex items-start space-x-3">
-                <Shield className="w-5 h-5 text-yellow-600 mt-0.5" />
+                <Shield className="w-5 h-5 text-black mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                  <p className="text-sm font-black text-black uppercase tracking-wide">
                     Important Notice
                   </p>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                  <p className="text-sm text-black/70 mt-1 font-medium">
                     Admin notifications (announcements, reports, and system alerts) cannot be disabled 
                     to ensure you receive important ministry updates.
                   </p>
@@ -375,15 +369,17 @@ export default function NotificationPreferences() {
             </CardContent>
           </Card>
 
-          <div className="flex justify-end pt-4 pb-8">
-            <Button
-              type="submit"
-              disabled={updatePreferences.isPending}
-              className="bg-ministry-charcoal hover:bg-ministry-charcoal/90 text-white"
-            >
+          {/* Save Button */}
+          <Button
+            type="submit"
+            disabled={updatePreferences.isPending}
+            className="w-full h-14 liquid-black text-ministry-gold-exact hover:opacity-90 rounded-none font-black uppercase tracking-wide border-2 border-ministry-gold-exact shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]"
+            data-testid="button-save-preferences"
+          >
+            <span className="relative z-10">
               {updatePreferences.isPending ? "Saving..." : "Save Preferences"}
-            </Button>
-          </div>
+            </span>
+          </Button>
         </form>
       </Form>
     </div>
