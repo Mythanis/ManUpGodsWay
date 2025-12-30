@@ -255,9 +255,9 @@ export default function StudyBuilder() {
         
         // If lessons were parsed from Word document, create a study with those lessons
         if (parsedLessons.length > 0) {
-          // Create a study within this series with unique title
+          // Create a study within this series with the same title
           const study = await apiRequest('POST', '/api/studies', {
-            title: `${formData.title} - Part 1`,
+            title: formData.title,
             description: formData.description,
             category: formData.category,
             requiredTier: 'free',
