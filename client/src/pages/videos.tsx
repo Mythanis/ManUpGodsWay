@@ -364,7 +364,7 @@ export default function Videos() {
               <Card key={video.id} className={`liquid-gold-card overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-none ${
                 video.isFeatured ? 'ring-2 ring-yellow-400' : ''
               }`} style={{ fontFamily: "'Inter', sans-serif" }}>
-                <div className="aspect-video bg-gray-900 relative cursor-pointer"
+                <div className="aspect-video bg-gradient-to-br from-gray-900 via-gray-800 to-black relative cursor-pointer group"
                      onClick={() => {
                        setSelectedVideo(video);
                        setShowVideoDialog(true);
@@ -374,7 +374,10 @@ export default function Videos() {
                     alt={video.title}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute top-2 left-2 space-y-1">
+                  {/* Dark overlay for better play button visibility */}
+                  <div className="absolute inset-0 bg-black/40"></div>
+                  
+                  <div className="absolute top-2 left-2 space-y-1 z-10">
                     {getTierBadge(video.requiredTier)}
                     {video.isFeatured && (
                       <Badge className="bg-black text-ministry-gold-exact flex items-center space-x-1 rounded-none border-2 border-ministry-gold-exact font-black uppercase tracking-wide">
@@ -384,12 +387,13 @@ export default function Videos() {
                     )}
                   </div>
                   {video.duration && (
-                    <div className="absolute bottom-2 right-2 bg-black text-white text-xs px-2 py-1 rounded-none border border-ministry-gold-exact font-bold">
+                    <div className="absolute bottom-2 right-2 bg-black text-white text-xs px-2 py-1 rounded-none border border-ministry-gold-exact font-bold z-10">
                       {formatDuration(video.duration)}
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                    <div className="w-16 h-16 bg-ministry-gold-exact rounded-none border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                  {/* Always visible play button */}
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <div className="w-16 h-16 bg-ministry-gold-exact rounded-none border-2 border-black flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] group-hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] group-hover:scale-110 transition-all">
                       <Play className="w-8 h-8 text-black fill-black" />
                     </div>
                   </div>
