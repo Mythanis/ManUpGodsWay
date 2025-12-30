@@ -255,15 +255,16 @@ export default function Videos() {
 
       {/* Search Bar */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-ministry-gold-exact border-2 border-black rounded-none">
-          <CardContent className="p-4">
+        <Card className="liquid-gold-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black rounded-none overflow-hidden">
+          <CardContent className="p-4 relative z-10">
             <div className="relative">
               <Input
                 type="text"
                 placeholder="SEARCH VIDEOS..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border-2 border-black rounded-none pl-10 pr-4 py-3 text-sm text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide focus:ring-2 focus:ring-black font-medium"
+                className="w-full bg-white border-2 border-black rounded-none pl-10 pr-4 py-3 text-sm text-black placeholder:text-black/50 placeholder:font-black placeholder:text-xs placeholder:tracking-widest placeholder:uppercase focus:ring-2 focus:ring-black font-bold"
+                style={{ fontFamily: "'Inter', sans-serif" }}
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-black" />
             </div>
@@ -360,9 +361,9 @@ export default function Videos() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVideos.map((video: Video) => (
-              <Card key={video.id} className={`overflow-hidden hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all bg-ministry-gold-exact border-2 border-black rounded-none ${
-                video.isFeatured ? 'ring-2 ring-yellow-400 shadow-xl' : ''
-              }`}>
+              <Card key={video.id} className={`liquid-gold-card overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-none ${
+                video.isFeatured ? 'ring-2 ring-yellow-400' : ''
+              }`} style={{ fontFamily: "'Inter', sans-serif" }}>
                 <div className="aspect-video bg-gray-900 relative cursor-pointer"
                      onClick={() => {
                        setSelectedVideo(video);
@@ -376,25 +377,27 @@ export default function Videos() {
                   <div className="absolute top-2 left-2 space-y-1">
                     {getTierBadge(video.requiredTier)}
                     {video.isFeatured && (
-                      <Badge className="bg-yellow-100 text-yellow-800 flex items-center space-x-1">
+                      <Badge className="bg-black text-ministry-gold-exact flex items-center space-x-1 rounded-none border-2 border-ministry-gold-exact font-black uppercase tracking-wide">
                         <Star className="w-3 h-3" />
                         <span>Featured</span>
                       </Badge>
                     )}
                   </div>
                   {video.duration && (
-                    <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                    <div className="absolute bottom-2 right-2 bg-black text-white text-xs px-2 py-1 rounded-none border border-ministry-gold-exact font-bold">
                       {formatDuration(video.duration)}
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                    <Play className="w-16 h-16 text-white" />
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                    <div className="w-16 h-16 bg-ministry-gold-exact rounded-none border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                      <Play className="w-8 h-8 text-black fill-black" />
+                    </div>
                   </div>
                 </div>
                 
-                <CardContent className="p-4">
+                <CardContent className="p-4 relative z-10">
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-black text-black line-clamp-2 flex-1 tracking-tight">
+                    <h3 className="font-black text-black line-clamp-2 flex-1 tracking-tight text-lg uppercase">
                       {video.title}
                     </h3>
                     {video.isFeatured && (
@@ -402,30 +405,36 @@ export default function Videos() {
                     )}
                   </div>
                   {video.description && (
-                    <p className="text-sm text-ministry-slate mb-3 line-clamp-2">
-                      {video.description}
-                    </p>
+                    <div 
+                      className="p-3 mb-3 rounded-none"
+                      style={{ 
+                        background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 70%, rgba(252,208,0,0.2) 100%)'
+                      }}
+                    >
+                      <p className="text-sm text-gray-800 line-clamp-2" style={{ fontFamily: "'Inter', sans-serif" }}>
+                        {video.description}
+                      </p>
+                    </div>
                   )}
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       {video.rating > 0 && (
-                        <div className="flex items-center">
-                          <Star className="w-4 h-4 text-black fill-current mr-1" />
-                          <span className="text-sm text-ministry-slate">{video.rating}</span>
-                          <span className="text-xs text-ministry-slate ml-1">({video.ratingCount})</span>
+                        <div className="flex items-center bg-black px-2 py-1 rounded-none">
+                          <Star className="w-4 h-4 text-ministry-gold-exact fill-current mr-1" />
+                          <span className="text-sm text-white font-bold">{video.rating}</span>
+                          <span className="text-xs text-white/70 ml-1">({video.ratingCount})</span>
                         </div>
                       )}
                     </div>
                     <Button
-                      variant="ghost"
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedVideo(video);
                         setShowVideoDialog(true);
                       }}
-                      className="text-ministry-steel hover:text-ministry-navy"
+                      className="bg-black text-white hover:bg-ministry-gold-exact hover:text-black font-black uppercase tracking-wide rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,1)] transition-all"
                     >
                       <Eye className="w-4 h-4 mr-1" />
                       Watch
