@@ -155,13 +155,23 @@ export default function StudyBuilder() {
             variant: "destructive",
           });
         }
+      } else {
+        // Handle parse errors (like wrong file format)
+        const errorData = await response.json().catch(() => ({}));
+        toast({
+          title: "Document Format Error",
+          description: errorData.message || "Only .docx files are supported. Please save your document as .docx format and try again.",
+          variant: "destructive",
+        });
+        setWordFile(null); // Clear the file so user can try again
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to parse Word document",
+        description: "Failed to parse Word document. Please ensure it's a .docx file.",
         variant: "destructive",
       });
+      setWordFile(null);
     } finally {
       setParsingWord(false);
     }
@@ -352,10 +362,11 @@ export default function StudyBuilder() {
     }
     
     if (contentType === "study") {
-      if (parsedLessons.length === 0 && !formData.description) {
+      // If a Word file was selected but no lessons were parsed, block submission
+      if (wordFile && parsedLessons.length === 0) {
         toast({
-          title: "Validation Error",
-          description: "Please provide content via Word document or description",
+          title: "Word Document Error",
+          description: "The Word document could not be parsed. Please make sure it's a .docx file (not .doc) with days formatted as 'Day 1: Title', 'Day 2: Title', etc.",
           variant: "destructive",
         });
         return;
