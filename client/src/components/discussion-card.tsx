@@ -13,7 +13,23 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus, Edit, Share2, Cross } from "lucide-react";
+import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus, Edit, Share2 } from "lucide-react";
+
+// Custom Christian Cross icon component
+const ChristianCross = ({ className }: { className?: string }) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2.5" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    className={className}
+  >
+    <line x1="12" y1="2" x2="12" y2="22" />
+    <line x1="5" y1="7" x2="19" y2="7" />
+  </svg>
+);
 import { SiFacebook, SiX, SiWhatsapp, SiLinkedin } from "react-icons/si";
 import { FlagContentDialog } from "@/components/flag-content-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -369,7 +385,7 @@ export default function DiscussionCard({
                   } border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all`}
                   data-testid="button-like-discussion"
                 >
-                  <Cross className="w-3.5 h-3.5" />
+                  <ChristianCross className="w-3.5 h-3.5" />
                   <span>{likeCount}</span>
                 </Button>
                 
@@ -560,7 +576,7 @@ export default function DiscussionCard({
                         className="flex items-center gap-1 text-white hover:text-black hover:bg-ministry-gold-exact px-2 py-1 rounded-none border border-ministry-gold-exact/50 transition-all"
                         data-testid={`button-like-reply-${reply.id}`}
                       >
-                        <Cross className="w-3 h-3" />
+                        <ChristianCross className="w-3 h-3" />
                         <span className="text-xs font-bold">{reply.likes || 0}</span>
                       </Button>
                       <FlagContentDialog 
