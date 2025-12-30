@@ -465,8 +465,8 @@ export default function StudyDetail() {
               {study.description}
             </p>
 
-            {/* Embedded Study Viewer - Always show when user has access */}
-            {hasAccess && user?.id && (
+            {/* Embedded Study Viewer - Only show when user has access and study has lessons */}
+            {hasAccess && user?.id && studyLessons.length > 0 && (
               <div className="mb-6">
                 <EmbeddedLessonViewer 
                   studyId={study.id!}
