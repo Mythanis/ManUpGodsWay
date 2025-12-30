@@ -311,7 +311,7 @@ export default function DiscussionCard({
           />
           <div className="flex-1">
             <div className="flex items-center flex-wrap gap-2 mb-2">
-              <h3 className="font-black text-sm text-black uppercase tracking-wide" data-testid="text-user-name">
+              <h3 className="font-black text-sm text-black uppercase tracking-wide" style={{ fontFamily: "'Inter', sans-serif" }} data-testid="text-user-name">
                 {discussion.user?.firstName} {discussion.user?.lastName?.charAt(0)}.
               </h3>
               {getTierBadge(discussion.user?.subscriptionTier)}
@@ -321,7 +321,7 @@ export default function DiscussionCard({
             </div>
             
             <div className="flex items-center flex-wrap gap-2 mb-2">
-              <h4 className="font-black text-black text-lg tracking-tight" data-testid="text-discussion-title">
+              <h4 className="font-black text-black text-lg tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }} data-testid="text-discussion-title">
                 {discussion.title}
               </h4>
               {discussion.studyId && (
@@ -336,7 +336,7 @@ export default function DiscussionCard({
               )}
             </div>
             
-            <p className="text-sm text-black/80 mb-3 line-clamp-3 leading-relaxed" data-testid="text-discussion-content">
+            <p className="text-sm text-black/80 mb-3 line-clamp-3 leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }} data-testid="text-discussion-content">
               {discussion.content}
             </p>
             
