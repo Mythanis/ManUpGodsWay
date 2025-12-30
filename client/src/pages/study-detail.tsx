@@ -584,54 +584,56 @@ export default function StudyDetail() {
 
       {hasAccess && (
         <>
-          {/* Progress Section */}
-          <div className="px-6 mb-6">
-            <div className="liquid-black border-2 border-[#FCD000] rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-progress">
-              <div className="p-6 relative z-10">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-black uppercase tracking-tight text-white">Your Progress</h2>
-                  <span className="text-sm text-black font-bold uppercase tracking-wide bg-ministry-gold-exact px-2 py-1 rounded-none border-2 border-black" data-testid="text-progress-status">
-                    {progressPercent === 100 ? 'Completed' : 'In Progress'}
-                  </span>
-                </div>
-                
-                <div className="mb-2">
-                  <div className="flex justify-between items-center text-sm text-gray-300 font-bold uppercase tracking-wide">
-                    <span>{completedLessonsForThisStudy.length} of {lessonsForThisStudy.length} lessons</span>
-                    <span className="text-ministry-gold-exact">{progressPercent}%</span>
+          {/* Progress Section - Only show for studies with lessons */}
+          {lessonsForThisStudy.length > 0 && (
+            <div className="px-6 mb-6">
+              <div className="liquid-black border-2 border-[#FCD000] rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-progress">
+                <div className="p-6 relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-black uppercase tracking-tight text-white">Your Progress</h2>
+                    <span className="text-sm text-black font-bold uppercase tracking-wide bg-ministry-gold-exact px-2 py-1 rounded-none border-2 border-black" data-testid="text-progress-status">
+                      {progressPercent === 100 ? 'Completed' : 'In Progress'}
+                    </span>
                   </div>
-                </div>
-                
-                <Progress value={progressPercent} className="mb-4 bg-gray-700 [&>div]:bg-ministry-gold-exact rounded-none h-3" data-testid="progress-bar" />
-
-                {progressPercent === 100 && (
-                  <div className="bg-ministry-gold-exact border-2 border-black rounded-none p-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-none bg-black flex items-center justify-center border-2 border-black">
-                        <svg className="w-5 h-5 text-ministry-gold-exact" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                        </svg>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-black uppercase tracking-tight text-black text-lg">STUDY COMPLETED!</h3>
-                        <p className="text-sm text-black/80">Congratulations on finishing this study and growing in your Faith journey.</p>
-                        {userProgress?.completedAt && (
-                          <p className="text-xs text-black/60 mt-1 font-bold uppercase">
-                            Completed on {new Date(userProgress.completedAt).toLocaleDateString('en-US', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </p>
-                        )}
-                      </div>
+                  
+                  <div className="mb-2">
+                    <div className="flex justify-between items-center text-sm text-gray-300 font-bold uppercase tracking-wide">
+                      <span>{completedLessonsForThisStudy.length} of {lessonsForThisStudy.length} lessons</span>
+                      <span className="text-ministry-gold-exact">{progressPercent}%</span>
                     </div>
                   </div>
-                )}
+                  
+                  <Progress value={progressPercent} className="mb-4 bg-gray-700 [&>div]:bg-ministry-gold-exact rounded-none h-3" data-testid="progress-bar" />
+
+                  {progressPercent === 100 && (
+                    <div className="bg-ministry-gold-exact border-2 border-black rounded-none p-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-none bg-black flex items-center justify-center border-2 border-black">
+                          <svg className="w-5 h-5 text-ministry-gold-exact" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-black uppercase tracking-tight text-black text-lg">STUDY COMPLETED!</h3>
+                          <p className="text-sm text-black/80">Congratulations on finishing this study and growing in your Faith journey.</p>
+                          {userProgress?.completedAt && (
+                            <p className="text-xs text-black/60 mt-1 font-bold uppercase">
+                              Completed on {new Date(userProgress.completedAt).toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Video Section */}
           {study.videoUrl && (
