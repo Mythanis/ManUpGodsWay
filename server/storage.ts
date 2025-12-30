@@ -611,7 +611,7 @@ export class DatabaseStorage implements IStorage {
             eq(userProgress.studyId, study.id)
           ));
         
-        // Get lesson completion count
+        // Get lesson completion count - use completedAt IS NOT NULL for consistency with other pages
         const lessons = await db.select().from(studyLessons)
           .where(eq(studyLessons.studyId, study.id));
         
@@ -621,7 +621,7 @@ export class DatabaseStorage implements IStorage {
             .where(and(
               eq(userLessonProgress.userId, userId),
               inArray(userLessonProgress.lessonId, lessons.map(l => l.id)),
-              eq(userLessonProgress.isCompleted, true)
+              sql`${userLessonProgress.completedAt} IS NOT NULL`
             ));
           completedLessonsCount = completedLessons.length;
         }
