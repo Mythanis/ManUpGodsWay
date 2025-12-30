@@ -1253,6 +1253,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
         }
+        
+        // Final fallback: If still no lessons found, create a single lesson with all content
+        // This supports individual studies that don't have day markers
+        if (lessons.length === 0 && htmlContent.length > 0) {
+          console.log("No sections found, creating single lesson with full content");
+          // Try to extract title from first heading or first line
+          const titleMatch = htmlContent.match(/<h[1-6][^>]*>([^<]+)<\/h[1-6]>/i) ||
+                            htmlContent.match(/<p[^>]*><strong>([^<]+)<\/strong><\/p>/i);
+          const title = titleMatch ? titleMatch[1].trim() : "Study Content";
+          
+          lessons.push({
+            dayNumber: 1,
+            title,
+            content: htmlContent,
+          });
+        }
       }
       
       // Clean up the temporary file

@@ -366,7 +366,7 @@ export default function StudyBuilder() {
       if (wordFile && parsedLessons.length === 0) {
         toast({
           title: "Word Document Error",
-          description: "The Word document could not be parsed. Please make sure it's a .docx file (not .doc) with days formatted as 'Day 1: Title', 'Day 2: Title', etc.",
+          description: "The Word document could not be parsed. Please make sure it's a .docx file (not .doc). The document will be imported as study content.",
           variant: "destructive",
         });
         return;
