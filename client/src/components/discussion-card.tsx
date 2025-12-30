@@ -64,6 +64,10 @@ export default function DiscussionCard({
   const [likeCount, setLikeCount] = useState(discussion.likes || 0);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Check if content is long enough to need expansion
+  const isLongContent = discussion.content && discussion.content.length > 280;
   const { user } = useAuth();
   
   // Check if current user owns this discussion
@@ -338,9 +342,40 @@ export default function DiscussionCard({
               </div>
             </div>
             
-            <p className="text-base text-black/90 mb-4 line-clamp-4 leading-relaxed" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400 }} data-testid="text-discussion-content">
-              {discussion.content}
-            </p>
+            <div 
+              className="relative mb-4 p-4 rounded-lg cursor-pointer"
+              style={{ 
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 70%, rgba(252,208,0,0.3) 100%)',
+                backdropFilter: 'blur(4px)'
+              }}
+              onClick={() => isLongContent && setIsExpanded(!isExpanded)}
+              data-testid="content-container"
+            >
+              <p 
+                className={`text-base text-gray-800 leading-relaxed ${!isExpanded && isLongContent ? 'line-clamp-4' : ''}`} 
+                style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400 }} 
+                data-testid="text-discussion-content"
+              >
+                {discussion.content}
+              </p>
+              {isLongContent && !isExpanded && (
+                <div 
+                  className="absolute bottom-0 left-0 right-0 h-12 flex items-end justify-center pb-2"
+                  style={{ background: 'linear-gradient(to top, rgba(255,255,255,0.95), transparent)' }}
+                >
+                  <span className="text-sm font-bold text-black/70 hover:text-black transition-colors">
+                    Click to read more...
+                  </span>
+                </div>
+              )}
+              {isLongContent && isExpanded && (
+                <div className="text-center mt-3 pt-2 border-t border-black/10">
+                  <span className="text-sm font-bold text-black/70 hover:text-black transition-colors">
+                    Click to collapse
+                  </span>
+                </div>
+              )}
+            </div>
             
             {/* Media Display */}
             {discussion.mediaUrls && discussion.mediaUrls.length > 0 && (
