@@ -320,23 +320,25 @@ export default function DiscussionCard({
               </span>
             </div>
             
-            <div className="flex items-center flex-wrap gap-2 mb-2">
-              <h4 className="font-black text-black text-lg tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }} data-testid="text-discussion-title">
-                {discussion.title}
-              </h4>
-              {discussion.studyId && (
-                <Badge className="text-xs bg-ministry-gold-exact text-black font-bold uppercase tracking-wide rounded-none border-2 border-black">
-                  📚 Study
-                </Badge>
-              )}
-              {discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' && (
-                <Badge className="text-xs bg-black text-ministry-gold-exact font-bold uppercase tracking-wide rounded-none border-2 border-ministry-gold-exact">
-                  {discussion.study.requiredTier.charAt(0).toUpperCase() + discussion.study.requiredTier.slice(1)} Only
-                </Badge>
-              )}
+            <div className="mb-3 pb-2 border-b-2 border-black/10">
+              <div className="flex items-center flex-wrap gap-2">
+                <h4 className="font-black text-black text-xl tracking-tight" style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }} data-testid="text-discussion-title">
+                  {discussion.title}
+                </h4>
+                {discussion.studyId && (
+                  <Badge className="text-xs bg-ministry-gold-exact text-black font-bold uppercase tracking-wide rounded-none border-2 border-black">
+                    📚 Study
+                  </Badge>
+                )}
+                {discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' && (
+                  <Badge className="text-xs bg-black text-ministry-gold-exact font-bold uppercase tracking-wide rounded-none border-2 border-ministry-gold-exact">
+                    {discussion.study.requiredTier.charAt(0).toUpperCase() + discussion.study.requiredTier.slice(1)} Only
+                  </Badge>
+                )}
+              </div>
             </div>
             
-            <p className="text-sm text-black/80 mb-3 line-clamp-3 leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }} data-testid="text-discussion-content">
+            <p className="text-base text-black/90 mb-4 line-clamp-4 leading-relaxed" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400 }} data-testid="text-discussion-content">
               {discussion.content}
             </p>
             
