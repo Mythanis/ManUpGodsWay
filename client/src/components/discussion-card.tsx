@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus, Edit, Share2, X } from "lucide-react";
+import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus, Edit, Share2 } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp, SiLinkedin } from "react-icons/si";
 import { FlagContentDialog } from "@/components/flag-content-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -369,7 +369,7 @@ export default function DiscussionCard({
                   } border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all`}
                   data-testid="button-like-discussion"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <Plus className="w-3.5 h-3.5" />
                   <span>{likeCount}</span>
                 </Button>
                 
@@ -560,7 +560,7 @@ export default function DiscussionCard({
                         className="flex items-center gap-1 text-white hover:text-black hover:bg-ministry-gold-exact px-2 py-1 rounded-none border border-ministry-gold-exact/50 transition-all"
                         data-testid={`button-like-reply-${reply.id}`}
                       >
-                        <X className="w-3 h-3" />
+                        <Plus className="w-3 h-3" />
                         <span className="text-xs font-bold">{reply.likes || 0}</span>
                       </Button>
                       <FlagContentDialog 

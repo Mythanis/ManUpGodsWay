@@ -925,12 +925,12 @@ export default function Community() {
             <p className="text-sm text-ministry-slate">Be the first to start a conversation!</p>
           </div>
         ) : (
-          <div className="space-y-4 flex flex-col items-center">
+          <div className="space-y-4 max-w-2xl mx-auto">
             {discussions.map((discussion: any) => (
               <div 
                 key={discussion.id}
                 data-discussion-id={discussion.id}
-                className={`w-full max-w-2xl ${highlightedDiscussion === discussion.id ? 'ring-2 ring-ministry-gold ring-opacity-50 rounded-lg' : ''}`}
+                className={`w-full ${highlightedDiscussion === discussion.id ? 'ring-2 ring-ministry-gold ring-opacity-50 rounded-lg' : ''}`}
               >
                 <DiscussionCard 
                   discussion={discussion}
