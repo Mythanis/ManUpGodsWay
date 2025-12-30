@@ -91,24 +91,20 @@ export default function WarGroupsMap({ groups }: WarGroupsMapProps) {
               direction="top" 
               offset={[0, -20]} 
               opacity={1}
-              className="!bg-zinc-900 !border-ministry-gold-exact !border-2 !rounded-lg !shadow-xl"
+              permanent={false}
             >
-              <div className="min-w-[220px] p-2 text-white">
-                <h3 className="font-bold text-base mb-1 text-ministry-gold-exact">{getGroupDisplayName(group)}</h3>
-                <div className="flex items-center gap-1 text-xs text-zinc-300 mb-1">
-                  <MapPin className="h-3 w-3 text-ministry-gold-exact" />
-                  {group.city}, {group.state}
+              <div style={{ minWidth: '200px', padding: '8px', color: 'white' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '6px', color: '#FCD000' }}>
+                  {getGroupDisplayName(group)}
                 </div>
-                <div className="flex items-center gap-1 text-xs text-zinc-300 mb-1">
-                  <User className="h-3 w-3 text-ministry-gold-exact" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#d4d4d8', marginBottom: '4px' }}>
+                  <MapPin style={{ width: '12px', height: '12px', color: '#FCD000' }} />
+                  <span>{group.city}, {group.state}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#d4d4d8' }}>
+                  <User style={{ width: '12px', height: '12px', color: '#FCD000' }} />
                   <span>Led by {group.leader.firstName} {group.leader.lastName}</span>
                 </div>
-                {group.meetingInfo && (
-                  <div className="flex items-start gap-1 text-xs text-zinc-300">
-                    <Clock className="h-3 w-3 text-ministry-gold-exact flex-shrink-0 mt-0.5" />
-                    <span className="line-clamp-2">{group.meetingInfo}</span>
-                  </div>
-                )}
               </div>
             </Tooltip>
             <Popup>

@@ -736,3 +736,32 @@
 .leaflet-bottom {
   z-index: 10 !important;
 }
+
+/* Leaflet tooltip styling for war groups map */
+.leaflet-tooltip {
+  background-color: #18181b !important;
+  border: 2px solid #FCD000 !important;
+  border-radius: 8px !important;
+  padding: 0 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+.leaflet-tooltip::before {
+  border-top-color: #FCD000 !important;
+}
+
+.leaflet-tooltip-top::before {
+  border-top-color: #FCD000 !important;
+}
+
+.leaflet-tooltip-bottom::before {
+  border-bottom-color: #FCD000 !important;
+}
+
+.leaflet-tooltip-left::before {
+  border-left-color: #FCD000 !important;
+}
+
+.leaflet-tooltip-right::before {
+  border-right-color: #FCD000 !important;
+}
