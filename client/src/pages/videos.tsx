@@ -393,8 +393,8 @@ export default function Videos() {
                   )}
                   {/* Always visible play button */}
                   <div className="absolute inset-0 flex items-center justify-center z-10">
-                    <div className="w-16 h-16 bg-ministry-gold-exact rounded-none border-2 border-black flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] group-hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] group-hover:scale-110 transition-all">
-                      <Play className="w-8 h-8 text-black fill-black" />
+                    <div className="w-10 h-10 bg-ministry-gold-exact rounded-none border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] group-hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] group-hover:scale-110 transition-all">
+                      <Play className="w-5 h-5 text-black fill-black" />
                     </div>
                   </div>
                 </div>
