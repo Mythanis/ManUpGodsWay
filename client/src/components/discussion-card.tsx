@@ -280,7 +280,7 @@ export default function DiscussionCard({
   };
 
   return (
-    <Card className="liquid-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden w-full" data-testid="discussion-card">
+    <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden w-full" data-testid="discussion-card">
       <CardContent className="p-4 relative">
         <div className="flex items-start space-x-3 relative z-10">
           <img 
@@ -295,17 +295,17 @@ export default function DiscussionCard({
           />
           <div className="flex-1">
             <div className="flex items-center flex-wrap gap-2 mb-2">
-              <h3 className="font-black text-sm text-white uppercase tracking-wide" data-testid="text-user-name">
+              <h3 className="font-black text-sm text-black uppercase tracking-wide" data-testid="text-user-name">
                 {discussion.user?.firstName} {discussion.user?.lastName?.charAt(0)}.
               </h3>
               {getTierBadge(discussion.user?.subscriptionTier)}
-              <span className="text-xs text-gray-400 font-medium" data-testid="text-time-ago">
+              <span className="text-xs text-black/60 font-medium" data-testid="text-time-ago">
                 • {getTimeAgo(discussion.createdAt)}
               </span>
             </div>
             
             <div className="flex items-center flex-wrap gap-2 mb-2">
-              <h4 className="font-black text-white text-lg tracking-tight" data-testid="text-discussion-title">
+              <h4 className="font-black text-black text-lg tracking-tight" data-testid="text-discussion-title">
                 {discussion.title}
               </h4>
               {discussion.studyId && (
@@ -320,7 +320,7 @@ export default function DiscussionCard({
               )}
             </div>
             
-            <p className="text-sm text-gray-300 mb-3 line-clamp-3 leading-relaxed" data-testid="text-discussion-content">
+            <p className="text-sm text-black/80 mb-3 line-clamp-3 leading-relaxed" data-testid="text-discussion-content">
               {discussion.content}
             </p>
             
@@ -358,7 +358,7 @@ export default function DiscussionCard({
               </div>
             )}
             
-            <div className="flex flex-wrap items-center gap-2 pt-3 mt-3 border-t-2 border-ministry-gold-exact/30">
+            <div className="flex flex-wrap items-center gap-2 pt-3 mt-3 border-t-2 border-black/20">
               <div className="flex items-center gap-2">
                 <Button 
                   variant="ghost"
@@ -528,12 +528,12 @@ export default function DiscussionCard({
         
         {/* Show replies if expanded */}
         {showReplies && discussion.replyCount > 0 && (
-          <div className="mt-4 pt-4 border-t-2 border-ministry-gold-exact/30 relative z-10">
+          <div className="mt-4 pt-4 border-t-2 border-black/20 relative z-10">
             <div className="space-y-3">
               {(replies as any[])?.map((reply: any) => (
-                <div key={reply.id} className="flex items-start space-x-3 ml-4 p-3 bg-black/50 rounded-none border-2 border-ministry-gold-exact/30 shadow-[2px_2px_0px_0px_rgba(252,208,0,0.2)]">
+                <div key={reply.id} className="flex items-start space-x-3 ml-4 p-3 bg-black rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                   <img 
-                    src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=000&color=FCD000&size=32`}
+                    src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=FCD000&color=000&size=32`}
                     alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
                     className="w-8 h-8 rounded-none object-cover cursor-pointer border-2 border-ministry-gold-exact hover:border-white transition-colors"
                     onClick={(e) => {
@@ -557,7 +557,7 @@ export default function DiscussionCard({
                       <Button 
                         variant="ghost"
                         size="sm"
-                        className="flex items-center gap-1 text-white hover:text-black hover:bg-ministry-gold-exact px-2 py-1 rounded-none border border-ministry-gold-exact/30 transition-all"
+                        className="flex items-center gap-1 text-white hover:text-black hover:bg-ministry-gold-exact px-2 py-1 rounded-none border border-ministry-gold-exact/50 transition-all"
                         data-testid={`button-like-reply-${reply.id}`}
                       >
                         <X className="w-3 h-3" />
@@ -581,7 +581,7 @@ export default function DiscussionCard({
         )}
 
         {showReplyForm && (
-          <div className="mt-4 pt-4 border-t-2 border-ministry-gold-exact/30 bg-black/30 rounded-none p-4 relative z-10">
+          <div className="mt-4 pt-4 border-t-2 border-black/20 bg-black rounded-none p-4 relative z-10 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
             <h4 className="text-sm font-black text-ministry-gold-exact mb-3 uppercase tracking-wide">Write your reply</h4>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmitReply)} className="space-y-3">
