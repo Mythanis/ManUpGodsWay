@@ -772,3 +772,60 @@
 .leaflet-tooltip-pane {
   z-index: 9999 !important;
 }
+
+/* Study Content Rich Text Styling - Ensure Word document formatting displays correctly */
+[data-testid="content-lesson-body"] strong,
+[data-testid="content-lesson-body"] b {
+  font-weight: 700 !important;
+  color: #FCD000 !important;
+}
+
+[data-testid="content-lesson-body"] em,
+[data-testid="content-lesson-body"] i {
+  font-style: italic !important;
+  color: #d1d5db !important;
+}
+
+[data-testid="content-lesson-body"] u {
+  text-decoration: underline !important;
+}
+
+[data-testid="content-lesson-body"] ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin: 0.75rem 0 !important;
+}
+
+[data-testid="content-lesson-body"] ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin: 0.75rem 0 !important;
+}
+
+[data-testid="content-lesson-body"] li {
+  color: #e5e7eb !important;
+  margin: 0.25rem 0 !important;
+}
+
+[data-testid="content-lesson-body"] h1,
+[data-testid="content-lesson-body"] h2,
+[data-testid="content-lesson-body"] h3,
+[data-testid="content-lesson-body"] h4 {
+  font-weight: 900 !important;
+  color: #FCD000 !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+[data-testid="content-lesson-body"] blockquote {
+  border-left: 4px solid #FCD000 !important;
+  padding-left: 1rem !important;
+  font-style: italic !important;
+  color: #9ca3af !important;
+  margin: 0.75rem 0 !important;
+}
+
+[data-testid="content-lesson-body"] p {
+  margin: 0.5rem 0 !important;
+  line-height: 1.6 !important;
+}

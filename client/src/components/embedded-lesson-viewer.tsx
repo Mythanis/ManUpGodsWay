@@ -365,9 +365,12 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
         <CardHeader className="print:pb-2 relative z-10">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <CardTitle className="text-2xl font-black text-white mb-1 uppercase tracking-tight" data-testid="text-lesson-title">
-                {currentLesson.title}
-              </CardTitle>
+              <div className="mb-1" data-testid="text-lesson-title">
+                <span className="text-lg font-bold text-[#FCD000] tracking-wide">Day {currentLesson.dayNumber}:</span>
+                <CardTitle className="text-2xl font-black text-white tracking-tight mt-1">
+                  {currentLesson.title}
+                </CardTitle>
+              </div>
               {currentLesson.estimatedMinutes && (
                 <p className="text-sm text-[#FCD000] font-bold">
                   ⏱️ {currentLesson.estimatedMinutes} min read
@@ -466,34 +469,85 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           {currentLesson.questions && currentLesson.questions.length > 0 && (
             <div className="space-y-4 print:break-inside-avoid">
               <h3 className="font-black text-lg text-[#FCD000] uppercase tracking-tight">Reflection Questions</h3>
-              {currentLesson.questions.map((q, index) => (
-                <div key={q.id} className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <Badge className="mt-1 bg-[#FCD000] text-black font-bold rounded-none uppercase text-xs">
-                      {q.type}
-                    </Badge>
-                    <p className="text-sm flex-1 font-bold text-white" data-testid={`question-text-${index}`}>
-                      {index + 1}. {q.question}
-                    </p>
-                  </div>
-                  {!isCompleted && (
-                    <Textarea
-                      placeholder="Type your reflection here..."
-                      value={answers[q.id] || ""}
-                      onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                      rows={3}
-                      className="print:hidden bg-white text-black border-2 border-black rounded-none font-medium"
-                      data-testid={`textarea-answer-${index}`}
-                    />
-                  )}
-                  {isCompleted && currentProgress?.answers?.[q.id] && (
-                    <div className="p-3 bg-[#FCD000] rounded-none border-2 border-black">
-                      <p className="text-xs text-black/70 mb-1 font-bold uppercase">Your answer:</p>
-                      <p className="text-sm text-black font-medium">{currentProgress.answers[q.id]}</p>
+              {currentLesson.questions.map((q, index) => {
+                const isFillInBlank = q.type?.toLowerCase() === 'fill_in_blank' || q.type?.toLowerCase() === 'fill-in-blank' || q.type?.toLowerCase() === 'fillinblank';
+                
+                // Parse fill-in-blank question to find blanks (marked with ___ or [blank])
+                const renderFillInBlank = () => {
+                  const parts = q.question.split(/(___|___+|\[blank\]|\[___\])/gi);
+                  let blankIndex = 0;
+                  
+                  return (
+                    <div className="text-sm text-white font-medium leading-relaxed">
+                      {parts.map((part, partIdx) => {
+                        if (part.match(/^_+$|^\[blank\]$|^\[___\]$/i)) {
+                          const currentBlankIndex = blankIndex;
+                          const blankKey = `${q.id}_blank_${currentBlankIndex}`;
+                          blankIndex++;
+                          
+                          if (isCompleted && currentProgress?.answers?.[blankKey]) {
+                            return (
+                              <span key={partIdx} className="inline-block mx-1 px-2 py-0.5 bg-[#FCD000] text-black font-bold border-b-2 border-black min-w-[80px] text-center">
+                                {currentProgress.answers[blankKey]}
+                              </span>
+                            );
+                          }
+                          
+                          return (
+                            <input
+                              key={partIdx}
+                              type="text"
+                              placeholder="________"
+                              value={answers[blankKey] || ""}
+                              onChange={(e) => handleAnswerChange(blankKey, e.target.value)}
+                              className="inline-block mx-1 px-2 py-0.5 bg-white text-black border-b-2 border-[#FCD000] min-w-[100px] max-w-[200px] font-medium focus:outline-none focus:border-black"
+                              disabled={isCompleted}
+                              data-testid={`input-blank-${index}-${currentBlankIndex}`}
+                            />
+                          );
+                        }
+                        return <span key={partIdx}>{part}</span>;
+                      })}
                     </div>
-                  )}
-                </div>
-              ))}
+                  );
+                };
+                
+                return (
+                  <div key={q.id} className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <Badge className="mt-1 bg-[#FCD000] text-black font-bold rounded-none uppercase text-xs shrink-0">
+                        {isFillInBlank ? 'Fill In' : q.type}
+                      </Badge>
+                      {isFillInBlank ? (
+                        <div className="flex-1" data-testid={`question-text-${index}`}>
+                          <span className="text-white font-bold mr-1">{index + 1}.</span>
+                          {renderFillInBlank()}
+                        </div>
+                      ) : (
+                        <p className="text-sm flex-1 font-bold text-white" data-testid={`question-text-${index}`}>
+                          {index + 1}. {q.question}
+                        </p>
+                      )}
+                    </div>
+                    {!isFillInBlank && !isCompleted && (
+                      <Textarea
+                        placeholder="Type your reflection here..."
+                        value={answers[q.id] || ""}
+                        onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                        rows={3}
+                        className="print:hidden bg-white text-black border-2 border-black rounded-none font-medium"
+                        data-testid={`textarea-answer-${index}`}
+                      />
+                    )}
+                    {!isFillInBlank && isCompleted && currentProgress?.answers?.[q.id] && (
+                      <div className="p-3 bg-[#FCD000] rounded-none border-2 border-black">
+                        <p className="text-xs text-black/70 mb-1 font-bold uppercase">Your answer:</p>
+                        <p className="text-sm text-black font-medium">{currentProgress.answers[q.id]}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
