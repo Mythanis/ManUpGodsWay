@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, BookOpen, CheckCircle, Layers, ChevronRight, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { BackButton } from "@/components/back-button";
 
 interface StudyInSeries {
   id: string;
@@ -62,14 +63,6 @@ export default function SeriesDetail() {
   const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
   const completedStudies = studies.filter(s => s.progress?.isCompleted).length;
 
-  const getTierColor = (tier: string) => {
-    switch (tier) {
-      case 'premium': return 'bg-blue-600';
-      case 'vip': return 'bg-purple-600';
-      default: return 'bg-green-600';
-    }
-  };
-
   const getButtonLabel = (study: StudyInSeries) => {
     if (study.progress?.isCompleted) return 'Review';
     if (study.progress && study.completedLessons > 0) return 'Continue';
@@ -88,7 +81,7 @@ export default function SeriesDetail() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold-exact"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FCD000]"></div>
       </div>
     );
   }
@@ -97,9 +90,11 @@ export default function SeriesDetail() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-400 mb-4">Series not found</p>
+          <p className="text-gray-400 mb-4 font-bold uppercase">Series not found</p>
           <Link href="/library">
-            <Button variant="outline">Back to Library</Button>
+            <Button className="bg-[#FCD000] text-black font-black uppercase tracking-wide rounded-none border-2 border-black hover:bg-yellow-400">
+              Back to Library
+            </Button>
           </Link>
         </div>
       </div>
@@ -108,32 +103,38 @@ export default function SeriesDetail() {
 
   return (
     <div className="min-h-screen bg-black pb-20">
+      <BackButton fallbackPath="/library" />
+      
       {/* Header */}
-      <div className="bg-gradient-to-r from-ministry-navy to-ministry-charcoal text-white px-6 pt-12 pb-6">
+      <div className="liquid-black text-white px-6 pt-12 pb-6 border-b-4 border-[#FCD000]">
         <Link href="/library">
-          <button className="flex items-center text-gray-300 hover:text-white mb-4 text-sm" data-testid="button-back">
+          <button className="flex items-center text-[#FCD000] hover:text-yellow-300 mb-4 text-sm font-bold uppercase tracking-wide" data-testid="button-back">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Library
           </button>
         </Link>
         
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center">
+        <div className="flex items-start gap-4 relative z-10">
+          <div className="flex-shrink-0 w-16 h-16 bg-[#FCD000] rounded-none flex items-center justify-center border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
             {series.thumbnailUrl ? (
               <img 
                 src={series.thumbnailUrl} 
                 alt={series.title}
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover rounded-none"
               />
             ) : (
-              <Layers className="w-8 h-8 text-ministry-gold-exact" />
+              <Layers className="w-8 h-8 text-black" />
             )}
           </div>
           <div className="flex-1">
-            <h1 className="text-2xl font-black tracking-tight mb-1" data-testid="text-series-title">
-              {series.title}
+            <h1 className="text-2xl font-black tracking-tight uppercase mb-1" data-testid="text-series-title">
+              <span className="text-white">{series.title.split(' ')[0]}</span>{' '}
+              <span className="text-[#FCD000]">{series.title.split(' ').slice(1).join(' ')}</span>
             </h1>
-            <p className="text-gray-300 text-sm">
+            <p className="text-[#FCD000] text-sm font-bold uppercase tracking-wide">
+              {series.category}
+            </p>
+            <p className="text-gray-300 text-sm mt-2">
               {series.description}
             </p>
           </div>
@@ -142,17 +143,22 @@ export default function SeriesDetail() {
 
       {/* Progress Overview */}
       {isAuthenticated && studies.length > 0 && (
-        <div className="px-6 -mt-3 relative z-10 mb-6">
-          <Card className="bg-gray-900 border border-gray-800">
-            <CardContent className="p-4">
+        <div className="px-6 mt-6 mb-6">
+          <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <CardContent className="p-4 relative z-10">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-gray-400">Series Progress</span>
-                <span className="text-sm font-bold text-ministry-gold-exact" data-testid="text-progress-percent">
+                <span className="text-sm text-black font-bold uppercase tracking-wide">Series Progress</span>
+                <span className="text-sm font-black text-black" data-testid="text-progress-percent">
                   {progressPercent}%
                 </span>
               </div>
-              <Progress value={progressPercent} className="h-2 mb-3" />
-              <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="h-3 bg-white border-2 border-black rounded-none overflow-hidden mb-3">
+                <div 
+                  className="h-full bg-black transition-all duration-300"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-xs text-black/70 font-bold uppercase">
                 <span>{completedLessons} of {totalLessons} lessons completed</span>
                 <span>{completedStudies} of {studies.length} studies completed</span>
               </div>
@@ -163,7 +169,7 @@ export default function SeriesDetail() {
 
       {/* Studies List */}
       <div className="px-6">
-        <h2 className="text-white font-bold text-lg mb-4">
+        <h2 className="text-white font-black text-lg mb-4 uppercase tracking-tight">
           Studies in this Series ({studies.length})
         </h2>
 
@@ -177,15 +183,15 @@ export default function SeriesDetail() {
             return (
               <Card 
                 key={study.id}
-                className={`bg-gray-900 border ${study.progress?.isCompleted ? 'border-green-600' : 'border-gray-800'} ${hasAccess ? 'hover:border-ministry-gold-exact transition-colors' : ''}`}
+                className={`liquid-gold-card border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${hasAccess ? 'hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all' : 'opacity-75'}`}
                 data-testid={`study-card-${study.id}`}
               >
-                <CardContent className="p-4">
+                <CardContent className="p-4 relative z-10">
                   <div className="flex items-start gap-4">
                     {/* Order Number */}
-                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${study.progress?.isCompleted ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400'}`}>
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-none flex items-center justify-center font-black text-lg border-2 border-black ${study.progress?.isCompleted ? 'bg-black text-[#FCD000]' : 'bg-white text-black'}`}>
                       {study.progress?.isCompleted ? (
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircle className="w-6 h-6" />
                       ) : (
                         index + 1
                       )}
@@ -194,32 +200,37 @@ export default function SeriesDetail() {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-white font-bold line-clamp-1" data-testid={`text-study-title-${study.id}`}>
+                        <h3 className="text-black font-black uppercase tracking-wide line-clamp-1" data-testid={`text-study-title-${study.id}`}>
                           {study.title}
                         </h3>
                         {study.requiredTier !== 'free' && (
-                          <span className={`text-xs px-2 py-0.5 rounded-full text-white ${getTierColor(study.requiredTier)}`}>
+                          <span className="text-xs px-2 py-0.5 rounded-none text-white bg-black font-bold uppercase border border-black">
                             {study.requiredTier.toUpperCase()}
                           </span>
                         )}
                       </div>
-                      <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+                      <p className="text-black/70 text-sm mb-3 line-clamp-2 font-medium">
                         {study.description}
                       </p>
 
                       {/* Progress bar for authenticated users */}
                       {isAuthenticated && study.totalLessons > 0 && (
                         <div className="mb-3">
-                          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                          <div className="flex items-center justify-between text-xs text-black/70 mb-1 font-bold uppercase">
                             <span>{study.completedLessons} of {study.totalLessons} lessons</span>
                             <span>{studyProgress}%</span>
                           </div>
-                          <Progress value={studyProgress} className="h-1.5" />
+                          <div className="h-2 bg-white border-2 border-black rounded-none overflow-hidden">
+                            <div 
+                              className="h-full bg-black transition-all duration-300"
+                              style={{ width: `${studyProgress}%` }}
+                            />
+                          </div>
                         </div>
                       )}
 
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <span className="text-xs text-black/70 flex items-center gap-1 font-bold uppercase">
                           <BookOpen className="w-3.5 h-3.5" />
                           {study.totalLessons} {study.totalLessons === 1 ? 'Lesson' : 'Lessons'}
                         </span>
@@ -228,7 +239,7 @@ export default function SeriesDetail() {
                           <Link href={`/studies/${study.id}`}>
                             <Button 
                               size="sm"
-                              className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-semibold"
+                              className="bg-black text-white hover:bg-gray-800 font-black uppercase tracking-wide rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]"
                               data-testid={`button-study-${study.id}`}
                             >
                               {getButtonLabel(study)}
@@ -240,7 +251,7 @@ export default function SeriesDetail() {
                             size="sm"
                             variant="outline"
                             disabled
-                            className="border-gray-600 text-gray-400"
+                            className="border-2 border-black text-black/50 rounded-none font-bold uppercase"
                           >
                             <Lock className="w-3 h-3 mr-1" />
                             {study.requiredTier.toUpperCase()} Only
@@ -257,8 +268,10 @@ export default function SeriesDetail() {
 
         {studies.length === 0 && (
           <div className="text-center py-8">
-            <BookOpen className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">No studies in this series yet.</p>
+            <div className="w-16 h-16 bg-[#FCD000] rounded-none flex items-center justify-center mx-auto mb-4 border-2 border-black">
+              <BookOpen className="w-8 h-8 text-black" />
+            </div>
+            <p className="text-gray-400 font-bold uppercase">No studies in this series yet.</p>
           </div>
         )}
       </div>
