@@ -615,24 +615,41 @@ export class DatabaseStorage implements IStorage {
         const lessons = await db.select().from(studyLessons)
           .where(eq(studyLessons.studyId, study.id));
         
-        const completedLessons = await db.select().from(userLessonProgress)
-          .where(and(
-            eq(userLessonProgress.userId, userId),
-            inArray(userLessonProgress.lessonId, lessons.map(l => l.id)),
-            eq(userLessonProgress.isCompleted, true)
-          ));
+        let completedLessonsCount = 0;
+        if (lessons.length > 0) {
+          const completedLessons = await db.select().from(userLessonProgress)
+            .where(and(
+              eq(userLessonProgress.userId, userId),
+              inArray(userLessonProgress.lessonId, lessons.map(l => l.id)),
+              eq(userLessonProgress.isCompleted, true)
+            ));
+          completedLessonsCount = completedLessons.length;
+        }
         
         return {
           ...study,
           progress: progress || null,
-          completedLessons: completedLessons.length,
+          completedLessons: completedLessonsCount,
           totalLessons: lessons.length,
         };
       }));
       return enrichedStudies;
     }
     
-    return seriesStudies;
+    // For non-authenticated users, still get totalLessons count
+    const enrichedStudies = await Promise.all(seriesStudies.map(async (study) => {
+      const lessons = await db.select().from(studyLessons)
+        .where(eq(studyLessons.studyId, study.id));
+      
+      return {
+        ...study,
+        progress: null,
+        completedLessons: 0,
+        totalLessons: lessons.length,
+      };
+    }));
+    
+    return enrichedStudies;
   }
 
   async createStudySeries(series: any): Promise<any> {
