@@ -649,25 +649,25 @@ export default function Community() {
       {/* Post Dialog */}
       <div className="px-6">
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-md mx-auto bg-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]" data-testid="dialog-new-discussion">
-            <DialogHeader>
-              <DialogTitle className="text-white text-xl font-black uppercase tracking-tight">Create Post</DialogTitle>
+          <DialogContent className="max-w-md mx-auto liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="dialog-new-discussion">
+            <DialogHeader className="relative z-10">
+              <DialogTitle className="text-black text-xl font-black uppercase tracking-tight">Create Post</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form 
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
+                className="space-y-4 relative z-10"
               >
                 <FormField
                   control={form.control}
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-300">Title</FormLabel>
+                      <FormLabel className="text-black font-bold uppercase tracking-wide">Title</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="What would you like to discuss?"
-                          className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
+                          className="bg-white border-2 border-black text-black placeholder:text-gray-500 rounded-none"
                           {...field}
                           data-testid="input-discussion-title"
                         />
@@ -682,14 +682,14 @@ export default function Community() {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-300">Category</FormLabel>
+                      <FormLabel className="text-black font-bold uppercase tracking-wide">Category</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger className="bg-gray-800 border-gray-700 text-white" data-testid="select-discussion-category">
+                          <SelectTrigger className="bg-white border-2 border-black text-black rounded-none" data-testid="select-discussion-category">
                             <SelectValue placeholder="Select a category" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="bg-gray-800 border-gray-700">
+                        <SelectContent className="bg-white border-2 border-black rounded-none">
                           {creationCategories.map((category) => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.label}
@@ -707,11 +707,11 @@ export default function Community() {
                   name="content"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-300">Content</FormLabel>
+                      <FormLabel className="text-black font-bold uppercase tracking-wide">Content</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Share your thoughts, photos, videos, or memes..."
-                          className="min-h-[100px] bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
+                          className="min-h-[100px] bg-white border-2 border-black text-black placeholder:text-gray-500 rounded-none"
                           {...field}
                           data-testid="textarea-discussion-content"
                         />
@@ -741,7 +741,7 @@ export default function Community() {
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
-                      className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
+                      className="border-2 border-black text-black hover:bg-black hover:text-white rounded-none font-bold uppercase"
                       data-testid="button-add-photo"
                     >
                       <Image className="w-4 h-4 mr-2" />
@@ -753,7 +753,7 @@ export default function Community() {
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
-                      className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
+                      className="border-2 border-black text-black hover:bg-black hover:text-white rounded-none font-bold uppercase"
                       data-testid="button-add-video"
                     >
                       <Video className="w-4 h-4 mr-2" />
@@ -811,7 +811,7 @@ export default function Community() {
                       setDialogOpen(false);
                       setUploadedMedia({ urls: [], types: [] });
                     }}
-                    className="flex-1 border-2 border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white rounded-none font-black uppercase tracking-wide"
+                    className="flex-1 bg-white border-2 border-black text-black hover:bg-gray-100 rounded-none font-black uppercase tracking-wide"
                     data-testid="button-cancel-discussion"
                   >
                     Cancel
@@ -819,8 +819,7 @@ export default function Community() {
                   <Button
                     type="submit"
                     disabled={createDiscussion.isPending || isUploading}
-                    className="flex-1 font-black uppercase tracking-wide rounded-none border-2 border-black"
-                    style={{ backgroundColor: '#FCD000', color: 'black' }}
+                    className="flex-1 bg-black text-white hover:bg-gray-800 font-black uppercase tracking-wide rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                     data-testid="button-create-discussion"
                   >
                     {createDiscussion.isPending ? "Creating..." : "Post"}
