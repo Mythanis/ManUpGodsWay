@@ -393,16 +393,16 @@ export default function StudyDetail() {
   const hasAccess = canAccess();
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 min-h-screen bg-black">
       <BackButton fallbackPath="/library" />
       {/* Header */}
-      <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
-        <div className="flex items-center mb-4">
+      <div className="liquid-black text-white px-6 pt-12 pb-6 border-b-4 border-[#FCD000]">
+        <div className="flex items-center mb-4 relative z-10">
           <Link href="/library">
             <Button 
               variant="ghost" 
               size="icon"
-              className="mr-3 p-2 hover:bg-ministry-gold-exact hover:text-black text-white rounded-none border-2 border-ministry-gold-exact"
+              className="mr-3 p-2 hover:bg-[#FCD000] hover:text-black text-white rounded-none border-2 border-[#FCD000]"
               data-testid="button-back"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -411,9 +411,9 @@ export default function StudyDetail() {
           <div className="flex-1">
             <h1 className="text-2xl font-black tracking-tighter uppercase" data-testid="text-study-title">
               <span className="text-white">{study.title.split(' ')[0]}</span>{' '}
-              <span className="text-ministry-gold-exact">{study.title.split(' ').slice(1).join(' ')}</span>
+              <span className="text-[#FCD000]">{study.title.split(' ').slice(1).join(' ')}</span>
             </h1>
-            <p className="text-ministry-gold-exact text-sm font-bold uppercase tracking-wide" data-testid="text-study-category">
+            <p className="text-[#FCD000] text-sm font-bold uppercase tracking-wide" data-testid="text-study-category">
               {study.category}
             </p>
           </div>
@@ -422,8 +422,8 @@ export default function StudyDetail() {
 
       {/* Study Info */}
       <div className="px-6 mt-4 mb-6">
-        <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-study-info">
-          <CardContent className="p-6">
+        <div className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-study-info">
+          <div className="p-6 relative z-10">
             {study.thumbnailUrl && (
               <img 
                 src={study.thumbnailUrl} 
@@ -437,13 +437,13 @@ export default function StudyDetail() {
               <div className="flex items-center space-x-2">
                 {/* Only show tier badge if study doesn't require purchase for this user */}
                 {!(study.requiresPurchase && study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free') && !hasPurchased) && (
-                  <Badge className="bg-black text-ministry-gold-exact font-bold uppercase tracking-wide rounded-none border-2 border-black" data-testid="badge-study-tier">
+                  <Badge className="bg-black text-[#FCD000] font-bold uppercase tracking-wide rounded-none border-2 border-black" data-testid="badge-study-tier">
                     {study.requiredTier || 'free'}
                   </Badge>
                 )}
                 {(study.rating && parseFloat(study.rating.toString()) > 0) && (
                   <div className="flex items-center space-x-1 bg-black px-2 py-1 rounded-none border-2 border-black" data-testid="rating-display">
-                    <Star className="w-4 h-4 text-ministry-gold-exact fill-current" />
+                    <Star className="w-4 h-4 text-[#FCD000] fill-current" />
                     <span className="text-sm font-bold text-white">{study.rating}</span>
                     <span className="text-xs text-gray-400">({study.ratingCount})</span>
                   </div>
@@ -451,11 +451,11 @@ export default function StudyDetail() {
               </div>
               <div className="flex items-center space-x-4 text-sm">
                 <div className="flex items-center space-x-1 bg-black px-2 py-1 rounded-none border-2 border-black">
-                  <Clock className="w-4 h-4 text-ministry-gold-exact" />
+                  <Clock className="w-4 h-4 text-[#FCD000]" />
                   <span className="text-white font-bold">{study.estimatedHours}h</span>
                 </div>
                 <div className="flex items-center space-x-1 bg-black px-2 py-1 rounded-none border-2 border-black">
-                  <Users className="w-4 h-4 text-ministry-gold-exact" />
+                  <Users className="w-4 h-4 text-[#FCD000]" />
                   <span className="text-white font-bold">{study.difficulty}</span>
                 </div>
               </div>
@@ -578,16 +578,16 @@ export default function StudyDetail() {
                 </Button>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {hasAccess && (
         <>
           {/* Progress Section */}
           <div className="px-6 mb-6">
-            <Card className="bg-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-progress">
-              <CardContent className="p-6">
+            <div className="liquid-black border-2 border-[#FCD000] rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-progress">
+              <div className="p-6 relative z-10">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-black uppercase tracking-tight text-white">Your Progress</h2>
                   <span className="text-sm text-black font-bold uppercase tracking-wide bg-ministry-gold-exact px-2 py-1 rounded-none border-2 border-black" data-testid="text-progress-status">
@@ -629,15 +629,15 @@ export default function StudyDetail() {
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
           {/* Video Section */}
           {study.videoUrl && (
             <div className="px-6 mb-6">
-              <Card className="bg-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-video">
-                <CardContent className="p-6">
+              <div className="liquid-black border-2 border-[#FCD000] rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-video">
+                <div className="p-6 relative z-10">
                   <h2 className="text-lg font-black uppercase tracking-tight text-white mb-4">Study Video</h2>
                   <div className="relative bg-gray-900 rounded-none overflow-hidden border-2 border-black">
                     {(() => {
@@ -719,15 +719,15 @@ export default function StudyDetail() {
                       );
                     })()}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
           )}
 
           {/* Content Section */}
           <div className="px-6 mb-6">
-            <Card className="bg-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-content">
-              <CardContent className="p-6">
+            <div className="liquid-black border-2 border-[#FCD000] rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-content">
+              <div className="p-6 relative z-10">
                 <h2 className="text-lg font-black uppercase tracking-tight text-white mb-4">Study Content</h2>
                 <div className="prose prose-sm max-w-none text-gray-300 prose-invert" data-testid="text-study-content">
                   {study.content ? (
@@ -736,14 +736,14 @@ export default function StudyDetail() {
                     <p className="text-gray-400">Study materials are available as downloadable documents above.</p>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
           {/* Rating Section */}
           <div className="px-6 mb-6">
-            <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-rating">
-              <CardContent className="p-6">
+            <div className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-rating">
+              <div className="p-6 relative z-10">
                 <h2 className="text-lg font-black uppercase tracking-tight text-black mb-4">Rate This Study</h2>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmitRating)} className="space-y-4">
@@ -799,8 +799,8 @@ export default function StudyDetail() {
                     </Button>
                   </form>
                 </Form>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </>
       )}
