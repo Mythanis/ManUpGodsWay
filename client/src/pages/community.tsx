@@ -609,10 +609,10 @@ export default function Community() {
               />
               <button
                 onClick={() => setDialogOpen(true)}
-                className="flex-1 text-left px-4 py-2.5 rounded-none bg-gray-800 text-gray-400 hover:bg-gray-700 transition-colors text-sm font-medium uppercase tracking-wide border border-gray-600"
+                className="flex-1 text-left px-4 py-2.5 rounded-none bg-white text-black hover:bg-gray-100 transition-colors text-sm font-medium uppercase tracking-wide border-2 border-black"
                 data-testid="button-quick-post"
               >
-                What's on your mind?
+                How is God shaping you right now?
               </button>
             </div>
             <div className="flex justify-between mt-3 pt-3 border-t-2 border-gray-700">
