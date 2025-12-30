@@ -809,7 +809,10 @@ export default function StudyDetail() {
 
       {/* Study Discussion Dialog Pop-out */}
       <Dialog open={discussionDialogOpen} onOpenChange={setDiscussionDialogOpen}>
-        <DialogContent className={`max-w-4xl h-[90vh] sm:h-auto sm:max-h-[80vh] flex flex-col p-3 sm:p-6 w-[95vw] sm:w-full mx-auto overflow-hidden ${isKeyboardVisible ? 'keyboard-visible' : ''}`}>
+        <DialogContent 
+          className={`!max-w-4xl !w-[95vw] !h-[85vh] sm:!h-auto sm:!max-h-[80vh] flex flex-col p-3 sm:p-6 mx-auto overflow-hidden ${isKeyboardVisible ? 'keyboard-visible' : ''}`}
+          style={{ width: '95vw', maxWidth: '56rem', height: '85vh' }}
+        >
           <DialogHeader className="flex-shrink-0 pb-2 sm:pb-4">
             <DialogTitle className="flex items-center space-x-2 text-lg sm:text-xl">
               <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-ministry-navy" />
