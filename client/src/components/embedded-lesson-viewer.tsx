@@ -327,7 +327,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
             size="sm"
             onClick={goToPreviousDay}
             disabled={currentDayIndex === 0}
-            className="bg-black text-white rounded-none font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-3 py-1 h-8 min-w-0 border-2 border-black"
+            className="bg-black text-white rounded-none font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-3 py-1 h-8 min-w-0 border-2 border-white"
             data-testid="button-previous-lesson"
           >
             <ChevronLeft className="w-4 h-4 text-white" />
@@ -351,7 +351,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
             size="sm"
             onClick={goToNextDay}
             disabled={currentDayIndex === lessons.length - 1}
-            className="bg-black text-white rounded-none font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-3 py-1 h-8 min-w-0 border-2 border-black"
+            className="bg-black text-white rounded-none font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-3 py-1 h-8 min-w-0 border-2 border-white"
             data-testid="button-next-lesson"
           >
             <span className="hidden sm:inline mr-1 text-white">Next</span>
