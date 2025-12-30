@@ -1049,15 +1049,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("HTML content length:", htmlContent.length);
       console.log("First 500 chars of text:", text.substring(0, 500));
       
-      // Parse daily lessons - look for various "Day X" patterns
+      // Parse daily lessons - look for various "Day X" patterns in both text and HTML
       // Supports: "Day 1:", "Day 1 -", "DAY 1", "Day One:", "Day 1.", "Day 1)", etc.
       const dayPatterns = [
-        /Day\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,  // Day 1: Title, Day 1 - Title, Day 1. Title
-        /DAY\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,  // DAY 1: Title
-        /^(\d+)\s*[:\-–—.)\]]\s*([^\n]*Day[^\n]*)/gim,  // 1: Day of Rest, 1. The Day...
-        /Lesson\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,  // Lesson 1: Title
-        /Week\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,  // Week 1: Title
-        /Session\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,  // Session 1: Title
+        /Day\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,
+        /DAY\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,
+        /Lesson\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,
+        /Week\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,
+        /Session\s+(\d+)\s*[:\-–—.)\]]\s*([^\n]*)/gi,
+      ];
+      
+      // HTML patterns for splitting - look for day markers in HTML
+      const htmlDayPatterns = [
+        /<p[^>]*>(?:<strong>|<b>)?(?:<em>|<i>)?Day\s+(\d+)\s*[:\-–—.)\]]\s*([^<]*)/gi,
+        /<p[^>]*>(?:<strong>|<b>)?DAY\s+(\d+)\s*[:\-–—.)\]]\s*([^<]*)/gi,
+        /<h[1-6][^>]*>(?:<strong>|<b>)?Day\s+(\d+)\s*[:\-–—.)\]]\s*([^<]*)/gi,
+        /<p[^>]*>(?:<strong>|<b>)?Lesson\s+(\d+)\s*[:\-–—.)\]]\s*([^<]*)/gi,
       ];
       
       const lessons: Array<{
@@ -1068,118 +1075,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         keyTakeaway?: string;
       }> = [];
       
-      // Try each pattern until we find matches
-      let matches: RegExpMatchArray[] = [];
-      for (const pattern of dayPatterns) {
-        matches = [...text.matchAll(pattern)];
-        if (matches.length > 0) {
-          console.log("Found matches with pattern:", pattern.source, "Count:", matches.length);
+      // Try to find day markers in HTML first to preserve formatting
+      let htmlMatches: RegExpMatchArray[] = [];
+      for (const pattern of htmlDayPatterns) {
+        htmlMatches = [...htmlContent.matchAll(pattern)];
+        if (htmlMatches.length > 0) {
+          console.log("Found HTML matches with pattern:", pattern.source, "Count:", htmlMatches.length);
           break;
         }
       }
       
-      // Helper function to extract HTML content for a text range
-      const getHtmlContentForSection = (textStart: number, textEnd: number): string => {
-        // Find corresponding position in HTML by matching text content
-        const sectionText = text.substring(textStart, textEnd).trim();
-        if (!sectionText) return '';
-        
-        // Find the first unique phrase from this section in HTML
-        const firstWords = sectionText.substring(0, Math.min(50, sectionText.length)).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const htmlStartMatch = htmlContent.match(new RegExp(firstWords.substring(0, 30), 'i'));
-        
-        if (htmlStartMatch && htmlStartMatch.index !== undefined) {
-          // Find a phrase near the end
-          const lastWords = sectionText.substring(Math.max(0, sectionText.length - 50)).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const searchFrom = htmlStartMatch.index;
-          const remainingHtml = htmlContent.substring(searchFrom);
-          const htmlEndMatch = remainingHtml.match(new RegExp(lastWords.substring(lastWords.length - 30), 'i'));
-          
-          if (htmlEndMatch && htmlEndMatch.index !== undefined) {
-            const endPos = searchFrom + htmlEndMatch.index + htmlEndMatch[0].length;
-            // Find the closing tag after this position
-            const closingTagMatch = htmlContent.substring(endPos).match(/<\/p>/);
-            const finalEnd = closingTagMatch ? endPos + closingTagMatch.index! + 4 : endPos + 100;
-            return htmlContent.substring(searchFrom, Math.min(finalEnd, htmlContent.length));
-          }
-          // Fallback: take a chunk from the start position
-          return htmlContent.substring(searchFrom, Math.min(searchFrom + sectionText.length * 2, htmlContent.length));
-        }
-        
-        // Fallback: convert plain text to HTML with paragraph breaks
-        return sectionText.split(/\n\n+/).map(p => `<p>${p.trim()}</p>`).join('');
-      };
-      
-      // If no structured patterns found, try splitting by common dividers
-      if (matches.length === 0) {
-        console.log("No day patterns found, trying alternative parsing...");
-        // Try splitting by double newlines or horizontal rules
-        const sections = text.split(/\n{3,}|\r\n{3,}|_{5,}|-{5,}|={5,}/);
-        if (sections.length > 1) {
-          let textPosition = 0;
-          sections.forEach((section, index) => {
-            const trimmed = section.trim();
-            if (trimmed.length > 50) {  // Only include substantial sections
-              const firstLine = trimmed.split('\n')[0].trim();
-              // Convert section to HTML with paragraph breaks
-              const htmlSection = trimmed.split(/\n\n+/).map(p => `<p>${p.trim().replace(/\n/g, '<br>')}</p>`).join('');
-              lessons.push({
-                dayNumber: index + 1,
-                title: firstLine.substring(0, 100) || `Day ${index + 1}`,
-                content: htmlSection,
-              });
-            }
-            textPosition += section.length;
-          });
-          console.log("Alternative parsing found", lessons.length, "sections");
-        }
-      }
-      
-      // Only process pattern matches if we didn't already find lessons via alternative parsing
-      if (lessons.length === 0 && matches.length > 0) {
-        for (let i = 0; i < matches.length; i++) {
-          const match = matches[i];
+      // If HTML patterns work, split HTML content directly
+      if (htmlMatches.length > 0) {
+        for (let i = 0; i < htmlMatches.length; i++) {
+          const match = htmlMatches[i];
           const dayNumber = parseInt(match[1], 10);
-          const title = match[2]?.trim() || `Day ${dayNumber}`;
+          const title = match[2]?.trim().replace(/<[^>]*>/g, '') || `Day ${dayNumber}`;
           
-          // Get content between this day and the next day (or end of text)
+          // Get HTML content between this day and the next
           const startIndex = match.index! + match[0].length;
-          const endIndex = i < matches.length - 1 ? matches[i + 1].index! : text.length;
-          const rawContent = text.substring(startIndex, endIndex).trim();
+          const endIndex = i < htmlMatches.length - 1 ? htmlMatches[i + 1].index! : htmlContent.length;
+          let content = htmlContent.substring(startIndex, endIndex).trim();
           
-          // Convert to HTML preserving paragraph structure
-          let content = rawContent.split(/\n\n+/).map(p => `<p>${p.trim().replace(/\n/g, '<br>')}</p>`).join('');
-          
-          // Try to extract scripture reference (look for common patterns)
-          let scripture: string | undefined;
-          const scripturePatterns = [
-            /Scripture[:\s]+([^\n]+)/i,
-            /Read[:\s]+([^\n]+)/i,
-            /Text[:\s]+([^\n]+)/i,
-            /Verse[:\s]+([^\n]+)/i,
-          ];
-          for (const pattern of scripturePatterns) {
-            const scriptureMatch = rawContent.match(pattern);
-            if (scriptureMatch) {
-              scripture = scriptureMatch[1].trim();
-              break;
-            }
+          // Clean up any incomplete HTML tags at the end
+          const lastCloseTag = content.lastIndexOf('</p>');
+          if (lastCloseTag > 0) {
+            content = content.substring(0, lastCloseTag + 4);
           }
           
-          // Try to extract key takeaway
+          // Extract scripture from HTML content
+          let scripture: string | undefined;
+          const scriptureHtmlMatch = content.match(/Scripture[:\s]*<\/strong>?\s*([^<]+)|<em>([^<]+)<\/em>\s*[-–—]\s*([A-Za-z]+\s+\d+)/i);
+          if (scriptureHtmlMatch) {
+            scripture = (scriptureHtmlMatch[1] || `${scriptureHtmlMatch[2]} - ${scriptureHtmlMatch[3]}`).trim();
+          }
+          
+          // Extract key takeaway from HTML content
           let keyTakeaway: string | undefined;
-          const takeawayPatterns = [
-            /Key\s*Takeaway[:\s]+([^\n]+)/i,
-            /Takeaway[:\s]+([^\n]+)/i,
-            /Summary[:\s]+([^\n]+)/i,
-            /Application[:\s]+([^\n]+)/i,
-          ];
-          for (const pattern of takeawayPatterns) {
-            const takeawayMatch = rawContent.match(pattern);
-            if (takeawayMatch) {
-              keyTakeaway = takeawayMatch[1].trim();
-              break;
-            }
+          const takeawayHtmlMatch = content.match(/Key\s*Takeaway[:\s]*<\/strong>?\s*([^<]+)|Takeaway[:\s]*<\/strong>?\s*([^<]+)/i);
+          if (takeawayHtmlMatch) {
+            keyTakeaway = (takeawayHtmlMatch[1] || takeawayHtmlMatch[2]).trim();
           }
           
           lessons.push({
@@ -1189,6 +1124,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
             scripture,
             keyTakeaway,
           });
+        }
+        console.log("Parsed", lessons.length, "lessons from HTML with formatting preserved");
+      }
+      
+      // Fallback: Try plain text patterns if HTML parsing didn't work
+      if (lessons.length === 0) {
+        let matches: RegExpMatchArray[] = [];
+        for (const pattern of dayPatterns) {
+          matches = [...text.matchAll(pattern)];
+          if (matches.length > 0) {
+            console.log("Found text matches with pattern:", pattern.source, "Count:", matches.length);
+            break;
+          }
+        }
+        
+        // Helper function to find HTML content for a text section
+        const findHtmlForText = (textContent: string): string => {
+          if (!textContent) return '';
+          
+          // Try to find a matching segment in HTML by looking for first few words
+          const words = textContent.split(/\s+/).filter(w => w.length > 3).slice(0, 5);
+          if (words.length === 0) return `<p>${textContent}</p>`;
+          
+          const searchPhrase = words.join('\\s*').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const searchRegex = new RegExp(searchPhrase, 'i');
+          const matchInHtml = htmlContent.match(searchRegex);
+          
+          if (matchInHtml && matchInHtml.index !== undefined) {
+            // Find the start of the containing paragraph
+            let startPos = htmlContent.lastIndexOf('<p', matchInHtml.index);
+            if (startPos === -1) startPos = matchInHtml.index;
+            
+            // Try to find a reasonable end point
+            const endWords = textContent.split(/\s+/).filter(w => w.length > 3).slice(-5);
+            if (endWords.length > 0) {
+              const endPhrase = endWords.join('\\s*').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const endRegex = new RegExp(endPhrase, 'i');
+              const searchFromPos = startPos + 100;
+              const endMatch = htmlContent.substring(searchFromPos).match(endRegex);
+              if (endMatch && endMatch.index !== undefined) {
+                let endPos = searchFromPos + endMatch.index + endMatch[0].length;
+                // Find the next closing tag
+                const closingMatch = htmlContent.substring(endPos).match(/<\/p>/);
+                if (closingMatch && closingMatch.index !== undefined) {
+                  endPos += closingMatch.index + 4;
+                }
+                return htmlContent.substring(startPos, endPos);
+              }
+            }
+            // Fallback: take a chunk proportional to text length
+            return htmlContent.substring(startPos, Math.min(startPos + textContent.length * 3, htmlContent.length));
+          }
+          
+          // Last resort: convert plain text to HTML preserving line breaks
+          return textContent.split(/\n\n+/).map(p => `<p>${p.trim().replace(/\n/g, '<br>')}</p>`).join('');
+        };
+        
+        if (matches.length > 0) {
+          for (let i = 0; i < matches.length; i++) {
+            const match = matches[i];
+            const dayNumber = parseInt(match[1], 10);
+            const title = match[2]?.trim() || `Day ${dayNumber}`;
+            
+            // Get content between this day and the next
+            const startIndex = match.index! + match[0].length;
+            const endIndex = i < matches.length - 1 ? matches[i + 1].index! : text.length;
+            const rawContent = text.substring(startIndex, endIndex).trim();
+            
+            // Try to get HTML version with formatting preserved
+            let content = findHtmlForText(rawContent);
+            
+            // Extract scripture and takeaway from raw content
+            let scripture: string | undefined;
+            const scripturePatterns = [
+              /Scripture[:\s]+([^\n]+)/i,
+              /Read[:\s]+([^\n]+)/i,
+              /Text[:\s]+([^\n]+)/i,
+            ];
+            for (const pattern of scripturePatterns) {
+              const scriptureMatch = rawContent.match(pattern);
+              if (scriptureMatch) {
+                scripture = scriptureMatch[1].trim();
+                break;
+              }
+            }
+            
+            let keyTakeaway: string | undefined;
+            const takeawayPatterns = [
+              /Key\s*Takeaway[:\s]+([^\n]+)/i,
+              /Takeaway[:\s]+([^\n]+)/i,
+              /Summary[:\s]+([^\n]+)/i,
+            ];
+            for (const pattern of takeawayPatterns) {
+              const takeawayMatch = rawContent.match(pattern);
+              if (takeawayMatch) {
+                keyTakeaway = takeawayMatch[1].trim();
+                break;
+              }
+            }
+            
+            lessons.push({
+              dayNumber,
+              title,
+              content,
+              scripture,
+              keyTakeaway,
+            });
+          }
+        }
+        
+        // Last fallback: split by sections
+        if (lessons.length === 0) {
+          console.log("No day patterns found, trying section-based parsing...");
+          const sections = text.split(/\n{3,}|\r\n{3,}|_{5,}|-{5,}|={5,}/);
+          if (sections.length > 1) {
+            sections.forEach((section, index) => {
+              const trimmed = section.trim();
+              if (trimmed.length > 50) {
+                const firstLine = trimmed.split('\n')[0].trim();
+                const content = findHtmlForText(trimmed);
+                lessons.push({
+                  dayNumber: index + 1,
+                  title: firstLine.substring(0, 100) || `Day ${index + 1}`,
+                  content,
+                });
+              }
+            });
+          }
         }
       }
       
