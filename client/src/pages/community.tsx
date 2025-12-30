@@ -649,14 +649,14 @@ export default function Community() {
       {/* Post Dialog */}
       <div className="px-6">
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-md mx-auto liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="dialog-new-discussion">
-            <DialogHeader className="relative z-10">
+          <DialogContent className="max-w-md mx-auto bg-[#FCD000] border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-visible" data-testid="dialog-new-discussion">
+            <DialogHeader>
               <DialogTitle className="text-black text-xl font-black uppercase tracking-tight">Create Post</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form 
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4 relative z-10"
+                className="space-y-4"
               >
                 <FormField
                   control={form.control}
