@@ -494,7 +494,7 @@ export default function Podcasts() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1 min-w-0 pr-2">
-                          <h3 className="font-black text-base sm:text-lg text-black mb-1 truncate uppercase tracking-tight">
+                          <h3 className="font-black text-base sm:text-lg text-black mb-1 uppercase tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
                             {podcast.title}
                           </h3>
                           <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-black/70 mb-2">
@@ -542,15 +542,16 @@ export default function Podcasts() {
                       </div>
 
                       {podcast.description && (
-                        <p className="text-black/70 text-sm mb-3 overflow-hidden font-medium" 
-                           style={{
-                             display: '-webkit-box',
-                             WebkitLineClamp: 2,
-                             WebkitBoxOrient: 'vertical',
-                             maxHeight: '2.5rem'
-                           }}>
-                          {podcast.description}
-                        </p>
+                        <div 
+                          className="p-3 mb-3 rounded-none"
+                          style={{ 
+                            background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 70%, rgba(252,208,0,0.3) 100%)'
+                          }}
+                        >
+                          <p className="text-gray-800 text-sm font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>
+                            {podcast.description}
+                          </p>
+                        </div>
                       )}
 
                       {/* Stats and Actions */}
