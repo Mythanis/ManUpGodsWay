@@ -658,7 +658,7 @@ export default function StudyBuilder() {
             <TabsList className="w-full">
               <TabsTrigger value="studies" className="flex-1">
                 <Book className="w-4 h-4 mr-2" />
-                Studies ({studies.length})
+                Individual Studies ({studies.filter(s => !s.seriesId).length})
               </TabsTrigger>
               <TabsTrigger value="series" className="flex-1">
                 <Layers className="w-4 h-4 mr-2" />
@@ -669,10 +669,10 @@ export default function StudyBuilder() {
             <TabsContent value="studies" className="space-y-2">
               {studiesLoading ? (
                 <div className="text-center py-8 text-muted-foreground">Loading...</div>
-              ) : studies.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">No studies yet</div>
+              ) : studies.filter(s => !s.seriesId).length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">No individual studies yet. Studies in a series are shown under the Series tab.</div>
               ) : (
-                studies.map((study) => (
+                studies.filter(s => !s.seriesId).map((study) => (
                   <Card key={study.id} className={!study.isPublished ? "opacity-60" : ""}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
