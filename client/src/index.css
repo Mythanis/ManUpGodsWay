@@ -743,7 +743,9 @@
   border: 2px solid #FCD000 !important;
   border-radius: 8px !important;
   padding: 0 !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+  z-index: 9999 !important;
+  opacity: 1 !important;
 }
 
 .leaflet-tooltip::before {
@@ -764,4 +766,9 @@
 
 .leaflet-tooltip-right::before {
   border-right-color: #FCD000 !important;
+}
+
+/* Make sure tooltips appear above map panes */
+.leaflet-tooltip-pane {
+  z-index: 9999 !important;
 }
