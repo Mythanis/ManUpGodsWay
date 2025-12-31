@@ -8773,6 +8773,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // RATIONS SYSTEM ROUTES
+  // ============================================
+
+  // Get user's ration balance and rank
+  app.get('/api/rations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { rationsService } = await import('./rations-service');
+      const rationInfo = await rationsService.getUserRations(userId);
+      res.json(rationInfo);
+    } catch (error) {
+      console.error("Error fetching rations:", error);
+      res.status(500).json({ message: "Failed to fetch rations" });
+    }
+  });
+
+  // Get ration transaction history
+  app.get('/api/rations/history', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const { rationsService } = await import('./rations-service');
+      const history = await rationsService.getTransactionHistory(userId, limit);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching ration history:", error);
+      res.status(500).json({ message: "Failed to fetch ration history" });
+    }
+  });
+
+  // Award rations for completing a mission
+  app.post('/api/rations/award', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { missionType, referenceId, referenceType } = req.body;
+      
+      if (!missionType) {
+        return res.status(400).json({ message: "Mission type is required" });
+      }
+
+      const { rationsService } = await import('./rations-service');
+      const result = await rationsService.awardRations(userId, missionType, referenceId, referenceType);
+      
+      if (!result.success) {
+        return res.status(400).json({ message: result.message });
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error awarding rations:", error);
+      res.status(500).json({ message: "Failed to award rations" });
+    }
+  });
+
+  // Spend rations
+  app.post('/api/rations/spend', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { amount, category, description, referenceId, referenceType } = req.body;
+      
+      if (!amount || !category || !description) {
+        return res.status(400).json({ message: "Amount, category, and description are required" });
+      }
+
+      const { rationsService } = await import('./rations-service');
+      const result = await rationsService.spendRations(userId, amount, category, description, referenceId, referenceType);
+      
+      if (!result.success) {
+        return res.status(400).json({ message: result.message });
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error spending rations:", error);
+      res.status(500).json({ message: "Failed to spend rations" });
+    }
+  });
+
+  // Get leaderboard
+  app.get('/api/rations/leaderboard', isAuthenticated, async (req: any, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 10;
+      const { rationsService } = await import('./rations-service');
+      const leaderboard = await rationsService.getLeaderboard(limit);
+      res.json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
+  // Check and award grace bonus for returning user
+  app.post('/api/rations/grace-bonus', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { rationsService } = await import('./rations-service');
+      const result = await rationsService.awardGraceBonus(userId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error checking grace bonus:", error);
+      res.status(500).json({ message: "Failed to check grace bonus" });
+    }
+  });
+
+  // Get mission reward definitions (for frontend display)
+  app.get('/api/rations/missions', async (req, res) => {
+    try {
+      const { MISSION_REWARDS, RATION_RANKS } = await import('@shared/schema');
+      res.json({ missions: MISSION_REWARDS, ranks: RATION_RANKS });
+    } catch (error) {
+      console.error("Error fetching mission definitions:", error);
+      res.status(500).json({ message: "Failed to fetch mission definitions" });
+    }
+  });
+
   // WebSocket server for real-time notifications
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   

@@ -43,6 +43,8 @@ export const users = pgTable("users", {
   stripeSubscriptionId: varchar("stripe_subscription_id"),
   streakDays: integer("streak_days").default(0),
   lastActiveDate: timestamp("last_active_date"),
+  rations: integer("rations").default(0), // Gamification currency
+  rationRank: varchar("ration_rank").default("recruit"), // recruit, warrior, shepherd, watchman, elder
   allowDirectMessages: boolean("allow_direct_messages").default(true),
   allowGroupInvites: boolean("allow_group_invites").default(true),
   prayerPermissionsGranted: boolean("prayer_permissions_granted").default(false),
@@ -1920,3 +1922,156 @@ export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
 
 export type BlogPost = typeof blogPosts.$inferSelect;
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+
+// Ration Transactions - tracks all earning and spending of rations
+export const rationTransactions = pgTable("ration_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  amount: integer("amount").notNull(), // Positive for earned, negative for spent
+  type: varchar("type").notNull(), // 'earn' or 'spend'
+  category: varchar("category").notNull(), // study, devotional, challenge, war_group, fitness, video, podcast, blog, event, profile, live, carousel
+  missionType: varchar("mission_type").notNull(), // specific mission e.g., 'complete_lesson', 'start_study', 'join_war_group'
+  description: text("description"), // Human-readable description
+  referenceId: varchar("reference_id"), // ID of related entity (study, devotional, etc.)
+  referenceType: varchar("reference_type"), // Type of reference entity
+  balanceAfter: integer("balance_after").notNull(), // Balance after this transaction
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_ration_transactions_user").on(table.userId),
+  index("idx_ration_transactions_category").on(table.category),
+  index("idx_ration_transactions_created").on(table.createdAt),
+]);
+
+export const insertRationTransactionSchema = createInsertSchema(rationTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type RationTransaction = typeof rationTransactions.$inferSelect;
+export type InsertRationTransaction = z.infer<typeof insertRationTransactionSchema>;
+
+// Daily Mission Limits - anti-abuse tracking for repetitive actions
+export const dailyMissionLimits = pgTable("daily_mission_limits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  missionType: varchar("mission_type").notNull(), // e.g., 'comment', 'share', 'prayer'
+  count: integer("count").default(0), // How many times today
+  date: varchar("date").notNull(), // YYYY-MM-DD format for easy daily reset
+  lastUpdated: timestamp("last_updated").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.missionType, table.date),
+  index("idx_daily_mission_limits_user_date").on(table.userId, table.date),
+]);
+
+export const insertDailyMissionLimitSchema = createInsertSchema(dailyMissionLimits).omit({
+  id: true,
+  lastUpdated: true,
+});
+
+export type DailyMissionLimit = typeof dailyMissionLimits.$inferSelect;
+export type InsertDailyMissionLimit = z.infer<typeof insertDailyMissionLimitSchema>;
+
+// Ration Rank Thresholds - defines the ranks and their requirements
+export const RATION_RANKS = {
+  recruit: { min: 0, max: 999, label: 'Recruit', order: 1 },
+  warrior: { min: 1000, max: 4999, label: 'Warrior', order: 2 },
+  shepherd: { min: 5000, max: 14999, label: 'Shepherd', order: 3 },
+  watchman: { min: 15000, max: 29999, label: 'Watchman', order: 4 },
+  elder: { min: 30000, max: Infinity, label: 'Elder', order: 5 },
+} as const;
+
+// Mission Reward Definitions
+export const MISSION_REWARDS = {
+  // Studies
+  study_start: { amount: 5, category: 'study', description: 'Started a study' },
+  study_complete_lesson: { amount: 25, category: 'study', description: 'Completed a lesson' },
+  study_complete: { amount: 150, category: 'study', description: 'Completed entire study' },
+  study_reflection: { amount: 20, category: 'study', description: 'Submitted reflection questions' },
+  study_streak_7: { amount: 50, category: 'study', description: '7-day study streak' },
+  study_streak_30: { amount: 250, category: 'study', description: '30-day study streak' },
+  
+  // Videos
+  video_watch_50: { amount: 5, category: 'video', description: 'Watched 50% of video' },
+  video_watch_100: { amount: 15, category: 'video', description: 'Watched entire video' },
+  video_comment: { amount: 10, category: 'video', description: 'Posted comment on video' },
+  video_share: { amount: 5, category: 'video', description: 'Shared video' },
+  
+  // Podcasts
+  podcast_listen_50: { amount: 5, category: 'podcast', description: 'Listened to 50% of podcast' },
+  podcast_listen_100: { amount: 15, category: 'podcast', description: 'Listened to entire podcast' },
+  podcast_save: { amount: 5, category: 'podcast', description: 'Saved podcast for later' },
+  podcast_comment: { amount: 10, category: 'podcast', description: 'Posted comment on podcast' },
+  
+  // Live Sessions
+  live_attend: { amount: 40, category: 'live', description: 'Attended live session' },
+  live_stay_full: { amount: 25, category: 'live', description: 'Stayed for full session' },
+  live_participate: { amount: 15, category: 'live', description: 'Participated in session' },
+  live_replay: { amount: 15, category: 'live', description: 'Watched replay within 48 hours' },
+  
+  // Blogs
+  blog_read: { amount: 10, category: 'blog', description: 'Read full blog post' },
+  blog_comment: { amount: 15, category: 'blog', description: 'Posted thoughtful comment' },
+  blog_share: { amount: 5, category: 'blog', description: 'Shared blog post' },
+  
+  // Devotionals
+  devotional_complete: { amount: 20, category: 'devotional', description: 'Completed daily devotional' },
+  devotional_reflection: { amount: 15, category: 'devotional', description: 'Submitted devotional reflection' },
+  devotional_streak_7: { amount: 75, category: 'devotional', description: '7-day devotional streak' },
+  devotional_streak_30: { amount: 300, category: 'devotional', description: '30-day devotional streak' },
+  
+  // War Groups
+  war_group_join: { amount: 100, category: 'war_group', description: 'Joined a War Group' },
+  war_group_checkin: { amount: 40, category: 'war_group', description: 'Weekly group check-in' },
+  war_group_call: { amount: 50, category: 'war_group', description: 'Attended group call' },
+  war_group_post: { amount: 20, category: 'war_group', description: 'Posted encouragement or Scripture' },
+  war_group_prayer: { amount: 10, category: 'war_group', description: 'Prayed for a brother' },
+  war_group_lead_weekly: { amount: 150, category: 'war_group', description: 'Led War Group weekly' },
+  war_group_host_call: { amount: 100, category: 'war_group', description: 'Hosted a call or study' },
+  war_group_mentor: { amount: 75, category: 'war_group', description: 'Logged mentoring session' },
+  war_group_resolve_issue: { amount: 50, category: 'war_group', description: 'Resolved accountability issue' },
+  
+  // Challenges
+  challenge_join: { amount: 25, category: 'challenge', description: 'Joined a challenge' },
+  challenge_daily: { amount: 30, category: 'challenge', description: 'Daily challenge completion' },
+  challenge_complete: { amount: 200, category: 'challenge', description: 'Completed challenge' },
+  challenge_perfect: { amount: 150, category: 'challenge', description: 'Perfect challenge completion' },
+  
+  // Fitness
+  fitness_log_workout: { amount: 15, category: 'fitness', description: 'Logged workout' },
+  fitness_3_weekly: { amount: 50, category: 'fitness', description: '3 workouts this week' },
+  fitness_5_weekly: { amount: 100, category: 'fitness', description: '5 workouts this week' },
+  fitness_scripture_combo: { amount: 25, category: 'fitness', description: 'Scripture + fitness combo day' },
+  
+  // Events
+  event_register: { amount: 25, category: 'event', description: 'Registered for event' },
+  event_attend: { amount: 100, category: 'event', description: 'Attended event' },
+  event_volunteer: { amount: 200, category: 'event', description: 'Volunteered at event' },
+  event_bring_friend: { amount: 150, category: 'event', description: 'Brought another man' },
+  
+  // Carousel
+  carousel_complete: { amount: 20, category: 'carousel', description: 'Completed featured item' },
+  carousel_weekly_complete: { amount: 100, category: 'carousel', description: 'Completed all weekly featured' },
+  
+  // Profile
+  profile_photo: { amount: 25, category: 'profile', description: 'Uploaded profile photo' },
+  profile_complete: { amount: 75, category: 'profile', description: 'Completed profile fully' },
+  profile_apparel: { amount: 50, category: 'profile', description: 'Man Up apparel in event photo' },
+  profile_licensed_leader: { amount: 250, category: 'profile', description: 'Licensed leader brand compliance' },
+  
+  // Special
+  grace_bonus: { amount: 100, category: 'special', description: 'Welcome back! Grace bonus for returning' },
+} as const;
+
+// Daily limits for anti-abuse
+export const DAILY_MISSION_LIMITS = {
+  video_comment: 5,
+  podcast_comment: 5,
+  blog_comment: 5,
+  war_group_post: 10,
+  war_group_prayer: 20,
+  video_share: 5,
+  blog_share: 5,
+} as const;
+
+export type MissionType = keyof typeof MISSION_REWARDS;
+export type RationRank = keyof typeof RATION_RANKS;
