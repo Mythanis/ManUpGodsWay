@@ -104,6 +104,23 @@ The system supports a tiered content structure (free, premium, VIP) and category
     - User search functionality for leader selection
     - Registration management with pending/approved/rejected tabs
 - **Fitness Integration**: Local exercise database with filtering and search capabilities for creating fitness plans.
+- **Gamification System (Rations & Ranks)**: A comprehensive engagement and reward system to encourage spiritual growth:
+  - **Rations Currency**: Users earn "rations" for completing missions (activities) across the platform
+  - **Rank Progression**: 5-tier rank system based on total rations earned:
+    - Recruit (0-999), Warrior (1,000-4,999), Shepherd (5,000-14,999), Watchman (15,000-29,999), Elder (30,000+)
+  - **Mission Types**: 40+ missions across all features with specific ration rewards:
+    - Study missions: Complete lesson (25), complete study (100), write reflection (20), 7-day streak (75), 30-day streak (300)
+    - Devotional missions: Complete devotional (20), write reflection (15), streaks
+    - Challenge missions: Accept challenge (25), complete challenge (75)
+    - War Group missions: Join group (50), create post (15), comment (10)
+    - Community missions: Create discussion (15), reply (10), upvote (2)
+    - Content missions: Watch video (15), listen to podcast (15), rate content (10)
+    - Profile missions: Complete profile (50), first study (100), grace bonus for returning users (100)
+  - **Anti-Abuse Guardrails**: Daily limits on rate-limited missions (e.g., max 5 comments/day for rations)
+  - **Grace Bonus**: 100 rations for users returning after 14+ days of inactivity
+  - **Frontend Display**: Rations balance and rank badge in home header, rations card on profile page
+  - **Rations Page**: History of transactions, leaderboard of top soldiers, rank progression info
+  - **Database Tables**: `ration_transactions` (transaction log), `daily_mission_limits` (anti-abuse tracking), `rations`/`rationRank` fields on users table
 
 # External Dependencies
 

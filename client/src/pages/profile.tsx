@@ -27,8 +27,12 @@ import {
   Flame,
   MessageCircle,
   Moon,
-  Sun
+  Sun,
+  Coins,
+  Medal,
+  TrendingUp
 } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Profile() {
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
@@ -74,6 +78,27 @@ export default function Profile() {
     queryKey: ["/api/progress"],
     retry: false,
   });
+
+  const { data: rations } = useQuery<{
+    balance: number;
+    rank: string;
+    rankLabel: string;
+    nextRank: string | null;
+    progressToNextRank: number;
+    rationsToNextRank: number;
+  }>({
+    queryKey: ["/api/rations"],
+    retry: false,
+  });
+
+  const RANK_CONFIG: Record<string, { color: string; bgColor: string }> = {
+    recruit: { color: "text-zinc-400", bgColor: "bg-zinc-800" },
+    warrior: { color: "text-amber-600", bgColor: "bg-amber-950" },
+    shepherd: { color: "text-ministry-gold", bgColor: "bg-yellow-950" },
+    watchman: { color: "text-cyan-400", bgColor: "bg-cyan-950" },
+    elder: { color: "text-purple-400", bgColor: "bg-purple-950" },
+  };
+  const rankConfig = RANK_CONFIG[rations?.rank || "recruit"] || RANK_CONFIG.recruit;
 
   // Mutation for opening Stripe billing portal
   const openBillingPortalMutation = useMutation({
@@ -170,6 +195,55 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {/* Rations Card */}
+      {rations && (
+        <div className="px-6 -mt-4 relative z-10 mb-6">
+          <Link href="/rations">
+            <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all" data-testid="card-rations">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-black border-2 border-black rounded-none flex items-center justify-center">
+                      <Coins className="w-6 h-6 text-ministry-gold" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-black text-black tracking-tight">
+                        {rations.balance.toLocaleString()}
+                      </p>
+                      <p className="text-xs font-bold text-black/70 uppercase tracking-wide">
+                        Rations Earned
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className={`flex items-center gap-1 px-2 py-1 ${rankConfig.bgColor} border border-black rounded-none`}>
+                      <Medal className={`w-4 h-4 ${rankConfig.color}`} />
+                      <span className={`text-xs font-black uppercase ${rankConfig.color}`}>
+                        {rations.rankLabel}
+                      </span>
+                    </div>
+                    <TrendingUp className="w-5 h-5 text-black" />
+                  </div>
+                </div>
+                {rations.nextRank && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-black/70 font-bold uppercase">
+                        Progress to next rank
+                      </span>
+                      <span className="text-xs font-bold text-black">
+                        {rations.progressToNextRank}%
+                      </span>
+                    </div>
+                    <Progress value={rations.progressToNextRank} className="h-2 bg-black/20 rounded-none" />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      )}
 
       {/* Account Management */}
       <div className="px-6 -mt-6 relative z-10 mb-6">
