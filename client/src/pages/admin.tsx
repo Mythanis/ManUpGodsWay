@@ -30,8 +30,9 @@ import BlogManagement from "@/components/admin/blog-management";
 import WarGroupsManagement from "@/components/admin/war-groups-management";
 import WarGroupRegistrationsManagement from "@/components/admin/war-group-registrations-management";
 import LiveStreamManagement from "@/components/admin/live-stream-management";
+import RationsManagement from "@/components/admin/rations-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio, FileText } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio, FileText, Coins } from "lucide-react";
 
 interface Study {
   id: string;
@@ -67,6 +68,7 @@ const adminTabs = [
   { id: "events", label: "Events", icon: Calendar },
   { id: "devotionals", label: "Devotionals", icon: Calendar },
   { id: "war-groups", label: "War Groups", icon: Shield },
+  { id: "rations", label: "Rations", icon: Coins },
   { id: "logo", label: "Logo", icon: Image },
   { id: "tiers", label: "Tiers", icon: DollarSign },
   { id: "settings", label: "Settings", icon: Settings },
@@ -773,6 +775,13 @@ export default function Admin() {
                   <WarGroupRegistrationsManagement />
                 </TabsContent>
               </Tabs>
+            </div>
+          )}
+
+          {activeTab === "rations" && (
+            <div>
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Rations & Rewards Management</h2>
+              <RationsManagement />
             </div>
           )}
 
