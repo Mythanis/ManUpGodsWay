@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProgressCard from "@/components/progress-card";
 import { NotificationPanel } from "@/components/notification-panel";
+import { RationsDisplay } from "@/components/rations-display";
 import { LiveStreamBanner } from "@/components/live-stream-banner";
 import BrotherhoodRequests from "@/components/brotherhood-requests";
 import UpgradeModal from "@/components/upgrade-modal";
@@ -403,7 +404,8 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className="relative">
+          <div className="flex items-center gap-2">
+            <RationsDisplay />
             <NotificationPanel />
           </div>
         </div>

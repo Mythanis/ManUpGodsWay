@@ -40,6 +40,7 @@ import WarGroupRegister from "@/pages/war-group-register";
 import SeriesDetail from "@/pages/series-detail";
 import Purchase from "@/pages/purchase";
 import Bible from "@/pages/bible";
+import Rations from "@/pages/rations";
 import NotFound from "@/pages/not-found";
 import Navigation from "@/components/navigation";
 import { UserSetupWizard } from "@/components/user-setup-wizard";
@@ -133,6 +134,7 @@ function Router() {
             <Route path="/purchase" component={Purchase} />
             <Route path="/purchase/:studyId" component={Purchase} />
             <Route path="/bible" component={Bible} />
+            <Route path="/rations" component={Rations} />
             <Route path="/more-man-up" component={MoreManUp} />
           </>
         )}
