@@ -9016,6 +9016,245 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ ADMIN RATION MANAGEMENT ROUTES ============
+
+  // Admin: Get all content with ration rewards
+  app.get('/api/admin/rations/content', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const contentType = req.query.type as string || 'all';
+      const result: any = {};
+
+      if (contentType === 'all' || contentType === 'studies') {
+        result.studies = await db.select({
+          id: studies.id,
+          title: studies.title,
+          category: studies.category,
+          rationReward: studies.rationReward,
+        }).from(studies).orderBy(studies.title);
+      }
+
+      if (contentType === 'all' || contentType === 'lessons') {
+        result.lessons = await db.select({
+          id: studyLessons.id,
+          studyId: studyLessons.studyId,
+          dayNumber: studyLessons.dayNumber,
+          title: studyLessons.title,
+          rationReward: studyLessons.rationReward,
+        }).from(studyLessons).orderBy(studyLessons.studyId, studyLessons.dayNumber);
+      }
+
+      if (contentType === 'all' || contentType === 'videos') {
+        result.videos = await db.select({
+          id: videos.id,
+          title: videos.title,
+          category: videos.category,
+          rationReward: videos.rationReward,
+        }).from(videos).orderBy(videos.title);
+      }
+
+      if (contentType === 'all' || contentType === 'podcasts') {
+        result.podcasts = await db.select({
+          id: podcasts.id,
+          title: podcasts.title,
+          category: podcasts.category,
+          rationReward: podcasts.rationReward,
+        }).from(podcasts).orderBy(podcasts.title);
+      }
+
+      if (contentType === 'all' || contentType === 'devotionals') {
+        result.devotionals = await db.select({
+          id: devotionals.id,
+          title: devotionals.title,
+          date: devotionals.date,
+          rationReward: devotionals.rationReward,
+        }).from(devotionals).orderBy(desc(devotionals.date)).limit(100);
+      }
+
+      if (contentType === 'all' || contentType === 'challenges') {
+        result.challenges = await db.select({
+          id: challenges.id,
+          title: challenges.title,
+          topic: challenges.topic,
+          rationReward: challenges.rationReward,
+        }).from(challenges).orderBy(desc(challenges.releaseDate));
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching ration content:", error);
+      res.status(500).json({ message: "Failed to fetch ration content" });
+    }
+  });
+
+  // Admin: Update ration reward for a specific content item
+  app.patch('/api/admin/rations/content/:type/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { type, id } = req.params;
+      const { rationReward } = req.body;
+
+      if (rationReward === undefined || rationReward < 0) {
+        return res.status(400).json({ message: "Valid ration reward is required (0 or positive number)" });
+      }
+
+      let updated = false;
+
+      switch (type) {
+        case 'study':
+          await db.update(studies).set({ rationReward }).where(eq(studies.id, id));
+          updated = true;
+          break;
+        case 'lesson':
+          await db.update(studyLessons).set({ rationReward }).where(eq(studyLessons.id, id));
+          updated = true;
+          break;
+        case 'video':
+          await db.update(videos).set({ rationReward }).where(eq(videos.id, id));
+          updated = true;
+          break;
+        case 'podcast':
+          await db.update(podcasts).set({ rationReward }).where(eq(podcasts.id, id));
+          updated = true;
+          break;
+        case 'devotional':
+          await db.update(devotionals).set({ rationReward }).where(eq(devotionals.id, id));
+          updated = true;
+          break;
+        case 'challenge':
+          await db.update(challenges).set({ rationReward }).where(eq(challenges.id, id));
+          updated = true;
+          break;
+        default:
+          return res.status(400).json({ message: "Invalid content type" });
+      }
+
+      if (updated) {
+        res.json({ success: true, message: "Ration reward updated" });
+      } else {
+        res.status(404).json({ message: "Content not found" });
+      }
+    } catch (error) {
+      console.error("Error updating ration reward:", error);
+      res.status(500).json({ message: "Failed to update ration reward" });
+    }
+  });
+
+  // Admin: Bulk update ration rewards for a content type
+  app.patch('/api/admin/rations/bulk/:type', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { type } = req.params;
+      const { rationReward } = req.body;
+
+      if (rationReward === undefined || rationReward < 0) {
+        return res.status(400).json({ message: "Valid ration reward is required" });
+      }
+
+      let count = 0;
+
+      switch (type) {
+        case 'studies':
+          const studyResult = await db.update(studies).set({ rationReward });
+          count = studyResult.rowCount || 0;
+          break;
+        case 'lessons':
+          const lessonResult = await db.update(studyLessons).set({ rationReward });
+          count = lessonResult.rowCount || 0;
+          break;
+        case 'videos':
+          const videoResult = await db.update(videos).set({ rationReward });
+          count = videoResult.rowCount || 0;
+          break;
+        case 'podcasts':
+          const podcastResult = await db.update(podcasts).set({ rationReward });
+          count = podcastResult.rowCount || 0;
+          break;
+        case 'devotionals':
+          const devotionalResult = await db.update(devotionals).set({ rationReward });
+          count = devotionalResult.rowCount || 0;
+          break;
+        case 'challenges':
+          const challengeResult = await db.update(challenges).set({ rationReward });
+          count = challengeResult.rowCount || 0;
+          break;
+        default:
+          return res.status(400).json({ message: "Invalid content type" });
+      }
+
+      res.json({ success: true, message: `Updated ${count} items`, count });
+    } catch (error) {
+      console.error("Error bulk updating ration rewards:", error);
+      res.status(500).json({ message: "Failed to bulk update ration rewards" });
+    }
+  });
+
+  // Admin: Manually adjust user rations
+  app.post('/api/admin/rations/adjust', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const adminUserId = req.user.claims.sub;
+      const { userId, amount, reason } = req.body;
+
+      if (!userId || amount === undefined || !reason) {
+        return res.status(400).json({ message: "User ID, amount, and reason are required" });
+      }
+
+      const { rationsService } = await import('./rations-service');
+      const result = await rationsService.adminAdjustRations(adminUserId, userId, amount, reason);
+
+      if (!result.success) {
+        return res.status(400).json({ message: result.message });
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error adjusting user rations:", error);
+      res.status(500).json({ message: "Failed to adjust user rations" });
+    }
+  });
+
+  // Admin: Get users with their ration info (paginated)
+  app.get('/api/admin/rations/users', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const search = req.query.search as string || '';
+      const offset = (page - 1) * limit;
+
+      let query = db.select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        profileImageUrl: users.profileImageUrl,
+        rations: users.rations,
+        rationRank: users.rationRank,
+      }).from(users);
+
+      if (search) {
+        query = query.where(
+          sql`LOWER(${users.firstName} || ' ' || ${users.lastName}) LIKE ${`%${search.toLowerCase()}%`} OR LOWER(${users.email}) LIKE ${`%${search.toLowerCase()}%`}`
+        );
+      }
+
+      const allUsers = await query.orderBy(desc(users.rations)).limit(limit).offset(offset);
+      
+      // Get total count
+      const [countResult] = await db.select({ count: sql<number>`count(*)` }).from(users);
+      const total = Number(countResult?.count) || 0;
+
+      res.json({
+        users: allUsers,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching users for rations:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
   // WebSocket server for real-time notifications
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   

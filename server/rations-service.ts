@@ -279,6 +279,106 @@ export class RationsService {
   }
 
   /**
+   * Award rations with a custom amount (for content-specific rewards)
+   */
+  async awardCustomRations(
+    userId: string,
+    amount: number,
+    category: string,
+    description: string,
+    missionType: string,
+    referenceId?: string,
+    referenceType?: string
+  ): Promise<{ success: boolean; amount: number; newBalance: number; newRank?: RationRank; rankUp?: boolean }> {
+    if (amount <= 0) {
+      return { success: false, amount: 0, newBalance: 0 };
+    }
+
+    // Get current user balance
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) {
+      return { success: false, amount: 0, newBalance: 0 };
+    }
+
+    const currentBalance = user.rations || 0;
+    const newBalance = currentBalance + amount;
+    const currentRank = user.rationRank as RationRank || 'recruit';
+    const newRank = this.calculateRank(newBalance);
+    const rankUp = newRank !== currentRank && RATION_RANKS[newRank].order > RATION_RANKS[currentRank].order;
+
+    // Update user balance and rank
+    await db.update(users)
+      .set({ 
+        rations: newBalance,
+        rationRank: newRank,
+      })
+      .where(eq(users.id, userId));
+
+    // Record transaction
+    await db.insert(rationTransactions).values({
+      userId,
+      amount,
+      type: 'earn',
+      category,
+      missionType,
+      description,
+      referenceId,
+      referenceType,
+      balanceAfter: newBalance,
+    });
+
+    return {
+      success: true,
+      amount,
+      newBalance,
+      newRank: rankUp ? newRank : undefined,
+      rankUp,
+    };
+  }
+
+  /**
+   * Admin: Manually adjust user rations
+   */
+  async adminAdjustRations(
+    adminUserId: string,
+    targetUserId: string,
+    amount: number,
+    reason: string
+  ): Promise<{ success: boolean; newBalance: number; message?: string }> {
+    const [targetUser] = await db.select().from(users).where(eq(users.id, targetUserId));
+    if (!targetUser) {
+      return { success: false, newBalance: 0, message: 'User not found' };
+    }
+
+    const currentBalance = targetUser.rations || 0;
+    const newBalance = Math.max(0, currentBalance + amount);
+    const newRank = this.calculateRank(newBalance);
+
+    // Update user balance and rank
+    await db.update(users)
+      .set({ 
+        rations: newBalance,
+        rationRank: newRank,
+      })
+      .where(eq(users.id, targetUserId));
+
+    // Record transaction
+    await db.insert(rationTransactions).values({
+      userId: targetUserId,
+      amount,
+      type: amount >= 0 ? 'admin_grant' : 'admin_deduct',
+      category: 'admin',
+      missionType: 'admin_adjustment',
+      description: `Admin adjustment: ${reason}`,
+      referenceId: adminUserId,
+      referenceType: 'admin_user',
+      balanceAfter: newBalance,
+    });
+
+    return { success: true, newBalance };
+  }
+
+  /**
    * Check and award streak bonuses
    */
   async checkAndAwardStreakBonus(
