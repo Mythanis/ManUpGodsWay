@@ -55,9 +55,14 @@ export default function RationsManagement() {
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustReason, setAdjustReason] = useState("");
 
-  const { data: contentData, isLoading: contentLoading } = useQuery<ContentData>({
+  const { data: contentData, isLoading: contentLoading, error: contentError } = useQuery<ContentData>({
     queryKey: ['/api/admin/rations/content'],
   });
+
+  // Debug: log any errors
+  if (contentError) {
+    console.error('Rations content error:', contentError);
+  }
 
   const { data: usersData, isLoading: usersLoading } = useQuery<{
     users: UserWithRations[];
@@ -245,6 +250,15 @@ export default function RationsManagement() {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-8 h-8 animate-spin text-yellow-500" />
+      </div>
+    );
+  }
+
+  if (contentError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-red-500">
+        <p className="font-bold mb-2">Failed to load content</p>
+        <p className="text-sm">{(contentError as Error).message}</p>
       </div>
     );
   }
