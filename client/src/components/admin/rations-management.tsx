@@ -67,7 +67,9 @@ export default function RationsManagement() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (userSearch) params.set('search', userSearch);
-      const res = await fetch(`/api/admin/rations/users?${params.toString()}`);
+      const res = await fetch(`/api/admin/rations/users?${params.toString()}`, {
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error('Failed to fetch users');
       return res.json();
     },
