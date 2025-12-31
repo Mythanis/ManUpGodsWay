@@ -55,8 +55,10 @@ export default function RationsManagement() {
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustReason, setAdjustReason] = useState("");
 
-  const { data: contentData, isLoading: contentLoading, error: contentError } = useQuery<ContentData>({
+  const { data: contentData, isLoading: contentLoading, error: contentError, refetch } = useQuery<ContentData>({
     queryKey: ['/api/admin/rations/content'],
+    staleTime: 0,
+    retry: 1,
   });
 
   // Debug: log any errors
@@ -258,7 +260,10 @@ export default function RationsManagement() {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-red-500">
         <p className="font-bold mb-2">Failed to load content</p>
-        <p className="text-sm">{(contentError as Error).message}</p>
+        <p className="text-sm mb-4">{(contentError as Error).message}</p>
+        <Button onClick={() => refetch()} className="bg-yellow-500 hover:bg-yellow-600 text-black">
+          Try Again
+        </Button>
       </div>
     );
   }
