@@ -2667,7 +2667,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let rationResult = null;
       if (!wasAlreadyComplete) {
         const { rationsService } = await import('./rations-service');
-        rationResult = await rationsService.awardRations(userId, 'complete_lesson', lessonId, 'lesson');
+        
+        // Get the lesson's configured reward from DB
+        const [lesson] = await db.select({ rationReward: schema.studyLessons.rationReward, title: schema.studyLessons.title })
+          .from(schema.studyLessons).where(eq(schema.studyLessons.id, lessonId));
+        const lessonReward = lesson?.rationReward || 25;
+        
+        rationResult = await rationsService.awardCustomRations(
+          userId, lessonReward, 'study', `Completed lesson: ${lesson?.title || 'Unknown'}`, 'complete_lesson', lessonId, 'lesson'
+        );
         
         // Check if this completes the study
         const lessons = await storage.getStudyLessons(studyId);
@@ -2678,8 +2686,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
         
         if (completedLessons.length === lessons.length && lessons.length > 0) {
-          // Award rations for completing the study
-          await rationsService.awardRations(userId, 'complete_study', studyId, 'study');
+          // Get the study's configured reward from DB
+          const [study] = await db.select({ rationReward: schema.studies.rationReward, title: schema.studies.title })
+            .from(schema.studies).where(eq(schema.studies.id, studyId));
+          const studyReward = study?.rationReward || 100;
+          
+          await rationsService.awardCustomRations(
+            userId, studyReward, 'study', `Completed study: ${study?.title || 'Unknown'}`, 'complete_study', studyId, 'study'
+          );
         }
       }
 
@@ -2985,7 +2999,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id: devotionalId } = req.params;
       
       const { rationsService } = await import('./rations-service');
-      const rationResult = await rationsService.awardRations(userId, 'devotional_complete', devotionalId, 'devotional');
+      
+      // Get the devotional's configured reward from DB
+      const [devotional] = await db.select({ rationReward: schema.devotionals.rationReward, title: schema.devotionals.title })
+        .from(schema.devotionals).where(eq(schema.devotionals.id, devotionalId));
+      const devotionalReward = devotional?.rationReward || 20;
+      
+      const rationResult = await rationsService.awardCustomRations(
+        userId, devotionalReward, 'devotional', `Completed devotional: ${devotional?.title || 'Daily Devotional'}`, 
+        'devotional_complete', devotionalId, 'devotional'
+      );
       
       // Update user streak
       await storage.upsertUser({ id: userId, lastActiveDate: new Date() });
@@ -5414,9 +5437,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const participant = await storage.acceptChallenge(userId, challengeId);
       
-      // Award rations for accepting the challenge
+      // Award rations for accepting the challenge (use DB configured reward)
       const { rationsService } = await import('./rations-service');
-      const rationResult = await rationsService.awardRations(userId, 'challenge_accept', challengeId, 'challenge');
+      const [challenge] = await db.select({ rationReward: schema.challenges.rationReward, title: schema.challenges.title })
+        .from(schema.challenges).where(eq(schema.challenges.id, challengeId));
+      const challengeReward = challenge?.rationReward || 25;
+      
+      const rationResult = await rationsService.awardCustomRations(
+        userId, challengeReward, 'challenge', `Accepted challenge: ${challenge?.title || 'Weekly Challenge'}`, 
+        'challenge_accept', challengeId, 'challenge'
+      );
       
       res.json({ ...participant, rations: rationResult });
     } catch (error) {
@@ -5438,7 +5468,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { rationsService } = await import('./rations-service');
-      const rationResult = await rationsService.awardRations(userId, 'challenge_complete', challengeId, 'challenge');
+      
+      // Award completion bonus (3x the accept reward)
+      const [challenge] = await db.select({ rationReward: schema.challenges.rationReward, title: schema.challenges.title })
+        .from(schema.challenges).where(eq(schema.challenges.id, challengeId));
+      const completionReward = (challenge?.rationReward || 25) * 3;
+      
+      const rationResult = await rationsService.awardCustomRations(
+        userId, completionReward, 'challenge', `Completed challenge: ${challenge?.title || 'Weekly Challenge'}`, 
+        'challenge_complete', challengeId, 'challenge'
+      );
       
       res.json({ success: true, rations: rationResult });
     } catch (error) {
@@ -9026,57 +9065,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (contentType === 'all' || contentType === 'studies') {
         result.studies = await db.select({
-          id: studies.id,
-          title: studies.title,
-          category: studies.category,
-          rationReward: studies.rationReward,
-        }).from(studies).orderBy(studies.title);
+          id: schema.studies.id,
+          title: schema.studies.title,
+          category: schema.studies.category,
+          rationReward: schema.studies.rationReward,
+        }).from(schema.studies).orderBy(schema.studies.title);
       }
 
       if (contentType === 'all' || contentType === 'lessons') {
         result.lessons = await db.select({
-          id: studyLessons.id,
-          studyId: studyLessons.studyId,
-          dayNumber: studyLessons.dayNumber,
-          title: studyLessons.title,
-          rationReward: studyLessons.rationReward,
-        }).from(studyLessons).orderBy(studyLessons.studyId, studyLessons.dayNumber);
+          id: schema.studyLessons.id,
+          studyId: schema.studyLessons.studyId,
+          dayNumber: schema.studyLessons.dayNumber,
+          title: schema.studyLessons.title,
+          rationReward: schema.studyLessons.rationReward,
+        }).from(schema.studyLessons).orderBy(schema.studyLessons.studyId, schema.studyLessons.dayNumber);
       }
 
       if (contentType === 'all' || contentType === 'videos') {
         result.videos = await db.select({
-          id: videos.id,
-          title: videos.title,
-          category: videos.category,
-          rationReward: videos.rationReward,
-        }).from(videos).orderBy(videos.title);
+          id: schema.videos.id,
+          title: schema.videos.title,
+          category: schema.videos.category,
+          rationReward: schema.videos.rationReward,
+        }).from(schema.videos).orderBy(schema.videos.title);
       }
 
       if (contentType === 'all' || contentType === 'podcasts') {
         result.podcasts = await db.select({
-          id: podcasts.id,
-          title: podcasts.title,
-          category: podcasts.category,
-          rationReward: podcasts.rationReward,
-        }).from(podcasts).orderBy(podcasts.title);
+          id: schema.podcasts.id,
+          title: schema.podcasts.title,
+          category: schema.podcasts.category,
+          rationReward: schema.podcasts.rationReward,
+        }).from(schema.podcasts).orderBy(schema.podcasts.title);
       }
 
       if (contentType === 'all' || contentType === 'devotionals') {
         result.devotionals = await db.select({
-          id: devotionals.id,
-          title: devotionals.title,
-          date: devotionals.date,
-          rationReward: devotionals.rationReward,
-        }).from(devotionals).orderBy(desc(devotionals.date)).limit(100);
+          id: schema.devotionals.id,
+          title: schema.devotionals.title,
+          date: schema.devotionals.date,
+          rationReward: schema.devotionals.rationReward,
+        }).from(schema.devotionals).orderBy(desc(schema.devotionals.date)).limit(100);
       }
 
       if (contentType === 'all' || contentType === 'challenges') {
         result.challenges = await db.select({
-          id: challenges.id,
-          title: challenges.title,
-          topic: challenges.topic,
-          rationReward: challenges.rationReward,
-        }).from(challenges).orderBy(desc(challenges.releaseDate));
+          id: schema.challenges.id,
+          title: schema.challenges.title,
+          topic: schema.challenges.topic,
+          rationReward: schema.challenges.rationReward,
+        }).from(schema.challenges).orderBy(desc(schema.challenges.releaseDate));
       }
 
       res.json(result);
@@ -9100,27 +9139,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       switch (type) {
         case 'study':
-          await db.update(studies).set({ rationReward }).where(eq(studies.id, id));
+          await db.update(schema.studies).set({ rationReward }).where(eq(schema.studies.id, id));
           updated = true;
           break;
         case 'lesson':
-          await db.update(studyLessons).set({ rationReward }).where(eq(studyLessons.id, id));
+          await db.update(schema.studyLessons).set({ rationReward }).where(eq(schema.studyLessons.id, id));
           updated = true;
           break;
         case 'video':
-          await db.update(videos).set({ rationReward }).where(eq(videos.id, id));
+          await db.update(schema.videos).set({ rationReward }).where(eq(schema.videos.id, id));
           updated = true;
           break;
         case 'podcast':
-          await db.update(podcasts).set({ rationReward }).where(eq(podcasts.id, id));
+          await db.update(schema.podcasts).set({ rationReward }).where(eq(schema.podcasts.id, id));
           updated = true;
           break;
         case 'devotional':
-          await db.update(devotionals).set({ rationReward }).where(eq(devotionals.id, id));
+          await db.update(schema.devotionals).set({ rationReward }).where(eq(schema.devotionals.id, id));
           updated = true;
           break;
         case 'challenge':
-          await db.update(challenges).set({ rationReward }).where(eq(challenges.id, id));
+          await db.update(schema.challenges).set({ rationReward }).where(eq(schema.challenges.id, id));
           updated = true;
           break;
         default:
@@ -9152,27 +9191,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       switch (type) {
         case 'studies':
-          const studyResult = await db.update(studies).set({ rationReward });
+          const studyResult = await db.update(schema.studies).set({ rationReward });
           count = studyResult.rowCount || 0;
           break;
         case 'lessons':
-          const lessonResult = await db.update(studyLessons).set({ rationReward });
+          const lessonResult = await db.update(schema.studyLessons).set({ rationReward });
           count = lessonResult.rowCount || 0;
           break;
         case 'videos':
-          const videoResult = await db.update(videos).set({ rationReward });
+          const videoResult = await db.update(schema.videos).set({ rationReward });
           count = videoResult.rowCount || 0;
           break;
         case 'podcasts':
-          const podcastResult = await db.update(podcasts).set({ rationReward });
+          const podcastResult = await db.update(schema.podcasts).set({ rationReward });
           count = podcastResult.rowCount || 0;
           break;
         case 'devotionals':
-          const devotionalResult = await db.update(devotionals).set({ rationReward });
+          const devotionalResult = await db.update(schema.devotionals).set({ rationReward });
           count = devotionalResult.rowCount || 0;
           break;
         case 'challenges':
-          const challengeResult = await db.update(challenges).set({ rationReward });
+          const challengeResult = await db.update(schema.challenges).set({ rationReward });
           count = challengeResult.rowCount || 0;
           break;
         default:
