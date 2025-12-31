@@ -17,7 +17,7 @@ import UpgradeModal from "@/components/upgrade-modal";
 import HomeCarousel from "@/components/home-carousel";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
-import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper, Book } from "lucide-react";
+import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper, Book, Coins } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest } from "@/lib/queryClient";
@@ -98,6 +98,11 @@ export default function Home() {
 
   const { data: devotional } = useQuery({
     queryKey: ["/api/devotionals/today"],
+    retry: false,
+  });
+
+  const { data: rations } = useQuery<{ balance: number }>({
+    queryKey: ["/api/rations"],
     retry: false,
   });
 
@@ -399,9 +404,12 @@ export default function Home() {
                 alt={`${user?.firstName} ${user?.lastName}`}
                 className="w-12 h-12 rounded-none object-cover border-2 border-ministry-gold-exact"
               />
-              <div className="liquid-gold-card text-black px-3 py-1 rounded-none text-xs font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                <span className="relative z-10">{(weeklyCompletions as any)?.count || 0} studies this week</span>
-              </div>
+              <Link href="/rations">
+                <div className="liquid-gold-card text-black px-3 py-1 rounded-none text-xs font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-1">
+                  <Coins className="w-3 h-3 relative z-10" />
+                  <span className="relative z-10">{rations?.balance?.toLocaleString() || 0} rations</span>
+                </div>
+              </Link>
             </div>
           </div>
           <div className="flex items-center gap-2">
