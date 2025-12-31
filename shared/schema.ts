@@ -77,6 +77,7 @@ export const videos = pgTable("videos", {
   isFeatured: boolean("is_featured").default(false),
   isProcessed: boolean("is_processed").default(false),
   processingStatus: varchar("processing_status").default("pending"), // pending, processing, completed, failed
+  rationReward: integer("ration_reward").default(15), // Rations earned for watching this video
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -129,6 +130,7 @@ export const studies = pgTable("studies", {
   ratingCount: integer("rating_count").default(0),
   isPublished: boolean("is_published").default(false),
   isFeatured: boolean("is_featured").default(false),
+  rationReward: integer("ration_reward").default(100), // Rations earned for completing this study
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -145,6 +147,7 @@ export const studyLessons = pgTable("study_lessons", {
   keyTakeaway: text("key_takeaway"), // Summary or key point for the day
   displayOrder: integer("display_order").notNull(), // Order of lesson in study
   estimatedMinutes: integer("estimated_minutes").default(15), // Estimated time to complete this lesson
+  rationReward: integer("ration_reward").default(25), // Rations earned for completing this lesson
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -584,6 +587,7 @@ export const devotionals = pgTable("devotionals", {
   imageUrl: varchar("image_url"),
   date: timestamp("date").notNull(),
   notificationsSent: boolean("notifications_sent").default(false), // Track if notifications have been sent for this devotional
+  rationReward: integer("ration_reward").default(20), // Rations earned for completing this devotional
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -1200,6 +1204,7 @@ export const podcasts = pgTable("podcasts", {
   liveEndedAt: timestamp("live_ended_at"),
   scheduledLiveDate: timestamp("scheduled_live_date"),
   liveNotificationsSent: boolean("live_notifications_sent").default(false),
+  rationReward: integer("ration_reward").default(15), // Rations earned for listening to this podcast
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -1260,6 +1265,7 @@ export const challenges = pgTable("challenges", {
   description: text("description"),
   topic: varchar("topic", { length: 100 }).notNull(),
   releaseDate: timestamp("releaseDate").notNull(), // The Monday this challenge should be released
+  rationReward: integer("ration_reward").default(25), // Rations earned for accepting this challenge
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt").defaultNow(),
 });
