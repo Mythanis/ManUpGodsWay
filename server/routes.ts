@@ -2654,18 +2654,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/studies/:studyId/lessons/:lessonId/complete', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { lessonId } = req.params;
+      const { studyId, lessonId } = req.params;
       const { answers } = req.body;
 
+      // Check if lesson was already completed
+      const existingProgress = await storage.getUserLessonProgress(userId);
+      const wasAlreadyComplete = existingProgress.some(p => p.lessonId === lessonId && p.isCompleted);
+
       const progress = await storage.markLessonComplete(userId, lessonId, answers);
-      res.json(progress);
+      
+      // Award rations for lesson completion (only if first time completing)
+      let rationResult = null;
+      if (!wasAlreadyComplete) {
+        const { rationsService } = await import('./rations-service');
+        rationResult = await rationsService.awardRations(userId, 'complete_lesson', lessonId, 'lesson');
+        
+        // Check if this completes the study
+        const lessons = await storage.getStudyLessons(studyId);
+        const updatedProgress = await storage.getUserLessonProgress(userId);
+        const studyLessonIds = lessons.map(l => l.id);
+        const completedLessons = updatedProgress.filter(
+          p => studyLessonIds.includes(p.lessonId) && p.isCompleted
+        );
+        
+        if (completedLessons.length === lessons.length && lessons.length > 0) {
+          // Award rations for completing the study
+          await rationsService.awardRations(userId, 'complete_study', studyId, 'study');
+        }
+      }
+
+      res.json({ ...progress, rations: rationResult });
     } catch (error) {
       console.error("Error marking lesson complete:", error);
       res.status(500).json({ message: "Failed to mark lesson complete" });
     }
   });
 
-  // Save lesson notes
+  // Save lesson notes (reflection)
   app.post('/api/studies/:studyId/lessons/:lessonId/notes', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -2673,7 +2698,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { notes } = req.body;
 
       const progress = await storage.saveLessonNotes(userId, lessonId, notes);
-      res.json(progress);
+      
+      // Award rations for writing a reflection (only if notes are substantial)
+      let rationResult = null;
+      if (notes && notes.trim().length >= 50) {
+        const { rationsService } = await import('./rations-service');
+        rationResult = await rationsService.awardRations(userId, 'write_study_reflection', lessonId, 'lesson');
+      }
+
+      res.json({ ...progress, rations: rationResult });
     } catch (error) {
       console.error("Error saving lesson notes:", error);
       res.status(500).json({ message: "Failed to save notes" });
@@ -2942,6 +2975,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error bulk importing devotionals:", error);
       res.status(500).json({ message: "Failed to bulk import devotionals" });
+    }
+  });
+
+  // Mark devotional as complete (awards rations)
+  app.post('/api/devotionals/:id/complete', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id: devotionalId } = req.params;
+      
+      const { rationsService } = await import('./rations-service');
+      const rationResult = await rationsService.awardRations(userId, 'devotional_complete', devotionalId, 'devotional');
+      
+      // Update user streak
+      await storage.upsertUser({ id: userId, lastActiveDate: new Date() });
+      
+      res.json({ 
+        success: true, 
+        rations: rationResult 
+      });
+    } catch (error) {
+      console.error("Error completing devotional:", error);
+      res.status(500).json({ message: "Failed to complete devotional" });
+    }
+  });
+
+  // Submit devotional reflection (awards rations)
+  app.post('/api/devotionals/:id/reflection', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id: devotionalId } = req.params;
+      const { reflection } = req.body;
+      
+      if (!reflection || reflection.trim().length < 50) {
+        return res.status(400).json({ message: "Reflection must be at least 50 characters" });
+      }
+      
+      const { rationsService } = await import('./rations-service');
+      const rationResult = await rationsService.awardRations(userId, 'devotional_reflection', devotionalId, 'devotional');
+      
+      res.json({ 
+        success: true, 
+        rations: rationResult 
+      });
+    } catch (error) {
+      console.error("Error submitting devotional reflection:", error);
+      res.status(500).json({ message: "Failed to submit reflection" });
     }
   });
 
@@ -5327,10 +5406,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const challengeId = req.params.id;
       
+      // Check if already accepted
+      const alreadyAccepted = await storage.hasUserAcceptedChallenge(userId, challengeId);
+      if (alreadyAccepted) {
+        return res.status(400).json({ message: 'Challenge already accepted' });
+      }
+      
       const participant = await storage.acceptChallenge(userId, challengeId);
-      res.json(participant);
+      
+      // Award rations for accepting the challenge
+      const { rationsService } = await import('./rations-service');
+      const rationResult = await rationsService.awardRations(userId, 'challenge_accept', challengeId, 'challenge');
+      
+      res.json({ ...participant, rations: rationResult });
     } catch (error) {
       console.error('Error accepting challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Complete weekly challenge (awards rations)
+  app.post('/api/challenges/:id/complete', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const challengeId = req.params.id;
+      
+      // Verify user has accepted the challenge
+      const hasAccepted = await storage.hasUserAcceptedChallenge(userId, challengeId);
+      if (!hasAccepted) {
+        return res.status(400).json({ message: 'Must accept challenge first' });
+      }
+      
+      const { rationsService } = await import('./rations-service');
+      const rationResult = await rationsService.awardRations(userId, 'challenge_complete', challengeId, 'challenge');
+      
+      res.json({ success: true, rations: rationResult });
+    } catch (error) {
+      console.error('Error completing challenge:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -8271,10 +8383,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/war-groups/:id/members/:memberId/approve', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { memberId } = req.params;
+      const { id: groupId, memberId } = req.params;
       
       const membership = await warGroupsService.approveMemberRequest(memberId, userId);
-      res.json(membership);
+      
+      // Award rations to the new member for joining
+      const { rationsService } = await import('./rations-service');
+      const rationResult = await rationsService.awardRations(membership.userId, 'war_group_join', groupId, 'war_group');
+      
+      res.json({ ...membership, rations: rationResult });
     } catch (error: any) {
       console.error('Error approving member:', error);
       res.status(403).json({ message: error.message || 'Failed to approve member' });
@@ -8391,7 +8508,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         validatedMediaUrls, 
         validatedMediaTypes
       );
-      res.status(201).json(post);
+      
+      // Award rations for posting
+      const { rationsService } = await import('./rations-service');
+      const rationResult = await rationsService.awardRations(userId, 'war_group_post', post.id, 'war_group_post');
+      
+      res.status(201).json({ ...post, rations: rationResult });
     } catch (error: any) {
       console.error('Error creating group post:', error);
       res.status(403).json({ message: error.message || 'Failed to create group post' });
@@ -8503,7 +8625,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const reply = await warGroupsService.createPostReply(postId, userId, content);
-      res.status(201).json(reply);
+      
+      // Award rations for commenting
+      const { rationsService } = await import('./rations-service');
+      const rationResult = await rationsService.awardRations(userId, 'war_group_comment', reply.id, 'war_group_reply');
+      
+      res.status(201).json({ ...reply, rations: rationResult });
     } catch (error: any) {
       console.error('Error creating post reply:', error);
       res.status(403).json({ message: error.message || 'Failed to create reply' });
