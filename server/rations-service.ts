@@ -354,7 +354,7 @@ export class RationsService {
   /**
    * Get leaderboard of top users by rations
    */
-  async getLeaderboard(limit: number = 10): Promise<Array<{
+  async getLeaderboard(limit: number = 50): Promise<Array<{
     userId: string;
     firstName: string | null;
     lastName: string | null;
