@@ -9094,8 +9094,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============ ADMIN RATION MANAGEMENT ROUTES ============
 
   // Admin: Get all content with ration rewards
-  app.get('/api/admin/rations/content', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.get('/api/admin/rations/content', isAuthenticated, async (req: any, res) => {
     try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
       const contentType = req.query.type as string || 'all';
       const result: any = {};
 
@@ -9162,8 +9167,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Update ration reward for a specific content item
-  app.patch('/api/admin/rations/content/:type/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.patch('/api/admin/rations/content/:type/:id', isAuthenticated, async (req: any, res) => {
     try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
       const { type, id } = req.params;
       const { rationReward } = req.body;
 
@@ -9214,8 +9224,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Bulk update ration rewards for a content type
-  app.patch('/api/admin/rations/bulk/:type', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.patch('/api/admin/rations/bulk/:type', isAuthenticated, async (req: any, res) => {
     try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
       const { type } = req.params;
       const { rationReward } = req.body;
 
@@ -9262,8 +9277,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Manually adjust user rations
-  app.post('/api/admin/rations/adjust', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post('/api/admin/rations/adjust', isAuthenticated, async (req: any, res) => {
     try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
       const adminUserId = req.user.claims.sub;
       const { userId, amount, reason } = req.body;
 
@@ -9286,8 +9306,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Get users with their ration info (paginated)
-  app.get('/api/admin/rations/users', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.get('/api/admin/rations/users', isAuthenticated, async (req: any, res) => {
     try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
       const search = req.query.search as string || '';
@@ -9331,8 +9356,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all missions for admin management
-  app.get('/api/admin/missions', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.get('/api/admin/missions', isAuthenticated, async (req: any, res) => {
     try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
       const allMissions = await db.select().from(schema.missions).orderBy(schema.missions.functionalArea, schema.missions.name);
       res.json(allMissions);
     } catch (error) {
@@ -9342,8 +9372,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update a mission's configuration
-  app.patch('/api/admin/missions/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.patch('/api/admin/missions/:id', isAuthenticated, async (req: any, res) => {
     try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
       const { id } = req.params;
       const { rations, pointCap, capDuration, activity, isActive } = req.body;
 
@@ -9371,8 +9406,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bulk update missions by functional area
-  app.patch('/api/admin/missions/bulk/:functionalArea', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.patch('/api/admin/missions/bulk/:functionalArea', isAuthenticated, async (req: any, res) => {
     try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
       const { functionalArea } = req.params;
       const { rations, pointCap, capDuration } = req.body;
 
