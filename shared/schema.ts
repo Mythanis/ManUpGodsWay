@@ -1977,6 +1977,62 @@ export const insertDailyMissionLimitSchema = createInsertSchema(dailyMissionLimi
 export type DailyMissionLimit = typeof dailyMissionLimits.$inferSelect;
 export type InsertDailyMissionLimit = z.infer<typeof insertDailyMissionLimitSchema>;
 
+// Missions Table - configurable missions for ration rewards
+export const missions = pgTable("missions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  missionKey: varchar("mission_key").notNull().unique(), // e.g., 'study_start', 'video_watch_100'
+  name: varchar("name").notNull(), // Display name e.g., "Studies Start a Study"
+  description: text("description").notNull(), // What this mission is
+  functionalArea: varchar("functional_area").notNull(), // Study, Videos, Podcasts, etc.
+  rations: integer("rations").notNull().default(0), // Ration reward amount
+  pointCap: integer("point_cap"), // Maximum rations earnable within cap duration (null = unlimited)
+  capDuration: integer("cap_duration"), // Number of days before cap resets (null = no cap)
+  activity: text("activity"), // Description of what user does to complete this mission
+  isActive: boolean("is_active").default(true), // Whether this mission is currently active
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_missions_functional_area").on(table.functionalArea),
+  index("idx_missions_key").on(table.missionKey),
+]);
+
+export const insertMissionSchema = createInsertSchema(missions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Mission = typeof missions.$inferSelect;
+export type InsertMission = z.infer<typeof insertMissionSchema>;
+
+// User Mission Progress - tracks user progress per mission with cap enforcement
+export const userMissionProgress = pgTable("user_mission_progress", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  missionId: varchar("mission_id").notNull().references(() => missions.id, { onDelete: 'cascade' }),
+  rationsEarnedInPeriod: integer("rations_earned_in_period").default(0), // Rations earned in current cap period
+  timesCompletedInPeriod: integer("times_completed_in_period").default(0), // Times completed in current cap period
+  periodStartedAt: timestamp("period_started_at"), // When the current cap period started
+  totalTimesCompleted: integer("total_times_completed").default(0), // Total times ever completed
+  totalRationsEarned: integer("total_rations_earned").default(0), // Total rations ever earned from this mission
+  lastCompletedAt: timestamp("last_completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.missionId),
+  index("idx_user_mission_progress_user").on(table.userId),
+  index("idx_user_mission_progress_mission").on(table.missionId),
+]);
+
+export const insertUserMissionProgressSchema = createInsertSchema(userMissionProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type UserMissionProgress = typeof userMissionProgress.$inferSelect;
+export type InsertUserMissionProgress = z.infer<typeof insertUserMissionProgressSchema>;
+
 // Ration Rank Thresholds - defines the ranks and their requirements
 export const RATION_RANKS = {
   recruit: { min: 0, max: 999, label: 'Recruit', order: 1 },
