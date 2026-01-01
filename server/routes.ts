@@ -9258,25 +9258,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const offset = (page - 1) * limit;
 
       let query = db.select({
-        id: users.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        email: users.email,
-        profileImageUrl: users.profileImageUrl,
-        rations: users.rations,
-        rationRank: users.rationRank,
-      }).from(users);
+        id: schema.users.id,
+        firstName: schema.users.firstName,
+        lastName: schema.users.lastName,
+        email: schema.users.email,
+        profileImageUrl: schema.users.profileImageUrl,
+        rations: schema.users.rations,
+        rationRank: schema.users.rationRank,
+      }).from(schema.users);
 
       if (search) {
         query = query.where(
-          sql`LOWER(${users.firstName} || ' ' || ${users.lastName}) LIKE ${`%${search.toLowerCase()}%`} OR LOWER(${users.email}) LIKE ${`%${search.toLowerCase()}%`}`
+          sql`LOWER(${schema.users.firstName} || ' ' || ${schema.users.lastName}) LIKE ${`%${search.toLowerCase()}%`} OR LOWER(${schema.users.email}) LIKE ${`%${search.toLowerCase()}%`}`
         );
       }
 
-      const allUsers = await query.orderBy(desc(users.rations)).limit(limit).offset(offset);
+      const allUsers = await query.orderBy(desc(schema.users.rations)).limit(limit).offset(offset);
       
       // Get total count
-      const [countResult] = await db.select({ count: sql<number>`count(*)` }).from(users);
+      const [countResult] = await db.select({ count: sql<number>`count(*)` }).from(schema.users);
       const total = Number(countResult?.count) || 0;
 
       res.json({

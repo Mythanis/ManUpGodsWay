@@ -11,8 +11,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
-import { Coins, Edit, Save, Search, User, Loader2, Plus, Minus } from "lucide-react";
+import { Coins, Edit, Save, Search, User, Loader2, Plus, Minus, Target, X, Check } from "lucide-react";
 
 interface ContentWithReward {
   id: string;
@@ -44,6 +45,21 @@ interface ContentData {
   challenges?: ContentWithReward[];
 }
 
+interface Mission {
+  id: string;
+  missionKey: string;
+  name: string;
+  description: string;
+  functionalArea: string;
+  rations: number;
+  pointCap: number | null;
+  capDuration: number | null;
+  activity: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function RationsManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -54,6 +70,15 @@ export default function RationsManagement() {
   const [adjustDialog, setAdjustDialog] = useState<{ user: UserWithRations; open: boolean } | null>(null);
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustReason, setAdjustReason] = useState("");
+  
+  // Missions state
+  const [missionFilter, setMissionFilter] = useState<string>("all");
+  const [editingMission, setEditingMission] = useState<{
+    id: string;
+    rations: number;
+    pointCap: number | null;
+    capDuration: number | null;
+  } | null>(null);
 
   const { data: contentData, isLoading: contentLoading, error: contentError, refetch } = useQuery<ContentData>({
     queryKey: ['/api/admin/rations/content'],
@@ -128,6 +153,49 @@ export default function RationsManagement() {
       toast({ title: "Failed to adjust rations", variant: "destructive" });
     },
   });
+
+  // Missions queries and mutations
+  const { data: missionsData, isLoading: missionsLoading } = useQuery<Mission[]>({
+    queryKey: ['/api/admin/missions'],
+    queryFn: async () => {
+      const res = await fetch('/api/admin/missions', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch missions');
+      return res.json();
+    },
+    staleTime: 0,
+  });
+
+  const updateMissionMutation = useMutation({
+    mutationFn: async ({ id, rations, pointCap, capDuration }: { id: string; rations: number; pointCap: number | null; capDuration: number | null }) => {
+      const res = await apiRequest('PATCH', `/api/admin/missions/${id}`, { rations, pointCap, capDuration });
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/missions'] });
+      toast({ title: "Mission updated successfully" });
+      setEditingMission(null);
+    },
+    onError: () => {
+      toast({ title: "Failed to update mission", variant: "destructive" });
+    },
+  });
+
+  // Get unique functional areas from missions
+  const functionalAreas = missionsData
+    ? [...new Set(missionsData.map(m => m.functionalArea))].sort()
+    : [];
+
+  // Filter missions based on selected functional area
+  const filteredMissions = missionsData
+    ? missionFilter === "all"
+      ? missionsData
+      : missionsData.filter(m => m.functionalArea === missionFilter)
+    : [];
+
+  const handleSaveMission = () => {
+    if (!editingMission) return;
+    updateMissionMutation.mutate(editingMission);
+  };
 
   const handleSaveReward = () => {
     if (!editingItem) return;
@@ -340,6 +408,158 @@ export default function RationsManagement() {
               {renderContentTable(contentData?.challenges, 'challenge', 'Challenges')}
             </TabsContent>
           </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Missions Management Section */}
+      <Card className="bg-gray-900 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Target className="w-5 h-5 text-yellow-500" />
+            Missions Management ({missionsData?.length || 0} missions)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4 mb-4">
+            <Label className="text-white whitespace-nowrap">Filter by Area:</Label>
+            <Select value={missionFilter} onValueChange={setMissionFilter}>
+              <SelectTrigger className="w-48 bg-gray-800 border-gray-600 text-white" data-testid="select-mission-filter">
+                <SelectValue placeholder="All areas" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-600">
+                <SelectItem value="all" className="text-white hover:bg-gray-700">All Areas ({missionsData?.length || 0})</SelectItem>
+                {functionalAreas.map(area => (
+                  <SelectItem key={area} value={area} className="text-white hover:bg-gray-700">
+                    {area} ({missionsData?.filter(m => m.functionalArea === area).length || 0})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {missionsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-yellow-500" />
+            </div>
+          ) : (
+            <ScrollArea className="h-[500px]">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-gray-700">
+                    <TableHead className="text-gray-400">Mission</TableHead>
+                    <TableHead className="text-gray-400">Functional Area</TableHead>
+                    <TableHead className="text-gray-400 text-right">Rations</TableHead>
+                    <TableHead className="text-gray-400 text-right">Point Cap</TableHead>
+                    <TableHead className="text-gray-400 text-right">Cap Duration (days)</TableHead>
+                    <TableHead className="text-gray-400 text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredMissions.map((mission) => (
+                    <TableRow key={mission.id} className="border-gray-700 hover:bg-gray-800/50">
+                      <TableCell>
+                        <div>
+                          <div className="font-medium text-white">{mission.name}</div>
+                          <div className="text-xs text-gray-500">{mission.description}</div>
+                          {mission.activity && (
+                            <div className="text-xs text-gray-400 mt-1 italic">Activity: {mission.activity}</div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                          {mission.functionalArea}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {editingMission?.id === mission.id ? (
+                          <Input
+                            type="number"
+                            value={editingMission.rations}
+                            onChange={(e) => setEditingMission({ ...editingMission, rations: parseInt(e.target.value) || 0 })}
+                            className="w-20 ml-auto bg-gray-800 border-gray-600 text-white"
+                            data-testid={`input-mission-rations-${mission.id}`}
+                          />
+                        ) : (
+                          <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+                            <Coins className="w-3 h-3 mr-1" />
+                            {mission.rations}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {editingMission?.id === mission.id ? (
+                          <Input
+                            type="number"
+                            value={editingMission.pointCap ?? ""}
+                            onChange={(e) => setEditingMission({ ...editingMission, pointCap: e.target.value ? parseInt(e.target.value) : null })}
+                            placeholder="No cap"
+                            className="w-20 ml-auto bg-gray-800 border-gray-600 text-white"
+                            data-testid={`input-mission-cap-${mission.id}`}
+                          />
+                        ) : (
+                          <span className="text-gray-400">{mission.pointCap ?? "—"}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {editingMission?.id === mission.id ? (
+                          <Input
+                            type="number"
+                            value={editingMission.capDuration ?? ""}
+                            onChange={(e) => setEditingMission({ ...editingMission, capDuration: e.target.value ? parseInt(e.target.value) : null })}
+                            placeholder="No limit"
+                            className="w-20 ml-auto bg-gray-800 border-gray-600 text-white"
+                            data-testid={`input-mission-duration-${mission.id}`}
+                          />
+                        ) : (
+                          <span className="text-gray-400">{mission.capDuration ? `${mission.capDuration} days` : "—"}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {editingMission?.id === mission.id ? (
+                          <div className="flex gap-1 justify-end">
+                            <Button
+                              size="sm"
+                              onClick={handleSaveMission}
+                              disabled={updateMissionMutation.isPending}
+                              className="bg-green-500 hover:bg-green-600 text-white"
+                              data-testid={`btn-save-mission-${mission.id}`}
+                            >
+                              {updateMissionMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditingMission(null)}
+                              className="text-gray-400 hover:text-white"
+                              data-testid={`btn-cancel-mission-${mission.id}`}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditingMission({
+                              id: mission.id,
+                              rations: mission.rations,
+                              pointCap: mission.pointCap,
+                              capDuration: mission.capDuration,
+                            })}
+                            className="text-gray-400 hover:text-white"
+                            data-testid={`btn-edit-mission-${mission.id}`}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          )}
         </CardContent>
       </Card>
 
