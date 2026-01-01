@@ -1,60 +1,48 @@
 import { db } from './db';
-import { users, rationTransactions, dailyMissionLimits, MISSION_REWARDS, RATION_RANKS, DAILY_MISSION_LIMITS } from '@shared/schema';
-import type { MissionType, RationRank } from '@shared/schema';
+import { users, rationTransactions, missions, userMissionProgress, RATION_RANKS } from '@shared/schema';
+import type { RationRank, Mission, UserMissionProgress } from '@shared/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 
 export class RationsService {
   
   /**
-   * Award rations to a user for completing a mission
+   * Award rations to a user for completing a mission (uses database missions with cap enforcement)
    */
   async awardRations(
     userId: string,
-    missionType: MissionType,
+    missionKey: string,
     referenceId?: string,
     referenceType?: string
   ): Promise<{ success: boolean; amount: number; newBalance: number; newRank?: RationRank; rankUp?: boolean; message?: string }> {
-    const mission = MISSION_REWARDS[missionType];
+    // Look up mission from database
+    const [mission] = await db.select().from(missions).where(eq(missions.missionKey, missionKey));
     if (!mission) {
-      return { success: false, amount: 0, newBalance: 0, message: 'Invalid mission type' };
+      return { success: false, amount: 0, newBalance: 0, message: `Mission not found: ${missionKey}` };
     }
 
-    // Check daily limits for rate-limited missions
-    const dailyLimit = DAILY_MISSION_LIMITS[missionType as keyof typeof DAILY_MISSION_LIMITS];
-    if (dailyLimit) {
-      const today = new Date().toISOString().split('T')[0];
-      const [existingLimit] = await db.select()
-        .from(dailyMissionLimits)
-        .where(
-          and(
-            eq(dailyMissionLimits.userId, userId),
-            eq(dailyMissionLimits.missionType, missionType),
-            eq(dailyMissionLimits.date, today)
-          )
-        );
+    if (!mission.isActive) {
+      return { success: false, amount: 0, newBalance: 0, message: 'Mission is not active' };
+    }
 
-      if (existingLimit && existingLimit.count && existingLimit.count >= dailyLimit) {
-        return { 
-          success: false, 
-          amount: 0, 
-          newBalance: 0, 
-          message: `Daily limit reached for ${missionType}. Max ${dailyLimit} per day.` 
+    const rationsToAward = mission.rations || 0;
+    if (rationsToAward <= 0) {
+      return { success: false, amount: 0, newBalance: 0, message: 'No rations configured for this mission' };
+    }
+
+    // Check and enforce cap if applicable
+    if (mission.pointCap && mission.capDuration) {
+      const capCheck = await this.checkAndUpdateMissionProgress(userId, mission, rationsToAward);
+      if (!capCheck.canEarn) {
+        return {
+          success: false,
+          amount: 0,
+          newBalance: 0,
+          message: capCheck.message || `Point cap reached for ${mission.name}. Resets in ${capCheck.daysUntilReset} days.`
         };
       }
-
-      // Update or insert daily limit counter
-      if (existingLimit) {
-        await db.update(dailyMissionLimits)
-          .set({ count: (existingLimit.count || 0) + 1, lastUpdated: new Date() })
-          .where(eq(dailyMissionLimits.id, existingLimit.id));
-      } else {
-        await db.insert(dailyMissionLimits).values({
-          userId,
-          missionType,
-          count: 1,
-          date: today,
-        });
-      }
+    } else {
+      // No cap - just update progress tracking
+      await this.updateMissionProgressNoCap(userId, mission.id, rationsToAward);
     }
 
     // Get current user balance
@@ -64,7 +52,7 @@ export class RationsService {
     }
 
     const currentBalance = user.rations || 0;
-    const newBalance = currentBalance + mission.amount;
+    const newBalance = currentBalance + rationsToAward;
     const currentRank = user.rationRank as RationRank || 'recruit';
     const newRank = this.calculateRank(newBalance);
     const rankUp = newRank !== currentRank && RATION_RANKS[newRank].order > RATION_RANKS[currentRank].order;
@@ -80,10 +68,10 @@ export class RationsService {
     // Record transaction
     await db.insert(rationTransactions).values({
       userId,
-      amount: mission.amount,
+      amount: rationsToAward,
       type: 'earn',
-      category: mission.category,
-      missionType,
+      category: mission.functionalArea.toLowerCase().replace(' ', '_'),
+      missionType: missionKey,
       description: mission.description,
       referenceId,
       referenceType,
@@ -92,11 +80,127 @@ export class RationsService {
 
     return {
       success: true,
-      amount: mission.amount,
+      amount: rationsToAward,
       newBalance,
       newRank: rankUp ? newRank : undefined,
       rankUp,
     };
+  }
+
+  /**
+   * Check if user can earn rations for a mission with cap, and update progress
+   */
+  private async checkAndUpdateMissionProgress(
+    userId: string,
+    mission: Mission,
+    rationsToAward: number
+  ): Promise<{ canEarn: boolean; message?: string; daysUntilReset?: number }> {
+    const now = new Date();
+    
+    // Get or create user mission progress
+    const [existingProgress] = await db.select()
+      .from(userMissionProgress)
+      .where(and(
+        eq(userMissionProgress.userId, userId),
+        eq(userMissionProgress.missionId, mission.id)
+      ));
+
+    // Calculate if cap period has reset
+    let shouldResetPeriod = !existingProgress;
+    if (existingProgress && existingProgress.periodStartedAt && mission.capDuration) {
+      const periodStart = new Date(existingProgress.periodStartedAt);
+      const daysSincePeriodStart = Math.floor((now.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // If cap duration has passed, reset the period
+      if (daysSincePeriodStart >= mission.capDuration) {
+        shouldResetPeriod = true;
+      }
+    }
+
+    if (shouldResetPeriod) {
+      // Create new progress record (fresh period)
+      await db.insert(userMissionProgress).values({
+        userId,
+        missionId: mission.id,
+        rationsEarnedInPeriod: rationsToAward,
+        timesCompletedInPeriod: 1,
+        periodStartedAt: now,
+        totalTimesCompleted: 1,
+        totalRationsEarned: rationsToAward,
+        lastCompletedAt: now,
+      }).onConflictDoUpdate({
+        target: [userMissionProgress.userId, userMissionProgress.missionId],
+        set: {
+          rationsEarnedInPeriod: rationsToAward,
+          timesCompletedInPeriod: 1,
+          periodStartedAt: now,
+          totalTimesCompleted: sql`${userMissionProgress.totalTimesCompleted} + 1`,
+          totalRationsEarned: sql`${userMissionProgress.totalRationsEarned} + ${rationsToAward}`,
+          lastCompletedAt: now,
+          updatedAt: now,
+        }
+      });
+      return { canEarn: true };
+    }
+
+    // Check if adding this would exceed the cap
+    const currentEarned = existingProgress.rationsEarnedInPeriod || 0;
+    if (mission.pointCap && currentEarned + rationsToAward > mission.pointCap) {
+      // Calculate days until reset
+      const periodStart = new Date(existingProgress.periodStartedAt!);
+      const daysSincePeriodStart = Math.floor((now.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24));
+      const daysUntilReset = Math.max(0, (mission.capDuration || 0) - daysSincePeriodStart);
+      
+      return {
+        canEarn: false,
+        message: `Point cap (${mission.pointCap}) reached for ${mission.name}`,
+        daysUntilReset
+      };
+    }
+
+    // Update progress
+    await db.update(userMissionProgress)
+      .set({
+        rationsEarnedInPeriod: currentEarned + rationsToAward,
+        timesCompletedInPeriod: (existingProgress.timesCompletedInPeriod || 0) + 1,
+        totalTimesCompleted: (existingProgress.totalTimesCompleted || 0) + 1,
+        totalRationsEarned: (existingProgress.totalRationsEarned || 0) + rationsToAward,
+        lastCompletedAt: now,
+        updatedAt: now,
+      })
+      .where(eq(userMissionProgress.id, existingProgress.id));
+
+    return { canEarn: true };
+  }
+
+  /**
+   * Update mission progress for missions without caps
+   */
+  private async updateMissionProgressNoCap(
+    userId: string,
+    missionId: string,
+    rationsEarned: number
+  ): Promise<void> {
+    const now = new Date();
+    
+    await db.insert(userMissionProgress).values({
+      userId,
+      missionId,
+      rationsEarnedInPeriod: rationsEarned,
+      timesCompletedInPeriod: 1,
+      periodStartedAt: now,
+      totalTimesCompleted: 1,
+      totalRationsEarned: rationsEarned,
+      lastCompletedAt: now,
+    }).onConflictDoUpdate({
+      target: [userMissionProgress.userId, userMissionProgress.missionId],
+      set: {
+        totalTimesCompleted: sql`${userMissionProgress.totalTimesCompleted} + 1`,
+        totalRationsEarned: sql`${userMissionProgress.totalRationsEarned} + ${rationsEarned}`,
+        lastCompletedAt: now,
+        updatedAt: now,
+      }
+    });
   }
 
   /**
@@ -385,30 +489,72 @@ export class RationsService {
     userId: string, 
     streakType: 'study' | 'devotional',
     currentStreak: number
-  ): Promise<{ awarded: boolean; missionType?: MissionType; amount?: number }> {
+  ): Promise<{ awarded: boolean; missionKey?: string; amount?: number }> {
     if (streakType === 'study') {
       if (currentStreak === 7) {
         const result = await this.awardRations(userId, 'study_streak_7');
-        return { awarded: result.success, missionType: 'study_streak_7', amount: result.amount };
+        return { awarded: result.success, missionKey: 'study_streak_7', amount: result.amount };
       }
       if (currentStreak === 30) {
         const result = await this.awardRations(userId, 'study_streak_30');
-        return { awarded: result.success, missionType: 'study_streak_30', amount: result.amount };
+        return { awarded: result.success, missionKey: 'study_streak_30', amount: result.amount };
       }
     }
     
     if (streakType === 'devotional') {
       if (currentStreak === 7) {
         const result = await this.awardRations(userId, 'devotional_streak_7');
-        return { awarded: result.success, missionType: 'devotional_streak_7', amount: result.amount };
+        return { awarded: result.success, missionKey: 'devotional_streak_7', amount: result.amount };
       }
       if (currentStreak === 30) {
         const result = await this.awardRations(userId, 'devotional_streak_30');
-        return { awarded: result.success, missionType: 'devotional_streak_30', amount: result.amount };
+        return { awarded: result.success, missionKey: 'devotional_streak_30', amount: result.amount };
       }
     }
 
     return { awarded: false };
+  }
+
+  /**
+   * Get all missions from database
+   */
+  async getAllMissions(): Promise<Mission[]> {
+    return db.select().from(missions).orderBy(missions.functionalArea, missions.name);
+  }
+
+  /**
+   * Get mission by key
+   */
+  async getMissionByKey(missionKey: string): Promise<Mission | null> {
+    const [mission] = await db.select().from(missions).where(eq(missions.missionKey, missionKey));
+    return mission || null;
+  }
+
+  /**
+   * Update mission configuration (admin only)
+   */
+  async updateMission(
+    missionId: string,
+    updates: Partial<Pick<Mission, 'rations' | 'pointCap' | 'capDuration' | 'activity' | 'isActive'>>
+  ): Promise<Mission | null> {
+    const [updated] = await db.update(missions)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(missions.id, missionId))
+      .returning();
+    
+    return updated || null;
+  }
+
+  /**
+   * Get user's mission progress
+   */
+  async getUserMissionProgress(userId: string): Promise<UserMissionProgress[]> {
+    return db.select()
+      .from(userMissionProgress)
+      .where(eq(userMissionProgress.userId, userId));
   }
 }
 

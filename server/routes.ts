@@ -9294,6 +9294,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all missions for admin management
+  app.get('/api/admin/missions', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const allMissions = await db.select().from(schema.missions).orderBy(schema.missions.functionalArea, schema.missions.name);
+      res.json(allMissions);
+    } catch (error) {
+      console.error("Error fetching missions:", error);
+      res.status(500).json({ message: "Failed to fetch missions" });
+    }
+  });
+
+  // Update a mission's configuration
+  app.patch('/api/admin/missions/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { rations, pointCap, capDuration, activity, isActive } = req.body;
+
+      const updates: any = { updatedAt: new Date() };
+      if (rations !== undefined) updates.rations = rations;
+      if (pointCap !== undefined) updates.pointCap = pointCap;
+      if (capDuration !== undefined) updates.capDuration = capDuration;
+      if (activity !== undefined) updates.activity = activity;
+      if (isActive !== undefined) updates.isActive = isActive;
+
+      const [updated] = await db.update(schema.missions)
+        .set(updates)
+        .where(eq(schema.missions.id, id))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: "Mission not found" });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating mission:", error);
+      res.status(500).json({ message: "Failed to update mission" });
+    }
+  });
+
+  // Bulk update missions by functional area
+  app.patch('/api/admin/missions/bulk/:functionalArea', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { functionalArea } = req.params;
+      const { rations, pointCap, capDuration } = req.body;
+
+      const updates: any = { updatedAt: new Date() };
+      if (rations !== undefined) updates.rations = rations;
+      if (pointCap !== undefined) updates.pointCap = pointCap;
+      if (capDuration !== undefined) updates.capDuration = capDuration;
+
+      await db.update(schema.missions)
+        .set(updates)
+        .where(eq(schema.missions.functionalArea, functionalArea));
+
+      res.json({ message: `Updated all missions in ${functionalArea}` });
+    } catch (error) {
+      console.error("Error bulk updating missions:", error);
+      res.status(500).json({ message: "Failed to bulk update missions" });
+    }
+  });
+
   // WebSocket server for real-time notifications
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
