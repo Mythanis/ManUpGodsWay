@@ -117,6 +117,36 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
     },
   });
 
+  // Track "Start a Study" activity when user first views the study
+  const [hasTrackedStudyStart, setHasTrackedStudyStart] = useState(false);
+  
+  const trackStartMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", `/api/studies/${studyId}/track-start`);
+    },
+    onSuccess: (data: any) => {
+      setHasTrackedStudyStart(true);
+      if (data?.rationsAwarded > 0) {
+        toast({
+          title: "Mission Started!",
+          description: `You earned ${data.rationsAwarded} rations for starting this study`,
+        });
+      }
+    },
+    onError: () => {
+      // Mark as attempted to avoid infinite retry loops
+      // This is a non-critical tracking feature - user can still use the study normally
+      setHasTrackedStudyStart(true);
+    },
+  });
+
+  // Track study start only once when lessons are loaded and userId is available
+  useEffect(() => {
+    if (!hasTrackedStudyStart && !trackStartMutation.isPending && lessons.length > 0 && !lessonsLoading && userId) {
+      trackStartMutation.mutate();
+    }
+  }, [hasTrackedStudyStart, lessons.length, lessonsLoading, userId, trackStartMutation.isPending]);
+
   // Load existing notes and answers when lesson changes
   useEffect(() => {
     if (currentProgress) {

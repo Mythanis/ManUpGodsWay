@@ -2650,6 +2650,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Track "Start a Study" activity - awards rations on first study view
+  app.post('/api/studies/:studyId/track-start', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { studyId } = req.params;
+
+      // Check if study exists
+      const study = await storage.getStudy(studyId);
+      if (!study) {
+        return res.status(404).json({ message: "Study not found" });
+      }
+
+      // Award rations for starting a study (RationsService handles deduplication via missionKey + referenceId)
+      const { rationsService } = await import('./rations-service');
+      const rationResult = await rationsService.awardRations(userId, 'start_study', studyId, 'study');
+
+      // Return appropriate status based on whether rations were actually awarded
+      if (rationResult && rationResult.awarded > 0) {
+        res.json({ 
+          success: true, 
+          message: "Study start tracked",
+          rationsAwarded: rationResult.awarded 
+        });
+      } else {
+        res.json({ 
+          success: true, 
+          message: "Already tracked",
+          rationsAwarded: 0 
+        });
+      }
+    } catch (error) {
+      console.error("Error tracking study start:", error);
+      res.status(500).json({ message: "Failed to track study start" });
+    }
+  });
+
   // Mark lesson as complete
   app.post('/api/studies/:studyId/lessons/:lessonId/complete', isAuthenticated, async (req: any, res) => {
     try {

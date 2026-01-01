@@ -177,6 +177,8 @@ export default function RationsManagement() {
     },
     onError: () => {
       toast({ title: "Failed to update mission", variant: "destructive" });
+      setEditingMission(null); // Reset edited state on failure to avoid stale UI
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/missions'] }); // Re-fetch to sync UI with actual data
     },
   });
 
