@@ -64,6 +64,169 @@ interface PodcastRating {
   };
 }
 
+function PodcastCard({ 
+  podcast, 
+  currentlyPlaying, 
+  onPlayPause, 
+  onPodcastView,
+  formatDuration,
+  renderStars,
+  RatingDialog 
+}: { 
+  podcast: Podcast;
+  currentlyPlaying: string | null;
+  onPlayPause: (podcast: Podcast) => void;
+  onPodcastView: (id: string) => void;
+  formatDuration: (seconds: number) => string;
+  renderStars: (rating: number, interactive?: boolean, onRatingSelect?: (rating: number) => void) => JSX.Element[];
+  RatingDialog: ({ podcast }: { podcast: Podcast }) => JSX.Element;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  
+  return (
+    <Card className="liquid-gold-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-none overflow-hidden">
+      <CardContent className="p-4 sm:p-6 relative">
+        <div 
+          className="flex items-start space-x-4 relative z-10 cursor-pointer"
+          onClick={() => setExpanded(!expanded)}
+          data-testid={`podcast-card-${podcast.id}`}
+        >
+          {/* Thumbnail/Icon */}
+          <div className="flex-shrink-0">
+            <img
+              src={getDefaultThumbnail(podcast.thumbnailUrl)}
+              alt={podcast.title}
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-none object-cover border-2 border-black"
+            />
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex-1 min-w-0 pr-2">
+                <h3 className="font-black text-base sm:text-lg text-black mb-1 uppercase tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  {podcast.title}
+                </h3>
+                <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-black/70 mb-2">
+                  <Badge variant="outline" className="text-xs text-black rounded-none border-2 border-black font-bold uppercase">
+                    {podcast.type === 'audio' ? 'Audio' : 'Video'}
+                  </Badge>
+                  {podcast.isLive && (
+                    <Badge className="text-xs bg-red-500 hover:bg-red-600 text-white">
+                      <Radio className="w-3 h-3 mr-1" />
+                      LIVE
+                    </Badge>
+                  )}
+                  <span className="capitalize hidden sm:inline">{podcast.category}</span>
+                  <span className="flex items-center">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {formatDuration(podcast.duration)}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                {podcast.isLive ? (
+                  <Button
+                    onClick={() => window.open(podcast.liveUrl, '_blank')}
+                    className="bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm px-2 sm:px-4 rounded-none border-2 border-black font-black uppercase"
+                    size="sm"
+                  >
+                    <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    Join Live
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => onPlayPause(podcast)}
+                    className="bg-black hover:bg-gray-900 text-white rounded-none border-2 border-black"
+                    size="sm"
+                  >
+                    {currentlyPlaying === podcast.id ? (
+                      <Pause className="w-4 h-4" />
+                    ) : (
+                      <Play className="w-4 h-4" />
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Collapsed Description Preview */}
+            {podcast.description && !expanded && (
+              <p className="text-gray-700 text-sm font-medium line-clamp-2" style={{ fontFamily: "'Inter', sans-serif" }}>
+                {podcast.description}
+              </p>
+            )}
+            
+            {/* Tap to expand hint */}
+            {podcast.description && !expanded && (
+              <p className="text-xs text-black/50 mt-1 font-bold uppercase">Tap to see more</p>
+            )}
+          </div>
+        </div>
+
+        {/* Expanded Content */}
+        {expanded && (
+          <div className="mt-4 space-y-3 relative z-10">
+            {podcast.description && (
+              <div 
+                className="p-3 rounded-none"
+                style={{ 
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 70%, rgba(252,208,0,0.3) 100%)'
+                }}
+              >
+                <p className="text-gray-800 text-sm font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  {podcast.description}
+                </p>
+              </div>
+            )}
+
+            {/* Stats and Actions */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center space-x-3 text-xs sm:text-sm text-black/70 font-bold">
+                <div className="flex items-center">
+                  {renderStars(Math.round(parseFloat(podcast.rating || '0')))}
+                  <span className="ml-2">
+                    {parseFloat(podcast.rating || '0').toFixed(1)} ({podcast.ratingCount || 0})
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  {podcast.viewCount || 0} views
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 w-full" onClick={(e) => e.stopPropagation()}>
+                <div className="flex-1">
+                  <RatingDialog podcast={podcast} />
+                </div>
+                <div className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onPodcastView(podcast.id)}
+                    className="text-xs px-2 py-1 h-auto w-full bg-ministry-gold-exact hover:bg-yellow-400 text-black rounded-none border-2 border-black font-black uppercase tracking-wide"
+                  >
+                    <MessageSquare className="w-3 h-3 mr-1" />
+                    Reviews
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <p 
+              className="text-xs text-black/50 font-bold uppercase text-center cursor-pointer"
+              onClick={() => setExpanded(false)}
+            >
+              Tap to collapse
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Podcasts() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -470,138 +633,28 @@ export default function Podcasts() {
         ) : (
           <div className="space-y-4">
             {filteredPodcasts.map((podcast: Podcast) => (
-              <Card key={podcast.id} className="liquid-gold-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-none overflow-hidden">
-                <CardContent className="p-4 sm:p-6 relative">
-                  <div className="flex items-start space-x-4 relative z-10">
-                    {/* Thumbnail/Icon */}
-                    <div className="flex-shrink-0">
-                      {podcast.type === 'video' ? (
-                        <img
-                          src={getDefaultThumbnail(podcast.thumbnailUrl)}
-                          alt={podcast.title}
-                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-none object-cover border-2 border-black"
-                        />
-                      ) : (
-                        <img
-                          src={getDefaultThumbnail(podcast.thumbnailUrl)}
-                          alt={podcast.title}
-                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-none object-cover border-2 border-black"
-                        />
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1 min-w-0 pr-2">
-                          <h3 className="font-black text-base sm:text-lg text-black mb-1 uppercase tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
-                            {podcast.title}
-                          </h3>
-                          <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-black/70 mb-2">
-                            <Badge variant="outline" className="text-xs text-black rounded-none border-2 border-black font-bold uppercase">
-                              {podcast.type === 'audio' ? 'Audio' : 'Video'}
-                            </Badge>
-                            {podcast.isLive && (
-                              <Badge className="text-xs bg-red-500 hover:bg-red-600 text-white">
-                                <Radio className="w-3 h-3 mr-1" />
-                                LIVE
-                              </Badge>
-                            )}
-                            <span className="capitalize hidden sm:inline">{podcast.category}</span>
-                            <span className="flex items-center">
-                              <Clock className="w-3 h-3 mr-1" />
-                              {formatDuration(podcast.duration)}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex-shrink-0">
-                          {podcast.isLive ? (
-                            <Button
-                              onClick={() => window.open(podcast.liveUrl, '_blank')}
-                              className="bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm px-2 sm:px-4 rounded-none border-2 border-black font-black uppercase"
-                              size="sm"
-                            >
-                              <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                              Join Live
-                            </Button>
-                          ) : (
-                            <Button
-                              onClick={() => handlePlayPause(podcast)}
-                              className="bg-black hover:bg-gray-900 text-white rounded-none border-2 border-black"
-                              size="sm"
-                            >
-                              {currentlyPlaying === podcast.id ? (
-                                <Pause className="w-4 h-4" />
-                              ) : (
-                                <Play className="w-4 h-4" />
-                              )}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-
-                      {podcast.description && (
-                        <div 
-                          className="p-3 mb-3 rounded-none"
-                          style={{ 
-                            background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 70%, rgba(252,208,0,0.3) 100%)'
-                          }}
-                        >
-                          <p className="text-gray-800 text-sm font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>
-                            {podcast.description}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Stats and Actions */}
-                      <div className="flex flex-col gap-3">
-                        <div className="flex items-center space-x-3 text-xs sm:text-sm text-black/70 font-bold">
-                          <div className="flex items-center">
-                            {renderStars(Math.round(parseFloat(podcast.rating || '0')))}
-                            <span className="ml-2">
-                              {parseFloat(podcast.rating || '0').toFixed(1)} ({podcast.ratingCount || 0})
-                            </span>
-                          </div>
-                          <div className="flex items-center">
-                            <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                            {podcast.viewCount || 0} views
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-2 w-full">
-                          <div className="flex-1">
-                            <RatingDialog podcast={podcast} />
-                          </div>
-                          <div className="flex-1">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handlePodcastView(podcast.id)}
-                              className="text-xs px-2 py-1 h-auto w-full bg-ministry-gold-exact hover:bg-yellow-400 text-black rounded-none border-2 border-black font-black uppercase tracking-wide"
-                            >
-                              <MessageSquare className="w-3 h-3 mr-1" />
-                              Reviews
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Hidden audio element for audio podcasts only */}
-                      {podcast.type === 'audio' && (
-                        <audio
-                          ref={(el) => {
-                            if (el) audioRefs.current[podcast.id] = el;
-                          }}
-                          src={podcast.fileUrl}
-                          onTimeUpdate={(e) => handleTimeUpdate(podcast.id, e.currentTarget.currentTime)}
-                          onEnded={() => setCurrentlyPlaying(null)}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div key={podcast.id}>
+                <PodcastCard
+                  podcast={podcast}
+                  currentlyPlaying={currentlyPlaying}
+                  onPlayPause={handlePlayPause}
+                  onPodcastView={handlePodcastView}
+                  formatDuration={formatDuration}
+                  renderStars={renderStars}
+                  RatingDialog={RatingDialog}
+                />
+                {/* Hidden audio element for audio podcasts only */}
+                {podcast.type === 'audio' && (
+                  <audio
+                    ref={(el) => {
+                      if (el) audioRefs.current[podcast.id] = el;
+                    }}
+                    src={podcast.fileUrl}
+                    onTimeUpdate={(e) => handleTimeUpdate(podcast.id, e.currentTarget.currentTime)}
+                    onEnded={() => setCurrentlyPlaying(null)}
+                  />
+                )}
+              </div>
             ))}
           </div>
         )}
