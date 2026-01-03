@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { BackButton } from "@/components/BackButton";
 import { 
   Dumbbell, 
   Calendar, 
@@ -1298,6 +1299,7 @@ export default function Fitness() {
   return (
     <div className="min-h-screen bg-black pb-20">
       <div className="px-4 pt-6 space-y-6">
+        <BackButton />
         {/* Header */}
         <div className="text-center mb-8 liquid-gold-card p-6 rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
           <h1 className="text-3xl font-black text-black mb-2 uppercase tracking-wide relative z-10">

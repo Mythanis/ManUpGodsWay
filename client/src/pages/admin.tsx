@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
+import { BackButton } from "@/components/BackButton";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -550,6 +551,7 @@ export default function Admin() {
     <div className="pb-20 bg-ministry-light-gray min-h-screen">
       {/* Admin Header */}
       <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
+        <BackButton />
         <h1 className="text-4xl font-black tracking-tighter uppercase" data-testid="text-admin-title">
           Owner <span className="text-ministry-gold-exact">Dashboard</span>
         </h1>

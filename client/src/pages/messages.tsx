@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
 import { formatLocalTime } from "@/lib/utils";
 import { MessageCircle, Plus, Users, Send, ArrowLeft, Search, X, UserPlus, Trash2, LogOut, MoreVertical, User as UserIcon } from "lucide-react";
+import { BackButton } from "@/components/BackButton";
 
 interface MessageUser {
   id: string;
@@ -404,6 +405,7 @@ export default function Messages() {
       {!selectedConversation ? (
         <div className="w-full">
           <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
+            <BackButton />
             <div className="flex items-center justify-between mb-2">
               <div>
                 <h1 className="text-4xl font-black tracking-tighter uppercase" data-testid="text-messages-title">Messages</h1>

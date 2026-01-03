@@ -7,6 +7,7 @@ import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { BlogPost } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { BackButton } from "@/components/BackButton";
 
 export default function BlogDetail() {
   const { slug } = useParams();
@@ -115,6 +116,7 @@ export default function BlogDetail() {
     <div className="min-h-screen bg-ministry-light-gray pb-20">
       <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
         <div className="max-w-3xl mx-auto">
+          <BackButton />
           <Button
             variant="ghost"
             onClick={() => navigate('/blog')}

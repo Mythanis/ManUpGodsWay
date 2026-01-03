@@ -11,6 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { BackButton } from "@/components/BackButton";
 
 interface Brother {
   id: string;
@@ -160,6 +161,7 @@ export default function Brothers() {
       {/* Header */}
       <div className="liquid-header text-white px-6 pt-12 pb-6 mb-6">
         <div className="max-w-4xl mx-auto">
+          <BackButton />
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <UserPlus className="w-8 h-8 text-ministry-gold" />

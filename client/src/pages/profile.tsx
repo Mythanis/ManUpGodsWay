@@ -16,6 +16,7 @@ import { FeedbackDialog } from "@/components/feedback-dialog";
 import { SilencedUsersButton } from "@/components/silenced-users-button";
 import { TestimonyForm } from "@/components/testimony-form";
 import UpgradeModal from "@/components/upgrade-modal";
+import { BackButton } from "@/components/BackButton";
 import { 
   User, 
   Bell, 
@@ -151,6 +152,7 @@ export default function Profile() {
     <div className="pb-20 bg-black min-h-screen">
       {/* Profile Header */}
       <div className="liquid-black text-white px-6 pt-12 pb-8 border-b-4 border-ministry-gold-exact overflow-hidden">
+        <BackButton />
         <div className="text-center relative z-10">
           <img 
             src={(user as any)?.profileImageUrl || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=4A90B8&color=fff`}

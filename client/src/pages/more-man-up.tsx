@@ -1,5 +1,6 @@
 import { ExternalLink } from "lucide-react";
 import { FaFacebook, FaTwitter, FaInstagram, FaGlobe, FaTshirt } from "react-icons/fa";
+import { BackButton } from "@/components/BackButton";
 
 export default function MoreManUp() {
   const socialLinks = [
@@ -40,6 +41,7 @@ export default function MoreManUp() {
       {/* Header */}
       <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
         <div className="max-w-md mx-auto">
+          <BackButton />
           <h1 className="text-4xl font-black tracking-tighter uppercase">
             More <span className="text-ministry-gold-exact">Man Up</span>
           </h1>

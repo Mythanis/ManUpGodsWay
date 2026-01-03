@@ -27,7 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { TestimonyForm } from "@/components/testimony-form";
 import BrotherhoodRequestButton from "@/components/brotherhood-request-button";
-import { BackButton } from "@/components/back-button";
+import { BackButton } from "@/components/BackButton";
 
 interface UserProfile {
   user: {

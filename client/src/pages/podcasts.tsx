@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { LiveStreamBanner } from "@/components/live-stream-banner";
 import { LiveStreamSetupDialog } from "@/components/live-stream-setup-dialog";
 import { useLocation } from "wouter";
+import { BackButton } from "@/components/BackButton";
 import { 
   Headphones, 
   Video, 
@@ -558,6 +559,7 @@ export default function Podcasts() {
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="liquid-header text-white px-6 pt-12 pb-6">
+        <BackButton />
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-4xl font-black flex items-center tracking-tighter uppercase">

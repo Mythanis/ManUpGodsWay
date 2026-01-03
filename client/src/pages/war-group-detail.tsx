@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus, MessageCircle, Pin, Trash2, Send, Pencil, X, Save, Image, Video, Loader2, Shield, UserMinus, ChevronDown, ChevronUp } from "lucide-react";
+import { BackButton } from "@/components/BackButton";
 
 // Christian Cross icon component
 function ChristianCross({ className }: { className?: string }) {
@@ -525,6 +526,7 @@ export default function WarGroupDetail() {
       {/* Header */}
       <div className="liquid-header text-white px-6 pt-12 pb-6">
         <div className="max-w-4xl mx-auto">
+          <BackButton />
           <Link href="/war-groups">
             <Button variant="ghost" className="text-white hover:text-ministry-gold-exact mb-4 -ml-2 font-semibold uppercase tracking-wide text-xs">
               <ChevronLeft className="h-4 w-4 mr-1" />

@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Book, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { BackButton } from "@/components/BackButton";
 
 // Bible books data
 const bibleBooks = [
@@ -434,6 +435,7 @@ export default function Bible() {
       {/* Header */}
       <div className="liquid-black border-b-4 border-ministry-gold-exact text-white px-6 pt-12 pb-6 overflow-hidden">
         <div className="max-w-6xl mx-auto relative z-10">
+          <BackButton />
           <div className="flex items-center gap-3 mb-2">
             <Book className="h-8 w-8 text-ministry-gold-exact" />
             <h1 className="text-4xl font-black tracking-tighter uppercase"><span className="text-white">Bible</span> <span className="text-ministry-gold-exact">Reader</span></h1>

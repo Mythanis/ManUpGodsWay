@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Coins, Medal, TrendingUp, Trophy, ArrowLeft, Clock, Plus, Minus, Crown, Target, Flame, Users } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { BackButton } from "@/components/BackButton";
 
 const RANK_CONFIG: Record<string, { color: string; bgColor: string; borderColor: string }> = {
   recruit: { color: "text-zinc-400", bgColor: "bg-zinc-800", borderColor: "border-zinc-600" },
@@ -85,6 +86,7 @@ export default function RationsPage() {
   return (
     <div className="pb-20 bg-background min-h-screen">
       <div className="liquid-header text-white px-4 pt-8 pb-6">
+        <BackButton />
         <div className="flex items-center gap-3 mb-4">
           <Link href="/">
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-none">

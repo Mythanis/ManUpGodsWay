@@ -14,6 +14,7 @@ import { MessageSquare, HandHeart, Plus, Trash2, Search, Filter, SortDesc, Send,
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'wouter';
+import { BackButton } from "@/components/BackButton";
 
 interface HurdleWallPost {
   id: string;
@@ -309,6 +310,7 @@ export default function HurdleWall() {
       {/* Header */}
       <div className="liquid-header text-white px-6 pt-8 pb-6">
         <div className="max-w-2xl mx-auto">
+          <BackButton />
           <div className="flex items-center gap-3 mb-2">
             <Link href="/">
               <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-none" data-testid="back-button">

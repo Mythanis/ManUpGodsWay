@@ -9,6 +9,7 @@ import { Search, BookOpen, ChevronRight, Layers } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
+import { BackButton } from "@/components/BackButton";
 
 const categories = [
   { id: 'all', label: 'All Content' },
@@ -105,6 +106,7 @@ export default function Library() {
     <div className="pb-20">
       {/* Header */}
       <div className="liquid-header text-white px-6 pt-12 pb-6">
+        <BackButton />
         <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase" data-testid="text-library-title"><span className="text-white">Study</span> <span className="text-ministry-gold-exact">Library</span></h1>
         <p className="text-ministry-gold-exact text-xs font-bold tracking-widest uppercase" data-testid="text-library-subtitle">
           Grow Stronger In Faith And Character

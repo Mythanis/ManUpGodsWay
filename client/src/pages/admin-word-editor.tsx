@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
+import { BackButton } from "@/components/BackButton";
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -219,6 +220,9 @@ export default function AdminWordEditor() {
 
   return (
     <div className="h-screen flex flex-col bg-background">
+      <div className="px-4 pt-4">
+        <BackButton />
+      </div>
       <style>{`
         .editable-section-highlight {
           background-color: rgba(59, 130, 246, 0.1);

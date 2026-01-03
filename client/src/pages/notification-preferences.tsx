@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { BackButton } from "@/components/back-button";
+import { BackButton } from "@/components/BackButton";
 
 interface NotificationPreferences {
   id: string;

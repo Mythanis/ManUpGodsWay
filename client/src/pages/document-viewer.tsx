@@ -1,6 +1,7 @@
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import MobilePdfViewer from '@/components/MobilePdfViewer';
+import { BackButton } from "@/components/BackButton";
 
 interface Study {
   id: string;

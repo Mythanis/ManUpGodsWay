@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Search, Star, Filter, Play, Clock, Eye, Crown, Gem, Zap } from "lucide-react";
 import { useLocation } from "wouter";
+import { BackButton } from "@/components/BackButton";
 
 interface Video {
   id: string;
@@ -215,6 +216,7 @@ export default function Videos() {
     <div className="pb-20">
       {/* Header */}
       <div className="liquid-header text-white px-6 pt-12 pb-6">
+        <BackButton />
         <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase"><span className="text-white">Video</span> <span className="text-ministry-gold-exact">Library</span></h1>
         <p className="text-[#FCD000] text-xs font-bold tracking-widest uppercase">
           Watch Inspiring Content And Grow In Faith

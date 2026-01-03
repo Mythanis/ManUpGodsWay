@@ -9,6 +9,7 @@ import { Trophy, Calendar, Filter, Target, Star, ArrowUp, ArrowDown, Clock, User
 import { format, startOfWeek } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { BackButton } from "@/components/BackButton";
 
 interface Challenge {
   id: string;
@@ -296,6 +297,7 @@ export default function Challenges() {
       {/* Header - matching War Room style */}
       <div className="liquid-header text-white px-6 pt-12 pb-6">
         <div className="max-w-2xl mx-auto">
+          <BackButton />
           <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase"><span className="text-white">Weekly</span> <span className="text-ministry-gold-exact">Challenges</span></h1>
           <p className="text-ministry-gold-exact text-xs font-bold tracking-widest uppercase">Grow Stronger In Faith Through Weekly Challenges</p>
         </div>

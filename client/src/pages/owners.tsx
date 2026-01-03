@@ -13,6 +13,7 @@ import { Crown, Settings, Users, Database, Shield, Activity, Trash2, UserCog, Cr
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useRef } from "react";
+import { BackButton } from "@/components/BackButton";
 
 // Stripe Configuration Component
 function StripeConfiguration() {
@@ -795,6 +796,7 @@ export default function Owners() {
   return (
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-6xl mx-auto space-y-8">
+        <BackButton />
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <Crown className="h-8 w-8 text-gold" />

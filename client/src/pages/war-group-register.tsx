@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { insertWarGroupRegistrationSchema } from "@shared/schema";
 import type { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
+import { BackButton } from "@/components/BackButton";
 
 const formSchema = insertWarGroupRegistrationSchema.extend({
   contactPhone: insertWarGroupRegistrationSchema.shape.contactPhone.optional(),
@@ -73,6 +74,7 @@ export default function WarGroupRegister() {
       {/* Header */}
       <div className="liquid-header text-white px-6 pt-12 pb-6">
         <div className="max-w-4xl mx-auto">
+          <BackButton />
           <Button
             variant="ghost"
             onClick={() => navigate("/war-groups")}

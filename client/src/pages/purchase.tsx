@@ -10,7 +10,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, CreditCard, Shield, BookOpen } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { BackButton } from '@/components/back-button';
+import { BackButton } from "@/components/BackButton";
 
 // Load Stripe with error handling
 const stripePromise = (() => {

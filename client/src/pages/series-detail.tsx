@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, BookOpen, CheckCircle, Layers, ChevronRight, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { BackButton } from "@/components/back-button";
+import { BackButton } from "@/components/BackButton";
 
 interface StudyInSeries {
   id: string;

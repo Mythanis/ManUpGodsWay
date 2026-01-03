@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Search, MapPin, Users, User, Map, List, Mail, Plus, Shield, BookOpen, Award, Headphones, CheckCircle, ShoppingBag, Play } from "lucide-react";
+import { BackButton } from "@/components/BackButton";
 
 interface SystemSettings {
   warGroupsVideoUrl: string | null;
@@ -120,6 +121,7 @@ export default function WarGroups() {
       {/* Header */}
       <div className="liquid-header text-white px-6 pt-12 pb-4">
         <div className="max-w-4xl mx-auto">
+          <BackButton />
           <div className="flex items-start justify-between gap-4 mb-4">
             <div>
               <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase">War Groups</h1>
