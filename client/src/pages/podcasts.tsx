@@ -160,7 +160,7 @@ function PodcastCard({
             
             {/* Tap to expand hint */}
             {podcast.description && !expanded && (
-              <p className="text-xs text-black/50 mt-1 font-bold uppercase">Tap to see more</p>
+              <p className="text-xs text-white mt-1 font-bold uppercase">Tap to see more</p>
             )}
           </div>
         </div>
