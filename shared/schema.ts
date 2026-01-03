@@ -1265,7 +1265,9 @@ export const challenges = pgTable("challenges", {
   description: text("description"),
   topic: varchar("topic", { length: 100 }).notNull(),
   releaseDate: timestamp("releaseDate").notNull(), // The Monday this challenge should be released
+  durationDays: integer("duration_days").default(7), // How many days users have to complete the challenge
   rationReward: integer("ration_reward").default(25), // Rations earned for accepting this challenge
+  completionReward: integer("completion_reward").default(75), // Rations earned for completing the challenge
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt").defaultNow(),
 });
@@ -1285,11 +1287,13 @@ export const challengeParticipants = pgTable("challenge_participants", {
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   challengeId: varchar("challenge_id").notNull().references(() => challenges.id, { onDelete: 'cascade' }),
   acceptedAt: timestamp("accepted_at").defaultNow(),
+  completedAt: timestamp("completed_at"), // When the user marked the challenge as complete (honor system)
 });
 
 export const insertChallengeParticipantSchema = createInsertSchema(challengeParticipants).omit({
   id: true,
   acceptedAt: true,
+  completedAt: true,
 });
 
 export type ChallengeParticipant = typeof challengeParticipants.$inferSelect;

@@ -11,6 +11,9 @@ interface Challenge {
   description?: string;
   topic: string;
   releaseDate: string;
+  durationDays?: number;
+  rationReward?: number;
+  completionReward?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -27,7 +30,9 @@ export default function ChallengeForm({ challenge, onSubmit, onCancel, isSubmitt
     title: '',
     description: '',
     topic: 'leadership',
-    releaseDate: ''
+    releaseDate: '',
+    durationDays: 7,
+    completionReward: 75
   });
 
   // Initialize form data when challenge changes
@@ -37,14 +42,18 @@ export default function ChallengeForm({ challenge, onSubmit, onCancel, isSubmitt
         title: challenge.title,
         description: challenge.description || '',
         topic: challenge.topic,
-        releaseDate: format(new Date(challenge.releaseDate), 'yyyy-MM-dd')
+        releaseDate: format(new Date(challenge.releaseDate), 'yyyy-MM-dd'),
+        durationDays: challenge.durationDays || 7,
+        completionReward: challenge.completionReward || 75
       });
     } else {
       setFormData({
         title: '',
         description: '',
         topic: 'leadership',
-        releaseDate: ''
+        releaseDate: '',
+        durationDays: 7,
+        completionReward: 75
       });
     }
   }, [challenge]);
@@ -185,6 +194,37 @@ export default function ChallengeForm({ challenge, onSubmit, onCancel, isSubmitt
               Will be released on Monday: {getMondayDisplay(new Date(formData.releaseDate).toISOString())}
             </p>
           )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium">Duration (Days)</label>
+          <Input
+            type="number"
+            min="1"
+            max="30"
+            value={formData.durationDays}
+            onChange={(e) => setFormData(prev => ({ ...prev, durationDays: parseInt(e.target.value) || 7 }))}
+            className="mt-2"
+          />
+          <p className="text-xs text-ministry-slate mt-1">
+            How many days users have to complete this challenge
+          </p>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">Completion Reward (Rations)</label>
+          <Input
+            type="number"
+            min="0"
+            value={formData.completionReward}
+            onChange={(e) => setFormData(prev => ({ ...prev, completionReward: parseInt(e.target.value) || 75 }))}
+            className="mt-2"
+          />
+          <p className="text-xs text-ministry-slate mt-1">
+            Rations earned when user marks challenge complete
+          </p>
         </div>
       </div>
 
