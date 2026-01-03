@@ -180,6 +180,8 @@ export default function Home() {
     },
     onSuccess: () => {
       refetchChallengeStatus();
+      // Invalidate rations balance to show updated total
+      queryClient.invalidateQueries({ queryKey: ["/api/rations"] });
       toast({
         title: "Challenge Completed!",
         description: "Congratulations! You've earned rations for completing this challenge.",
@@ -1198,6 +1200,10 @@ export default function Home() {
                   ) : challengeStatus?.hasCompleted ? (
                     <div className="flex items-center space-x-2 text-green-700 font-bold">
                       <span>✓ Completed</span>
+                    </div>
+                  ) : challengeStatus?.isExpired ? (
+                    <div className="flex items-center space-x-2 text-red-600 font-bold">
+                      <span>Deadline Passed</span>
                     </div>
                   ) : (
                     <Button 
