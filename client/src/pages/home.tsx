@@ -1026,47 +1026,68 @@ export default function Home() {
                       <span>Share</span>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-2 bg-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                    <div className="flex gap-2">
-                      <a
-                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}&quote=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 bg-[#1877F2] text-white rounded-none hover:opacity-80 transition-opacity"
-                      >
-                        <SiFacebook className="w-5 h-5" />
-                      </a>
-                      <a
-                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\nFrom Man Up God's Way`)}&url=${encodeURIComponent(window.location.origin)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 bg-black text-white border border-white rounded-none hover:opacity-80 transition-opacity"
-                      >
-                        <SiX className="w-5 h-5" />
-                      </a>
-                      <a
-                        href={`https://wa.me/?text=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\nFrom Man Up God's Way: ${window.location.origin}`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 bg-[#25D366] text-white rounded-none hover:opacity-80 transition-opacity"
-                      >
-                        <SiWhatsapp className="w-5 h-5" />
-                      </a>
-                      <a
-                        href={`mailto:?subject=${encodeURIComponent(devotional.title)}&body=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n${devotional.content}\n\nFrom Man Up God's Way: ${window.location.origin}`)}`}
-                        className="p-2 bg-gray-600 text-white rounded-none hover:opacity-80 transition-opacity"
-                      >
-                        <Mail className="w-5 h-5" />
-                      </a>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(window.location.origin);
-                          toast({ title: "Link copied!", description: "The link has been copied to your clipboard" });
-                        }}
-                        className="p-2 bg-ministry-gold-exact text-black rounded-none hover:opacity-80 transition-opacity"
-                      >
-                        <Link2 className="w-5 h-5" />
-                      </button>
+                  <PopoverContent className="w-auto p-3 bg-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="space-y-3">
+                      <div className="text-center">
+                        <a
+                          href={`/api/devotionals/${devotional.id}/share-image`}
+                          download={`manupgodsway-${devotional.id}.png`}
+                          className="block w-full p-3 bg-ministry-gold-exact text-black rounded-none hover:bg-yellow-400 transition-colors font-bold text-sm uppercase"
+                          data-testid="download-share-image"
+                        >
+                          📥 Download Share Image
+                        </a>
+                        <p className="text-xs text-gray-400 mt-1">Save & share on any platform</p>
+                      </div>
+                      <div className="border-t border-gray-700 pt-2">
+                        <p className="text-xs text-gray-400 mb-2 text-center">Or share directly:</p>
+                        <div className="flex gap-2 justify-center">
+                          <a
+                            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.manupgodsway.org')}&quote=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\nDownload the app: www.manupgodsway.org`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-[#1877F2] text-white rounded-none hover:opacity-80 transition-opacity"
+                            data-testid="share-facebook"
+                          >
+                            <SiFacebook className="w-5 h-5" />
+                          </a>
+                          <a
+                            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n📲 Download the app: www.manupgodsway.org`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-black text-white border border-white rounded-none hover:opacity-80 transition-opacity"
+                            data-testid="share-twitter"
+                          >
+                            <SiX className="w-5 h-5" />
+                          </a>
+                          <a
+                            href={`https://wa.me/?text=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n📲 Download the app: www.manupgodsway.org`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-[#25D366] text-white rounded-none hover:opacity-80 transition-opacity"
+                            data-testid="share-whatsapp"
+                          >
+                            <SiWhatsapp className="w-5 h-5" />
+                          </a>
+                          <a
+                            href={`mailto:?subject=${encodeURIComponent(devotional.title)}&body=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n${devotional.content}\n\n📲 Download the app: www.manupgodsway.org`)}`}
+                            className="p-2 bg-gray-600 text-white rounded-none hover:opacity-80 transition-opacity"
+                            data-testid="share-email"
+                          >
+                            <Mail className="w-5 h-5" />
+                          </a>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText('www.manupgodsway.org');
+                              toast({ title: "Link copied!", description: "www.manupgodsway.org copied to clipboard" });
+                            }}
+                            className="p-2 bg-gray-700 text-white rounded-none hover:opacity-80 transition-opacity"
+                            data-testid="copy-link"
+                          >
+                            <Link2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </PopoverContent>
                 </Popover>
