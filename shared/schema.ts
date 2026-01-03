@@ -1921,6 +1921,7 @@ export const blogPosts = pgTable("blog_posts", {
   rssGuid: varchar("rss_guid"), // Unique identifier from RSS to prevent duplicates
   externalUrl: varchar("external_url"), // Link to original post if imported
   category: varchar("category").default("general"),
+  displayOrder: integer("display_order").default(0), // For manual ordering
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

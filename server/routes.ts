@@ -7407,7 +7407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const blogs = await db.select().from(schema.blogPosts)
         .where(eq(schema.blogPosts.isPublished, true))
-        .orderBy(desc(schema.blogPosts.publishedAt));
+        .orderBy(schema.blogPosts.displayOrder, desc(schema.blogPosts.publishedAt));
       res.json(blogs);
     } catch (error) {
       console.error('Error fetching blogs:', error);
@@ -7453,7 +7453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const blogs = await db.select().from(schema.blogPosts)
-        .orderBy(desc(schema.blogPosts.createdAt));
+        .orderBy(schema.blogPosts.displayOrder, desc(schema.blogPosts.createdAt));
       res.json(blogs);
     } catch (error) {
       console.error('Error fetching admin blogs:', error);
@@ -7813,6 +7813,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Failed to sync thumbnails',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+  // Reorder blogs (admin only)
+  app.post('/api/admin/blogs/reorder', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { blogId, direction } = req.body;
+      if (!blogId || !['up', 'down'].includes(direction)) {
+        return res.status(400).json({ message: "Blog ID and direction (up/down) are required" });
+      }
+
+      // Get all blogs ordered by displayOrder
+      const allBlogs = await db.select().from(schema.blogPosts)
+        .orderBy(schema.blogPosts.displayOrder, schema.blogPosts.createdAt);
+
+      const currentIndex = allBlogs.findIndex(b => b.id === blogId);
+      if (currentIndex === -1) {
+        return res.status(404).json({ message: "Blog not found" });
+      }
+
+      const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (swapIndex < 0 || swapIndex >= allBlogs.length) {
+        return res.status(400).json({ message: "Cannot move blog further in that direction" });
+      }
+
+      // Swap display orders
+      const currentBlog = allBlogs[currentIndex];
+      const swapBlog = allBlogs[swapIndex];
+
+      await db.update(schema.blogPosts)
+        .set({ displayOrder: swapBlog.displayOrder })
+        .where(eq(schema.blogPosts.id, currentBlog.id));
+
+      await db.update(schema.blogPosts)
+        .set({ displayOrder: currentBlog.displayOrder })
+        .where(eq(schema.blogPosts.id, swapBlog.id));
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error reordering blogs:', error);
+      res.status(500).json({ message: 'Failed to reorder blogs' });
+    }
+  });
+
+  // Update all blog display orders (admin only) - for bulk reordering
+  app.post('/api/admin/blogs/update-order', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { blogIds } = req.body;
+      if (!Array.isArray(blogIds)) {
+        return res.status(400).json({ message: "Blog IDs array is required" });
+      }
+
+      // Update display order for each blog based on array position
+      for (let i = 0; i < blogIds.length; i++) {
+        await db.update(schema.blogPosts)
+          .set({ displayOrder: i })
+          .where(eq(schema.blogPosts.id, blogIds[i]));
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error updating blog order:', error);
+      res.status(500).json({ message: 'Failed to update blog order' });
     }
   });
 

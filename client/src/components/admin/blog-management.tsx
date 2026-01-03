@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Edit, Trash2, Plus, Eye, EyeOff, Rss, ExternalLink, Star, Upload, X, FileText, RefreshCw } from "lucide-react";
+import { Edit, Trash2, Plus, Eye, EyeOff, Rss, ExternalLink, Star, Upload, X, FileText, RefreshCw, ChevronUp, ChevronDown } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { BlogPost } from "@shared/schema";
 
@@ -144,6 +144,22 @@ export default function BlogManagement() {
       toast({ 
         title: "Sync Failed", 
         description: error.message || "Failed to sync thumbnails", 
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const reorderMutation = useMutation({
+    mutationFn: ({ blogId, direction }: { blogId: string; direction: 'up' | 'down' }) => 
+      apiRequest('POST', '/api/admin/blogs/reorder', { blogId, direction }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/blogs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/blogs'] });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Reorder Failed", 
+        description: error.message || "Failed to reorder blog", 
         variant: "destructive" 
       });
     },
@@ -371,7 +387,37 @@ export default function BlogManagement() {
                   </div>
                 </div>
                 
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="flex gap-1 flex-shrink-0">
+                  <div className="flex flex-col gap-0.5 mr-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => reorderMutation.mutate({ blogId: blog.id, direction: 'up' })}
+                      disabled={reorderMutation.isPending}
+                      className={`h-6 w-6 p-0 rounded-none ${
+                        blog.isPublished 
+                          ? 'text-black hover:bg-black/10' 
+                          : 'text-white hover:bg-white/10'
+                      }`}
+                      data-testid={`button-move-up-${blog.id}`}
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => reorderMutation.mutate({ blogId: blog.id, direction: 'down' })}
+                      disabled={reorderMutation.isPending}
+                      className={`h-6 w-6 p-0 rounded-none ${
+                        blog.isPublished 
+                          ? 'text-black hover:bg-black/10' 
+                          : 'text-white hover:bg-white/10'
+                      }`}
+                      data-testid={`button-move-down-${blog.id}`}
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </div>
                   <Button
                     size="sm"
                     onClick={() => handleEdit(blog)}
