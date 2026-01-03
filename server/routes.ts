@@ -5606,7 +5606,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Complete weekly challenge (awards rations)
+  // Complete weekly challenge (awards rations) - honor system
   app.post('/api/challenges/:id/complete', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -5618,12 +5618,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Must accept challenge first' });
       }
       
+      // Check if already completed
+      const participation = await storage.getChallengeParticipation(userId, challengeId);
+      if (participation?.completedAt) {
+        return res.status(400).json({ message: 'Challenge already completed' });
+      }
+      
+      // Mark as completed in database
+      await storage.completeChallenge(userId, challengeId);
+      
       const { rationsService } = await import('./rations-service');
       
-      // Award completion bonus (3x the accept reward)
-      const [challenge] = await db.select({ rationReward: schema.challenges.rationReward, title: schema.challenges.title })
-        .from(schema.challenges).where(eq(schema.challenges.id, challengeId));
-      const completionReward = (challenge?.rationReward || 25) * 3;
+      // Award completion reward from the challenge settings
+      const [challenge] = await db.select({ 
+        completionReward: schema.challenges.completionReward, 
+        title: schema.challenges.title 
+      }).from(schema.challenges).where(eq(schema.challenges.id, challengeId));
+      const completionReward = challenge?.completionReward || 75;
       
       const rationResult = await rationsService.awardCustomRations(
         userId, completionReward, 'challenge', `Completed challenge: ${challenge?.title || 'Weekly Challenge'}`, 
@@ -5633,6 +5644,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true, rations: rationResult });
     } catch (error) {
       console.error('Error completing challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+  // Get user's challenge status (accepted, completed, deadline)
+  app.get('/api/challenges/:id/user-status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const challengeId = req.params.id;
+      
+      const participation = await storage.getChallengeParticipation(userId, challengeId);
+      const challenge = await storage.getChallenge(challengeId);
+      
+      if (!participation) {
+        return res.json({ hasAccepted: false, hasCompleted: false });
+      }
+      
+      // Calculate deadline based on acceptedAt + durationDays
+      const durationDays = challenge?.durationDays || 7;
+      const acceptedAt = new Date(participation.acceptedAt!);
+      const deadline = new Date(acceptedAt);
+      deadline.setDate(deadline.getDate() + durationDays);
+      
+      res.json({
+        hasAccepted: true,
+        hasCompleted: !!participation.completedAt,
+        acceptedAt: participation.acceptedAt,
+        completedAt: participation.completedAt,
+        deadline: deadline.toISOString(),
+        isExpired: new Date() > deadline
+      });
+    } catch (error) {
+      console.error('Error getting challenge status:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

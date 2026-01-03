@@ -136,6 +136,20 @@ export default function Home() {
     retry: false,
   });
 
+  // Get full challenge status including completion
+  const { data: challengeStatus, refetch: refetchChallengeStatus } = useQuery<{
+    hasAccepted: boolean;
+    hasCompleted: boolean;
+    acceptedAt?: string;
+    completedAt?: string;
+    deadline?: string;
+    isExpired?: boolean;
+  }>({
+    queryKey: ["/api/challenges", (currentChallenge as any)?.id, "user-status"],
+    enabled: !!(currentChallenge as any)?.id,
+    retry: false,
+  });
+
   // Mutation to accept the challenge
   const acceptChallengeMutation = useMutation({
     mutationFn: async (challengeId: string) => {
@@ -144,6 +158,7 @@ export default function Home() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/challenges", (currentChallenge as any)?.id, "participant-count"] });
       refetchUserAccepted();
+      refetchChallengeStatus();
       toast({
         title: "Challenge Accepted!",
         description: "You've joined this week's challenge. Let's grow together!",
@@ -153,6 +168,27 @@ export default function Home() {
       toast({
         title: "Error",
         description: error.message || "Failed to accept challenge",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation to complete the challenge (honor system)
+  const completeChallengeMutation = useMutation({
+    mutationFn: async (challengeId: string) => {
+      return await apiRequest("POST", `/api/challenges/${challengeId}/complete`);
+    },
+    onSuccess: () => {
+      refetchChallengeStatus();
+      toast({
+        title: "Challenge Completed!",
+        description: "Congratulations! You've earned rations for completing this challenge.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to complete challenge",
         variant: "destructive",
       });
     },
@@ -1150,21 +1186,56 @@ export default function Home() {
                       {(challengeParticipants as any)?.count || 0} {((challengeParticipants as any)?.count || 0) === 1 ? 'brother has' : 'brothers have'} taken this challenge
                     </span>
                   </div>
-                  <Button 
-                    className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-bold"
-                    onClick={() => acceptChallengeMutation.mutate((currentChallenge as any)?.id)}
-                    disabled={(userAccepted as any)?.hasAccepted || acceptChallengeMutation.isPending}
-                    data-testid="button-accept-challenge"
-                  >
-                    {acceptChallengeMutation.isPending ? (
-                      "Accepting..."
-                    ) : (userAccepted as any)?.hasAccepted ? (
-                      "Challenge Accepted ✓"
-                    ) : (
-                      "I Take the Challenge"
-                    )}
-                  </Button>
+                  {!challengeStatus?.hasAccepted ? (
+                    <Button 
+                      className="bg-black hover:bg-gray-900 text-white font-bold"
+                      onClick={() => acceptChallengeMutation.mutate((currentChallenge as any)?.id)}
+                      disabled={acceptChallengeMutation.isPending}
+                      data-testid="button-accept-challenge"
+                    >
+                      {acceptChallengeMutation.isPending ? "Accepting..." : "I Take the Challenge"}
+                    </Button>
+                  ) : challengeStatus?.hasCompleted ? (
+                    <div className="flex items-center space-x-2 text-green-700 font-bold">
+                      <span>✓ Completed</span>
+                    </div>
+                  ) : (
+                    <Button 
+                      className="bg-green-600 hover:bg-green-700 text-white font-bold"
+                      onClick={() => completeChallengeMutation.mutate((currentChallenge as any)?.id)}
+                      disabled={completeChallengeMutation.isPending}
+                      data-testid="button-complete-challenge"
+                    >
+                      {completeChallengeMutation.isPending ? "Completing..." : "Mark Complete ✓"}
+                    </Button>
+                  )}
                 </div>
+                
+                {/* Deadline info for accepted challenges */}
+                {challengeStatus?.hasAccepted && !challengeStatus?.hasCompleted && challengeStatus?.deadline && (
+                  <div className="mt-3 pt-3 border-t border-black/20">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-black/70">
+                        {challengeStatus.isExpired ? (
+                          <span className="text-red-600 font-bold">Challenge expired</span>
+                        ) : (
+                          <>
+                            Complete by: <span className="font-bold text-black">
+                              {new Date(challengeStatus.deadline).toLocaleDateString('en-US', { 
+                                weekday: 'short', 
+                                month: 'short', 
+                                day: 'numeric' 
+                              })}
+                            </span>
+                          </>
+                        )}
+                      </span>
+                      <span className="text-black font-medium">
+                        {(currentChallenge as any)?.durationDays || 7} day challenge
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}

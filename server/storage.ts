@@ -381,6 +381,9 @@ export interface IStorage {
   acceptChallenge(userId: string, challengeId: string): Promise<ChallengeParticipant>;
   getChallengeParticipantCount(challengeId: string): Promise<number>;
   hasUserAcceptedChallenge(userId: string, challengeId: string): Promise<boolean>;
+  getChallengeParticipation(userId: string, challengeId: string): Promise<ChallengeParticipant | undefined>;
+  completeChallenge(userId: string, challengeId: string): Promise<void>;
+  getChallenge(id: string): Promise<Challenge | undefined>;
 
   // Content flagging operations
   flagContent(flagData: InsertContentFlag): Promise<ContentFlag>;
@@ -4188,6 +4191,37 @@ export class DatabaseStorage implements IStorage {
       ));
     
     return !!participant;
+  }
+
+  async getChallengeParticipation(userId: string, challengeId: string): Promise<ChallengeParticipant | undefined> {
+    const [participant] = await db
+      .select()
+      .from(challengeParticipants)
+      .where(and(
+        eq(challengeParticipants.userId, userId),
+        eq(challengeParticipants.challengeId, challengeId)
+      ));
+    
+    return participant;
+  }
+
+  async completeChallenge(userId: string, challengeId: string): Promise<void> {
+    await db
+      .update(challengeParticipants)
+      .set({ completedAt: new Date() })
+      .where(and(
+        eq(challengeParticipants.userId, userId),
+        eq(challengeParticipants.challengeId, challengeId)
+      ));
+  }
+
+  async getChallenge(id: string): Promise<Challenge | undefined> {
+    const [challenge] = await db
+      .select()
+      .from(challenges)
+      .where(eq(challenges.id, id));
+    
+    return challenge;
   }
 
   // Content Flagging Methods
