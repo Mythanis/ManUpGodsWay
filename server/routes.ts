@@ -2809,6 +2809,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate shareable devotional image
+  app.get('/api/devotionals/:id/share-image', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const devotional = await storage.getDevotional(id);
+      
+      if (!devotional) {
+        return res.status(404).json({ message: "Devotional not found" });
+      }
+
+      const { createCanvas, loadImage, registerFont } = await import('canvas');
+      
+      const width = 1200;
+      const height = 630;
+      const canvas = createCanvas(width, height);
+      const ctx = canvas.getContext('2d');
+
+      // Black background
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, width, height);
+
+      // Gold gradient overlay at top
+      const gradient = ctx.createLinearGradient(0, 0, width, 100);
+      gradient.addColorStop(0, 'rgba(252, 208, 0, 0.3)');
+      gradient.addColorStop(1, 'rgba(252, 208, 0, 0.1)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, 100);
+
+      // Gold accent bar at top
+      ctx.fillStyle = '#FCD000';
+      ctx.fillRect(0, 0, width, 8);
+
+      // Title - "MAN UP GOD'S WAY"
+      ctx.fillStyle = '#FCD000';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('MAN UP GOD\'S WAY', width / 2, 60);
+
+      // Devotional title
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 32px sans-serif';
+      const titleLines = wrapText(ctx, devotional.title, width - 120, 28);
+      let y = 130;
+      for (const line of titleLines.slice(0, 2)) {
+        ctx.fillText(line, width / 2, y);
+        y += 40;
+      }
+
+      // Scripture verse (main content)
+      ctx.fillStyle = '#FCD000';
+      ctx.font = 'italic 28px sans-serif';
+      const verse = devotional.verse || '';
+      const verseLines = wrapText(ctx, `"${verse}"`, width - 100, 26);
+      y += 30;
+      for (const line of verseLines.slice(0, 4)) {
+        ctx.fillText(line, width / 2, y);
+        y += 38;
+      }
+
+      // Scripture reference
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 24px sans-serif';
+      y += 20;
+      ctx.fillText(`— ${devotional.verseReference || ''}`, width / 2, y);
+
+      // Bottom section - Website URL
+      ctx.fillStyle = '#FCD000';
+      ctx.fillRect(0, height - 80, width, 80);
+      
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText('www.manupgodsway.org', width / 2, height - 35);
+
+      // Download the app text
+      ctx.font = '18px sans-serif';
+      ctx.fillText('Download the App Today', width / 2, height - 60);
+
+      // Set response headers
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      
+      // Stream the image
+      const buffer = canvas.toBuffer('image/png');
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error generating share image:", error);
+      res.status(500).json({ message: "Failed to generate share image" });
+    }
+  });
+
+  // Helper function to wrap text
+  function wrapText(ctx: any, text: string, maxWidth: number, fontSize: number): string[] {
+    const words = text.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+
+    for (const word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      const metrics = ctx.measureText(testLine);
+      
+      if (metrics.width > maxWidth && currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+    
+    return lines;
+  }
+
   app.post('/api/devotionals', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
