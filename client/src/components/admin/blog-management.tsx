@@ -15,6 +15,8 @@ import type { BlogPost } from "@shared/schema";
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
 
+const IGNITE_CHURCH_RSS_URL = "https://ignitechurchstl.church/blog/rss";
+
 const CATEGORIES = [
   { value: "general", label: "General" },
   { value: "faith", label: "Faith" },
@@ -568,8 +570,27 @@ export default function BlogManagement() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-sm text-black/70 font-medium">
-              Enter an RSS feed URL to import blog posts. Duplicate posts (by GUID) will be skipped.
+              Import blog posts from Ignite Church RSS feed. Duplicate posts (by GUID) will be skipped.
             </p>
+            
+            <div className="bg-black/10 p-3 border-2 border-black">
+              <Label className="font-bold uppercase text-black text-xs">Ignite Church Feed (Default)</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <code className="text-xs bg-white px-2 py-1 border border-black flex-1 truncate">
+                  {IGNITE_CHURCH_RSS_URL}
+                </code>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setRssUrl(IGNITE_CHURCH_RSS_URL)}
+                  className="bg-black text-white rounded-none text-xs hover:bg-gray-800"
+                  data-testid="button-use-ignite-rss"
+                >
+                  Use This
+                </Button>
+              </div>
+            </div>
+
             <div>
               <Label htmlFor="rss-url" className="font-bold uppercase text-black">RSS Feed URL *</Label>
               <Input
