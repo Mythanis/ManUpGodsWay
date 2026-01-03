@@ -4951,6 +4951,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mark welcome intro as seen
+  app.post('/api/user/welcome-seen', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const updatedUser = await storage.updateUserProfile(userId, {
+        hasSeenWelcome: true,
+      });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking welcome as seen:", error);
+      res.status(500).json({ message: "Failed to update welcome status" });
+    }
+  });
+
   // Logo settings routes
   // Get current logo settings
   app.get('/api/logo', async (req, res) => {

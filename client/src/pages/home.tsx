@@ -15,6 +15,7 @@ import { LiveStreamBanner } from "@/components/live-stream-banner";
 import BrotherhoodRequests from "@/components/brotherhood-requests";
 import UpgradeModal from "@/components/upgrade-modal";
 import HomeCarousel from "@/components/home-carousel";
+import { WelcomeIntro } from "@/components/WelcomeIntro";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper, Book, Coins } from "lucide-react";
@@ -40,6 +41,7 @@ export default function Home() {
   const [showChallengeDialog, setShowChallengeDialog] = useState(false);
   const [showHurdleWallDialog, setShowHurdleWallDialog] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showWelcomeIntro, setShowWelcomeIntro] = useState(false);
   const [appOpenStreak, setAppOpenStreak] = useState(0);
 
   // Track app opens and calculate streak
@@ -95,6 +97,13 @@ export default function Home() {
       return;
     }
   }, [isAuthenticated, authLoading, toast]);
+
+  // Show welcome intro for new users who haven't seen it
+  useEffect(() => {
+    if (user && !user.hasSeenWelcome) {
+      setShowWelcomeIntro(true);
+    }
+  }, [user]);
 
   const { data: devotional } = useQuery({
     queryKey: ["/api/devotionals/today"],
@@ -1350,6 +1359,12 @@ export default function Home() {
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
+      />
+
+      {/* Welcome Intro for New Users */}
+      <WelcomeIntro
+        open={showWelcomeIntro}
+        onClose={() => setShowWelcomeIntro(false)}
       />
     </div>
   );
