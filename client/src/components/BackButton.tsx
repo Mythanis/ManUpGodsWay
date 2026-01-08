@@ -13,13 +13,12 @@ export function BackButton() {
   return (
     <Button
       variant="ghost"
-      size="sm"
+      size="icon"
       onClick={handleBack}
-      className="flex items-center gap-1 text-muted-foreground hover:text-foreground mb-4"
+      className="rounded-full w-10 h-10 bg-black hover:bg-black/80 mb-4"
       data-testid="button-back"
     >
-      <ArrowLeft className="h-4 w-4" />
-      <span>Back</span>
+      <ArrowLeft className="h-5 w-5 text-[#FCD000]" />
     </Button>
   );
 }
