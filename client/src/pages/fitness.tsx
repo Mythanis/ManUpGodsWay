@@ -1301,11 +1301,11 @@ export default function Fitness() {
       <div className="px-4 pt-6 space-y-6">
         <BackButton />
         {/* Header */}
-        <div className="text-center mb-8 liquid-gold-card p-6 rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
-          <h1 className="text-3xl font-black text-black mb-2 uppercase tracking-wide relative z-10">
+        <div className="text-center mb-8 liquid-header p-6 rounded-none border-2 border-[#FCD000] shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
+          <h1 className="text-3xl font-black text-white mb-2 uppercase tracking-wide relative z-10">
             Fitness Center
           </h1>
-          <p className="text-black font-medium relative z-10 mb-4">
+          <p className="text-white font-medium relative z-10 mb-4">
             Build physical strength to complement your spiritual growth
           </p>
           <div className="flex flex-wrap justify-center gap-3 relative z-10">
