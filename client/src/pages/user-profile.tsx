@@ -301,7 +301,7 @@ export default function UserProfile() {
                   size="sm"
                   className={silenceStatus?.isSilenced 
                     ? "border-green-300 text-green-600 hover:bg-green-50" 
-                    : "border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10"
+                    : "bg-ministry-charcoal border-ministry-charcoal text-white hover:bg-ministry-charcoal/90"
                   }
                   disabled={silenceUser.isPending || unsilenceUser.isPending}
                 >
