@@ -315,7 +315,7 @@ export default function Brothers() {
                             )}
                           </div>
                           <div className="flex items-center justify-between mt-1">
-                            <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                            <div className="flex items-center space-x-2 text-xs text-white">
                               <Calendar className="w-3 h-3" />
                               <span>Since {new Date(brother.createdAt).toLocaleDateString()}</span>
                             </div>
