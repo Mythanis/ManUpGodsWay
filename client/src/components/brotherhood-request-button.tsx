@@ -273,7 +273,7 @@ export default function BrotherhoodRequestButton({
       <Button
         onClick={handleSendRequest}
         disabled={requestMutation.isPending}
-        className="gap-2 bg-ministry-charcoal hover:bg-ministry-charcoal/90"
+        className="gap-2 bg-ministry-charcoal hover:bg-ministry-charcoal/90 text-white"
         data-testid={`button-request-brotherhood-${recipientId}`}
       >
         <UserPlus className="w-4 h-4" />
