@@ -1298,10 +1298,10 @@ export default function Fitness() {
 
   return (
     <div className="min-h-screen bg-black pb-20">
-      <div className="px-4 pt-6 space-y-6">
+      {/* Header with liquid effect */}
+      <div className="liquid-header px-4 pt-6 pb-6 border-b-4 border-[#FCD000]">
         <BackButton />
-        {/* Header */}
-        <div className="text-center mb-8 liquid-header p-6 rounded-none border-2 border-[#FCD000] shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
+        <div className="text-center">
           <h1 className="text-3xl font-black text-white mb-2 uppercase tracking-wide relative z-10">
             Fitness Center
           </h1>
@@ -1327,7 +1327,10 @@ export default function Fitness() {
             </button>
           </div>
         </div>
+      </div>
 
+      {/* Main Content */}
+      <div className="px-4 pt-6 space-y-6 pb-20">
         {/* Fitness Pillar Dialog */}
         <Dialog open={showFitnessPillarDialog} onOpenChange={setShowFitnessPillarDialog}>
           <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85vh] flex flex-col p-0 rounded-none border-2 border-black bg-black">
