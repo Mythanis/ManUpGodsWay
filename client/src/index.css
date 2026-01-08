@@ -526,16 +526,16 @@
   pointer-events: none;
 }
 
-/* Glossy gold card effect - Enhanced liquid look */
+/* Glossy card effect - Enhanced liquid look (black and white) */
 .liquid-gold-card {
   background: linear-gradient(
     145deg,
-    #FCD000 0%,
-    #ffe14d 15%,
-    #FCD000 35%,
-    #e6bc00 55%,
-    #FCD000 75%,
-    #ffe14d 100%
+    #ffffff 0%,
+    #f5f5f5 15%,
+    #ffffff 35%,
+    #e8e8e8 55%,
+    #ffffff 75%,
+    #f5f5f5 100%
   ) !important;
   background-size: 200% 200%;
   animation: liquidGold 4s ease infinite;
@@ -659,31 +659,31 @@
 }
 
 .liquid-button:hover {
-  box-shadow: 0 0 20px rgba(252, 208, 0, 0.4),
-              0 0 40px rgba(252, 208, 0, 0.2);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.4),
+              0 0 40px rgba(255, 255, 255, 0.2);
 }
 
-/* Glowing gold accent */
+/* Glowing accent (black and white) */
 .glow-gold {
-  box-shadow: 0 4px 15px rgba(252, 208, 0, 0.3),
-              0 0 30px rgba(252, 208, 0, 0.15);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15),
+              0 0 30px rgba(0, 0, 0, 0.08);
 }
 
-/* Pulsing gold glow for emphasis */
+/* Pulsing glow for emphasis (black and white) */
 .pulse-gold {
   animation: pulse-glow 2s ease-in-out infinite;
-  box-shadow: 0 0 20px rgba(252, 208, 0, 0.4);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
 }
 
-/* Liquid section divider */
+/* Liquid section divider (black and white) */
 .liquid-divider {
   height: 2px;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    #FCD000 20%,
-    #ffd633 50%,
-    #FCD000 80%,
+    #666666 20%,
+    #888888 50%,
+    #666666 80%,
     transparent 100%
   );
   margin: 1.5rem 0;
@@ -708,7 +708,7 @@
 .liquid-orbs::before {
   width: 150px;
   height: 150px;
-  background: #FCD000;
+  background: #ffffff;
   top: -50px;
   right: -30px;
 }
@@ -716,7 +716,7 @@
 .liquid-orbs::after {
   width: 100px;
   height: 100px;
-  background: #FCD000;
+  background: #ffffff;
   bottom: 50px;
   left: -20px;
   animation-delay: 2s;
@@ -740,7 +740,7 @@
 /* Leaflet tooltip styling for war groups map */
 .leaflet-tooltip {
   background-color: #18181b !important;
-  border: 2px solid #FCD000 !important;
+  border: 2px solid #ffffff !important;
   border-radius: 8px !important;
   padding: 0 !important;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
@@ -749,23 +749,23 @@
 }
 
 .leaflet-tooltip::before {
-  border-top-color: #FCD000 !important;
+  border-top-color: #ffffff !important;
 }
 
 .leaflet-tooltip-top::before {
-  border-top-color: #FCD000 !important;
+  border-top-color: #ffffff !important;
 }
 
 .leaflet-tooltip-bottom::before {
-  border-bottom-color: #FCD000 !important;
+  border-bottom-color: #ffffff !important;
 }
 
 .leaflet-tooltip-left::before {
-  border-left-color: #FCD000 !important;
+  border-left-color: #ffffff !important;
 }
 
 .leaflet-tooltip-right::before {
-  border-right-color: #FCD000 !important;
+  border-right-color: #ffffff !important;
 }
 
 /* Make sure tooltips appear above map panes */
