@@ -103,9 +103,8 @@ export default function Videos() {
   // Set video stream URL when dialog opens
   useEffect(() => {
     if (selectedVideo && showVideoDialog) {
-      // For demo purposes, use the sample video directly
-      // In production, this would be the actual uploaded video file
-      setVideoStreamUrl('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
+      // Use the actual uploaded video stream endpoint
+      setVideoStreamUrl(`/api/videos/${selectedVideo.id}/stream`);
     } else {
       setVideoStreamUrl(null);
     }
