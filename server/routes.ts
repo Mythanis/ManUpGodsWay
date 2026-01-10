@@ -5803,8 +5803,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const challengeId = req.params.id;
       
-      const hasAccepted = await storage.hasUserAcceptedChallenge(userId, challengeId);
-      res.json({ hasAccepted });
+      const participation = await storage.getChallengeParticipation(userId, challengeId);
+      res.json({ 
+        hasAccepted: !!participation,
+        hasCompleted: !!participation?.completedAt
+      });
     } catch (error) {
       console.error('Error checking if user accepted challenge:', error);
       res.status(500).json({ message: 'Internal server error' });
