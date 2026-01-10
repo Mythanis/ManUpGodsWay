@@ -135,6 +135,29 @@ export default function Challenges() {
     },
   });
 
+  // Complete challenge mutation
+  const completeChallengeMutation = useMutation({
+    mutationFn: async (challengeId: string) => {
+      return apiRequest('POST', `/api/challenges/${challengeId}/complete`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Challenge Completed!",
+        description: "Congratulations! You've earned rations for completing this challenge.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', currentWeekChallenge?.id, 'user-accepted'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', selectedChallenge?.id, 'user-accepted'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/rations'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to complete challenge. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Filter and sort challenges (current and previous only, excluding current week display)
   const processedChallenges = challenges
     .filter((challenge: Challenge) => {
@@ -238,27 +261,45 @@ export default function Challenges() {
                     </span>
                   </div>
                   {user ? (
-                    <Button
-                      size="sm"
-                      className="bg-black hover:bg-black/90 text-ministry-gold-exact font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        acceptChallengeMutation.mutate(challenge.id);
-                      }}
-                      disabled={userAccepted?.hasAccepted || acceptChallengeMutation.isPending}
-                      data-testid="button-accept-challenge"
-                    >
-                      {acceptChallengeMutation.isPending ? (
-                        "..."
-                      ) : userAccepted?.hasAccepted ? (
-                        <>
+                    <div className="flex items-center gap-2">
+                      {!userAccepted?.hasAccepted ? (
+                        <Button
+                          size="sm"
+                          className="bg-black hover:bg-black/90 text-ministry-gold-exact font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            acceptChallengeMutation.mutate(challenge.id);
+                          }}
+                          disabled={acceptChallengeMutation.isPending}
+                          data-testid="button-accept-challenge"
+                        >
+                          {acceptChallengeMutation.isPending ? "..." : "Accept"}
+                        </Button>
+                      ) : userAccepted?.hasCompleted ? (
+                        <Button
+                          size="sm"
+                          className="bg-ministry-gold-exact text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                          disabled
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <CheckCircle className="w-4 h-4 mr-1" />
-                          Accepted
-                        </>
+                          Completed
+                        </Button>
                       ) : (
-                        "Accept"
+                        <Button
+                          size="sm"
+                          className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            completeChallengeMutation.mutate(challenge.id);
+                          }}
+                          disabled={completeChallengeMutation.isPending}
+                          data-testid="button-complete-challenge"
+                        >
+                          {completeChallengeMutation.isPending ? "..." : "Complete"}
+                        </Button>
                       )}
-                    </Button>
+                    </div>
                   ) : (
                     <Button
                       size="sm"
@@ -470,24 +511,38 @@ export default function Challenges() {
                     </span>
                   </div>
                   {user ? (
-                    <Button 
-                      size="sm"
-                      className="bg-black hover:bg-black/90 text-ministry-gold-exact font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-                      onClick={() => acceptChallengeMutation.mutate(selectedChallenge.id)}
-                      disabled={selectedUserAccepted?.hasAccepted || acceptChallengeMutation.isPending}
-                      data-testid="button-accept-challenge-dialog"
-                    >
-                      {acceptChallengeMutation.isPending ? (
-                        "..."
-                      ) : selectedUserAccepted?.hasAccepted ? (
-                        <>
+                    <div className="flex items-center gap-2">
+                      {!selectedUserAccepted?.hasAccepted ? (
+                        <Button 
+                          size="sm"
+                          className="bg-black hover:bg-black/90 text-ministry-gold-exact font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                          onClick={() => acceptChallengeMutation.mutate(selectedChallenge.id)}
+                          disabled={acceptChallengeMutation.isPending}
+                          data-testid="button-accept-challenge-dialog"
+                        >
+                          {acceptChallengeMutation.isPending ? "..." : "Accept"}
+                        </Button>
+                      ) : selectedUserAccepted?.hasCompleted ? (
+                        <Button
+                          size="sm"
+                          className="bg-ministry-gold-exact text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                          disabled
+                        >
                           <CheckCircle className="w-4 h-4 mr-1" />
-                          Accepted
-                        </>
+                          Completed
+                        </Button>
                       ) : (
-                        "Accept"
+                        <Button
+                          size="sm"
+                          className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                          onClick={() => completeChallengeMutation.mutate(selectedChallenge.id)}
+                          disabled={completeChallengeMutation.isPending}
+                          data-testid="button-complete-challenge-dialog"
+                        >
+                          {completeChallengeMutation.isPending ? "..." : "Complete"}
+                        </Button>
                       )}
-                    </Button>
+                    </div>
                   ) : (
                     <Button
                       size="sm"
