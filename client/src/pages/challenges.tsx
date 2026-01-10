@@ -278,12 +278,12 @@ export default function Challenges() {
                       ) : userAccepted?.hasCompleted ? (
                         <Button
                           size="sm"
-                          className="bg-ministry-gold-exact text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                          className="bg-ministry-gold-exact text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
                           disabled
                           onClick={(e) => e.stopPropagation()}
                         >
                           <CheckCircle className="w-4 h-4 mr-1" />
-                          Completed
+                          COMPLETED
                         </Button>
                       ) : (
                         <Button
@@ -525,11 +525,11 @@ export default function Challenges() {
                       ) : selectedUserAccepted?.hasCompleted ? (
                         <Button
                           size="sm"
-                          className="bg-ministry-gold-exact text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                          className="bg-ministry-gold-exact text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
                           disabled
                         >
                           <CheckCircle className="w-4 h-4 mr-1" />
-                          Completed
+                          COMPLETED
                         </Button>
                       ) : (
                         <Button
