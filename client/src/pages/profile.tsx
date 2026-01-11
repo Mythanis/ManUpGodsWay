@@ -344,7 +344,7 @@ export default function Profile() {
                 <div className="w-8 h-8 rounded-none bg-ministry-gold-exact flex items-center justify-center">
                   <Shield className="w-4 h-4 text-black" />
                 </div>
-                <span className="font-bold text-white uppercase tracking-wide">Privacy & Security</span>
+                <span className="font-bold text-white uppercase tracking-wide">Privacy Policy & Terms</span>
               </div>
               <svg className="w-5 h-5 text-ministry-gold-exact" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>

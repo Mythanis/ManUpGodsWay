@@ -18,7 +18,7 @@ export default function PrivacySecurity() {
               <Shield className="w-6 h-6 text-black" />
             </div>
             <h1 className="text-2xl font-black text-white uppercase tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
-              Privacy & Security
+              Privacy Policy & Terms
             </h1>
           </div>
           <p className="text-gray-400 text-sm">
