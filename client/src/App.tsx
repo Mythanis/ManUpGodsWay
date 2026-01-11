@@ -42,8 +42,6 @@ import Purchase from "@/pages/purchase";
 import Bible from "@/pages/bible";
 import Rations from "@/pages/rations";
 import PrivacySecurity from "@/pages/privacy-security";
-import PrivacyPolicy from "@/pages/privacy-policy";
-import TermsConditions from "@/pages/terms-conditions";
 import NotFound from "@/pages/not-found";
 import Navigation from "@/components/navigation";
 import { UserSetupWizard } from "@/components/user-setup-wizard";
@@ -139,8 +137,6 @@ function Router() {
             <Route path="/bible" component={Bible} />
             <Route path="/rations" component={Rations} />
             <Route path="/privacy-security" component={PrivacySecurity} />
-            <Route path="/privacy-policy" component={PrivacyPolicy} />
-            <Route path="/terms-conditions" component={TermsConditions} />
             <Route path="/more-man-up" component={MoreManUp} />
           </>
         )}
