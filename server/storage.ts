@@ -289,6 +289,7 @@ export interface IStorage {
   checkExpiredSubscriptions(): Promise<User[]>;
   banUser(userId: string, reason: string): Promise<User>;
   unbanUser(userId: string): Promise<User>;
+  deleteUserPermanently(userId: string): Promise<void>;
   getSystemStats(): Promise<{
     totalUsers: number;
     totalStudies: number;
@@ -2218,6 +2219,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId))
       .returning();
     return updatedUser;
+  }
+
+  async deleteUserPermanently(userId: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, userId));
   }
 
   async getSystemStats(): Promise<{

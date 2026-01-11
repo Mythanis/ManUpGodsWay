@@ -3690,6 +3690,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete('/api/admin/users/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const adminUser = await storage.getUser(req.user.claims.sub);
+      if (!adminUser || !isAdmin(adminUser)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const userIdToDelete = req.params.id;
+      
+      if (userIdToDelete === req.user.claims.sub) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+
+      const userToDelete = await storage.getUser(userIdToDelete);
+      if (!userToDelete) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (userToDelete.role === 'owner') {
+        return res.status(403).json({ message: "Cannot delete owner accounts" });
+      }
+
+      await storage.deleteUserPermanently(userIdToDelete);
+      res.json({ success: true, message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
   app.get('/api/admin/stats', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);

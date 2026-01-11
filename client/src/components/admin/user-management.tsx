@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity } from "lucide-react";
+import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle } from "lucide-react";
 
 interface User {
   id: string;
@@ -37,6 +37,7 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [showBanDialog, setShowBanDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [banReason, setBanReason] = useState('');
   const [editedUser, setEditedUser] = useState<Partial<User>>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -129,6 +130,30 @@ export default function UserManagement() {
       toast({
         title: "Error",
         description: "Failed to unban user. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteUser = useMutation({
+    mutationFn: async (userId: string) => {
+      await apiRequest('DELETE', `/api/admin/users/${userId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+      setShowDeleteDialog(false);
+      setShowUserDialog(false);
+      setSelectedUser(null);
+      toast({
+        title: "User Deleted",
+        description: "The user and all their data have been permanently deleted.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete user. Please try again.",
         variant: "destructive",
       });
     },
@@ -454,8 +479,8 @@ export default function UserManagement() {
 
               {/* Bottom Button Layout */}
               <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                {/* Ban/Unban Button - Bottom Left */}
-                <div>
+                {/* Ban/Unban and Delete Buttons - Bottom Left */}
+                <div className="flex space-x-2">
                   {selectedUser.isBanned ? (
                     <Button
                       onClick={() => unbanUser.mutate(selectedUser.id)}
@@ -475,6 +500,14 @@ export default function UserManagement() {
                       Ban User
                     </Button>
                   )}
+                  <Button
+                    variant="destructive"
+                    onClick={() => setShowDeleteDialog(true)}
+                    className="bg-red-800 hover:bg-red-900"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete User
+                  </Button>
                 </div>
 
                 {/* Save Button - Bottom Right */}
@@ -544,6 +577,76 @@ export default function UserManagement() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-red-600 flex items-center space-x-2">
+              <AlertTriangle className="w-5 h-5" />
+              <span>Delete User Permanently</span>
+            </DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. All user data will be permanently deleted.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedUser && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <img 
+                  src={selectedUser.profileImageUrl || `https://ui-avatars.com/api/?name=${selectedUser.firstName}+${selectedUser.lastName}&background=4A90B8&color=fff`}
+                  alt={`${selectedUser.firstName} ${selectedUser.lastName}`}
+                  className="w-16 h-16 rounded-full object-cover border-2 border-red-300"
+                />
+                <div>
+                  <h3 className="text-lg font-bold text-red-800">
+                    {selectedUser.firstName} {selectedUser.lastName}
+                  </h3>
+                  <p className="text-sm text-red-600">{selectedUser.email}</p>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-sm text-yellow-800 font-medium">
+                  The following will be permanently deleted:
+                </p>
+                <ul className="text-xs text-yellow-700 mt-2 space-y-1 list-disc list-inside">
+                  <li>User profile and account settings</li>
+                  <li>All messages and conversations</li>
+                  <li>Testimonies and prayer requests</li>
+                  <li>Study progress and lesson completions</li>
+                  <li>Discussion posts and replies</li>
+                  <li>War group memberships</li>
+                  <li>All other user data</li>
+                </ul>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteDialog(false)}
+                  className="border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    if (selectedUser) {
+                      deleteUser.mutate(selectedUser.id);
+                    }
+                  }}
+                  disabled={deleteUser.isPending}
+                  className="bg-red-800 hover:bg-red-900"
+                >
+                  {deleteUser.isPending ? "Deleting..." : "Delete User Permanently"}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </Card>
