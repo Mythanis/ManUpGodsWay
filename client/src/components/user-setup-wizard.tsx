@@ -31,6 +31,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
+  const [showNotificationDialog, setShowNotificationDialog] = useState(false);
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -66,17 +67,39 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
     },
   });
 
-  const requestPrayerPermissions = async () => {
-    let permissionsGranted = true;
-    
-    if ('Notification' in window && Notification.permission === 'default') {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        permissionsGranted = false;
-      }
+  const handlePrayerNotificationToggle = (checked: boolean) => {
+    if (checked) {
+      setShowNotificationDialog(true);
+    } else {
+      setSetupData({ ...setupData, prayerPermissionsGranted: false });
     }
+  };
 
-    return permissionsGranted;
+  const handleAcceptNotificationPermission = async () => {
+    setShowNotificationDialog(false);
+    
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        setSetupData({ ...setupData, prayerPermissionsGranted: true });
+        toast({
+          title: "Notifications Enabled",
+          description: "You'll receive alerts when your prayer time is complete.",
+        });
+      } else {
+        setSetupData({ ...setupData, prayerPermissionsGranted: false });
+        toast({
+          title: "Notifications Not Enabled",
+          description: "You can enable notifications later in your device settings.",
+        });
+      }
+    } else {
+      setSetupData({ ...setupData, prayerPermissionsGranted: false });
+      toast({
+        title: "Notifications Not Supported",
+        description: "Your browser doesn't support notifications.",
+      });
+    }
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,17 +171,6 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
     } else if (step === 3) {
       setStep(4);
     } else {
-      if (setupData.prayerPermissionsGranted) {
-        const hasPermissions = await requestPrayerPermissions();
-        if (!hasPermissions) {
-          toast({
-            title: "Permissions Needed",
-            description: "Prayer notifications require permission to alert you when prayer time is complete.",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
       updateProfileMutation.mutate(setupData);
     }
   };
@@ -440,9 +452,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                     </div>
                     <Switch
                       checked={setupData.prayerPermissionsGranted}
-                      onCheckedChange={(checked) => 
-                        setSetupData({ ...setupData, prayerPermissionsGranted: checked })
-                      }
+                      onCheckedChange={handlePrayerNotificationToggle}
                     />
                   </div>
 
@@ -763,6 +773,41 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
             >
               <Check className="w-5 h-5 mr-2" />
               I Accept the Privacy Policy
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showNotificationDialog} onOpenChange={setShowNotificationDialog}>
+        <DialogContent className="max-w-sm bg-ministry-charcoal border-ministry-gold">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <Bell className="w-5 h-5 text-ministry-gold" />
+              Enable Notifications
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-white space-y-4">
+            <p className="text-gray-300 text-sm leading-relaxed">
+              Prayer notifications require permission from your device to send you alerts when your prayer time is complete.
+            </p>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              After clicking "Allow Notifications", your device will ask you to approve. Please select "Allow" to enable this feature.
+            </p>
+          </div>
+          <div className="pt-4 flex space-x-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowNotificationDialog(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAcceptNotificationPermission}
+              className="flex-1 bg-ministry-gold hover:bg-ministry-gold/90 text-black font-bold"
+            >
+              <Bell className="w-4 h-4 mr-2" />
+              Allow Notifications
             </Button>
           </div>
         </DialogContent>
