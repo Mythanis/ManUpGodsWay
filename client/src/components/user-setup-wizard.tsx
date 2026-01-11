@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { MessageSquare, Users, User, CheckCircle, Clock, Bell } from "lucide-react";
+import { MessageSquare, Users, User, CheckCircle, Clock, Bell, FileText, Scale } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface SetupData {
@@ -24,6 +26,8 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [setupData, setSetupData] = useState<SetupData>({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -294,6 +298,50 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                     </div>
                   </div>
                 </div>
+
+                <Separator className="bg-ministry-steel/50" />
+
+                <div className="space-y-4">
+                  <p className="text-sm text-white dark:text-white font-medium text-center">
+                    Please review and accept our policies to continue
+                  </p>
+                  
+                  <div className="flex items-start space-x-3 p-3 border border-ministry-steel dark:border-ministry-steel rounded-lg">
+                    <Checkbox
+                      id="terms"
+                      checked={acceptedTerms}
+                      onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+                      className="mt-0.5 border-ministry-gold data-[state=checked]:bg-ministry-gold data-[state=checked]:text-ministry-charcoal"
+                    />
+                    <div className="flex-1">
+                      <label htmlFor="terms" className="text-sm text-white dark:text-white cursor-pointer">
+                        I have read and agree to the{' '}
+                        <Link href="/terms-conditions" className="text-ministry-gold hover:underline inline-flex items-center gap-1">
+                          <Scale className="w-3 h-3" />
+                          Terms & Conditions
+                        </Link>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3 p-3 border border-ministry-steel dark:border-ministry-steel rounded-lg">
+                    <Checkbox
+                      id="privacy"
+                      checked={acceptedPrivacy}
+                      onCheckedChange={(checked) => setAcceptedPrivacy(checked === true)}
+                      className="mt-0.5 border-ministry-gold data-[state=checked]:bg-ministry-gold data-[state=checked]:text-ministry-charcoal"
+                    />
+                    <div className="flex-1">
+                      <label htmlFor="privacy" className="text-sm text-white dark:text-white cursor-pointer">
+                        I have read and agree to the{' '}
+                        <Link href="/privacy-policy" className="text-ministry-gold hover:underline inline-flex items-center gap-1">
+                          <FileText className="w-3 h-3" />
+                          Privacy Policy
+                        </Link>
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="flex space-x-3">
@@ -306,8 +354,8 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                 </Button>
                 <Button
                   onClick={handleNext}
-                  disabled={updateProfileMutation.isPending}
-                  className="flex-1 bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal dark:text-ministry-charcoal"
+                  disabled={updateProfileMutation.isPending || !acceptedTerms || !acceptedPrivacy}
+                  className="flex-1 bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal dark:text-ministry-charcoal disabled:opacity-50"
                 >
                   {updateProfileMutation.isPending ? 'Setting up...' : 'Complete Setup'}
                 </Button>
