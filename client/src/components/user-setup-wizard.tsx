@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { MessageSquare, Users, User, CheckCircle, Clock, Bell, FileText, Scale } from "lucide-react";
+import { MessageSquare, Users, User, CheckCircle, Clock, Bell, FileText, Scale, Camera, Upload, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface SetupData {
@@ -25,9 +25,14 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [step, setStep] = useState(1);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [setupData, setSetupData] = useState<SetupData>({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -36,6 +41,13 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
     prayerPermissionsGranted: false,
   });
 
+  useEffect(() => {
+    const termsAccepted = sessionStorage.getItem('wizard_terms_accepted') === 'true';
+    const privacyAccepted = sessionStorage.getItem('wizard_privacy_accepted') === 'true';
+    if (termsAccepted) setAcceptedTerms(true);
+    if (privacyAccepted) setAcceptedPrivacy(true);
+  }, []);
+
   const updateProfileMutation = useMutation({
     mutationFn: (data: SetupData) =>
       apiRequest('POST', '/api/profile/setup', {
@@ -43,6 +55,8 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
         isProfileComplete: true,
       }),
     onSuccess: () => {
+      sessionStorage.removeItem('wizard_terms_accepted');
+      sessionStorage.removeItem('wizard_privacy_accepted');
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       toast({
         title: "Welcome to Man Up God's Way!",
@@ -62,7 +76,6 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
   const requestPrayerPermissions = async () => {
     let permissionsGranted = true;
     
-    // Request notification permission for prayer completion alerts
     if ('Notification' in window && Notification.permission === 'default') {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
@@ -71,6 +84,56 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
     }
 
     return permissionsGranted;
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfileImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setProfileImage(null);
+    setProfileImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadProfileImage = async () => {
+    if (!profileImage) return;
+    
+    setIsUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('profileImage', profileImage);
+      
+      const response = await fetch('/api/profile/image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+    } catch (error) {
+      toast({
+        title: "Image Upload Failed",
+        description: "There was an error uploading your profile picture. You can add one later in settings.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const handleNext = async () => {
@@ -85,9 +148,13 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
       }
       setStep(2);
     } else if (step === 2) {
+      if (profileImage) {
+        await uploadProfileImage();
+      }
       setStep(3);
+    } else if (step === 3) {
+      setStep(4);
     } else {
-      // Step 3 - request permissions if user enabled prayer features
       if (setupData.prayerPermissionsGranted) {
         const hasPermissions = await requestPrayerPermissions();
         if (!hasPermissions) {
@@ -103,12 +170,32 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
     }
   };
 
+  const handleSkipProfilePicture = () => {
+    setStep(3);
+  };
+
   const handleBack = () => {
     if (step === 2) {
       setStep(1);
     } else if (step === 3) {
       setStep(2);
+    } else if (step === 4) {
+      setStep(3);
     }
+  };
+
+  const handleTermsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    sessionStorage.setItem('wizard_return', 'true');
+    sessionStorage.setItem('wizard_step', '4');
+    setLocation('/terms-conditions?wizard=true');
+  };
+
+  const handlePrivacyClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    sessionStorage.setItem('wizard_return', 'true');
+    sessionStorage.setItem('wizard_step', '4');
+    setLocation('/privacy-policy?wizard=true');
   };
 
   return (
@@ -126,6 +213,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
               <div className={`w-3 h-3 rounded-full ${step >= 1 ? 'bg-ministry-gold' : 'bg-ministry-steel'}`} />
               <div className={`w-3 h-3 rounded-full ${step >= 2 ? 'bg-ministry-gold' : 'bg-ministry-steel'}`} />
               <div className={`w-3 h-3 rounded-full ${step >= 3 ? 'bg-ministry-gold' : 'bg-ministry-steel'}`} />
+              <div className={`w-3 h-3 rounded-full ${step >= 4 ? 'bg-ministry-gold' : 'bg-ministry-steel'}`} />
             </div>
           </div>
         </CardHeader>
@@ -174,6 +262,89 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
           )}
 
           {step === 2 && (
+            <>
+              <div className="text-center">
+                <Camera className="w-12 h-12 mx-auto mb-4 text-ministry-gold" />
+                <h3 className="text-lg font-semibold text-white dark:text-white mb-2">
+                  Profile Picture
+                </h3>
+                <p className="text-sm text-ministry-slate dark:text-ministry-slate">
+                  Add a photo so other members can recognize you
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center space-y-4">
+                {profileImagePreview ? (
+                  <div className="relative">
+                    <img
+                      src={profileImagePreview}
+                      alt="Profile preview"
+                      className="w-32 h-32 rounded-full object-cover border-4 border-ministry-gold"
+                    />
+                    <button
+                      onClick={removeImage}
+                      className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-32 h-32 rounded-full border-4 border-dashed border-ministry-steel flex flex-col items-center justify-center cursor-pointer hover:border-ministry-gold transition-colors"
+                  >
+                    <Upload className="w-8 h-8 text-ministry-slate mb-2" />
+                    <span className="text-xs text-ministry-slate">Upload Photo</span>
+                  </div>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+
+                {!profileImagePreview && (
+                  <Button
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose Photo
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={handleBack}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleSkipProfilePicture}
+                  className="flex-1"
+                >
+                  Skip
+                </Button>
+                <Button
+                  onClick={handleNext}
+                  disabled={!profileImage || isUploadingImage}
+                  className="flex-1 bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal dark:text-ministry-charcoal disabled:opacity-50"
+                >
+                  {isUploadingImage ? 'Uploading...' : 'Continue'}
+                </Button>
+              </div>
+            </>
+          )}
+
+          {step === 3 && (
             <>
               <div className="text-center">
                 <MessageSquare className="w-12 h-12 mx-auto mb-4 text-ministry-gold" />
@@ -254,7 +425,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
             </>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <>
               <div className="text-center">
                 <Clock className="w-12 h-12 mx-auto mb-4 text-ministry-gold" />
@@ -303,23 +474,23 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
 
                 <div className="space-y-4">
                   <p className="text-sm text-white dark:text-white font-medium text-center">
-                    Please review and accept our policies to continue
+                    Click the Terms & Conditions and Privacy Policy links below and read to the end. At the bottom is an accept button you must click to fill in the check boxes below and enable the Complete Setup button.
                   </p>
                   
                   <div className="flex items-start space-x-3 p-3 border border-ministry-steel dark:border-ministry-steel rounded-lg">
                     <Checkbox
                       id="terms"
                       checked={acceptedTerms}
-                      onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+                      disabled={true}
                       className="mt-0.5 border-ministry-gold data-[state=checked]:bg-ministry-gold data-[state=checked]:text-ministry-charcoal"
                     />
                     <div className="flex-1">
-                      <label htmlFor="terms" className="text-sm text-white dark:text-white cursor-pointer">
+                      <label className="text-sm text-white dark:text-white">
                         I have read and agree to the{' '}
-                        <Link href="/terms-conditions" className="text-ministry-gold hover:underline inline-flex items-center gap-1">
+                        <button onClick={handleTermsClick} className="text-ministry-gold hover:underline inline-flex items-center gap-1">
                           <Scale className="w-3 h-3" />
                           Terms & Conditions
-                        </Link>
+                        </button>
                       </label>
                     </div>
                   </div>
@@ -328,16 +499,16 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                     <Checkbox
                       id="privacy"
                       checked={acceptedPrivacy}
-                      onCheckedChange={(checked) => setAcceptedPrivacy(checked === true)}
+                      disabled={true}
                       className="mt-0.5 border-ministry-gold data-[state=checked]:bg-ministry-gold data-[state=checked]:text-ministry-charcoal"
                     />
                     <div className="flex-1">
-                      <label htmlFor="privacy" className="text-sm text-white dark:text-white cursor-pointer">
+                      <label className="text-sm text-white dark:text-white">
                         I have read and agree to the{' '}
-                        <Link href="/privacy-policy" className="text-ministry-gold hover:underline inline-flex items-center gap-1">
+                        <button onClick={handlePrivacyClick} className="text-ministry-gold hover:underline inline-flex items-center gap-1">
                           <FileText className="w-3 h-3" />
                           Privacy Policy
-                        </Link>
+                        </button>
                       </label>
                     </div>
                   </div>

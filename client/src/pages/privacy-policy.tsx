@@ -1,8 +1,24 @@
+import { useLocation } from "wouter";
 import { BackButton } from "@/components/BackButton";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileText, Check } from "lucide-react";
 
 export default function PrivacyPolicy() {
+  const [, setLocation] = useLocation();
+  const isFromWizard = new URLSearchParams(window.location.search).get('wizard') === 'true';
+
+  const handleAccept = () => {
+    sessionStorage.setItem('wizard_privacy_accepted', 'true');
+    setLocation('/');
+  };
+
+  const handleBack = () => {
+    if (isFromWizard) {
+      setLocation('/');
+    }
+  };
+
   return (
     <div className="min-h-screen liquid-black pb-24">
       <div className="relative overflow-hidden">
@@ -10,7 +26,18 @@ export default function PrivacyPolicy() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/5 via-transparent to-transparent"></div>
         
         <div className="relative z-10 px-6 pt-6 pb-8">
-          <BackButton />
+          {isFromWizard ? (
+            <button
+              onClick={handleBack}
+              className="w-10 h-10 rounded-full bg-black flex items-center justify-center border-2 border-ministry-gold-exact mb-4"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-ministry-gold-exact" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          ) : (
+            <BackButton />
+          )}
           
           <div className="flex items-center space-x-3 mb-2">
             <div className="w-10 h-10 rounded-none bg-ministry-gold-exact flex items-center justify-center">
@@ -154,6 +181,18 @@ export default function PrivacyPolicy() {
                 <a href="mailto:jody@manupgodsway.org" className="text-ministry-gold-exact hover:underline">jody@manupgodsway.org</a>
               </p>
             </section>
+
+            {isFromWizard && (
+              <div className="pt-4 border-t border-ministry-steel">
+                <Button
+                  onClick={handleAccept}
+                  className="w-full bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-bold uppercase py-3"
+                >
+                  <Check className="w-5 h-5 mr-2" />
+                  I Accept the Privacy Policy
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
