@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +24,6 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [, setLocation] = useLocation();
   const [step, setStep] = useState(1);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
@@ -182,20 +180,6 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
     } else if (step === 4) {
       setStep(3);
     }
-  };
-
-  const handleTermsClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    sessionStorage.setItem('wizard_return', 'true');
-    sessionStorage.setItem('wizard_step', '4');
-    setLocation('/terms-conditions?wizard=true');
-  };
-
-  const handlePrivacyClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    sessionStorage.setItem('wizard_return', 'true');
-    sessionStorage.setItem('wizard_step', '4');
-    setLocation('/privacy-policy?wizard=true');
   };
 
   return (
@@ -485,13 +469,23 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                       className="mt-0.5 border-ministry-gold data-[state=checked]:bg-ministry-gold data-[state=checked]:text-ministry-charcoal"
                     />
                     <div className="flex-1">
-                      <label className="text-sm text-white dark:text-white">
+                      <span className="text-sm text-white dark:text-white">
                         I have read and agree to the{' '}
-                        <button onClick={handleTermsClick} className="text-ministry-gold hover:underline inline-flex items-center gap-1">
+                        <button 
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            sessionStorage.setItem('wizard_return', 'true');
+                            sessionStorage.setItem('wizard_step', '4');
+                            window.location.href = '/terms-conditions?wizard=true';
+                          }} 
+                          className="text-ministry-gold hover:underline inline-flex items-center gap-1 cursor-pointer"
+                        >
                           <Scale className="w-3 h-3" />
                           Terms & Conditions
                         </button>
-                      </label>
+                      </span>
                     </div>
                   </div>
 
@@ -503,13 +497,23 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                       className="mt-0.5 border-ministry-gold data-[state=checked]:bg-ministry-gold data-[state=checked]:text-ministry-charcoal"
                     />
                     <div className="flex-1">
-                      <label className="text-sm text-white dark:text-white">
+                      <span className="text-sm text-white dark:text-white">
                         I have read and agree to the{' '}
-                        <button onClick={handlePrivacyClick} className="text-ministry-gold hover:underline inline-flex items-center gap-1">
+                        <button 
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            sessionStorage.setItem('wizard_return', 'true');
+                            sessionStorage.setItem('wizard_step', '4');
+                            window.location.href = '/privacy-policy?wizard=true';
+                          }} 
+                          className="text-ministry-gold hover:underline inline-flex items-center gap-1 cursor-pointer"
+                        >
                           <FileText className="w-3 h-3" />
                           Privacy Policy
                         </button>
-                      </label>
+                      </span>
                     </div>
                   </div>
                 </div>
