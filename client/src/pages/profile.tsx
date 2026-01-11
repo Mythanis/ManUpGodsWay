@@ -337,6 +337,7 @@ export default function Profile() {
             <Button 
               variant="ghost"
               className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-none"
+              onClick={() => setLocation('/privacy-security')}
               data-testid="button-privacy"
             >
               <div className="flex items-center space-x-3">
