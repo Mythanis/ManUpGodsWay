@@ -2143,3 +2143,104 @@ export const DAILY_MISSION_LIMITS = {
 
 export type MissionType = keyof typeof MISSION_REWARDS;
 export type RationRank = keyof typeof RATION_RANKS;
+
+// Store Products - items users can redeem with rations
+export const storeProducts = pgTable("store_products", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  imageUrl: varchar("image_url"),
+  tier: varchar("tier").notNull().default("bronze"), // bronze (codes/discounts), silver (small items), gold (VIP items)
+  rationCost: integer("ration_cost").notNull().default(100),
+  stock: integer("stock"), // null = unlimited
+  isVipOnly: boolean("is_vip_only").default(false), // Requires VIP subscription
+  productType: varchar("product_type").notNull().default("physical"), // physical, digital, discount_code
+  discountCode: varchar("discount_code"), // For discount code products
+  discountValue: varchar("discount_value"), // e.g., "20% off", "$10 off"
+  isActive: boolean("is_active").default(true),
+  displayOrder: integer("display_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_store_products_tier").on(table.tier),
+  index("idx_store_products_active").on(table.isActive),
+]);
+
+export const insertStoreProductSchema = createInsertSchema(storeProducts, {
+  name: z.string().min(1, "Product name is required"),
+  description: z.string().optional(),
+  imageUrl: z.string().optional(),
+  tier: z.enum(["bronze", "silver", "gold"]).default("bronze"),
+  rationCost: z.number().int().min(1, "Ration cost must be at least 1"),
+  stock: z.number().int().min(0).nullable().optional(),
+  isVipOnly: z.boolean().default(false),
+  productType: z.enum(["physical", "digital", "discount_code"]).default("physical"),
+  discountCode: z.string().optional(),
+  discountValue: z.string().optional(),
+  isActive: z.boolean().default(true),
+  displayOrder: z.number().int().default(0),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type StoreProduct = typeof storeProducts.$inferSelect;
+export type InsertStoreProduct = z.infer<typeof insertStoreProductSchema>;
+
+// Store Redemptions - tracks user purchases from the store
+export const storeRedemptions = pgTable("store_redemptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  productId: varchar("product_id").notNull().references(() => storeProducts.id, { onDelete: 'cascade' }),
+  rationsCost: integer("rations_cost").notNull(), // Snapshot of cost at time of redemption
+  status: varchar("status").notNull().default("pending"), // pending, fulfilled, cancelled
+  shippingName: varchar("shipping_name"),
+  shippingAddress: text("shipping_address"),
+  shippingCity: varchar("shipping_city"),
+  shippingState: varchar("shipping_state"),
+  shippingZip: varchar("shipping_zip"),
+  shippingPhone: varchar("shipping_phone"),
+  shippingEmail: varchar("shipping_email"),
+  notes: text("notes"), // Admin notes for fulfillment
+  fulfilledAt: timestamp("fulfilled_at"),
+  fulfilledBy: varchar("fulfilled_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_store_redemptions_user").on(table.userId),
+  index("idx_store_redemptions_product").on(table.productId),
+  index("idx_store_redemptions_status").on(table.status),
+]);
+
+export const insertStoreRedemptionSchema = createInsertSchema(storeRedemptions, {
+  productId: z.string().min(1, "Product ID is required"),
+  rationsCost: z.number().int().min(1),
+  status: z.enum(["pending", "fulfilled", "cancelled"]).default("pending"),
+  shippingName: z.string().optional(),
+  shippingAddress: z.string().optional(),
+  shippingCity: z.string().optional(),
+  shippingState: z.string().optional(),
+  shippingZip: z.string().optional(),
+  shippingPhone: z.string().optional(),
+  shippingEmail: z.string().optional(),
+  notes: z.string().optional(),
+}).omit({
+  id: true,
+  fulfilledAt: true,
+  fulfilledBy: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type StoreRedemption = typeof storeRedemptions.$inferSelect;
+export type InsertStoreRedemption = z.infer<typeof insertStoreRedemptionSchema>;
+
+// Store tier definitions
+export const STORE_TIERS = {
+  bronze: { label: 'Bronze', description: 'Discount codes and coupons', color: '#CD7F32', minRations: 0 },
+  silver: { label: 'Silver', description: 'Small items like pens, coozies, and accessories', color: '#C0C0C0', minRations: 500 },
+  gold: { label: 'Gold', description: 'Premium items for VIP members', color: '#FFD700', minRations: 2000, vipOnly: true },
+} as const;
+
+export type StoreTier = keyof typeof STORE_TIERS;
