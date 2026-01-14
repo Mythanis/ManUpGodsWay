@@ -9803,6 +9803,182 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ RATIONS STORE ROUTES ============
+
+  // Get all store products (optionally filtered by tier)
+  app.get('/api/store/products', isAuthenticated, async (req: any, res) => {
+    try {
+      const tier = req.query.tier as string | undefined;
+      const products = await storage.getStoreProducts(tier);
+      res.json(products);
+    } catch (error) {
+      console.error("Error fetching store products:", error);
+      res.status(500).json({ message: "Failed to fetch store products" });
+    }
+  });
+
+  // Get single store product
+  app.get('/api/store/products/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const product = await storage.getStoreProduct(req.params.id);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      res.json(product);
+    } catch (error) {
+      console.error("Error fetching store product:", error);
+      res.status(500).json({ message: "Failed to fetch store product" });
+    }
+  });
+
+  // Redeem a product with rations
+  app.post('/api/store/redeem', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { productId, shippingInfo } = req.body;
+
+      if (!productId) {
+        return res.status(400).json({ message: "Product ID is required" });
+      }
+
+      const redemption = await storage.redeemProduct(userId, productId, shippingInfo);
+      res.status(201).json(redemption);
+    } catch (error) {
+      console.error("Error redeeming product:", error);
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Failed to redeem product" });
+    }
+  });
+
+  // Get user's redemption history
+  app.get('/api/store/redemptions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const redemptions = await storage.getUserRedemptions(userId);
+      res.json(redemptions);
+    } catch (error) {
+      console.error("Error fetching redemptions:", error);
+      res.status(500).json({ message: "Failed to fetch redemptions" });
+    }
+  });
+
+  // ============ ADMIN STORE MANAGEMENT ROUTES ============
+
+  // Admin: Get all store products (including inactive)
+  app.get('/api/admin/store/products', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const tier = req.query.tier as string | undefined;
+      // Get all products including inactive ones
+      const products = await db.select()
+        .from(schema.storeProducts)
+        .where(tier ? eq(schema.storeProducts.tier, tier) : undefined)
+        .orderBy(asc(schema.storeProducts.tier), asc(schema.storeProducts.displayOrder));
+      
+      res.json(products);
+    } catch (error) {
+      console.error("Error fetching admin store products:", error);
+      res.status(500).json({ message: "Failed to fetch store products" });
+    }
+  });
+
+  // Admin: Create a new store product
+  app.post('/api/admin/store/products', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const product = await storage.createStoreProduct(req.body);
+      res.status(201).json(product);
+    } catch (error) {
+      console.error("Error creating store product:", error);
+      res.status(500).json({ message: "Failed to create store product" });
+    }
+  });
+
+  // Admin: Update a store product
+  app.patch('/api/admin/store/products/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const product = await storage.updateStoreProduct(req.params.id, req.body);
+      res.json(product);
+    } catch (error) {
+      console.error("Error updating store product:", error);
+      res.status(500).json({ message: "Failed to update store product" });
+    }
+  });
+
+  // Admin: Delete a store product
+  app.delete('/api/admin/store/products/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      await storage.deleteStoreProduct(req.params.id);
+      res.json({ message: "Product deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting store product:", error);
+      res.status(500).json({ message: "Failed to delete store product" });
+    }
+  });
+
+  // Admin: Get all redemptions for fulfillment
+  app.get('/api/admin/store/redemptions', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const status = req.query.status as string | undefined;
+      const redemptions = await storage.getAllRedemptions(status);
+      res.json(redemptions);
+    } catch (error) {
+      console.error("Error fetching all redemptions:", error);
+      res.status(500).json({ message: "Failed to fetch redemptions" });
+    }
+  });
+
+  // Admin: Update redemption status (fulfill, cancel)
+  app.patch('/api/admin/store/redemptions/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { status, notes } = req.body;
+      if (!status || !['pending', 'fulfilled', 'cancelled'].includes(status)) {
+        return res.status(400).json({ message: "Valid status is required (pending, fulfilled, cancelled)" });
+      }
+
+      const redemption = await storage.updateRedemptionStatus(
+        req.params.id, 
+        status, 
+        user.id,
+        notes
+      );
+      res.json(redemption);
+    } catch (error) {
+      console.error("Error updating redemption status:", error);
+      res.status(500).json({ message: "Failed to update redemption status" });
+    }
+  });
+
   // WebSocket server for real-time notifications
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   

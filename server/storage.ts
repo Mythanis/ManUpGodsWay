@@ -156,6 +156,12 @@ import {
   type InsertCarouselItem,
   type LiveStream,
   type InsertLiveStream,
+  storeProducts,
+  storeRedemptions,
+  type StoreProduct,
+  type InsertStoreProduct,
+  type StoreRedemption,
+  type InsertStoreRedemption,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne } from "drizzle-orm";
@@ -521,6 +527,27 @@ export interface IStorage {
   startLiveStream(id: string): Promise<LiveStream>;
   endLiveStream(id: string): Promise<LiveStream>;
   deleteLiveStream(id: string): Promise<void>;
+
+  // Store operations
+  getStoreProducts(tier?: string): Promise<StoreProduct[]>;
+  getStoreProduct(id: string): Promise<StoreProduct | undefined>;
+  createStoreProduct(product: InsertStoreProduct): Promise<StoreProduct>;
+  updateStoreProduct(id: string, product: Partial<InsertStoreProduct>): Promise<StoreProduct>;
+  deleteStoreProduct(id: string): Promise<void>;
+  
+  // Store redemption operations
+  redeemProduct(userId: string, productId: string, shippingInfo?: {
+    shippingName?: string;
+    shippingAddress?: string;
+    shippingCity?: string;
+    shippingState?: string;
+    shippingZip?: string;
+    shippingPhone?: string;
+    shippingEmail?: string;
+  }): Promise<StoreRedemption>;
+  getUserRedemptions(userId: string): Promise<(StoreRedemption & { product: StoreProduct })[]>;
+  getAllRedemptions(status?: string): Promise<(StoreRedemption & { product: StoreProduct; user: User })[]>;
+  updateRedemptionStatus(id: string, status: string, fulfilledBy?: string, notes?: string): Promise<StoreRedemption>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -5645,6 +5672,190 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(liveStreams)
       .where(eq(liveStreams.id, id));
+  }
+
+  // Store operations
+  async getStoreProducts(tier?: string): Promise<StoreProduct[]> {
+    const conditions = [eq(storeProducts.isActive, true)];
+    if (tier) {
+      conditions.push(eq(storeProducts.tier, tier));
+    }
+    return await db
+      .select()
+      .from(storeProducts)
+      .where(and(...conditions))
+      .orderBy(asc(storeProducts.displayOrder), asc(storeProducts.rationCost));
+  }
+
+  async getStoreProduct(id: string): Promise<StoreProduct | undefined> {
+    const [product] = await db
+      .select()
+      .from(storeProducts)
+      .where(eq(storeProducts.id, id));
+    return product;
+  }
+
+  async createStoreProduct(product: InsertStoreProduct): Promise<StoreProduct> {
+    const [newProduct] = await db
+      .insert(storeProducts)
+      .values(product)
+      .returning();
+    return newProduct;
+  }
+
+  async updateStoreProduct(id: string, product: Partial<InsertStoreProduct>): Promise<StoreProduct> {
+    const [updatedProduct] = await db
+      .update(storeProducts)
+      .set({ ...product, updatedAt: new Date() })
+      .where(eq(storeProducts.id, id))
+      .returning();
+    return updatedProduct;
+  }
+
+  async deleteStoreProduct(id: string): Promise<void> {
+    await db
+      .delete(storeProducts)
+      .where(eq(storeProducts.id, id));
+  }
+
+  // Store redemption operations
+  async redeemProduct(userId: string, productId: string, shippingInfo?: {
+    shippingName?: string;
+    shippingAddress?: string;
+    shippingCity?: string;
+    shippingState?: string;
+    shippingZip?: string;
+    shippingPhone?: string;
+    shippingEmail?: string;
+  }): Promise<StoreRedemption> {
+    // Get product and verify it exists and is active
+    const product = await this.getStoreProduct(productId);
+    if (!product || !product.isActive) {
+      throw new Error("Product not found or no longer available");
+    }
+
+    // Check stock
+    if (product.stock !== null && product.stock <= 0) {
+      throw new Error("Product is out of stock");
+    }
+
+    // Get user and check rations balance
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const userRations = user.rations || 0;
+    if (userRations < product.rationCost) {
+      throw new Error(`Insufficient rations. You need ${product.rationCost} rations but have ${userRations}`);
+    }
+
+    // Check VIP requirement
+    if (product.isVipOnly && user.subscriptionTier !== 'vip') {
+      throw new Error("This product is only available for VIP members");
+    }
+
+    // Deduct rations from user
+    await db
+      .update(users)
+      .set({ 
+        rations: userRations - product.rationCost,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+
+    // Reduce stock if applicable
+    if (product.stock !== null) {
+      await db
+        .update(storeProducts)
+        .set({ 
+          stock: product.stock - 1,
+          updatedAt: new Date()
+        })
+        .where(eq(storeProducts.id, productId));
+    }
+
+    // Create redemption record
+    const [redemption] = await db
+      .insert(storeRedemptions)
+      .values({
+        userId,
+        productId,
+        rationsCost: product.rationCost,
+        status: 'pending',
+        ...shippingInfo
+      })
+      .returning();
+
+    return redemption;
+  }
+
+  async getUserRedemptions(userId: string): Promise<(StoreRedemption & { product: StoreProduct })[]> {
+    const results = await db
+      .select({
+        redemption: storeRedemptions,
+        product: storeProducts
+      })
+      .from(storeRedemptions)
+      .innerJoin(storeProducts, eq(storeRedemptions.productId, storeProducts.id))
+      .where(eq(storeRedemptions.userId, userId))
+      .orderBy(desc(storeRedemptions.createdAt));
+
+    return results.map(r => ({
+      ...r.redemption,
+      product: r.product
+    }));
+  }
+
+  async getAllRedemptions(status?: string): Promise<(StoreRedemption & { product: StoreProduct; user: User })[]> {
+    const conditions = [];
+    if (status) {
+      conditions.push(eq(storeRedemptions.status, status));
+    }
+
+    const results = await db
+      .select({
+        redemption: storeRedemptions,
+        product: storeProducts,
+        user: users
+      })
+      .from(storeRedemptions)
+      .innerJoin(storeProducts, eq(storeRedemptions.productId, storeProducts.id))
+      .innerJoin(users, eq(storeRedemptions.userId, users.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(storeRedemptions.createdAt));
+
+    return results.map(r => ({
+      ...r.redemption,
+      product: r.product,
+      user: r.user
+    }));
+  }
+
+  async updateRedemptionStatus(id: string, status: string, fulfilledBy?: string, notes?: string): Promise<StoreRedemption> {
+    const updateData: any = {
+      status,
+      updatedAt: new Date()
+    };
+
+    if (status === 'fulfilled') {
+      updateData.fulfilledAt = new Date();
+      if (fulfilledBy) {
+        updateData.fulfilledBy = fulfilledBy;
+      }
+    }
+
+    if (notes) {
+      updateData.notes = notes;
+    }
+
+    const [redemption] = await db
+      .update(storeRedemptions)
+      .set(updateData)
+      .where(eq(storeRedemptions.id, id))
+      .returning();
+
+    return redemption;
   }
 }
 
