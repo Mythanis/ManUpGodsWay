@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { BackButton } from "@/components/BackButton";
@@ -26,6 +27,8 @@ interface StoreProduct {
   productType: string;
   discountCode: string | null;
   discountValue: string | null;
+  hasSizes: boolean | null;
+  availableSizes: string[] | null;
   isActive: boolean;
 }
 
@@ -87,6 +90,7 @@ export default function RationsStorePage() {
     shippingState: "",
     shippingZip: "",
   });
+  const [selectedSize, setSelectedSize] = useState<string>("");
 
   const { data: rations } = useQuery<RationsInfo>({
     queryKey: ["/api/rations"],
@@ -97,8 +101,8 @@ export default function RationsStorePage() {
   });
 
   const redeemMutation = useMutation({
-    mutationFn: async ({ productId, shippingInfo }: { productId: string; shippingInfo?: ShippingInfo }) => {
-      return await apiRequest("POST", "/api/store/redeem", { productId, shippingInfo });
+    mutationFn: async ({ productId, shippingInfo, selectedSize }: { productId: string; shippingInfo?: ShippingInfo; selectedSize?: string }) => {
+      return await apiRequest("POST", "/api/store/redeem", { productId, shippingInfo, selectedSize });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rations"] });
@@ -118,6 +122,7 @@ export default function RationsStorePage() {
 
   const handleRedeem = (product: StoreProduct) => {
     setSelectedProduct(product);
+    setSelectedSize("");
     if (product.productType === "physical") {
       setShippingInfo({
         shippingName: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : "",
@@ -135,10 +140,26 @@ export default function RationsStorePage() {
   const confirmRedeem = () => {
     if (!selectedProduct) return;
     
+    if (selectedProduct.hasSizes && selectedProduct.availableSizes?.length && !selectedSize) {
+      toast({
+        title: "Please select a size",
+        description: "You must select a size before redeeming this product.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (selectedProduct.productType === "physical") {
-      redeemMutation.mutate({ productId: selectedProduct.id, shippingInfo });
+      redeemMutation.mutate({ 
+        productId: selectedProduct.id, 
+        shippingInfo,
+        selectedSize: selectedProduct.hasSizes ? selectedSize : undefined
+      });
     } else {
-      redeemMutation.mutate({ productId: selectedProduct.id });
+      redeemMutation.mutate({ 
+        productId: selectedProduct.id,
+        selectedSize: selectedProduct.hasSizes ? selectedSize : undefined
+      });
     }
   };
 
@@ -396,6 +417,24 @@ export default function RationsStorePage() {
                   <span className="font-black text-ministry-gold">{selectedProduct.rationCost.toLocaleString()} rations</span>
                 </div>
               </div>
+
+              {selectedProduct.hasSizes && selectedProduct.availableSizes && selectedProduct.availableSizes.length > 0 && (
+                <div className="mb-4">
+                  <Label className="text-xs text-zinc-400 uppercase font-bold mb-2 block">Select Size</Label>
+                  <Select value={selectedSize} onValueChange={setSelectedSize}>
+                    <SelectTrigger className="bg-zinc-900 border-zinc-700 rounded-none text-white">
+                      <SelectValue placeholder="Choose a size" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-900 border-zinc-700 rounded-none">
+                      {selectedProduct.availableSizes.map((size) => (
+                        <SelectItem key={size} value={size} className="text-white hover:bg-zinc-800">
+                          {size}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {selectedProduct.productType === "physical" && (
                 <div className="space-y-3">

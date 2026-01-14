@@ -20,6 +20,7 @@ interface StoreRedemption {
   userId: string;
   productId: string;
   rationCost: number;
+  selectedSize: string | null;
   status: string;
   shippingName: string | null;
   trackingNumber: string | null;
@@ -115,6 +116,14 @@ export default function MyOrdersPage() {
                             {order.rationCost.toLocaleString()}
                           </span>
                         </div>
+                        {order.selectedSize && (
+                          <>
+                            <span className="text-zinc-600">•</span>
+                            <span className="text-xs text-zinc-400 font-bold">
+                              Size: {order.selectedSize}
+                            </span>
+                          </>
+                        )}
                         <span className="text-zinc-600">•</span>
                         <span className="text-xs text-zinc-500">
                           {new Date(order.createdAt).toLocaleDateString()}

@@ -27,6 +27,8 @@ interface StoreProduct {
   productType: string;
   discountCode: string | null;
   discountValue: string | null;
+  hasSizes: boolean | null;
+  availableSizes: string[] | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -37,6 +39,7 @@ interface StoreRedemption {
   userId: string;
   productId: string;
   rationCost: number;
+  selectedSize: string | null;
   status: string;
   shippingName: string | null;
   shippingEmail: string | null;
@@ -778,6 +781,12 @@ export default function StoreManagement() {
                     <span className="text-zinc-400">Product:</span>
                     <span className="text-white">{selectedRedemption.product?.name}</span>
                   </div>
+                  {selectedRedemption.selectedSize && (
+                    <div className="flex justify-between">
+                      <span className="text-zinc-400">Size:</span>
+                      <span className="text-white font-bold">{selectedRedemption.selectedSize}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-zinc-400">Customer:</span>
                     <span className="text-white">{selectedRedemption.shippingName}</span>

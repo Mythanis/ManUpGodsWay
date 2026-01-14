@@ -544,7 +544,7 @@ export interface IStorage {
     shippingZip?: string;
     shippingPhone?: string;
     shippingEmail?: string;
-  }): Promise<StoreRedemption>;
+  }, selectedSize?: string): Promise<StoreRedemption>;
   getUserRedemptions(userId: string): Promise<(StoreRedemption & { product: StoreProduct })[]>;
   getAllRedemptions(status?: string): Promise<(StoreRedemption & { product: StoreProduct; user: User })[]>;
   updateRedemptionStatus(id: string, status: string, fulfilledBy?: string, trackingNumber?: string): Promise<StoreRedemption>;
@@ -5727,7 +5727,7 @@ export class DatabaseStorage implements IStorage {
     shippingZip?: string;
     shippingPhone?: string;
     shippingEmail?: string;
-  }): Promise<StoreRedemption> {
+  }, selectedSize?: string): Promise<StoreRedemption> {
     // Get product and verify it exists and is active
     const product = await this.getStoreProduct(productId);
     if (!product || !product.isActive) {
@@ -5737,6 +5737,11 @@ export class DatabaseStorage implements IStorage {
     // Check stock
     if (product.stock !== null && product.stock <= 0) {
       throw new Error("Product is out of stock");
+    }
+
+    // Validate size is required for products with sizes
+    if (product.hasSizes && (!selectedSize || selectedSize.trim() === '')) {
+      throw new Error("Please select a size for this product");
     }
 
     // Get user and check rations balance
@@ -5782,6 +5787,7 @@ export class DatabaseStorage implements IStorage {
         userId,
         productId,
         rationsCost: product.rationCost,
+        selectedSize: selectedSize || null,
         status: 'pending',
         ...shippingInfo
       })

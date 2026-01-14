@@ -9865,13 +9865,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/store/redeem', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { productId, shippingInfo } = req.body;
+      const { productId, shippingInfo, selectedSize } = req.body;
 
       if (!productId) {
         return res.status(400).json({ message: "Product ID is required" });
       }
 
-      const redemption = await storage.redeemProduct(userId, productId, shippingInfo);
+      const redemption = await storage.redeemProduct(userId, productId, shippingInfo, selectedSize);
+      
+      // Send email notifications for order
+      try {
+        const user = await storage.getUser(userId);
+        const product = await storage.getStoreProduct(productId);
+        
+        if (user && product) {
+          const orderEmailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #FCD000; background: #000; padding: 20px; margin: 0;">New Rations Store Order</h1>
+              <div style="padding: 20px; background: #f5f5f5;">
+                <h2 style="margin-top: 0;">Order Details</h2>
+                <p><strong>Order ID:</strong> ${redemption.id}</p>
+                <p><strong>Product:</strong> ${product.name}</p>
+                <p><strong>Rations Cost:</strong> ${product.rationCost.toLocaleString()}</p>
+                ${selectedSize ? `<p><strong>Size:</strong> ${selectedSize}</p>` : ''}
+                
+                <h3>Customer Information</h3>
+                <p><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
+                <p><strong>Email:</strong> ${user.email}</p>
+                
+                ${shippingInfo ? `
+                <h3>Shipping Information</h3>
+                <p><strong>Ship To:</strong> ${shippingInfo.shippingName}</p>
+                <p><strong>Address:</strong> ${shippingInfo.shippingAddress}</p>
+                <p><strong>City, State ZIP:</strong> ${shippingInfo.shippingCity}, ${shippingInfo.shippingState} ${shippingInfo.shippingZip}</p>
+                <p><strong>Phone:</strong> ${shippingInfo.shippingPhone}</p>
+                <p><strong>Email:</strong> ${shippingInfo.shippingEmail}</p>
+                ` : ''}
+                
+                <p style="margin-top: 20px; color: #666;">
+                  <a href="https://manupgodsway.com/admin" style="color: #FCD000;">View in Admin Panel</a>
+                </p>
+              </div>
+            </div>
+          `;
+          
+          // Send to both email addresses
+          const { Resend } = await import('resend');
+          const resendApiKey = process.env.RESEND_API_KEY;
+          if (resendApiKey) {
+            const resend = new Resend(resendApiKey);
+            await resend.emails.send({
+              from: 'Man Up God\'s Way <noreply@manupgodsway.org>',
+              to: ['swhite@gojsdirect.com', 'info@manupgodsway.org'],
+              subject: `New Rations Store Order: ${product.name}`,
+              html: orderEmailHtml,
+            });
+          }
+        }
+      } catch (emailError) {
+        console.error("Error sending order notification email:", emailError);
+        // Don't fail the redemption if email fails
+      }
+      
       res.status(201).json(redemption);
     } catch (error) {
       console.error("Error redeeming product:", error);
