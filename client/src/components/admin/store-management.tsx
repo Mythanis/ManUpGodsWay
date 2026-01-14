@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, Package, Tag, Crown, ShoppingBag, Truck, Check, X, Loader2, Coins } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Tag, Crown, ShoppingBag, Truck, Check, X, Loader2, Coins, Upload, Image } from "lucide-react";
 
 interface StoreProduct {
   id: string;
@@ -80,6 +80,9 @@ export default function StoreManagement() {
   const [showFulfillDialog, setShowFulfillDialog] = useState(false);
   const [selectedRedemption, setSelectedRedemption] = useState<StoreRedemption | null>(null);
   const [trackingNumber, setTrackingNumber] = useState("");
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [productForm, setProductForm] = useState({
     name: "",
     description: "",
@@ -104,9 +107,13 @@ export default function StoreManagement() {
 
   const createProductMutation = useMutation({
     mutationFn: async (data: typeof productForm) => {
-      return await apiRequest("POST", "/api/admin/store/products", data);
+      const response = await apiRequest("POST", "/api/admin/store/products", data);
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async (product: StoreProduct) => {
+      if (selectedImageFile && product.id) {
+        await uploadProductImage(product.id);
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/admin/store/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/store/products"] });
       toast({ title: "Success", description: "Product created successfully" });
@@ -122,7 +129,10 @@ export default function StoreManagement() {
     mutationFn: async ({ id, data }: { id: string; data: Partial<typeof productForm> }) => {
       return await apiRequest("PUT", `/api/admin/store/products/${id}`, data);
     },
-    onSuccess: () => {
+    onSuccess: async (_, variables) => {
+      if (selectedImageFile) {
+        await uploadProductImage(variables.id);
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/admin/store/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/store/products"] });
       toast({ title: "Success", description: "Product updated successfully" });
@@ -179,6 +189,61 @@ export default function StoreManagement() {
       discountValue: "",
       isActive: true,
     });
+    setSelectedImageFile(null);
+    setImagePreview(null);
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadProductImage = async (productId: string) => {
+    if (!selectedImageFile) return;
+    
+    setIsUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', selectedImageFile);
+      
+      const response = await fetch(`/api/admin/store/products/${productId}/upload-image`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/store/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/store/products"] });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({ title: "Warning", description: "Product created but image upload failed", variant: "destructive" });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const removeProductImage = async (productId: string) => {
+    try {
+      await apiRequest("DELETE", `/api/admin/store/products/${productId}/delete-image`);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/store/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/store/products"] });
+      setImagePreview(null);
+      setProductForm({ ...productForm, imageUrl: "" });
+      toast({ title: "Success", description: "Image removed" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to remove image", variant: "destructive" });
+    }
   };
 
   const openEditDialog = (product: StoreProduct) => {
@@ -196,6 +261,8 @@ export default function StoreManagement() {
       discountValue: product.discountValue || "",
       isActive: product.isActive,
     });
+    setSelectedImageFile(null);
+    setImagePreview(product.imageUrl || null);
     setShowProductDialog(true);
   };
 
@@ -495,13 +562,48 @@ export default function StoreManagement() {
               />
             </div>
             <div>
-              <Label className="text-zinc-400">Image URL (optional)</Label>
-              <Input
-                value={productForm.imageUrl}
-                onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
-                className="bg-zinc-800 border-zinc-700 text-white"
-                placeholder="https://example.com/image.jpg"
-              />
+              <Label className="text-zinc-400">Product Image</Label>
+              <div className="mt-2">
+                {(imagePreview || productForm.imageUrl) ? (
+                  <div className="relative w-full h-32 bg-zinc-800 border border-zinc-700 rounded overflow-hidden">
+                    <img 
+                      src={imagePreview || productForm.imageUrl} 
+                      alt="Product preview" 
+                      className="w-full h-full object-cover"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      className="absolute top-2 right-2"
+                      onClick={() => {
+                        if (editingProduct && productForm.imageUrl) {
+                          removeProductImage(editingProduct.id);
+                        } else {
+                          setSelectedImageFile(null);
+                          setImagePreview(null);
+                        }
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full h-32 bg-zinc-800 border-2 border-dashed border-zinc-600 rounded cursor-pointer hover:border-ministry-gold transition-colors">
+                    <Upload className="w-8 h-8 text-zinc-500 mb-2" />
+                    <span className="text-sm text-zinc-400">Click to upload image</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+              {selectedImageFile && (
+                <p className="text-xs text-zinc-500 mt-1">Selected: {selectedImageFile.name}</p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

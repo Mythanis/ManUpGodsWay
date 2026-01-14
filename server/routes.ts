@@ -17,7 +17,7 @@ import { warGroupsService } from "./warGroupsService";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
 import * as schema from "@shared/schema";
-import { eq, and, sql, desc } from "drizzle-orm";
+import { eq, and, sql, desc, asc } from "drizzle-orm";
 import { 
   insertStudySchema, 
   insertStudySeriesSchema,
@@ -179,6 +179,36 @@ const blogThumbnailStorage = multer.diskStorage({
 
 const blogThumbnailUpload = multer({
   storage: blogThumbnailStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit for images
+  },
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPEG, PNG, WebP, and GIF images are allowed!'));
+    }
+  }
+});
+
+// Configure multer for store product images with disk storage
+const storeProductImageStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(process.cwd(), 'uploads', 'store-products');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const filename = `store_product_${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    cb(null, filename);
+  }
+});
+
+const storeProductImageUpload = multer({
+  storage: storeProductImageStorage,
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit for images
   },
@@ -9933,6 +9963,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting store product:", error);
       res.status(500).json({ message: "Failed to delete store product" });
+    }
+  });
+
+  // Admin: Upload product image
+  app.post('/api/admin/store/products/:id/upload-image', isAuthenticated, storeProductImageUpload.single('image'), async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "No image file uploaded" });
+      }
+
+      const imageUrl = `/uploads/store-products/${file.filename}`;
+      const product = await storage.updateStoreProduct(req.params.id, { imageUrl });
+      res.json(product);
+    } catch (error) {
+      console.error("Error uploading store product image:", error);
+      res.status(500).json({ message: "Failed to upload product image" });
+    }
+  });
+
+  // Admin: Delete product image
+  app.delete('/api/admin/store/products/:id/delete-image', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Get current product to find image file
+      const products = await db.select().from(schema.storeProducts).where(eq(schema.storeProducts.id, req.params.id));
+      if (products.length === 0) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      const product = products[0];
+      if (product.imageUrl && product.imageUrl.startsWith('/uploads/store-products/')) {
+        const filename = product.imageUrl.replace('/uploads/store-products/', '');
+        const filePath = path.join(process.cwd(), 'uploads', 'store-products', filename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+
+      const updatedProduct = await storage.updateStoreProduct(req.params.id, { imageUrl: "" });
+      res.json(updatedProduct);
+    } catch (error) {
+      console.error("Error deleting store product image:", error);
+      res.status(500).json({ message: "Failed to delete product image" });
     }
   });
 
