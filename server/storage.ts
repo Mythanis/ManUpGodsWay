@@ -547,7 +547,7 @@ export interface IStorage {
   }): Promise<StoreRedemption>;
   getUserRedemptions(userId: string): Promise<(StoreRedemption & { product: StoreProduct })[]>;
   getAllRedemptions(status?: string): Promise<(StoreRedemption & { product: StoreProduct; user: User })[]>;
-  updateRedemptionStatus(id: string, status: string, fulfilledBy?: string, notes?: string): Promise<StoreRedemption>;
+  updateRedemptionStatus(id: string, status: string, fulfilledBy?: string, trackingNumber?: string): Promise<StoreRedemption>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -5832,21 +5832,21 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async updateRedemptionStatus(id: string, status: string, fulfilledBy?: string, notes?: string): Promise<StoreRedemption> {
+  async updateRedemptionStatus(id: string, status: string, fulfilledBy?: string, trackingNumber?: string): Promise<StoreRedemption> {
     const updateData: any = {
       status,
       updatedAt: new Date()
     };
 
-    if (status === 'fulfilled') {
+    if (status === 'shipped' || status === 'delivered') {
       updateData.fulfilledAt = new Date();
       if (fulfilledBy) {
         updateData.fulfilledBy = fulfilledBy;
       }
     }
 
-    if (notes) {
-      updateData.notes = notes;
+    if (trackingNumber) {
+      updateData.trackingNumber = trackingNumber;
     }
 
     const [redemption] = await db

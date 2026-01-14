@@ -9905,7 +9905,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Update a store product
-  app.patch('/api/admin/store/products/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/admin/store/products/:id', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
       if (!user || !isAdmin(user)) {
@@ -9953,24 +9953,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin: Update redemption status (fulfill, cancel)
-  app.patch('/api/admin/store/redemptions/:id', isAuthenticated, async (req: any, res) => {
+  // Admin: Update redemption status (fulfill, ship, cancel)
+  app.put('/api/admin/store/redemptions/:id', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
       if (!user || !isAdmin(user)) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const { status, notes } = req.body;
-      if (!status || !['pending', 'fulfilled', 'cancelled'].includes(status)) {
-        return res.status(400).json({ message: "Valid status is required (pending, fulfilled, cancelled)" });
+      const { status, trackingNumber } = req.body;
+      if (!status || !['pending', 'processing', 'shipped', 'delivered', 'cancelled'].includes(status)) {
+        return res.status(400).json({ message: "Valid status is required (pending, processing, shipped, delivered, cancelled)" });
       }
 
       const redemption = await storage.updateRedemptionStatus(
         req.params.id, 
         status, 
         user.id,
-        notes
+        trackingNumber
       );
       res.json(redemption);
     } catch (error) {

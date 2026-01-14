@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Coins, Medal, TrendingUp, Trophy, ArrowLeft, Clock, Plus, Minus, Crown, Target, Flame, Users } from "lucide-react";
+import { Coins, Medal, TrendingUp, Trophy, ArrowLeft, Clock, Plus, Minus, Crown, Target, Flame, Users, ShoppingBag } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { BackButton } from "@/components/BackButton";
 
@@ -137,6 +137,15 @@ export default function RationsPage() {
             </CardContent>
           </Card>
         )}
+
+        <Link href="/rations-store">
+          <Button 
+            className="w-full mt-4 bg-ministry-gold text-black font-bold uppercase tracking-wide hover:bg-yellow-500 rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] py-6"
+          >
+            <ShoppingBag className="w-5 h-5 mr-2" />
+            Visit Rations Store
+          </Button>
+        </Link>
       </div>
 
       <div className="px-4 -mt-2 relative z-10">
