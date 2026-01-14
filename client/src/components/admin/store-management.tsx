@@ -107,8 +107,7 @@ export default function StoreManagement() {
 
   const createProductMutation = useMutation({
     mutationFn: async (data: typeof productForm) => {
-      const response = await apiRequest("POST", "/api/admin/store/products", data);
-      return response.json();
+      return await apiRequest("POST", "/api/admin/store/products", data);
     },
     onSuccess: async (product: StoreProduct) => {
       if (selectedImageFile && product.id) {
