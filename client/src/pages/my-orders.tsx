@@ -19,7 +19,7 @@ interface StoreRedemption {
   id: string;
   userId: string;
   productId: string;
-  rationCost: number;
+  rationsCost: number;
   selectedSize: string | null;
   status: string;
   shippingName: string | null;
@@ -113,7 +113,7 @@ export default function MyOrdersPage() {
                         <div className="flex items-center gap-1">
                           <Coins className="w-3 h-3 text-ministry-gold" />
                           <span className="text-xs font-bold text-ministry-gold">
-                            {order.rationCost.toLocaleString()}
+                            {order.rationsCost.toLocaleString()}
                           </span>
                         </div>
                         {order.selectedSize && (
