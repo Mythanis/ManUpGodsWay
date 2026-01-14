@@ -2157,6 +2157,8 @@ export const storeProducts = pgTable("store_products", {
   productType: varchar("product_type").notNull().default("physical"), // physical, digital, discount_code
   discountCode: varchar("discount_code"), // For discount code products
   discountValue: varchar("discount_value"), // e.g., "20% off", "$10 off"
+  hasSizes: boolean("has_sizes").default(false), // Whether product has size options
+  availableSizes: text("available_sizes").array(), // Array of available sizes e.g., ["S", "M", "L", "XL"]
   isActive: boolean("is_active").default(true),
   displayOrder: integer("display_order").default(0),
   createdAt: timestamp("created_at").defaultNow(),
@@ -2177,6 +2179,8 @@ export const insertStoreProductSchema = createInsertSchema(storeProducts, {
   productType: z.enum(["physical", "digital", "discount_code"]).default("physical"),
   discountCode: z.string().optional(),
   discountValue: z.string().optional(),
+  hasSizes: z.boolean().default(false),
+  availableSizes: z.array(z.string()).optional(),
   isActive: z.boolean().default(true),
   displayOrder: z.number().int().default(0),
 }).omit({
@@ -2194,6 +2198,7 @@ export const storeRedemptions = pgTable("store_redemptions", {
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   productId: varchar("product_id").notNull().references(() => storeProducts.id, { onDelete: 'cascade' }),
   rationsCost: integer("rations_cost").notNull(), // Snapshot of cost at time of redemption
+  selectedSize: varchar("selected_size"), // Size selected if product has sizes
   status: varchar("status").notNull().default("pending"), // pending, fulfilled, cancelled
   shippingName: varchar("shipping_name"),
   shippingAddress: text("shipping_address"),
@@ -2216,6 +2221,7 @@ export const storeRedemptions = pgTable("store_redemptions", {
 export const insertStoreRedemptionSchema = createInsertSchema(storeRedemptions, {
   productId: z.string().min(1, "Product ID is required"),
   rationsCost: z.number().int().min(1),
+  selectedSize: z.string().optional(),
   status: z.enum(["pending", "fulfilled", "cancelled"]).default("pending"),
   shippingName: z.string().optional(),
   shippingAddress: z.string().optional(),
