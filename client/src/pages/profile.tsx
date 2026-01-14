@@ -31,7 +31,8 @@ import {
   Sun,
   Coins,
   Medal,
-  TrendingUp
+  TrendingUp,
+  ShoppingBag
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -299,6 +300,24 @@ export default function Profile() {
                   </div>
                 </Button>
               </EditProfileDialog>
+
+              <Link href="/rations-store">
+                <Button 
+                  variant="outline"
+                  className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                  data-testid="button-rations-store"
+                >
+                  <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                    <ShoppingBag className="w-6 h-6 text-white relative z-10" />
+                  </div>
+                  <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Rations Store</span>
+                  <div className="pr-4">
+                    <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                  </div>
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>

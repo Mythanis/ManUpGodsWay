@@ -42,6 +42,7 @@ import Purchase from "@/pages/purchase";
 import Bible from "@/pages/bible";
 import Rations from "@/pages/rations";
 import RationsStore from "@/pages/rations-store";
+import MyOrders from "@/pages/my-orders";
 import PrivacySecurity from "@/pages/privacy-security";
 import NotFound from "@/pages/not-found";
 import Navigation from "@/components/navigation";
@@ -138,6 +139,7 @@ function Router() {
             <Route path="/bible" component={Bible} />
             <Route path="/rations" component={Rations} />
             <Route path="/rations-store" component={RationsStore} />
+            <Route path="/my-orders" component={MyOrders} />
             <Route path="/privacy-security" component={PrivacySecurity} />
             <Route path="/more-man-up" component={MoreManUp} />
           </>

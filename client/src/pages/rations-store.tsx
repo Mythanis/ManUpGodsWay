@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { BackButton } from "@/components/BackButton";
-import { Coins, ShoppingBag, Tag, Gift, Crown, Package, Check, Loader2 } from "lucide-react";
+import { Coins, ShoppingBag, Tag, Gift, Crown, Package, Check, Loader2, ClipboardList } from "lucide-react";
 
 interface StoreProduct {
   id: string;
@@ -254,9 +255,21 @@ export default function RationsStorePage() {
     <div className="pb-20 bg-background min-h-screen">
       <div className="liquid-header text-white px-4 pt-8 pb-6">
         <BackButton />
-        <div className="flex items-center gap-3 mb-4">
-          <ShoppingBag className="w-6 h-6" />
-          <h1 className="text-2xl font-black uppercase tracking-tighter">Rations Store</h1>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <ShoppingBag className="w-6 h-6" />
+            <h1 className="text-2xl font-black uppercase tracking-tighter">Rations Store</h1>
+          </div>
+          <Link href="/my-orders">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-black/50 border-2 border-ministry-gold text-ministry-gold hover:bg-ministry-gold hover:text-black rounded-none font-bold uppercase text-xs"
+            >
+              <ClipboardList className="w-4 h-4 mr-1" />
+              My Orders
+            </Button>
+          </Link>
         </div>
 
         <Card className="bg-black/50 border-2 border-ministry-gold rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
