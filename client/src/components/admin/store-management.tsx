@@ -94,8 +94,11 @@ export default function StoreManagement() {
     productType: "physical",
     discountCode: "",
     discountValue: "",
+    hasSizes: false,
+    availableSizes: [] as string[],
     isActive: true,
   });
+  const [sizesInput, setSizesInput] = useState("");
 
   const { data: products = [], isLoading: productsLoading } = useQuery<StoreProduct[]>({
     queryKey: ["/api/admin/store/products"],
@@ -186,10 +189,13 @@ export default function StoreManagement() {
       productType: "physical",
       discountCode: "",
       discountValue: "",
+      hasSizes: false,
+      availableSizes: [],
       isActive: true,
     });
     setSelectedImageFile(null);
     setImagePreview(null);
+    setSizesInput("");
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -247,6 +253,7 @@ export default function StoreManagement() {
 
   const openEditDialog = (product: StoreProduct) => {
     setEditingProduct(product);
+    const sizes = product.availableSizes || [];
     setProductForm({
       name: product.name,
       description: product.description || "",
@@ -254,14 +261,17 @@ export default function StoreManagement() {
       tier: product.tier,
       rationCost: product.rationCost,
       stock: product.stock,
-      isVipOnly: product.isVipOnly,
+      isVipOnly: product.isVipOnly ?? false,
       productType: product.productType,
       discountCode: product.discountCode || "",
       discountValue: product.discountValue || "",
-      isActive: product.isActive,
+      hasSizes: product.hasSizes ?? false,
+      availableSizes: sizes,
+      isActive: product.isActive ?? true,
     });
     setSelectedImageFile(null);
     setImagePreview(product.imageUrl || null);
+    setSizesInput(sizes.join(", "));
     setShowProductDialog(true);
   };
 
@@ -702,7 +712,37 @@ export default function StoreManagement() {
                 />
                 <Label className="text-zinc-400">Active</Label>
               </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={productForm.hasSizes}
+                  onCheckedChange={(checked) => {
+                    setProductForm({ ...productForm, hasSizes: checked });
+                    if (!checked) {
+                      setSizesInput("");
+                      setProductForm(prev => ({ ...prev, hasSizes: checked, availableSizes: [] }));
+                    }
+                  }}
+                />
+                <Label className="text-zinc-400">Has Sizes</Label>
+              </div>
             </div>
+
+            {productForm.hasSizes && (
+              <div className="space-y-2">
+                <Label className="text-zinc-400">Available Sizes (comma-separated)</Label>
+                <Input
+                  value={sizesInput}
+                  onChange={(e) => {
+                    setSizesInput(e.target.value);
+                    const sizes = e.target.value.split(",").map(s => s.trim()).filter(s => s);
+                    setProductForm({ ...productForm, availableSizes: sizes });
+                  }}
+                  placeholder="S, M, L, XL, 2XL, 3XL"
+                  className="bg-zinc-900 border-zinc-700 text-white"
+                />
+                <p className="text-xs text-zinc-500">Enter sizes separated by commas (e.g., S, M, L, XL)</p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setShowProductDialog(false)} className="text-zinc-400">
