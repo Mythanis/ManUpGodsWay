@@ -9909,47 +9909,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             </div>
           `;
           
-          // Send to both email addresses using Resend integration
-          const { Resend } = await import('resend');
+          // Send to both email addresses using Nodemailer SMTP (Nixihost)
+          const nodemailer = await import('nodemailer');
           
-          // Get Resend credentials from Replit connector
-          const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-          const xReplitToken = process.env.REPL_IDENTITY 
-            ? 'repl ' + process.env.REPL_IDENTITY 
-            : process.env.WEB_REPL_RENEWAL 
-            ? 'depl ' + process.env.WEB_REPL_RENEWAL 
-            : null;
+          const transporter = nodemailer.default.createTransport({
+            host: 'mail.manupgodsway.org',
+            port: 465,
+            secure: true,
+            auth: {
+              user: 'info@manupgodsway.org',
+              pass: process.env.SMTP_PASSWORD,
+            },
+          });
           
-          if (hostname && xReplitToken) {
-            const connectionResponse = await fetch(
-              'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=resend',
-              {
-                headers: {
-                  'Accept': 'application/json',
-                  'X_REPLIT_TOKEN': xReplitToken
-                }
-              }
-            );
-            const connectionData = await connectionResponse.json();
-            const connectionSettings = connectionData.items?.[0];
-            
-            if (connectionSettings?.settings?.api_key) {
-              const resend = new Resend(connectionSettings.settings.api_key);
-              const fromEmail = connectionSettings.settings.from_email || 'noreply@manupgodsway.org';
-              
-              await resend.emails.send({
-                from: `Man Up God's Way <${fromEmail}>`,
-                to: ['swhite@gojsdirect.com', 'info@manupgodsway.org'],
-                subject: `New Rations Store Order: ${product.name}`,
-                html: orderEmailHtml,
-              });
-              console.log('Order notification email sent successfully');
-            } else {
-              console.log('Resend not configured - skipping email notification');
-            }
-          } else {
-            console.log('Replit connector not available - skipping email notification');
-          }
+          await transporter.sendMail({
+            from: 'Man Up God\'s Way <info@manupgodsway.org>',
+            to: 'swhite@gojsdirect.com, info@manupgodsway.org',
+            subject: `New Rations Store Order: ${product.name}`,
+            html: orderEmailHtml,
+          });
+          console.log('Order notification email sent successfully via SMTP');
         }
       } catch (emailError) {
         console.error("Error sending order notification email:", emailError);
