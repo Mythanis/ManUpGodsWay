@@ -1119,6 +1119,9 @@ export class DatabaseStorage implements IStorage {
     // Note: updateUserStreak has a guard clause that prevents multiple updates per day,
     // so this is safe to call even if the user completes multiple lessons in one day
     await this.updateUserStreak(userId, now);
+    
+    // Track daily activity for totalActiveDays (never resets) - use same date as streak
+    await this.trackStudyActivityDay(userId, now);
 
     return result;
   }
@@ -1452,6 +1455,9 @@ export class DatabaseStorage implements IStorage {
     // Update user streak when they make progress
     await this.updateUserStreak(userId, userLocalDate);
     
+    // Track daily activity for totalActiveDays (never resets) - use same local date as streak
+    await this.trackStudyActivityDay(userId, userLocalDate);
+    
     const existing = await db
       .select()
       .from(userProgress)
@@ -1462,12 +1468,19 @@ export class DatabaseStorage implements IStorage {
     
     // Set completedAt timestamp when marking study as completed for the first time
     if (progress.isCompleted === true) {
+      const isNewCompletion = existing.length === 0 || !existing[0].completedAt;
+      
       if (existing.length > 0 && !existing[0].completedAt) {
         // Only set completedAt if it's not already set (preserve original completion date)
         updateData.completedAt = new Date();
       } else if (existing.length === 0) {
         // New progress record being created as completed
         updateData.completedAt = new Date();
+      }
+      
+      // Increment totalStudiesCompleted for first-time completion (never resets)
+      if (isNewCompletion) {
+        await this.incrementTotalStudiesCompleted(userId);
       }
     }
 
@@ -1489,6 +1502,48 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return newProgress;
     }
+  }
+  
+  // Track study activity for a new day - increments totalActiveDays once per calendar day
+  async trackStudyActivityDay(userId: string, userLocalDate?: Date): Promise<void> {
+    // Use user's local date if provided, otherwise fall back to server date
+    const dateToUse = userLocalDate || new Date();
+    const today = dateToUse.toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    const [user] = await db
+      .select({ lastStudyActivityDate: users.lastStudyActivityDate, totalActiveDays: users.totalActiveDays })
+      .from(users)
+      .where(eq(users.id, userId));
+    
+    if (!user) return;
+    
+    // If today is a new activity day, increment the counter
+    if (user.lastStudyActivityDate !== today) {
+      await db
+        .update(users)
+        .set({
+          lastStudyActivityDate: today,
+          totalActiveDays: (user.totalActiveDays || 0) + 1,
+        })
+        .where(eq(users.id, userId));
+    }
+  }
+  
+  // Increment totalStudiesCompleted - called when a study is completed for the first time
+  async incrementTotalStudiesCompleted(userId: string): Promise<void> {
+    const [user] = await db
+      .select({ totalStudiesCompleted: users.totalStudiesCompleted })
+      .from(users)
+      .where(eq(users.id, userId));
+    
+    if (!user) return;
+    
+    await db
+      .update(users)
+      .set({
+        totalStudiesCompleted: (user.totalStudiesCompleted || 0) + 1,
+      })
+      .where(eq(users.id, userId));
   }
 
   // Study-specific methods
@@ -3492,25 +3547,9 @@ export class DatabaseStorage implements IStorage {
     const user = await this.getUser(userId);
     if (!user) return undefined;
 
-    // Calculate studies completed
-    const [{ studiesCompleted }] = await db
-      .select({ studiesCompleted: count(userProgress.id) })
-      .from(userProgress)
-      .where(and(
-        eq(userProgress.userId, userId),
-        isNotNull(userProgress.completedAt)
-      ));
-
-    // Calculate days active (unique days with any activity)
-    // This counts distinct dates when user accessed studies
-    const userActivityDates = await db
-      .selectDistinct({
-        date: sql<string>`DATE(${userProgress.lastAccessedAt})`
-      })
-      .from(userProgress)
-      .where(eq(userProgress.userId, userId));
-    
-    const daysActive = userActivityDates.length;
+    // Use persistent counters from user profile (never reset)
+    const studiesCompleted = user.totalStudiesCompleted || 0;
+    const daysActive = user.totalActiveDays || 0;
 
     // Calculate forum posts (discussions + replies)
     const [{ discussionCount }] = await db

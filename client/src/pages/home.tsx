@@ -268,7 +268,8 @@ export default function Home() {
     .filter((p: any) => p && !p.isCompleted)
     .sort((a: any, b: any) => new Date(b.lastAccessedAt || 0).getTime() - new Date(a.lastAccessedAt || 0).getTime())[0];
   
-  const completedCount = safeProgress.filter((p: any) => p && p.isCompleted).length;
+  // Use persistent lifetime counter from user profile (never resets)
+  const completedCount = (user as any)?.totalStudiesCompleted || 0;
   
   // Helper function to get display name for posts
   const getUserDisplayName = (user: any, isAnonymous: boolean) => {
@@ -865,9 +866,7 @@ export default function Home() {
               </div>
               <div className="text-right">
                 <p className="text-2xl font-black text-black">
-                  {progress.length > 0 
-                    ? new Set(progress.map((p: any) => new Date(p.lastAccessedAt || p.createdAt).toDateString())).size 
-                    : 0}
+                  {(user as any)?.totalActiveDays || 0}
                 </p>
                 <p className="text-xs text-black/70 font-bold uppercase">days</p>
               </div>

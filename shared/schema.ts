@@ -43,6 +43,9 @@ export const users = pgTable("users", {
   stripeSubscriptionId: varchar("stripe_subscription_id"),
   streakDays: integer("streak_days").default(0),
   lastActiveDate: timestamp("last_active_date"),
+  totalStudiesCompleted: integer("total_studies_completed").default(0), // Lifetime count - never resets
+  totalActiveDays: integer("total_active_days").default(0), // Lifetime days with study activity - never resets
+  lastStudyActivityDate: varchar("last_study_activity_date"), // Track when last study day was counted (YYYY-MM-DD)
   rations: integer("rations").default(0), // Gamification currency
   rationRank: varchar("ration_rank").default("recruit"), // recruit, warrior, shepherd, watchman, elder
   allowDirectMessages: boolean("allow_direct_messages").default(true),
