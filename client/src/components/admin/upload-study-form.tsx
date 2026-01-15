@@ -506,6 +506,96 @@ export default function UploadStudyForm() {
               />
             </div>
 
+            {/* Publishing Options - Grouped Together */}
+            <div className="space-y-4 rounded-lg border-2 border-ministry-gold p-4 bg-ministry-gold/10">
+              <h3 className="font-semibold text-ministry-charcoal flex items-center gap-2">
+                <CalendarClock className="w-5 h-5" />
+                Publishing Options
+              </h3>
+              
+              {/* Publish Now */}
+              <FormField
+                control={form.control}
+                name="isPublished"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border bg-white dark:bg-gray-900 p-3">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base font-medium">
+                        Publish Now
+                      </FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        Make this study visible immediately
+                      </div>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked);
+                          if (checked) {
+                            setScheduleForLater(false);
+                            form.setValue('scheduledPublishDate', '');
+                          }
+                        }}
+                        disabled={scheduleForLater}
+                        data-testid="switch-publish-study"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {/* Schedule for Later */}
+              <div className="flex flex-row items-center justify-between rounded-lg border bg-white dark:bg-gray-900 p-3">
+                <div className="space-y-0.5">
+                  <div className="text-base font-medium">
+                    Schedule for Later
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Automatically publish at a future date
+                  </div>
+                </div>
+                <Switch
+                  checked={scheduleForLater}
+                  onCheckedChange={(checked) => {
+                    setScheduleForLater(checked);
+                    if (checked) {
+                      form.setValue('isPublished', false);
+                    } else {
+                      form.setValue('scheduledPublishDate', '');
+                    }
+                  }}
+                  data-testid="switch-schedule-later"
+                />
+              </div>
+
+              {/* Schedule Date Picker - shows when scheduling is enabled */}
+              {scheduleForLater && (
+                <FormField
+                  control={form.control}
+                  name="scheduledPublishDate"
+                  render={({ field }) => (
+                    <FormItem className="bg-white dark:bg-gray-900 p-3 rounded-lg border">
+                      <FormLabel className="font-medium">Publish Date & Time</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="datetime-local"
+                          min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+                          className="mt-2"
+                          {...field}
+                          data-testid="input-scheduled-date"
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Study will automatically become visible at this date and time
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+
             {/* Add to Series Section */}
             {allSeries.length > 0 && (
               <div className="flex flex-row items-center justify-between rounded-lg border p-4">
@@ -901,87 +991,6 @@ export default function UploadStudyForm() {
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={form.control}
-              name="isPublished"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">
-                      Publish Study
-                    </FormLabel>
-                    <div className="text-sm text-muted-foreground">
-                      Make this study visible to users
-                    </div>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={(checked) => {
-                        field.onChange(checked);
-                        if (checked) {
-                          setScheduleForLater(false);
-                          form.setValue('scheduledPublishDate', '');
-                        }
-                      }}
-                      disabled={scheduleForLater}
-                      data-testid="switch-publish-study"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            {/* Schedule for Later Section */}
-            <div className="flex flex-row items-center justify-between rounded-lg border p-4 bg-blue-50 dark:bg-blue-950">
-              <div className="space-y-0.5">
-                <div className="text-sm font-medium flex items-center gap-2">
-                  <CalendarClock className="w-4 h-4" />
-                  Schedule for Later
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Automatically publish at a future date
-                </div>
-              </div>
-              <Switch
-                checked={scheduleForLater}
-                onCheckedChange={(checked) => {
-                  setScheduleForLater(checked);
-                  if (checked) {
-                    form.setValue('isPublished', false);
-                  } else {
-                    form.setValue('scheduledPublishDate', '');
-                  }
-                }}
-                data-testid="switch-schedule-later"
-              />
-            </div>
-
-            {/* Schedule Date Picker */}
-            {scheduleForLater && (
-              <FormField
-                control={form.control}
-                name="scheduledPublishDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Publish Date</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="datetime-local"
-                        min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
-                        {...field}
-                        data-testid="input-scheduled-date"
-                      />
-                    </FormControl>
-                    <p className="text-xs text-muted-foreground">
-                      Study will be automatically published at this date and time
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
 
             <div className="flex space-x-2 pt-4">
               <Button
