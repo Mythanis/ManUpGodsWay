@@ -12,7 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Upload, FileText, Book, Layers, Video, Image, Trash2, Edit, Eye, Check, Loader2, ChevronDown, ChevronUp, X } from "lucide-react";
+import { Plus, Upload, FileText, Book, Layers, Video, Image, Trash2, Edit, Eye, Check, Loader2, ChevronDown, ChevronUp, X, CalendarClock } from "lucide-react";
+import { format } from "date-fns";
 
 interface Study {
   id: string;
@@ -82,7 +83,10 @@ export default function StudyBuilder() {
     requiresPurchase: false,
     price: "",
     isPublished: true,
+    scheduledPublishDate: "",
   });
+  
+  const [scheduleForLater, setScheduleForLater] = useState(false);
   
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -117,7 +121,9 @@ export default function StudyBuilder() {
       requiresPurchase: false,
       price: "",
       isPublished: true,
+      scheduledPublishDate: "",
     });
+    setScheduleForLater(false);
     setThumbnailFile(null);
     setVideoFile(null);
     setWordFile(null);
@@ -188,6 +194,9 @@ export default function StudyBuilder() {
         ...data,
         seriesId: data.seriesId || null,
         price: data.requiresPurchase && data.price ? data.price : null,
+        scheduledPublishDate: data.scheduledPublishDate 
+          ? new Date(data.scheduledPublishDate).toISOString() 
+          : null,
       });
       return study;
     },
@@ -656,16 +665,68 @@ export default function StudyBuilder() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between border rounded-lg p-4 bg-green-50 dark:bg-green-950/30">
-                    <div>
-                      <Label>Publish Immediately</Label>
-                      <p className="text-sm text-muted-foreground">Make this study visible to users</p>
+                  {/* Publishing Options Section */}
+                  <div className="border-2 border-ministry-gold rounded-lg p-4 space-y-4 bg-ministry-gold/10">
+                    <h4 className="font-semibold text-ministry-charcoal flex items-center gap-2">
+                      <CalendarClock className="w-5 h-5" />
+                      Publishing Options
+                    </h4>
+                    
+                    <div className="flex items-center justify-between border rounded-lg p-3 bg-white dark:bg-gray-900">
+                      <div>
+                        <Label>Publish Now</Label>
+                        <p className="text-sm text-muted-foreground">Make this study visible immediately</p>
+                      </div>
+                      <Switch
+                        checked={formData.isPublished}
+                        onCheckedChange={(v) => {
+                          setFormData({ ...formData, isPublished: v });
+                          if (v) {
+                            setScheduleForLater(false);
+                            setFormData(prev => ({ ...prev, isPublished: v, scheduledPublishDate: "" }));
+                          }
+                        }}
+                        disabled={scheduleForLater}
+                        data-testid="switch-is-published"
+                      />
                     </div>
-                    <Switch
-                      checked={formData.isPublished}
-                      onCheckedChange={(v) => setFormData({ ...formData, isPublished: v })}
-                      data-testid="switch-is-published"
-                    />
+
+                    <div className="flex items-center justify-between border rounded-lg p-3 bg-white dark:bg-gray-900">
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          Schedule for Later
+                        </Label>
+                        <p className="text-sm text-muted-foreground">Automatically publish at a future date</p>
+                      </div>
+                      <Switch
+                        checked={scheduleForLater}
+                        onCheckedChange={(v) => {
+                          setScheduleForLater(v);
+                          if (v) {
+                            setFormData(prev => ({ ...prev, isPublished: false }));
+                          } else {
+                            setFormData(prev => ({ ...prev, scheduledPublishDate: "" }));
+                          }
+                        }}
+                        data-testid="switch-schedule-later"
+                      />
+                    </div>
+
+                    {scheduleForLater && (
+                      <div className="space-y-2 border rounded-lg p-3 bg-white dark:bg-gray-900">
+                        <Label>Publish Date & Time</Label>
+                        <Input
+                          type="datetime-local"
+                          min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+                          value={formData.scheduledPublishDate}
+                          onChange={(e) => setFormData({ ...formData, scheduledPublishDate: e.target.value })}
+                          data-testid="input-scheduled-date"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Study will automatically become visible at this date and time
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between border rounded-lg p-4">
