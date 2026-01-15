@@ -629,7 +629,9 @@ export class DatabaseStorage implements IStorage {
     const seriesStudies = await db.select().from(studies)
       .where(and(
         eq(studies.seriesId, seriesId),
-        eq(studies.isPublished, true)
+        eq(studies.isPublished, true),
+        // Exclude studies scheduled for the future
+        sql`(${studies.scheduledPublishDate} IS NULL OR ${studies.scheduledPublishDate} <= NOW())`
       ))
       .orderBy(asc(studies.seriesOrder), asc(studies.createdAt));
     
@@ -700,13 +702,34 @@ export class DatabaseStorage implements IStorage {
     await db.delete(studySeries).where(eq(studySeries.id, id));
   }
 
+  // Auto-publish scheduled studies that are due
+  async autoPublishScheduledStudies(): Promise<number> {
+    const now = new Date();
+    const result = await db
+      .update(studies)
+      .set({ isPublished: true, updatedAt: now })
+      .where(and(
+        eq(studies.isPublished, false),
+        sql`${studies.scheduledPublishDate} IS NOT NULL AND ${studies.scheduledPublishDate} <= NOW()`
+      ))
+      .returning({ id: studies.id });
+    
+    return result.length;
+  }
+
   // Study operations
   async getStudies(category?: string, requiredTier?: string, isAdmin?: boolean): Promise<Study[]> {
+    // Auto-publish any scheduled studies that are now due
+    await this.autoPublishScheduledStudies();
     const conditions = [];
     
     // Only filter by published status if not admin
     if (!isAdmin) {
       conditions.push(eq(studies.isPublished, true));
+      // Exclude studies scheduled for the future (not yet published)
+      conditions.push(
+        sql`(${studies.scheduledPublishDate} IS NULL OR ${studies.scheduledPublishDate} <= NOW())`
+      );
     }
     
     if (category) {
@@ -729,7 +752,9 @@ export class DatabaseStorage implements IStorage {
   async getIndividualStudies(category?: string): Promise<Study[]> {
     const conditions = [
       eq(studies.isPublished, true),
-      isNull(studies.seriesId)
+      isNull(studies.seriesId),
+      // Exclude studies scheduled for the future
+      sql`(${studies.scheduledPublishDate} IS NULL OR ${studies.scheduledPublishDate} <= NOW())`
     ];
     
     if (category && category !== 'all') {

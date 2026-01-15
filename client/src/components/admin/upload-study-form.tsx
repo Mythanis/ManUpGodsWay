@@ -15,8 +15,9 @@ import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertStudySchema } from "@shared/schema";
-import { Plus, Layers, FileText, Upload, Check, Loader2 } from "lucide-react";
+import { Plus, Layers, FileText, Upload, Check, Loader2, CalendarClock } from "lucide-react";
 import { z } from "zod";
+import { format } from "date-fns";
 
 interface StudySeries {
   id: string;
@@ -55,6 +56,7 @@ const createStudySchema = insertStudySchema.extend({
   requiresPurchase: z.boolean().default(false),
   price: z.string().optional(),
   purchaseRequiredTiers: z.array(z.enum(["free", "premium", "vip"])).default([]),
+  scheduledPublishDate: z.string().optional(),
 });
 
 export default function UploadStudyForm() {
@@ -69,6 +71,9 @@ export default function UploadStudyForm() {
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [addToSeries, setAddToSeries] = useState(false);
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>("");
+  
+  // Scheduling state
+  const [scheduleForLater, setScheduleForLater] = useState(false);
   
   // Bulk import state
   const [bulkImportMode, setBulkImportMode] = useState(false);
@@ -117,6 +122,7 @@ export default function UploadStudyForm() {
       price: '',
       purchaseRequiredTiers: [],
       isPublished: false,
+      scheduledPublishDate: '',
     },
   });
 
@@ -298,6 +304,7 @@ export default function UploadStudyForm() {
       setThumbnailFile(null);
       setAddToSeries(false);
       setSelectedSeriesId("");
+      setScheduleForLater(false);
       setBulkImportMode(false);
       setBulkWordFile(null);
       setParsedLessons([]);
@@ -350,6 +357,12 @@ export default function UploadStudyForm() {
       price: data.requiresPurchase && data.price && data.price.trim() !== '' ? data.price : null,
       // Add seriesId if adding to a series
       seriesId: addToSeries && selectedSeriesId ? selectedSeriesId : null,
+      // Convert scheduled date to ISO string, or null if not scheduling
+      scheduledPublishDate: scheduleForLater && data.scheduledPublishDate 
+        ? new Date(data.scheduledPublishDate).toISOString() 
+        : null,
+      // If scheduling for later, don't publish immediately
+      isPublished: scheduleForLater ? false : data.isPublished,
     };
     createStudy.mutate(submitData);
   };
@@ -905,13 +918,70 @@ export default function UploadStudyForm() {
                   <FormControl>
                     <Switch
                       checked={field.value}
-                      onCheckedChange={field.onChange}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked);
+                        if (checked) {
+                          setScheduleForLater(false);
+                          form.setValue('scheduledPublishDate', '');
+                        }
+                      }}
+                      disabled={scheduleForLater}
                       data-testid="switch-publish-study"
                     />
                   </FormControl>
                 </FormItem>
               )}
             />
+
+            {/* Schedule for Later Section */}
+            <div className="flex flex-row items-center justify-between rounded-lg border p-4 bg-blue-50 dark:bg-blue-950">
+              <div className="space-y-0.5">
+                <div className="text-sm font-medium flex items-center gap-2">
+                  <CalendarClock className="w-4 h-4" />
+                  Schedule for Later
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Automatically publish at a future date
+                </div>
+              </div>
+              <Switch
+                checked={scheduleForLater}
+                onCheckedChange={(checked) => {
+                  setScheduleForLater(checked);
+                  if (checked) {
+                    form.setValue('isPublished', false);
+                  } else {
+                    form.setValue('scheduledPublishDate', '');
+                  }
+                }}
+                data-testid="switch-schedule-later"
+              />
+            </div>
+
+            {/* Schedule Date Picker */}
+            {scheduleForLater && (
+              <FormField
+                control={form.control}
+                name="scheduledPublishDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Publish Date</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="datetime-local"
+                        min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+                        {...field}
+                        data-testid="input-scheduled-date"
+                      />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      Study will be automatically published at this date and time
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="flex space-x-2 pt-4">
               <Button

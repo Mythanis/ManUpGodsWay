@@ -12,7 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Edit, Trash2, Plus, Book, Users, Crown, Gem, List, ChevronUp, ChevronDown, Layers, X, Check, BookOpen } from "lucide-react";
+import { Edit, Trash2, Plus, Book, Users, Crown, Gem, List, ChevronUp, ChevronDown, Layers, X, Check, BookOpen, CalendarClock } from "lucide-react";
+import { format } from "date-fns";
 
 interface Study {
   id: string;
@@ -25,12 +26,14 @@ interface Study {
   tags: string[];
   author: string;
   isActive: boolean;
+  isPublished?: boolean;
   requiresPurchase?: boolean;
   price?: string;
   purchaseRequiredTiers?: string[];
   totalDays?: number;
   seriesId?: string | null;
   seriesOrder?: number | null;
+  scheduledPublishDate?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -71,6 +74,7 @@ interface FormData {
   purchaseRequiredTiers: string[];
   seriesId: string;
   isPublished: boolean;
+  scheduledPublishDate: string;
 }
 
 export default function StudyManagement() {
@@ -115,7 +119,11 @@ export default function StudyManagement() {
     purchaseRequiredTiers: [],
     seriesId: "",
     isPublished: false,
+    scheduledPublishDate: "",
   });
+  
+  // Scheduling state for edit dialog
+  const [scheduleForLater, setScheduleForLater] = useState(false);
 
   // Series management state
   const [activeView, setActiveView] = useState<"all" | "series" | "individual">("all");
@@ -448,6 +456,13 @@ export default function StudyManagement() {
 
   const handleEdit = (study: Study) => {
     setEditingStudy(study);
+    // Format scheduled date for datetime-local input in local timezone
+    let scheduledDate = "";
+    if (study.scheduledPublishDate) {
+      const date = new Date(study.scheduledPublishDate);
+      // Format as local datetime string for datetime-local input
+      scheduledDate = format(date, "yyyy-MM-dd'T'HH:mm");
+    }
     setFormData({
       title: study.title,
       description: study.description,
@@ -462,7 +477,9 @@ export default function StudyManagement() {
       purchaseRequiredTiers: study.purchaseRequiredTiers || [],
       seriesId: study.seriesId || "",
       isPublished: study.isPublished || false,
+      scheduledPublishDate: scheduledDate,
     });
+    setScheduleForLater(!!study.scheduledPublishDate);
     setShowEditDialog(true);
   };
 
@@ -493,7 +510,10 @@ export default function StudyManagement() {
       price: formData.requiresPurchase && formData.price && formData.price.trim() !== '' ? formData.price : undefined,
       purchaseRequiredTiers: formData.requiresPurchase ? formData.purchaseRequiredTiers : [],
       seriesId: formData.seriesId || null,
-      isPublished: formData.isPublished,
+      isPublished: scheduleForLater ? false : formData.isPublished,
+      scheduledPublishDate: scheduleForLater && formData.scheduledPublishDate 
+        ? new Date(formData.scheduledPublishDate).toISOString() 
+        : null,
     };
 
     updateStudyMutation.mutate({ id: editingStudy.id, updates });
@@ -1877,10 +1897,59 @@ export default function StudyManagement() {
               <Switch
                 id="edit-published"
                 checked={formData.isPublished}
-                onCheckedChange={(checked) => setFormData({ ...formData, isPublished: checked })}
+                onCheckedChange={(checked) => {
+                  setFormData({ ...formData, isPublished: checked });
+                  if (checked) {
+                    setScheduleForLater(false);
+                    setFormData(prev => ({ ...prev, isPublished: checked, scheduledPublishDate: "" }));
+                  }
+                }}
+                disabled={scheduleForLater}
                 data-testid="switch-publish-study"
               />
             </div>
+
+            {/* Schedule for Later */}
+            <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-700">
+              <div>
+                <Label htmlFor="edit-schedule" className="font-medium flex items-center gap-2">
+                  <CalendarClock className="w-4 h-4" />
+                  Schedule for Later
+                </Label>
+                <p className="text-xs text-muted-foreground">Automatically publish at a future date</p>
+              </div>
+              <Switch
+                id="edit-schedule"
+                checked={scheduleForLater}
+                onCheckedChange={(checked) => {
+                  setScheduleForLater(checked);
+                  if (checked) {
+                    setFormData(prev => ({ ...prev, isPublished: false }));
+                  } else {
+                    setFormData(prev => ({ ...prev, scheduledPublishDate: "" }));
+                  }
+                }}
+                data-testid="switch-schedule-later"
+              />
+            </div>
+
+            {/* Schedule Date Picker */}
+            {scheduleForLater && (
+              <div className="space-y-2">
+                <Label htmlFor="edit-scheduled-date">Publish Date & Time</Label>
+                <Input
+                  id="edit-scheduled-date"
+                  type="datetime-local"
+                  min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+                  value={formData.scheduledPublishDate}
+                  onChange={(e) => setFormData({ ...formData, scheduledPublishDate: e.target.value })}
+                  data-testid="input-scheduled-date"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Study will be automatically published at this date and time
+                </p>
+              </div>
+            )}
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button
