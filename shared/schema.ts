@@ -134,6 +134,7 @@ export const studies = pgTable("studies", {
   ratingCount: integer("rating_count").default(0),
   isPublished: boolean("is_published").default(false),
   isFeatured: boolean("is_featured").default(false),
+  scheduledPublishDate: timestamp("scheduled_publish_date"), // Optional: publish study at this date/time
   rationReward: integer("ration_reward").default(100), // Rations earned for completing this study
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
