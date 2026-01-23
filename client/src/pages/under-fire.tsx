@@ -132,6 +132,26 @@ export default function UnderFire() {
     },
   });
 
+  const unassistMutation = useMutation({
+    mutationFn: async (requestId: string) => {
+      return apiRequest('POST', `/api/accountability-requests/${requestId}/unassist`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Unassisted",
+        description: "You are no longer assisting this request. It is now open for others.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to unassist",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreateRequest = () => {
     if (!newRequestContent.trim()) {
       toast({
@@ -151,6 +171,12 @@ export default function UnderFire() {
   const handleDeleteRequest = (requestId: string) => {
     if (window.confirm('Are you sure you want to delete this request? This action cannot be undone.')) {
       deleteRequestMutation.mutate(requestId);
+    }
+  };
+
+  const handleUnassist = (requestId: string) => {
+    if (window.confirm('Are you sure you want to stop assisting? This will allow others to assist.')) {
+      unassistMutation.mutate(requestId);
     }
   };
 
@@ -305,14 +331,27 @@ export default function UnderFire() {
                   
                   <Separator className="bg-gray-700" />
                   
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 flex-wrap">
                     {request.assistedById ? (
-                      <div className="flex items-center gap-2 text-green-400">
-                        <CheckCircle className="h-4 w-4" />
-                        <span className="text-sm font-medium">
-                          Accountability accepted by {request.assister?.firstName} {request.assister?.lastName}
-                        </span>
-                      </div>
+                      <>
+                        <div className="flex items-center gap-2 text-green-400">
+                          <CheckCircle className="h-4 w-4" />
+                          <span className="text-sm font-medium">
+                            Accountability accepted by {request.assister?.firstName} {request.assister?.lastName}
+                          </span>
+                        </div>
+                        {currentUser?.id === request.assistedById && (
+                          <Button
+                            onClick={() => handleUnassist(request.id)}
+                            disabled={unassistMutation.isPending}
+                            variant="outline"
+                            size="sm"
+                            className="text-red-400 border-red-400 hover:bg-red-900/20 rounded-none"
+                          >
+                            {unassistMutation.isPending ? 'Processing...' : 'Unassist'}
+                          </Button>
+                        )}
+                      </>
                     ) : currentUser?.id !== request.userId ? (
                       <Button
                         onClick={() => handleAssist(request.id)}

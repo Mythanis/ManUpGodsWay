@@ -8364,6 +8364,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to assist with request" });
     }
   });
+
+  // Unassist an accountability request (only the person who assisted can unassist)
+  app.post('/api/accountability-requests/:requestId/unassist', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { requestId } = req.params;
+      
+      const request = await storage.getAccountabilityRequestById(requestId);
+      if (!request) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+      
+      // Only the person who assisted can unassist
+      if (request.assistedById !== userId) {
+        return res.status(403).json({ message: "You can only unassist requests you are assisting" });
+      }
+      
+      await storage.unassistAccountabilityRequest(requestId);
+      res.json({ message: "You are no longer assisting this request" });
+    } catch (error) {
+      console.error("Error unassisting accountability request:", error);
+      res.status(500).json({ message: "Failed to unassist request" });
+    }
+  });
   
   // Delete own accountability request
   app.delete('/api/accountability-requests/:requestId', isAuthenticated, async (req: any, res) => {

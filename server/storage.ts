@@ -556,6 +556,7 @@ export interface IStorage {
   getAccountabilityRequestById(id: string): Promise<any | undefined>;
   createAccountabilityRequest(request: { userId: string; content: string }): Promise<any>;
   markAccountabilityRequestAssisted(requestId: string, assisterId: string): Promise<any>;
+  unassistAccountabilityRequest(requestId: string): Promise<any>;
   deleteAccountabilityRequest(id: string): Promise<void>;
 }
 
@@ -5998,6 +5999,18 @@ export class DatabaseStorage implements IStorage {
       .set({
         assistedById: assisterId,
         assistedAt: new Date(),
+      })
+      .where(eq(accountabilityRequests.id, requestId))
+      .returning();
+    return updated;
+  }
+
+  async unassistAccountabilityRequest(requestId: string): Promise<AccountabilityRequest> {
+    const [updated] = await db
+      .update(accountabilityRequests)
+      .set({
+        assistedById: null,
+        assistedAt: null,
       })
       .where(eq(accountabilityRequests.id, requestId))
       .returning();
