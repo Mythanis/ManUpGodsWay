@@ -5965,7 +5965,6 @@ export class DatabaseStorage implements IStorage {
             id: assister.id,
             firstName: assister.firstName,
             lastName: assister.lastName,
-            email: assister.email,
             profileImageUrl: assister.profileImageUrl,
           } : null,
         };
