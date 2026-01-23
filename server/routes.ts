@@ -8351,7 +8351,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.sendMessage({
         conversationId: conversation.id,
-        senderId: assisterId,
+        userId: assisterId,
         content: initialMessage,
       });
       
