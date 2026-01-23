@@ -305,7 +305,7 @@ export default function UnderFire() {
                           Accountability Request
                         </Badge>
                         {request.assistedById && (
-                          <Badge className="bg-green-500 text-white font-semibold">
+                          <Badge className="bg-ministry-gold-exact text-black font-semibold">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Assisted
                           </Badge>
@@ -334,8 +334,8 @@ export default function UnderFire() {
                   <div className="flex items-center gap-4 flex-wrap">
                     {request.assistedById ? (
                       <>
-                        <div className="flex items-center gap-2 text-green-400">
-                          <CheckCircle className="h-4 w-4" />
+                        <div className="flex items-center gap-2 text-white">
+                          <CheckCircle className="h-4 w-4 text-ministry-gold-exact" />
                           <span className="text-sm font-medium">
                             Accountability accepted by {request.assister?.firstName} {request.assister?.lastName}
                           </span>
