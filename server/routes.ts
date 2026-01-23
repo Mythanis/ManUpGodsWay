@@ -8281,6 +8281,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // ========================================
+  // UNDER FIRE - ACCOUNTABILITY REQUESTS
+  // ========================================
+  
+  // Get all accountability requests
+  app.get('/api/accountability-requests', isAuthenticated, async (req: any, res) => {
+    try {
+      const requests = await storage.getAccountabilityRequests();
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching accountability requests:", error);
+      res.status(500).json({ message: "Failed to fetch accountability requests" });
+    }
+  });
+  
+  // Create a new accountability request
+  app.post('/api/accountability-requests', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { content } = req.body;
+      
+      if (!content || !content.trim()) {
+        return res.status(400).json({ message: "Content is required" });
+      }
+      
+      const request = await storage.createAccountabilityRequest({
+        userId,
+        content: content.trim(),
+      });
+      
+      res.status(201).json(request);
+    } catch (error) {
+      console.error("Error creating accountability request:", error);
+      res.status(500).json({ message: "Failed to create accountability request" });
+    }
+  });
+  
+  // Assist with an accountability request (creates DM)
+  app.post('/api/accountability-requests/:requestId/assist', isAuthenticated, async (req: any, res) => {
+    try {
+      const assisterId = req.user.claims.sub;
+      const { requestId } = req.params;
+      
+      // Get the request
+      const request = await storage.getAccountabilityRequestById(requestId);
+      if (!request) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+      
+      // Cannot assist your own request
+      if (request.userId === assisterId) {
+        return res.status(400).json({ message: "You cannot assist your own request" });
+      }
+      
+      // Check if already assisted
+      if (request.assistedById) {
+        return res.status(400).json({ message: "This request has already been assisted" });
+      }
+      
+      // Mark as assisted
+      await storage.markAccountabilityRequestAssisted(requestId, assisterId);
+      
+      // Create or get existing DM conversation between the two users
+      const conversation = await storage.getOrCreateDirectConversation(request.userId, assisterId);
+      
+      // Send initial message from the assister
+      const assister = await storage.getUser(assisterId);
+      const initialMessage = `I saw your accountability request and I'm here to help you! Let's work together to keep you on track.`;
+      
+      await storage.sendMessage({
+        conversationId: conversation.id,
+        senderId: assisterId,
+        content: initialMessage,
+      });
+      
+      res.json({ 
+        message: "Accountability accepted! A direct message has been created.",
+        conversationId: conversation.id 
+      });
+    } catch (error) {
+      console.error("Error assisting accountability request:", error);
+      res.status(500).json({ message: "Failed to assist with request" });
+    }
+  });
+  
+  // Delete own accountability request
+  app.delete('/api/accountability-requests/:requestId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { requestId } = req.params;
+      
+      const request = await storage.getAccountabilityRequestById(requestId);
+      if (!request) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+      
+      if (request.userId !== userId) {
+        return res.status(403).json({ message: "You can only delete your own requests" });
+      }
+      
+      await storage.deleteAccountabilityRequest(requestId);
+      res.json({ message: "Request deleted" });
+    } catch (error) {
+      console.error("Error deleting accountability request:", error);
+      res.status(500).json({ message: "Failed to delete request" });
+    }
+  });
+
+  // ========================================
   // STRIPE PAYMENT ROUTES
   // ========================================
   

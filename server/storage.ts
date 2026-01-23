@@ -142,6 +142,8 @@ import {
   type InsertHurdleWallReply,
   type HurdleWallPrayer,
   type InsertHurdleWallPrayer,
+  accountabilityRequests,
+  type AccountabilityRequest,
   type UserPrayerStats,
   type InsertUserPrayerStats,
   type UserPurchase,
@@ -548,6 +550,13 @@ export interface IStorage {
   getUserRedemptions(userId: string): Promise<(StoreRedemption & { product: StoreProduct })[]>;
   getAllRedemptions(status?: string): Promise<(StoreRedemption & { product: StoreProduct; user: User })[]>;
   updateRedemptionStatus(id: string, status: string, fulfilledBy?: string, trackingNumber?: string): Promise<StoreRedemption>;
+  
+  // Accountability requests operations
+  getAccountabilityRequests(): Promise<any[]>;
+  getAccountabilityRequestById(id: string): Promise<any | undefined>;
+  createAccountabilityRequest(request: { userId: string; content: string }): Promise<any>;
+  markAccountabilityRequestAssisted(requestId: string, assisterId: string): Promise<any>;
+  deleteAccountabilityRequest(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -5926,6 +5935,77 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return redemption;
+  }
+
+  // Accountability requests operations
+  async getAccountabilityRequests(): Promise<any[]> {
+    const requests = await db
+      .select()
+      .from(accountabilityRequests)
+      .orderBy(desc(accountabilityRequests.createdAt));
+
+    const requestsWithUsers = await Promise.all(
+      requests.map(async (request) => {
+        const [user] = await db.select().from(users).where(eq(users.id, request.userId));
+        let assister = null;
+        if (request.assistedById) {
+          const [assisterUser] = await db.select().from(users).where(eq(users.id, request.assistedById));
+          assister = assisterUser;
+        }
+        return {
+          ...request,
+          user: user ? {
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            profileImageUrl: user.profileImageUrl,
+          } : null,
+          assister: assister ? {
+            id: assister.id,
+            firstName: assister.firstName,
+            lastName: assister.lastName,
+            profileImageUrl: assister.profileImageUrl,
+          } : null,
+        };
+      })
+    );
+
+    return requestsWithUsers;
+  }
+
+  async getAccountabilityRequestById(id: string): Promise<AccountabilityRequest | undefined> {
+    const [request] = await db
+      .select()
+      .from(accountabilityRequests)
+      .where(eq(accountabilityRequests.id, id));
+    return request;
+  }
+
+  async createAccountabilityRequest(request: { userId: string; content: string }): Promise<AccountabilityRequest> {
+    const [newRequest] = await db
+      .insert(accountabilityRequests)
+      .values({
+        userId: request.userId,
+        content: request.content,
+      })
+      .returning();
+    return newRequest;
+  }
+
+  async markAccountabilityRequestAssisted(requestId: string, assisterId: string): Promise<AccountabilityRequest> {
+    const [updated] = await db
+      .update(accountabilityRequests)
+      .set({
+        assistedById: assisterId,
+        assistedAt: new Date(),
+      })
+      .where(eq(accountabilityRequests.id, requestId))
+      .returning();
+    return updated;
+  }
+
+  async deleteAccountabilityRequest(id: string): Promise<void> {
+    await db.delete(accountabilityRequests).where(eq(accountabilityRequests.id, id));
   }
 }
 

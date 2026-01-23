@@ -1539,6 +1539,26 @@ export type InsertHurdleWallPrayer = z.infer<typeof insertHurdleWallPrayerSchema
 export type UserPrayerStats = typeof userPrayerStats.$inferSelect;
 export type InsertUserPrayerStats = z.infer<typeof insertUserPrayerStatsSchema>;
 
+// Accountability Requests for Under Fire page
+export const accountabilityRequests = pgTable("accountability_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  assistedById: varchar("assisted_by_id").references(() => users.id),
+  assistedAt: timestamp("assisted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAccountabilityRequestSchema = createInsertSchema(accountabilityRequests).omit({
+  id: true,
+  assistedById: true,
+  assistedAt: true,
+  createdAt: true,
+});
+
+export type AccountabilityRequest = typeof accountabilityRequests.$inferSelect;
+export type InsertAccountabilityRequest = z.infer<typeof insertAccountabilityRequestSchema>;
+
 // Carousel items for homepage featured content
 export const carouselItems = pgTable("carousel_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

@@ -34,6 +34,7 @@ import MoreManUp from "@/pages/more-man-up";
 import Blog from "@/pages/blog";
 import BlogDetail from "@/pages/blog-detail";
 import HurdleWall from "@/pages/hurdle-wall";
+import UnderFire from "@/pages/under-fire";
 import WarGroups from "@/pages/war-groups";
 import WarGroupDetail from "@/pages/war-group-detail";
 import WarGroupRegister from "@/pages/war-group-register";
@@ -131,6 +132,7 @@ function Router() {
             <Route path="/blog" component={Blog} />
             <Route path="/blog/:slug" component={BlogDetail} />
             <Route path="/hurdle-wall" component={HurdleWall} />
+            <Route path="/under-fire" component={UnderFire} />
             <Route path="/war-groups" component={WarGroups} />
             <Route path="/war-groups/register" component={WarGroupRegister} />
             <Route path="/war-groups/:id" component={WarGroupDetail} />
