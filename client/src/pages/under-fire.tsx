@@ -179,9 +179,7 @@ export default function UnderFire() {
   };
 
   const handleUnassist = (requestId: string) => {
-    if (window.confirm('Are you sure you want to stop assisting? This will allow others to assist.')) {
-      unassistMutation.mutate(requestId);
-    }
+    unassistMutation.mutate(requestId);
   };
 
   const formatTimeAgo = (dateString: string) => {
