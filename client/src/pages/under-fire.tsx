@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useWebSocket } from '@/hooks/useWebSocket';
 import { formatDistanceToNow } from 'date-fns';
 import { Trash2, Search, SortDesc, Shield, HandHelping, CheckCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -45,6 +46,9 @@ export default function UnderFire() {
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
   
   const { data: currentUser } = useQuery<{ id: string }>({ queryKey: ['/api/auth/user'] });
+  
+  // Enable WebSocket for real-time updates when assist/unassist happens
+  useWebSocket(currentUser?.id);
   
   const { data: allRequests = [], isLoading } = useQuery<AccountabilityRequest[]>({
     queryKey: ['/api/accountability-requests'],
@@ -344,9 +348,8 @@ export default function UnderFire() {
                           <Button
                             onClick={() => handleUnassist(request.id)}
                             disabled={unassistMutation.isPending}
-                            variant="outline"
                             size="sm"
-                            className="text-red-400 border-red-400 hover:bg-red-900/20 rounded-none"
+                            className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold rounded-none"
                           >
                             {unassistMutation.isPending ? 'Processing...' : 'Unassist'}
                           </Button>

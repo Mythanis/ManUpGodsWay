@@ -8355,6 +8355,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: initialMessage,
       });
       
+      // Broadcast real-time update to all clients
+      if ((req.app as any).broadcastToAll) {
+        (req.app as any).broadcastToAll({
+          type: 'accountability_request_assist',
+          data: { requestId, assisterId }
+        });
+      }
+      
       res.json({ 
         message: "Accountability accepted! A direct message has been created.",
         conversationId: conversation.id 
@@ -8382,6 +8390,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       await storage.unassistAccountabilityRequest(requestId);
+      
+      // Broadcast real-time update to all clients
+      if ((req.app as any).broadcastToAll) {
+        (req.app as any).broadcastToAll({
+          type: 'accountability_request_unassist',
+          data: { requestId }
+        });
+      }
+      
       res.json({ message: "You are no longer assisting this request" });
     } catch (error) {
       console.error("Error unassisting accountability request:", error);
@@ -10304,6 +10321,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         data: notification
       }));
     }
+  };
+  
+  // Add function to broadcast to all connected clients
+  (app as any).broadcastToAll = (message: { type: string; data?: any }) => {
+    connectedClients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(message));
+      }
+    });
   };
   
   return httpServer;

@@ -157,6 +157,16 @@ export function useWebSocket(userId?: string) {
             queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
             queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall/user'] });
             break;
+
+          case 'accountability_request_assist':
+            // Invalidate accountability requests to show updated assist status
+            queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });
+            break;
+
+          case 'accountability_request_unassist':
+            // Invalidate accountability requests to show updated assist status
+            queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });
+            break;
         }
       } catch (error) {
         console.error('Error parsing WebSocket message:', error);
