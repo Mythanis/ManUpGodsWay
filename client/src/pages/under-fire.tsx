@@ -33,6 +33,7 @@ interface AccountabilityRequest {
     id: string;
     firstName: string;
     lastName: string;
+    email?: string;
     profileImageUrl?: string;
   } | null;
 }
@@ -339,7 +340,9 @@ export default function UnderFire() {
                         <div className="flex items-center gap-2 text-white">
                           <CheckCircle className="h-4 w-4 text-ministry-gold-exact" />
                           <span className="text-sm font-medium">
-                            Accountability accepted by {request.assister?.firstName} {request.assister?.lastName}
+                            Accountability accepted by {request.assister?.firstName && request.assister?.lastName 
+                              ? `${request.assister.firstName} ${request.assister.lastName}`
+                              : request.assister?.email || 'a brother'}
                           </span>
                         </div>
                         {currentUser?.id === request.assistedById && (
