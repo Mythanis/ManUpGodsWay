@@ -100,7 +100,7 @@ export default function UnderFire() {
       });
       queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });
       if (data.conversationId) {
-        setLocation(`/messages/${data.conversationId}`);
+        setLocation(`/messages?conversation=${data.conversationId}`);
       }
     },
     onError: (error: any) => {
