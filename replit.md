@@ -1,5 +1,5 @@
 # Overview
-"Man Up God's Way" is a full-stack React/Express application providing a faith-based platform for biblical masculinity, leadership development, and spiritual growth. It offers structured learning programs including **embedded, day-by-day Bible studies** with progress tracking, devotionals, community discussions, and comprehensive discipleship tools to empower men in their faith and character. **Studies are transitioning from document-based (PDF/Word) to fully embedded structured lessons** with day-by-day navigation, interactive questions, progress tracking, and in-app reading. The platform features robust authentication, real-time messaging, video content management with tiered access, admin content and user management, a comprehensive podcasts system, weekly challenges, and a local exercise database for fitness programs. The project aims to provide a centralized hub for spiritual and personal development, fostering a strong, engaged community.
+"Man Up God's Way" is a full-stack React/Express application providing a faith-based platform for biblical masculinity, leadership development, and spiritual growth. It offers structured learning programs including day-by-day Bible studies with progress tracking, devotionals, community discussions, and comprehensive discipleship tools. The platform features robust authentication, real-time messaging, video content management with tiered access, admin content and user management, a comprehensive podcasts system, weekly challenges, and a local exercise database. The project aims to provide a centralized hub for spiritual and personal development, fostering a strong, engaged community.
 
 # User Preferences
 Preferred communication style: Simple, everyday language.
@@ -7,120 +7,32 @@ Preferred communication style: Simple, everyday language.
 # System Architecture
 
 ## Frontend Architecture
-The frontend is built with React 18 and TypeScript, using Vite for development. It employs Wouter for routing, shadcn/ui (based on Radix UI) for components, and Tailwind CSS for styling with a custom ministry-themed color palette (charcoal, gold, steel, slate). TanStack Query manages server state, while React Hook Form with Zod handles form validation. The application features a mobile-first responsive design with a bottom navigation and card-based layouts.
+The frontend is built with React 18 and TypeScript, using Vite. It employs Wouter for routing, shadcn/ui (based on Radix UI) for components, and Tailwind CSS for styling with a custom ministry-themed color palette. TanStack Query manages server state, while React Hook Form with Zod handles form validation. The application features a mobile-first responsive design with a bottom navigation and card-based layouts.
 
 ## Backend Architecture
-The backend is an Express.js server in TypeScript, following a RESTful API design. It utilizes session-based authentication integrated with Replit's OIDC, storing sessions in PostgreSQL. Middleware is used for logging, error handling, and role-based access control (user, admin) with subscription tiers (free, premium, VIP) for content access.
+The backend is an Express.js server in TypeScript, following a RESTful API design. It utilizes session-based authentication integrated with Replit's OIDC, storing sessions in PostgreSQL. Middleware is used for logging, error handling, and role-based access control (user, admin) with subscription tiers (free, premium, VIP).
 
 ## Database Design
-PostgreSQL, hosted on Neon Database, is used with Drizzle ORM for type-safe queries and migrations. The schema includes:
-- **studySeries**: Groups related studies into series (e.g., "Holy Spirit" series) with title, description, category, thumbnail, and display order
-- **studies**: Bible study metadata (title, description, category, tier, totalDays, seriesId, seriesOrder, etc.)
-- **studyLessons**: Individual day/lesson content (dayNumber, title, content, scripture, questions, keyTakeaway)
-- **userProgress**: Overall study progress tracking (currentDay, status, completedAt)
-- **userLessonProgress**: Per-lesson completion tracking (isCompleted, answers, completedAt)
-- **users, discussions, devotionals, podcasts, challenges, testimonies, exercises**: Additional core tables
-- **challengeParticipants**: Tracks which users have accepted weekly challenges (with unique constraint to prevent duplicates)
-- Various metadata tables for ratings, video content, and user engagement
+PostgreSQL, hosted on Neon Database, is used with Drizzle ORM for type-safe queries and migrations. The schema includes tables for study series, individual studies, lessons, user progress (overall and per-lesson), users, discussions, devotionals, podcasts, challenges, testimonies, exercises, and challenge participants.
 
 ## Content Management
-The system supports a tiered content structure (free, premium, VIP) and category-based organization for study materials, videos, and podcasts. Features include progress tracking (lesson completion, study ratings), search, and a comprehensive admin panel for content and user management, video/podcast uploads, tier assignment, and notification broadcasting.
-
-### Study Content Management
-- **Embedded Lessons**: Admins can create structured, day-by-day study lessons directly in the app with rich text editor, scripture references, questions, and key takeaways
-- **Bulk Import Tool**: Production-ready feature for converting Word/PDF content to embedded lessons. Supports common export formats (Markdown headings, colon/hyphen/em-dash separators), automatic lesson parsing with preview, and batch creation. Safety features include stale data prevention (clears preview on text edits) and collision-free ordering (uses max displayOrder)
-- **Progress Tracking**: 
-  - **Study Detail Page**: Displays incremental progress based on completed lessons (X of Y lessons completed, percentage)
-  - **EmbeddedLessonViewer**: Shows comprehensive progress indicators including progress bar, day badges, visual navigation dots with completion checkmarks
-  - **Library Page**: Displays study series cards (not individual studies). Click a series to see all contained studies with progress tracking
-  - **Series Detail Page**: Shows all studies in a series with order, progress bars, lesson counts, and tier badges
-  - Smart button labels - "Start" for new studies, "Continue" for in-progress studies, "Review" for completed studies
-  - **Streak Tracking**: Automatically updates when lessons are completed, incrementing once per calendar day regardless of activity type (devotionals or lessons)
-- **Document Management**: Legacy system for managing PDF/Word study documents with tier-based access. Admins can upload new documents, delete existing ones, and update study materials through the edit interface
-
-### Devotional Content Management
-- **Thumbnail Uploads**: Admins can upload custom thumbnail images for daily devotionals through the admin panel
-  - File upload UI with dropzone-style interface and instant preview
-  - Uploaded images stored in `/uploads/thumbnails/` directory
-  - Automatic display on home page devotional card (20x20 rounded thumbnail)
-  - Graceful fallback to default logo when no custom thumbnail exists
-  - Remove functionality to delete uploaded thumbnails
-  - Form workflow ensures both devotional and thumbnail complete before success notification
-  - Existing thumbnails preserved when editing devotional without uploading new image
-- **Bulk Import**: Admins can import up to 30 devotionals at once for automated posting
-  - Structured text format with TITLE, REFERENCE, VERSE, and CONTENT fields
-  - Supports multiline devotional content and separators between entries
-  - Start date picker assigns consecutive dates automatically (daily posting schedule)
-  - Preview functionality shows parsed devotionals before import
-  - Backend validation ensures data integrity for each devotional
-  - Devotionals automatically appear on their assigned dates on the home page
+The system supports a tiered content structure (free, premium, VIP) and category-based organization. Features include progress tracking, search, and a comprehensive admin panel.
+- **Study Content**: Supports embedded, day-by-day lessons with rich text editing, scripture, questions, and key takeaways. Includes a bulk import tool for converting document-based content (Word/PDF) into structured lessons. Progress tracking is integrated at various levels (lesson, study, series).
+- **Devotional Content**: Admins can upload custom thumbnail images and utilize a bulk import tool for up to 30 devotionals, which supports automated daily posting and validation.
 
 ## Key Features
 - **Authentication**: Replit Auth integration with session management.
-- **Messaging**: Real-time direct and group messaging with conversation management.
-- **Studies & Devotionals**: Comprehensive management for Bible studies (including lesson-based structures) and devotionals with thumbnail image uploads for visual appeal on home page.
-- **Community**: Interactive discussion features with auto-subscription when posting replies, real-time statistics, user profiles, and a discipleship system with tag-based user discovery and faith journey stages for testimonies.
-- **Video & Podcast Management**: Full upload, storage, processing, and management system for videos and podcasts with tiered access, topic classification, ratings/reviews, live session support (Riverside.fm integration), and RSS feed import capability.
-  - **RSS Feed Import**: One-click sync from Podomatic RSS feed (https://manupgodsway.podomatic.com/rss2.xml)
-  - Automatic duplicate detection using case-insensitive title matching
-  - Efficient batch processing with O(1) duplicate lookups using Set data structure
-  - Parses iTunes-specific metadata (duration, thumbnails, enclosures)
-  - Success feedback with detailed import/skip counts
-- **Notifications**: Enhanced system with push notification broadcasting, user management, automated daily devotional notifications, tiered content update notifications, and automatic discussion reply notifications (users are automatically subscribed when they post a reply).
-- **User Engagement**: Streak tracking, prayer time system, weekly challenges with intelligent release logic and participation tracking ("I Take the Challenge" button with real-time participant counts), and a comprehensive testimony system.
-- **War Room**: Renamed from "Hurdle Wall" - A dedicated prayer request space where men bring their battles to God and stand together in prayer. **Prayer requests only** (discussion posts removed). Features include:
-  - **Prayer Requests**: All posts use real names (anonymous posting removed) and are tagged as "Prayer Request"
-  - **Commenting System**: Users can add supportive comments to any prayer request, view/hide comments with toggle button, and delete their own comments
-  - **Prayer Interaction**: Prayer button to indicate you've prayed for a request, with real-time prayer counts
-  - **Visual Design**: Black card design with white text and yellow badges/buttons for high contrast
-  - **Real-time Updates**: WebSocket integration for live prayer counts and comment updates
-- **War Groups**: Licensed discipleship groups named "Man Up God's Way - [City Name]" with city-based discovery, interactive map view with geocoding (OpenStreetMap Nominatim API), group leaders, member management, and admin oversight. Includes synchronous geocoding on group creation/updates with background retry service for failed attempts.
-  - **Private Discussion Boards**: Each war group has a private discussion board accessible only to approved members:
-    - Create text posts and share thoughts with the group
-    - **Media Upload Support**: Upload images and videos to posts with preview and removal capabilities
-    - Cross icon for post interactions (instead of heart)
-    - Reply to posts with threaded conversations
-    - Leaders can pin important posts and delete any post
-    - Members can only delete their own posts
-    - Leader can edit group description and meeting info
-  - **Registration & Approval Workflow**: Users can submit registration requests to start new war groups:
-    - Registration form collects: city/state, description, meeting info, contact details, leadership experience, and motivation
-    - Auto-formatted group name: "Man Up God's Way - [City]"
-    - Admin review process with approve/reject actions
-    - Approval automatically creates war group and assigns requester as leader
-    - Rejection requires reason that's stored with the request
-    - Admin can view pending, approved, and rejected registrations in tabbed interface
-    - **Notifications**: When a registration is submitted:
-      - All admin users receive in-app notification with registration details
-      - Email sent to info@manupgodsway.org with complete registration information
-      - Email includes link to admin panel for review
-      - HTML sanitization prevents XSS in email content
-  - **Admin Management**: Comprehensive admin interface for managing war groups including:
-    - View all groups with member counts, leader info, location, and licensing status
-    - Search and filter groups by name, location, or leader
-    - Change group leader with automatic role updates (old leader → member, new leader → leader role)
-    - View group member rosters with profile information
-    - Remove members from groups (with confirmation)
-    - User search functionality for leader selection
-    - Registration management with pending/approved/rejected tabs
-- **Fitness Integration**: Local exercise database with filtering and search capabilities for creating fitness plans.
-- **Gamification System (Rations & Ranks)**: A comprehensive engagement and reward system to encourage spiritual growth:
-  - **Rations Currency**: Users earn "rations" for completing missions (activities) across the platform
-  - **Rank Progression**: 5-tier rank system based on total rations earned:
-    - Recruit (0-999), Warrior (1,000-4,999), Shepherd (5,000-14,999), Watchman (15,000-29,999), Elder (30,000+)
-  - **Mission Types**: 40+ missions across all features with specific ration rewards:
-    - Study missions: Complete lesson (25), complete study (100), write reflection (20), 7-day streak (75), 30-day streak (300)
-    - Devotional missions: Complete devotional (20), write reflection (15), streaks
-    - Challenge missions: Accept challenge (25), complete challenge (75)
-    - War Group missions: Join group (50), create post (15), comment (10)
-    - Community missions: Create discussion (15), reply (10), upvote (2)
-    - Content missions: Watch video (15), listen to podcast (15), rate content (10)
-    - Profile missions: Complete profile (50), first study (100), grace bonus for returning users (100)
-  - **Anti-Abuse Guardrails**: Daily limits on rate-limited missions (e.g., max 5 comments/day for rations)
-  - **Grace Bonus**: 100 rations for users returning after 14+ days of inactivity
-  - **Frontend Display**: Rations balance and rank badge in home header, rations card on profile page
-  - **Rations Page**: History of transactions, leaderboard of top soldiers, rank progression info
-  - **Database Tables**: `ration_transactions` (transaction log), `daily_mission_limits` (anti-abuse tracking), `rations`/`rationRank` fields on users table
+- **Messaging**: Real-time direct and group messaging.
+- **Studies & Devotionals**: Management for Bible studies (lesson-based) and devotionals (with thumbnail uploads).
+- **Community**: Interactive discussions, user profiles, and a discipleship system with tag-based user discovery and faith journey stages.
+- **Video & Podcast Management**: Full upload, storage, processing, and management with tiered access, topic classification, ratings, and RSS feed import capabilities (e.g., Podomatic).
+- **Notifications**: Enhanced system for push notifications, daily devotionals, content updates, and discussion replies.
+- **User Engagement**: Streak tracking, prayer time system, weekly challenges with participation tracking, and a testimony system.
+- **War Room**: A dedicated prayer request space where users can post prayer requests (real names only), comment, and indicate they've prayed, with real-time updates via WebSockets.
+- **Under Fire**: An accountability space where users post requests, and others can "Assist" to become accountability partners, initiating a direct message.
+- **War Groups**: Licensed discipleship groups with city-based discovery, interactive map view (OpenStreetMap Nominatim API), leader/member management, and private discussion boards supporting media uploads. Includes a registration and approval workflow for new groups with admin notifications.
+- **Fitness Integration**: Local exercise database for fitness plans.
+- **Gamification (Rations & Ranks)**: A system where users earn "rations" for completing missions (40+ types across features) to progress through a 5-tier rank system. Includes anti-abuse guardrails and a grace bonus for returning users.
 
 # External Dependencies
 
