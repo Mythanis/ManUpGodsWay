@@ -642,7 +642,7 @@ export default function Home() {
 
       {/* Current Progress Section */}
       <div className="px-6 mb-6">
-        <h2 className="text-xl font-black text-ministry-gold-exact mb-4 tracking-widest uppercase drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">Your Journey</h2>
+        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Your Journey</h2>
         
         {currentStudy && currentStudy.study ? (
           <ProgressCard 
@@ -934,7 +934,7 @@ export default function Home() {
 
             {/* Progress Insights */}
             <div className="bg-ministry-gold-exact p-4 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-              <h4 className="text-base font-black text-black mb-2 uppercase tracking-widest">Your Journey</h4>
+              <h4 className="font-black text-black mb-2 uppercase tracking-tight">Your Journey</h4>
               <div className="space-y-2 text-sm text-black/80">
                 {completedCount === 0 && (
                   <p>🌱 Ready to start your first study? Check out the featured study above!</p>
