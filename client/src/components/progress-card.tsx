@@ -26,7 +26,7 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
       <CardContent className="p-6 relative z-10">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-black text-xl text-black uppercase tracking-widest drop-shadow-[1px_1px_0px_rgba(252,208,0,0.3)]" data-testid="text-study-title" style={{ fontFamily: "'Bebas Neue', Impact, 'Arial Black', sans-serif" }}>
+            <h3 className="font-black text-xl text-black uppercase tracking-tight" data-testid="text-study-title">
               {study.title}
             </h3>
             <p className="text-sm text-black font-bold mt-1 uppercase tracking-wide" data-testid="text-study-info">
