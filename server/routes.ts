@@ -3169,16 +3169,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Devotional not found" });
       }
 
-      const { createCanvas, loadImage, registerFont } = await import('canvas');
+      const { createCanvas, loadImage } = await import('canvas');
       
-      // Compact square format for better social sharing
+      // Square format for social sharing (Instagram post)
       const width = 1080;
-      const height = 1350;
+      const height = 1080;
       const canvas = createCanvas(width, height);
       const ctx = canvas.getContext('2d');
-      const padding = 50;
-      const bottomSection = 120;
-      const maxY = height - bottomSection - 40;
+      const padding = 60;
+      const bottomSection = 100;
 
       // Black background
       ctx.fillStyle = '#000000';
@@ -3186,83 +3185,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Gold accent bars at top and bottom
       ctx.fillStyle = '#FCD000';
-      ctx.fillRect(0, 0, width, 8);
-      ctx.fillRect(0, height - 8, width, 8);
+      ctx.fillRect(0, 0, width, 6);
+      ctx.fillRect(0, height - 6, width, 6);
 
       // Gold border frame
       ctx.strokeStyle = '#FCD000';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(20, 20, width - 40, height - 40);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(15, 15, width - 30, height - 30);
 
-      // Header - "MAN UP GOD'S WAY"
-      ctx.fillStyle = '#FCD000';
-      ctx.font = 'bold 40px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('MAN UP GOD\'S WAY', width / 2, 80);
+      // Try to load logo
+      let logoY = 60;
+      try {
+        const logoSettings = await storage.getLogoSettings();
+        if (logoSettings?.logoUrl) {
+          const logoImg = await loadImage(logoSettings.logoUrl);
+          const logoHeight = 80;
+          const logoWidth = (logoImg.width / logoImg.height) * logoHeight;
+          ctx.drawImage(logoImg, (width - logoWidth) / 2, 40, logoWidth, logoHeight);
+          logoY = 140;
+        }
+      } catch (logoErr) {
+        // Logo failed to load, use text header instead
+        ctx.fillStyle = '#FCD000';
+        ctx.font = 'bold 36px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('MAN UP GOD\'S WAY', width / 2, 75);
+        logoY = 110;
+      }
 
-      // Decorative line under header
+      // Decorative line under logo/header
       ctx.strokeStyle = '#FCD000';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(padding + 150, 105);
-      ctx.lineTo(width - padding - 150, 105);
+      ctx.moveTo(padding + 100, logoY);
+      ctx.lineTo(width - padding - 100, logoY);
       ctx.stroke();
 
-      // Devotional title
+      // Starting Y position for content
+      let y = logoY + 40;
+      const maxY = height - bottomSection - 30;
+
+      // Devotional title (max 2 lines)
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 36px sans-serif';
-      const titleLines = wrapText(ctx, devotional.title.toUpperCase(), width - padding * 2 - 40, 32);
-      let y = 160;
+      ctx.font = 'bold 32px sans-serif';
+      ctx.textAlign = 'center';
+      const titleLines = wrapText(ctx, devotional.title.toUpperCase(), width - padding * 2, 28);
       for (const line of titleLines.slice(0, 2)) {
         ctx.fillText(line, width / 2, y);
-        y += 44;
+        y += 40;
       }
 
       // Decorative divider
-      y += 15;
+      y += 10;
       ctx.fillStyle = '#FCD000';
-      ctx.fillRect(width / 2 - 50, y, 100, 3);
+      ctx.fillRect(width / 2 - 40, y, 80, 3);
       y += 30;
 
-      // Scripture verse in gold
+      // Scripture verse in gold (max 3 lines)
       ctx.fillStyle = '#FCD000';
-      ctx.font = 'italic 28px sans-serif';
+      ctx.font = 'italic 24px sans-serif';
       const verse = devotional.verse || '';
-      const verseLines = wrapText(ctx, `"${verse}"`, width - padding * 2 - 20, 26);
-      for (const line of verseLines.slice(0, 4)) {
-        if (y > maxY - 200) break;
-        ctx.fillText(line, width / 2, y);
-        y += 38;
+      const verseLines = wrapText(ctx, `"${verse}"`, width - padding * 2, 22);
+      const maxVerseLines = Math.min(3, verseLines.length);
+      for (let i = 0; i < maxVerseLines; i++) {
+        if (y > maxY - 150) break;
+        ctx.fillText(verseLines[i], width / 2, y);
+        y += 32;
+      }
+      if (verseLines.length > maxVerseLines) {
+        ctx.fillText('...', width / 2, y);
+        y += 32;
       }
 
       // Scripture reference
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 24px sans-serif';
-      y += 10;
+      ctx.font = 'bold 20px sans-serif';
+      y += 5;
       ctx.fillText(`— ${devotional.verseReference || ''}`, width / 2, y);
 
       // Another divider
-      y += 35;
+      y += 30;
       ctx.fillStyle = '#FCD000';
-      ctx.fillRect(width / 2 - 30, y, 60, 2);
-      y += 35;
+      ctx.fillRect(width / 2 - 25, y, 50, 2);
+      y += 25;
 
-      // Devotional content (the main body text) - limit based on available space
+      // Devotional content - limit strictly to available space
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = '22px sans-serif';
+      ctx.font = '20px sans-serif';
       ctx.textAlign = 'left';
       const content = devotional.content || '';
       const cleanContent = content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-      const contentLines = wrapText(ctx, cleanContent, width - padding * 2 - 30, 20);
-      const availableLines = Math.floor((maxY - y - 50) / 30);
-      const maxContentLines = Math.min(contentLines.length, Math.max(4, availableLines));
+      const contentLines = wrapText(ctx, cleanContent, width - padding * 2, 18);
+      const lineHeight = 28;
+      const availableSpace = maxY - y - 20;
+      const maxContentLines = Math.min(Math.floor(availableSpace / lineHeight), contentLines.length);
+      
       for (let i = 0; i < maxContentLines; i++) {
-        if (y > maxY - 50) break;
-        ctx.fillText(contentLines[i], padding + 15, y);
-        y += 30;
+        ctx.fillText(contentLines[i], padding, y);
+        y += lineHeight;
       }
-      if (contentLines.length > maxContentLines && y <= maxY - 30) {
-        ctx.fillText('...read more in the app', padding + 15, y);
+      if (contentLines.length > maxContentLines) {
+        ctx.fillStyle = '#888888';
+        ctx.font = 'italic 18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('...read more in the app', width / 2, y);
       }
 
       // Bottom gold section
@@ -3271,11 +3297,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       ctx.fillStyle = '#000000';
       ctx.textAlign = 'center';
-      ctx.font = 'bold 32px sans-serif';
-      ctx.fillText('www.manupgodsway.org', width / 2, height - 50);
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText('www.manupgodsway.org', width / 2, height - 40);
 
-      ctx.font = 'bold 20px sans-serif';
-      ctx.fillText('DOWNLOAD THE APP TODAY', width / 2, height - 90);
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText('DOWNLOAD THE APP TODAY', width / 2, height - 72);
 
       // Set response headers
       res.setHeader('Content-Type', 'image/png');
