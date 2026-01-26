@@ -1256,7 +1256,7 @@ export default function Home() {
               {/* Challenge Header */}
               <div className="bg-black text-white p-6 rounded-lg">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="inline-flex items-center bg-ministry-gold-exact text-ministry-gold px-3 py-1 rounded-full text-xs font-medium">
+                  <div className="inline-flex items-center bg-ministry-gold-exact text-black px-3 py-1 rounded-full text-xs font-bold">
                     <Target className="w-3 h-3 mr-1" fill="currentColor" />
                     Week of {formatLocalDate(new Date((currentChallenge as any)?.releaseDate), { 
                       month: 'short', 
