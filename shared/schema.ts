@@ -1293,12 +1293,14 @@ export const challengeParticipants = pgTable("challenge_participants", {
   challengeId: varchar("challenge_id").notNull().references(() => challenges.id, { onDelete: 'cascade' }),
   acceptedAt: timestamp("accepted_at").defaultNow(),
   completedAt: timestamp("completed_at"), // When the user marked the challenge as complete (honor system)
+  regroupedAt: timestamp("regrouped_at"), // When user acknowledged they didn't complete but will try harder next time
 });
 
 export const insertChallengeParticipantSchema = createInsertSchema(challengeParticipants).omit({
   id: true,
   acceptedAt: true,
   completedAt: true,
+  regroupedAt: true,
 });
 
 export type ChallengeParticipant = typeof challengeParticipants.$inferSelect;

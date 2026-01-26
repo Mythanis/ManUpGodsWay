@@ -5843,6 +5843,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Regroup from challenge (user didn't complete but acknowledges and will try next time)
+  app.post('/api/challenges/:id/regroup', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const challengeId = req.params.id;
+      
+      // Verify user has accepted the challenge
+      const hasAccepted = await storage.hasUserAcceptedChallenge(userId, challengeId);
+      if (!hasAccepted) {
+        return res.status(400).json({ message: 'Must accept challenge first' });
+      }
+      
+      // Check if already completed or regrouped
+      const participation = await storage.getChallengeParticipation(userId, challengeId);
+      if (participation?.completedAt) {
+        return res.status(400).json({ message: 'Challenge already completed' });
+      }
+      if (participation?.regroupedAt) {
+        return res.status(400).json({ message: 'Already regrouped from this challenge' });
+      }
+      
+      // Mark as regrouped in database
+      await db.update(schema.challengeParticipants)
+        .set({ regroupedAt: new Date() })
+        .where(
+          and(
+            eq(schema.challengeParticipants.userId, userId),
+            eq(schema.challengeParticipants.challengeId, challengeId)
+          )
+        );
+      
+      res.json({ success: true, message: 'Keep your head up, soldier! The next challenge awaits.' });
+    } catch (error) {
+      console.error('Error regrouping from challenge:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
   // Get user's challenge status (accepted, completed, deadline)
   app.get('/api/challenges/:id/user-status', isAuthenticated, async (req: any, res) => {
     try {
@@ -5895,7 +5933,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const participation = await storage.getChallengeParticipation(userId, challengeId);
       res.json({ 
         hasAccepted: !!participation,
-        hasCompleted: !!participation?.completedAt
+        hasCompleted: !!participation?.completedAt,
+        hasRegrouped: !!participation?.regroupedAt
       });
     } catch (error) {
       console.error('Error checking if user accepted challenge:', error);

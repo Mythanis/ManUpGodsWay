@@ -158,6 +158,28 @@ export default function Challenges() {
     },
   });
 
+  // Regroup challenge mutation
+  const regroupChallengeMutation = useMutation({
+    mutationFn: async (challengeId: string) => {
+      return apiRequest('POST', `/api/challenges/${challengeId}/regroup`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Regrouping!",
+        description: "Keep your head up, soldier! The next challenge awaits.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', currentWeekChallenge?.id, 'user-accepted'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', selectedChallenge?.id, 'user-accepted'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to regroup. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Filter and sort challenges (current and previous only, excluding current week display)
   const processedChallenges = challenges
     .filter((challenge: Challenge) => {
@@ -285,19 +307,42 @@ export default function Challenges() {
                           <CheckCircle className="w-4 h-4 mr-1" />
                           COMPLETED
                         </Button>
-                      ) : (
+                      ) : userAccepted?.hasRegrouped ? (
                         <Button
                           size="sm"
-                          className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            completeChallengeMutation.mutate(challenge.id);
-                          }}
-                          disabled={completeChallengeMutation.isPending}
-                          data-testid="button-complete-challenge"
+                          className="bg-gray-600 text-white font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
+                          disabled
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          {completeChallengeMutation.isPending ? "..." : "Complete"}
+                          REGROUPED
                         </Button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              completeChallengeMutation.mutate(challenge.id);
+                            }}
+                            disabled={completeChallengeMutation.isPending}
+                            data-testid="button-complete-challenge"
+                          >
+                            {completeChallengeMutation.isPending ? "..." : "Complete"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="bg-gray-700 hover:bg-gray-600 text-white font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              regroupChallengeMutation.mutate(challenge.id);
+                            }}
+                            disabled={regroupChallengeMutation.isPending}
+                            data-testid="button-regroup-challenge"
+                          >
+                            {regroupChallengeMutation.isPending ? "..." : "Regroup"}
+                          </Button>
+                        </div>
                       )}
                     </div>
                   ) : (
@@ -531,16 +576,35 @@ export default function Challenges() {
                           <CheckCircle className="w-4 h-4 mr-1" />
                           COMPLETED
                         </Button>
-                      ) : (
+                      ) : selectedUserAccepted?.hasRegrouped ? (
                         <Button
                           size="sm"
-                          className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-                          onClick={() => completeChallengeMutation.mutate(selectedChallenge.id)}
-                          disabled={completeChallengeMutation.isPending}
-                          data-testid="button-complete-challenge-dialog"
+                          className="bg-gray-600 text-white font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
+                          disabled
                         >
-                          {completeChallengeMutation.isPending ? "..." : "Complete"}
+                          REGROUPED
                         </Button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                            onClick={() => completeChallengeMutation.mutate(selectedChallenge.id)}
+                            disabled={completeChallengeMutation.isPending}
+                            data-testid="button-complete-challenge-dialog"
+                          >
+                            {completeChallengeMutation.isPending ? "..." : "Complete"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="bg-gray-700 hover:bg-gray-600 text-white font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                            onClick={() => regroupChallengeMutation.mutate(selectedChallenge.id)}
+                            disabled={regroupChallengeMutation.isPending}
+                            data-testid="button-regroup-challenge-dialog"
+                          >
+                            {regroupChallengeMutation.isPending ? "..." : "Regroup"}
+                          </Button>
+                        </div>
                       )}
                     </div>
                   ) : (
