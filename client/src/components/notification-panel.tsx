@@ -235,6 +235,13 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         }
         break;
         
+      case 'challenge':
+      case 'challenge_ended':
+      case 'new_challenge':
+        // Navigate to challenges page
+        setLocation('/challenges');
+        break;
+        
       case 'brotherhood':
         // For brotherhood requests, navigate to the requester's profile
         if (notification.relatedId) {
