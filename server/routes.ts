@@ -49,6 +49,12 @@ import {
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
+import { 
+  savePushSubscription, 
+  removePushSubscription, 
+  getUserSubscriptionCount,
+  sendPushNotification 
+} from "./pushNotificationService";
 import Parser from 'rss-parser';
 
 // Role checking helper functions
@@ -379,6 +385,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating user theme:", error);
       res.status(500).json({ message: "Failed to update theme preference" });
+    }
+  });
+
+  // Push Notification routes
+  app.post('/api/push/subscribe', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { subscription } = req.body;
+      
+      if (!subscription || !subscription.endpoint || !subscription.keys) {
+        return res.status(400).json({ message: 'Invalid subscription data' });
+      }
+
+      const success = await savePushSubscription(
+        userId,
+        subscription.endpoint,
+        subscription.keys.p256dh,
+        subscription.keys.auth,
+        req.headers['user-agent']
+      );
+
+      if (success) {
+        res.json({ success: true, message: 'Push subscription saved' });
+      } else {
+        res.status(500).json({ message: 'Failed to save subscription' });
+      }
+    } catch (error) {
+      console.error('Error saving push subscription:', error);
+      res.status(500).json({ message: 'Failed to save push subscription' });
+    }
+  });
+
+  app.post('/api/push/unsubscribe', isAuthenticated, async (req: any, res) => {
+    try {
+      const { endpoint } = req.body;
+      
+      if (!endpoint) {
+        return res.status(400).json({ message: 'Endpoint is required' });
+      }
+
+      const success = await removePushSubscription(endpoint);
+      res.json({ success });
+    } catch (error) {
+      console.error('Error removing push subscription:', error);
+      res.status(500).json({ message: 'Failed to remove push subscription' });
+    }
+  });
+
+  app.get('/api/push/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const count = await getUserSubscriptionCount(userId);
+      res.json({ hasSubscription: count > 0, subscriptionCount: count });
+    } catch (error) {
+      console.error('Error checking push status:', error);
+      res.status(500).json({ message: 'Failed to check push status' });
+    }
+  });
+
+  app.get('/api/push/vapid-public-key', (req, res) => {
+    const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || process.env.VITE_VAPID_PUBLIC_KEY;
+    if (vapidPublicKey) {
+      res.json({ vapidPublicKey });
+    } else {
+      res.status(404).json({ message: 'VAPID public key not configured' });
+    }
+  });
+
+  // Test push notification (admin only)
+  app.post('/api/push/test', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!hasAdminPrivileges(user)) {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const result = await sendPushNotification(req.user.claims.sub, {
+        title: 'Test Notification',
+        body: 'This is a test push notification from Man Up God\'s Way!',
+        url: '/'
+      });
+
+      res.json({ success: true, ...result });
+    } catch (error) {
+      console.error('Error sending test push:', error);
+      res.status(500).json({ message: 'Failed to send test notification' });
     }
   });
 
