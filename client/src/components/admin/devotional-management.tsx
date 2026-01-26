@@ -618,9 +618,9 @@ export default function DevotionalManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-ministry-gold/10 border border-ministry-gold/30 rounded-lg p-4">
+            <div className="bg-ministry-gold/10 dark:bg-ministry-gold/20 border border-ministry-gold/30 rounded-lg p-4">
               <div className="flex items-start justify-between mb-2">
-                <h4 className="font-semibold text-ministry-charcoal">Format Instructions</h4>
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100">Format Instructions</h4>
                 <a
                   href="/api/devotionals/template"
                   download
@@ -630,10 +630,10 @@ export default function DevotionalManagement() {
                   Download Template
                 </a>
               </div>
-              <p className="text-sm text-ministry-charcoal mb-2">
+              <p className="text-sm text-gray-700 dark:text-gray-200 mb-2">
                 Download the Word document template with 30 devotional slots, or use this format:
               </p>
-              <code className="block bg-ministry-charcoal text-ministry-gold p-3 rounded text-xs mb-2 whitespace-pre">
+              <code className="block bg-gray-900 dark:bg-black text-ministry-gold p-3 rounded text-xs mb-2 whitespace-pre">
 {`TITLE: Your devotional title
 REFERENCE: John 3:16
 VERSE: For God so loved the world that he gave...
@@ -645,7 +645,7 @@ Lord, help us to understand Your word...
 
 Each devotional is separated by ---`}
               </code>
-              <p className="text-xs text-ministry-charcoal">
+              <p className="text-xs text-gray-600 dark:text-gray-300">
                 Required: TITLE, REFERENCE, VERSE, CONTENT. Optional: PRAYER. All can be multi-line.
               </p>
             </div>
