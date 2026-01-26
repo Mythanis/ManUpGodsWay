@@ -512,6 +512,15 @@
   left: 50% !important;
   top: 50% !important;
   transform: translate(-50%, -50%) !important;
+  animation: none !important;
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%) !important;
+}
+
+/* Disable blinking animations on dialog pseudo-elements */
+[data-radix-dialog-content].liquid-header::before,
+[role="dialog"].liquid-header::before {
+  animation: none !important;
+  opacity: 0.5 !important;
 }
 
 .liquid-header::before {
