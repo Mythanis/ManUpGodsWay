@@ -1102,8 +1102,8 @@ export default function Home() {
               </div>
               
               {/* Full Content */}
-              <div className="bg-gray-900 p-4 border-2 border-black rounded-sm">
-                <p className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">
+              <div className="bg-black p-4 border-2 border-ministry-gold-exact rounded-sm">
+                <p className="text-gray-100 text-sm leading-relaxed whitespace-pre-wrap">
                   {devotional.content}
                 </p>
               </div>
