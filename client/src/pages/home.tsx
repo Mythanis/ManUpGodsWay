@@ -1114,21 +1114,82 @@ export default function Home() {
                   <span>{isLiked ? 'Favorited' : 'Favorite'}</span>
                 </Button>
                 
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleNativeShare(devotional)}
-                  disabled={isSharing}
-                  className="flex items-center justify-center space-x-2 bg-gray-800 text-white hover:bg-gray-700 rounded-none border-2 border-black font-bold uppercase text-xs"
-                  data-testid="share-devotional"
-                >
-                  {isSharing ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                  ) : (
-                    <Share2 className="w-4 h-4" />
-                  )}
-                  <span>{isSharing ? 'Sharing...' : 'Share'}</span>
-                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="flex items-center justify-center space-x-2 bg-gray-800 text-white hover:bg-gray-700 rounded-none border-2 border-black font-bold uppercase text-xs"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      <span>Share</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-3 bg-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="space-y-3">
+                      <div className="text-center">
+                        <button
+                          onClick={() => handleNativeShare(devotional)}
+                          disabled={isSharing}
+                          className="block w-full p-3 bg-ministry-gold-exact text-black rounded-none hover:bg-yellow-400 transition-colors font-bold text-sm uppercase disabled:opacity-50"
+                          data-testid="share-with-image"
+                        >
+                          {isSharing ? '⏳ Sharing...' : '📤 Share with Image'}
+                        </button>
+                        <p className="text-xs text-gray-400 mt-1">Share devotional image to any app</p>
+                      </div>
+                      <div className="border-t border-gray-700 pt-2">
+                        <p className="text-xs text-gray-400 mb-2 text-center">Or share directly:</p>
+                        <div className="flex gap-2 justify-center">
+                          <a
+                            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.manupgodsway.org')}&quote=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\nDownload the app: www.manupgodsway.org`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-[#1877F2] text-white rounded-none hover:opacity-80 transition-opacity"
+                            data-testid="share-facebook"
+                          >
+                            <SiFacebook className="w-5 h-5" />
+                          </a>
+                          <a
+                            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n📲 Download the app: www.manupgodsway.org`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-black text-white border border-white rounded-none hover:opacity-80 transition-opacity"
+                            data-testid="share-twitter"
+                          >
+                            <SiX className="w-5 h-5" />
+                          </a>
+                          <a
+                            href={`https://wa.me/?text=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n📲 Download the app: www.manupgodsway.org`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-[#25D366] text-white rounded-none hover:opacity-80 transition-opacity"
+                            data-testid="share-whatsapp"
+                          >
+                            <SiWhatsapp className="w-5 h-5" />
+                          </a>
+                          <a
+                            href={`mailto:?subject=${encodeURIComponent(devotional.title)}&body=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n${devotional.content}\n\n📲 Download the app: www.manupgodsway.org`)}`}
+                            className="p-2 bg-gray-600 text-white rounded-none hover:opacity-80 transition-opacity"
+                            data-testid="share-email"
+                          >
+                            <Mail className="w-5 h-5" />
+                          </a>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\nwww.manupgodsway.org`);
+                              toast({ title: "Copied!", description: "Devotional text copied to clipboard" });
+                            }}
+                            className="p-2 bg-gray-700 text-white rounded-none hover:opacity-80 transition-opacity"
+                            data-testid="copy-link"
+                          >
+                            <Link2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 
                 <Button 
                   size="sm"
