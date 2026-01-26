@@ -2823,8 +2823,8 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Enhanced createNotification that checks preferences
-  async createNotificationWithPreferences(notification: InsertNotification): Promise<Notification | null> {
+  // Enhanced createNotification that checks preferences and sends push notification
+  async createNotificationWithPreferences(notification: InsertNotification, pushPayload?: { url?: string }): Promise<Notification | null> {
     const shouldSend = await this.shouldReceiveNotification(notification.userId, notification.type);
     
     if (!shouldSend) {
@@ -2832,7 +2832,22 @@ export class DatabaseStorage implements IStorage {
       return null;
     }
     
-    return this.createNotification(notification);
+    const newNotification = await this.createNotification(notification);
+    
+    // Also send push notification if available
+    try {
+      const { sendPushNotification } = await import('./pushNotificationService');
+      await sendPushNotification(notification.userId, {
+        title: notification.title,
+        body: notification.message,
+        url: pushPayload?.url || '/',
+        tag: notification.type,
+      });
+    } catch (error) {
+      console.error('Failed to send push notification:', error);
+    }
+    
+    return newNotification;
   }
 
   // Message request methods

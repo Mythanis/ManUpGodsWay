@@ -66,7 +66,7 @@ class DevotionalNotificationService {
               title: '🌅 Daily Devotional Available',
               message: `"${devotional.title}" is ready for your daily spiritual growth.`,
               relatedId: devotional.id,
-            });
+            }, { url: `/devotionals/${devotional.id}` });
           } catch (error) {
             console.error(`Failed to create notification for user ${user.id}:`, error);
             return null;

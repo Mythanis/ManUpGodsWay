@@ -110,7 +110,7 @@ class ChallengeNotificationService {
               title: 'Challenge Time Up!',
               message: `"${challenge.title}" has ended. Did you complete it? Mark it as Complete or Regroup for next time!`,
               relatedId: challenge.id,
-            });
+            }, { url: '/challenges' });
           } catch (error) {
             console.error(`Failed to create challenge end notification for user ${participant.userId}:`, error);
             return null;
