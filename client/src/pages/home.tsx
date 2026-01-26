@@ -1243,11 +1243,11 @@ export default function Home() {
 
       {/* Challenge Dialog */}
       <Dialog open={showChallengeDialog} onOpenChange={setShowChallengeDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2 text-ministry-navy">
-              <Target className="w-5 h-5 text-ministry-gold" />
-              <span className="text-black">This Week Challenge</span>
+        <DialogContent className="max-w-2xl liquid-header border-2 border-ministry-gold-exact rounded-sm">
+          <DialogHeader className="liquid-gold-card p-4 -m-6 mb-4 border-b-2 border-black">
+            <DialogTitle className="flex items-center space-x-2 relative z-10">
+              <Target className="w-5 h-5 text-black" />
+              <span className="text-black font-bold uppercase tracking-tight">This Week's Challenge</span>
             </DialogTitle>
           </DialogHeader>
           
