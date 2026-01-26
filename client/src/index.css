@@ -567,6 +567,7 @@
   );
   animation: shimmer 2.5s ease-in-out infinite;
   pointer-events: none;
+  z-index: 0;
 }
 
 .liquid-gold-card::after {
@@ -582,6 +583,7 @@
     transparent 100%
   );
   pointer-events: none;
+  z-index: 0;
 }
 
 /* Glossy black button/icon area - Enhanced liquid look */
