@@ -26,7 +26,7 @@ The system supports a tiered content structure (free, premium, VIP) and category
 - **Studies & Devotionals**: Management for Bible studies (lesson-based) and devotionals (with thumbnail uploads).
 - **Community**: Interactive discussions, user profiles, and a discipleship system with tag-based user discovery and faith journey stages.
 - **Video & Podcast Management**: Full upload, storage, processing, and management with tiered access, topic classification, ratings, and RSS feed import capabilities (e.g., Podomatic).
-- **Notifications**: Enhanced system for push notifications, daily devotionals, content updates, and discussion replies.
+- **Notifications**: Enhanced system for native push notifications (via Web Push API and Service Workers), daily devotionals, content updates, and discussion replies. Users can enable/disable push notifications per device in settings.
 - **User Engagement**: Streak tracking, prayer time system, weekly challenges with participation tracking, and a testimony system.
 - **War Room**: A dedicated prayer request space where users can post prayer requests (real names only), comment, and indicate they've prayed, with real-time updates via WebSockets.
 - **Under Fire**: An accountability space where users post requests, and others can "Assist" to become accountability partners, initiating a direct message.
