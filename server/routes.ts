@@ -3088,6 +3088,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 color: "808080" 
               }),
             ],
+            spacing: { after: 100 },
+          })
+        );
+        
+        // PRAYER field
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: "PRAYER:", bold: true, size: 22 }),
+            ],
+            spacing: { after: 50 },
+          })
+        );
+        
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ 
+                text: "[Write a closing prayer for this devotional. Help readers connect with God through prayer.]", 
+                italics: true, 
+                size: 22, 
+                color: "808080" 
+              }),
+            ],
             spacing: { after: 200 },
           })
         );

@@ -314,6 +314,7 @@ export default function DevotionalManagement() {
         let verseReference = '';
         let verse = '';
         const contentLines: string[] = [];
+        const prayerLines: string[] = [];
         let mode = '';
 
         for (const line of lines) {
@@ -328,12 +329,16 @@ export default function DevotionalManagement() {
             mode = 'verse';
           } else if (line.startsWith('CONTENT:')) {
             mode = 'content';
+          } else if (line.startsWith('PRAYER:')) {
+            mode = 'prayer';
           } else if (line) {
             // Continuation of previous field
             if (mode === 'verse') {
               verse += ' ' + line;
             } else if (mode === 'content') {
               contentLines.push(line);
+            } else if (mode === 'prayer') {
+              prayerLines.push(line);
             }
           }
         }
@@ -345,6 +350,7 @@ export default function DevotionalManagement() {
             verseReference,
             verse,
             content: contentLines.join('\n'),
+            prayer: prayerLines.length > 0 ? prayerLines.join('\n') : undefined,
             date: currentDate.toISOString().split('T')[0],
           });
           
@@ -634,11 +640,13 @@ VERSE: For God so loved the world that he gave...
 CONTENT:
 This is the devotional content.
 It can span multiple lines and paragraphs.
+PRAYER:
+Lord, help us to understand Your word...
 
 Each devotional is separated by ---`}
               </code>
               <p className="text-xs text-ministry-charcoal">
-                All fields (TITLE, REFERENCE, VERSE, CONTENT) are required. Content can be multi-line.
+                Required: TITLE, REFERENCE, VERSE, CONTENT. Optional: PRAYER. All can be multi-line.
               </p>
             </div>
 

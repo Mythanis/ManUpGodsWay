@@ -589,6 +589,7 @@ export const devotionals = pgTable("devotionals", {
   verse: varchar("verse").notNull(),
   verseReference: varchar("verse_reference").notNull(),
   content: text("content").notNull(),
+  prayer: text("prayer"), // Closing prayer for the devotional
   imageUrl: varchar("image_url"),
   date: timestamp("date").notNull(),
   notificationsSent: boolean("notifications_sent").default(false), // Track if notifications have been sent for this devotional
