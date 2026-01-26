@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatLocalDate, getCurrentLocalDate, parseDateSafely } from "@/lib/utils";
-import { CalendarDays, Plus, Edit, Trash, Upload, X, Image as ImageIcon } from "lucide-react";
+import { CalendarDays, Plus, Edit, Trash, Upload, X, Image as ImageIcon, Download } from "lucide-react";
 import { insertDevotionalSchema } from "@shared/schema";
 
 // Create form schema based on insertDevotionalSchema
@@ -613,9 +613,19 @@ export default function DevotionalManagement() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-ministry-gold/10 border border-ministry-gold/30 rounded-lg p-4">
-              <h4 className="font-semibold text-ministry-charcoal mb-2">Format Instructions</h4>
+              <div className="flex items-start justify-between mb-2">
+                <h4 className="font-semibold text-ministry-charcoal">Format Instructions</h4>
+                <a
+                  href="/api/devotionals/template"
+                  download
+                  className="inline-flex items-center px-3 py-1.5 bg-ministry-navy text-white rounded-lg hover:bg-ministry-charcoal transition-colors text-sm"
+                >
+                  <Download className="w-4 h-4 mr-1.5" />
+                  Download Template
+                </a>
+              </div>
               <p className="text-sm text-ministry-charcoal mb-2">
-                Separate each devotional with a line containing "---". Use this format for each devotional:
+                Download the Word document template with 30 devotional slots, or use this format:
               </p>
               <code className="block bg-ministry-charcoal text-ministry-gold p-3 rounded text-xs mb-2 whitespace-pre">
 {`TITLE: Your devotional title

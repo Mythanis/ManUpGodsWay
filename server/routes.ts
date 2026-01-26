@@ -2926,6 +2926,192 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Devotional routes
+  
+  // Download Word document template for bulk devotional import
+  app.get('/api/devotionals/template', isAuthenticated, async (req: any, res) => {
+    try {
+      const { Document, Packer, Paragraph, TextRun, HeadingLevel, BorderStyle, AlignmentType } = await import('docx');
+      
+      const devotionalCount = 30;
+      const children: any[] = [];
+      
+      // Title
+      children.push(
+        new Paragraph({
+          text: "Man Up God's Way - Devotional Bulk Import Template",
+          heading: HeadingLevel.TITLE,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 },
+        })
+      );
+      
+      // Instructions
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "INSTRUCTIONS:",
+              bold: true,
+              size: 24,
+            }),
+          ],
+          spacing: { before: 200, after: 100 },
+        })
+      );
+      
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "1. Fill in each devotional below. Each section is separated by '---'",
+              size: 22,
+            }),
+          ],
+          spacing: { after: 50 },
+        })
+      );
+      
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "2. Keep the field labels (TITLE:, REFERENCE:, VERSE:, CONTENT:) exactly as shown",
+              size: 22,
+            }),
+          ],
+          spacing: { after: 50 },
+        })
+      );
+      
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "3. Copy all text from this document and paste into the Bulk Import text area",
+              size: 22,
+            }),
+          ],
+          spacing: { after: 50 },
+        })
+      );
+      
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "4. Set your start date in the admin panel - dates will be assigned sequentially",
+              size: 22,
+            }),
+          ],
+          spacing: { after: 300 },
+        })
+      );
+      
+      // Generate 30 devotional templates
+      for (let i = 1; i <= devotionalCount; i++) {
+        // Separator (except for first)
+        if (i > 1) {
+          children.push(
+            new Paragraph({
+              text: "---",
+              alignment: AlignmentType.CENTER,
+              spacing: { before: 300, after: 300 },
+            })
+          );
+        }
+        
+        // Day header
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `DEVOTIONAL ${i} OF 30`,
+                bold: true,
+                size: 26,
+                color: "B8860B", // Dark goldenrod
+              }),
+            ],
+            spacing: { before: 200, after: 200 },
+          })
+        );
+        
+        // TITLE field
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: "TITLE: ", bold: true, size: 22 }),
+              new TextRun({ text: "[Enter devotional title here]", italics: true, size: 22, color: "808080" }),
+            ],
+            spacing: { after: 100 },
+          })
+        );
+        
+        // REFERENCE field
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: "REFERENCE: ", bold: true, size: 22 }),
+              new TextRun({ text: "[e.g., John 3:16 or Romans 8:28-30]", italics: true, size: 22, color: "808080" }),
+            ],
+            spacing: { after: 100 },
+          })
+        );
+        
+        // VERSE field
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: "VERSE: ", bold: true, size: 22 }),
+              new TextRun({ text: "[Enter the full scripture text here]", italics: true, size: 22, color: "808080" }),
+            ],
+            spacing: { after: 100 },
+          })
+        );
+        
+        // CONTENT field
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: "CONTENT:", bold: true, size: 22 }),
+            ],
+            spacing: { after: 50 },
+          })
+        );
+        
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ 
+                text: "[Write your devotional content here. This can span multiple paragraphs. Share the spiritual insight, application, and encouragement for the day.]", 
+                italics: true, 
+                size: 22, 
+                color: "808080" 
+              }),
+            ],
+            spacing: { after: 200 },
+          })
+        );
+      }
+      
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: children,
+        }],
+      });
+      
+      const buffer = await Packer.toBuffer(doc);
+      
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', 'attachment; filename="devotional-bulk-import-template.docx"');
+      res.send(Buffer.from(buffer));
+      
+    } catch (error) {
+      console.error("Error generating devotional template:", error);
+      res.status(500).json({ message: "Failed to generate template" });
+    }
+  });
+
   app.get('/api/devotionals/today', async (req, res) => {
     try {
       const devotional = await storage.getTodaysDevotional();
