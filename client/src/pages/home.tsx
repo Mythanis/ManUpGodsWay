@@ -1127,7 +1127,7 @@ export default function Home() {
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-3 bg-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                     <div className="space-y-3">
-                      <div className="text-center">
+                      <div className="space-y-2">
                         <button
                           onClick={() => handleNativeShare(devotional)}
                           disabled={isSharing}
@@ -1136,7 +1136,15 @@ export default function Home() {
                         >
                           {isSharing ? '⏳ Sharing...' : '📤 Share with Image'}
                         </button>
-                        <p className="text-xs text-gray-400 mt-1">Share devotional image to any app</p>
+                        <a
+                          href={`/api/devotionals/${devotional.id}/share-image`}
+                          download={`manupgodsway-devotional-${devotional.id}.png`}
+                          className="block w-full p-2 bg-gray-700 text-white text-center rounded-none hover:bg-gray-600 transition-colors font-bold text-xs uppercase"
+                          data-testid="download-image"
+                        >
+                          📥 Download Image
+                        </a>
+                        <p className="text-xs text-gray-400 text-center">Download then share from your gallery</p>
                       </div>
                       <div className="border-t border-gray-700 pt-2">
                         <p className="text-xs text-gray-400 mb-2 text-center">Or share directly:</p>
