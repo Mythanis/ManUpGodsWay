@@ -6,6 +6,7 @@ import { devotionalNotificationService } from "./devotionalNotificationService";
 import { subscriptionExpirationService } from "./subscriptionExpirationService";
 import { fitnessReminderService } from "./fitnessReminderService";
 import { warGroupsGeocodingService } from "./warGroupsGeocodingService";
+import { challengeNotificationService } from "./challengeNotificationService";
 
 const app = express();
 app.use(express.json());
@@ -87,5 +88,8 @@ app.use((req, res, next) => {
     
     // Start the war groups geocoding service
     warGroupsGeocodingService.start();
+    
+    // Start the challenge notification service
+    challengeNotificationService.start();
   });
 })();
