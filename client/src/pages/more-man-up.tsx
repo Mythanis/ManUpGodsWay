@@ -62,10 +62,10 @@ export default function MoreManUp() {
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between p-4 bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-200"
+                className="flex items-center justify-between p-4 bg-ministry-gold-exact border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-200"
               >
                 <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-black rounded-none flex items-center justify-center">
+                  <div className="w-10 h-10 bg-black rounded-sm flex items-center justify-center">
                     <IconComponent className="w-5 h-5 text-white" />
                   </div>
                   <span className="font-black text-black uppercase tracking-tighter">
@@ -79,7 +79,7 @@ export default function MoreManUp() {
         </div>
 
         {/* Footer Message */}
-        <div className="mt-8 text-center bg-black border-2 border-black rounded-none p-4">
+        <div className="mt-8 text-center bg-black border-2 border-black rounded-sm p-4">
           <p className="text-sm text-white font-medium">
             Follow us for daily inspiration, updates, and community highlights!
           </p>

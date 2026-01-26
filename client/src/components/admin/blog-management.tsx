@@ -274,7 +274,7 @@ export default function BlogManagement() {
           <Button
             onClick={() => setShowRssDialog(true)}
             variant="outline"
-            className="bg-ministry-gold-exact text-black border-2 border-black rounded-none font-bold uppercase tracking-wide hover:bg-yellow-400"
+            className="bg-ministry-gold-exact text-black border-2 border-black rounded-sm font-bold uppercase tracking-wide hover:bg-yellow-400"
             data-testid="button-import-rss"
           >
             <Rss className="w-4 h-4 mr-2" />
@@ -284,7 +284,7 @@ export default function BlogManagement() {
             onClick={() => syncThumbnailsMutation.mutate()}
             variant="outline"
             disabled={syncThumbnailsMutation.isPending}
-            className="bg-ministry-gold-exact text-black border-2 border-black rounded-none font-bold uppercase tracking-wide hover:bg-yellow-400"
+            className="bg-ministry-gold-exact text-black border-2 border-black rounded-sm font-bold uppercase tracking-wide hover:bg-yellow-400"
             data-testid="button-sync-thumbnails"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${syncThumbnailsMutation.isPending ? 'animate-spin' : ''}`} />
@@ -295,7 +295,7 @@ export default function BlogManagement() {
               resetForm();
               setShowDialog(true);
             }}
-            className="bg-black text-white border-2 border-black rounded-none font-bold uppercase tracking-wide hover:bg-gray-800 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)]"
+            className="bg-black text-white border-2 border-black rounded-sm font-bold uppercase tracking-wide hover:bg-gray-800 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)]"
             data-testid="button-add-blog"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -307,7 +307,7 @@ export default function BlogManagement() {
       {isLoading ? (
         <div className="flex flex-col gap-3">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+            <Card key={i} className="bg-ministry-gold-exact border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
               <CardContent className="p-3 flex items-center gap-4">
                 <div className="w-16 h-16 bg-black/20 animate-pulse flex-shrink-0"></div>
                 <div className="flex-1 animate-pulse space-y-2">
@@ -323,7 +323,7 @@ export default function BlogManagement() {
           ))}
         </div>
       ) : blogs.length === 0 ? (
-        <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center py-12">
+        <Card className="bg-ministry-gold-exact border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center py-12">
           <CardContent>
             <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-black">No Blog Posts Yet</h3>
             <p className="text-black/80 font-medium mb-4">
@@ -336,7 +336,7 @@ export default function BlogManagement() {
           {blogs.map((blog) => (
             <Card 
               key={blog.id} 
-              className={`border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
+              className={`border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
                 blog.isPublished ? 'bg-ministry-gold-exact' : 'bg-black text-white'
               }`}
             >
@@ -368,7 +368,7 @@ export default function BlogManagement() {
                       <Star className="w-4 h-4 text-black flex-shrink-0" fill="currentColor" />
                     )}
                     {!blog.isPublished && (
-                      <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-none font-bold uppercase flex-shrink-0">
+                      <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-sm font-bold uppercase flex-shrink-0">
                         Draft
                       </span>
                     )}
@@ -394,7 +394,7 @@ export default function BlogManagement() {
                       variant="ghost"
                       onClick={() => reorderMutation.mutate({ blogId: blog.id, direction: 'up' })}
                       disabled={reorderMutation.isPending}
-                      className={`h-6 w-6 p-0 rounded-none ${
+                      className={`h-6 w-6 p-0 rounded-sm ${
                         blog.isPublished 
                           ? 'text-black hover:bg-black/10' 
                           : 'text-white hover:bg-white/10'
@@ -408,7 +408,7 @@ export default function BlogManagement() {
                       variant="ghost"
                       onClick={() => reorderMutation.mutate({ blogId: blog.id, direction: 'down' })}
                       disabled={reorderMutation.isPending}
-                      className={`h-6 w-6 p-0 rounded-none ${
+                      className={`h-6 w-6 p-0 rounded-sm ${
                         blog.isPublished 
                           ? 'text-black hover:bg-black/10' 
                           : 'text-white hover:bg-white/10'
@@ -421,7 +421,7 @@ export default function BlogManagement() {
                   <Button
                     size="sm"
                     onClick={() => handleEdit(blog)}
-                    className={`rounded-none border-2 font-bold ${
+                    className={`rounded-sm border-2 font-bold ${
                       blog.isPublished 
                         ? 'border-black bg-black text-white hover:bg-gray-800' 
                         : 'border-white bg-white text-black hover:bg-gray-200'
@@ -439,7 +439,7 @@ export default function BlogManagement() {
                         deleteMutation.mutate(blog.id);
                       }
                     }}
-                    className="rounded-none border-2 border-black bg-red-600 hover:bg-red-700 text-white"
+                    className="rounded-sm border-2 border-black bg-red-600 hover:bg-red-700 text-white"
                     data-testid={`button-delete-blog-${blog.id}`}
                   >
                     <Trash2 className="w-3 h-3" />
@@ -452,7 +452,7 @@ export default function BlogManagement() {
       )}
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-ministry-gold-exact border-2 border-black rounded-none">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-ministry-gold-exact border-2 border-black rounded-sm">
           <DialogHeader>
             <DialogTitle className="font-black text-2xl uppercase tracking-tighter text-black">
               {editingBlog ? "Edit Blog Post" : "Create Blog Post"}
@@ -466,7 +466,7 @@ export default function BlogManagement() {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="Enter blog title"
-                className="rounded-none border-2 border-black"
+                className="rounded-sm border-2 border-black"
                 data-testid="input-blog-title"
               />
             </div>
@@ -478,7 +478,7 @@ export default function BlogManagement() {
                 value={formData.slug}
                 onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                 placeholder="Auto-generated from title if empty"
-                className="rounded-none border-2 border-black"
+                className="rounded-sm border-2 border-black"
                 data-testid="input-blog-slug"
               />
             </div>
@@ -491,7 +491,7 @@ export default function BlogManagement() {
                 onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
                 placeholder="Brief description (shown in previews)"
                 rows={2}
-                className="rounded-none border-2 border-black"
+                className="rounded-sm border-2 border-black"
                 data-testid="input-blog-excerpt"
               />
             </div>
@@ -504,7 +504,7 @@ export default function BlogManagement() {
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 placeholder="Write your blog content here..."
                 rows={10}
-                className="rounded-none border-2 border-black font-mono"
+                className="rounded-sm border-2 border-black font-mono"
                 data-testid="input-blog-content"
               />
             </div>
@@ -523,7 +523,7 @@ export default function BlogManagement() {
                       type="button"
                       size="sm"
                       onClick={removeImage}
-                      className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-none border-2 border-black p-1 h-8 w-8"
+                      className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-sm border-2 border-black p-1 h-8 w-8"
                       data-testid="button-remove-thumbnail"
                     >
                       <X className="w-4 h-4" />
@@ -536,7 +536,7 @@ export default function BlogManagement() {
                     type="file"
                     accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
                     onChange={handleImageChange}
-                    className="rounded-none border-2 border-black file:mr-2 file:py-1 file:px-3 file:rounded-none file:border-0 file:font-bold file:bg-black file:text-white file:uppercase file:text-xs"
+                    className="rounded-sm border-2 border-black file:mr-2 file:py-1 file:px-3 file:rounded-sm file:border-0 file:font-bold file:bg-black file:text-white file:uppercase file:text-xs"
                     data-testid="input-blog-thumbnail"
                   />
                 </div>
@@ -553,7 +553,7 @@ export default function BlogManagement() {
                 value={formData.category}
                 onValueChange={(value) => setFormData({ ...formData, category: value })}
               >
-                <SelectTrigger id="blog-category" className="rounded-none border-2 border-black" data-testid="select-blog-category">
+                <SelectTrigger id="blog-category" className="rounded-sm border-2 border-black" data-testid="select-blog-category">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -566,7 +566,7 @@ export default function BlogManagement() {
               </Select>
             </div>
 
-            <div className="flex items-center justify-between gap-4 bg-black/10 p-4 rounded-none border-2 border-black">
+            <div className="flex items-center justify-between gap-4 bg-black/10 p-4 rounded-sm border-2 border-black">
               <div className="flex items-center space-x-3">
                 <Switch
                   id="blog-published"
@@ -591,14 +591,14 @@ export default function BlogManagement() {
             <Button
               variant="outline"
               onClick={() => setShowDialog(false)}
-              className="rounded-none border-2 border-black text-black hover:bg-black hover:text-white"
+              className="rounded-sm border-2 border-black text-black hover:bg-black hover:text-white"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="bg-black text-white rounded-none border-2 border-black hover:bg-gray-800 shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]"
+              className="bg-black text-white rounded-sm border-2 border-black hover:bg-gray-800 shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]"
               data-testid="button-save-blog"
             >
               {createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save Blog Post"}
@@ -608,7 +608,7 @@ export default function BlogManagement() {
       </Dialog>
 
       <Dialog open={showRssDialog} onOpenChange={setShowRssDialog}>
-        <DialogContent className="bg-ministry-gold-exact border-2 border-black rounded-none">
+        <DialogContent className="bg-ministry-gold-exact border-2 border-black rounded-sm">
           <DialogHeader>
             <DialogTitle className="font-black text-2xl uppercase tracking-tighter text-black">
               Import From RSS Feed
@@ -629,7 +629,7 @@ export default function BlogManagement() {
                   type="button"
                   size="sm"
                   onClick={() => setRssUrl(IGNITE_CHURCH_RSS_URL)}
-                  className="bg-black text-white rounded-none text-xs hover:bg-gray-800"
+                  className="bg-black text-white rounded-sm text-xs hover:bg-gray-800"
                   data-testid="button-use-ignite-rss"
                 >
                   Use This
@@ -644,7 +644,7 @@ export default function BlogManagement() {
                 value={rssUrl}
                 onChange={(e) => setRssUrl(e.target.value)}
                 placeholder="https://example.com/feed.xml"
-                className="rounded-none border-2 border-black"
+                className="rounded-sm border-2 border-black"
                 data-testid="input-rss-url"
               />
             </div>
@@ -653,14 +653,14 @@ export default function BlogManagement() {
             <Button
               variant="outline"
               onClick={() => setShowRssDialog(false)}
-              className="rounded-none border-2 border-black text-black hover:bg-black hover:text-white"
+              className="rounded-sm border-2 border-black text-black hover:bg-black hover:text-white"
             >
               Cancel
             </Button>
             <Button
               onClick={() => importRssMutation.mutate(rssUrl)}
               disabled={!rssUrl || importRssMutation.isPending}
-              className="bg-black text-white rounded-none border-2 border-black hover:bg-gray-800 shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]"
+              className="bg-black text-white rounded-sm border-2 border-black hover:bg-gray-800 shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]"
               data-testid="button-import-rss-confirm"
             >
               {importRssMutation.isPending ? "Importing..." : "Import Posts"}

@@ -22,7 +22,7 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
       : 0;
 
   return (
-    <Card className="border-2 border-black liquid-gold-card glow-gold rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="progress-card">
+    <Card className="border-2 border-black liquid-gold-card glow-gold rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="progress-card">
       <CardContent className="p-6 relative z-10">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -40,7 +40,7 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
             </p>
           </div>
           <div className="text-right">
-            <div className="bg-black text-white px-3 py-1 rounded-none text-xs font-black uppercase tracking-wide" data-testid="text-progress-status">
+            <div className="bg-black text-white px-3 py-1 rounded-sm text-xs font-black uppercase tracking-wide" data-testid="text-progress-status">
               {isStudyCompleted ? 'Completed' : 'In Progress'}
             </div>
           </div>
@@ -51,12 +51,12 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
             <span>{completedLessons} of {totalLessons} lessons</span>
             <span>{progressPercent}%</span>
           </div>
-          <Progress value={progressPercent} className="h-3 bg-white border-2 border-black rounded-none [&>div]:bg-black [&>div]:rounded-none" data-testid="progress-bar" />
+          <Progress value={progressPercent} className="h-3 bg-white border-2 border-black rounded-sm [&>div]:bg-black [&>div]:rounded-sm" data-testid="progress-bar" />
         </div>
         
         <Link href={`/studies/${study.id}`}>
           <Button 
-            className="w-full bg-black text-white py-3 rounded-none font-black uppercase tracking-wide hover:bg-gray-900 border-2 border-black"
+            className="w-full bg-black text-white py-3 rounded-sm font-black uppercase tracking-wide hover:bg-gray-900 border-2 border-black"
             data-testid="button-continue-study"
           >
             {isStudyCompleted ? 'Review Study' : 'Continue Study'}

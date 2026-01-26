@@ -129,7 +129,7 @@ export default function WarGroups() {
             </div>
             <Button
               onClick={() => navigate('/war-groups/register')}
-              className="bg-ministry-gold-exact hover:bg-yellow-400 text-black font-black tracking-tight uppercase text-xs whitespace-nowrap rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+              className="bg-ministry-gold-exact hover:bg-yellow-400 text-black font-black tracking-tight uppercase text-xs whitespace-nowrap rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
               data-testid="button-register-war-group"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -175,7 +175,7 @@ export default function WarGroups() {
           <div className="space-y-2">
             {myGroups.map((group) => (
               <Link key={group.id} href={`/war-groups/${group.id}`}>
-                <Card className="liquid-gold-card border-2 border-black rounded-none hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                <Card className="liquid-gold-card border-2 border-black rounded-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                   <CardContent className="py-3 px-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -192,7 +192,7 @@ export default function WarGroups() {
                           <Users className="h-3 w-3" />
                           {group.memberCount}
                         </span>
-                        <Badge className="bg-black text-white text-xs py-0.5 rounded-none font-bold uppercase tracking-wide">Member</Badge>
+                        <Badge className="bg-black text-white text-xs py-0.5 rounded-sm font-bold uppercase tracking-wide">Member</Badge>
                       </div>
                     </div>
                   </CardContent>
@@ -210,7 +210,7 @@ export default function WarGroups() {
           <div className="space-y-6">
             {/* Explainer Video Section */}
             {systemSettings?.warGroupsVideoUrl && getEmbedUrl(systemSettings.warGroupsVideoUrl) && (
-              <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+              <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
                     <div className="liquid-black w-12 h-12 flex items-center justify-center border-2 border-black">
@@ -236,7 +236,7 @@ export default function WarGroups() {
               </Card>
             )}
 
-            <Card className="liquid-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
+            <Card className="liquid-black border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
               <CardHeader>
                 <div className="flex items-center gap-3 mb-2">
                   <Shield className="h-8 w-8 text-ministry-gold-exact relative z-10" />
@@ -326,7 +326,7 @@ export default function WarGroups() {
                 <div className="pt-4">
                   <Button
                     onClick={() => navigate('/war-groups/register')}
-                    className="w-full bg-ministry-gold-exact text-black hover:bg-yellow-400 font-black py-6 rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] uppercase tracking-wide text-sm"
+                    className="w-full bg-ministry-gold-exact text-black hover:bg-yellow-400 font-black py-6 rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] uppercase tracking-wide text-sm"
                     data-testid="button-register-from-about"
                   >
                     <Plus className="h-5 w-5 mr-2" />
@@ -344,7 +344,7 @@ export default function WarGroups() {
             {/* Search Section */}
             <div className="relative z-10">
               <h2 className="text-xl font-black mb-4 tracking-tight uppercase">Discover Groups</h2>
-          <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <CardContent className="pt-6">
               <div className="space-y-3">
                 <div className="relative">
@@ -354,7 +354,7 @@ export default function WarGroups() {
                     placeholder="SEARCH BY NAME OR CITY..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-white text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide border-2 border-black rounded-none font-medium"
+                    className="pl-10 bg-white text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide border-2 border-black rounded-sm font-medium"
                     data-testid="input-search-groups"
                   />
                 </div>
@@ -364,7 +364,7 @@ export default function WarGroups() {
                     placeholder="CITY"
                     value={cityFilter}
                     onChange={(e) => setCityFilter(e.target.value)}
-                    className="bg-white text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide border-2 border-black rounded-none font-medium"
+                    className="bg-white text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide border-2 border-black rounded-sm font-medium"
                     data-testid="input-filter-city"
                   />
                   <Input
@@ -372,7 +372,7 @@ export default function WarGroups() {
                     placeholder="STATE"
                     value={stateFilter}
                     onChange={(e) => setStateFilter(e.target.value)}
-                    className="bg-white text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide border-2 border-black rounded-none font-medium"
+                    className="bg-white text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide border-2 border-black rounded-sm font-medium"
                     data-testid="input-filter-state"
                   />
                 </div>
@@ -420,7 +420,7 @@ export default function WarGroups() {
                   variant={viewMode === 'list' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className={`rounded-none text-xs font-black uppercase tracking-wide ${viewMode === 'list' ? 'bg-black text-white border-2 border-black' : 'bg-white border-2 border-black text-black hover:bg-gray-100'}`}
+                  className={`rounded-sm text-xs font-black uppercase tracking-wide ${viewMode === 'list' ? 'bg-black text-white border-2 border-black' : 'bg-white border-2 border-black text-black hover:bg-gray-100'}`}
                   data-testid="button-view-list"
                 >
                   <List className="h-4 w-4 mr-1" />
@@ -430,7 +430,7 @@ export default function WarGroups() {
                   variant={viewMode === 'map' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setViewMode('map')}
-                  className={`rounded-none text-xs font-black uppercase tracking-wide ${viewMode === 'map' ? 'bg-black text-white border-2 border-black' : 'bg-white border-2 border-black text-black hover:bg-gray-100'}`}
+                  className={`rounded-sm text-xs font-black uppercase tracking-wide ${viewMode === 'map' ? 'bg-black text-white border-2 border-black' : 'bg-white border-2 border-black text-black hover:bg-gray-100'}`}
                   data-testid="button-view-map"
                 >
                   <Map className="h-4 w-4 mr-1" />
@@ -460,7 +460,7 @@ export default function WarGroups() {
             </div>
           ) : groups.length === 0 ? (
             <div className="space-y-4">
-              <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+              <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                 <CardContent className="text-center py-12">
                   <MapPin className="h-12 w-12 text-black mx-auto mb-4 relative z-10" />
                   <p className="text-black font-black text-lg mb-2 uppercase tracking-tight relative z-10">No groups found in your area</p>
@@ -469,7 +469,7 @@ export default function WarGroups() {
               </Card>
               
               {/* Start a Group Section */}
-              <Card className="liquid-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
+              <Card className="liquid-black border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
                 <CardContent className="py-8">
                   <div className="text-center">
                     <h3 className="text-ministry-gold-exact text-2xl font-black mb-3 uppercase tracking-tight">
@@ -481,7 +481,7 @@ export default function WarGroups() {
                     </p>
                     <a
                       href="mailto:info@manupgodsway.org?subject=Start a War Group&body=I'm interested in starting a licensed Man Up God's Way war group in my area.%0D%0A%0D%0ACity:%0D%0AState:%0D%0AName:%0D%0APhone:%0D%0A%0D%0APlease send me more information about licensing requirements and getting started."
-                      className="inline-flex items-center gap-2 bg-ministry-gold-exact hover:bg-yellow-400 text-black font-black py-3 px-6 rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all uppercase tracking-wide text-sm"
+                      className="inline-flex items-center gap-2 bg-ministry-gold-exact hover:bg-yellow-400 text-black font-black py-3 px-6 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all uppercase tracking-wide text-sm"
                       data-testid="link-start-group"
                     >
                       <Mail className="h-5 w-5" />
@@ -496,7 +496,7 @@ export default function WarGroups() {
             </div>
           ) : viewMode === 'map' ? (
             <Suspense fallback={
-              <div className="h-[500px] w-full rounded-none overflow-hidden border-2 border-black bg-ministry-gold-exact flex items-center justify-center">
+              <div className="h-[500px] w-full rounded-sm overflow-hidden border-2 border-black bg-ministry-gold-exact flex items-center justify-center">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
                   <p className="text-black font-black uppercase tracking-wide text-sm">Loading Map...</p>
@@ -509,7 +509,7 @@ export default function WarGroups() {
             <div className="space-y-2">
               {groups.map((group) => (
                 <Link key={group.id} href={`/war-groups/${group.id}`}>
-                  <Card className="liquid-gold-card border-2 border-black rounded-none hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                  <Card className="liquid-gold-card border-2 border-black rounded-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                     <CardContent className="py-3 px-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">

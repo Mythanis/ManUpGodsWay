@@ -504,10 +504,10 @@ export default function Home() {
               <img
                 src={(user as any)?.profileImageUrl || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=4A90B8&color=fff&size=60`}
                 alt={`${user?.firstName} ${user?.lastName}`}
-                className="w-12 h-12 rounded-none object-cover border-2 border-ministry-gold-exact"
+                className="w-12 h-12 rounded-sm object-cover border-2 border-ministry-gold-exact"
               />
               <Link href="/rations">
-                <div className="liquid-gold-card text-black px-3 py-1 rounded-none text-xs font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-1">
+                <div className="liquid-gold-card text-black px-3 py-1 rounded-sm text-xs font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-1">
                   <Coins className="w-3 h-3 relative z-10" />
                   <span className="relative z-10">{rations?.balance?.toLocaleString() || 0} rations</span>
                 </div>
@@ -530,14 +530,14 @@ export default function Home() {
         
         {/* Subscription Banner */}
         {user?.subscriptionTier === 'free' && (
-          <div className="liquid-gold-card glow-gold text-black rounded-none border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="banner-subscription">
+          <div className="liquid-gold-card glow-gold text-black rounded-sm border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="banner-subscription">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-black text-sm text-black uppercase tracking-tight">Upgrade to Premium</h3>
                 <p className="text-xs text-black/80 font-medium">Unlock all community features</p>
               </div>
               <Button 
-                className="bg-black text-white px-4 py-2 rounded-none text-xs font-black uppercase tracking-wide hover:bg-gray-900 border-2 border-black"
+                className="bg-black text-white px-4 py-2 rounded-sm text-xs font-black uppercase tracking-wide hover:bg-gray-900 border-2 border-black"
                 data-testid="button-upgrade"
                 onClick={() => setShowUpgradeModal(true)}
               >
@@ -559,7 +559,7 @@ export default function Home() {
         </div>
         
         <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Today's Devotional</h2>
-        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black liquid-gold-card glow-gold mb-6 rounded-none" data-testid="card-devotional">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black liquid-gold-card glow-gold mb-6 rounded-sm" data-testid="card-devotional">
           <CardContent className="p-6">
             {devotional ? (
               <>
@@ -569,7 +569,7 @@ export default function Home() {
                     <img 
                       src={getDefaultThumbnail((devotional as any)?.imageUrl)} 
                       alt={(devotional as any)?.title || 'Daily Devotional'}
-                      className="w-20 h-20 rounded-none object-cover border-2 border-black"
+                      className="w-20 h-20 rounded-sm object-cover border-2 border-black"
                     />
                   </div>
                   
@@ -593,7 +593,7 @@ export default function Home() {
                 
                 <Button 
                   onClick={() => setShowFullDevotional(true)}
-                  className="w-full liquid-black text-white py-3 rounded-none font-black hover:bg-gray-900 uppercase tracking-wide text-sm liquid-button relative z-10"
+                  className="w-full liquid-black text-white py-3 rounded-sm font-black hover:bg-gray-900 uppercase tracking-wide text-sm liquid-button relative z-10"
                   data-testid="button-read-devotional"
                 >
                   Read Today's Devotional
@@ -624,7 +624,7 @@ export default function Home() {
         ) : (
           <>
             {/* No Current Study - Show Recommendations */}
-            <Card className="border-2 border-black p-6 mb-4 liquid-gold-card glow-gold rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-no-current-study">
+            <Card className="border-2 border-black p-6 mb-4 liquid-gold-card glow-gold rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-no-current-study">
               <div className="text-center">
                 <p className="text-ministry-slate mb-4">
                   {completedCount > 0 
@@ -632,7 +632,7 @@ export default function Home() {
                     : "You haven't started any studies yet"}
                 </p>
                 <Button 
-                  className="bg-black text-white hover:bg-gray-900 border-2 border-black rounded-none font-black uppercase tracking-wide text-sm"
+                  className="bg-black text-white hover:bg-gray-900 border-2 border-black rounded-sm font-black uppercase tracking-wide text-sm"
                   data-testid="button-browse-studies"
                   onClick={() => window.location.href = '/library'}
                 >
@@ -648,7 +648,7 @@ export default function Home() {
                 <p className="text-sm text-[#FCD000] mb-4 font-black uppercase tracking-wide">{completedCount > 0 ? "Continue Your Faith Journey" : "Start Your Growth Today"}</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
-                    <Card key={study.id} className="border-2 border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all liquid-gold-card rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                    <Card key={study.id} className="border-2 border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all liquid-gold-card rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                       <CardContent className="p-0">
                         <div className="flex items-stretch">
                           <div className="w-14 liquid-black flex items-center justify-center flex-shrink-0">
@@ -665,7 +665,7 @@ export default function Home() {
                             </div>
                             <Button 
                               size="sm"
-                              className="bg-black text-white hover:bg-gray-900 rounded-none font-black uppercase tracking-wide text-xs border-2 border-black ml-3 flex-shrink-0"
+                              className="bg-black text-white hover:bg-gray-900 rounded-sm font-black uppercase tracking-wide text-xs border-2 border-black ml-3 flex-shrink-0"
                               onClick={() => window.location.href = `/studies/${study.id}`}
                             >
                               Start
@@ -824,10 +824,10 @@ export default function Home() {
         
         <div className="space-y-3">
           {completedCount > 0 && (
-            <Card className="border-2 border-black liquid-gold-card rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="activity-completed-study">
+            <Card className="border-2 border-black liquid-gold-card rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="activity-completed-study">
               <CardContent className="p-4 relative z-10">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-none liquid-black flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-sm liquid-black flex items-center justify-center">
                     <svg className="w-5 h-5 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -843,10 +843,10 @@ export default function Home() {
             </Card>
           )}
           
-          <Card className="border-2 border-black liquid-gold-card rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="activity-streak">
+          <Card className="border-2 border-black liquid-gold-card rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="activity-streak">
             <CardContent className="p-4 relative z-10">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-none liquid-black flex items-center justify-center">
+                <div className="w-10 h-10 rounded-sm liquid-black flex items-center justify-center">
                   <svg className="w-5 h-5 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
                   </svg>
@@ -875,9 +875,9 @@ export default function Home() {
           
           <div className="space-y-4 py-4">
             {/* Completed Studies */}
-            <div className="flex items-center justify-between p-4 bg-ministry-gold-exact rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center justify-between p-4 bg-ministry-gold-exact rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-none bg-black flex items-center justify-center">
+                <div className="w-10 h-10 rounded-sm bg-black flex items-center justify-center">
                   <Target className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -892,9 +892,9 @@ export default function Home() {
             </div>
 
             {/* Current Streak */}
-            <div className="flex items-center justify-between p-4 bg-ministry-gold-exact rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center justify-between p-4 bg-ministry-gold-exact rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-none bg-black flex items-center justify-center">
+                <div className="w-10 h-10 rounded-sm bg-black flex items-center justify-center">
                   <TrendingUp className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -909,9 +909,9 @@ export default function Home() {
             </div>
 
             {/* Total Active Days */}
-            <div className="flex items-center justify-between p-4 bg-ministry-gold-exact rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center justify-between p-4 bg-ministry-gold-exact rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-none bg-black flex items-center justify-center">
+                <div className="w-10 h-10 rounded-sm bg-black flex items-center justify-center">
                   <Calendar className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -928,7 +928,7 @@ export default function Home() {
             </div>
 
             {/* Progress Insights */}
-            <div className="bg-ministry-gold-exact p-4 rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+            <div className="bg-ministry-gold-exact p-4 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
               <h4 className="font-black text-black mb-2 uppercase tracking-tight">Your Journey</h4>
               <div className="space-y-2 text-sm text-black/80">
                 {completedCount === 0 && (
@@ -952,7 +952,7 @@ export default function Home() {
 
             <Button 
               onClick={() => setShowProgressDialog(false)}
-              className="w-full bg-black text-white hover:bg-gray-900 rounded-none font-black uppercase tracking-wide border-2 border-black"
+              className="w-full bg-black text-white hover:bg-gray-900 rounded-sm font-black uppercase tracking-wide border-2 border-black"
             >
               Continue Growing
             </Button>
@@ -1050,7 +1050,7 @@ export default function Home() {
 
       {/* Full Devotional Modal */}
       <Dialog open={showFullDevotional} onOpenChange={setShowFullDevotional}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85vh] overflow-y-auto bg-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-0">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85vh] overflow-y-auto bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-0">
           <div className="bg-ministry-gold-exact p-4 border-b-2 border-black">
             <DialogHeader>
               <DialogTitle className="text-black text-lg font-black uppercase tracking-tight">
@@ -1063,7 +1063,7 @@ export default function Home() {
             <div className="p-4 space-y-4">
               {/* Full Image */}
               {devotional.imageUrl && (
-                <div className="overflow-hidden border-2 border-black rounded-none">
+                <div className="overflow-hidden border-2 border-black rounded-sm">
                   <img 
                     src={devotional.imageUrl} 
                     alt={devotional.title}
@@ -1076,7 +1076,7 @@ export default function Home() {
               )}
               
               {/* Verse */}
-              <div className="bg-ministry-gold-exact p-4 border-2 border-black rounded-none">
+              <div className="bg-ministry-gold-exact p-4 border-2 border-black rounded-sm">
                 <p className="text-black font-bold text-sm">
                   "{devotional.verse}"
                 </p>
@@ -1086,7 +1086,7 @@ export default function Home() {
               </div>
               
               {/* Full Content */}
-              <div className="bg-gray-900 p-4 border-2 border-black rounded-none">
+              <div className="bg-gray-900 p-4 border-2 border-black rounded-sm">
                 <p className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">
                   {devotional.content}
                 </p>
@@ -1097,7 +1097,7 @@ export default function Home() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className={`flex items-center justify-center space-x-2 rounded-none border-2 border-black font-bold uppercase text-xs ${
+                  className={`flex items-center justify-center space-x-2 rounded-sm border-2 border-black font-bold uppercase text-xs ${
                     isLiked 
                       ? 'bg-red-500 text-white hover:bg-red-600' 
                       : 'bg-gray-800 text-white hover:bg-gray-700'
@@ -1119,19 +1119,19 @@ export default function Home() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      className="flex items-center justify-center space-x-2 bg-gray-800 text-white hover:bg-gray-700 rounded-none border-2 border-black font-bold uppercase text-xs"
+                      className="flex items-center justify-center space-x-2 bg-gray-800 text-white hover:bg-gray-700 rounded-sm border-2 border-black font-bold uppercase text-xs"
                     >
                       <Share2 className="w-4 h-4" />
                       <span>Share</span>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-3 bg-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <PopoverContent className="w-auto p-3 bg-black border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                     <div className="space-y-3">
                       <div className="space-y-2">
                         <button
                           onClick={() => handleNativeShare(devotional)}
                           disabled={isSharing}
-                          className="block w-full p-3 bg-ministry-gold-exact text-black rounded-none hover:bg-yellow-400 transition-colors font-bold text-sm uppercase disabled:opacity-50"
+                          className="block w-full p-3 bg-ministry-gold-exact text-black rounded-sm hover:bg-yellow-400 transition-colors font-bold text-sm uppercase disabled:opacity-50"
                           data-testid="share-with-image"
                         >
                           {isSharing ? '⏳ Sharing...' : '📤 Share with Image'}
@@ -1139,7 +1139,7 @@ export default function Home() {
                         <a
                           href={`/api/devotionals/${devotional.id}/share-image`}
                           download={`manupgodsway-devotional-${devotional.id}.png`}
-                          className="block w-full p-2 bg-gray-700 text-white text-center rounded-none hover:bg-gray-600 transition-colors font-bold text-xs uppercase"
+                          className="block w-full p-2 bg-gray-700 text-white text-center rounded-sm hover:bg-gray-600 transition-colors font-bold text-xs uppercase"
                           data-testid="download-image"
                         >
                           📥 Download Image
@@ -1153,7 +1153,7 @@ export default function Home() {
                             href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.manupgodsway.org')}&quote=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\nDownload the app: www.manupgodsway.org`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 bg-[#1877F2] text-white rounded-none hover:opacity-80 transition-opacity"
+                            className="p-2 bg-[#1877F2] text-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="share-facebook"
                           >
                             <SiFacebook className="w-5 h-5" />
@@ -1162,7 +1162,7 @@ export default function Home() {
                             href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n📲 Download the app: www.manupgodsway.org`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 bg-black text-white border border-white rounded-none hover:opacity-80 transition-opacity"
+                            className="p-2 bg-black text-white border border-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="share-twitter"
                           >
                             <SiX className="w-5 h-5" />
@@ -1171,14 +1171,14 @@ export default function Home() {
                             href={`https://wa.me/?text=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n📲 Download the app: www.manupgodsway.org`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 bg-[#25D366] text-white rounded-none hover:opacity-80 transition-opacity"
+                            className="p-2 bg-[#25D366] text-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="share-whatsapp"
                           >
                             <SiWhatsapp className="w-5 h-5" />
                           </a>
                           <a
                             href={`mailto:?subject=${encodeURIComponent(devotional.title)}&body=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n${devotional.content}\n\n📲 Download the app: www.manupgodsway.org`)}`}
-                            className="p-2 bg-gray-600 text-white rounded-none hover:opacity-80 transition-opacity"
+                            className="p-2 bg-gray-600 text-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="share-email"
                           >
                             <Mail className="w-5 h-5" />
@@ -1188,7 +1188,7 @@ export default function Home() {
                               navigator.clipboard.writeText(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\nwww.manupgodsway.org`);
                               toast({ title: "Copied!", description: "Devotional text copied to clipboard" });
                             }}
-                            className="p-2 bg-gray-700 text-white rounded-none hover:opacity-80 transition-opacity"
+                            className="p-2 bg-gray-700 text-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="copy-link"
                           >
                             <Link2 className="w-5 h-5" />
@@ -1202,7 +1202,7 @@ export default function Home() {
                 <Button 
                   size="sm"
                   onClick={() => setShowFullDevotional(false)}
-                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400 rounded-none border-2 border-black font-black uppercase text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400 rounded-sm border-2 border-black font-black uppercase text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                 >
                   Close
                 </Button>

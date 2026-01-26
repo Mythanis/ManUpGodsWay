@@ -300,13 +300,13 @@ export default function DiscussionCard({
   };
 
   return (
-    <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden w-full" style={{ fontFamily: "'Inter', 'DM Sans', sans-serif" }} data-testid="discussion-card">
+    <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden w-full" style={{ fontFamily: "'Inter', 'DM Sans', sans-serif" }} data-testid="discussion-card">
       <CardContent className="p-4 relative">
         <div className="flex items-start space-x-3 relative z-10">
           <img 
             src={discussion.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${discussion.user?.firstName}+${discussion.user?.lastName}&background=4A90B8&color=fff`}
             alt={`${discussion.user?.firstName} ${discussion.user?.lastName}`}
-            className="w-12 h-12 rounded-none object-cover cursor-pointer border-2 border-ministry-gold-exact hover:border-white transition-colors"
+            className="w-12 h-12 rounded-sm object-cover cursor-pointer border-2 border-ministry-gold-exact hover:border-white transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               setLocation(`/users/${discussion.userId}`);
@@ -330,12 +330,12 @@ export default function DiscussionCard({
                   {discussion.title}
                 </h4>
                 {discussion.studyId && (
-                  <Badge className="text-xs bg-ministry-gold-exact text-black font-bold uppercase tracking-wide rounded-none border-2 border-black">
+                  <Badge className="text-xs bg-ministry-gold-exact text-black font-bold uppercase tracking-wide rounded-sm border-2 border-black">
                     📚 Study
                   </Badge>
                 )}
                 {discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' && (
-                  <Badge className="text-xs bg-black text-ministry-gold-exact font-bold uppercase tracking-wide rounded-none border-2 border-ministry-gold-exact">
+                  <Badge className="text-xs bg-black text-ministry-gold-exact font-bold uppercase tracking-wide rounded-sm border-2 border-ministry-gold-exact">
                     {discussion.study.requiredTier.charAt(0).toUpperCase() + discussion.study.requiredTier.slice(1)} Only
                   </Badge>
                 )}
@@ -417,7 +417,7 @@ export default function DiscussionCard({
                   variant="ghost"
                   size="sm"
                   onClick={() => toggleLike.mutate()}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-none font-black uppercase text-xs tracking-wide ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm font-black uppercase text-xs tracking-wide ${
                     userHasLiked ? 'bg-ministry-gold-exact text-black' : 'bg-black text-white hover:bg-ministry-gold-exact hover:text-black'
                   } border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all`}
                   data-testid="button-like-discussion"
@@ -430,7 +430,7 @@ export default function DiscussionCard({
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowReplies(!showReplies)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white hover:bg-ministry-gold-exact hover:text-black rounded-none font-black uppercase text-xs tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white hover:bg-ministry-gold-exact hover:text-black rounded-sm font-black uppercase text-xs tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all"
                   data-testid="button-replies"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
@@ -460,7 +460,7 @@ export default function DiscussionCard({
                     }
                     setShowReplyForm(!showReplyForm);
                   }}
-                  className={`px-3 py-1.5 rounded-none font-black uppercase tracking-wide text-xs border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all ${
+                  className={`px-3 py-1.5 rounded-sm font-black uppercase tracking-wide text-xs border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all ${
                     discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' &&
                     !((discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
                       (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip'))
@@ -481,7 +481,7 @@ export default function DiscussionCard({
                 {isOwner && (
                   <Button 
                     size="sm" 
-                    className="bg-black text-white hover:bg-ministry-gold-exact hover:text-black p-1.5 rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all"
+                    className="bg-black text-white hover:bg-ministry-gold-exact hover:text-black p-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all"
                     onClick={() => {
                       editForm.reset({
                         title: discussion.title || '',
@@ -499,7 +499,7 @@ export default function DiscussionCard({
                 <div className="relative">
                   <Button 
                     size="sm" 
-                    className="bg-black text-white hover:bg-ministry-gold-exact hover:text-black p-1.5 rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all"
+                    className="bg-black text-white hover:bg-ministry-gold-exact hover:text-black p-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all"
                     onClick={() => setShowShareMenu(!showShareMenu)}
                     data-testid="button-share-discussion"
                   >
@@ -507,12 +507,12 @@ export default function DiscussionCard({
                   </Button>
                   
                   {showShareMenu && (
-                    <div className="absolute right-0 bottom-full mb-2 bg-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] p-2 z-50 min-w-[160px]">
+                    <div className="absolute right-0 bottom-full mb-2 bg-black border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] p-2 z-50 min-w-[160px]">
                     <div className="text-xs text-ministry-gold-exact font-black uppercase tracking-wide mb-2 px-2">Share to:</div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start text-white hover:text-black hover:bg-ministry-gold-exact rounded-none font-bold text-xs"
+                      className="w-full justify-start text-white hover:text-black hover:bg-ministry-gold-exact rounded-sm font-bold text-xs"
                       onClick={shareToFacebook}
                       data-testid="button-share-facebook"
                     >
@@ -522,7 +522,7 @@ export default function DiscussionCard({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start text-white hover:text-black hover:bg-ministry-gold-exact rounded-none font-bold text-xs"
+                      className="w-full justify-start text-white hover:text-black hover:bg-ministry-gold-exact rounded-sm font-bold text-xs"
                       onClick={shareToTwitter}
                       data-testid="button-share-twitter"
                     >
@@ -532,7 +532,7 @@ export default function DiscussionCard({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start text-white hover:text-black hover:bg-ministry-gold-exact rounded-none font-bold text-xs"
+                      className="w-full justify-start text-white hover:text-black hover:bg-ministry-gold-exact rounded-sm font-bold text-xs"
                       onClick={shareToWhatsApp}
                       data-testid="button-share-whatsapp"
                     >
@@ -542,7 +542,7 @@ export default function DiscussionCard({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start text-white hover:text-black hover:bg-ministry-gold-exact rounded-none font-bold text-xs"
+                      className="w-full justify-start text-white hover:text-black hover:bg-ministry-gold-exact rounded-sm font-bold text-xs"
                       onClick={shareToLinkedIn}
                       data-testid="button-share-linkedin"
                     >
@@ -553,7 +553,7 @@ export default function DiscussionCard({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start text-white hover:text-black hover:bg-ministry-gold-exact rounded-none font-bold text-xs"
+                      className="w-full justify-start text-white hover:text-black hover:bg-ministry-gold-exact rounded-sm font-bold text-xs"
                       onClick={copyLink}
                       data-testid="button-copy-link"
                     >
@@ -569,7 +569,7 @@ export default function DiscussionCard({
                   contentType="discussion" 
                   contentId={discussion.id}
                   triggerElement={
-                    <Button size="sm" className="bg-black text-white hover:bg-red-600 hover:text-white p-1.5 rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all">
+                    <Button size="sm" className="bg-black text-white hover:bg-red-600 hover:text-white p-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all">
                       <Flag className="h-3.5 w-3.5" />
                     </Button>
                   }
@@ -584,11 +584,11 @@ export default function DiscussionCard({
           <div className="mt-4 pt-4 border-t-2 border-black/20 relative z-10">
             <div className="space-y-3">
               {(replies as any[])?.map((reply: any) => (
-                <div key={reply.id} className="flex items-start space-x-3 ml-4 p-3 bg-black rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <div key={reply.id} className="flex items-start space-x-3 ml-4 p-3 bg-black rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                   <img 
                     src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=FCD000&color=000&size=32`}
                     alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
-                    className="w-8 h-8 rounded-none object-cover cursor-pointer border-2 border-ministry-gold-exact hover:border-white transition-colors"
+                    className="w-8 h-8 rounded-sm object-cover cursor-pointer border-2 border-ministry-gold-exact hover:border-white transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       setLocation(`/users/${reply.userId}`);
@@ -610,7 +610,7 @@ export default function DiscussionCard({
                       <Button 
                         variant="ghost"
                         size="sm"
-                        className="flex items-center gap-1 text-white hover:text-black hover:bg-ministry-gold-exact px-2 py-1 rounded-none border border-ministry-gold-exact/50 transition-all"
+                        className="flex items-center gap-1 text-white hover:text-black hover:bg-ministry-gold-exact px-2 py-1 rounded-sm border border-ministry-gold-exact/50 transition-all"
                         data-testid={`button-like-reply-${reply.id}`}
                       >
                         <ChristianCross className="w-3 h-3" />
@@ -620,7 +620,7 @@ export default function DiscussionCard({
                         contentType="reply" 
                         contentId={reply.id}
                         triggerElement={
-                          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-red-500 hover:bg-red-500/10 p-1 rounded-none transition-all">
+                          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-red-500 hover:bg-red-500/10 p-1 rounded-sm transition-all">
                             <Flag className="h-3 w-3" />
                           </Button>
                         }
@@ -634,7 +634,7 @@ export default function DiscussionCard({
         )}
 
         {showReplyForm && (
-          <div className="mt-4 pt-4 border-t-2 border-black/20 bg-black rounded-none p-4 relative z-10 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+          <div className="mt-4 pt-4 border-t-2 border-black/20 bg-black rounded-sm p-4 relative z-10 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
             <h4 className="text-sm font-black text-ministry-gold-exact mb-3 uppercase tracking-wide">Write your reply</h4>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmitReply)} className="space-y-3">
@@ -646,7 +646,7 @@ export default function DiscussionCard({
                       <FormControl>
                         <Textarea
                           placeholder="Write your reply..."
-                          className="min-h-[80px] resize-none bg-black text-white border-2 border-ministry-gold-exact/30 focus:border-ministry-gold-exact rounded-none"
+                          className="min-h-[80px] resize-none bg-black text-white border-2 border-ministry-gold-exact/30 focus:border-ministry-gold-exact rounded-sm"
                           {...field}
                           data-testid="textarea-reply-content"
                         />
@@ -665,7 +665,7 @@ export default function DiscussionCard({
                       setShowReplyForm(false);
                       form.reset();
                     }}
-                    className="text-xs font-bold text-gray-400 hover:text-white hover:bg-gray-800 rounded-none border-2 border-gray-600 px-3"
+                    className="text-xs font-bold text-gray-400 hover:text-white hover:bg-gray-800 rounded-sm border-2 border-gray-600 px-3"
                     data-testid="button-cancel-reply"
                   >
                     Cancel
@@ -673,7 +673,7 @@ export default function DiscussionCard({
                   <Button
                     type="submit"
                     disabled={createReply.isPending}
-                    className="text-xs font-black uppercase tracking-wide bg-ministry-gold-exact text-black hover:bg-yellow-400 rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-3"
+                    className="text-xs font-black uppercase tracking-wide bg-ministry-gold-exact text-black hover:bg-yellow-400 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-3"
                     data-testid="button-submit-reply"
                   >
                     <Send className="w-3 h-3 mr-1" />
@@ -690,7 +690,7 @@ export default function DiscussionCard({
 
       {/* Edit Discussion Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="bg-black border-2 border-ministry-gold-exact text-white max-w-md rounded-none shadow-[6px_6px_0px_0px_rgba(252,208,0,1)]">
+        <DialogContent className="bg-black border-2 border-ministry-gold-exact text-white max-w-md rounded-sm shadow-[6px_6px_0px_0px_rgba(252,208,0,1)]">
           <DialogHeader>
             <DialogTitle className="text-ministry-gold-exact font-black uppercase tracking-wide">Edit Discussion</DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -707,7 +707,7 @@ export default function DiscussionCard({
                     <FormControl>
                       <Input
                         placeholder="Discussion title..."
-                        className="bg-black text-white border-2 border-ministry-gold-exact/30 focus:border-ministry-gold-exact rounded-none"
+                        className="bg-black text-white border-2 border-ministry-gold-exact/30 focus:border-ministry-gold-exact rounded-sm"
                         {...field}
                         data-testid="input-edit-title"
                       />
@@ -724,7 +724,7 @@ export default function DiscussionCard({
                     <FormControl>
                       <Textarea
                         placeholder="What's on your mind?"
-                        className="min-h-[120px] resize-none bg-black text-white border-2 border-ministry-gold-exact/30 focus:border-ministry-gold-exact rounded-none"
+                        className="min-h-[120px] resize-none bg-black text-white border-2 border-ministry-gold-exact/30 focus:border-ministry-gold-exact rounded-sm"
                         {...field}
                         data-testid="textarea-edit-content"
                       />
@@ -738,7 +738,7 @@ export default function DiscussionCard({
                   type="button"
                   variant="ghost"
                   onClick={() => setShowEditDialog(false)}
-                  className="text-gray-400 hover:text-white hover:bg-gray-800 rounded-none border-2 border-gray-600 px-4 font-bold"
+                  className="text-gray-400 hover:text-white hover:bg-gray-800 rounded-sm border-2 border-gray-600 px-4 font-bold"
                   data-testid="button-cancel-edit"
                 >
                   Cancel
@@ -746,7 +746,7 @@ export default function DiscussionCard({
                 <Button
                   type="submit"
                   disabled={updateDiscussion.isPending}
-                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400 rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-4 font-black uppercase tracking-wide"
+                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-4 font-black uppercase tracking-wide"
                   data-testid="button-save-edit"
                 >
                   {updateDiscussion.isPending ? "Saving..." : "Save Changes"}

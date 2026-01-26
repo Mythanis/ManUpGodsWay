@@ -14,7 +14,7 @@ export default function PrivacySecurity() {
           <BackButton />
           
           <div className="flex items-center space-x-3 mb-2">
-            <div className="w-10 h-10 rounded-none bg-ministry-gold-exact flex items-center justify-center">
+            <div className="w-10 h-10 rounded-sm bg-ministry-gold-exact flex items-center justify-center">
               <Shield className="w-6 h-6 text-black" />
             </div>
             <h1 className="text-2xl font-black text-white uppercase tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -28,12 +28,12 @@ export default function PrivacySecurity() {
       </div>
       
       <div className="px-6 py-6">
-        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
           <CardContent className="p-0">
             <Link href="/privacy-policy">
               <div className="flex items-center justify-between p-4 border-b-2 border-ministry-gold-exact/30 hover:bg-gray-800 cursor-pointer transition-colors">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-none bg-ministry-gold-exact flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-sm bg-ministry-gold-exact flex items-center justify-center">
                     <FileText className="w-4 h-4 text-black" />
                   </div>
                   <span className="font-bold text-white uppercase tracking-wide">Privacy Policy</span>
@@ -47,7 +47,7 @@ export default function PrivacySecurity() {
             <Link href="/terms-conditions">
               <div className="flex items-center justify-between p-4 hover:bg-gray-800 cursor-pointer transition-colors">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-none bg-ministry-gold-exact flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-sm bg-ministry-gold-exact flex items-center justify-center">
                     <Scale className="w-4 h-4 text-black" />
                   </div>
                   <span className="font-bold text-white uppercase tracking-wide">Terms & Conditions</span>

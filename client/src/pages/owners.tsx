@@ -819,7 +819,7 @@ export default function Owners() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`h-14 min-w-[200px] flex items-center justify-between border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all flex-shrink-0 cursor-pointer ${
+                  className={`h-14 min-w-[200px] flex items-center justify-between border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all flex-shrink-0 cursor-pointer ${
                     isActive 
                       ? 'liquid-black border-ministry-gold-exact shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]' 
                       : 'liquid-gold-card'

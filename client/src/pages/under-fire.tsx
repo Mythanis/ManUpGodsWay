@@ -230,12 +230,12 @@ export default function UnderFire() {
               placeholder="SEARCH REQUESTS..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-2 border-black bg-ministry-gold-exact rounded-none text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide font-medium"
+              className="pl-10 border-2 border-black bg-ministry-gold-exact rounded-sm text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide font-medium"
             />
           </div>
           <div className="flex gap-2">
             <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-              <SelectTrigger className="w-36 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-none">
+              <SelectTrigger className="w-36 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-sm">
                 <SortDesc className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -247,7 +247,7 @@ export default function UnderFire() {
           </div>
         </div>
 
-        <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <Card className="bg-ministry-gold-exact border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <CardHeader>
             <CardTitle className="text-black flex items-center gap-2 text-2xl font-black tracking-tighter uppercase">
               <Shield className="h-6 w-6" />
@@ -275,7 +275,7 @@ export default function UnderFire() {
             <Button 
               onClick={handleCreateRequest}
               disabled={createRequestMutation.isPending || !newRequestContent.trim()}
-              className="w-full bg-black hover:bg-gray-900 text-white font-black text-lg py-6 rounded-none shadow-lg border-2 border-black transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] uppercase tracking-wide"
+              className="w-full bg-black hover:bg-gray-900 text-white font-black text-lg py-6 rounded-sm shadow-lg border-2 border-black transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] uppercase tracking-wide"
               data-testid="button-share-request"
             >
               {createRequestMutation.isPending ? 'Posting...' : 'Share Request'}
@@ -285,7 +285,7 @@ export default function UnderFire() {
 
         <div className="space-y-4">
           {requests.length === 0 ? (
-            <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <Card className="bg-ministry-gold-exact border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <CardContent className="text-center py-12">
                 <Shield className="h-12 w-12 text-black mx-auto mb-4" />
                 <p className="text-black font-medium">No accountability requests yet. Be the first to share!</p>
@@ -293,7 +293,7 @@ export default function UnderFire() {
             </Card>
           ) : (
             requests.map((request) => (
-              <Card key={request.id} className="bg-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
+              <Card key={request.id} className="bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
@@ -349,7 +349,7 @@ export default function UnderFire() {
                             onClick={() => handleUnassist(request.id)}
                             disabled={unassistMutation.isPending}
                             size="sm"
-                            className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold rounded-none"
+                            className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold rounded-sm"
                           >
                             {unassistMutation.isPending ? 'Processing...' : 'Unassist'}
                           </Button>
@@ -359,7 +359,7 @@ export default function UnderFire() {
                       <Button
                         onClick={() => handleAssist(request.id)}
                         disabled={assistMutation.isPending}
-                        className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold rounded-none"
+                        className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold rounded-sm"
                         data-testid={`button-assist-${request.id}`}
                       >
                         <HandHelping className="h-4 w-4 mr-2" />

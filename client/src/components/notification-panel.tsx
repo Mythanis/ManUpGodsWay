@@ -596,7 +596,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         <Bell className="h-5 w-5" />
         {(unreadCount > 0 || pendingRequests.length > 0) && (
           <Badge 
-            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-[#FCD000] text-black border-2 border-black rounded-none font-bold"
+            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-[#FCD000] text-black border-2 border-black rounded-sm font-bold"
           >
             {unreadCount + pendingRequests.length}
           </Badge>
@@ -604,7 +604,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       </Button>
 
       {showPanel && (
-        <Card className="fixed right-4 top-16 w-[340px] max-h-[80vh] z-[9999] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col bg-white border-2 border-black rounded-none overflow-hidden">
+        <Card className="fixed right-4 top-16 w-[340px] max-h-[80vh] z-[9999] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col bg-white border-2 border-black rounded-sm overflow-hidden">
           <CardHeader className="pb-2 flex-shrink-0 bg-[#FCD000] border-b-2 border-black">
             <div className="flex items-center justify-between mb-2">
               <CardTitle className="text-base font-bold uppercase tracking-wide text-black">Notifications</CardTitle>
@@ -612,7 +612,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowPanel(false)}
-                className="text-black hover:bg-black/10 p-1 rounded-none"
+                className="text-black hover:bg-black/10 p-1 rounded-sm"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -623,7 +623,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                   variant="ghost"
                   size="sm"
                   onClick={() => markAllAsReadMutation.mutate()}
-                  className="text-xs h-7 px-2 text-black hover:bg-black/10 rounded-none border border-black"
+                  className="text-xs h-7 px-2 text-black hover:bg-black/10 rounded-sm border border-black"
                 >
                   <CheckCheck className="h-3 w-3 mr-1" />
                   Mark all read
@@ -634,7 +634,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                   variant="ghost"
                   size="sm"
                   onClick={() => clearAllNotificationsMutation.mutate()}
-                  className="text-xs h-7 px-2 text-black hover:bg-black/10 rounded-none border border-black"
+                  className="text-xs h-7 px-2 text-black hover:bg-black/10 rounded-sm border border-black"
                 >
                   <Trash2 className="h-3 w-3 mr-1" />
                   Clear all
@@ -649,7 +649,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
               {pendingRequests.map((request) => (
                 <div
                   key={request.id}
-                  className="flex border-2 border-black rounded-none overflow-hidden shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] liquid-gold-card"
+                  className="flex border-2 border-black rounded-sm overflow-hidden shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] liquid-gold-card"
                 >
                   <div className="w-12 liquid-black flex items-center justify-center flex-shrink-0">
                     <MessageSquare className="h-5 w-5 text-white relative z-10" />
@@ -665,7 +665,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                         size="sm"
                         onClick={() => handleRequestResponse(request.id, 'accept')}
                         disabled={respondToRequestMutation.isPending}
-                        className="flex-1 text-xs h-7 bg-black text-white hover:bg-gray-800 rounded-none border-2 border-black font-bold uppercase"
+                        className="flex-1 text-xs h-7 bg-black text-white hover:bg-gray-800 rounded-sm border-2 border-black font-bold uppercase"
                       >
                         Accept
                       </Button>
@@ -674,7 +674,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                         variant="outline"
                         onClick={() => handleRequestResponse(request.id, 'decline')}
                         disabled={respondToRequestMutation.isPending}
-                        className="flex-1 text-xs h-7 bg-white text-black hover:bg-gray-100 rounded-none border-2 border-black font-bold uppercase"
+                        className="flex-1 text-xs h-7 bg-white text-black hover:bg-gray-100 rounded-sm border-2 border-black font-bold uppercase"
                       >
                         Decline
                       </Button>
@@ -688,7 +688,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                 <div
                   key={notification.id}
                   className={cn(
-                    "flex border-2 border-black rounded-none overflow-hidden shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px]",
+                    "flex border-2 border-black rounded-sm overflow-hidden shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px]",
                     notification.isRead ? "opacity-60" : "",
                     notification.type === 'brotherhood' ? "liquid-gold-card" : "liquid-gold-card"
                   )}
@@ -719,7 +719,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                           size="sm"
                           onClick={(e) => { e.stopPropagation(); handleBrotherhoodResponse(notification.relatedId!, 'approved'); }}
                           disabled={respondToBrotherhoodMutation.isPending}
-                          className="flex-1 text-xs h-7 bg-black text-white hover:bg-gray-800 rounded-none border-2 border-black font-bold uppercase"
+                          className="flex-1 text-xs h-7 bg-black text-white hover:bg-gray-800 rounded-sm border-2 border-black font-bold uppercase"
                         >
                           <UserCheck className="h-3 w-3 mr-1" />
                           Approve
@@ -729,7 +729,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                           variant="outline"
                           onClick={(e) => { e.stopPropagation(); handleBrotherhoodResponse(notification.relatedId!, 'denied'); }}
                           disabled={respondToBrotherhoodMutation.isPending}
-                          className="flex-1 text-xs h-7 bg-white text-black hover:bg-gray-100 rounded-none border-2 border-black font-bold uppercase"
+                          className="flex-1 text-xs h-7 bg-white text-black hover:bg-gray-100 rounded-sm border-2 border-black font-bold uppercase"
                         >
                           <UserX className="h-3 w-3 mr-1" />
                           Deny
@@ -742,15 +742,15 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0 hover:bg-black/10 text-black self-start mt-2 mr-2 rounded-none"
+                        className="h-8 w-8 p-0 hover:bg-black/10 text-black self-start mt-2 mr-2 rounded-sm"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-32 rounded-none border-2 border-black bg-white">
+                    <DropdownMenuContent align="end" className="w-32 rounded-sm border-2 border-black bg-white">
                       <DropdownMenuItem
                         onClick={() => clearNotificationMutation.mutate(notification.id)}
-                        className="text-red-600 hover:text-red-700 focus:text-red-700 rounded-none font-bold uppercase text-xs"
+                        className="text-red-600 hover:text-red-700 focus:text-red-700 rounded-sm font-bold uppercase text-xs"
                       >
                         <Trash2 className="h-3 w-3 mr-2" />
                         Clear

@@ -565,25 +565,25 @@ export default function Admin() {
       {/* Quick Stats */}
       <div className="px-6 py-6">
         <div className="grid grid-cols-2 gap-4" data-testid="card-admin-stats">
-          <div className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 text-center">
+          <div className="bg-ministry-gold-exact border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 text-center">
             <p className="text-3xl font-black text-black" data-testid="text-total-users">
               {(stats as any)?.totalUsers || 0}
             </p>
             <p className="text-xs font-bold uppercase tracking-wide text-black">Total Users</p>
           </div>
-          <div className="bg-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(212,175,55,1)] p-4 text-center">
+          <div className="bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(212,175,55,1)] p-4 text-center">
             <p className="text-3xl font-black text-ministry-gold-exact" data-testid="text-total-studies">
               {(stats as any)?.totalStudies || 0}
             </p>
             <p className="text-xs font-bold uppercase tracking-wide text-white">Studies</p>
           </div>
-          <div className="bg-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(212,175,55,1)] p-4 text-center">
+          <div className="bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(212,175,55,1)] p-4 text-center">
             <p className="text-3xl font-black text-ministry-gold-exact" data-testid="text-active-today">
               {(stats as any)?.activeToday || 0}
             </p>
             <p className="text-xs font-bold uppercase tracking-wide text-white">Active Today</p>
           </div>
-          <div className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 text-center">
+          <div className="bg-ministry-gold-exact border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 text-center">
             <p className="text-3xl font-black text-black" data-testid="text-new-posts">
               {(stats as any)?.newPosts || 0}
             </p>
@@ -604,7 +604,7 @@ export default function Admin() {
                   setActiveTab(tab.id);
                   setShowContentDialog(true);
                 }}
-                className="h-16 w-full flex items-center justify-between liquid-gold-card border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
+                className="h-16 w-full flex items-center justify-between liquid-gold-card border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
                 data-testid={`tab-${tab.id}`}
               >
                 <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">

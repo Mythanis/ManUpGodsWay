@@ -573,7 +573,7 @@ export default function Community() {
 
       {/* Community Stats */}
       <div className={`px-6 ${activeLiveStream ? '' : '-mt-3'} relative z-10 mb-4`}>
-        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] liquid-gold-card border-2 border-black rounded-none" data-testid="card-stats">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] liquid-gold-card border-2 border-black rounded-sm" data-testid="card-stats">
           <CardContent className="p-4">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div className="border-r-2 border-black">
@@ -601,17 +601,17 @@ export default function Community() {
       
       {/* Facebook-style Quick Post Card */}
       <div className="px-6 mb-4">
-        <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] liquid-black border-2 border-ministry-gold-exact rounded-none" data-testid="card-quick-post">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] liquid-black border-2 border-ministry-gold-exact rounded-sm" data-testid="card-quick-post">
           <CardContent className="p-3">
             <div className="flex items-center gap-3">
               <img 
                 src={(user as any)?.profileImageUrl || `https://ui-avatars.com/api/?name=${(user as any)?.firstName || 'U'}+${(user as any)?.lastName || ''}&background=FCD000&color=000&size=40`}
                 alt="Your avatar"
-                className="w-10 h-10 rounded-none object-cover"
+                className="w-10 h-10 rounded-sm object-cover"
               />
               <button
                 onClick={() => setDialogOpen(true)}
-                className="flex-1 text-left px-4 py-2.5 rounded-none bg-white text-gray-500 hover:bg-gray-100 transition-colors text-sm font-medium uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                className="flex-1 text-left px-4 py-2.5 rounded-sm bg-white text-gray-500 hover:bg-gray-100 transition-colors text-sm font-medium uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                 data-testid="button-quick-post"
               >
                 <span className="block text-black font-black">Post Here</span>
@@ -621,7 +621,7 @@ export default function Community() {
             <div className="flex justify-between mt-3 pt-3 border-t-2 border-gray-700">
               <button 
                 onClick={() => { setDialogOpen(true); }}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-none hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
+                className="flex items-center gap-2 px-4 py-1.5 rounded-sm hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
                 data-testid="button-quick-photo"
               >
                 <Image className="w-5 h-5 text-green-500" />
@@ -629,7 +629,7 @@ export default function Community() {
               </button>
               <button 
                 onClick={() => { setDialogOpen(true); }}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-none hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
+                className="flex items-center gap-2 px-4 py-1.5 rounded-sm hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
                 data-testid="button-quick-video"
               >
                 <Video className="w-5 h-5 text-red-500" />
@@ -637,7 +637,7 @@ export default function Community() {
               </button>
               <button 
                 onClick={() => setDialogOpen(true)}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-none hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
+                className="flex items-center gap-2 px-4 py-1.5 rounded-sm hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
                 data-testid="button-quick-post-btn"
               >
                 <Plus className="w-5 h-5 text-ministry-gold" />
@@ -651,7 +651,7 @@ export default function Community() {
       {/* Post Dialog */}
       <div className="px-6">
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-md mx-auto bg-[#FCD000] border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-visible" data-testid="dialog-new-discussion">
+          <DialogContent className="max-w-md mx-auto bg-[#FCD000] border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-visible" data-testid="dialog-new-discussion">
             <DialogHeader>
               <DialogTitle className="text-black text-xl font-black uppercase tracking-tight">Create Post</DialogTitle>
             </DialogHeader>
@@ -669,7 +669,7 @@ export default function Community() {
                       <FormControl>
                         <Input 
                           placeholder="What would you like to discuss?"
-                          className="bg-white border-2 border-black text-black placeholder:text-gray-500 rounded-none"
+                          className="bg-white border-2 border-black text-black placeholder:text-gray-500 rounded-sm"
                           {...field}
                           data-testid="input-discussion-title"
                         />
@@ -687,11 +687,11 @@ export default function Community() {
                       <FormLabel className="text-black font-bold uppercase tracking-wide">Category</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger className="bg-white border-2 border-black text-black rounded-none" data-testid="select-discussion-category">
+                          <SelectTrigger className="bg-white border-2 border-black text-black rounded-sm" data-testid="select-discussion-category">
                             <SelectValue placeholder="Select a category" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="bg-white border-2 border-black rounded-none">
+                        <SelectContent className="bg-white border-2 border-black rounded-sm">
                           {creationCategories.map((category) => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.label}
@@ -713,7 +713,7 @@ export default function Community() {
                       <FormControl>
                         <Textarea
                           placeholder="Share your thoughts, photos, videos, or memes..."
-                          className="min-h-[100px] bg-white border-2 border-black text-black placeholder:text-gray-500 rounded-none"
+                          className="min-h-[100px] bg-white border-2 border-black text-black placeholder:text-gray-500 rounded-sm"
                           {...field}
                           data-testid="textarea-discussion-content"
                         />
@@ -743,7 +743,7 @@ export default function Community() {
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
-                      className="bg-black border-2 border-black text-white hover:bg-gray-800 rounded-none font-bold uppercase"
+                      className="bg-black border-2 border-black text-white hover:bg-gray-800 rounded-sm font-bold uppercase"
                       data-testid="button-add-photo"
                     >
                       <Image className="w-4 h-4 mr-2" />
@@ -755,7 +755,7 @@ export default function Community() {
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
-                      className="bg-black border-2 border-black text-white hover:bg-gray-800 rounded-none font-bold uppercase"
+                      className="bg-black border-2 border-black text-white hover:bg-gray-800 rounded-sm font-bold uppercase"
                       data-testid="button-add-video"
                     >
                       <Video className="w-4 h-4 mr-2" />
@@ -813,7 +813,7 @@ export default function Community() {
                       setDialogOpen(false);
                       setUploadedMedia({ urls: [], types: [] });
                     }}
-                    className="flex-1 bg-white border-2 border-black text-black hover:bg-gray-100 rounded-none font-black uppercase tracking-wide"
+                    className="flex-1 bg-white border-2 border-black text-black hover:bg-gray-100 rounded-sm font-black uppercase tracking-wide"
                     data-testid="button-cancel-discussion"
                   >
                     Cancel
@@ -821,7 +821,7 @@ export default function Community() {
                   <Button
                     type="submit"
                     disabled={createDiscussion.isPending || isUploading}
-                    className="flex-1 bg-black text-white hover:bg-gray-800 font-black uppercase tracking-wide rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                    className="flex-1 bg-black text-white hover:bg-gray-800 font-black uppercase tracking-wide rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                     data-testid="button-create-discussion"
                   >
                     {createDiscussion.isPending ? "Creating..." : "Post"}
@@ -840,7 +840,7 @@ export default function Community() {
           onValueChange={(value) => setSelectedCategory(value === 'all' ? '' : value)}
         >
           <SelectTrigger 
-            className="w-full liquid-gold-card border-2 border-black text-black font-bold h-9 rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+            className="w-full liquid-gold-card border-2 border-black text-black font-bold h-9 rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
             data-testid="select-popular-topics"
           >
             <div className="flex items-center">
@@ -879,7 +879,7 @@ export default function Community() {
             placeholder="SEARCH DISCUSSIONS..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10 border-2 border-black liquid-gold-card text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide rounded-none font-medium shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+            className="pl-10 pr-10 border-2 border-black liquid-gold-card text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide rounded-sm font-medium shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
           />
           {searchQuery && (
             <Button
@@ -903,7 +903,7 @@ export default function Community() {
           <div className="flex items-center space-x-2">
             <ArrowUpDown className="w-4 h-4 text-ministry-gold" />
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-32 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-none" data-testid="select-sort-by">
+              <SelectTrigger className="w-32 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-sm" data-testid="select-sort-by">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

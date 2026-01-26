@@ -89,7 +89,7 @@ export default function RationsPage() {
         <BackButton />
         <div className="flex items-center gap-3 mb-4">
           <Link href="/">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-none">
+            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-sm">
               <ArrowLeft className="w-5 h-5" />
             </Button>
           </Link>
@@ -97,11 +97,11 @@ export default function RationsPage() {
         </div>
 
         {rations && (
-          <Card className={`${rankConfig.bgColor} border-2 ${rankConfig.borderColor} rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`}>
+          <Card className={`${rankConfig.bgColor} border-2 ${rankConfig.borderColor} rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 liquid-gold-card border-2 border-black rounded-none flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                  <div className="w-14 h-14 liquid-gold-card border-2 border-black rounded-sm flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                     <Coins className="w-8 h-8 text-black" />
                   </div>
                   <div>
@@ -113,7 +113,7 @@ export default function RationsPage() {
                     </p>
                   </div>
                 </div>
-                <div className={`flex flex-col items-center px-3 py-2 bg-black/50 border ${rankConfig.borderColor} rounded-none`}>
+                <div className={`flex flex-col items-center px-3 py-2 bg-black/50 border ${rankConfig.borderColor} rounded-sm`}>
                   <Medal className={`w-8 h-8 ${rankConfig.color}`} />
                   <span className={`text-xs font-black uppercase ${rankConfig.color}`}>
                     {rations.rankLabel}
@@ -131,7 +131,7 @@ export default function RationsPage() {
                       {rations.rationsToNextRank.toLocaleString()} to go
                     </span>
                   </div>
-                  <Progress value={rations.progressToNextRank} className="h-3 bg-black/50 rounded-none" />
+                  <Progress value={rations.progressToNextRank} className="h-3 bg-black/50 rounded-sm" />
                 </div>
               )}
             </CardContent>
@@ -140,7 +140,7 @@ export default function RationsPage() {
 
         <Link href="/rations-store">
           <Button 
-            className="w-full mt-4 bg-ministry-gold text-black font-bold uppercase tracking-wide hover:bg-yellow-500 rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] py-6"
+            className="w-full mt-4 bg-ministry-gold text-black font-bold uppercase tracking-wide hover:bg-yellow-500 rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] py-6"
           >
             <ShoppingBag className="w-5 h-5 mr-2" />
             Visit Rations Store
@@ -150,10 +150,10 @@ export default function RationsPage() {
 
       <div className="px-4 -mt-2 relative z-10">
         <Tabs defaultValue="history" className="w-full">
-          <TabsList className="w-full bg-zinc-900 border-2 border-black rounded-none h-12 p-1 mb-4">
+          <TabsList className="w-full bg-zinc-900 border-2 border-black rounded-sm h-12 p-1 mb-4">
             <TabsTrigger 
               value="history" 
-              className="flex-1 rounded-none data-[state=active]:bg-ministry-gold data-[state=active]:text-black font-bold uppercase text-xs"
+              className="flex-1 rounded-sm data-[state=active]:bg-ministry-gold data-[state=active]:text-black font-bold uppercase text-xs"
               data-testid="tab-history"
             >
               <Clock className="w-4 h-4 mr-1" />
@@ -161,7 +161,7 @@ export default function RationsPage() {
             </TabsTrigger>
             <TabsTrigger 
               value="leaderboard" 
-              className="flex-1 rounded-none data-[state=active]:bg-ministry-gold data-[state=active]:text-black font-bold uppercase text-xs"
+              className="flex-1 rounded-sm data-[state=active]:bg-ministry-gold data-[state=active]:text-black font-bold uppercase text-xs"
               data-testid="tab-leaderboard"
             >
               <Trophy className="w-4 h-4 mr-1" />
@@ -169,7 +169,7 @@ export default function RationsPage() {
             </TabsTrigger>
             <TabsTrigger 
               value="ranks" 
-              className="flex-1 rounded-none data-[state=active]:bg-ministry-gold data-[state=active]:text-black font-bold uppercase text-xs"
+              className="flex-1 rounded-sm data-[state=active]:bg-ministry-gold data-[state=active]:text-black font-bold uppercase text-xs"
               data-testid="tab-ranks"
             >
               <Medal className="w-4 h-4 mr-1" />
@@ -178,7 +178,7 @@ export default function RationsPage() {
           </TabsList>
 
           <TabsContent value="history" className="mt-0">
-            <Card className="bg-zinc-900 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <Card className="bg-zinc-900 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <CardHeader className="border-b border-zinc-800 py-3 px-4">
                 <CardTitle className="text-sm font-black uppercase tracking-wide text-white flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-ministry-gold" />
@@ -203,7 +203,7 @@ export default function RationsPage() {
                         data-testid={`transaction-${transaction.id}`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-none flex items-center justify-center ${
+                          <div className={`w-8 h-8 rounded-sm flex items-center justify-center ${
                             transaction.amount > 0 ? "bg-green-900/50 border border-green-700" : "bg-red-900/50 border border-red-700"
                           }`}>
                             {transaction.amount > 0 ? (
@@ -234,7 +234,7 @@ export default function RationsPage() {
           </TabsContent>
 
           <TabsContent value="leaderboard" className="mt-0">
-            <Card className="bg-zinc-900 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <Card className="bg-zinc-900 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <CardHeader className="border-b border-zinc-800 py-3 px-4">
                 <CardTitle className="text-sm font-black uppercase tracking-wide text-white flex items-center gap-2">
                   <Users className="w-4 h-4 text-ministry-gold" />
@@ -267,13 +267,13 @@ export default function RationsPage() {
                               index === 1 ? "bg-zinc-400 text-black" :
                               index === 2 ? "bg-amber-700 text-white" :
                               "bg-zinc-800 text-zinc-400"
-                            } rounded-none border-2 border-black`}>
+                            } rounded-sm border-2 border-black`}>
                               {index < 3 ? <Crown className="w-4 h-4" /> : index + 1}
                             </div>
                             <img
                               src={entry.profileImageUrl || `https://ui-avatars.com/api/?name=${entry.firstName}+${entry.lastName}&background=4A90B8&color=fff&size=40`}
                               alt={`${entry.firstName || ""} ${entry.lastName || ""}`}
-                              className="w-10 h-10 rounded-none border border-zinc-700 object-cover"
+                              className="w-10 h-10 rounded-sm border border-zinc-700 object-cover"
                             />
                             <div>
                               <p className={`text-sm font-bold ${isCurrentUser ? "text-ministry-gold" : "text-white"}`}>
@@ -304,7 +304,7 @@ export default function RationsPage() {
           </TabsContent>
 
           <TabsContent value="ranks" className="mt-0">
-            <Card className="bg-zinc-900 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <Card className="bg-zinc-900 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <CardHeader className="border-b border-zinc-800 py-3 px-4">
                 <CardTitle className="text-sm font-black uppercase tracking-wide text-white flex items-center gap-2">
                   <Flame className="w-4 h-4 text-ministry-gold" />
@@ -326,7 +326,7 @@ export default function RationsPage() {
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-none flex items-center justify-center ${tierConfig.bgColor} border ${tierConfig.borderColor}`}>
+                            <div className={`w-10 h-10 rounded-sm flex items-center justify-center ${tierConfig.bgColor} border ${tierConfig.borderColor}`}>
                               <Medal className={`w-6 h-6 ${tierConfig.color}`} />
                             </div>
                             <div>
@@ -343,7 +343,7 @@ export default function RationsPage() {
                             </div>
                           </div>
                           {isAchieved && (
-                            <div className="px-2 py-1 bg-green-900/30 border border-green-700 rounded-none">
+                            <div className="px-2 py-1 bg-green-900/30 border border-green-700 rounded-sm">
                               <span className="text-xs font-bold text-green-400 uppercase">Achieved</span>
                             </div>
                           )}

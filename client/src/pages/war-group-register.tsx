@@ -78,7 +78,7 @@ export default function WarGroupRegister() {
           <Button
             variant="ghost"
             onClick={() => navigate("/war-groups")}
-            className="mb-4 text-ministry-gold-exact hover:text-yellow-300 hover:bg-white/10 rounded-none font-black uppercase tracking-wide text-xs"
+            className="mb-4 text-ministry-gold-exact hover:text-yellow-300 hover:bg-white/10 rounded-sm font-black uppercase tracking-wide text-xs"
             data-testid="button-back"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -95,7 +95,7 @@ export default function WarGroupRegister() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
-        <Card className="liquid-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
+        <Card className="liquid-black border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
           <CardHeader>
             <CardDescription className="text-gray-300 relative z-10">
               Apply to start a licensed "Man Up God's Way" discipleship group in your city.
@@ -140,7 +140,7 @@ export default function WarGroupRegister() {
                             {...field}
                             onChange={(e) => handleCityChange(e.target.value)}
                             placeholder="e.g., Dallas"
-                            className="bg-white border-2 border-black text-black rounded-none font-medium placeholder:text-black/50"
+                            className="bg-white border-2 border-black text-black rounded-sm font-medium placeholder:text-black/50"
                             data-testid="input-city"
                           />
                         </FormControl>
@@ -159,7 +159,7 @@ export default function WarGroupRegister() {
                           <Input
                             {...field}
                             placeholder="e.g., TX"
-                            className="bg-white border-2 border-black text-black rounded-none font-medium placeholder:text-black/50"
+                            className="bg-white border-2 border-black text-black rounded-sm font-medium placeholder:text-black/50"
                             data-testid="input-state"
                           />
                         </FormControl>
@@ -181,7 +181,7 @@ export default function WarGroupRegister() {
                           <Input
                             {...field}
                             readOnly
-                            className="bg-gray-200 border-2 border-black text-black rounded-none font-medium cursor-not-allowed"
+                            className="bg-gray-200 border-2 border-black text-black rounded-sm font-medium cursor-not-allowed"
                             data-testid="input-name"
                           />
                         </FormControl>
@@ -212,7 +212,7 @@ export default function WarGroupRegister() {
                             {...field}
                             value={field.value || ""}
                             placeholder="Describe your vision for this war group..."
-                            className="bg-white border-2 border-black text-black rounded-none font-medium min-h-[100px] placeholder:text-black/50"
+                            className="bg-white border-2 border-black text-black rounded-sm font-medium min-h-[100px] placeholder:text-black/50"
                             data-testid="input-description"
                           />
                         </FormControl>
@@ -232,7 +232,7 @@ export default function WarGroupRegister() {
                             {...field}
                             value={field.value || ""}
                             placeholder="When and where do you plan to meet? (e.g., Every Tuesday 7pm at Community Center)"
-                            className="bg-white border-2 border-black text-black rounded-none font-medium min-h-[80px] placeholder:text-black/50"
+                            className="bg-white border-2 border-black text-black rounded-sm font-medium min-h-[80px] placeholder:text-black/50"
                             data-testid="input-meeting-info"
                           />
                         </FormControl>
@@ -260,7 +260,7 @@ export default function WarGroupRegister() {
                             {...field}
                             type="email"
                             placeholder="your@email.com"
-                            className="bg-white border-2 border-black text-black rounded-none font-medium placeholder:text-black/50"
+                            className="bg-white border-2 border-black text-black rounded-sm font-medium placeholder:text-black/50"
                             data-testid="input-contact-email"
                           />
                         </FormControl>
@@ -281,7 +281,7 @@ export default function WarGroupRegister() {
                             value={field.value || ""}
                             type="tel"
                             placeholder="(555) 123-4567"
-                            className="bg-white border-2 border-black text-black rounded-none font-medium placeholder:text-black/50"
+                            className="bg-white border-2 border-black text-black rounded-sm font-medium placeholder:text-black/50"
                             data-testid="input-contact-phone"
                           />
                         </FormControl>
@@ -309,7 +309,7 @@ export default function WarGroupRegister() {
                             {...field}
                             value={field.value || ""}
                             placeholder="Share your leadership background and experience in ministry or discipleship..."
-                            className="bg-white border-2 border-black text-black rounded-none font-medium min-h-[100px] placeholder:text-black/50"
+                            className="bg-white border-2 border-black text-black rounded-sm font-medium min-h-[100px] placeholder:text-black/50"
                             data-testid="input-leadership-experience"
                           />
                         </FormControl>
@@ -329,7 +329,7 @@ export default function WarGroupRegister() {
                             {...field}
                             value={field.value || ""}
                             placeholder="What's your vision and motivation for leading this group?"
-                            className="bg-white border-2 border-black text-black rounded-none font-medium min-h-[100px] placeholder:text-black/50"
+                            className="bg-white border-2 border-black text-black rounded-sm font-medium min-h-[100px] placeholder:text-black/50"
                             data-testid="input-motivation"
                           />
                         </FormControl>
@@ -344,7 +344,7 @@ export default function WarGroupRegister() {
                     type="button"
                     variant="outline"
                     onClick={() => navigate("/war-groups")}
-                    className="flex-1 bg-white text-black border-2 border-black rounded-none font-black uppercase tracking-wide hover:bg-gray-100 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                    className="flex-1 bg-white text-black border-2 border-black rounded-sm font-black uppercase tracking-wide hover:bg-gray-100 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                     data-testid="button-cancel"
                   >
                     Cancel
@@ -352,7 +352,7 @@ export default function WarGroupRegister() {
                   <Button
                     type="submit"
                     disabled={registerMutation.isPending}
-                    className="flex-1 liquid-gold-card text-black border-2 border-black rounded-none font-black uppercase tracking-wide hover:brightness-110 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden"
+                    className="flex-1 liquid-gold-card text-black border-2 border-black rounded-sm font-black uppercase tracking-wide hover:brightness-110 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden"
                     data-testid="button-submit-registration"
                   >
                     <span className="relative z-10">

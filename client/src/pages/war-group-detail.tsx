@@ -615,7 +615,7 @@ export default function WarGroupDetail() {
             </CardHeader>
             <CardContent className="space-y-3">
               {pendingRequests.map((request) => (
-                <div key={request.id} className="flex items-center justify-between bg-white/10 rounded-none p-3">
+                <div key={request.id} className="flex items-center justify-between bg-white/10 rounded-sm p-3">
                   <div className="flex items-center gap-3">
                     {request.user.profileImageUrl ? (
                       <img 
@@ -640,7 +640,7 @@ export default function WarGroupDetail() {
                       size="sm"
                       onClick={() => approveMutation.mutate(request.id)}
                       disabled={approveMutation.isPending || rejectMutation.isPending}
-                      className="bg-green-600 hover:bg-green-700 text-white rounded-none"
+                      className="bg-green-600 hover:bg-green-700 text-white rounded-sm"
                       data-testid={`button-approve-${request.id}`}
                     >
                       <CheckCircle2 className="h-4 w-4 mr-1" />
@@ -651,7 +651,7 @@ export default function WarGroupDetail() {
                       variant="outline"
                       onClick={() => rejectMutation.mutate(request.id)}
                       disabled={approveMutation.isPending || rejectMutation.isPending}
-                      className="border-red-500 text-red-500 hover:bg-red-500/10 rounded-none"
+                      className="border-red-500 text-red-500 hover:bg-red-500/10 rounded-sm"
                       data-testid={`button-reject-${request.id}`}
                     >
                       <XCircle className="h-4 w-4 mr-1" />
@@ -693,7 +693,7 @@ export default function WarGroupDetail() {
                 {approvedMembers.map((member) => {
                   const isMemberLeader = member.userId === group?.leader?.id;
                   return (
-                    <div key={member.id} className="flex items-center justify-between bg-white/10 rounded-none p-3">
+                    <div key={member.id} className="flex items-center justify-between bg-white/10 rounded-sm p-3">
                       <div className="flex items-center gap-3">
                         {member.user.profileImageUrl ? (
                           <img 
@@ -733,8 +733,8 @@ export default function WarGroupDetail() {
                               onClick={() => toggleManagePermissionMutation.mutate(member.id)}
                               disabled={toggleManagePermissionMutation.isPending}
                               className={member.canManageMembers 
-                                ? "border-blue-500 text-blue-500 hover:bg-blue-500/10 rounded-none"
-                                : "border-white/30 text-white/70 hover:bg-white/10 rounded-none"
+                                ? "border-blue-500 text-blue-500 hover:bg-blue-500/10 rounded-sm"
+                                : "border-white/30 text-white/70 hover:bg-white/10 rounded-sm"
                               }
                               data-testid={`button-toggle-manage-${member.id}`}
                             >
@@ -751,7 +751,7 @@ export default function WarGroupDetail() {
                               }
                             }}
                             disabled={removeMemberMutation.isPending}
-                            className="border-red-500 text-red-500 hover:bg-red-500/10 rounded-none"
+                            className="border-red-500 text-red-500 hover:bg-red-500/10 rounded-sm"
                             data-testid={`button-remove-${member.id}`}
                           >
                             <UserMinus className="h-4 w-4 mr-1" />

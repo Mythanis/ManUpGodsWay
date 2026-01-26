@@ -76,7 +76,7 @@ export default function Navigation() {
             <Link key={item.id} href={item.path}>
               <Button
                 variant="ghost"
-                className={`flex flex-col items-center justify-center h-full px-3 py-1 min-w-[60px] max-w-[80px] flex-shrink-0 rounded-none ${
+                className={`flex flex-col items-center justify-center h-full px-3 py-1 min-w-[60px] max-w-[80px] flex-shrink-0 rounded-sm ${
                   active 
                     ? 'text-ministry-gold font-semibold bg-ministry-gold/10' 
                     : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
@@ -97,7 +97,7 @@ export default function Navigation() {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className={`flex flex-col items-center justify-center h-full px-3 py-1 min-w-[60px] max-w-[80px] flex-shrink-0 rounded-none ${
+              className={`flex flex-col items-center justify-center h-full px-3 py-1 min-w-[60px] max-w-[80px] flex-shrink-0 rounded-sm ${
                 isDropdownActive
                   ? 'text-ministry-gold font-semibold bg-ministry-gold/10' 
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
@@ -113,7 +113,7 @@ export default function Navigation() {
           <DropdownMenuContent 
             align="end" 
             side="top"
-            className="w-52 mb-2 bg-zinc-900 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-1"
+            className="w-52 mb-2 bg-zinc-900 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-1"
             data-testid="dropdown-more-menu"
           >
             {dropdownItems.map((item) => {
@@ -124,7 +124,7 @@ export default function Navigation() {
                 <DropdownMenuItem
                   key={item.id}
                   onClick={() => setLocation(item.path)}
-                  className={`cursor-pointer rounded-none font-bold uppercase text-xs tracking-wide ${
+                  className={`cursor-pointer rounded-sm font-bold uppercase text-xs tracking-wide ${
                     active 
                       ? 'text-black bg-ministry-gold-exact' 
                       : 'text-white hover:bg-ministry-gold-exact hover:text-black'

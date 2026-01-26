@@ -73,13 +73,13 @@ export default function Blog() {
               placeholder="Search blog posts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 rounded-none border-2 border-black bg-ministry-gold-exact text-black placeholder:text-black/50 font-medium"
+              className="pl-10 rounded-sm border-2 border-black bg-ministry-gold-exact text-black placeholder:text-black/50 font-medium"
               data-testid="input-blog-search"
             />
           </div>
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger 
-              className="w-full sm:w-48 rounded-none border-2 border-black bg-ministry-gold-exact text-black font-bold uppercase"
+              className="w-full sm:w-48 rounded-sm border-2 border-black bg-ministry-gold-exact text-black font-bold uppercase"
               data-testid="select-blog-category"
             >
               <SelectValue />
@@ -97,7 +97,7 @@ export default function Blog() {
         {isLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <Card key={i} className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+              <Card key={i} className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                 <CardContent className="p-3 relative z-10">
                   <div className="animate-pulse flex gap-3">
                     <div className="w-20 h-20 bg-black/20 flex-shrink-0"></div>
@@ -112,7 +112,7 @@ export default function Blog() {
             ))}
           </div>
         ) : filteredBlogs.length === 0 ? (
-          <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center py-8 overflow-hidden">
+          <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center py-8 overflow-hidden">
             <CardContent className="relative z-10">
               <h3 className="text-lg font-black uppercase tracking-tighter mb-2 text-black">No Blog Posts Found</h3>
               <p className="text-black/80 font-medium text-sm">
@@ -185,7 +185,7 @@ function BlogCard({ blog, featured, formatDate }: {
 
   return (
     <Card 
-      className={`border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden ${
+      className={`border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden ${
         featured ? 'liquid-black text-white' : 'liquid-gold-card text-black'
       }`}
       onClick={() => navigate(`/blog/${blog.slug}`)}
@@ -210,7 +210,7 @@ function BlogCard({ blog, featured, formatDate }: {
           </div>
           <div className="p-3 flex-1 min-w-0">
             <div className="flex flex-wrap gap-2 mb-2">
-              <span className={`text-xs font-black uppercase px-2 py-0.5 rounded-none ${
+              <span className={`text-xs font-black uppercase px-2 py-0.5 rounded-sm ${
                 featured 
                   ? 'bg-ministry-gold-exact text-black' 
                   : 'bg-black text-white'
@@ -233,7 +233,7 @@ function BlogCard({ blog, featured, formatDate }: {
                   </button>
                 </PopoverTrigger>
                 <PopoverContent 
-                  className="w-auto p-2 bg-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                  className="w-auto p-2 bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex gap-2">
@@ -241,7 +241,7 @@ function BlogCard({ blog, featured, formatDate }: {
                       href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${window.location.origin}/blog/${blog.slug}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 bg-[#1877F2] text-white rounded-none hover:opacity-80 transition-opacity"
+                      className="p-2 bg-[#1877F2] text-white rounded-sm hover:opacity-80 transition-opacity"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <SiFacebook className="w-5 h-5" />
@@ -250,7 +250,7 @@ function BlogCard({ blog, featured, formatDate }: {
                       href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${blog.title} - Check out this article from Man Up God's Way!`)}&url=${encodeURIComponent(`${window.location.origin}/blog/${blog.slug}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 bg-black text-white border border-white rounded-none hover:opacity-80 transition-opacity"
+                      className="p-2 bg-black text-white border border-white rounded-sm hover:opacity-80 transition-opacity"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <SiX className="w-5 h-5" />
@@ -259,14 +259,14 @@ function BlogCard({ blog, featured, formatDate }: {
                       href={`https://wa.me/?text=${encodeURIComponent(`${blog.title} - Check out this article from Man Up God's Way! ${window.location.origin}/blog/${blog.slug}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 bg-[#25D366] text-white rounded-none hover:opacity-80 transition-opacity"
+                      className="p-2 bg-[#25D366] text-white rounded-sm hover:opacity-80 transition-opacity"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <SiWhatsapp className="w-5 h-5" />
                     </a>
                     <a
                       href={`mailto:?subject=${encodeURIComponent(blog.title)}&body=${encodeURIComponent(`Check out this article from Man Up God's Way:\n\n${blog.title}\n\n${window.location.origin}/blog/${blog.slug}`)}`}
-                      className="p-2 bg-gray-600 text-white rounded-none hover:opacity-80 transition-opacity"
+                      className="p-2 bg-gray-600 text-white rounded-sm hover:opacity-80 transition-opacity"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Mail className="w-5 h-5" />
@@ -277,7 +277,7 @@ function BlogCard({ blog, featured, formatDate }: {
                         navigator.clipboard.writeText(`${window.location.origin}/blog/${blog.slug}`);
                         toast({ title: "Link copied!", description: "The link has been copied to your clipboard" });
                       }}
-                      className="p-2 bg-ministry-gold-exact text-black rounded-none hover:opacity-80 transition-opacity"
+                      className="p-2 bg-ministry-gold-exact text-black rounded-sm hover:opacity-80 transition-opacity"
                     >
                       <Link2 className="w-5 h-5" />
                     </button>

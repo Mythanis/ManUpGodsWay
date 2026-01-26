@@ -221,13 +221,13 @@ export default function Challenges() {
 
   const ChallengeCard = ({ challenge, isCurrentWeek = false }: { challenge: Challenge; isCurrentWeek?: boolean }) => (
     <Card 
-      className={`${isCurrentWeek ? 'liquid-gold-card' : 'liquid-black'} border-2 border-black cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-none overflow-hidden`}
+      className={`${isCurrentWeek ? 'liquid-gold-card' : 'liquid-black'} border-2 border-black cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-sm overflow-hidden`}
       onClick={() => openChallengeDialog(challenge)}
     >
       <CardContent className="p-6 relative">
         <div className="flex items-start space-x-4">
           <div className="flex-shrink-0 relative z-10">
-            <div className={`w-16 h-16 rounded-none flex items-center justify-center border-2 border-black ${
+            <div className={`w-16 h-16 rounded-sm flex items-center justify-center border-2 border-black ${
               isCurrentWeek ? 'bg-black text-ministry-gold-exact' : 'bg-ministry-gold-exact text-black'
             }`}>
               {isCurrentWeek ? (
@@ -244,13 +244,13 @@ export default function Challenges() {
                 <h3 className={`font-black text-lg mb-1 tracking-tight ${isCurrentWeek ? 'text-black' : 'text-white'}`}>
                   {challenge.title}
                   {isCurrentWeek && (
-                    <Badge className="ml-2 bg-black text-ministry-gold-exact font-black rounded-none uppercase tracking-wide text-xs">
+                    <Badge className="ml-2 bg-black text-ministry-gold-exact font-black rounded-sm uppercase tracking-wide text-xs">
                       Current Week
                     </Badge>
                   )}
                 </h3>
                 <div className={`flex items-center flex-wrap gap-2 text-sm mb-2 ${isCurrentWeek ? 'text-black/70' : 'text-gray-400'}`}>
-                  <Badge className={`font-bold text-xs uppercase tracking-wide border-2 border-black rounded-none ${isCurrentWeek ? 'bg-black text-ministry-gold-exact' : 'bg-ministry-gold-exact text-black'}`}>
+                  <Badge className={`font-bold text-xs uppercase tracking-wide border-2 border-black rounded-sm ${isCurrentWeek ? 'bg-black text-ministry-gold-exact' : 'bg-ministry-gold-exact text-black'}`}>
                     {challenge.topic}
                   </Badge>
                   <div className="flex items-center">
@@ -287,7 +287,7 @@ export default function Challenges() {
                       {!userAccepted?.hasAccepted ? (
                         <Button
                           size="sm"
-                          className="bg-black hover:bg-black/90 text-ministry-gold-exact font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                          className="bg-black hover:bg-black/90 text-ministry-gold-exact font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                           onClick={(e) => {
                             e.stopPropagation();
                             acceptChallengeMutation.mutate(challenge.id);
@@ -300,7 +300,7 @@ export default function Challenges() {
                       ) : userAccepted?.hasCompleted ? (
                         <Button
                           size="sm"
-                          className="bg-ministry-gold-exact text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
+                          className="bg-ministry-gold-exact text-black font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
                           disabled
                           onClick={(e) => e.stopPropagation()}
                         >
@@ -310,7 +310,7 @@ export default function Challenges() {
                       ) : userAccepted?.hasRegrouped ? (
                         <Button
                           size="sm"
-                          className="bg-gray-600 text-white font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
+                          className="bg-gray-600 text-white font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
                           disabled
                           onClick={(e) => e.stopPropagation()}
                         >
@@ -320,7 +320,7 @@ export default function Challenges() {
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                            className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                             onClick={(e) => {
                               e.stopPropagation();
                               completeChallengeMutation.mutate(challenge.id);
@@ -332,7 +332,7 @@ export default function Challenges() {
                           </Button>
                           <Button
                             size="sm"
-                            className="bg-gray-700 hover:bg-gray-600 text-white font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                            className="bg-gray-700 hover:bg-gray-600 text-white font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                             onClick={(e) => {
                               e.stopPropagation();
                               regroupChallengeMutation.mutate(challenge.id);
@@ -348,7 +348,7 @@ export default function Challenges() {
                   ) : (
                     <Button
                       size="sm"
-                      className="bg-black/50 text-white/50 rounded-none"
+                      className="bg-black/50 text-white/50 rounded-sm"
                       disabled
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -405,7 +405,7 @@ export default function Challenges() {
               <Target className="w-6 h-6 text-ministry-gold mr-2" />
               <h2 className="text-xl font-black text-white tracking-tight uppercase">This Week's Challenge</h2>
             </div>
-            <Card className="text-center py-12 liquid-black border-2 border-black rounded-none overflow-hidden">
+            <Card className="text-center py-12 liquid-black border-2 border-black rounded-sm overflow-hidden">
               <CardContent className="relative">
                 <Clock className="w-12 h-12 mx-auto text-ministry-gold-exact mb-4 relative z-10" />
                 <h3 className="text-lg font-black text-white mb-2 relative z-10 uppercase tracking-tight">No Current Challenge</h3>
@@ -424,7 +424,7 @@ export default function Challenges() {
             <div className="flex items-center space-x-2">
               <span className="text-xs font-black text-white uppercase tracking-wide">Filter:</span>
               <Select value={filterTopic} onValueChange={setFilterTopic}>
-                <SelectTrigger className="w-40 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-none">
+                <SelectTrigger className="w-40 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-sm">
                   <div className="flex items-center">
                     <Filter className="w-4 h-4 mr-2" />
                     <SelectValue placeholder="All Topics" />
@@ -448,7 +448,7 @@ export default function Challenges() {
                 variant="default"
                 size="sm"
                 onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-                className="flex items-center space-x-1 bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black rounded-none uppercase tracking-wide"
+                className="flex items-center space-x-1 bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black rounded-sm uppercase tracking-wide"
               >
                 {sortOrder === 'desc' ? (
                   <>
@@ -486,7 +486,7 @@ export default function Challenges() {
 
         {/* Previous Challenges List */}
         {processedChallenges.length === 0 ? (
-          <Card className="text-center py-12 liquid-black border-2 border-black rounded-none overflow-hidden">
+          <Card className="text-center py-12 liquid-black border-2 border-black rounded-sm overflow-hidden">
             <CardContent className="relative">
               <Trophy className="w-12 h-12 mx-auto text-ministry-gold-exact mb-4 relative z-10" />
               <h3 className="text-lg font-black text-white mb-2 relative z-10 uppercase tracking-tight">
@@ -510,7 +510,7 @@ export default function Challenges() {
 
       {/* Challenge Detail Dialog */}
       <Dialog open={showChallengeDialog} onOpenChange={setShowChallengeDialog}>
-        <DialogContent className="max-w-2xl bg-zinc-900 border-2 border-black rounded-none shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+        <DialogContent className="max-w-2xl bg-zinc-900 border-2 border-black rounded-sm shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <Target className="w-5 h-5 text-ministry-gold-exact" />
@@ -521,13 +521,13 @@ export default function Challenges() {
           {selectedChallenge && (
             <div className="space-y-4">
               {/* Challenge Header */}
-              <div className="liquid-black text-white p-6 rounded-none border-2 border-black overflow-hidden">
+              <div className="liquid-black text-white p-6 rounded-sm border-2 border-black overflow-hidden">
                 <div className="flex items-center justify-between mb-4 relative z-10 flex-wrap gap-2">
-                  <div className="inline-flex items-center bg-ministry-gold-exact text-black px-3 py-1 rounded-none text-xs font-black uppercase tracking-wide border-2 border-black">
+                  <div className="inline-flex items-center bg-ministry-gold-exact text-black px-3 py-1 rounded-sm text-xs font-black uppercase tracking-wide border-2 border-black">
                     <Target className="w-3 h-3 mr-1" fill="currentColor" />
                     Week of {formatChallengeDate(selectedChallenge.releaseDate)}
                   </div>
-                  <Badge className="bg-ministry-gold-exact text-black font-black capitalize rounded-none border-2 border-black">
+                  <Badge className="bg-ministry-gold-exact text-black font-black capitalize rounded-sm border-2 border-black">
                     {selectedChallenge.topic}
                   </Badge>
                 </div>
@@ -535,7 +535,7 @@ export default function Challenges() {
                 <h3 className="text-xl font-black mb-3 relative z-10 uppercase tracking-tight">
                   {selectedChallenge.title}
                   {isSelectedCurrentWeek && (
-                    <Badge className="ml-2 bg-ministry-gold-exact text-black rounded-none border-2 border-black font-black">
+                    <Badge className="ml-2 bg-ministry-gold-exact text-black rounded-sm border-2 border-black font-black">
                       Current Week
                     </Badge>
                   )}
@@ -547,7 +547,7 @@ export default function Challenges() {
               </div>
 
               {/* Participant Count Banner */}
-              <div className="liquid-gold-card border-2 border-black rounded-none p-4 overflow-hidden">
+              <div className="liquid-gold-card border-2 border-black rounded-sm p-4 overflow-hidden">
                 <div className="flex items-center justify-between flex-wrap gap-3 relative z-10">
                   <div className="flex items-center space-x-2">
                     <Users className="w-5 h-5 text-black" />
@@ -560,7 +560,7 @@ export default function Challenges() {
                       {!selectedUserAccepted?.hasAccepted ? (
                         <Button 
                           size="sm"
-                          className="bg-black hover:bg-black/90 text-ministry-gold-exact font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                          className="bg-black hover:bg-black/90 text-ministry-gold-exact font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                           onClick={() => acceptChallengeMutation.mutate(selectedChallenge.id)}
                           disabled={acceptChallengeMutation.isPending}
                           data-testid="button-accept-challenge-dialog"
@@ -570,7 +570,7 @@ export default function Challenges() {
                       ) : selectedUserAccepted?.hasCompleted ? (
                         <Button
                           size="sm"
-                          className="bg-ministry-gold-exact text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
+                          className="bg-ministry-gold-exact text-black font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
                           disabled
                         >
                           <CheckCircle className="w-4 h-4 mr-1" />
@@ -579,7 +579,7 @@ export default function Challenges() {
                       ) : selectedUserAccepted?.hasRegrouped ? (
                         <Button
                           size="sm"
-                          className="bg-gray-600 text-white font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
+                          className="bg-gray-600 text-white font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
                           disabled
                         >
                           REGROUPED
@@ -588,7 +588,7 @@ export default function Challenges() {
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                            className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                             onClick={() => completeChallengeMutation.mutate(selectedChallenge.id)}
                             disabled={completeChallengeMutation.isPending}
                             data-testid="button-complete-challenge-dialog"
@@ -597,7 +597,7 @@ export default function Challenges() {
                           </Button>
                           <Button
                             size="sm"
-                            className="bg-gray-700 hover:bg-gray-600 text-white font-black whitespace-nowrap rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                            className="bg-gray-700 hover:bg-gray-600 text-white font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                             onClick={() => regroupChallengeMutation.mutate(selectedChallenge.id)}
                             disabled={regroupChallengeMutation.isPending}
                             data-testid="button-regroup-challenge-dialog"
@@ -610,7 +610,7 @@ export default function Challenges() {
                   ) : (
                     <Button
                       size="sm"
-                      className="bg-black/50 text-white/50 rounded-none"
+                      className="bg-black/50 text-white/50 rounded-sm"
                       disabled
                     >
                       Login to Accept
@@ -622,7 +622,7 @@ export default function Challenges() {
               {/* Close Button */}
               <div className="flex justify-end pt-2">
                 <Button 
-                  className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black rounded-none uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                  className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                   onClick={() => setShowChallengeDialog(false)}
                 >
                   Close

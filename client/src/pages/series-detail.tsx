@@ -92,7 +92,7 @@ export default function SeriesDetail() {
         <div className="text-center">
           <p className="text-gray-400 mb-4 font-bold uppercase">Series not found</p>
           <Link href="/library">
-            <Button className="bg-[#FCD000] text-black font-black uppercase tracking-wide rounded-none border-2 border-black hover:bg-yellow-400">
+            <Button className="bg-[#FCD000] text-black font-black uppercase tracking-wide rounded-sm border-2 border-black hover:bg-yellow-400">
               Back to Library
             </Button>
           </Link>
@@ -115,12 +115,12 @@ export default function SeriesDetail() {
         </Link>
         
         <div className="flex items-start gap-4 relative z-10">
-          <div className="flex-shrink-0 w-16 h-16 bg-[#FCD000] rounded-none flex items-center justify-center border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+          <div className="flex-shrink-0 w-16 h-16 bg-[#FCD000] rounded-sm flex items-center justify-center border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
             {series.thumbnailUrl ? (
               <img 
                 src={series.thumbnailUrl} 
                 alt={series.title}
-                className="w-full h-full object-cover rounded-none"
+                className="w-full h-full object-cover rounded-sm"
               />
             ) : (
               <Layers className="w-8 h-8 text-black" />
@@ -144,7 +144,7 @@ export default function SeriesDetail() {
       {/* Progress Overview */}
       {isAuthenticated && studies.length > 0 && (
         <div className="px-6 mt-6 mb-6">
-          <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <CardContent className="p-4 relative z-10">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm text-black font-bold uppercase tracking-wide">Series Progress</span>
@@ -152,7 +152,7 @@ export default function SeriesDetail() {
                   {progressPercent}%
                 </span>
               </div>
-              <div className="h-3 bg-white border-2 border-black rounded-none overflow-hidden mb-3">
+              <div className="h-3 bg-white border-2 border-black rounded-sm overflow-hidden mb-3">
                 <div 
                   className="h-full bg-black transition-all duration-300"
                   style={{ width: `${progressPercent}%` }}
@@ -183,13 +183,13 @@ export default function SeriesDetail() {
             return (
               <Card 
                 key={study.id}
-                className={`liquid-gold-card border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${hasAccess ? 'hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all' : 'opacity-75'}`}
+                className={`liquid-gold-card border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${hasAccess ? 'hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all' : 'opacity-75'}`}
                 data-testid={`study-card-${study.id}`}
               >
                 <CardContent className="p-4 relative z-10">
                   <div className="flex items-start gap-4">
                     {/* Order Number */}
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-none flex items-center justify-center font-black text-lg border-2 border-black ${study.progress?.isCompleted ? 'bg-black text-[#FCD000]' : 'bg-white text-black'}`}>
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-sm flex items-center justify-center font-black text-lg border-2 border-black ${study.progress?.isCompleted ? 'bg-black text-[#FCD000]' : 'bg-white text-black'}`}>
                       {study.progress?.isCompleted ? (
                         <CheckCircle className="w-6 h-6" />
                       ) : (
@@ -204,7 +204,7 @@ export default function SeriesDetail() {
                           {study.title}
                         </h3>
                         {study.requiredTier !== 'free' && (
-                          <span className="text-xs px-2 py-0.5 rounded-none text-white bg-black font-bold uppercase border border-black">
+                          <span className="text-xs px-2 py-0.5 rounded-sm text-white bg-black font-bold uppercase border border-black">
                             {study.requiredTier.toUpperCase()}
                           </span>
                         )}
@@ -220,7 +220,7 @@ export default function SeriesDetail() {
                             <span>{study.completedLessons} of {study.totalLessons} lessons</span>
                             <span>{studyProgress}%</span>
                           </div>
-                          <div className="h-2 bg-white border-2 border-black rounded-none overflow-hidden">
+                          <div className="h-2 bg-white border-2 border-black rounded-sm overflow-hidden">
                             <div 
                               className="h-full bg-black transition-all duration-300"
                               style={{ width: `${studyProgress}%` }}
@@ -239,7 +239,7 @@ export default function SeriesDetail() {
                           <Link href={`/studies/${study.id}`}>
                             <Button 
                               size="sm"
-                              className="bg-black text-white hover:bg-gray-800 font-black uppercase tracking-wide rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]"
+                              className="bg-black text-white hover:bg-gray-800 font-black uppercase tracking-wide rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]"
                               data-testid={`button-study-${study.id}`}
                             >
                               {getButtonLabel(study)}
@@ -251,7 +251,7 @@ export default function SeriesDetail() {
                             size="sm"
                             variant="outline"
                             disabled
-                            className="border-2 border-black text-black/50 rounded-none font-bold uppercase"
+                            className="border-2 border-black text-black/50 rounded-sm font-bold uppercase"
                           >
                             <Lock className="w-3 h-3 mr-1" />
                             {study.requiredTier.toUpperCase()} Only
@@ -268,7 +268,7 @@ export default function SeriesDetail() {
 
         {studies.length === 0 && (
           <div className="text-center py-8">
-            <div className="w-16 h-16 bg-[#FCD000] rounded-none flex items-center justify-center mx-auto mb-4 border-2 border-black">
+            <div className="w-16 h-16 bg-[#FCD000] rounded-sm flex items-center justify-center mx-auto mb-4 border-2 border-black">
               <BookOpen className="w-8 h-8 text-black" />
             </div>
             <p className="text-gray-400 font-bold uppercase">No studies in this series yet.</p>

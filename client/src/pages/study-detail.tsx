@@ -46,11 +46,11 @@ function PDFTextViewer({ studyId, studyTitle }: { studyId: string; studyTitle: s
   return (
     <div
       onClick={handleOpenDocument}
-      className="w-full flex items-center justify-between p-4 bg-black rounded-none hover:bg-gray-900 transition-colors border-2 border-ministry-gold-exact cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+      className="w-full flex items-center justify-between p-4 bg-black rounded-sm hover:bg-gray-900 transition-colors border-2 border-ministry-gold-exact cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
       data-testid="button-view-pdf"
     >
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 rounded-none bg-red-600 flex items-center justify-center border-2 border-black">
+        <div className="w-10 h-10 rounded-sm bg-red-600 flex items-center justify-center border-2 border-black">
           <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
             <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
           </svg>
@@ -61,7 +61,7 @@ function PDFTextViewer({ studyId, studyTitle }: { studyId: string; studyTitle: s
       </div>
       <div
         onClick={handleDownload}
-        className="p-2 hover:bg-ministry-gold-exact hover:text-black rounded-none transition-colors border-2 border-ministry-gold-exact"
+        className="p-2 hover:bg-ministry-gold-exact hover:text-black rounded-sm transition-colors border-2 border-ministry-gold-exact"
         data-testid="button-download-pdf-icon"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,11 +87,11 @@ function WordDocumentViewer({ studyId, studyTitle }: { studyId: string; studyTit
   return (
     <div
       onClick={handleOpenDocument}
-      className="w-full flex items-center justify-between p-4 bg-black rounded-none hover:bg-gray-900 transition-colors border-2 border-ministry-gold-exact cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+      className="w-full flex items-center justify-between p-4 bg-black rounded-sm hover:bg-gray-900 transition-colors border-2 border-ministry-gold-exact cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
       data-testid="button-view-word"
     >
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 rounded-none bg-blue-600 flex items-center justify-center border-2 border-black">
+        <div className="w-10 h-10 rounded-sm bg-blue-600 flex items-center justify-center border-2 border-black">
           <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
             <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
           </svg>
@@ -103,7 +103,7 @@ function WordDocumentViewer({ studyId, studyTitle }: { studyId: string; studyTit
       </div>
       <div
         onClick={handleDownload}
-        className="p-2 hover:bg-ministry-gold-exact hover:text-black rounded-none transition-colors border-2 border-ministry-gold-exact"
+        className="p-2 hover:bg-ministry-gold-exact hover:text-black rounded-sm transition-colors border-2 border-ministry-gold-exact"
         data-testid="button-download-word-icon"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -402,7 +402,7 @@ export default function StudyDetail() {
             <Button 
               variant="ghost" 
               size="icon"
-              className="mr-3 p-2 hover:bg-[#FCD000] hover:text-black text-white rounded-none border-2 border-[#FCD000]"
+              className="mr-3 p-2 hover:bg-[#FCD000] hover:text-black text-white rounded-sm border-2 border-[#FCD000]"
               data-testid="button-back"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -422,13 +422,13 @@ export default function StudyDetail() {
 
       {/* Study Info */}
       <div className="px-6 mt-4 mb-6">
-        <div className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-study-info">
+        <div className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-study-info">
           <div className="p-6 relative z-10">
             {study.thumbnailUrl && (
               <img 
                 src={study.thumbnailUrl} 
                 alt={study.title}
-                className="w-full h-48 object-cover rounded-none mb-4 border-2 border-black"
+                className="w-full h-48 object-cover rounded-sm mb-4 border-2 border-black"
                 data-testid="img-study-thumbnail"
               />
             )}
@@ -437,12 +437,12 @@ export default function StudyDetail() {
               <div className="flex items-center space-x-2">
                 {/* Only show tier badge if study doesn't require purchase for this user */}
                 {!(study.requiresPurchase && study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free') && !hasPurchased) && (
-                  <Badge className="bg-black text-[#FCD000] font-bold uppercase tracking-wide rounded-none border-2 border-black" data-testid="badge-study-tier">
+                  <Badge className="bg-black text-[#FCD000] font-bold uppercase tracking-wide rounded-sm border-2 border-black" data-testid="badge-study-tier">
                     {study.requiredTier || 'free'}
                   </Badge>
                 )}
                 {(study.rating && parseFloat(study.rating.toString()) > 0) && (
-                  <div className="flex items-center space-x-1 bg-black px-2 py-1 rounded-none border-2 border-black" data-testid="rating-display">
+                  <div className="flex items-center space-x-1 bg-black px-2 py-1 rounded-sm border-2 border-black" data-testid="rating-display">
                     <Star className="w-4 h-4 text-[#FCD000] fill-current" />
                     <span className="text-sm font-bold text-white">{study.rating}</span>
                     <span className="text-xs text-gray-400">({study.ratingCount})</span>
@@ -450,11 +450,11 @@ export default function StudyDetail() {
                 )}
               </div>
               <div className="flex items-center space-x-4 text-sm">
-                <div className="flex items-center space-x-1 bg-black px-2 py-1 rounded-none border-2 border-black">
+                <div className="flex items-center space-x-1 bg-black px-2 py-1 rounded-sm border-2 border-black">
                   <Clock className="w-4 h-4 text-[#FCD000]" />
                   <span className="text-white font-bold">{study.estimatedHours}h</span>
                 </div>
-                <div className="flex items-center space-x-1 bg-black px-2 py-1 rounded-none border-2 border-black">
+                <div className="flex items-center space-x-1 bg-black px-2 py-1 rounded-sm border-2 border-black">
                   <Users className="w-4 h-4 text-[#FCD000]" />
                   <span className="text-white font-bold">{study.difficulty}</span>
                 </div>
@@ -478,7 +478,7 @@ export default function StudyDetail() {
 
             {/* Legacy Study Materials - Show as backup/alternative resources */}
             {hasAccess && (study.pdfFilename || study.wordFilename) && (
-              <div className="bg-black rounded-none p-4 mb-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <div className="bg-black rounded-sm p-4 mb-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <h3 className="font-bold uppercase tracking-wide text-ministry-gold-exact mb-2 text-sm flex items-center">
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -500,14 +500,14 @@ export default function StudyDetail() {
             )}
 
             {!hasAccess && study.requiresPurchase && study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free') && (
-              <div className="bg-black border-2 border-ministry-gold-exact rounded-none p-4 mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="purchase-restriction">
+              <div className="bg-black border-2 border-ministry-gold-exact rounded-sm p-4 mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="purchase-restriction">
                 <h3 className="font-black uppercase tracking-tight text-ministry-gold-exact mb-2">Purchase Required</h3>
                 <p className="text-sm text-gray-400 mb-3">
                   This study requires a one-time purchase of {study.price ? `$${parseFloat(study.price).toFixed(2)}` : 'a fee'} to access.
                 </p>
                 <Button 
                   onClick={() => setPurchasePopupOpen(true)}
-                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold uppercase tracking-wide rounded-none border-2 border-black"
+                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold uppercase tracking-wide rounded-sm border-2 border-black"
                   data-testid="button-purchase-study"
                 >
                   Purchase Study
@@ -516,13 +516,13 @@ export default function StudyDetail() {
             )}
 
             {!hasAccess && (!study.requiresPurchase || !study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free')) && (
-              <div className="bg-black border-2 border-ministry-gold-exact rounded-none p-4 mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="access-restriction">
+              <div className="bg-black border-2 border-ministry-gold-exact rounded-sm p-4 mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="access-restriction">
                 <h3 className="font-black uppercase tracking-tight text-ministry-gold-exact mb-2">Premium Content</h3>
                 <p className="text-sm text-gray-400 mb-3">
                   This study requires a {study.requiredTier} subscription to access.
                 </p>
                 <Button 
-                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold uppercase tracking-wide rounded-none border-2 border-black"
+                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold uppercase tracking-wide rounded-sm border-2 border-black"
                   data-testid="button-upgrade-access"
                 >
                   Upgrade to {study.requiredTier}
@@ -532,9 +532,9 @@ export default function StudyDetail() {
 
             {/* Join Discussion Section - Only for users with tier access */}
             {studyDiscussion && hasAccess && (
-              <div className="flex items-center justify-between p-4 bg-black rounded-none border-2 border-ministry-gold-exact shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <div className="flex items-center justify-between p-4 bg-black rounded-sm border-2 border-ministry-gold-exact shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-none bg-ministry-gold-exact flex items-center justify-center border-2 border-black">
+                  <div className="w-10 h-10 rounded-sm bg-ministry-gold-exact flex items-center justify-center border-2 border-black">
                     <MessageCircle className="w-5 h-5 text-black" />
                   </div>
                   <div>
@@ -546,7 +546,7 @@ export default function StudyDetail() {
                 </div>
                 <Button
                   onClick={() => setDiscussionDialogOpen(true)}
-                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold uppercase tracking-wide rounded-none border-2 border-black"
+                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold uppercase tracking-wide rounded-sm border-2 border-black"
                   data-testid="button-join-discussion"
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
@@ -557,9 +557,9 @@ export default function StudyDetail() {
             
             {/* Tier Access Required for Discussion */}
             {studyDiscussion && !hasAccess && (
-              <div className="flex items-center justify-between p-4 bg-black rounded-none border-2 border-ministry-gold-exact shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <div className="flex items-center justify-between p-4 bg-black rounded-sm border-2 border-ministry-gold-exact shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-none bg-ministry-gold-exact/20 flex items-center justify-center border-2 border-ministry-gold-exact">
+                  <div className="w-10 h-10 rounded-sm bg-ministry-gold-exact/20 flex items-center justify-center border-2 border-ministry-gold-exact">
                     <MessageCircle className="w-5 h-5 text-ministry-gold-exact" />
                   </div>
                   <div>
@@ -571,7 +571,7 @@ export default function StudyDetail() {
                 </div>
                 <Button
                   disabled
-                  className="bg-gray-800 text-gray-500 font-bold uppercase tracking-wide rounded-none border-2 border-gray-600 opacity-50"
+                  className="bg-gray-800 text-gray-500 font-bold uppercase tracking-wide rounded-sm border-2 border-gray-600 opacity-50"
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
                   {study.requiredTier} Required
@@ -587,11 +587,11 @@ export default function StudyDetail() {
           {/* Progress Section - Only show for studies with lessons */}
           {lessonsForThisStudy.length > 0 && (
             <div className="px-6 mb-6">
-              <div className="liquid-black border-2 border-[#FCD000] rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-progress">
+              <div className="liquid-black border-2 border-[#FCD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-progress">
                 <div className="p-6 relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-black uppercase tracking-tight text-white">Your Progress</h2>
-                    <span className="text-sm text-black font-bold uppercase tracking-wide bg-ministry-gold-exact px-2 py-1 rounded-none border-2 border-black" data-testid="text-progress-status">
+                    <span className="text-sm text-black font-bold uppercase tracking-wide bg-ministry-gold-exact px-2 py-1 rounded-sm border-2 border-black" data-testid="text-progress-status">
                       {progressPercent === 100 ? 'Completed' : 'In Progress'}
                     </span>
                   </div>
@@ -603,12 +603,12 @@ export default function StudyDetail() {
                     </div>
                   </div>
                   
-                  <Progress value={progressPercent} className="mb-4 bg-gray-700 [&>div]:bg-ministry-gold-exact rounded-none h-3" data-testid="progress-bar" />
+                  <Progress value={progressPercent} className="mb-4 bg-gray-700 [&>div]:bg-ministry-gold-exact rounded-sm h-3" data-testid="progress-bar" />
 
                   {progressPercent === 100 && (
-                    <div className="bg-ministry-gold-exact border-2 border-black rounded-none p-4">
+                    <div className="bg-ministry-gold-exact border-2 border-black rounded-sm p-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-none bg-black flex items-center justify-center border-2 border-black">
+                        <div className="w-10 h-10 rounded-sm bg-black flex items-center justify-center border-2 border-black">
                           <svg className="w-5 h-5 text-ministry-gold-exact" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
                           </svg>
@@ -638,10 +638,10 @@ export default function StudyDetail() {
           {/* Video Section */}
           {study.videoUrl && (
             <div className="px-6 mb-6">
-              <div className="liquid-black border-2 border-[#FCD000] rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-video">
+              <div className="liquid-black border-2 border-[#FCD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-video">
                 <div className="p-6 relative z-10">
                   <h2 className="text-lg font-black uppercase tracking-tight text-white mb-4">Study Video</h2>
-                  <div className="relative bg-gray-900 rounded-none overflow-hidden border-2 border-black">
+                  <div className="relative bg-gray-900 rounded-sm overflow-hidden border-2 border-black">
                     {(() => {
                       const videoUrl = study.videoUrl;
                       
@@ -728,7 +728,7 @@ export default function StudyDetail() {
 
           {/* Content Section */}
           <div className="px-6 mb-6">
-            <div className="liquid-black border-2 border-[#FCD000] rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-content">
+            <div className="liquid-black border-2 border-[#FCD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-content">
               <div className="p-6 relative z-10">
                 <h2 className="text-lg font-black uppercase tracking-tight text-white mb-4">Study Content</h2>
                 <div className="prose prose-sm max-w-none text-gray-300 prose-invert" data-testid="text-study-content">
@@ -744,7 +744,7 @@ export default function StudyDetail() {
 
           {/* Rating Section */}
           <div className="px-6 mb-6">
-            <div className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-rating">
+            <div className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-rating">
               <div className="p-6 relative z-10">
                 <h2 className="text-lg font-black uppercase tracking-tight text-black mb-4">Rate This Study</h2>
                 <Form {...form}>
@@ -757,10 +757,10 @@ export default function StudyDetail() {
                           <FormLabel className="text-black font-bold uppercase tracking-wide">Rating</FormLabel>
                           <FormControl>
                             <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
-                              <SelectTrigger className="bg-black border-2 border-black text-white rounded-none" data-testid="select-rating">
+                              <SelectTrigger className="bg-black border-2 border-black text-white rounded-sm" data-testid="select-rating">
                                 <SelectValue placeholder="Select rating" />
                               </SelectTrigger>
-                              <SelectContent className="bg-black border-2 border-ministry-gold-exact rounded-none">
+                              <SelectContent className="bg-black border-2 border-ministry-gold-exact rounded-sm">
                                 <SelectItem value="5">⭐⭐⭐⭐⭐ (5 stars)</SelectItem>
                                 <SelectItem value="4">⭐⭐⭐⭐ (4 stars)</SelectItem>
                                 <SelectItem value="3">⭐⭐⭐ (3 stars)</SelectItem>
@@ -783,7 +783,7 @@ export default function StudyDetail() {
                             <Textarea
                               {...field}
                               placeholder="Share your thoughts about this study..."
-                              className="min-h-[100px] bg-black border-2 border-black text-white placeholder:text-gray-500 rounded-none"
+                              className="min-h-[100px] bg-black border-2 border-black text-white placeholder:text-gray-500 rounded-sm"
                               data-testid="textarea-review"
                             />
                           </FormControl>
@@ -794,7 +794,7 @@ export default function StudyDetail() {
                     <Button
                       type="submit"
                       disabled={rateStudy.isPending}
-                      className="w-full bg-black text-ministry-gold-exact hover:bg-gray-900 font-bold uppercase tracking-wide rounded-none border-2 border-black"
+                      className="w-full bg-black text-ministry-gold-exact hover:bg-gray-900 font-bold uppercase tracking-wide rounded-sm border-2 border-black"
                       data-testid="button-submit-rating"
                     >
                       {rateStudy.isPending ? "Submitting..." : "Submit Rating"}

@@ -134,19 +134,19 @@ export default function Profile() {
   const getTierBadge = (tier: string) => {
     switch (tier) {
       case 'premium':
-        return <Badge className="bg-ministry-steel/20 text-ministry-steel rounded-none font-black uppercase tracking-wide">Premium Member</Badge>;
+        return <Badge className="bg-ministry-steel/20 text-ministry-steel rounded-sm font-black uppercase tracking-wide">Premium Member</Badge>;
       case 'vip':
-        return <Badge className="bg-ministry-gold-exact text-black rounded-none font-black uppercase tracking-wide">VIP Member</Badge>;
+        return <Badge className="bg-ministry-gold-exact text-black rounded-sm font-black uppercase tracking-wide">VIP Member</Badge>;
       default:
-        return <Badge variant="outline" className="rounded-none font-black uppercase tracking-wide">Free Member</Badge>;
+        return <Badge variant="outline" className="rounded-sm font-black uppercase tracking-wide">Free Member</Badge>;
     }
   };
 
   const getStreakBadge = (days: number) => {
     if (days >= 30) {
-      return <Badge className="bg-ministry-success/20 text-ministry-success rounded-none font-black uppercase tracking-wide">{days}-Day Streak</Badge>;
+      return <Badge className="bg-ministry-success/20 text-ministry-success rounded-sm font-black uppercase tracking-wide">{days}-Day Streak</Badge>;
     }
-    return <Badge variant="outline" className="rounded-none font-black uppercase tracking-wide">{days}-Day Streak</Badge>;
+    return <Badge variant="outline" className="rounded-sm font-black uppercase tracking-wide">{days}-Day Streak</Badge>;
   };
 
   return (
@@ -158,7 +158,7 @@ export default function Profile() {
           <img 
             src={(user as any)?.profileImageUrl || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=4A90B8&color=fff`}
             alt="Profile"
-            className="w-20 h-20 rounded-none mx-auto mb-4 border-4 border-ministry-gold-exact object-cover"
+            className="w-20 h-20 rounded-sm mx-auto mb-4 border-4 border-ministry-gold-exact object-cover"
             data-testid="img-profile"
           />
           <h1 className="text-4xl font-black mb-1 tracking-tighter uppercase" style={{ fontFamily: "'Inter', sans-serif" }} data-testid="text-user-name">
@@ -203,11 +203,11 @@ export default function Profile() {
       {rations && (
         <div className="px-6 -mt-4 relative z-10 mb-6">
           <Link href="/rations">
-            <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all" data-testid="card-rations">
+            <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all" data-testid="card-rations">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-black border-2 border-black rounded-none flex items-center justify-center">
+                    <div className="w-12 h-12 bg-black border-2 border-black rounded-sm flex items-center justify-center">
                       <Coins className="w-6 h-6 text-ministry-gold" />
                     </div>
                     <div>
@@ -220,7 +220,7 @@ export default function Profile() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className={`flex items-center gap-1 px-2 py-1 ${rankConfig.bgColor} border border-black rounded-none`}>
+                    <div className={`flex items-center gap-1 px-2 py-1 ${rankConfig.bgColor} border border-black rounded-sm`}>
                       <Medal className={`w-4 h-4 ${rankConfig.color}`} />
                       <span className={`text-xs font-black uppercase ${rankConfig.color}`}>
                         {rations.rankLabel}
@@ -239,7 +239,7 @@ export default function Profile() {
                         {rations.progressToNextRank}%
                       </span>
                     </div>
-                    <Progress value={rations.progressToNextRank} className="h-2 bg-black/20 rounded-none" />
+                    <Progress value={rations.progressToNextRank} className="h-2 bg-black/20 rounded-sm" />
                   </div>
                 )}
               </CardContent>
@@ -250,12 +250,12 @@ export default function Profile() {
 
       {/* Account Management */}
       <div className="px-6 -mt-6 relative z-10 mb-6">
-        <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] liquid-black border-2 border-ministry-gold-exact rounded-none overflow-hidden" data-testid="card-account">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] liquid-black border-2 border-ministry-gold-exact rounded-sm overflow-hidden" data-testid="card-account">
           <CardContent className="p-6 relative z-10">
             <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>Account & Subscription</h2>
             
             <div className="space-y-4">
-              <div className="h-16 w-full flex items-center liquid-gold-card border-2 border-black overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+              <div className="h-16 w-full flex items-center liquid-gold-card border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                 <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                   <Crown className="w-6 h-6 text-white relative z-10" />
                 </div>
@@ -286,7 +286,7 @@ export default function Profile() {
               <EditProfileDialog>
                 <Button 
                   variant="outline"
-                  className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                  className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                   data-testid="button-edit-profile"
                 >
                   <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
@@ -304,7 +304,7 @@ export default function Profile() {
               <Link href="/rations-store">
                 <Button 
                   variant="outline"
-                  className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                  className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                   data-testid="button-rations-store"
                 >
                   <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
@@ -327,19 +327,19 @@ export default function Profile() {
       <div className="px-6 mb-6">
         <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>Settings</h2>
         
-        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]" data-testid="card-settings">
+        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]" data-testid="card-settings">
           <CardContent className="p-0 relative z-10">
             <NotificationPanel variant="button" />
             
             {/* Notification Preferences */}
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-none"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-sm"
               onClick={() => setLocation('/notification-preferences')}
               data-testid="button-notification-preferences"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-none bg-ministry-gold-exact flex items-center justify-center">
+                <div className="w-8 h-8 rounded-sm bg-ministry-gold-exact flex items-center justify-center">
                   <Settings className="w-4 h-4 text-black" />
                 </div>
                 <span className="font-bold text-white uppercase tracking-wide">Notification Preferences</span>
@@ -355,12 +355,12 @@ export default function Profile() {
             
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-none"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-sm"
               onClick={() => setLocation('/privacy-security')}
               data-testid="button-privacy"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-none bg-ministry-gold-exact flex items-center justify-center">
+                <div className="w-8 h-8 rounded-sm bg-ministry-gold-exact flex items-center justify-center">
                   <Shield className="w-4 h-4 text-black" />
                 </div>
                 <span className="font-bold text-white uppercase tracking-wide">Privacy Policy & Terms</span>
@@ -372,11 +372,11 @@ export default function Profile() {
             
             <Button 
               variant="ghost"
-              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-none"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-sm"
               data-testid="button-help"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-none bg-ministry-gold-exact flex items-center justify-center">
+                <div className="w-8 h-8 rounded-sm bg-ministry-gold-exact flex items-center justify-center">
                   <HelpCircle className="w-4 h-4 text-black" />
                 </div>
                 <span className="font-bold text-white uppercase tracking-wide">Help & Support</span>
@@ -392,7 +392,7 @@ export default function Profile() {
               data-testid="button-feedback"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-none bg-ministry-gold-exact flex items-center justify-center">
+                <div className="w-8 h-8 rounded-sm bg-ministry-gold-exact flex items-center justify-center">
                   <MessageCircle className="w-4 h-4 text-black" />
                 </div>
                 <span className="font-bold text-white uppercase tracking-wide">Send Feedback</span>
@@ -405,11 +405,11 @@ export default function Profile() {
             <Button 
               variant="ghost"
               onClick={() => window.location.href = '/api/logout'}
-              className="w-full justify-between p-4 h-auto hover:bg-red-900/30 rounded-none"
+              className="w-full justify-between p-4 h-auto hover:bg-red-900/30 rounded-sm"
               data-testid="button-logout"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-none bg-red-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-sm bg-red-600 flex items-center justify-center">
                   <LogOut className="w-4 h-4 text-white" />
                 </div>
                 <span className="font-bold text-red-400 uppercase tracking-wide">Sign Out</span>
@@ -426,13 +426,13 @@ export default function Profile() {
       <div className="px-6">
         <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>Your Journey</h2>
         
-        <Card className="border-2 border-black liquid-gold-card rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden" data-testid="card-progress">
+        <Card className="border-2 border-black liquid-gold-card rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden" data-testid="card-progress">
           <CardContent className="p-6 relative z-10">
             {currentStudies.length === 0 && completedStudies.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-black mb-4 font-medium">You haven't started any studies yet</p>
                 <Button 
-                  className="liquid-black text-ministry-gold-exact hover:opacity-90 rounded-none font-black uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] h-12 px-6"
+                  className="liquid-black text-ministry-gold-exact hover:opacity-90 rounded-sm font-black uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] h-12 px-6"
                   data-testid="button-start-journey"
                 >
                   <span className="relative z-10">Start Your Journey</span>

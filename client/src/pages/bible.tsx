@@ -448,15 +448,15 @@ export default function Bible() {
 
       <div className="max-w-6xl mx-auto p-4 space-y-6">
         {/* Bible Controls - Compact */}
-        <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+        <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
           <CardContent className="p-3 space-y-3 relative z-10">
             {/* Row 1: Version, Book, Chapter selectors */}
             <div className="grid grid-cols-3 gap-2">
               <Select value={selectedVersion} onValueChange={handleVersionChange}>
-                <SelectTrigger className="bg-black border-2 border-black text-white rounded-none font-semibold h-9 text-sm" data-testid="select-bible-version">
+                <SelectTrigger className="bg-black border-2 border-black text-white rounded-sm font-semibold h-9 text-sm" data-testid="select-bible-version">
                   <SelectValue placeholder="Version" />
                 </SelectTrigger>
-                <SelectContent className="rounded-none border-2 border-black">
+                <SelectContent className="rounded-sm border-2 border-black">
                   {bibleVersions.map((version) => (
                     <SelectItem key={version.id} value={version.id}>
                       <span className="font-bold">{version.id}</span>
@@ -466,10 +466,10 @@ export default function Bible() {
               </Select>
 
               <Select value={selectedBook} onValueChange={setSelectedBook}>
-                <SelectTrigger className="bg-black border-2 border-black text-white rounded-none font-semibold h-9 text-sm" data-testid="select-bible-book">
+                <SelectTrigger className="bg-black border-2 border-black text-white rounded-sm font-semibold h-9 text-sm" data-testid="select-bible-book">
                   <SelectValue placeholder="Book" />
                 </SelectTrigger>
-                <SelectContent className="max-h-60 rounded-none border-2 border-black">
+                <SelectContent className="max-h-60 rounded-sm border-2 border-black">
                   <div className="px-2 py-1 text-xs font-black uppercase tracking-widest text-ministry-gold-exact bg-black">Old Testament</div>
                   {bibleBooks.filter(book => book.testament === "Old").map((book) => (
                     <SelectItem key={book.name} value={book.name}>
@@ -486,10 +486,10 @@ export default function Bible() {
               </Select>
 
               <Select value={selectedChapter.toString()} onValueChange={(value) => setSelectedChapter(parseInt(value))}>
-                <SelectTrigger className="bg-black border-2 border-black text-white rounded-none font-semibold h-9 text-sm" data-testid="select-bible-chapter">
+                <SelectTrigger className="bg-black border-2 border-black text-white rounded-sm font-semibold h-9 text-sm" data-testid="select-bible-chapter">
                   <SelectValue placeholder="Ch" />
                 </SelectTrigger>
-                <SelectContent className="max-h-60 rounded-none border-2 border-black">
+                <SelectContent className="max-h-60 rounded-sm border-2 border-black">
                   {chapterOptions.map((chapter) => (
                     <SelectItem key={chapter} value={chapter.toString()}>
                       {chapter}
@@ -508,7 +508,7 @@ export default function Bible() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="pl-8 h-9 bg-black border-2 border-black text-white placeholder:text-white/50 rounded-none font-medium text-sm"
+                  className="pl-8 h-9 bg-black border-2 border-black text-white placeholder:text-white/50 rounded-sm font-medium text-sm"
                   data-testid="input-bible-search"
                 />
               </div>
@@ -516,7 +516,7 @@ export default function Bible() {
                 onClick={handleSearch}
                 disabled={!searchTerm.trim() || isSearching}
                 size="sm"
-                className="h-9 px-3 bg-black hover:bg-black/80 text-ministry-gold-exact font-bold uppercase text-xs rounded-none border-2 border-black"
+                className="h-9 px-3 bg-black hover:bg-black/80 text-ministry-gold-exact font-bold uppercase text-xs rounded-sm border-2 border-black"
                 data-testid="button-bible-search"
               >
                 {isSearching ? "..." : "Search"}
@@ -528,12 +528,12 @@ export default function Bible() {
                   size="sm"
                   onClick={() => navigateChapter('prev')}
                   disabled={selectedChapter <= 1}
-                  className="h-9 w-9 p-0 bg-black border-2 border-black text-white hover:bg-black/80 rounded-none"
+                  className="h-9 w-9 p-0 bg-black border-2 border-black text-white hover:bg-black/80 rounded-sm"
                   data-testid="button-prev-chapter"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Badge className="px-2 py-1 text-xs bg-black font-bold rounded-none border-2 border-black whitespace-nowrap">
+                <Badge className="px-2 py-1 text-xs bg-black font-bold rounded-sm border-2 border-black whitespace-nowrap">
                   <span className="text-white">{currentBook?.abbrev || selectedBook}</span> <span className="text-ministry-gold-exact">{selectedChapter}</span>
                 </Badge>
                 <Button
@@ -541,7 +541,7 @@ export default function Bible() {
                   size="sm"
                   onClick={() => navigateChapter('next')}
                   disabled={!currentBook || selectedChapter >= currentBook.chapters}
-                  className="h-9 w-9 p-0 bg-black border-2 border-black text-white hover:bg-black/80 rounded-none"
+                  className="h-9 w-9 p-0 bg-black border-2 border-black text-white hover:bg-black/80 rounded-sm"
                   data-testid="button-next-chapter"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -552,18 +552,18 @@ export default function Bible() {
         </Card>
 
         {/* Bible Text Display */}
-        <Card className="liquid-black border-2 border-ministry-gold-exact rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+        <Card className="liquid-black border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
           <CardHeader className="relative z-10">
             <div className="flex flex-wrap justify-between items-center gap-3">
               <CardTitle className="font-black uppercase tracking-tight text-xl">
                 <span className="text-white">{selectedBook}</span> <span className="text-ministry-gold-exact">Chapter {selectedChapter}</span> <span className="text-white/60">({selectedVersion})</span>
               </CardTitle>
               <div className="flex gap-2">
-                <Badge className="bg-ministry-gold-exact text-black font-bold uppercase tracking-wide rounded-none border-2 border-black">
+                <Badge className="bg-ministry-gold-exact text-black font-bold uppercase tracking-wide rounded-sm border-2 border-black">
                   {currentBook?.testament} Testament
                 </Badge>
                 <Badge 
-                  className={`font-bold uppercase tracking-wide rounded-none border-2 border-black ${
+                  className={`font-bold uppercase tracking-wide rounded-sm border-2 border-black ${
                     apiStatus === "connected" 
                       ? "bg-green-600 text-white" 
                       : apiStatus === "fallback" 
@@ -602,7 +602,7 @@ export default function Bible() {
 
 
         {/* API Status and Version Information */}
-        <Card className="liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+        <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
           <CardHeader className="relative z-10">
             <CardTitle className="text-black font-black uppercase tracking-tight text-xl">Bible API Status & Versions</CardTitle>
             <CardDescription className="text-black/70 font-semibold">
@@ -614,7 +614,7 @@ export default function Bible() {
           <CardContent className="relative z-10">
             <div className="space-y-4">
               {/* API Status Indicator */}
-              <div className="p-3 border-2 border-black bg-black rounded-none">
+              <div className="p-3 border-2 border-black bg-black rounded-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold uppercase tracking-wide text-white">API Services:</span>
                   <div className="flex items-center gap-2">
@@ -635,7 +635,7 @@ export default function Bible() {
                 {bibleVersions.map((version) => (
                   <div
                     key={version.id}
-                    className={`p-4 border-2 border-black rounded-none transition-colors ${
+                    className={`p-4 border-2 border-black rounded-sm transition-colors ${
                       selectedVersion === version.id
                         ? 'bg-black text-ministry-gold-exact shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
                         : 'bg-black/20 text-black'
@@ -655,7 +655,7 @@ export default function Bible() {
 
       {/* Search Results Modal */}
       <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] bg-black border-2 border-ministry-gold-exact rounded-none">
+        <DialogContent className="max-w-4xl max-h-[80vh] bg-black border-2 border-ministry-gold-exact rounded-sm">
           <DialogHeader>
             <DialogTitle className="text-ministry-gold-exact font-black uppercase tracking-tight text-xl">
               Search Results for "{searchTerm}"
@@ -682,12 +682,12 @@ export default function Bible() {
                 {searchResults.map((result, index) => (
                   <div 
                     key={index}
-                    className="p-4 border-2 border-ministry-gold-exact/50 hover:border-ministry-gold-exact bg-black hover:bg-ministry-gold-exact/10 cursor-pointer transition-colors rounded-none"
+                    className="p-4 border-2 border-ministry-gold-exact/50 hover:border-ministry-gold-exact bg-black hover:bg-ministry-gold-exact/10 cursor-pointer transition-colors rounded-sm"
                     onClick={() => goToSearchResult(result)}
                     data-testid={`search-result-${index}`}
                   >
                     <div className="flex items-start gap-3">
-                      <Badge className="text-xs font-black shrink-0 bg-ministry-gold-exact text-black rounded-none border-2 border-black uppercase tracking-wide">
+                      <Badge className="text-xs font-black shrink-0 bg-ministry-gold-exact text-black rounded-sm border-2 border-black uppercase tracking-wide">
                         {result.book} {result.chapter}:{result.verse}
                       </Badge>
                       <p className="text-sm text-white leading-relaxed flex-1 font-medium">
@@ -715,7 +715,7 @@ export default function Bible() {
             </p>
             <Button 
               onClick={() => setIsSearchModalOpen(false)}
-              className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black uppercase tracking-wide rounded-none border-2 border-black"
+              className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black uppercase tracking-wide rounded-sm border-2 border-black"
               data-testid="button-close-search"
             >
               Close

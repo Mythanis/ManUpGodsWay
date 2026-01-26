@@ -700,11 +700,11 @@ export default function Fitness() {
   };
 
   const FitnessChallengeCard = ({ challenge, isToday = false }: { challenge: FitnessChallenge; isToday?: boolean }) => (
-    <div className={`${isToday ? 'liquid-gold-card' : 'liquid-black'} rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all`}>
+    <div className={`${isToday ? 'liquid-gold-card' : 'liquid-black'} rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all`}>
       <div className="p-6">
         <div className="flex items-start space-x-4 relative z-10">
           <div className="flex-shrink-0">
-            <div className={`w-16 h-16 rounded-none flex items-center justify-center border-2 border-black ${
+            <div className={`w-16 h-16 rounded-sm flex items-center justify-center border-2 border-black ${
               isToday ? 'liquid-black' : 'liquid-gold-card'
             }`}>
               {isToday ? (
@@ -721,16 +721,16 @@ export default function Fitness() {
                 <h3 className={`font-black text-lg mb-1 uppercase ${isToday ? 'text-black' : 'text-white'}`}>
                   {challenge.title}
                   {isToday && (
-                    <Badge className="ml-2 bg-black text-[#FCD000] font-bold rounded-none border-none">
+                    <Badge className="ml-2 bg-black text-[#FCD000] font-bold rounded-sm border-none">
                       Today's Challenge
                     </Badge>
                   )}
                 </h3>
                 <div className={`flex items-center flex-wrap gap-2 text-sm mb-2 ${isToday ? 'text-black' : 'text-white'}`}>
-                  <Badge className="text-xs capitalize bg-black text-[#FCD000] border-none rounded-none font-bold">
+                  <Badge className="text-xs capitalize bg-black text-[#FCD000] border-none rounded-sm font-bold">
                     {challenge.category}
                   </Badge>
-                  <Badge className="text-xs capitalize bg-[#FCD000] text-black border-none rounded-none font-bold">
+                  <Badge className="text-xs capitalize bg-[#FCD000] text-black border-none rounded-sm font-bold">
                     {challenge.difficulty}
                   </Badge>
                   <div className="flex items-center">
@@ -759,7 +759,7 @@ export default function Fitness() {
 
             {(challenge.videoId || challenge.videoUrl) && (
               <button 
-                className="liquid-black px-4 py-2 rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-white font-bold uppercase text-sm flex items-center"
+                className="liquid-black px-4 py-2 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-white font-bold uppercase text-sm flex items-center"
                 data-testid={`button-watch-video-${challenge.id}`}
               >
                 <Play className="w-4 h-4 mr-2" />
@@ -773,7 +773,7 @@ export default function Fitness() {
   );
 
   const ExerciseCard = ({ exercise, showRemove = false }: { exercise: Exercise; showRemove?: boolean }) => (
-    <div className="liquid-gold-card rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all p-4">
+    <div className="liquid-gold-card rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all p-4">
       <div className="relative z-10">
         <div className="flex items-start">
           <div className="flex-1">
@@ -782,13 +782,13 @@ export default function Fitness() {
             </h3>
             
             <div className="flex flex-wrap gap-2 mb-3">
-              <Badge className="text-xs capitalize bg-black text-[#FCD000] border-none rounded-none font-bold">
+              <Badge className="text-xs capitalize bg-black text-[#FCD000] border-none rounded-sm font-bold">
                 {exercise.bodyPart}
               </Badge>
-              <Badge className="text-xs capitalize bg-black/80 text-white border-none rounded-none font-bold">
+              <Badge className="text-xs capitalize bg-black/80 text-white border-none rounded-sm font-bold">
                 {exercise.level || 'Beginner'}
               </Badge>
-              <Badge className="text-xs capitalize bg-black/60 text-white border-none rounded-none font-bold">
+              <Badge className="text-xs capitalize bg-black/60 text-white border-none rounded-sm font-bold">
                 {exercise.equipment}
               </Badge>
             </div>
@@ -797,10 +797,10 @@ export default function Fitness() {
               <button
                 onClick={() => handleToggleFavorite(exercise)}
                 className={showRemove 
-                  ? 'bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold uppercase text-sm flex items-center' 
+                  ? 'bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold uppercase text-sm flex items-center' 
                   : `${isFavorite(exercise.exerciseId || exercise.id || '') 
-                    ? 'liquid-black text-[#FCD000] px-3 py-1.5 rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,1)] font-bold uppercase text-sm flex items-center' 
-                    : 'bg-transparent text-black px-3 py-1.5 rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-[#FCD000] font-bold uppercase text-sm flex items-center transition-all'
+                    ? 'liquid-black text-[#FCD000] px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,1)] font-bold uppercase text-sm flex items-center' 
+                    : 'bg-transparent text-black px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-[#FCD000] font-bold uppercase text-sm flex items-center transition-all'
                   }`}
                 data-testid={`button-favorite-${exercise.exerciseId || exercise.id || ''}`}
               >
@@ -819,10 +819,10 @@ export default function Fitness() {
               
               {fitnessPlans.length > 0 && (
                 <Select onValueChange={(planId) => addToPlanMutation.mutate({ planId, exercise })}>
-                  <SelectTrigger className="w-32 rounded-none border-2 border-black bg-white text-black font-bold">
+                  <SelectTrigger className="w-32 rounded-sm border-2 border-black bg-white text-black font-bold">
                     <SelectValue placeholder="Add to Plan" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-none border-2 border-black">
+                  <SelectContent className="rounded-sm border-2 border-black">
                     {fitnessPlans.map((plan: FitnessPlan) => (
                       <SelectItem key={plan.id} value={plan.id}>
                         {plan.name}
@@ -1287,8 +1287,8 @@ export default function Fitness() {
       <div className="min-h-screen bg-black">
         <div className="px-4 pt-6">
           <div className="flex items-center justify-center py-20">
-            <div className="liquid-gold-card p-8 rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
-              <div className="animate-spin rounded-none h-12 w-12 border-4 border-black border-t-transparent relative z-10"></div>
+            <div className="liquid-gold-card p-8 rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+              <div className="animate-spin rounded-sm h-12 w-12 border-4 border-black border-t-transparent relative z-10"></div>
             </div>
           </div>
         </div>
@@ -1311,7 +1311,7 @@ export default function Fitness() {
           <div className="flex flex-wrap justify-center gap-3 relative z-10">
             <button
               onClick={() => setShowFitnessPillarDialog(true)}
-              className="liquid-black px-6 py-3 rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-[#FCD000] font-black uppercase text-sm flex items-center"
+              className="liquid-black px-6 py-3 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-[#FCD000] font-black uppercase text-sm flex items-center"
               data-testid="button-fitness-pillar"
             >
               <Info className="w-5 h-5 mr-2" />
@@ -1319,7 +1319,7 @@ export default function Fitness() {
             </button>
             <button
               onClick={() => setShowFitnessCoachDialog(true)}
-              className="liquid-black px-6 py-3 rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-[#FCD000] font-black uppercase text-sm flex items-center"
+              className="liquid-black px-6 py-3 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-[#FCD000] font-black uppercase text-sm flex items-center"
               data-testid="button-fitness-coach"
             >
               <User className="w-5 h-5 mr-2" />
@@ -1333,7 +1333,7 @@ export default function Fitness() {
       <div className="px-4 pt-6 space-y-6 pb-20">
         {/* Fitness Pillar Dialog */}
         <Dialog open={showFitnessPillarDialog} onOpenChange={setShowFitnessPillarDialog}>
-          <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85vh] flex flex-col p-0 rounded-none border-2 border-black bg-black">
+          <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85vh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
             <DialogHeader className="px-6 py-4 border-b border-[#FCD000] flex-shrink-0 liquid-gold-card">
               <DialogTitle className="text-xl font-black uppercase tracking-wide text-black relative z-10">
                 Man Up God's Way Fitness Pillar
@@ -1352,7 +1352,7 @@ export default function Fitness() {
                 Scripture is clear that the Christian life requires training, self-control, and perseverance. While godliness is of greatest value, Scripture also affirms the discipline of the body when it serves obedience and purpose.
               </p>
               
-              <blockquote className="liquid-gold-card p-4 rounded-none border-l-4 border-black overflow-hidden">
+              <blockquote className="liquid-gold-card p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-medium italic relative z-10">
                   "For bodily training is only of little profit, but godliness is profitable for all things."
                 </p>
@@ -1365,7 +1365,7 @@ export default function Fitness() {
                 We do not train for vanity, comparison, or self-glory. We train to honor God, keep our word, and lead our families with strength, energy, and consistency.
               </p>
               
-              <blockquote className="liquid-gold-card p-4 rounded-none border-l-4 border-black overflow-hidden">
+              <blockquote className="liquid-gold-card p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-medium italic relative z-10">
                   "Do you not know that your body is a temple of the Holy Spirit who is in you, whom you have from God, and that you are not your own?"
                 </p>
@@ -1378,7 +1378,7 @@ export default function Fitness() {
                 Physical discipline reinforces spiritual discipline. A man who cannot govern his body will struggle to govern his habits, his home, and his calling. Strength training, proper nutrition, and daily movement are expressions of self-control, not obsession.
               </p>
               
-              <blockquote className="liquid-gold-card p-4 rounded-none border-l-4 border-black overflow-hidden">
+              <blockquote className="liquid-gold-card p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-medium italic relative z-10">
                   "Everyone who competes in the games exercises self-control in all things."
                 </p>
@@ -1391,7 +1391,7 @@ export default function Fitness() {
                 This pillar is about becoming dependable men. Men who show up. Men who endure. Men who are not ruled by comfort, excuses, or excess. Men who understand that faithfulness is proven in daily obedience.
               </p>
               
-              <blockquote className="liquid-gold-card p-4 rounded-none border-l-4 border-black overflow-hidden">
+              <blockquote className="liquid-gold-card p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-medium italic relative z-10">
                   "But I discipline my body and make it my slave."
                 </p>
@@ -1409,7 +1409,7 @@ export default function Fitness() {
 
         {/* Fitness Coach Dialog */}
         <Dialog open={showFitnessCoachDialog} onOpenChange={setShowFitnessCoachDialog}>
-          <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85vh] flex flex-col p-0 rounded-none border-2 border-black bg-black">
+          <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85vh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
             <DialogHeader className="px-6 py-4 border-b border-[#FCD000] flex-shrink-0 liquid-gold-card">
               <DialogTitle className="text-xl font-black uppercase tracking-wide text-black relative z-10">
                 Meet Your Fitness Coach
@@ -1418,7 +1418,7 @@ export default function Fitness() {
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-black">
               {/* Coach Photo and Name */}
               <div className="text-center">
-                <div className="w-40 h-40 mx-auto mb-4 rounded-none border-4 border-[#FCD000] overflow-hidden shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+                <div className="w-40 h-40 mx-auto mb-4 rounded-sm border-4 border-[#FCD000] overflow-hidden shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
                   <img 
                     src={seanMcManusPhoto} 
                     alt="Sean McManus" 
@@ -1441,7 +1441,7 @@ export default function Fitness() {
                 He helps men lose fat, build strength, and reclaim confidence without extremes, gimmicks, or confusion. His coaching is built on proven fundamentals and steady accountability through strength training, protein-focused nutrition, and disciplined daily habits that actually fit real life.
               </p>
               
-              <div className="liquid-gold-card p-4 rounded-none border-l-4 border-black overflow-hidden">
+              <div className="liquid-gold-card p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-bold relative z-10">
                   Sean believes the body is not separate from faith. It is one of the primary tools God uses to shape discipline, consistency, and leadership in a man's life.
                 </p>
@@ -1454,7 +1454,7 @@ export default function Fitness() {
                 </p>
               </div>
               
-              <div className="liquid-gold-card p-4 rounded-none border-l-4 border-black overflow-hidden">
+              <div className="liquid-gold-card p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-bold relative z-10">
                   If you are done starting over and ready to become a man others can rely on, Sean would be honored to coach you.
                 </p>
@@ -1465,24 +1465,24 @@ export default function Fitness() {
 
         {/* Tab Navigation */}
         <Tabs defaultValue="workout" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 liquid-black rounded-none border-2 border-black h-auto p-1 overflow-hidden">
-            <TabsTrigger value="workout" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-none font-bold uppercase py-2">
+          <TabsList className="grid w-full grid-cols-5 liquid-black rounded-sm border-2 border-black h-auto p-1 overflow-hidden">
+            <TabsTrigger value="workout" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-bold uppercase py-2">
               <Dumbbell className="w-4 h-4" />
               <span className="hidden sm:inline">Workout</span>
             </TabsTrigger>
-            <TabsTrigger value="exercises" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-none font-bold uppercase py-2">
+            <TabsTrigger value="exercises" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-bold uppercase py-2">
               <Search className="w-4 h-4" />
               <span className="hidden sm:inline">Exercises</span>
             </TabsTrigger>
-            <TabsTrigger value="favorites" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-none font-bold uppercase py-2">
+            <TabsTrigger value="favorites" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-bold uppercase py-2">
               <Heart className="w-4 h-4" />
               <span className="hidden sm:inline">Favorites</span>
             </TabsTrigger>
-            <TabsTrigger value="pre-built-plans" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-none font-bold uppercase py-2">
+            <TabsTrigger value="pre-built-plans" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-bold uppercase py-2">
               <BookOpen className="w-4 h-4" />
               <span className="hidden sm:inline">Plans</span>
             </TabsTrigger>
-            <TabsTrigger value="my-plans" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-none font-bold uppercase py-2">
+            <TabsTrigger value="my-plans" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-bold uppercase py-2">
               <List className="w-4 h-4" />
               <span className="hidden sm:inline">My Plans</span>
             </TabsTrigger>
@@ -1491,7 +1491,7 @@ export default function Fitness() {
           {/* Daily Workout Tab */}
           <TabsContent value="workout" className="space-y-6">
             {/* Today's Workout Header */}
-            <div className="flex items-center mb-6 liquid-black p-4 rounded-none border-2 border-black overflow-hidden">
+            <div className="flex items-center mb-6 liquid-black p-4 rounded-sm border-2 border-black overflow-hidden">
               <Dumbbell className="w-6 h-6 text-[#FCD000] mr-2 relative z-10" />
               <h2 className="text-xl font-black text-white uppercase tracking-wide relative z-10">Today's Workout</h2>
               <div className="ml-auto text-sm text-[#FCD000] font-bold relative z-10">
@@ -1504,7 +1504,7 @@ export default function Fitness() {
               
               if (todaysExercises.length === 0) {
                 return (
-                  <div className="text-center py-12 liquid-gold-card rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                  <div className="text-center py-12 liquid-gold-card rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                     <Calendar className="w-12 h-12 mx-auto text-black mb-4 relative z-10" />
                     <h3 className="text-lg font-black text-black mb-2 uppercase relative z-10">No Workout Today</h3>
                     <p className="text-black relative z-10">
@@ -1517,7 +1517,7 @@ export default function Fitness() {
               return (
                 <div className="space-y-4">
                   {todaysExercises.map((exercise, index) => (
-                    <div key={`${exercise.planId}-${exercise.exerciseId}`} className="liquid-black rounded-none border-2 border-black shadow-[3px_3px_0px_0px_rgba(252,208,0,0.5)] overflow-hidden p-4">
+                    <div key={`${exercise.planId}-${exercise.exerciseId}`} className="liquid-black rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(252,208,0,0.5)] overflow-hidden p-4">
                       <div className="flex gap-6 relative z-10">
                         {/* Exercise Details */}
                         <div className="flex-grow">
@@ -1576,7 +1576,7 @@ export default function Fitness() {
 
                           {/* Notes */}
                           {exercise.notes && (
-                            <div className="mt-3 p-2 bg-[#FCD000]/20 rounded-none border border-[#FCD000]">
+                            <div className="mt-3 p-2 bg-[#FCD000]/20 rounded-sm border border-[#FCD000]">
                               <p className="text-sm text-white">
                                 <strong className="text-[#FCD000]">Notes:</strong> {exercise.notes}
                               </p>
@@ -1588,7 +1588,7 @@ export default function Fitness() {
                   ))}
                   
                   {/* Workout Summary */}
-                  <div className="liquid-gold-card rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden p-4 mt-6">
+                  <div className="liquid-gold-card rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden p-4 mt-6">
                     <div className="flex items-center justify-between relative z-10">
                       <div>
                         <h4 className="font-black text-black uppercase">Today's Progress</h4>

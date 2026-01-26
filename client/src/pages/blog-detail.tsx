@@ -57,18 +57,18 @@ export default function BlogDetail() {
         <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-ministry-gold-exact">
           <div className="max-w-3xl mx-auto">
             <div className="animate-pulse">
-              <div className="h-8 bg-white/20 rounded-none w-3/4 mb-4"></div>
-              <div className="h-4 bg-white/10 rounded-none w-1/2"></div>
+              <div className="h-8 bg-white/20 rounded-sm w-3/4 mb-4"></div>
+              <div className="h-4 bg-white/10 rounded-sm w-1/2"></div>
             </div>
           </div>
         </div>
         <div className="px-6 py-6 max-w-3xl mx-auto">
-          <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <Card className="bg-ministry-gold-exact border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <CardContent className="p-6">
               <div className="animate-pulse space-y-4">
-                <div className="h-4 bg-black/20 rounded-none w-full"></div>
-                <div className="h-4 bg-black/20 rounded-none w-full"></div>
-                <div className="h-4 bg-black/20 rounded-none w-3/4"></div>
+                <div className="h-4 bg-black/20 rounded-sm w-full"></div>
+                <div className="h-4 bg-black/20 rounded-sm w-full"></div>
+                <div className="h-4 bg-black/20 rounded-sm w-3/4"></div>
               </div>
             </CardContent>
           </Card>
@@ -85,7 +85,7 @@ export default function BlogDetail() {
             <Button
               variant="ghost"
               onClick={() => navigate('/blog')}
-              className="text-ministry-gold-exact hover:bg-white/10 mb-4 rounded-none font-bold uppercase"
+              className="text-ministry-gold-exact hover:bg-white/10 mb-4 rounded-sm font-bold uppercase"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Blog
@@ -93,7 +93,7 @@ export default function BlogDetail() {
           </div>
         </div>
         <div className="px-6 py-6 max-w-3xl mx-auto">
-          <Card className="bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center py-12">
+          <Card className="bg-ministry-gold-exact border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center py-12">
             <CardContent>
               <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-black">Blog Post Not Found</h3>
               <p className="text-black/80 font-medium mb-4">
@@ -101,7 +101,7 @@ export default function BlogDetail() {
               </p>
               <Button
                 onClick={() => navigate('/blog')}
-                className="bg-black text-white rounded-none border-2 border-black font-bold uppercase hover:bg-gray-800"
+                className="bg-black text-white rounded-sm border-2 border-black font-bold uppercase hover:bg-gray-800"
               >
                 View All Posts
               </Button>
@@ -120,7 +120,7 @@ export default function BlogDetail() {
           <Button
             variant="ghost"
             onClick={() => navigate('/blog')}
-            className="text-ministry-gold-exact hover:bg-white/10 mb-4 rounded-none font-bold uppercase"
+            className="text-ministry-gold-exact hover:bg-white/10 mb-4 rounded-sm font-bold uppercase"
             data-testid="button-back-blog"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -166,20 +166,20 @@ export default function BlogDetail() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-ministry-gold-exact hover:bg-white/10 rounded-none font-bold uppercase"
+                  className="text-ministry-gold-exact hover:bg-white/10 rounded-sm font-bold uppercase"
                   data-testid="button-share-blog"
                 >
                   <Share2 className="w-4 h-4 mr-1" />
                   Share
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-2 bg-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <PopoverContent className="w-auto p-2 bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <div className="flex gap-2">
                   <a
                     href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 bg-[#1877F2] text-white rounded-none hover:opacity-80 transition-opacity"
+                    className="p-2 bg-[#1877F2] text-white rounded-sm hover:opacity-80 transition-opacity"
                     data-testid="share-facebook"
                   >
                     <SiFacebook className="w-5 h-5" />
@@ -188,7 +188,7 @@ export default function BlogDetail() {
                     href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${blog?.title} - Check out this article from Man Up God's Way!`)}&url=${encodeURIComponent(window.location.href)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 bg-black text-white border border-white rounded-none hover:opacity-80 transition-opacity"
+                    className="p-2 bg-black text-white border border-white rounded-sm hover:opacity-80 transition-opacity"
                     data-testid="share-twitter"
                   >
                     <SiX className="w-5 h-5" />
@@ -197,14 +197,14 @@ export default function BlogDetail() {
                     href={`https://wa.me/?text=${encodeURIComponent(`${blog?.title} - Check out this article from Man Up God's Way! ${window.location.href}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 bg-[#25D366] text-white rounded-none hover:opacity-80 transition-opacity"
+                    className="p-2 bg-[#25D366] text-white rounded-sm hover:opacity-80 transition-opacity"
                     data-testid="share-whatsapp"
                   >
                     <SiWhatsapp className="w-5 h-5" />
                   </a>
                   <a
                     href={`mailto:?subject=${encodeURIComponent(blog?.title || '')}&body=${encodeURIComponent(`Check out this article from Man Up God's Way:\n\n${blog?.title}\n\n${window.location.href}`)}`}
-                    className="p-2 bg-gray-600 text-white rounded-none hover:opacity-80 transition-opacity"
+                    className="p-2 bg-gray-600 text-white rounded-sm hover:opacity-80 transition-opacity"
                     data-testid="share-email"
                   >
                     <Mail className="w-5 h-5" />
@@ -214,7 +214,7 @@ export default function BlogDetail() {
                       navigator.clipboard.writeText(window.location.href);
                       toast({ title: "Link copied!", description: "The link has been copied to your clipboard" });
                     }}
-                    className="p-2 bg-ministry-gold-exact text-black rounded-none hover:opacity-80 transition-opacity"
+                    className="p-2 bg-ministry-gold-exact text-black rounded-sm hover:opacity-80 transition-opacity"
                     data-testid="share-copy-link"
                   >
                     <Link2 className="w-5 h-5" />
@@ -227,7 +227,7 @@ export default function BlogDetail() {
       </div>
 
       <div className="max-w-3xl mx-auto px-6 -mt-4">
-        <div className="border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+        <div className="border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
           {blog.coverImageUrl ? (
             <img
               src={blog.coverImageUrl}
@@ -243,7 +243,7 @@ export default function BlogDetail() {
       </div>
 
       <div className="px-6 py-6 max-w-3xl mx-auto">
-        <Card className="bg-white border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <Card className="bg-white border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <CardContent className="p-6 md:p-8">
             <div 
               className="prose prose-lg max-w-none text-black prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-a:text-black prose-a:underline prose-strong:text-black"
@@ -256,7 +256,7 @@ export default function BlogDetail() {
           <Button
             variant="outline"
             onClick={() => navigate('/blog')}
-            className="rounded-none border-2 border-black bg-black text-white hover:bg-gray-800 font-bold uppercase"
+            className="rounded-sm border-2 border-black bg-black text-white hover:bg-gray-800 font-bold uppercase"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             More Posts
@@ -267,7 +267,7 @@ export default function BlogDetail() {
               href={blog.externalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-ministry-gold-exact text-black border-2 border-black rounded-none font-bold uppercase hover:bg-yellow-400 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-ministry-gold-exact text-black border-2 border-black rounded-sm font-bold uppercase hover:bg-yellow-400 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
             >
               <ExternalLink className="w-4 h-4" />
               Original Source

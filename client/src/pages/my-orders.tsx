@@ -70,7 +70,7 @@ export default function MyOrdersPage() {
             <div className="animate-pulse text-ministry-gold">Loading orders...</div>
           </div>
         ) : orders.length === 0 ? (
-          <Card className="bg-zinc-900 border-2 border-zinc-700 rounded-none">
+          <Card className="bg-zinc-900 border-2 border-zinc-700 rounded-sm">
             <CardContent className="p-8 text-center">
               <ShoppingBag className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
               <h3 className="text-white font-bold uppercase mb-2">No Orders Yet</h3>
@@ -87,11 +87,11 @@ export default function MyOrdersPage() {
             return (
               <Card 
                 key={order.id} 
-                className="bg-black border-2 border-zinc-700 rounded-none shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]"
+                className="bg-black border-2 border-zinc-700 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]"
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 bg-zinc-900 border border-zinc-700 rounded-none flex items-center justify-center flex-shrink-0">
+                    <div className="w-16 h-16 bg-zinc-900 border border-zinc-700 rounded-sm flex items-center justify-center flex-shrink-0">
                       {order.product.productType === "discount_code" ? (
                         <Tag className="w-8 h-8 text-zinc-600" />
                       ) : (
@@ -103,7 +103,7 @@ export default function MyOrdersPage() {
                         <h3 className="font-bold text-white uppercase text-sm truncate">
                           {order.product.name}
                         </h3>
-                        <Badge className={`${statusConfig.bgColor} ${statusConfig.color} text-[10px] font-bold uppercase flex-shrink-0 rounded-none border border-current`}>
+                        <Badge className={`${statusConfig.bgColor} ${statusConfig.color} text-[10px] font-bold uppercase flex-shrink-0 rounded-sm border border-current`}>
                           <StatusIcon className="w-3 h-3 mr-1" />
                           {statusConfig.label}
                         </Badge>
@@ -131,14 +131,14 @@ export default function MyOrdersPage() {
                       </div>
 
                       {order.trackingNumber && (
-                        <div className="bg-zinc-900 border border-zinc-700 p-2 rounded-none mt-2">
+                        <div className="bg-zinc-900 border border-zinc-700 p-2 rounded-sm mt-2">
                           <p className="text-[10px] text-zinc-500 uppercase font-bold">Tracking Number</p>
                           <p className="text-xs text-white font-mono">{order.trackingNumber}</p>
                         </div>
                       )}
 
                       {order.product.productType === "discount_code" && order.status === "delivered" && (
-                        <div className="bg-green-900/30 border border-green-700 p-2 rounded-none mt-2">
+                        <div className="bg-green-900/30 border border-green-700 p-2 rounded-sm mt-2">
                           <p className="text-[10px] text-green-400 uppercase font-bold">Code Delivered</p>
                           <p className="text-xs text-green-300">Check your email for the discount code!</p>
                         </div>

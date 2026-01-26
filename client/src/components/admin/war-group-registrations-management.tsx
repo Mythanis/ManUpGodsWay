@@ -317,7 +317,7 @@ export default function WarGroupRegistrationsManagement() {
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 placeholder="Explain why this registration is being rejected..."
-                className="bg-white border-2 border-black text-black mt-2 rounded-none font-medium placeholder:text-black/50"
+                className="bg-white border-2 border-black text-black mt-2 rounded-sm font-medium placeholder:text-black/50"
                 data-testid="input-rejection-reason"
               />
             </div>

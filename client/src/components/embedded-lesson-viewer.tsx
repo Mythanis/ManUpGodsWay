@@ -350,13 +350,13 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
       
       <div className="space-y-4 print:space-y-2" data-testid="embedded-lesson-viewer">
       {/* Lesson Navigation */}
-      <div className="liquid-gold-card border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-3 print:hidden">
+      <div className="liquid-gold-card border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-3 print:hidden">
         <div className="flex items-center justify-between gap-2 relative z-10">
           <Button
             size="sm"
             onClick={goToPreviousDay}
             disabled={currentDayIndex === 0}
-            className="bg-black text-white rounded-none font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-3 py-1 h-8 min-w-0 border-2 border-white"
+            className="bg-black text-white rounded-sm font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-3 py-1 h-8 min-w-0 border-2 border-white"
             data-testid="button-previous-lesson"
           >
             <ChevronLeft className="w-4 h-4 text-white" />
@@ -379,7 +379,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
             size="sm"
             onClick={goToNextDay}
             disabled={currentDayIndex === lessons.length - 1}
-            className="bg-black text-white rounded-none font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-3 py-1 h-8 min-w-0 border-2 border-white"
+            className="bg-black text-white rounded-sm font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-3 py-1 h-8 min-w-0 border-2 border-white"
             data-testid="button-next-lesson"
           >
             <span className="hidden sm:inline mr-1 text-white">Next</span>
@@ -389,7 +389,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
       </div>
 
       {/* Lesson Content */}
-      <Card className="lesson-print-content liquid-black border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+      <Card className="lesson-print-content liquid-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
         <CardHeader className="print:pb-2 relative z-10">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -419,7 +419,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
         <CardContent className="space-y-6 relative z-10">
           {/* Scripture Reference */}
           {currentLesson.scripture && (
-            <div className="p-4 bg-[#FCD000] rounded-none border-l-4 border-black">
+            <div className="p-4 bg-[#FCD000] rounded-sm border-l-4 border-black">
               <p className="text-xs font-black text-black mb-1 uppercase tracking-wide">Scripture</p>
               <p className="font-serif text-base text-black" data-testid="text-scripture">
                 {currentLesson.scripture}
@@ -436,7 +436,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
 
           {/* Key Takeaway */}
           {currentLesson.keyTakeaway && (
-            <div className="p-4 bg-[#FCD000] rounded-none border-2 border-black">
+            <div className="p-4 bg-[#FCD000] rounded-sm border-2 border-black">
               <p className="text-xs font-black text-black mb-2 uppercase tracking-wide">
                 💡 Key Takeaway
               </p>
@@ -447,7 +447,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           )}
 
           {/* Personal Study Notes */}
-          <div className="border-2 border-[#FCD000] rounded-none print:hidden bg-black/50">
+          <div className="border-2 border-[#FCD000] rounded-sm print:hidden bg-black/50">
             <button
               onClick={() => setNotesExpanded(!notesExpanded)}
               className="w-full p-4 flex items-center justify-between text-left hover:bg-white/10 transition-colors"
@@ -456,7 +456,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
               <div className="flex items-center gap-2">
                 <StickyNote className="w-5 h-5 text-[#FCD000]" />
                 <span className="font-black text-white uppercase tracking-wide text-sm">My Study Notes</span>
-                {notes && <Badge className="text-xs bg-[#FCD000] text-black font-bold rounded-none">Has notes</Badge>}
+                {notes && <Badge className="text-xs bg-[#FCD000] text-black font-bold rounded-sm">Has notes</Badge>}
               </div>
               <ChevronRight className={`w-4 h-4 text-[#FCD000] transition-transform ${notesExpanded ? 'rotate-90' : ''}`} />
             </button>
@@ -467,14 +467,14 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={6}
-                  className="resize-y bg-white text-black border-2 border-black rounded-none font-medium"
+                  className="resize-y bg-white text-black border-2 border-black rounded-sm font-medium"
                   data-testid="textarea-study-notes"
                 />
                 <Button
                   size="sm"
                   onClick={() => saveNotesMutation.mutate()}
                   disabled={saveNotesMutation.isPending}
-                  className="bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-none"
+                  className="bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm"
                   data-testid="button-save-notes"
                 >
                   {saveNotesMutation.isPending ? (
@@ -543,7 +543,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                 return (
                   <div key={q.id} className="space-y-2">
                     <div className="flex items-start gap-2">
-                      <Badge className="mt-1 bg-[#FCD000] text-black font-bold rounded-none uppercase text-xs shrink-0">
+                      <Badge className="mt-1 bg-[#FCD000] text-black font-bold rounded-sm uppercase text-xs shrink-0">
                         {isFillInBlank ? 'Fill In' : q.type}
                       </Badge>
                       {isFillInBlank ? (
@@ -563,12 +563,12 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                         value={answers[q.id] || ""}
                         onChange={(e) => handleAnswerChange(q.id, e.target.value)}
                         rows={3}
-                        className="print:hidden bg-white text-black border-2 border-black rounded-none font-medium"
+                        className="print:hidden bg-white text-black border-2 border-black rounded-sm font-medium"
                         data-testid={`textarea-answer-${index}`}
                       />
                     )}
                     {!isFillInBlank && isCompleted && currentProgress?.answers?.[q.id] && (
-                      <div className="p-3 bg-[#FCD000] rounded-none border-2 border-black">
+                      <div className="p-3 bg-[#FCD000] rounded-sm border-2 border-black">
                         <p className="text-xs text-black/70 mb-1 font-bold uppercase">Your answer:</p>
                         <p className="text-sm text-black font-medium">{currentProgress.answers[q.id]}</p>
                       </div>
@@ -585,7 +585,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
               <Button
                 onClick={() => markCompleteMutation.mutate()}
                 disabled={markCompleteMutation.isPending}
-                className="bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all px-6 py-3"
+                className="bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all px-6 py-3"
                 data-testid="button-mark-complete"
               >
                 {markCompleteMutation.isPending ? (
@@ -603,7 +603,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
       </Card>
 
       {/* Lesson Navigation Dots */}
-      <div className="flex justify-center gap-2 print:hidden flex-wrap p-2 bg-black/50 border-2 border-[#FCD000] rounded-none">
+      <div className="flex justify-center gap-2 print:hidden flex-wrap p-2 bg-black/50 border-2 border-[#FCD000] rounded-sm">
         {lessons.map((lesson, index) => {
           const progress = lessonProgressData.find(p => p.lessonId === lesson.id);
           const completed = !!progress?.completedAt;

@@ -85,7 +85,7 @@ function PodcastCard({
   const [expanded, setExpanded] = useState(false);
   
   return (
-    <Card className="liquid-gold-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-none overflow-hidden">
+    <Card className="liquid-gold-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-sm overflow-hidden">
       <CardContent className="p-4 sm:p-6 relative">
         <div 
           className="flex items-start space-x-4 relative z-10 cursor-pointer"
@@ -97,7 +97,7 @@ function PodcastCard({
             <img
               src={getDefaultThumbnail(podcast.thumbnailUrl)}
               alt={podcast.title}
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-none object-cover border-2 border-black"
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-sm object-cover border-2 border-black"
             />
           </div>
 
@@ -109,7 +109,7 @@ function PodcastCard({
                   {podcast.title}
                 </h3>
                 <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-black/70 mb-2">
-                  <Badge variant="outline" className="text-xs text-black rounded-none border-2 border-black font-bold uppercase">
+                  <Badge variant="outline" className="text-xs text-black rounded-sm border-2 border-black font-bold uppercase">
                     {podcast.type === 'audio' ? 'Audio' : 'Video'}
                   </Badge>
                   {podcast.isLive && (
@@ -130,7 +130,7 @@ function PodcastCard({
                 {podcast.isLive ? (
                   <Button
                     onClick={() => window.open(podcast.liveUrl, '_blank')}
-                    className="bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm px-2 sm:px-4 rounded-none border-2 border-black font-black uppercase"
+                    className="bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm px-2 sm:px-4 rounded-sm border-2 border-black font-black uppercase"
                     size="sm"
                   >
                     <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
@@ -139,7 +139,7 @@ function PodcastCard({
                 ) : (
                   <Button
                     onClick={() => onPlayPause(podcast)}
-                    className="bg-black hover:bg-gray-900 text-white rounded-none border-2 border-black"
+                    className="bg-black hover:bg-gray-900 text-white rounded-sm border-2 border-black"
                     size="sm"
                   >
                     {currentlyPlaying === podcast.id ? (
@@ -171,7 +171,7 @@ function PodcastCard({
           <div className="mt-4 space-y-3 relative z-10">
             {podcast.description && (
               <div 
-                className="p-3 rounded-none"
+                className="p-3 rounded-sm"
                 style={{ 
                   background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 70%, rgba(252,208,0,0.3) 100%)'
                 }}
@@ -206,7 +206,7 @@ function PodcastCard({
                     variant="outline" 
                     size="sm"
                     onClick={() => onPodcastView(podcast.id)}
-                    className="text-xs px-2 py-1 h-auto w-full bg-ministry-gold-exact hover:bg-yellow-400 text-black rounded-none border-2 border-black font-black uppercase tracking-wide"
+                    className="text-xs px-2 py-1 h-auto w-full bg-ministry-gold-exact hover:bg-yellow-400 text-black rounded-sm border-2 border-black font-black uppercase tracking-wide"
                   >
                     <MessageSquare className="w-3 h-3 mr-1" />
                     Reviews
@@ -498,19 +498,19 @@ export default function Podcasts() {
     return (
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="w-full text-xs px-2 py-1 h-auto bg-black text-white hover:bg-gray-900 rounded-none border-2 border-black font-black uppercase tracking-wide">
+          <Button variant="outline" size="sm" className="w-full text-xs px-2 py-1 h-auto bg-black text-white hover:bg-gray-900 rounded-sm border-2 border-black font-black uppercase tracking-wide">
             <Star className="w-3 h-3 mr-1" />
             Rate
           </Button>
         </DialogTrigger>
-        <DialogContent className="rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <DialogContent className="rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <DialogHeader>
             <DialogTitle className="font-black uppercase tracking-tight">Rate "{podcast.title}"</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <label className="text-sm font-black uppercase tracking-wide">Rating</label>
-              <div className="flex space-x-2 mt-3 p-4 bg-ministry-gold-exact border-2 border-black rounded-none">
+              <div className="flex space-x-2 mt-3 p-4 bg-ministry-gold-exact border-2 border-black rounded-sm">
                 {renderStars(rating, true, setRating)}
               </div>
             </div>
@@ -520,18 +520,18 @@ export default function Podcasts() {
                 value={review}
                 onChange={(e) => setReview(e.target.value)}
                 placeholder="Share your thoughts about this podcast..."
-                className="mt-2 rounded-none border-2 border-black"
+                className="mt-2 rounded-sm border-2 border-black"
                 rows={3}
               />
             </div>
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowDialog(false)} className="rounded-none border-2 border-black font-black uppercase tracking-wide">
+              <Button variant="outline" onClick={() => setShowDialog(false)} className="rounded-sm border-2 border-black font-black uppercase tracking-wide">
                 Cancel
               </Button>
               <Button 
                 onClick={handleSubmit}
                 disabled={ratePodcastMutation.isPending}
-                className="bg-black text-white hover:bg-gray-900 rounded-none border-2 border-black font-black uppercase tracking-wide"
+                className="bg-black text-white hover:bg-gray-900 rounded-sm border-2 border-black font-black uppercase tracking-wide"
               >
                 Submit Rating
               </Button>
@@ -579,13 +579,13 @@ export default function Podcasts() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="SEARCH PODCASTS..."
-              className="pl-10 bg-white border-2 border-black text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide rounded-none font-medium"
+              className="pl-10 bg-white border-2 border-black text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide rounded-sm font-medium"
             />
           </div>
           
           <div className="flex space-x-3">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="bg-ministry-gold-exact border-2 border-black text-black font-bold rounded-none w-40">
+              <SelectTrigger className="bg-ministry-gold-exact border-2 border-black text-black font-bold rounded-sm w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -599,7 +599,7 @@ export default function Podcasts() {
             </Select>
 
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="bg-ministry-gold-exact border-2 border-black text-black font-bold rounded-none w-40">
+              <SelectTrigger className="bg-ministry-gold-exact border-2 border-black text-black font-bold rounded-sm w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -623,7 +623,7 @@ export default function Podcasts() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold"></div>
           </div>
         ) : filteredPodcasts.length === 0 ? (
-          <Card className="text-center py-12 liquid-gold-card border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+          <Card className="text-center py-12 liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
             <CardContent className="relative z-10">
               <Headphones className="w-12 h-12 mx-auto text-black mb-4" />
               <h3 className="text-lg font-black text-black mb-2 tracking-tight">No Podcasts Found</h3>

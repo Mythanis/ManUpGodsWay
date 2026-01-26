@@ -167,7 +167,7 @@ export default function Brothers() {
               <UserPlus className="w-8 h-8 text-ministry-gold" />
               <h1 className="text-4xl font-black tracking-tighter uppercase">My Brothers</h1>
             </div>
-            <div className="flex items-center space-x-2 text-xs font-bold bg-ministry-gold-exact text-black px-3 py-1 rounded-none uppercase tracking-wide">
+            <div className="flex items-center space-x-2 text-xs font-bold bg-ministry-gold-exact text-black px-3 py-1 rounded-sm uppercase tracking-wide">
               <Users className="w-4 h-4" />
               <span>{brothers?.length || 0} Brothers</span>
             </div>
@@ -193,13 +193,13 @@ export default function Brothers() {
                   }
                 }}
                 onKeyDown={handleSearchKeyPress}
-                className="pl-10 pr-12 border-2 border-black bg-ministry-gold-exact text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide rounded-none font-medium"
+                className="pl-10 pr-12 border-2 border-black bg-ministry-gold-exact text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide rounded-sm font-medium"
                 data-testid="input-search-users"
               />
               <Button
                 onClick={handleSearch}
                 disabled={userSearchQuery.length < 2}
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 bg-black hover:bg-gray-900 text-white rounded-none"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 bg-black hover:bg-gray-900 text-white rounded-sm"
                 data-testid="button-search-users"
               >
                 <Send className="w-4 h-4" />
@@ -208,7 +208,7 @@ export default function Brothers() {
 
             {/* User Search Results Dropdown */}
             {showUserSearch && userSearchQuery.length >= 2 && (
-              <div className="absolute top-full left-0 right-0 z-50 bg-ministry-gold-exact border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-1 max-h-60 overflow-y-auto">
+              <div className="absolute top-full left-0 right-0 z-50 bg-ministry-gold-exact border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-1 max-h-60 overflow-y-auto">
                 {isSearchingUsers ? (
                   <div className="p-4 text-center text-muted-foreground">
                     Searching users...
@@ -263,7 +263,7 @@ export default function Brothers() {
         )}
 
         {!brothers || brothers.length === 0 ? (
-          <Card className="border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-ministry-gold-exact">
+          <Card className="border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-ministry-gold-exact">
             <CardContent className="text-center py-12">
               <UserPlus className="w-16 h-16 text-black mx-auto mb-4" />
               <h2 className="text-xl font-black mb-2 text-black tracking-tight">No Brothers Yet</h2>
@@ -271,7 +271,7 @@ export default function Brothers() {
                 Start building meaningful relationships by connecting with other men in the community.
               </p>
               <Link href="/community">
-                <Button className="bg-black hover:bg-gray-900 text-white rounded-none font-black uppercase tracking-wide">
+                <Button className="bg-black hover:bg-gray-900 text-white rounded-sm font-black uppercase tracking-wide">
                   <Users className="w-4 h-4 mr-2" />
                   Explore Community
                 </Button>
@@ -287,14 +287,14 @@ export default function Brothers() {
                 return (
                   <Card
                     key={brother.id}
-                    className="hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-none bg-ministry-gold-exact"
+                    className="hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-sm bg-ministry-gold-exact"
                     data-testid={`brother-card-${brother.id}`}
                   >
                     <CardContent className="p-3">
                       <div className="flex items-center space-x-3">
                         <Link href={`/users/${brother.id}`} className="flex-shrink-0">
-                          <Avatar className="w-10 h-10 cursor-pointer rounded-none">
-                            <AvatarFallback className="bg-black text-white text-sm font-black rounded-none">
+                          <Avatar className="w-10 h-10 cursor-pointer rounded-sm">
+                            <AvatarFallback className="bg-black text-white text-sm font-black rounded-sm">
                               {brother.firstName?.[0]}{brother.lastName?.[0]}
                             </AvatarFallback>
                           </Avatar>
@@ -308,7 +308,7 @@ export default function Brothers() {
                             </Link>
                             <span className="text-xs text-muted-foreground">@{brother.username}</span>
                             {tagInfo && (
-                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-xs font-bold uppercase ${tagInfo.bgColor} ${tagInfo.color}`}>
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-bold uppercase ${tagInfo.bgColor} ${tagInfo.color}`}>
                                 <Tag className="w-3 h-3" />
                                 {tagInfo.label}
                               </span>

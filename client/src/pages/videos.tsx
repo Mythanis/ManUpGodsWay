@@ -167,21 +167,21 @@ export default function Videos() {
     switch (tier) {
       case 'vip':
         return (
-          <Badge className="bg-ministry-gold-exact text-black flex items-center space-x-1 rounded-none font-black uppercase tracking-wide">
+          <Badge className="bg-ministry-gold-exact text-black flex items-center space-x-1 rounded-sm font-black uppercase tracking-wide">
             <Crown className="w-3 h-3" />
             <span>VIP</span>
           </Badge>
         );
       case 'premium':
         return (
-          <Badge className="bg-blue-100 text-blue-800 flex items-center space-x-1 rounded-none font-black uppercase tracking-wide">
+          <Badge className="bg-blue-100 text-blue-800 flex items-center space-x-1 rounded-sm font-black uppercase tracking-wide">
             <Gem className="w-3 h-3" />
             <span>Premium</span>
           </Badge>
         );
       default:
         return (
-          <Badge className="bg-white text-black border-2 border-black flex items-center space-x-1 rounded-none font-bold uppercase tracking-wide">
+          <Badge className="bg-white text-black border-2 border-black flex items-center space-x-1 rounded-sm font-bold uppercase tracking-wide">
             <Zap className="w-3 h-3" />
             <span>Free</span>
           </Badge>
@@ -224,7 +224,7 @@ export default function Videos() {
 
       {/* Search Bar */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="liquid-gold-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black rounded-none overflow-hidden">
+        <Card className="liquid-gold-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black rounded-sm overflow-hidden">
           <CardContent className="p-4 relative z-10">
             <div className="relative">
               <Input
@@ -232,7 +232,7 @@ export default function Videos() {
                 placeholder="SEARCH VIDEOS..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border-2 border-black rounded-none pl-10 pr-4 py-3 text-sm text-black placeholder:text-black/50 placeholder:font-black placeholder:text-xs placeholder:tracking-widest placeholder:uppercase focus:ring-2 focus:ring-black font-bold"
+                className="w-full bg-white border-2 border-black rounded-sm pl-10 pr-4 py-3 text-sm text-black placeholder:text-black/50 placeholder:font-black placeholder:text-xs placeholder:tracking-widest placeholder:uppercase focus:ring-2 focus:ring-black font-bold"
                 style={{ fontFamily: "'Inter', sans-serif" }}
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-black" />
@@ -260,7 +260,7 @@ export default function Videos() {
         ) : (
           <div className="flex flex-col gap-4">
             {filteredVideos.map((video: Video) => (
-              <Card key={video.id} className={`liquid-gold-card overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-none ${
+              <Card key={video.id} className={`liquid-gold-card overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-sm ${
                 video.isFeatured ? 'ring-2 ring-yellow-400' : ''
               }`} style={{ fontFamily: "'Inter', sans-serif" }}>
                 <div className="aspect-video bg-gradient-to-br from-gray-900 via-gray-800 to-black relative cursor-pointer group"
@@ -279,20 +279,20 @@ export default function Videos() {
                   <div className="absolute top-2 left-2 space-y-1 z-10">
                     {getTierBadge(video.requiredTier)}
                     {video.isFeatured && (
-                      <Badge className="bg-black text-ministry-gold-exact flex items-center space-x-1 rounded-none border-2 border-ministry-gold-exact font-black uppercase tracking-wide">
+                      <Badge className="bg-black text-ministry-gold-exact flex items-center space-x-1 rounded-sm border-2 border-ministry-gold-exact font-black uppercase tracking-wide">
                         <Star className="w-3 h-3" />
                         <span>Featured</span>
                       </Badge>
                     )}
                   </div>
                   {video.duration && (
-                    <div className="absolute bottom-2 right-2 bg-black text-white text-xs px-2 py-1 rounded-none border border-ministry-gold-exact font-bold z-10">
+                    <div className="absolute bottom-2 right-2 bg-black text-white text-xs px-2 py-1 rounded-sm border border-ministry-gold-exact font-bold z-10">
                       {formatDuration(video.duration)}
                     </div>
                   )}
                   {/* Always visible play button */}
                   <div className="absolute inset-0 flex items-center justify-center z-10">
-                    <div className="w-10 h-10 bg-ministry-gold-exact rounded-none border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] group-hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] group-hover:scale-110 transition-all">
+                    <div className="w-10 h-10 bg-ministry-gold-exact rounded-sm border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] group-hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] group-hover:scale-110 transition-all">
                       <Play className="w-5 h-5 text-black fill-black" />
                     </div>
                   </div>
@@ -309,7 +309,7 @@ export default function Videos() {
                   </div>
                   {video.description && (
                     <div 
-                      className="p-3 mb-3 rounded-none"
+                      className="p-3 mb-3 rounded-sm"
                       style={{ 
                         background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 70%, rgba(252,208,0,0.2) 100%)'
                       }}
@@ -323,7 +323,7 @@ export default function Videos() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       {video.rating > 0 && (
-                        <div className="flex items-center bg-black px-2 py-1 rounded-none">
+                        <div className="flex items-center bg-black px-2 py-1 rounded-sm">
                           <Star className="w-4 h-4 text-ministry-gold-exact fill-current mr-1" />
                           <span className="text-sm text-white font-bold">{video.rating}</span>
                           <span className="text-xs text-white/70 ml-1">({video.ratingCount})</span>
@@ -337,7 +337,7 @@ export default function Videos() {
                         setSelectedVideo(video);
                         setShowVideoDialog(true);
                       }}
-                      className="bg-black text-white hover:bg-ministry-gold-exact hover:text-black font-black uppercase tracking-wide rounded-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,1)] transition-all"
+                      className="bg-black text-white hover:bg-ministry-gold-exact hover:text-black font-black uppercase tracking-wide rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,1)] transition-all"
                     >
                       <Eye className="w-4 h-4 mr-1" />
                       Watch

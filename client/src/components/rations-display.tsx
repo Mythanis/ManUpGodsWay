@@ -39,7 +39,7 @@ export function RationsDisplay() {
 
   if (isLoading || !rations) {
     return (
-      <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-900/80 border border-zinc-700 rounded-none">
+      <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-900/80 border border-zinc-700 rounded-sm">
         <Coins className="w-4 h-4 text-ministry-gold animate-pulse" />
         <span className="text-sm font-bold text-zinc-500">...</span>
       </div>
@@ -54,7 +54,7 @@ export function RationsDisplay() {
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
-          className="flex items-center gap-1.5 px-2 py-1 h-auto bg-zinc-900/80 border-2 border-black rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-800 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all"
+          className="flex items-center gap-1.5 px-2 py-1 h-auto bg-zinc-900/80 border-2 border-black rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-800 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all"
           data-testid="rations-display"
         >
           <Coins className="w-4 h-4 text-ministry-gold" />
@@ -65,7 +65,7 @@ export function RationsDisplay() {
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-72 p-0 bg-zinc-900 border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+        className="w-72 p-0 bg-zinc-900 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
         align="end"
         data-testid="rations-popover"
       >
@@ -77,7 +77,7 @@ export function RationsDisplay() {
                 {rations.balance.toLocaleString()}
               </span>
             </div>
-            <div className="flex items-center gap-1 px-2 py-0.5 bg-black rounded-none border border-ministry-gold">
+            <div className="flex items-center gap-1 px-2 py-0.5 bg-black rounded-sm border border-ministry-gold">
               <RankIcon className={`w-4 h-4 ${rankConfig.color}`} />
               <span className={`text-xs font-bold uppercase ${rankConfig.color}`}>
                 {rations.rankLabel}
@@ -101,7 +101,7 @@ export function RationsDisplay() {
             </div>
             <Progress 
               value={rations.progressToNextRank} 
-              className="h-2 bg-zinc-800 rounded-none"
+              className="h-2 bg-zinc-800 rounded-sm"
             />
             <p className="text-xs text-zinc-500 mt-1">
               {rations.rationsToNextRank.toLocaleString()} rations needed
@@ -113,7 +113,7 @@ export function RationsDisplay() {
           <Link href="/rations">
             <Button 
               variant="ghost" 
-              className="w-full justify-between h-10 px-3 rounded-none bg-zinc-800/50 hover:bg-ministry-gold/20 hover:text-ministry-gold border border-zinc-700"
+              className="w-full justify-between h-10 px-3 rounded-sm bg-zinc-800/50 hover:bg-ministry-gold/20 hover:text-ministry-gold border border-zinc-700"
               data-testid="view-rations-history"
             >
               <div className="flex items-center gap-2">
@@ -146,7 +146,7 @@ export function RationsCompact() {
   return (
     <Link href="/rations">
       <div 
-        className="flex items-center gap-1 px-2 py-1 bg-zinc-900/60 border border-zinc-800 rounded-none cursor-pointer hover:bg-zinc-800 transition-colors"
+        className="flex items-center gap-1 px-2 py-1 bg-zinc-900/60 border border-zinc-800 rounded-sm cursor-pointer hover:bg-zinc-800 transition-colors"
         data-testid="rations-compact"
       >
         <Coins className="w-3.5 h-3.5 text-ministry-gold" />
