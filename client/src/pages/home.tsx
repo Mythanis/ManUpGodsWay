@@ -297,19 +297,32 @@ export default function Home() {
     }
   };
 
-  // Check URL parameters to auto-open devotional from notifications or carousel
+  // Check URL parameters to auto-open devotional from carousel links
   useEffect(() => {
-    // Check if URL has devotional parameter
     const url = new URL(window.location.href);
     const devotionalParam = url.searchParams.get('devotional');
     
     if (devotionalParam === 'open' && devotional) {
       console.log('Auto-opening devotional from URL parameter');
       setShowFullDevotional(true);
-      // Clear the URL parameter after opening
       window.history.replaceState({}, '', '/');
     }
   }, [devotional, location]);
+
+  // Listen for custom event from notification clicks to open devotional
+  useEffect(() => {
+    const handleOpenDevotional = () => {
+      console.log('Opening devotional from notification event');
+      if (devotional) {
+        setShowFullDevotional(true);
+      }
+    };
+
+    window.addEventListener('openDevotional', handleOpenDevotional);
+    return () => {
+      window.removeEventListener('openDevotional', handleOpenDevotional);
+    };
+  }, [devotional]);
 
   if (authLoading) {
     return (

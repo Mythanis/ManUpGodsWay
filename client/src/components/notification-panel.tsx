@@ -204,9 +204,13 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         
       case 'new_devotional':
       case 'devotional':
-        // Navigate to home with parameter to auto-open the devotional
+        // Navigate to home and dispatch event to open devotional
         console.log('Navigating to home for devotional with auto-open');
-        setLocation('/?devotional=open');
+        setLocation('/');
+        // Use custom event since wouter doesn't track query params
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('openDevotional'));
+        }, 100);
         break;
         
       case 'discussion':
