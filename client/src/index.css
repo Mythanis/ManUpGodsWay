@@ -652,6 +652,7 @@
     transparent
   );
   transition: left 0.5s ease;
+  pointer-events: none;
 }
 
 .liquid-button:hover::before {
