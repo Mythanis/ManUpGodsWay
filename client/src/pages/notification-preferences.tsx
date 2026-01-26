@@ -16,11 +16,14 @@ import {
   Users, 
   Mail,
   Shield,
-  Radio
+  Radio,
+  Smartphone,
+  Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { BackButton } from "@/components/BackButton";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 interface NotificationPreferences {
   id: string;
@@ -53,6 +56,46 @@ type PreferencesFormValues = z.infer<typeof preferencesSchema>;
 export default function NotificationPreferences() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { 
+    isSupported: pushSupported, 
+    permission: pushPermission,
+    isSubscribed: isPushEnabled, 
+    isPending: isPushPending,
+    subscribe: enablePush, 
+    unsubscribe: disablePush 
+  } = usePushNotifications();
+
+  const handlePushToggle = async (enabled: boolean) => {
+    try {
+      if (enabled) {
+        const success = await enablePush();
+        if (success) {
+          toast({
+            title: "Push Notifications Enabled",
+            description: "You'll now receive notifications on this device.",
+          });
+        } else if (pushPermission === 'denied') {
+          toast({
+            title: "Permission Denied",
+            description: "Please enable notifications in your browser settings.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        await disablePush();
+        toast({
+          title: "Push Notifications Disabled",
+          description: "You won't receive push notifications on this device.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update push notification settings.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const { data: preferences, isLoading } = useQuery<NotificationPreferences>({
     queryKey: ['/api/notification-preferences'],
@@ -151,6 +194,42 @@ export default function NotificationPreferences() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-6 space-y-6">
           
+          {/* Push Notifications Section */}
+          {pushSupported && (
+            <div>
+              <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>
+                Device Notifications
+              </h2>
+              <div className="space-y-2">
+                <div className="h-16 w-full flex items-center liquid-gold-card border-2 border-black overflow-hidden rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                  <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                    <Smartphone className="w-6 h-6 text-white relative z-10" />
+                  </div>
+                  <div className="flex-1 px-4 relative z-10">
+                    <span className="font-black text-sm text-black uppercase tracking-wide">Push Notifications</span>
+                    <p className="text-xs text-black/70 mt-0.5">Get alerts on your phone's home screen</p>
+                  </div>
+                  <div className="pr-4 relative z-10">
+                    {isPushPending ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-black" />
+                    ) : (
+                      <Switch 
+                        checked={isPushEnabled} 
+                        onCheckedChange={handlePushToggle}
+                        disabled={pushPermission === 'denied'}
+                      />
+                    )}
+                  </div>
+                </div>
+                {pushPermission === 'denied' && (
+                  <p className="text-xs text-red-400 px-1">
+                    Push notifications are blocked. Please enable them in your browser/phone settings.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Content Updates Section */}
           <div>
             <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>

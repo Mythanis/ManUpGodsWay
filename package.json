@@ -50,6 +50,7 @@
     "@types/memoizee": "^0.4.12",
     "@types/multer": "^2.0.0",
     "@types/nodemailer": "^7.0.5",
+    "@types/web-push": "^3.6.4",
     "canvas": "^3.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
