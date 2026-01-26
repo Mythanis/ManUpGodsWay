@@ -32,6 +32,7 @@ export default function Home() {
   // Initialize WebSocket for real-time notifications
   useWebSocket(user?.id);
   const [showFullDevotional, setShowFullDevotional] = useState(false);
+  const [pendingDevotionalOpen, setPendingDevotionalOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showPrayerDialog, setShowPrayerDialog] = useState(false);
   const [prayerDuration, setPrayerDuration] = useState("5");
@@ -315,6 +316,9 @@ export default function Home() {
       console.log('Opening devotional from notification event');
       if (devotional) {
         setShowFullDevotional(true);
+      } else {
+        console.log('Devotional not loaded yet, setting pending flag');
+        setPendingDevotionalOpen(true);
       }
     };
 
@@ -323,6 +327,15 @@ export default function Home() {
       window.removeEventListener('openDevotional', handleOpenDevotional);
     };
   }, [devotional]);
+
+  // Open devotional dialog when data becomes available and pending flag is set
+  useEffect(() => {
+    if (pendingDevotionalOpen && devotional) {
+      console.log('Devotional loaded, opening dialog');
+      setShowFullDevotional(true);
+      setPendingDevotionalOpen(false);
+    }
+  }, [pendingDevotionalOpen, devotional]);
 
   if (authLoading) {
     return (
