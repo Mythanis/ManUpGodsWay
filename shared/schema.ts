@@ -2276,3 +2276,34 @@ export const STORE_TIERS = {
 } as const;
 
 export type StoreTier = keyof typeof STORE_TIERS;
+
+// Push Subscriptions - stores browser push notification subscriptions
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  endpoint: text("endpoint").notNull(),
+  p256dh: text("p256dh").notNull(), // Public key
+  auth: text("auth").notNull(), // Auth secret
+  userAgent: text("user_agent"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_push_subscriptions_user").on(table.userId),
+  index("idx_push_subscriptions_endpoint").on(table.endpoint),
+]);
+
+export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions, {
+  endpoint: z.string().min(1, "Endpoint is required"),
+  p256dh: z.string().min(1, "Public key is required"),
+  auth: z.string().min(1, "Auth secret is required"),
+  userAgent: z.string().optional(),
+}).omit({
+  id: true,
+  isActive: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;
