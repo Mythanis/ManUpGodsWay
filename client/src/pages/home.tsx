@@ -733,76 +733,52 @@ export default function Home() {
             </div>
           </Button>
 
-          <Link href="/videos" className="block">
-            <Button 
-              variant="outline"
-              className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
-              data-testid="button-watch-videos"
-            >
-              <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
-                <Play className="w-6 h-6 text-white relative z-10" />
-              </div>
-              <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Watch Videos</span>
-              <div className="pr-4">
-                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </div>
-            </Button>
+          <Link href="/videos" className="block h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-watch-videos">
+            <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+              <Play className="w-6 h-6 text-white relative z-10" />
+            </div>
+            <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Watch Videos</span>
+            <div className="pr-4">
+              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
           </Link>
           
-          <Link href="/hurdle-wall" className="block">
-            <Button 
-              variant="outline"
-              className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
-              data-testid="button-hurdle-wall"
-            >
-              <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
-                <Shield className="w-6 h-6 text-white relative z-10" />
-              </div>
-              <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">War Room</span>
-              <div className="pr-4">
-                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </div>
-            </Button>
+          <Link href="/hurdle-wall" className="block h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-hurdle-wall">
+            <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+              <Shield className="w-6 h-6 text-white relative z-10" />
+            </div>
+            <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">War Room</span>
+            <div className="pr-4">
+              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
           </Link>
 
-          <Link href="/community" className="block">
-            <Button 
-              variant="outline"
-              className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
-              data-testid="button-join-discussion"
-            >
-              <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
-                <MessageSquare className="w-6 h-6 text-white relative z-10" />
-              </div>
-              <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Join Discussion</span>
-              <div className="pr-4">
-                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </div>
-            </Button>
+          <Link href="/community" className="block h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-join-discussion">
+            <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+              <MessageSquare className="w-6 h-6 text-white relative z-10" />
+            </div>
+            <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Join Discussion</span>
+            <div className="pr-4">
+              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
           </Link>
 
-          <Link href="/blog" className="block">
-            <Button 
-              variant="outline"
-              className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
-              data-testid="button-blog"
-            >
-              <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
-                <Newspaper className="w-6 h-6 text-white relative z-10" />
-              </div>
-              <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Blog</span>
-              <div className="pr-4">
-                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </div>
-            </Button>
+          <Link href="/blog" className="block h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-blog">
+            <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+              <Newspaper className="w-6 h-6 text-white relative z-10" />
+            </div>
+            <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Blog</span>
+            <div className="pr-4">
+              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
           </Link>
 
           <Button 
