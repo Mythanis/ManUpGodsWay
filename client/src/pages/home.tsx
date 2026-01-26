@@ -21,12 +21,13 @@ import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, Tre
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest } from "@/lib/queryClient";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 export default function Home() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [location] = useLocation();
   
   // Initialize WebSocket for real-time notifications
   useWebSocket(user?.id);
@@ -298,15 +299,17 @@ export default function Home() {
 
   // Check URL parameters to auto-open devotional from notifications or carousel
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const devotionalParam = params.get('devotional');
+    // Check if URL has devotional parameter
+    const url = new URL(window.location.href);
+    const devotionalParam = url.searchParams.get('devotional');
     
-    if (devotionalParam && devotional) {
+    if (devotionalParam === 'open' && devotional) {
+      console.log('Auto-opening devotional from URL parameter');
       setShowFullDevotional(true);
       // Clear the URL parameter after opening
       window.history.replaceState({}, '', '/');
     }
-  }, [devotional]);
+  }, [devotional, location]);
 
   if (authLoading) {
     return (
