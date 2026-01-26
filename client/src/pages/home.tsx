@@ -296,7 +296,7 @@ export default function Home() {
     }
   };
 
-  // Check URL parameters to auto-open devotional from carousel
+  // Check URL parameters to auto-open devotional from notifications or carousel
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const devotionalParam = params.get('devotional');
@@ -304,7 +304,7 @@ export default function Home() {
     if (devotionalParam && devotional) {
       setShowFullDevotional(true);
       // Clear the URL parameter after opening
-      window.history.replaceState({}, '', '/home');
+      window.history.replaceState({}, '', '/');
     }
   }, [devotional]);
 
