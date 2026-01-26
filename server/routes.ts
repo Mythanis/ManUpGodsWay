@@ -3279,7 +3279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Set response headers
       res.setHeader('Content-Type', 'image/png');
-      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       
       // Stream the image
       const buffer = canvas.toBuffer('image/png');
