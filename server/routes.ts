@@ -5733,6 +5733,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const challenge = await storage.pushChallengeToCurrentWeek(req.params.id);
+      
+      // Send notifications to all users about the new challenge
+      try {
+        const allUsers = await storage.getUsers();
+        const notificationPromises = allUsers.map(async (targetUser) => {
+          if (targetUser.id === user.id) return null; // Skip the admin who posted
+          return await storage.createNotificationWithPreferences({
+            userId: targetUser.id,
+            type: 'challenge',
+            title: 'New Weekly Challenge',
+            message: `A new challenge is available: ${challenge.title}`,
+            data: { challengeId: challenge.id },
+          });
+        });
+        await Promise.allSettled(notificationPromises);
+        console.log(`Sent challenge notifications to ${allUsers.length - 1} users`);
+        
+        // Broadcast real-time update to all connected users
+        if ((app as any).broadcastToAll) {
+          (app as any).broadcastToAll({
+            type: 'new_challenge',
+            challenge: challenge,
+          });
+        }
+      } catch (notificationError) {
+        console.error('Error sending challenge notifications:', notificationError);
+        // Don't fail the challenge push if notifications fail
+      }
+      
       res.json(challenge);
     } catch (error) {
       console.error('Error pushing challenge to current week:', error);
