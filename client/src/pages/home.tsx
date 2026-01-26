@@ -1066,10 +1066,10 @@ export default function Home() {
 
       {/* Full Devotional Modal */}
       <Dialog open={showFullDevotional} onOpenChange={setShowFullDevotional}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85vh] overflow-y-auto bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-0">
-          <div className="bg-ministry-gold-exact p-4 border-b-2 border-black">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85vh] overflow-y-auto liquid-header border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] p-0">
+          <div className="liquid-gold-card p-4 border-b-2 border-black">
             <DialogHeader>
-              <DialogTitle className="text-black text-lg font-black uppercase tracking-tight">
+              <DialogTitle className="text-black text-lg font-black uppercase tracking-tight relative z-10">
                 {devotional?.title}
               </DialogTitle>
             </DialogHeader>
