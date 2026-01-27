@@ -5877,6 +5877,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingPodcasts = await storage.getAllPodcasts();
       const existingTitles = new Set(existingPodcasts.map((p: any) => p.title?.toLowerCase().trim()));
 
+      // Helper function to extract episode number from title
+      const extractEpisodeNumber = (title: string): number | null => {
+        if (!title) return null;
+        // Match patterns like "Episode 123", "Ep 123", "Ep. 123", "#123", "E123"
+        const patterns = [
+          /episode\s*#?\s*(\d+)/i,
+          /ep\.?\s*#?\s*(\d+)/i,
+          /e(\d+)/i,
+          /#(\d+)/,
+          /^(\d+)\s*[-:.]/,
+          /[-:.\s](\d+)$/
+        ];
+        for (const pattern of patterns) {
+          const match = title.match(pattern);
+          if (match) {
+            return parseInt(match[1], 10);
+          }
+        }
+        return null;
+      };
+
       for (const item of feed.items) {
         try {
           const itemTitle = item.title?.toLowerCase().trim();
@@ -5903,6 +5924,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Get audio URL from enclosure
           const audioUrl = item.enclosure?.url || item.link || '';
           const thumbnailUrl = item.image?.href || item.itunes?.image || feed.image?.url || '';
+          
+          // Extract episode number from title
+          const episodeNumber = extractEpisodeNumber(item.title || '');
 
           const podcastData = {
             title: item.title || 'Untitled Podcast',
@@ -5914,7 +5938,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             category: 'general',
             tags: item.categories || [],
             isPublished: true,
-            uploadedBy: user.id
+            uploadedBy: user.id,
+            episodeNumber: episodeNumber
           };
 
           const podcast = await storage.createPodcast(podcastData);
