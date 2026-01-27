@@ -3187,11 +3187,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ctx.lineWidth = 4;
       ctx.strokeRect(20, 20, width - 40, height - 40);
 
-      // Fixed layout zones
-      const headerEnd = 160;
-      const footerStart = height - 90;
-      const contentStart = headerEnd + 20;
-      const contentEnd = footerStart - 20;
+      // Fixed layout zones - maximize content area
+      const headerEnd = 150;
+      const footerStart = height - 80;
+      const contentStart = headerEnd + 15;
+      const contentEnd = footerStart - 10;
 
       // === HEADER ZONE (0 to headerEnd) ===
       // Try to load and draw logo
@@ -3292,10 +3292,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       ctx.fillStyle = '#000000';
       ctx.textAlign = 'center';
-      ctx.font = 'bold 18px sans-serif';
-      ctx.fillText('DOWNLOAD THE APP', width / 2, footerStart + 30);
-      ctx.font = 'bold 32px sans-serif';
-      ctx.fillText('www.manupgodsway.org', width / 2, footerStart + 65);
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText('DOWNLOAD THE APP', width / 2, footerStart + 28);
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText('www.manupgodsway.org', width / 2, footerStart + 58);
 
       // Set response headers
       res.setHeader('Content-Type', 'image/png');
