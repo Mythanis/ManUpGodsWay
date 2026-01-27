@@ -19,7 +19,9 @@ import {
   Eye,
   Star,
   Calendar,
-  Radio
+  Radio,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -40,6 +42,7 @@ interface Podcast {
   isCurrentlyLive?: boolean;
   liveStreamUrl?: string;
   liveStartedAt?: string;
+  episodeNumber?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -153,6 +156,51 @@ export default function PodcastManagement() {
       });
     }
   });
+
+  // Move podcast (reorder) mutation
+  const movePodcast = async (podcastId: string, newEpisodeNumber: number) => {
+    try {
+      const response = await fetch(`/api/podcasts/${podcastId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ episodeNumber: newEpisodeNumber }),
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to reorder');
+      queryClient.invalidateQueries({ queryKey: ['admin', 'podcasts'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'podcasts'] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to reorder podcast",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Swap episode numbers between two podcasts
+  const swapPodcasts = async (podcast1: Podcast, podcast2: Podcast) => {
+    const ep1 = podcast1.episodeNumber ?? 0;
+    const ep2 = podcast2.episodeNumber ?? 0;
+    await Promise.all([
+      movePodcast(podcast1.id, ep2),
+      movePodcast(podcast2.id, ep1)
+    ]);
+  };
+
+  const handleMoveUp = (index: number) => {
+    if (index === 0) return;
+    const currentPodcast = podcasts[index];
+    const abovePodcast = podcasts[index - 1];
+    swapPodcasts(currentPodcast, abovePodcast);
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index === podcasts.length - 1) return;
+    const currentPodcast = podcasts[index];
+    const belowPodcast = podcasts[index + 1];
+    swapPodcasts(currentPodcast, belowPodcast);
+  };
 
   const resetForm = () => {
     setFormData({
@@ -485,23 +533,46 @@ export default function PodcastManagement() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {podcasts.map((podcast: Podcast) => (
+          {podcasts.map((podcast: Podcast, index: number) => (
             <Card key={podcast.id} className="hover:shadow-md transition-shadow bg-ministry-gold-exact">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-4 flex-1">
-                    <div className="flex-shrink-0">
-                      <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
+                    <div className="flex-shrink-0 flex flex-col items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleMoveUp(index)}
+                        disabled={index === 0}
+                        className="h-6 w-6 p-0"
+                        title="Move up"
+                      >
+                        <ChevronUp className="w-4 h-4" />
+                      </Button>
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
                         podcast.type === 'video' 
                           ? 'bg-ministry-steel/20' 
                           : 'bg-black'
                       }`}>
                         {podcast.type === 'video' ? (
-                          <Video className="w-8 h-8 text-ministry-steel" />
+                          <Video className="w-6 h-6 text-ministry-steel" />
                         ) : (
-                          <Headphones className="w-8 h-8 text-white" />
+                          <Headphones className="w-6 h-6 text-white" />
                         )}
                       </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleMoveDown(index)}
+                        disabled={index === podcasts.length - 1}
+                        className="h-6 w-6 p-0"
+                        title="Move down"
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </Button>
+                      {podcast.episodeNumber && (
+                        <span className="text-xs text-black font-bold">#{podcast.episodeNumber}</span>
+                      )}
                     </div>
 
                     <div className="flex-1">
