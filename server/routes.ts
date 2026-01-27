@@ -3309,13 +3309,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Simple text wrapping helper
+  // Simple text wrapping helper - handles newlines and spaces
   function wrapTextSimple(ctx: any, text: string, maxWidth: number): string[] {
-    const words = text.split(' ');
+    // First, normalize the text - replace newlines with spaces and collapse multiple spaces
+    const normalizedText = text.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
+    const words = normalizedText.split(' ');
     const lines: string[] = [];
     let currentLine = '';
     
     for (const word of words) {
+      if (!word) continue;
       const testLine = currentLine ? `${currentLine} ${word}` : word;
       if (ctx.measureText(testLine).width > maxWidth && currentLine) {
         lines.push(currentLine);
