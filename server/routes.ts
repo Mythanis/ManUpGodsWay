@@ -714,6 +714,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check time-gate status for a study in a series
+  app.get('/api/studies/:id/time-gate', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const studyId = req.params.id;
+      const timezone = req.query.timezone as string || 'America/New_York';
+      
+      // Check if user is admin - admins bypass time gates
+      const user = await storage.getUser(userId);
+      if (user && isAdmin(user)) {
+        return res.json({
+          isLocked: false,
+          unlockTime: null,
+          previousStudyTitle: null,
+          message: null,
+          isAdmin: true
+        });
+      }
+      
+      const status = await storage.getStudyTimeGateStatus(userId, studyId, timezone);
+      res.json(status);
+    } catch (error) {
+      console.error("Error checking time gate status:", error);
+      res.status(500).json({ message: "Failed to check time gate status" });
+    }
+  });
+
   // Check if user has purchased a study
   app.get('/api/purchases/check/:studyId', isAuthenticated, async (req: any, res) => {
     try {

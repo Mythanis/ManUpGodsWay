@@ -231,6 +231,12 @@ export interface IStorage {
   updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
   updateUserStreak(userId: string, userLocalDate?: Date): Promise<void>;
   getWeeklyStudyCompletions(userId: string): Promise<number>;
+  getStudyTimeGateStatus(userId: string, studyId: string, userTimezone: string): Promise<{
+    isLocked: boolean;
+    unlockTime: Date | null;
+    previousStudyTitle: string | null;
+    message: string | null;
+  }>;
   
   // Study-specific methods
   getStudyDiscussion(studyId: string): Promise<(Discussion & { user: User }) | null>;
@@ -3808,6 +3814,125 @@ export class DatabaseStorage implements IStorage {
       );
 
     return result[0]?.count || 0;
+  }
+
+  async getStudyTimeGateStatus(userId: string, studyId: string, userTimezone: string): Promise<{
+    isLocked: boolean;
+    unlockTime: Date | null;
+    previousStudyTitle: string | null;
+    message: string | null;
+  }> {
+    // Get the current study
+    const study = await this.getStudy(studyId);
+    if (!study) {
+      return { isLocked: false, unlockTime: null, previousStudyTitle: null, message: null };
+    }
+
+    // If study is not part of a series, it's not time-gated
+    if (!study.seriesId) {
+      return { isLocked: false, unlockTime: null, previousStudyTitle: null, message: null };
+    }
+
+    // If this is the first study in the series (order 0 or 1), it's always unlocked
+    const currentOrder = study.seriesOrder || 0;
+    if (currentOrder <= 1) {
+      return { isLocked: false, unlockTime: null, previousStudyTitle: null, message: null };
+    }
+
+    // Find the previous study in the series
+    const [previousStudy] = await db.select().from(studies)
+      .where(and(
+        eq(studies.seriesId, study.seriesId),
+        eq(studies.seriesOrder, currentOrder - 1)
+      ));
+
+    if (!previousStudy) {
+      // No previous study found, unlock this one
+      return { isLocked: false, unlockTime: null, previousStudyTitle: null, message: null };
+    }
+
+    // Check if the previous study was completed
+    const [prevProgress] = await db.select().from(userProgress)
+      .where(and(
+        eq(userProgress.userId, userId),
+        eq(userProgress.studyId, previousStudy.id),
+        eq(userProgress.status, 'completed')
+      ));
+
+    if (!prevProgress || !prevProgress.completedAt) {
+      // Previous study not completed yet
+      return {
+        isLocked: true,
+        unlockTime: null,
+        previousStudyTitle: previousStudy.title,
+        message: `Complete "${previousStudy.title}" first to unlock this study`
+      };
+    }
+
+    // Calculate midnight in user's timezone after the completion
+    const completedAt = new Date(prevProgress.completedAt);
+    
+    // Calculate the next midnight in the user's timezone
+    try {
+      // Helper function to get date parts in a specific timezone
+      const getDatePartsInTimezone = (date: Date, tz: string) => {
+        const formatter = new Intl.DateTimeFormat('en-US', {
+          timeZone: tz,
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        const parts = formatter.formatToParts(date);
+        const getPart = (type: string) => parts.find(p => p.type === type)?.value || '0';
+        return {
+          year: parseInt(getPart('year')),
+          month: parseInt(getPart('month')),
+          day: parseInt(getPart('day')),
+          hour: parseInt(getPart('hour')),
+          minute: parseInt(getPart('minute')),
+          second: parseInt(getPart('second'))
+        };
+      };
+
+      // Get completion date parts in user's timezone
+      const completionParts = getDatePartsInTimezone(completedAt, userTimezone);
+      
+      // Get now's date parts in user's timezone
+      const now = new Date();
+      const nowParts = getDatePartsInTimezone(now, userTimezone);
+
+      // Calculate the next day after completion
+      const nextDayAfterCompletion = new Date(completionParts.year, completionParts.month - 1, completionParts.day + 1);
+      
+      // Create comparison date for "now" in same format
+      const nowDate = new Date(nowParts.year, nowParts.month - 1, nowParts.day);
+      const nowDateTime = new Date(nowParts.year, nowParts.month - 1, nowParts.day, nowParts.hour, nowParts.minute, nowParts.second);
+      const nextDayMidnight = new Date(nextDayAfterCompletion.getFullYear(), nextDayAfterCompletion.getMonth(), nextDayAfterCompletion.getDate(), 0, 0, 0);
+
+      // Check if current date in user's timezone is >= next day after completion
+      if (nowDate >= nextDayAfterCompletion) {
+        return { isLocked: false, unlockTime: null, previousStudyTitle: null, message: null };
+      }
+
+      // Still locked - calculate time remaining until midnight
+      const msUntilMidnight = nextDayMidnight.getTime() - nowDateTime.getTime();
+      const unlockTimeUTC = new Date(now.getTime() + msUntilMidnight);
+
+      return {
+        isLocked: true,
+        unlockTime: unlockTimeUTC,
+        previousStudyTitle: previousStudy.title,
+        message: `This study unlocks at midnight`
+      };
+    } catch (e) {
+      // If timezone parsing fails, default to unlocked
+      console.error('Error calculating timezone:', e);
+      return { isLocked: false, unlockTime: null, previousStudyTitle: null, message: null };
+    }
   }
 
   // System settings operations
