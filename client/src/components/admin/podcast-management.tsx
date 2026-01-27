@@ -20,10 +20,12 @@ import {
   Star,
   Calendar,
   Radio,
-  ChevronUp,
-  ChevronDown
+  GripVertical
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Podcast {
   id: string;
@@ -45,6 +47,137 @@ interface Podcast {
   episodeNumber?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+interface SortablePodcastCardProps {
+  podcast: Podcast;
+  onEdit: (podcast: Podcast) => void;
+  onDelete: (id: string) => void;
+  formatDuration: (seconds: number) => string;
+}
+
+function SortablePodcastCard({ podcast, onEdit, onDelete, formatDuration }: SortablePodcastCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: podcast.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Card 
+      ref={setNodeRef} 
+      style={style} 
+      className={`hover:shadow-md transition-shadow bg-ministry-gold-exact ${isDragging ? 'shadow-lg ring-2 ring-black' : ''}`}
+    >
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-4 flex-1">
+            <div 
+              {...attributes} 
+              {...listeners}
+              className="flex-shrink-0 flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing touch-none"
+            >
+              <GripVertical className="w-6 h-6 text-black/50" />
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                podcast.type === 'video' 
+                  ? 'bg-ministry-steel/20' 
+                  : 'bg-black'
+              }`}>
+                {podcast.type === 'video' ? (
+                  <Video className="w-6 h-6 text-ministry-steel" />
+                ) : (
+                  <Headphones className="w-6 h-6 text-white" />
+                )}
+              </div>
+              {podcast.episodeNumber && (
+                <span className="text-xs text-black font-bold">#{podcast.episodeNumber}</span>
+              )}
+            </div>
+
+            <div className="flex-1">
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <h3 className="font-semibold text-lg text-black mb-1">
+                    {podcast.title}
+                  </h3>
+                  <div className="flex items-center space-x-4 text-sm text-black mb-2">
+                    <Badge variant="outline" className="text-xs">
+                      {podcast.type === 'audio' ? 'Audio' : 'Video'}
+                    </Badge>
+                    <span className="capitalize">{podcast.category}</span>
+                    <span>{formatDuration(podcast.duration)}</span>
+                    {!podcast.isPublished && (
+                      <Badge variant="secondary" className="text-xs">
+                        Draft
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {podcast.description && (
+                <p className="text-black text-sm mb-3 line-clamp-2">
+                  {podcast.description}
+                </p>
+              )}
+
+              <div className="flex items-center space-x-6 text-sm text-black">
+                <div className="flex items-center">
+                  <Star className="w-4 h-4 mr-1 text-ministry-gold" />
+                  {parseFloat(podcast.rating).toFixed(1)} ({podcast.ratingCount})
+                </div>
+                <div className="flex items-center">
+                  <Eye className="w-4 h-4 mr-1" />
+                  {podcast.viewCount} views
+                </div>
+                <div className="flex items-center">
+                  <Calendar className="w-4 h-4 mr-1" />
+                  {formatDistanceToNow(new Date(podcast.createdAt), { addSuffix: true })}
+                </div>
+              </div>
+
+              {podcast.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {podcast.tags.slice(0, 3).map((tag, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 ml-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onEdit(podcast)}
+            >
+              <Edit2 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDelete(podcast.id)}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function PodcastManagement() {
@@ -157,49 +290,50 @@ export default function PodcastManagement() {
     }
   });
 
-  // Move podcast (reorder) mutation
-  const movePodcast = async (podcastId: string, newEpisodeNumber: number) => {
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end - update episode numbers for all affected podcasts
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over || active.id === over.id) return;
+    
+    const oldIndex = podcasts.findIndex((p: Podcast) => p.id === active.id);
+    const newIndex = podcasts.findIndex((p: Podcast) => p.id === over.id);
+    
+    if (oldIndex === -1 || newIndex === -1) return;
+    
+    // Calculate new order - assign episode numbers based on position (highest at top)
+    const reorderedPodcasts = arrayMove([...podcasts], oldIndex, newIndex);
+    const totalPodcasts = reorderedPodcasts.length;
+    
+    // Update all episode numbers based on new positions
     try {
-      const response = await fetch(`/api/podcasts/${podcastId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ episodeNumber: newEpisodeNumber }),
-        credentials: 'include'
-      });
-      if (!response.ok) throw new Error('Failed to reorder');
+      await Promise.all(
+        reorderedPodcasts.map((podcast: Podcast, index: number) => 
+          fetch(`/api/podcasts/${podcast.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ episodeNumber: totalPodcasts - index }),
+            credentials: 'include'
+          })
+        )
+      );
       queryClient.invalidateQueries({ queryKey: ['admin', 'podcasts'] });
       queryClient.invalidateQueries({ queryKey: ['api', 'podcasts'] });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to reorder podcast",
+        description: "Failed to reorder podcasts",
         variant: "destructive"
       });
     }
-  };
-
-  // Swap episode numbers between two podcasts
-  const swapPodcasts = async (podcast1: Podcast, podcast2: Podcast) => {
-    const ep1 = podcast1.episodeNumber ?? 0;
-    const ep2 = podcast2.episodeNumber ?? 0;
-    await Promise.all([
-      movePodcast(podcast1.id, ep2),
-      movePodcast(podcast2.id, ep1)
-    ]);
-  };
-
-  const handleMoveUp = (index: number) => {
-    if (index === 0) return;
-    const currentPodcast = podcasts[index];
-    const abovePodcast = podcasts[index - 1];
-    swapPodcasts(currentPodcast, abovePodcast);
-  };
-
-  const handleMoveDown = (index: number) => {
-    if (index === podcasts.length - 1) return;
-    const currentPodcast = podcasts[index];
-    const belowPodcast = podcasts[index + 1];
-    swapPodcasts(currentPodcast, belowPodcast);
   };
 
   const resetForm = () => {
@@ -532,125 +666,21 @@ export default function PodcastManagement() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {podcasts.map((podcast: Podcast, index: number) => (
-            <Card key={podcast.id} className="hover:shadow-md transition-shadow bg-ministry-gold-exact">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4 flex-1">
-                    <div className="flex-shrink-0 flex flex-col items-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleMoveUp(index)}
-                        disabled={index === 0}
-                        className="h-6 w-6 p-0"
-                        title="Move up"
-                      >
-                        <ChevronUp className="w-4 h-4" />
-                      </Button>
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                        podcast.type === 'video' 
-                          ? 'bg-ministry-steel/20' 
-                          : 'bg-black'
-                      }`}>
-                        {podcast.type === 'video' ? (
-                          <Video className="w-6 h-6 text-ministry-steel" />
-                        ) : (
-                          <Headphones className="w-6 h-6 text-white" />
-                        )}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleMoveDown(index)}
-                        disabled={index === podcasts.length - 1}
-                        className="h-6 w-6 p-0"
-                        title="Move down"
-                      >
-                        <ChevronDown className="w-4 h-4" />
-                      </Button>
-                      {podcast.episodeNumber && (
-                        <span className="text-xs text-black font-bold">#{podcast.episodeNumber}</span>
-                      )}
-                    </div>
-
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="font-semibold text-lg text-black mb-1">
-                            {podcast.title}
-                          </h3>
-                          <div className="flex items-center space-x-4 text-sm text-black mb-2">
-                            <Badge variant="outline" className="text-xs">
-                              {podcast.type === 'audio' ? 'Audio' : 'Video'}
-                            </Badge>
-                            <span className="capitalize">{podcast.category}</span>
-                            <span>{formatDuration(podcast.duration)}</span>
-                            {!podcast.isPublished && (
-                              <Badge variant="secondary" className="text-xs">
-                                Draft
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {podcast.description && (
-                        <p className="text-black text-sm mb-3 line-clamp-2">
-                          {podcast.description}
-                        </p>
-                      )}
-
-                      <div className="flex items-center space-x-6 text-sm text-black">
-                        <div className="flex items-center">
-                          <Star className="w-4 h-4 mr-1 text-ministry-gold" />
-                          {parseFloat(podcast.rating).toFixed(1)} ({podcast.ratingCount})
-                        </div>
-                        <div className="flex items-center">
-                          <Eye className="w-4 h-4 mr-1" />
-                          {podcast.viewCount} views
-                        </div>
-                        <div className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          {formatDistanceToNow(new Date(podcast.createdAt), { addSuffix: true })}
-                        </div>
-                      </div>
-
-                      {podcast.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {podcast.tags.slice(0, 3).map((tag, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2 ml-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(podcast)}
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(podcast.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={podcasts.map((p: Podcast) => p.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-4">
+              {podcasts.map((podcast: Podcast) => (
+                <SortablePodcastCard
+                  key={podcast.id}
+                  podcast={podcast}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  formatDuration={formatDuration}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
       </div>
     </div>
