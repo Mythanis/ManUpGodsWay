@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { getTierDisplayName } from "@/lib/utils";
 import { BackButton } from "@/components/BackButton";
 import { Coins, ShoppingBag, Tag, Gift, Crown, Package, Check, Loader2, ClipboardList } from "lucide-react";
 
@@ -67,7 +68,7 @@ const TIER_CONFIG = {
   },
   gold: { 
     label: "Gold", 
-    description: "Premium items for VIPs",
+    description: "Premium items for Warriors",
     color: "bg-yellow-700", 
     textColor: "text-ministry-gold",
     borderColor: "border-ministry-gold",
@@ -201,7 +202,7 @@ export default function RationsStorePage() {
             <h3 className="font-bold text-white uppercase tracking-tight text-sm line-clamp-2">{product.name}</h3>
             {product.isVipOnly && (
               <Badge className="bg-ministry-gold text-black text-[10px] font-bold uppercase ml-2 flex-shrink-0 rounded-sm">
-                VIP
+                Warrior
               </Badge>
             )}
           </div>
@@ -239,7 +240,7 @@ export default function RationsStorePage() {
             {!inStock ? (
               "Out of Stock"
             ) : !meetsVipRequirement ? (
-              "VIP Only"
+              "Warrior Only"
             ) : !canAfford ? (
               `Need ${(product.rationCost - userBalance).toLocaleString()} more`
             ) : (
@@ -312,7 +313,7 @@ export default function RationsStorePage() {
               {isVip && (
                 <Badge className="bg-ministry-gold text-black font-bold uppercase rounded-sm border-2 border-black">
                   <Crown className="w-3 h-3 mr-1" />
-                  VIP
+                  Warrior
                 </Badge>
               )}
             </div>
@@ -383,7 +384,7 @@ export default function RationsStorePage() {
                 <Crown className="w-4 h-4 text-ministry-gold" />
                 <span className="font-bold text-ministry-gold uppercase text-sm">Gold Tier</span>
               </div>
-              <p className="text-xs text-yellow-300/70">Premium items including t-shirts, hats, and exclusive gear - VIP members only!</p>
+              <p className="text-xs text-yellow-300/70">Premium items including t-shirts, hats, and exclusive gear - Warrior members only!</p>
             </div>
             {isLoading ? (
               <div className="flex justify-center py-12">

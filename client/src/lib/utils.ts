@@ -66,3 +66,13 @@ export function parseDateSafely(dateString: string): Date {
   // If it's just a date string (YYYY-MM-DD), add noon time to avoid timezone issues
   return new Date(dateString + 'T12:00:00');
 }
+
+// Map internal tier names to display names
+export function getTierDisplayName(tier: string): string {
+  const tierNames: Record<string, string> = {
+    'free': 'Recruit',
+    'premium': 'Soldier',
+    'vip': 'Warrior'
+  };
+  return tierNames[tier?.toLowerCase()] || tier;
+}

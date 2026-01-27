@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { getTierDisplayName } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -438,7 +439,7 @@ export default function StudyDetail() {
                 {/* Only show tier badge if study doesn't require purchase for this user */}
                 {!(study.requiresPurchase && study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free') && !hasPurchased) && (
                   <Badge className="bg-black text-[#FCD000] font-bold uppercase tracking-wide rounded-sm border-2 border-black" data-testid="badge-study-tier">
-                    {study.requiredTier || 'free'}
+                    {getTierDisplayName(study.requiredTier || 'free')}
                   </Badge>
                 )}
                 {(study.rating && parseFloat(study.rating.toString()) > 0) && (
@@ -519,13 +520,13 @@ export default function StudyDetail() {
               <div className="bg-black border-2 border-ministry-gold-exact rounded-sm p-4 mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="access-restriction">
                 <h3 className="font-black uppercase tracking-tight text-ministry-gold-exact mb-2">Premium Content</h3>
                 <p className="text-sm text-gray-400 mb-3">
-                  This study requires a {study.requiredTier} subscription to access.
+                  This study requires a {getTierDisplayName(study.requiredTier || 'free')} subscription to access.
                 </p>
                 <Button 
                   className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold uppercase tracking-wide rounded-sm border-2 border-black"
                   data-testid="button-upgrade-access"
                 >
-                  Upgrade to {study.requiredTier}
+                  Upgrade to {getTierDisplayName(study.requiredTier || 'free')}
                 </Button>
               </div>
             )}
@@ -565,7 +566,7 @@ export default function StudyDetail() {
                   <div>
                     <h3 className="font-medium text-white">Study Discussion Available</h3>
                     <p className="text-sm text-gray-400">
-                      Upgrade to {study.requiredTier} to join the study discussion
+                      Upgrade to {getTierDisplayName(study.requiredTier || 'free')} to join the study discussion
                     </p>
                   </div>
                 </div>
@@ -574,7 +575,7 @@ export default function StudyDetail() {
                   className="bg-gray-800 text-gray-500 font-bold uppercase tracking-wide rounded-sm border-2 border-gray-600 opacity-50"
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
-                  {study.requiredTier} Required
+                  {getTierDisplayName(study.requiredTier || 'free')} Required
                 </Button>
               </div>
             )}
@@ -858,7 +859,7 @@ export default function StudyDetail() {
                   <div className="text-center py-8">
                     <p className="text-sm text-ministry-slate">
                       {study?.requiredTier && study.requiredTier !== 'free' 
-                        ? `${study.requiredTier.charAt(0).toUpperCase() + study.requiredTier.slice(1)} subscription required to participate in this discussion.`
+                        ? `${getTierDisplayName(study.requiredTier || 'free')} subscription required to participate in this discussion.`
                         : 'You need access to this study to participate in the discussion.'
                       }
                     </p>
@@ -1014,7 +1015,7 @@ function StudyDiscussionReplyForm({ discussionId, currentUserTier, study }: {
       if (!hasAccess) {
         toast({
           title: "Access Restricted",
-          description: `This study discussion requires ${study.requiredTier} subscription to participate.`,
+          description: `This study discussion requires ${getTierDisplayName(study.requiredTier || 'free')} subscription to participate.`,
           variant: "destructive",
         });
         return;
@@ -1039,7 +1040,7 @@ function StudyDiscussionReplyForm({ discussionId, currentUserTier, study }: {
             <FormItem>
               <FormControl>
                 <Textarea
-                  placeholder={hasReplyAccess ? "Write your reply..." : `${study?.requiredTier || 'Premium'} subscription required to reply`}
+                  placeholder={hasReplyAccess ? "Write your reply..." : `${getTierDisplayName(study?.requiredTier || 'premium')} subscription required to reply`}
                   className="min-h-[80px] resize-none"
                   disabled={!hasReplyAccess || createReply.isPending}
                   {...field}

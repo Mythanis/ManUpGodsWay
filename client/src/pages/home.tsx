@@ -562,7 +562,7 @@ export default function Home() {
           <div className="liquid-gold-card glow-gold text-black rounded-sm border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="banner-subscription">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-black text-sm text-black uppercase tracking-tight">Upgrade to Premium</h3>
+                <h3 className="font-black text-sm text-black uppercase tracking-tight">Upgrade to Soldier</h3>
                 <p className="text-xs text-black/80 font-medium">Unlock all community features</p>
               </div>
               <Button 

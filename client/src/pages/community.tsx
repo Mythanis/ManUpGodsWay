@@ -18,6 +18,7 @@ import { insertDiscussionSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { getTierDisplayName } from "@/lib/utils";
 import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X, Send, Hash, HandHeart, Image, Video, Radio, Trash2 } from "lucide-react";
 import { HonorButton } from "@/components/honor-button";
 import { z } from "zod";
@@ -204,7 +205,7 @@ function DiscussionReplyForm({ discussionId, currentUserTier, discussion }: {
             <FormItem>
               <FormControl>
                 <Textarea
-                  placeholder={hasReplyAccess ? "Write your reply..." : `${discussion.study?.requiredTier || 'Premium'} subscription required to reply`}
+                  placeholder={hasReplyAccess ? "Write your reply..." : `${getTierDisplayName(discussion.study?.requiredTier || 'premium')} subscription required to reply`}
                   className="min-h-[80px] resize-none"
                   disabled={!hasReplyAccess || createReply.isPending}
                   {...field}
