@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Link } from "wouter";
 
 interface ProgressCardProps {
   study: any;
@@ -54,14 +53,13 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
           <Progress value={progressPercent} className="h-3 bg-white border-2 border-black rounded-sm [&>div]:bg-black [&>div]:rounded-sm" data-testid="progress-bar" />
         </div>
         
-        <Link href={`/studies/${study.id}`}>
-          <Button 
-            className="w-full bg-black text-white py-3 rounded-sm font-black uppercase tracking-wide hover:bg-gray-900 border-2 border-black"
-            data-testid="button-continue-study"
-          >
-            {isStudyCompleted ? 'Review Study' : 'Continue Study'}
-          </Button>
-        </Link>
+        <Button 
+          className="w-full bg-black text-white py-3 rounded-sm font-black uppercase tracking-wide hover:bg-gray-900 border-2 border-black"
+          data-testid="button-continue-study"
+          onClick={() => window.location.href = `/studies/${study.id}`}
+        >
+          {isStudyCompleted ? 'Review Study' : 'Continue Study'}
+        </Button>
       </CardContent>
     </Card>
   );

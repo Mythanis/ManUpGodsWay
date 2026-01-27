@@ -255,7 +255,6 @@ export default function StudyDetail() {
     },
     retry: false,
     enabled: !!id && !!user?.id,
-    refetchInterval: timeGateStatus?.isLocked ? 60000 : false, // Refresh every minute if locked
   });
 
   // Countdown timer state
