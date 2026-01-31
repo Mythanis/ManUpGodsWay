@@ -122,8 +122,8 @@ export function NotificationPreferences() {
     },
     {
       key: 'nextStudyNotifications' as const,
-      title: 'Next Study Available',
-      description: 'Get reminded when the next study in a series unlocks after completing one',
+      title: 'Daily Study Reminders',
+      description: 'Get notified each day when your next study in a series is ready',
       icon: <Bell className="h-4 w-4" />
     },
     {

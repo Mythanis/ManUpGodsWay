@@ -4,6 +4,7 @@ import {
   studies,
   studyLessons,
   userLessonProgress,
+  userSeriesProgress,
   discussions,
   discussionReplies,
   discussionSubscriptions,
@@ -181,6 +182,8 @@ export interface IStorage {
   createStudySeries(series: any): Promise<any>;
   updateStudySeries(id: string, series: any): Promise<any>;
   deleteStudySeries(id: string): Promise<void>;
+  startUserSeries(userId: string, seriesId: string): Promise<any>;
+  getUserSeriesProgress(userId: string, seriesId: string): Promise<any | null>;
 
   // Study operations
   getStudies(category?: string, requiredTier?: string, isAdmin?: boolean): Promise<Study[]>;
@@ -668,6 +671,24 @@ export class DatabaseStorage implements IStorage {
     
     // Get progress for each study if user is logged in
     if (userId) {
+      // Get or create series progress to track when user started this series
+      let [seriesProgress] = await db.select().from(userSeriesProgress)
+        .where(and(
+          eq(userSeriesProgress.userId, userId),
+          eq(userSeriesProgress.seriesId, seriesId)
+        ));
+      
+      // Calculate which day the user is on (0-indexed) for daily drip using actual 24h intervals
+      let daysSinceStart = 0;
+      let startTimestamp: Date | null = null;
+      if (seriesProgress?.startedAt) {
+        startTimestamp = new Date(seriesProgress.startedAt);
+        const now = new Date();
+        // Use actual elapsed time in 24h intervals, not calendar days
+        const elapsedMs = now.getTime() - startTimestamp.getTime();
+        daysSinceStart = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
+      }
+      
       // First, get all lesson and progress data for determining lock status
       const studyCompletionStatus: Map<string, boolean> = new Map();
       
@@ -717,21 +738,41 @@ export class DatabaseStorage implements IStorage {
           completedLessonsCount = completedLessons.length;
         }
         
-        // Determine if this study is locked due to consecutive completion requirement
+        // Determine if this study is locked
         let isLockedByPrevious = false;
+        let isLockedByDrip = false;
+        let unlocksAt: Date | null = null;
+        
         if (requiresConsecutive && index > 0) {
-          // Check if the previous study is complete
+          // Daily drip: study unlocks after (index * 24 hours) from start time
+          if (seriesProgress && startTimestamp) {
+            isLockedByDrip = index > daysSinceStart;
+            if (isLockedByDrip) {
+              // Calculate exact unlock time: startTime + (index * 24 hours)
+              unlocksAt = new Date(startTimestamp.getTime() + (index * 24 * 60 * 60 * 1000));
+            }
+          } else {
+            // User hasn't started series yet - first study is always available
+            isLockedByDrip = index > 0;
+          }
+          
+          // Also check if previous study is complete (must complete before moving on)
           const previousStudyId = seriesStudies[index - 1].id;
           const previousComplete = studyCompletionStatus.get(previousStudyId) ?? false;
           isLockedByPrevious = !previousComplete;
         }
+        
+        // Study is locked if either drip or completion lock applies
+        const isLocked = isLockedByDrip || isLockedByPrevious;
         
         return {
           ...study,
           progress: progress || null,
           completedLessons: completedLessonsCount,
           totalLessons: lessons.length,
-          isLockedByPrevious,
+          isLockedByPrevious: isLocked,
+          isLockedByDrip,
+          unlocksAt: unlocksAt?.toISOString() || null,
           studyNumber: index + 1,
           totalStudiesInSeries: seriesStudies.length,
         };
@@ -757,6 +798,39 @@ export class DatabaseStorage implements IStorage {
     }));
     
     return enrichedStudies;
+  }
+
+  async startUserSeries(userId: string, seriesId: string): Promise<any> {
+    // Check if already started
+    const [existing] = await db.select().from(userSeriesProgress)
+      .where(and(
+        eq(userSeriesProgress.userId, userId),
+        eq(userSeriesProgress.seriesId, seriesId)
+      ));
+    
+    if (existing) {
+      return existing;
+    }
+    
+    // Create new series progress
+    const [progress] = await db.insert(userSeriesProgress)
+      .values({
+        userId,
+        seriesId,
+        startedAt: new Date(),
+      })
+      .returning();
+    
+    return progress;
+  }
+
+  async getUserSeriesProgress(userId: string, seriesId: string): Promise<any | null> {
+    const [progress] = await db.select().from(userSeriesProgress)
+      .where(and(
+        eq(userSeriesProgress.userId, userId),
+        eq(userSeriesProgress.seriesId, seriesId)
+      ));
+    return progress || null;
   }
 
   async createStudySeries(series: any): Promise<any> {

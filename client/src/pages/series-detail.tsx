@@ -1,11 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, BookOpen, CheckCircle, Layers, ChevronRight, Lock } from "lucide-react";
+import { ArrowLeft, BookOpen, CheckCircle, Layers, ChevronRight, Lock, Clock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { BackButton } from "@/components/BackButton";
+import { apiRequest } from "@/lib/queryClient";
 
 interface StudyInSeries {
   id: string;
@@ -22,6 +23,8 @@ interface StudyInSeries {
   completedLessons: number;
   totalLessons: number;
   isLockedByPrevious?: boolean;
+  isLockedByDrip?: boolean;
+  unlocksAt?: string | null;
   studyNumber?: number;
   totalStudiesInSeries?: number;
 }
@@ -59,7 +62,17 @@ export default function SeriesDetail() {
     enabled: !!seriesId,
   });
 
+  const queryClient = useQueryClient();
   const isLoading = seriesLoading || studiesLoading;
+
+  const startSeriesMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', `/api/study-series/${seriesId}/start`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/study-series", seriesId, "studies"] });
+    },
+  });
 
   const totalLessons = studies.reduce((sum, s) => sum + (s.totalLessons || 0), 0);
   const completedLessons = studies.reduce((sum, s) => sum + (s.completedLessons || 0), 0);
@@ -88,6 +101,45 @@ export default function SeriesDetail() {
   const getPreviousStudyTitle = (index: number): string | null => {
     if (index <= 0) return null;
     return studies[index - 1]?.title || null;
+  };
+
+  const formatUnlockDate = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return '';
+    const unlockDate = new Date(dateStr);
+    const now = new Date();
+    const msRemaining = unlockDate.getTime() - now.getTime();
+    
+    if (msRemaining <= 0) {
+      return 'now';
+    }
+    
+    const hoursRemaining = Math.ceil(msRemaining / (1000 * 60 * 60));
+    
+    if (hoursRemaining <= 1) {
+      const minutesRemaining = Math.ceil(msRemaining / (1000 * 60));
+      return `in ${minutesRemaining} minute${minutesRemaining !== 1 ? 's' : ''}`;
+    }
+    
+    if (hoursRemaining < 24) {
+      return `in ${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''}`;
+    }
+    
+    // Check if it's tomorrow
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(23, 59, 59, 999);
+    
+    if (unlockDate <= tomorrow) {
+      return 'tomorrow';
+    }
+    
+    return unlockDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const handleStudyClick = async (study: StudyInSeries, index: number) => {
+    if (index === 0 && !study.progress) {
+      await startSeriesMutation.mutateAsync();
+    }
   };
 
   if (isLoading) {
@@ -242,12 +294,24 @@ export default function SeriesDetail() {
                       </p>
 
                       {/* Locked message */}
-                      {isConsecutiveLocked && previousTitle && (
+                      {isConsecutiveLocked && (
                         <div className="mb-3 p-2 bg-zinc-900 border border-zinc-700 rounded-sm">
-                          <p className="text-xs text-zinc-400 font-medium">
-                            <Lock className="w-3 h-3 inline mr-1" />
-                            Complete "{previousTitle}" first to unlock
-                          </p>
+                          {study.isLockedByDrip && study.unlocksAt ? (
+                            <p className="text-xs text-zinc-400 font-medium">
+                              <Clock className="w-3 h-3 inline mr-1" />
+                              Unlocks {formatUnlockDate(study.unlocksAt)}
+                            </p>
+                          ) : previousTitle ? (
+                            <p className="text-xs text-zinc-400 font-medium">
+                              <Lock className="w-3 h-3 inline mr-1" />
+                              Complete "{previousTitle}" first to unlock
+                            </p>
+                          ) : (
+                            <p className="text-xs text-zinc-400 font-medium">
+                              <Lock className="w-3 h-3 inline mr-1" />
+                              Start the series to begin
+                            </p>
+                          )}
                         </div>
                       )}
 
@@ -289,6 +353,7 @@ export default function SeriesDetail() {
                               size="sm"
                               className="bg-black text-white hover:bg-gray-800 font-black uppercase tracking-wide rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]"
                               data-testid={`button-study-${study.id}`}
+                              onClick={() => handleStudyClick(study, index)}
                             >
                               {getButtonLabel(study)}
                               <ChevronRight className="w-4 h-4 ml-1" />

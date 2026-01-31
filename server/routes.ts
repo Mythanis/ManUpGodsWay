@@ -512,6 +512,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Start a series (records when user begins for daily drip)
+  app.post('/api/study-series/:id/start', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      const progress = await storage.startUserSeries(userId, id);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error starting series:", error);
+      res.status(500).json({ message: "Failed to start series" });
+    }
+  });
+
+  // Get user's series progress
+  app.get('/api/study-series/:id/progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      const progress = await storage.getUserSeriesProgress(userId, id);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching series progress:", error);
+      res.status(500).json({ message: "Failed to fetch series progress" });
+    }
+  });
+
   // Admin Study Series routes
   app.get('/api/admin/study-series', isAuthenticated, async (req: any, res) => {
     try {

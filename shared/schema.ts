@@ -192,6 +192,17 @@ export const userLessonProgress = pgTable("user_lesson_progress", {
   index("idx_user_lesson_progress_user_lesson").on(table.userId, table.lessonId), // Fast lookups
 ]);
 
+// User series progress - tracks when users start each series for daily drip
+export const userSeriesProgress = pgTable("user_series_progress", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  seriesId: varchar("series_id").notNull().references(() => studySeries.id, { onDelete: 'cascade' }),
+  startedAt: timestamp("started_at").defaultNow(), // When user first accessed this series
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.seriesId),
+]);
+
 // User purchases
 export const userPurchases = pgTable("user_purchases", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
