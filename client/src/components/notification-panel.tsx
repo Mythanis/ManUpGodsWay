@@ -695,10 +695,10 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                 >
                   <div className={cn(
                     "w-10 flex items-center justify-center flex-shrink-0 self-stretch",
-                    notification.isRead ? "bg-green-600" : "bg-zinc-800"
+                    notification.isRead ? "bg-[#FCD000]" : "bg-zinc-800"
                   )}>
                     {notification.isRead ? (
-                      <Check className="h-4 w-4 text-white" />
+                      <Check className="h-4 w-4 text-black" />
                     ) : (
                       <div className="text-[#FCD000]">{getNotificationIcon(notification.type)}</div>
                     )}
