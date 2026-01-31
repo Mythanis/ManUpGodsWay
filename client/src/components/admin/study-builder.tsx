@@ -1187,7 +1187,10 @@ function EditSeriesForm({ series, onSave, onCancel }: {
     title: series.title,
     description: series.description,
     category: series.category,
+    requiredTier: series.requiredTier || 'free',
     thumbnailUrl: series.thumbnailUrl || '',
+    isPublished: series.isPublished ?? false,
+    requiresConsecutiveCompletion: series.requiresConsecutiveCompletion ?? false,
   });
   const [saving, setSaving] = useState(false);
 
@@ -1216,16 +1219,29 @@ function EditSeriesForm({ series, onSave, onCancel }: {
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
         />
       </div>
-      <div className="space-y-2">
-        <Label>Category</Label>
-        <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {categories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Category</Label>
+          <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Access Tier</Label>
+          <Select value={formData.requiredTier} onValueChange={(v) => setFormData({ ...formData, requiredTier: v })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {tiers.map((tier) => (
+                <SelectItem key={tier.id} value={tier.id}>{tier.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <div className="space-y-2">
         <Label>Thumbnail URL</Label>
@@ -1233,6 +1249,23 @@ function EditSeriesForm({ series, onSave, onCancel }: {
           value={formData.thumbnailUrl}
           onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
           placeholder="https://..."
+        />
+      </div>
+      <div className="flex items-center justify-between border rounded-lg p-3">
+        <Label>Published</Label>
+        <Switch
+          checked={formData.isPublished}
+          onCheckedChange={(v) => setFormData({ ...formData, isPublished: v })}
+        />
+      </div>
+      <div className="flex items-center justify-between border rounded-lg p-3">
+        <div>
+          <Label>Requires Consecutive Completion</Label>
+          <p className="text-xs text-gray-500">Studies must be completed in order</p>
+        </div>
+        <Switch
+          checked={formData.requiresConsecutiveCompletion}
+          onCheckedChange={(v) => setFormData({ ...formData, requiresConsecutiveCompletion: v })}
         />
       </div>
       <DialogFooter>

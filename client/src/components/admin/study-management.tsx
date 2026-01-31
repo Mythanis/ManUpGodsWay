@@ -138,7 +138,10 @@ export default function StudyManagement() {
     title: "",
     description: "",
     category: "",
+    requiredTier: "free",
     thumbnailUrl: "",
+    isPublished: false,
+    requiresConsecutiveCompletion: false,
   });
   
   // Bulk series upload state
@@ -424,7 +427,10 @@ export default function StudyManagement() {
       title: series.title,
       description: series.description || "",
       category: series.category || "",
-      thumbnailUrl: "",
+      requiredTier: series.requiredTier || "free",
+      thumbnailUrl: series.thumbnailUrl || "",
+      isPublished: series.isPublished || false,
+      requiresConsecutiveCompletion: series.requiresConsecutiveCompletion || false,
     });
     setShowEditSeriesDialog(true);
   };
@@ -1385,7 +1391,7 @@ export default function StudyManagement() {
 
       {/* Edit Series Dialog */}
       <Dialog open={showEditSeriesDialog} onOpenChange={setShowEditSeriesDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Edit Series</DialogTitle>
           </DialogHeader>
@@ -1409,18 +1415,62 @@ export default function StudyManagement() {
                 data-testid="input-edit-series-description"
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-series-category">Category</Label>
+                <Select value={seriesFormData.category} onValueChange={(val) => setSeriesFormData({ ...seriesFormData, category: val })}>
+                  <SelectTrigger data-testid="select-edit-series-category">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="edit-series-tier">Access Tier</Label>
+                <Select value={seriesFormData.requiredTier} onValueChange={(val) => setSeriesFormData({ ...seriesFormData, requiredTier: val })}>
+                  <SelectTrigger data-testid="select-edit-series-tier">
+                    <SelectValue placeholder="Select tier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="vip">VIP</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div>
-              <Label htmlFor="edit-series-category">Category</Label>
-              <Select value={seriesFormData.category} onValueChange={(val) => setSeriesFormData({ ...seriesFormData, category: val })}>
-                <SelectTrigger data-testid="select-edit-series-category">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="edit-series-thumbnail">Thumbnail URL</Label>
+              <Input
+                id="edit-series-thumbnail"
+                value={seriesFormData.thumbnailUrl}
+                onChange={(e) => setSeriesFormData({ ...seriesFormData, thumbnailUrl: e.target.value })}
+                placeholder="https://..."
+                data-testid="input-edit-series-thumbnail"
+              />
+            </div>
+            <div className="flex items-center justify-between border rounded-lg p-3">
+              <Label>Published</Label>
+              <Switch
+                checked={seriesFormData.isPublished}
+                onCheckedChange={(checked) => setSeriesFormData({ ...seriesFormData, isPublished: checked })}
+                data-testid="switch-edit-series-published"
+              />
+            </div>
+            <div className="flex items-center justify-between border rounded-lg p-3">
+              <div>
+                <Label>Requires Consecutive Completion</Label>
+                <p className="text-xs text-gray-500">Studies must be completed in order</p>
+              </div>
+              <Switch
+                checked={seriesFormData.requiresConsecutiveCompletion}
+                onCheckedChange={(checked) => setSeriesFormData({ ...seriesFormData, requiresConsecutiveCompletion: checked })}
+                data-testid="switch-edit-series-consecutive"
+              />
             </div>
           </div>
           <DialogFooter>
