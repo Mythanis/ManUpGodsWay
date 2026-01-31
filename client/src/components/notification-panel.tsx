@@ -647,29 +647,29 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
             </div>
           </CardHeader>
           
-          <ScrollArea className="flex-1 max-h-[60vh]">
-            <CardContent className="space-y-3 p-3 bg-gray-100">
+          <ScrollArea className="flex-1 max-h-[50vh]">
+            <CardContent className="space-y-2 p-2 bg-gray-100">
               {/* Message Requests */}
               {pendingRequests.map((request) => (
                 <div
                   key={request.id}
-                  className="flex border-2 border-black rounded-sm overflow-hidden shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] liquid-gold-card"
+                  className="flex border-2 border-black rounded-sm overflow-hidden shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] liquid-gold-card"
                 >
-                  <div className="w-12 liquid-black flex items-center justify-center flex-shrink-0">
-                    <MessageSquare className="h-5 w-5 text-white relative z-10" />
+                  <div className="w-9 liquid-black flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="h-4 w-4 text-white relative z-10" />
                   </div>
-                  <div className="flex-1 p-3">
-                    <p className="text-sm font-black text-black uppercase tracking-wide">Message Request</p>
-                    <p className="text-xs text-black/70 font-medium">
+                  <div className="flex-1 p-2">
+                    <p className="text-xs font-black text-black uppercase tracking-wide">Message Request</p>
+                    <p className="text-[10px] text-black/70 font-medium">
                       From {request.fromUser.firstName || request.fromUser.email}
                     </p>
-                    <p className="text-xs mt-1 break-words text-black/60">{request.message}</p>
-                    <div className="flex gap-2 mt-2">
+                    <p className="text-[10px] mt-0.5 break-words text-black/60 line-clamp-1">{request.message}</p>
+                    <div className="flex gap-1.5 mt-1.5">
                       <Button
                         size="sm"
                         onClick={() => handleRequestResponse(request.id, 'accept')}
                         disabled={respondToRequestMutation.isPending}
-                        className="flex-1 text-xs h-7 bg-black text-white hover:bg-gray-800 rounded-sm border-2 border-black font-bold uppercase"
+                        className="flex-1 text-[10px] h-6 bg-black text-white hover:bg-gray-800 rounded-sm border border-black font-bold uppercase"
                       >
                         Accept
                       </Button>
@@ -678,7 +678,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                         variant="outline"
                         onClick={() => handleRequestResponse(request.id, 'decline')}
                         disabled={respondToRequestMutation.isPending}
-                        className="flex-1 text-xs h-7 bg-white text-black hover:bg-gray-100 rounded-sm border-2 border-black font-bold uppercase"
+                        className="flex-1 text-[10px] h-6 bg-white text-black hover:bg-gray-100 rounded-sm border border-black font-bold uppercase"
                       >
                         Decline
                       </Button>
@@ -692,38 +692,38 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                 <div
                   key={notification.id}
                   className={cn(
-                    "flex border-2 border-black rounded-sm overflow-hidden shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px]",
+                    "flex border-2 border-black rounded-sm overflow-hidden shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px]",
                     notification.isRead ? "opacity-60" : "",
-                    notification.type === 'brotherhood' ? "liquid-gold-card" : "liquid-gold-card"
+                    "liquid-gold-card"
                   )}
                 >
-                  <div className="w-12 liquid-black flex items-center justify-center flex-shrink-0 self-stretch">
+                  <div className="w-9 liquid-black flex items-center justify-center flex-shrink-0 self-stretch">
                     <div className="text-white relative z-10">{getNotificationIcon(notification.type)}</div>
                   </div>
                   <div 
-                    className="flex-1 p-3 cursor-pointer"
+                    className="flex-1 p-2 cursor-pointer"
                     onClick={(e) => notification.type === 'brotherhood' ? handleBrotherhoodNotificationClick(notification, e) : handleNotificationClick(notification)}
                   >
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-black text-black uppercase tracking-wide line-clamp-1">{notification.title}</p>
+                      <p className="text-xs font-black text-black uppercase tracking-wide line-clamp-1">{notification.title}</p>
                       {!notification.isRead && (
-                        <div className="h-2 w-2 bg-black rounded-full flex-shrink-0 ml-2" />
+                        <div className="h-1.5 w-1.5 bg-black rounded-full flex-shrink-0 ml-1" />
                       )}
                     </div>
-                    <p className="text-xs text-black/70 break-words line-clamp-2 mt-1">
+                    <p className="text-[10px] text-black/70 break-words line-clamp-1 mt-0.5">
                       {notification.message}
                     </p>
-                    <p className="text-xs text-black/50 mt-1 font-medium">
+                    <p className="text-[10px] text-black/50 font-medium">
                       {formatLocalDateTime(notification.createdAt)}
                     </p>
                     {/* Approve/Deny buttons for brotherhood requests */}
                     {notification.type === 'brotherhood' && notification.relatedId && (
-                      <div className="flex gap-2 mt-2">
+                      <div className="flex gap-1.5 mt-1.5">
                         <Button
                           size="sm"
                           onClick={(e) => { e.stopPropagation(); handleBrotherhoodResponse(notification.relatedId!, 'approved'); }}
                           disabled={respondToBrotherhoodMutation.isPending}
-                          className="flex-1 text-xs h-7 bg-black text-white hover:bg-gray-800 rounded-sm border-2 border-black font-bold uppercase"
+                          className="flex-1 text-[10px] h-6 bg-black text-white hover:bg-gray-800 rounded-sm border border-black font-bold uppercase"
                         >
                           <UserCheck className="h-3 w-3 mr-1" />
                           Approve
@@ -733,7 +733,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                           variant="outline"
                           onClick={(e) => { e.stopPropagation(); handleBrotherhoodResponse(notification.relatedId!, 'denied'); }}
                           disabled={respondToBrotherhoodMutation.isPending}
-                          className="flex-1 text-xs h-7 bg-white text-black hover:bg-gray-100 rounded-sm border-2 border-black font-bold uppercase"
+                          className="flex-1 text-[10px] h-6 bg-white text-black hover:bg-gray-100 rounded-sm border border-black font-bold uppercase"
                         >
                           <UserX className="h-3 w-3 mr-1" />
                           Deny
@@ -746,17 +746,17 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0 hover:bg-black/10 text-black self-start mt-2 mr-2 rounded-sm"
+                        className="h-6 w-6 p-0 hover:bg-black/10 text-black self-start mt-1 mr-1 rounded-sm"
                       >
-                        <MoreVertical className="h-4 w-4" />
+                        <MoreVertical className="h-3 w-3" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-32 rounded-sm border-2 border-black bg-white">
+                    <DropdownMenuContent align="end" className="w-28 rounded-sm border-2 border-black bg-white">
                       <DropdownMenuItem
                         onClick={() => clearNotificationMutation.mutate(notification.id)}
-                        className="text-red-600 hover:text-red-700 focus:text-red-700 rounded-sm font-bold uppercase text-xs"
+                        className="text-red-600 hover:text-red-700 focus:text-red-700 rounded-sm font-bold uppercase text-[10px]"
                       >
-                        <Trash2 className="h-3 w-3 mr-2" />
+                        <Trash2 className="h-3 w-3 mr-1" />
                         Clear
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -765,8 +765,8 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
               ))}
 
               {notifications.length === 0 && pendingRequests.length === 0 && (
-                <div className="text-center py-8 text-sm text-gray-500 font-medium">
-                  <Bell className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                <div className="text-center py-6 text-xs text-gray-500 font-medium">
+                  <Bell className="h-6 w-6 mx-auto mb-1 text-gray-300" />
                   No notifications yet
                 </div>
               )}
