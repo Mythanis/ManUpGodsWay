@@ -741,6 +741,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if study is locked due to consecutive completion requirement
+  app.get('/api/studies/:id/consecutive-lock', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const studyId = req.params.id;
+      
+      // Check if user is admin - admins bypass consecutive locks
+      const user = await storage.getUser(userId);
+      if (user && isAdmin(user)) {
+        return res.json({
+          isLocked: false,
+          previousStudyTitle: null,
+          message: null,
+          isAdmin: true
+        });
+      }
+      
+      const status = await storage.getStudyConsecutiveLockStatus(userId, studyId);
+      res.json(status);
+    } catch (error) {
+      console.error("Error checking consecutive lock status:", error);
+      res.status(500).json({ message: "Failed to check consecutive lock status" });
+    }
+  });
+
   // Check if user has purchased a study
   app.get('/api/purchases/check/:studyId', isAuthenticated, async (req: any, res) => {
     try {

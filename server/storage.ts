@@ -238,6 +238,15 @@ export interface IStorage {
     message: string | null;
   }>;
   
+  getStudyConsecutiveLockStatus(userId: string, studyId: string): Promise<{
+    isLocked: boolean;
+    previousStudyTitle: string | null;
+    previousStudyId: string | null;
+    message: string | null;
+    studyNumber: number;
+    totalStudiesInSeries: number;
+  }>;
+  
   // Study-specific methods
   getStudyDiscussion(studyId: string): Promise<(Discussion & { user: User }) | null>;
   createDiscussionsForExistingStudies(): Promise<void>;
@@ -642,6 +651,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStudiesInSeries(seriesId: string, userId?: string): Promise<any[]> {
+    // First get the series to check if it requires consecutive completion
+    const [series] = await db.select().from(studySeries)
+      .where(eq(studySeries.id, seriesId));
+    
+    const requiresConsecutive = series?.requiresConsecutiveCompletion ?? false;
+    
     const seriesStudies = await db.select().from(studies)
       .where(and(
         eq(studies.seriesId, seriesId),
@@ -653,7 +668,34 @@ export class DatabaseStorage implements IStorage {
     
     // Get progress for each study if user is logged in
     if (userId) {
-      const enrichedStudies = await Promise.all(seriesStudies.map(async (study) => {
+      // First, get all lesson and progress data for determining lock status
+      const studyCompletionStatus: Map<string, boolean> = new Map();
+      
+      // Pre-calculate completion status for each study
+      for (const study of seriesStudies) {
+        const lessons = await db.select().from(studyLessons)
+          .where(eq(studyLessons.studyId, study.id));
+        
+        if (lessons.length === 0) {
+          // Study with no lessons is considered complete if user has started it
+          const [progress] = await db.select().from(userProgress)
+            .where(and(
+              eq(userProgress.userId, userId),
+              eq(userProgress.studyId, study.id)
+            ));
+          studyCompletionStatus.set(study.id, progress?.completed ?? false);
+        } else {
+          const completedLessons = await db.select().from(userLessonProgress)
+            .where(and(
+              eq(userLessonProgress.userId, userId),
+              inArray(userLessonProgress.lessonId, lessons.map(l => l.id)),
+              sql`${userLessonProgress.completedAt} IS NOT NULL`
+            ));
+          studyCompletionStatus.set(study.id, completedLessons.length >= lessons.length);
+        }
+      }
+      
+      const enrichedStudies = await Promise.all(seriesStudies.map(async (study, index) => {
         const [progress] = await db.select().from(userProgress)
           .where(and(
             eq(userProgress.userId, userId),
@@ -675,18 +717,31 @@ export class DatabaseStorage implements IStorage {
           completedLessonsCount = completedLessons.length;
         }
         
+        // Determine if this study is locked due to consecutive completion requirement
+        let isLockedByPrevious = false;
+        if (requiresConsecutive && index > 0) {
+          // Check if the previous study is complete
+          const previousStudyId = seriesStudies[index - 1].id;
+          const previousComplete = studyCompletionStatus.get(previousStudyId) ?? false;
+          isLockedByPrevious = !previousComplete;
+        }
+        
         return {
           ...study,
           progress: progress || null,
           completedLessons: completedLessonsCount,
           totalLessons: lessons.length,
+          isLockedByPrevious,
+          studyNumber: index + 1,
+          totalStudiesInSeries: seriesStudies.length,
         };
       }));
       return enrichedStudies;
     }
     
     // For non-authenticated users, still get totalLessons count
-    const enrichedStudies = await Promise.all(seriesStudies.map(async (study) => {
+    // All studies after first are locked for unauthenticated users if consecutive completion required
+    const enrichedStudies = await Promise.all(seriesStudies.map(async (study, index) => {
       const lessons = await db.select().from(studyLessons)
         .where(eq(studyLessons.studyId, study.id));
       
@@ -695,6 +750,9 @@ export class DatabaseStorage implements IStorage {
         progress: null,
         completedLessons: 0,
         totalLessons: lessons.length,
+        isLockedByPrevious: requiresConsecutive && index > 0,
+        studyNumber: index + 1,
+        totalStudiesInSeries: seriesStudies.length,
       };
     }));
     
@@ -3933,6 +3991,92 @@ export class DatabaseStorage implements IStorage {
       console.error('Error calculating timezone:', e);
       return { isLocked: false, unlockTime: null, previousStudyTitle: null, message: null };
     }
+  }
+
+  async getStudyConsecutiveLockStatus(userId: string, studyId: string): Promise<{
+    isLocked: boolean;
+    previousStudyTitle: string | null;
+    previousStudyId: string | null;
+    message: string | null;
+    studyNumber: number;
+    totalStudiesInSeries: number;
+  }> {
+    // Get the current study
+    const study = await this.getStudy(studyId);
+    if (!study) {
+      return { isLocked: false, previousStudyTitle: null, previousStudyId: null, message: null, studyNumber: 1, totalStudiesInSeries: 1 };
+    }
+
+    // If study is not part of a series, it's not subject to consecutive completion
+    if (!study.seriesId) {
+      return { isLocked: false, previousStudyTitle: null, previousStudyId: null, message: null, studyNumber: 1, totalStudiesInSeries: 1 };
+    }
+
+    // Get the series to check if it requires consecutive completion
+    const [series] = await db.select().from(studySeries)
+      .where(eq(studySeries.id, study.seriesId));
+    
+    if (!series?.requiresConsecutiveCompletion) {
+      return { isLocked: false, previousStudyTitle: null, previousStudyId: null, message: null, studyNumber: 1, totalStudiesInSeries: 1 };
+    }
+
+    // Get all studies in the series ordered by seriesOrder
+    const seriesStudiesData = await db.select().from(studies)
+      .where(and(
+        eq(studies.seriesId, study.seriesId),
+        eq(studies.isPublished, true)
+      ))
+      .orderBy(asc(studies.seriesOrder), asc(studies.createdAt));
+
+    const studyIndex = seriesStudiesData.findIndex(s => s.id === studyId);
+    const studyNumber = studyIndex + 1;
+    const totalStudiesInSeries = seriesStudiesData.length;
+
+    // First study is never locked
+    if (studyIndex <= 0) {
+      return { isLocked: false, previousStudyTitle: null, previousStudyId: null, message: null, studyNumber, totalStudiesInSeries };
+    }
+
+    // Check if previous study is complete
+    const previousStudy = seriesStudiesData[studyIndex - 1];
+    
+    // Get lessons for the previous study
+    const prevLessons = await db.select().from(studyLessons)
+      .where(eq(studyLessons.studyId, previousStudy.id));
+    
+    let previousComplete = false;
+    
+    if (prevLessons.length === 0) {
+      // Study with no lessons - check userProgress
+      const [progress] = await db.select().from(userProgress)
+        .where(and(
+          eq(userProgress.userId, userId),
+          eq(userProgress.studyId, previousStudy.id)
+        ));
+      previousComplete = progress?.completed ?? false;
+    } else {
+      // Check if all lessons are completed
+      const completedLessons = await db.select().from(userLessonProgress)
+        .where(and(
+          eq(userLessonProgress.userId, userId),
+          inArray(userLessonProgress.lessonId, prevLessons.map(l => l.id)),
+          sql`${userLessonProgress.completedAt} IS NOT NULL`
+        ));
+      previousComplete = completedLessons.length >= prevLessons.length;
+    }
+
+    if (previousComplete) {
+      return { isLocked: false, previousStudyTitle: null, previousStudyId: null, message: null, studyNumber, totalStudiesInSeries };
+    }
+
+    return {
+      isLocked: true,
+      previousStudyTitle: previousStudy.title,
+      previousStudyId: previousStudy.id,
+      message: `Complete "${previousStudy.title}" first to unlock this study`,
+      studyNumber,
+      totalStudiesInSeries
+    };
   }
 
   // System settings operations
