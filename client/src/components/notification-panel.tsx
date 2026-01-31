@@ -691,20 +691,27 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={cn(
-                    "flex bg-zinc-900 border border-white/10 rounded-lg overflow-hidden transition-all hover:border-[#FCD000]/40 hover:bg-zinc-800",
-                    notification.isRead ? "opacity-50" : ""
-                  )}
+                  className="flex bg-zinc-900 border border-white/10 rounded-lg overflow-hidden transition-all hover:border-[#FCD000]/40 hover:bg-zinc-800"
                 >
-                  <div className="w-10 bg-zinc-800 flex items-center justify-center flex-shrink-0 self-stretch">
-                    <div className="text-[#FCD000]">{getNotificationIcon(notification.type)}</div>
+                  <div className={cn(
+                    "w-10 flex items-center justify-center flex-shrink-0 self-stretch",
+                    notification.isRead ? "bg-green-600" : "bg-zinc-800"
+                  )}>
+                    {notification.isRead ? (
+                      <Check className="h-4 w-4 text-white" />
+                    ) : (
+                      <div className="text-[#FCD000]">{getNotificationIcon(notification.type)}</div>
+                    )}
                   </div>
                   <div 
                     className="flex-1 p-2.5 cursor-pointer"
                     onClick={(e) => notification.type === 'brotherhood' ? handleBrotherhoodNotificationClick(notification, e) : handleNotificationClick(notification)}
                   >
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-medium text-white line-clamp-1">{notification.title}</p>
+                      <p className={cn(
+                        "text-xs font-medium line-clamp-1",
+                        notification.isRead ? "text-white/60" : "text-white"
+                      )}>{notification.title}</p>
                       {!notification.isRead && (
                         <div className="h-1.5 w-1.5 bg-[#FCD000] rounded-full flex-shrink-0 ml-1" />
                       )}
