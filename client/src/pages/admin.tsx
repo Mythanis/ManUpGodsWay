@@ -108,6 +108,7 @@ export default function Admin() {
     description: "",
     category: "",
     requiredTier: "free",
+    difficulty: "beginner",
     videoUrl: "",
     duration: 0,
     author: "",
@@ -315,6 +316,7 @@ export default function Admin() {
       description: study.description,
       category: study.category,
       requiredTier: study.requiredTier,
+      difficulty: study.difficulty || "beginner",
       videoUrl: study.videoUrl || "",
       duration: study.duration,
       author: study.author,
@@ -342,6 +344,7 @@ export default function Admin() {
       description: formData.description,
       category: formData.category,
       requiredTier: formData.requiredTier,
+      difficulty: formData.difficulty,
       videoUrl: formData.videoUrl || undefined,
       duration: formData.duration,
       author: formData.author,
@@ -894,6 +897,25 @@ export default function Admin() {
                   placeholder="Duration"
                   data-testid="input-edit-duration"
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-difficulty">Difficulty</Label>
+                <Select
+                  value={formData.difficulty}
+                  onValueChange={(value) => setFormData({ ...formData, difficulty: value })}
+                >
+                  <SelectTrigger data-testid="select-edit-difficulty">
+                    <SelectValue placeholder="Select difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beginner">Beginner</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
