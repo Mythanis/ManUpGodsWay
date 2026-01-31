@@ -257,30 +257,60 @@ export default function StudyDetail() {
     enabled: !!id && !!user?.id,
   });
 
+  // Check consecutive lock status (includes daily drip)
+  const { data: consecutiveLockStatus } = useQuery<{
+    isLocked: boolean;
+    previousStudyTitle: string | null;
+    previousStudyId: string | null;
+    message: string | null;
+    studyNumber: number;
+    totalStudiesInSeries: number;
+    isLockedByDrip?: boolean;
+    unlocksAt?: string;
+  }>({
+    queryKey: ["/api/studies", id, "consecutive-lock"],
+    queryFn: async () => {
+      const res = await fetch(`/api/studies/${id}/consecutive-lock`, {
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to fetch consecutive lock status');
+      return res.json();
+    },
+    retry: false,
+    enabled: !!id && !!user?.id,
+  });
+
+  // Combined lock status - study is locked if either time gate or consecutive lock is active
+  const isStudyLocked = timeGateStatus?.isLocked || consecutiveLockStatus?.isLocked;
+  const lockMessage = consecutiveLockStatus?.isLocked 
+    ? consecutiveLockStatus.message 
+    : timeGateStatus?.message;
+  const lockUnlockTime = consecutiveLockStatus?.unlocksAt || timeGateStatus?.unlockTime;
+
   // Countdown timer state
   const [countdown, setCountdown] = useState<string>('');
 
   // Update countdown every second when locked
   useEffect(() => {
-    if (!timeGateStatus?.isLocked || !timeGateStatus?.unlockTime) {
+    if (!isStudyLocked || !lockUnlockTime) {
       setCountdown('');
       return;
     }
 
     const updateCountdown = () => {
       const now = new Date();
-      const unlockTime = new Date(timeGateStatus.unlockTime!);
+      const unlockTime = new Date(lockUnlockTime);
       const diff = unlockTime.getTime() - now.getTime();
 
       if (diff <= 0) {
         setCountdown('');
-        // Use partial match to invalidate regardless of timezone in key
+        // Invalidate both time-gate and consecutive-lock queries
         queryClient.invalidateQueries({ 
           predicate: (query) => 
             Array.isArray(query.queryKey) && 
             query.queryKey[0] === "/api/studies" && 
             query.queryKey[1] === id && 
-            query.queryKey[2] === "time-gate"
+            (query.queryKey[2] === "time-gate" || query.queryKey[2] === "consecutive-lock")
         });
         return;
       }
@@ -301,7 +331,7 @@ export default function StudyDetail() {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [timeGateStatus?.isLocked, timeGateStatus?.unlockTime, id, queryClient]);
+  }, [isStudyLocked, lockUnlockTime, id, queryClient]);
 
   const { data: progress } = useQuery<UserProgress>({
     queryKey: ["/api/progress", id],
@@ -534,7 +564,7 @@ export default function StudyDetail() {
             </p>
 
             {/* Time-Gate Locked State */}
-            {timeGateStatus?.isLocked && (
+            {isStudyLocked && (
               <div className="bg-black border-2 border-ministry-gold-exact rounded-sm p-6 mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="time-gate-locked">
                 <div className="flex flex-col items-center text-center">
                   <div className="w-16 h-16 rounded-sm bg-ministry-gold-exact/20 flex items-center justify-center border-2 border-ministry-gold-exact mb-4">
@@ -542,31 +572,24 @@ export default function StudyDetail() {
                   </div>
                   <h3 className="font-black uppercase tracking-tight text-ministry-gold-exact text-xl mb-2">Study Locked</h3>
                   
-                  {timeGateStatus.previousStudyTitle && !timeGateStatus.unlockTime && (
+                  {lockMessage && (
                     <p className="text-sm text-gray-400 mb-4">
-                      Complete <span className="text-white font-bold">"{timeGateStatus.previousStudyTitle}"</span> first to unlock this study.
+                      {lockMessage}
                     </p>
                   )}
                   
-                  {timeGateStatus.unlockTime && (
-                    <>
-                      <p className="text-sm text-gray-400 mb-2">
-                        Great job completing the previous study! This study unlocks at midnight.
-                      </p>
-                      {countdown && (
-                        <div className="bg-ministry-gold-exact/10 border-2 border-ministry-gold-exact rounded-sm px-6 py-3 mt-2">
-                          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Unlocks in</p>
-                          <p className="text-2xl font-black text-ministry-gold-exact tracking-tight">{countdown}</p>
-                        </div>
-                      )}
-                    </>
+                  {lockUnlockTime && countdown && (
+                    <div className="bg-ministry-gold-exact/10 border-2 border-ministry-gold-exact rounded-sm px-6 py-3 mt-2">
+                      <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Unlocks in</p>
+                      <p className="text-2xl font-black text-ministry-gold-exact tracking-tight">{countdown}</p>
+                    </div>
                   )}
                 </div>
               </div>
             )}
 
             {/* Embedded Study Viewer - Only show when user has access and study has lessons and not time-gated */}
-            {hasAccess && !timeGateStatus?.isLocked && user?.id && studyLessons.length > 0 && (
+            {hasAccess && !isStudyLocked && user?.id && studyLessons.length > 0 && (
               <div className="mb-6">
                 <EmbeddedLessonViewer 
                   studyId={study.id!}
@@ -577,7 +600,7 @@ export default function StudyDetail() {
             )}
 
             {/* Legacy Study Materials - Show as backup/alternative resources (not when time-gated) */}
-            {hasAccess && !timeGateStatus?.isLocked && (study.pdfFilename || study.wordFilename) && (
+            {hasAccess && !isStudyLocked && (study.pdfFilename || study.wordFilename) && (
               <div className="bg-black rounded-sm p-4 mb-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <h3 className="font-bold uppercase tracking-wide text-ministry-gold-exact mb-2 text-sm flex items-center">
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -631,7 +654,7 @@ export default function StudyDetail() {
             )}
 
             {/* Join Discussion Section - Only for users with tier access and not time-gated */}
-            {studyDiscussion && hasAccess && !timeGateStatus?.isLocked && (
+            {studyDiscussion && hasAccess && !isStudyLocked && (
               <div className="flex items-center justify-between p-4 bg-black rounded-sm border-2 border-ministry-gold-exact shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-sm bg-ministry-gold-exact flex items-center justify-center border-2 border-black">

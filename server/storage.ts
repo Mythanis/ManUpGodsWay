@@ -248,6 +248,8 @@ export interface IStorage {
     message: string | null;
     studyNumber: number;
     totalStudiesInSeries: number;
+    isLockedByDrip?: boolean;
+    unlocksAt?: string;
   }>;
   
   // Study-specific methods
@@ -4109,6 +4111,50 @@ export class DatabaseStorage implements IStorage {
     // First study is never locked
     if (studyIndex <= 0) {
       return { isLocked: false, previousStudyTitle: null, previousStudyId: null, message: null, studyNumber, totalStudiesInSeries };
+    }
+
+    // Check daily drip lock first
+    const [seriesProgress] = await db.select().from(userSeriesProgress)
+      .where(and(
+        eq(userSeriesProgress.userId, userId),
+        eq(userSeriesProgress.seriesId, study.seriesId)
+      ));
+    
+    if (seriesProgress?.startedAt) {
+      const startTimestamp = new Date(seriesProgress.startedAt);
+      const now = new Date();
+      const elapsedMs = now.getTime() - startTimestamp.getTime();
+      const daysSinceStart = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
+      
+      // If this study hasn't unlocked yet by time, it's locked
+      if (studyIndex > daysSinceStart) {
+        const unlocksAt = new Date(startTimestamp.getTime() + (studyIndex * 24 * 60 * 60 * 1000));
+        const hoursRemaining = Math.ceil((unlocksAt.getTime() - now.getTime()) / (1000 * 60 * 60));
+        const timeMessage = hoursRemaining < 24 
+          ? `Unlocks in ${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''}`
+          : `Unlocks ${unlocksAt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`;
+        
+        return {
+          isLocked: true,
+          previousStudyTitle: null,
+          previousStudyId: null,
+          message: timeMessage,
+          studyNumber,
+          totalStudiesInSeries,
+          isLockedByDrip: true,
+          unlocksAt: unlocksAt.toISOString()
+        };
+      }
+    } else if (studyIndex > 0) {
+      // User hasn't started series yet - all studies after first are locked
+      return {
+        isLocked: true,
+        previousStudyTitle: null,
+        previousStudyId: null,
+        message: 'Start the series first',
+        studyNumber,
+        totalStudiesInSeries
+      };
     }
 
     // Check if previous study is complete
