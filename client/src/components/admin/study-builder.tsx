@@ -1022,6 +1022,8 @@ function EditStudyForm({ study, seriesList, onSave, onCancel }: {
     description: study.description,
     category: study.category,
     requiredTier: study.requiredTier || 'free',
+    difficulty: study.difficulty || 'beginner',
+    duration: study.duration || 0,
     thumbnailUrl: study.thumbnailUrl || '',
     videoUrl: study.videoUrl || '',
     seriesId: study.seriesId || '',
@@ -1037,6 +1039,8 @@ function EditStudyForm({ study, seriesList, onSave, onCancel }: {
       await onSave({
         ...formData,
         seriesId: formData.seriesId || undefined,
+        difficulty: formData.difficulty,
+        duration: formData.duration,
         price: formData.requiresPurchase && formData.price ? formData.price : undefined,
       });
     } finally {
@@ -1082,6 +1086,28 @@ function EditStudyForm({ study, seriesList, onSave, onCancel }: {
               ))}
             </SelectContent>
           </Select>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Difficulty</Label>
+          <Select value={formData.difficulty} onValueChange={(v) => setFormData({ ...formData, difficulty: v })}>
+            <SelectTrigger><SelectValue placeholder="Select difficulty" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="beginner">Beginner</SelectItem>
+              <SelectItem value="intermediate">Intermediate</SelectItem>
+              <SelectItem value="advanced">Advanced</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Duration (minutes)</Label>
+          <Input
+            type="number"
+            value={formData.duration}
+            onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 0 })}
+            placeholder="Duration in minutes"
+          />
         </div>
       </div>
       {seriesList.length > 0 && (
