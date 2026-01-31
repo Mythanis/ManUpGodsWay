@@ -96,6 +96,7 @@ export const studySeries = pgTable("study_series", {
   requiredTier: varchar("required_tier").default("free"),
   displayOrder: integer("display_order").default(0),
   isPublished: boolean("is_published").default(false),
+  requiresConsecutiveCompletion: boolean("requires_consecutive_completion").default(false), // Studies must be completed in order
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -571,6 +572,7 @@ export const notificationPreferences = pgTable("notification_preferences", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }).unique(),
   studyNotifications: boolean("study_notifications").default(true),
+  nextStudyNotifications: boolean("next_study_notifications").default(true), // Notify when next study in series unlocks
   devotionalNotifications: boolean("devotional_notifications").default(true),
   discussionNotifications: boolean("discussion_notifications").default(true),
   discussionReplyNotifications: boolean("discussion_reply_notifications").default(true),
@@ -850,6 +852,7 @@ export const insertStudySeriesSchema = createInsertSchema(studySeries, {
   requiredTier: z.enum(["free", "premium", "vip"]).default("free"),
   displayOrder: z.number().int().default(0),
   isPublished: z.boolean().default(false),
+  requiresConsecutiveCompletion: z.boolean().default(false),
 }).omit({
   id: true,
   createdAt: true,
