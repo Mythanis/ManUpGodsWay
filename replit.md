@@ -17,7 +17,7 @@ PostgreSQL, hosted on Neon Database, is used with Drizzle ORM for type-safe quer
 
 ## Content Management
 The system supports a tiered content structure (free, premium, VIP) and category-based organization. Features include progress tracking, search, and a comprehensive admin panel.
-- **Study Content**: Supports embedded, day-by-day lessons with rich text editing, scripture, questions, and key takeaways. Includes a bulk import tool for converting document-based content (Word/PDF) into structured lessons. Progress tracking is integrated at various levels (lesson, study, series).
+- **Study Content**: Supports embedded, day-by-day lessons with rich text editing, scripture, questions, and key takeaways. Includes a bulk import tool for converting document-based content (Word/PDF) into structured lessons. Progress tracking is integrated at various levels (lesson, study, series). Series can require consecutive completion, where studies unlock only after completing the previous one. Users receive notifications when the next study becomes available.
 - **Devotional Content**: Admins can upload custom thumbnail images and utilize a bulk import tool for up to 30 devotionals, which supports automated daily posting and validation.
 
 ## Key Features
