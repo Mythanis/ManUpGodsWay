@@ -2915,13 +2915,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (completedLessons.length === lessons.length && lessons.length > 0) {
           // Get the study's configured reward from DB
-          const [study] = await db.select({ rationReward: schema.studies.rationReward, title: schema.studies.title })
-            .from(schema.studies).where(eq(schema.studies.id, studyId));
+          const [study] = await db.select({ 
+            rationReward: schema.studies.rationReward, 
+            title: schema.studies.title,
+            seriesId: schema.studies.seriesId,
+            seriesOrder: schema.studies.seriesOrder
+          }).from(schema.studies).where(eq(schema.studies.id, studyId));
           const studyReward = study?.rationReward || 100;
           
           await rationsService.awardCustomRations(
             userId, studyReward, 'study', `Completed study: ${study?.title || 'Unknown'}`, 'complete_study', studyId, 'study'
           );
+          
+          // Check if there's a next study in a consecutive series and notify user
+          if (study?.seriesId) {
+            const [series] = await db.select()
+              .from(schema.studySeries)
+              .where(eq(schema.studySeries.id, study.seriesId));
+            
+            if (series?.requiresConsecutiveCompletion) {
+              // Get all studies in the series ordered properly to find the next one
+              const allSeriesStudies = await db.select()
+                .from(schema.studies)
+                .where(and(
+                  eq(schema.studies.seriesId, study.seriesId),
+                  eq(schema.studies.isPublished, true)
+                ))
+                .orderBy(asc(schema.studies.seriesOrder), asc(schema.studies.createdAt));
+              
+              // Find current study index and get the next one
+              const currentIndex = allSeriesStudies.findIndex(s => s.id === studyId);
+              const nextStudy = currentIndex >= 0 && currentIndex < allSeriesStudies.length - 1
+                ? allSeriesStudies[currentIndex + 1]
+                : null;
+              
+              if (nextStudy) {
+                // Check user's notification preferences
+                const [userPrefs] = await db.select()
+                  .from(schema.notificationPreferences)
+                  .where(eq(schema.notificationPreferences.userId, userId));
+                
+                // Send notification if user has nextStudyNotifications enabled (default true)
+                const shouldNotify = userPrefs?.nextStudyNotifications !== false;
+                
+                if (shouldNotify) {
+                  await storage.createNotification({
+                    userId,
+                    type: 'study',
+                    title: 'Next Study Unlocked!',
+                    message: `"${nextStudy.title}" is now available. Continue your journey in ${series.title}!`,
+                    relatedId: nextStudy.id,
+                  });
+                }
+              }
+            }
+          }
         }
       }
 

@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, Layers, BookOpen, GripVertical, X, Check } from "lucide-react";
+import { Plus, Edit, Trash2, Layers, BookOpen, GripVertical, X, Check, Lock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface StudySeries {
   id: string;
@@ -18,6 +19,7 @@ interface StudySeries {
   category: string;
   thumbnailUrl: string | null;
   displayOrder: number;
+  requiresConsecutiveCompletion: boolean;
   createdAt: string;
   studyCount?: number;
   totalLessons?: number;
@@ -55,6 +57,7 @@ export default function SeriesManagement() {
     category: "",
     thumbnailUrl: "",
     displayOrder: 0,
+    requiresConsecutiveCompletion: false,
   });
 
   const { data: seriesList = [], isLoading } = useQuery<StudySeries[]>({
@@ -139,6 +142,7 @@ export default function SeriesManagement() {
       category: "",
       thumbnailUrl: "",
       displayOrder: 0,
+      requiresConsecutiveCompletion: false,
     });
   };
 
@@ -154,6 +158,7 @@ export default function SeriesManagement() {
       category: series.category || "",
       thumbnailUrl: series.thumbnailUrl || "",
       displayOrder: series.displayOrder || 0,
+      requiresConsecutiveCompletion: series.requiresConsecutiveCompletion || false,
     });
     setShowEditDialog(true);
   };
@@ -339,6 +344,22 @@ export default function SeriesManagement() {
                 data-testid="input-series-thumbnail"
               />
             </div>
+            <div className="flex items-center justify-between py-2 px-3 bg-muted rounded-md">
+              <div className="space-y-0.5">
+                <Label htmlFor="requiresConsecutive" className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Sequential Completion Required
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Users must complete each study in order before unlocking the next
+                </p>
+              </div>
+              <Switch
+                id="requiresConsecutive"
+                checked={formData.requiresConsecutiveCompletion}
+                onCheckedChange={(checked) => setFormData({ ...formData, requiresConsecutiveCompletion: checked })}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
@@ -401,6 +422,22 @@ export default function SeriesManagement() {
                 value={formData.thumbnailUrl}
                 onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
                 data-testid="input-edit-series-thumbnail"
+              />
+            </div>
+            <div className="flex items-center justify-between py-2 px-3 bg-muted rounded-md">
+              <div className="space-y-0.5">
+                <Label htmlFor="edit-requiresConsecutive" className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Sequential Completion Required
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Users must complete each study in order before unlocking the next
+                </p>
+              </div>
+              <Switch
+                id="edit-requiresConsecutive"
+                checked={formData.requiresConsecutiveCompletion}
+                onCheckedChange={(checked) => setFormData({ ...formData, requiresConsecutiveCompletion: checked })}
               />
             </div>
           </div>

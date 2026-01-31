@@ -13,6 +13,7 @@ interface NotificationPreferences {
   id: string;
   userId: string;
   studyNotifications: boolean;
+  nextStudyNotifications: boolean;
   devotionalNotifications: boolean;
   discussionNotifications: boolean;
   discussionReplyNotifications: boolean;
@@ -117,6 +118,12 @@ export function NotificationPreferences() {
       key: 'studyNotifications' as const,
       title: 'New Study Notifications',
       description: 'Get notified when new Bible studies are published',
+      icon: <Bell className="h-4 w-4" />
+    },
+    {
+      key: 'nextStudyNotifications' as const,
+      title: 'Next Study Available',
+      description: 'Get reminded when the next study in a series unlocks after completing one',
       icon: <Bell className="h-4 w-4" />
     },
     {

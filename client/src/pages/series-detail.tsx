@@ -21,6 +21,9 @@ interface StudyInSeries {
   } | null;
   completedLessons: number;
   totalLessons: number;
+  isLockedByPrevious?: boolean;
+  studyNumber?: number;
+  totalStudiesInSeries?: number;
 }
 
 interface Series {
@@ -78,6 +81,15 @@ export default function SeriesDetail() {
     return userTierIndex >= requiredTierIndex;
   };
 
+  const isLockedByConsecutive = (study: StudyInSeries) => {
+    return study.isLockedByPrevious === true;
+  };
+
+  const getPreviousStudyTitle = (index: number): string | null => {
+    if (index <= 0) return null;
+    return studies[index - 1]?.title || null;
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -103,7 +115,7 @@ export default function SeriesDetail() {
 
   return (
     <div className="min-h-screen bg-black pb-20">
-      <BackButton fallbackPath="/library" />
+      <BackButton />
       
       {/* Header */}
       <div className="liquid-black text-white px-6 pt-12 pb-6 border-b-4 border-[#FCD000]">
@@ -176,6 +188,8 @@ export default function SeriesDetail() {
         <div className="space-y-4">
           {studies.map((study, index) => {
             const hasAccess = canAccessStudy(study);
+            const isConsecutiveLocked = isLockedByConsecutive(study);
+            const previousTitle = getPreviousStudyTitle(index);
             const studyProgress = study.totalLessons > 0 
               ? Math.round((study.completedLessons / study.totalLessons) * 100)
               : 0;
@@ -183,14 +197,28 @@ export default function SeriesDetail() {
             return (
               <Card 
                 key={study.id}
-                className={`liquid-gold-card border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${hasAccess ? 'hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all' : 'opacity-75'}`}
+                className={`border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
+                  isConsecutiveLocked 
+                    ? 'bg-zinc-800 opacity-80' 
+                    : hasAccess 
+                      ? 'liquid-gold-card hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all' 
+                      : 'liquid-gold-card opacity-75'
+                }`}
                 data-testid={`study-card-${study.id}`}
               >
                 <CardContent className="p-4 relative z-10">
                   <div className="flex items-start gap-4">
                     {/* Order Number */}
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-sm flex items-center justify-center font-black text-lg border-2 border-black ${study.progress?.isCompleted ? 'bg-black text-[#FCD000]' : 'bg-white text-black'}`}>
-                      {study.progress?.isCompleted ? (
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-sm flex items-center justify-center font-black text-lg border-2 border-black ${
+                      isConsecutiveLocked 
+                        ? 'bg-zinc-700 text-zinc-400' 
+                        : study.progress?.isCompleted 
+                          ? 'bg-black text-[#FCD000]' 
+                          : 'bg-white text-black'
+                    }`}>
+                      {isConsecutiveLocked ? (
+                        <Lock className="w-5 h-5" />
+                      ) : study.progress?.isCompleted ? (
                         <CheckCircle className="w-6 h-6" />
                       ) : (
                         index + 1
@@ -200,7 +228,7 @@ export default function SeriesDetail() {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-black font-black uppercase tracking-wide line-clamp-1" data-testid={`text-study-title-${study.id}`}>
+                        <h3 className={`font-black uppercase tracking-wide line-clamp-1 ${isConsecutiveLocked ? 'text-zinc-400' : 'text-black'}`} data-testid={`text-study-title-${study.id}`}>
                           {study.title}
                         </h3>
                         {study.requiredTier !== 'free' && (
@@ -209,12 +237,22 @@ export default function SeriesDetail() {
                           </span>
                         )}
                       </div>
-                      <p className="text-black/70 text-sm mb-3 line-clamp-2 font-medium">
+                      <p className={`text-sm mb-3 line-clamp-2 font-medium ${isConsecutiveLocked ? 'text-zinc-500' : 'text-black/70'}`}>
                         {study.description}
                       </p>
 
-                      {/* Progress bar for authenticated users */}
-                      {isAuthenticated && study.totalLessons > 0 && (
+                      {/* Locked message */}
+                      {isConsecutiveLocked && previousTitle && (
+                        <div className="mb-3 p-2 bg-zinc-900 border border-zinc-700 rounded-sm">
+                          <p className="text-xs text-zinc-400 font-medium">
+                            <Lock className="w-3 h-3 inline mr-1" />
+                            Complete "{previousTitle}" first to unlock
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Progress bar for authenticated users (not shown for locked studies) */}
+                      {isAuthenticated && study.totalLessons > 0 && !isConsecutiveLocked && (
                         <div className="mb-3">
                           <div className="flex items-center justify-between text-xs text-black/70 mb-1 font-bold uppercase">
                             <span>{study.completedLessons} of {study.totalLessons} lessons</span>
@@ -230,12 +268,22 @@ export default function SeriesDetail() {
                       )}
 
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-black/70 flex items-center gap-1 font-bold uppercase">
+                        <span className={`text-xs flex items-center gap-1 font-bold uppercase ${isConsecutiveLocked ? 'text-zinc-500' : 'text-black/70'}`}>
                           <BookOpen className="w-3.5 h-3.5" />
                           {study.totalLessons} {study.totalLessons === 1 ? 'Lesson' : 'Lessons'}
                         </span>
 
-                        {hasAccess ? (
+                        {isConsecutiveLocked ? (
+                          <Button 
+                            size="sm"
+                            variant="outline"
+                            disabled
+                            className="border-2 border-zinc-600 text-zinc-500 bg-zinc-700 rounded-sm font-bold uppercase"
+                          >
+                            <Lock className="w-3 h-3 mr-1" />
+                            Locked
+                          </Button>
+                        ) : hasAccess ? (
                           <Link href={`/studies/${study.id}`}>
                             <Button 
                               size="sm"
