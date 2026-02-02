@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Edit, Trash2, Plus, Eye, EyeOff, Rss, ExternalLink, Star, Upload, X, FileText, RefreshCw, ChevronUp, ChevronDown } from "lucide-react";
+import { Edit, Trash2, Plus, Eye, EyeOff, Rss, ExternalLink, Star, Upload, X, FileText, RefreshCw, GripVertical } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { BlogPost } from "@shared/schema";
 
@@ -46,6 +46,8 @@ export default function BlogManagement() {
     isPublished: false,
     isFeatured: false,
   });
+  const [draggedBlogId, setDraggedBlogId] = useState<string | null>(null);
+  const [dragOverBlogId, setDragOverBlogId] = useState<string | null>(null);
 
   const { data: blogs = [], isLoading } = useQuery<BlogPost[]>({
     queryKey: ['/api/admin/blogs'],
@@ -150,8 +152,8 @@ export default function BlogManagement() {
   });
 
   const reorderMutation = useMutation({
-    mutationFn: ({ blogId, direction }: { blogId: string; direction: 'up' | 'down' }) => 
-      apiRequest('POST', '/api/admin/blogs/reorder', { blogId, direction }),
+    mutationFn: ({ blogId, targetBlogId }: { blogId: string; targetBlogId: string }) => 
+      apiRequest('POST', '/api/admin/blogs/reorder-to', { blogId, targetBlogId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/blogs'] });
       queryClient.invalidateQueries({ queryKey: ['/api/blogs'] });
@@ -164,6 +166,37 @@ export default function BlogManagement() {
       });
     },
   });
+
+  const handleDragStart = (e: React.DragEvent, blogId: string) => {
+    setDraggedBlogId(blogId);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', blogId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, blogId: string) => {
+    e.preventDefault();
+    if (draggedBlogId && draggedBlogId !== blogId) {
+      setDragOverBlogId(blogId);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverBlogId(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetBlogId: string) => {
+    e.preventDefault();
+    if (draggedBlogId && draggedBlogId !== targetBlogId) {
+      reorderMutation.mutate({ blogId: draggedBlogId, targetBlogId });
+    }
+    setDraggedBlogId(null);
+    setDragOverBlogId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedBlogId(null);
+    setDragOverBlogId(null);
+  };
 
   const resetForm = () => {
     setFormData({
@@ -336,11 +369,24 @@ export default function BlogManagement() {
           {blogs.map((blog) => (
             <Card 
               key={blog.id} 
-              className={`border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
+              draggable
+              onDragStart={(e) => handleDragStart(e, blog.id)}
+              onDragOver={(e) => handleDragOver(e, blog.id)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, blog.id)}
+              onDragEnd={handleDragEnd}
+              className={`border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-grab active:cursor-grabbing transition-all duration-200 ${
                 blog.isPublished ? 'bg-ministry-gold-exact' : 'bg-black text-white'
+              } ${draggedBlogId === blog.id ? 'opacity-50 scale-[0.98]' : ''} ${
+                dragOverBlogId === blog.id ? 'ring-4 ring-blue-500 ring-offset-2' : ''
               }`}
             >
               <CardContent className="p-3 flex items-center gap-4">
+                <div className={`flex-shrink-0 cursor-grab ${
+                  blog.isPublished ? 'text-black/40' : 'text-white/40'
+                }`}>
+                  <GripVertical className="w-5 h-5" />
+                </div>
                 <div className={`relative w-16 h-16 flex-shrink-0 overflow-hidden border-2 border-black ${
                   !blog.coverImageUrl ? (blog.isPublished ? 'bg-black' : 'bg-ministry-gold-exact') : ''
                 }`}>
@@ -388,36 +434,6 @@ export default function BlogManagement() {
                 </div>
                 
                 <div className="flex gap-1 flex-shrink-0">
-                  <div className="flex flex-col gap-0.5 mr-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => reorderMutation.mutate({ blogId: blog.id, direction: 'up' })}
-                      disabled={reorderMutation.isPending}
-                      className={`h-6 w-6 p-0 rounded-sm ${
-                        blog.isPublished 
-                          ? 'text-black hover:bg-black/10' 
-                          : 'text-white hover:bg-white/10'
-                      }`}
-                      data-testid={`button-move-up-${blog.id}`}
-                    >
-                      <ChevronUp className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => reorderMutation.mutate({ blogId: blog.id, direction: 'down' })}
-                      disabled={reorderMutation.isPending}
-                      className={`h-6 w-6 p-0 rounded-sm ${
-                        blog.isPublished 
-                          ? 'text-black hover:bg-black/10' 
-                          : 'text-white hover:bg-white/10'
-                      }`}
-                      data-testid={`button-move-down-${blog.id}`}
-                    >
-                      <ChevronDown className="w-4 h-4" />
-                    </Button>
-                  </div>
                   <Button
                     size="sm"
                     onClick={() => handleEdit(blog)}

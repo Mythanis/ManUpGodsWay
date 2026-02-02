@@ -8620,6 +8620,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Drag-drop reorder: move blog to target position (admin only)
+  app.post('/api/admin/blogs/reorder-to', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { blogId, targetBlogId } = req.body;
+      if (!blogId || !targetBlogId) {
+        return res.status(400).json({ message: "Blog ID and target blog ID are required" });
+      }
+
+      // Get all blogs ordered by displayOrder
+      const allBlogs = await db.select().from(schema.blogPosts)
+        .orderBy(schema.blogPosts.displayOrder, schema.blogPosts.createdAt);
+
+      const sourceIndex = allBlogs.findIndex(b => b.id === blogId);
+      const targetIndex = allBlogs.findIndex(b => b.id === targetBlogId);
+
+      if (sourceIndex === -1 || targetIndex === -1) {
+        return res.status(404).json({ message: "Blog not found" });
+      }
+
+      if (sourceIndex === targetIndex) {
+        return res.json({ success: true });
+      }
+
+      // Remove source from array and insert at target position
+      const [movedBlog] = allBlogs.splice(sourceIndex, 1);
+      allBlogs.splice(targetIndex, 0, movedBlog);
+
+      // Update all display orders based on new positions
+      for (let i = 0; i < allBlogs.length; i++) {
+        await db.update(schema.blogPosts)
+          .set({ displayOrder: i })
+          .where(eq(schema.blogPosts.id, allBlogs[i].id));
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error reordering blogs:', error);
+      res.status(500).json({ message: 'Failed to reorder blogs' });
+    }
+  });
+
   // Update all blog display orders (admin only) - for bulk reordering
   app.post('/api/admin/blogs/update-order', isAuthenticated, async (req: any, res) => {
     try {
