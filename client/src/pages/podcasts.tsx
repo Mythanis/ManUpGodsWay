@@ -85,10 +85,10 @@ function PodcastCard({
   const [expanded, setExpanded] = useState(false);
   
   return (
-    <Card className="liquid-gold-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-sm overflow-hidden">
-      <CardContent className="p-4 sm:p-6 relative">
+    <Card className="bg-black shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all border-2 border-ministry-gold-exact rounded-sm overflow-hidden">
+      <CardContent className="p-3 sm:p-4">
         <div 
-          className="flex items-start space-x-4 relative z-10 cursor-pointer"
+          className="flex items-start space-x-3 cursor-pointer"
           onClick={() => setExpanded(!expanded)}
           data-testid={`podcast-card-${podcast.id}`}
         >
@@ -97,23 +97,23 @@ function PodcastCard({
             <img
               src={getDefaultThumbnail(podcast.thumbnailUrl)}
               alt={podcast.title}
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-sm object-cover border-2 border-black"
+              className="w-12 h-12 sm:w-14 sm:h-14 rounded-sm object-cover border-2 border-ministry-gold-exact"
             />
           </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-2">
+            <div className="flex items-start justify-between mb-1">
               <div className="flex-1 min-w-0 pr-2">
-                <h3 className="font-black text-base sm:text-lg text-black mb-1 uppercase tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
+                <h3 className="font-black text-sm sm:text-base text-white mb-1 uppercase tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
                   {podcast.title}
                 </h3>
-                <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-black/70 mb-2">
-                  <Badge variant="outline" className="text-xs text-black rounded-sm border-2 border-black font-bold uppercase">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-white/70 mb-1">
+                  <Badge variant="outline" className="text-xs text-ministry-gold-exact rounded-sm border border-ministry-gold-exact font-bold uppercase py-0 px-1">
                     {podcast.type === 'audio' ? 'Audio' : 'Video'}
                   </Badge>
                   {podcast.isLive && (
-                    <Badge className="text-xs bg-red-500 hover:bg-red-600 text-white">
+                    <Badge className="text-xs bg-red-500 hover:bg-red-600 text-white py-0 px-1">
                       <Radio className="w-3 h-3 mr-1" />
                       LIVE
                     </Badge>
@@ -130,16 +130,16 @@ function PodcastCard({
                 {podcast.isLive ? (
                   <Button
                     onClick={() => window.open(podcast.liveUrl, '_blank')}
-                    className="bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm px-2 sm:px-4 rounded-sm border-2 border-black font-black uppercase"
+                    className="bg-red-500 hover:bg-red-600 text-white text-xs px-2 rounded-sm border-2 border-red-600 font-black uppercase"
                     size="sm"
                   >
-                    <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    Join Live
+                    <ExternalLink className="w-3 h-3 mr-1" />
+                    Join
                   </Button>
                 ) : (
                   <Button
                     onClick={() => onPlayPause(podcast)}
-                    className="bg-black hover:bg-gray-900 text-white rounded-sm border-2 border-black"
+                    className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black rounded-sm border-2 border-ministry-gold-exact"
                     size="sm"
                   >
                     {currentlyPlaying === podcast.id ? (
@@ -154,37 +154,32 @@ function PodcastCard({
 
             {/* Collapsed Description Preview */}
             {podcast.description && !expanded && (
-              <p className="text-gray-700 text-sm font-medium line-clamp-2" style={{ fontFamily: "'Inter', sans-serif" }}>
+              <p className="text-white/80 text-xs font-medium line-clamp-1" style={{ fontFamily: "'Inter', sans-serif" }}>
                 {podcast.description}
               </p>
             )}
             
             {/* Tap to expand hint */}
             {podcast.description && !expanded && (
-              <p className="text-xs text-white mt-1 font-bold uppercase">Tap to see more</p>
+              <p className="text-xs text-ministry-gold-exact mt-1 font-bold uppercase">Tap for more</p>
             )}
           </div>
         </div>
 
         {/* Expanded Content */}
         {expanded && (
-          <div className="mt-4 space-y-3 relative z-10">
+          <div className="mt-3 space-y-2">
             {podcast.description && (
-              <div 
-                className="p-3 rounded-sm"
-                style={{ 
-                  background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 70%, rgba(252,208,0,0.3) 100%)'
-                }}
-              >
-                <p className="text-gray-800 text-sm font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>
+              <div className="p-2 rounded-sm bg-white/10 border border-ministry-gold-exact/30">
+                <p className="text-white/90 text-xs font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>
                   {podcast.description}
                 </p>
               </div>
             )}
 
             {/* Stats and Actions */}
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center space-x-3 text-xs sm:text-sm text-black/70 font-bold">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center space-x-3 text-xs text-white/70 font-bold">
                 <div className="flex items-center">
                   {renderStars(Math.round(parseFloat(podcast.rating || '0')))}
                   <span className="ml-2">
@@ -192,7 +187,7 @@ function PodcastCard({
                   </span>
                 </div>
                 <div className="flex items-center">
-                  <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  <Eye className="w-3 h-3 mr-1" />
                   {podcast.viewCount || 0} views
                 </div>
               </div>
@@ -206,7 +201,7 @@ function PodcastCard({
                     variant="outline" 
                     size="sm"
                     onClick={() => onPodcastView(podcast.id)}
-                    className="text-xs px-2 py-1 h-auto w-full bg-ministry-gold-exact hover:bg-yellow-400 text-black rounded-sm border-2 border-black font-black uppercase tracking-wide"
+                    className="text-xs px-2 py-1 h-auto w-full bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black rounded-sm border-2 border-black font-black uppercase tracking-wide"
                   >
                     <MessageSquare className="w-3 h-3 mr-1" />
                     Reviews
@@ -216,7 +211,7 @@ function PodcastCard({
             </div>
             
             <p 
-              className="text-xs text-black/50 font-bold uppercase text-center cursor-pointer"
+              className="text-xs text-ministry-gold-exact/70 font-bold uppercase text-center cursor-pointer"
               onClick={() => setExpanded(false)}
             >
               Tap to collapse
@@ -460,11 +455,11 @@ export default function Podcasts() {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-5 h-5 ${
+        className={`w-4 h-4 ${
           i < rating 
-            ? 'fill-black text-black' 
-            : 'text-gray-400'
-        } ${interactive ? 'cursor-pointer hover:fill-gray-700 hover:text-gray-700' : ''}`}
+            ? 'fill-ministry-gold-exact text-ministry-gold-exact' 
+            : 'text-white/40'
+        } ${interactive ? 'cursor-pointer hover:fill-ministry-gold-exact/70 hover:text-ministry-gold-exact/70' : ''}`}
         onClick={interactive && onRatingSelect ? () => onRatingSelect(i + 1) : undefined}
       />
     ));
