@@ -595,8 +595,8 @@ export default function Home() {
         </div>
         
         <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Today's Devotional</h2>
-        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black liquid-gold-card glow-gold mb-6 rounded-sm" data-testid="card-devotional">
-          <CardContent className="p-6">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] border-2 border-ministry-gold-exact liquid-black-white mb-6 rounded-sm overflow-hidden" data-testid="card-devotional">
+          <CardContent className="p-6 relative z-10">
             {devotional ? (
               <>
                 <div className="flex items-start gap-4 mb-4">
@@ -605,19 +605,19 @@ export default function Home() {
                     <img 
                       src={getDefaultThumbnail((devotional as any)?.imageUrl)} 
                       alt={(devotional as any)?.title || 'Daily Devotional'}
-                      className="w-20 h-20 rounded-sm object-cover border-2 border-black"
+                      className="w-20 h-20 rounded-sm object-cover border-2 border-ministry-gold-exact"
                     />
                   </div>
                   
                   {/* Title and Verse */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-black text-black text-base mb-1 uppercase tracking-tight" data-testid="text-devotional-title">
+                    <h3 className="font-black text-white text-base mb-1 uppercase tracking-tight" data-testid="text-devotional-title">
                       {(devotional as any)?.title}
                     </h3>
-                    <p className="text-sm text-black font-bold mb-1" data-testid="text-verse">
+                    <p className="text-sm text-ministry-gold-exact font-bold mb-1" data-testid="text-verse">
                       {(devotional as any)?.verseReference}
                     </p>
-                    <p className="text-xs text-black/70 font-medium">
+                    <p className="text-xs text-white/70 font-medium">
                       {formatLocalDate(new Date(), { 
                         weekday: 'long', 
                         month: 'long', 
@@ -629,7 +629,7 @@ export default function Home() {
                 
                 <Button 
                   onClick={() => setShowFullDevotional(true)}
-                  className="w-full liquid-black text-white py-3 rounded-sm font-black hover:bg-gray-900 uppercase tracking-wide text-sm liquid-button relative z-10"
+                  className="w-full bg-ministry-gold-exact text-black py-3 rounded-sm font-black hover:bg-yellow-400 uppercase tracking-wide text-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                   data-testid="button-read-devotional"
                 >
                   Read Today's Devotional
@@ -637,7 +637,7 @@ export default function Home() {
               </>
             ) : (
               <div className="text-center py-8">
-                <p className="text-black">No devotional available for today</p>
+                <p className="text-white">No devotional available for today</p>
               </div>
             )}
           </CardContent>
@@ -660,15 +660,15 @@ export default function Home() {
         ) : (
           <>
             {/* No Current Study - Show Recommendations */}
-            <Card className="border-2 border-black p-6 mb-4 liquid-gold-card glow-gold rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-no-current-study">
-              <div className="text-center">
-                <p className="text-ministry-slate mb-4">
+            <Card className="border-2 border-ministry-gold-exact p-6 mb-4 liquid-black-white rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden" data-testid="card-no-current-study">
+              <div className="text-center relative z-10">
+                <p className="text-white/80 mb-4">
                   {completedCount > 0 
                     ? "Great job completing your study! Start a new one to continue growing." 
                     : "You haven't started any studies yet"}
                 </p>
                 <Button 
-                  className="bg-black text-white hover:bg-gray-900 border-2 border-black rounded-sm font-black uppercase tracking-wide text-sm"
+                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400 border-2 border-black rounded-sm font-black uppercase tracking-wide text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                   data-testid="button-browse-studies"
                   onClick={() => window.location.href = '/library'}
                 >
@@ -940,9 +940,9 @@ export default function Home() {
             </div>
 
             {/* Progress Insights */}
-            <div className="bg-ministry-gold-exact p-4 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-              <h4 className="font-black text-black mb-2 uppercase tracking-tight">Your Journey</h4>
-              <div className="space-y-2 text-sm text-black/80">
+            <div className="liquid-black-white p-4 rounded-sm border-2 border-ministry-gold-exact shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
+              <h4 className="font-black text-white mb-2 uppercase tracking-tight relative z-10">Your Journey</h4>
+              <div className="space-y-2 text-sm text-white/80 relative z-10">
                 {completedCount === 0 && (
                   <p>🌱 Ready to start your first study? Check out the featured study above!</p>
                 )}
