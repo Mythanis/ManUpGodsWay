@@ -1,26 +1,25 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 
 declare global {
   interface Window {
-    refTagger?: {
+    lsbXref?: {
       tag: () => void;
     };
-    refTaggerReady?: boolean;
   }
 }
 
-let refTaggerLoaded = false;
+let lsbXrefLoaded = false;
 const loadCallbacks: (() => void)[] = [];
 
-function onRefTaggerReady(callback: () => void) {
-  if (refTaggerLoaded && window.refTagger) {
+function onLsbXrefReady(callback: () => void) {
+  if (lsbXrefLoaded && window.lsbXref) {
     callback();
   } else {
     loadCallbacks.push(callback);
-    if (!refTaggerLoaded) {
+    if (!lsbXrefLoaded) {
       const checkReady = setInterval(() => {
-        if (window.refTagger && typeof window.refTagger.tag === 'function') {
-          refTaggerLoaded = true;
+        if (window.lsbXref && typeof window.lsbXref.tag === 'function') {
+          lsbXrefLoaded = true;
           clearInterval(checkReady);
           while (loadCallbacks.length > 0) {
             const cb = loadCallbacks.shift();
@@ -38,11 +37,11 @@ export function useRefTagger(dependencies: unknown[] = []) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      onRefTaggerReady(() => {
+      onLsbXrefReady(() => {
         try {
-          window.refTagger?.tag();
+          window.lsbXref?.tag();
         } catch (e) {
-          // Non-critical: RefTagger handles most cases automatically
+          // Non-critical: LSB XRef handles most cases automatically
         }
       });
     }, 500);
@@ -55,9 +54,9 @@ export function useRefTagger(dependencies: unknown[] = []) {
 
 export function triggerRefTagger() {
   setTimeout(() => {
-    onRefTaggerReady(() => {
+    onLsbXrefReady(() => {
       try {
-        window.refTagger?.tag();
+        window.lsbXref?.tag();
       } catch (e) {
         // Non-critical
       }
