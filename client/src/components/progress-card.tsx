@@ -21,17 +21,17 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
       : 0;
 
   return (
-    <Card className="border-2 border-black liquid-gold-card glow-gold rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="progress-card">
+    <Card className="border-2 border-ministry-gold-exact liquid-black-white rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden" data-testid="progress-card">
       <CardContent className="p-6 relative z-10">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-black text-black text-lg mb-1 uppercase tracking-tight" data-testid="text-study-title">
+            <h3 className="font-black text-white text-lg mb-1 uppercase tracking-tight" data-testid="text-study-title">
               {study.title}
             </h3>
-            <p className="text-sm text-black font-bold mt-1 uppercase tracking-wide" data-testid="text-study-info">
+            <p className="text-sm text-ministry-gold-exact font-bold mt-1 uppercase tracking-wide" data-testid="text-study-info">
               {study.estimatedHours}h study
             </p>
-            <p className="text-sm text-black/70 font-medium mt-1">
+            <p className="text-sm text-white/70 font-medium mt-1">
               {isStudyCompleted 
                 ? "Study completed" 
                 : "In progress"
@@ -39,22 +39,22 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
             </p>
           </div>
           <div className="text-right">
-            <div className="bg-black text-white px-3 py-1 rounded-sm text-xs font-black uppercase tracking-wide" data-testid="text-progress-status">
+            <div className="bg-ministry-gold-exact text-black px-3 py-1 rounded-sm text-xs font-black uppercase tracking-wide border-2 border-black" data-testid="text-progress-status">
               {isStudyCompleted ? 'Completed' : 'In Progress'}
             </div>
           </div>
         </div>
         
         <div className="mb-4">
-          <div className="flex items-center justify-between text-xs text-black/70 mb-2 font-bold uppercase">
+          <div className="flex items-center justify-between text-xs text-white/70 mb-2 font-bold uppercase">
             <span>{completedLessons} of {totalLessons} lessons</span>
             <span>{progressPercent}%</span>
           </div>
-          <Progress value={progressPercent} className="h-3 bg-white border-2 border-black rounded-sm [&>div]:bg-black [&>div]:rounded-sm" data-testid="progress-bar" />
+          <Progress value={progressPercent} className="h-3 bg-white/20 border-2 border-ministry-gold-exact rounded-sm [&>div]:bg-ministry-gold-exact [&>div]:rounded-sm" data-testid="progress-bar" />
         </div>
         
         <Button 
-          className="w-full bg-black text-white py-3 rounded-sm font-black uppercase tracking-wide hover:bg-gray-900 border-2 border-black"
+          className="w-full bg-ministry-gold-exact text-black py-3 rounded-sm font-black uppercase tracking-wide hover:bg-yellow-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
           data-testid="button-continue-study"
           onClick={() => window.location.href = `/studies/${study.id}`}
         >
