@@ -221,64 +221,64 @@ export default function Challenges() {
 
   const ChallengeCard = ({ challenge, isCurrentWeek = false }: { challenge: Challenge; isCurrentWeek?: boolean }) => (
     <Card 
-      className={`${isCurrentWeek ? 'liquid-gold-card' : 'liquid-black'} border-2 border-black cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-sm overflow-hidden`}
+      className={`bg-black border-2 ${isCurrentWeek ? 'border-ministry-gold-exact shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]' : 'border-ministry-gold-exact/50 shadow-[3px_3px_0px_0px_rgba(252,208,0,0.5)]'} cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all rounded-sm overflow-hidden`}
       onClick={() => openChallengeDialog(challenge)}
     >
-      <CardContent className="p-6 relative">
-        <div className="flex items-start space-x-4">
-          <div className="flex-shrink-0 relative z-10">
-            <div className={`w-16 h-16 rounded-sm flex items-center justify-center border-2 border-black ${
-              isCurrentWeek ? 'bg-black text-ministry-gold-exact' : 'bg-ministry-gold-exact text-black'
+      <CardContent className="p-4 sm:p-5">
+        <div className="flex items-start space-x-3">
+          <div className="flex-shrink-0">
+            <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-sm flex items-center justify-center border-2 ${
+              isCurrentWeek ? 'bg-ministry-gold-exact border-ministry-gold-exact text-black' : 'bg-transparent border-ministry-gold-exact text-ministry-gold-exact'
             }`}>
               {isCurrentWeek ? (
-                <Star className="w-8 h-8 fill-current" />
+                <Star className="w-6 h-6 sm:w-7 sm:h-7 fill-current" />
               ) : (
-                <Trophy className="w-8 h-8" />
+                <Trophy className="w-6 h-6 sm:w-7 sm:h-7" />
               )}
             </div>
           </div>
 
-          <div className="flex-1 relative z-10">
-            <div className="flex items-start justify-between mb-2">
+          <div className="flex-1">
+            <div className="flex items-start justify-between mb-1">
               <div>
-                <h3 className={`font-black text-lg mb-1 tracking-tight ${isCurrentWeek ? 'text-black' : 'text-white'}`}>
+                <h3 className="font-black text-sm sm:text-base text-white mb-1 tracking-tight uppercase">
                   {challenge.title}
                   {isCurrentWeek && (
-                    <Badge className="ml-2 bg-black text-ministry-gold-exact font-black rounded-sm uppercase tracking-wide text-xs">
-                      Current Week
+                    <Badge className="ml-2 bg-ministry-gold-exact text-black font-black rounded-sm uppercase tracking-wide text-xs py-0 px-1">
+                      Current
                     </Badge>
                   )}
                 </h3>
-                <div className={`flex items-center flex-wrap gap-2 text-sm mb-2 ${isCurrentWeek ? 'text-black/70' : 'text-gray-400'}`}>
-                  <Badge className={`font-bold text-xs uppercase tracking-wide border-2 border-black rounded-sm ${isCurrentWeek ? 'bg-black text-ministry-gold-exact' : 'bg-ministry-gold-exact text-black'}`}>
+                <div className="flex items-center flex-wrap gap-2 text-xs text-white/60 mb-1">
+                  <Badge className="font-bold text-xs uppercase tracking-wide border border-ministry-gold-exact rounded-sm bg-transparent text-ministry-gold-exact py-0 px-1">
                     {challenge.topic}
                   </Badge>
                   <div className="flex items-center">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    Week of {formatChallengeDate(challenge.releaseDate)}
+                    <Calendar className="w-3 h-3 mr-1" />
+                    {formatChallengeDate(challenge.releaseDate)}
                   </div>
                 </div>
               </div>
             </div>
 
             {challenge.description && (
-              <p className={`text-sm line-clamp-2 mb-2 ${isCurrentWeek ? 'text-black/80' : 'text-gray-300'}`}>
+              <p className="text-white/70 text-xs line-clamp-2 mb-1">
                 {challenge.description}
               </p>
             )}
 
-            <div className={`flex items-center text-sm ${isCurrentWeek ? 'text-black font-bold' : 'text-ministry-gold-exact'}`}>
-              <Eye className="w-4 h-4 mr-1" />
-              <span>Tap to view details</span>
+            <div className="flex items-center text-xs text-ministry-gold-exact font-bold">
+              <Eye className="w-3 h-3 mr-1" />
+              <span>Tap for details</span>
             </div>
 
             {/* Accept Challenge Section - Only for current week */}
             {isCurrentWeek && (
-              <div className="mt-4 pt-4 border-t-2 border-black">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="mt-3 pt-3 border-t border-ministry-gold-exact/30">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <div className="flex items-center space-x-2">
-                    <Users className="w-5 h-5 text-black flex-shrink-0" />
-                    <span className="text-sm text-black font-bold">
+                    <Users className="w-4 h-4 text-ministry-gold-exact flex-shrink-0" />
+                    <span className="text-xs text-white font-bold">
                       {participantCount?.count || 0} accepted
                     </span>
                   </div>
@@ -287,7 +287,7 @@ export default function Challenges() {
                       {!userAccepted?.hasAccepted ? (
                         <Button
                           size="sm"
-                          className="bg-black hover:bg-black/90 text-ministry-gold-exact font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                          className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-ministry-gold-exact text-xs px-3 py-1 h-auto"
                           onClick={(e) => {
                             e.stopPropagation();
                             acceptChallengeMutation.mutate(challenge.id);
@@ -300,17 +300,17 @@ export default function Challenges() {
                       ) : userAccepted?.hasCompleted ? (
                         <Button
                           size="sm"
-                          className="bg-ministry-gold-exact text-black font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
+                          className="bg-ministry-gold-exact text-black font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-ministry-gold-exact cursor-not-allowed opacity-90 text-xs px-3 py-1 h-auto"
                           disabled
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          COMPLETED
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          DONE
                         </Button>
                       ) : userAccepted?.hasRegrouped ? (
                         <Button
                           size="sm"
-                          className="bg-gray-600 text-white font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
+                          className="bg-gray-600 text-white font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-gray-500 cursor-not-allowed opacity-90 text-xs px-3 py-1 h-auto"
                           disabled
                           onClick={(e) => e.stopPropagation()}
                         >
@@ -320,7 +320,7 @@ export default function Challenges() {
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                            className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-ministry-gold-exact text-xs px-3 py-1 h-auto"
                             onClick={(e) => {
                               e.stopPropagation();
                               completeChallengeMutation.mutate(challenge.id);
@@ -332,7 +332,7 @@ export default function Challenges() {
                           </Button>
                           <Button
                             size="sm"
-                            className="bg-gray-700 hover:bg-gray-600 text-white font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                            className="bg-gray-700 hover:bg-gray-600 text-white font-black whitespace-nowrap rounded-sm uppercase tracking-wide border border-gray-500 text-xs px-3 py-1 h-auto"
                             onClick={(e) => {
                               e.stopPropagation();
                               regroupChallengeMutation.mutate(challenge.id);
@@ -348,7 +348,7 @@ export default function Challenges() {
                   ) : (
                     <Button
                       size="sm"
-                      className="bg-black/50 text-white/50 rounded-sm"
+                      className="bg-white/10 text-white/50 rounded-sm text-xs px-3 py-1 h-auto"
                       disabled
                       onClick={(e) => e.stopPropagation()}
                     >
