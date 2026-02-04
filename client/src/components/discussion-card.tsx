@@ -300,13 +300,13 @@ export default function DiscussionCard({
   };
 
   return (
-    <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden w-full" style={{ fontFamily: "'Inter', 'DM Sans', sans-serif" }} data-testid="discussion-card">
-      <CardContent className="p-4 relative">
-        <div className="flex items-start space-x-3 relative z-10">
+    <Card className="bg-black border-2 border-ministry-gold-exact rounded-sm shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden w-full" style={{ fontFamily: "'Inter', 'DM Sans', sans-serif" }} data-testid="discussion-card">
+      <CardContent className="p-4">
+        <div className="flex items-start space-x-3">
           <img 
-            src={discussion.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${discussion.user?.firstName}+${discussion.user?.lastName}&background=4A90B8&color=fff`}
+            src={discussion.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${discussion.user?.firstName}+${discussion.user?.lastName}&background=FCD000&color=000`}
             alt={`${discussion.user?.firstName} ${discussion.user?.lastName}`}
-            className="w-12 h-12 rounded-sm object-cover cursor-pointer border-2 border-ministry-gold-exact hover:border-white transition-colors"
+            className="w-10 h-10 rounded-sm object-cover cursor-pointer border-2 border-ministry-gold-exact hover:border-white transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               setLocation(`/users/${discussion.userId}`);
@@ -314,28 +314,28 @@ export default function DiscussionCard({
             data-testid="img-user-avatar"
           />
           <div className="flex-1">
-            <div className="flex items-center flex-wrap gap-2 mb-2">
-              <h3 className="font-black text-sm text-black uppercase tracking-wide" style={{ fontFamily: "'Inter', sans-serif" }} data-testid="text-user-name">
+            <div className="flex items-center flex-wrap gap-2 mb-1">
+              <h3 className="font-black text-sm text-white uppercase tracking-wide" style={{ fontFamily: "'Inter', sans-serif" }} data-testid="text-user-name">
                 {discussion.user?.firstName} {discussion.user?.lastName?.charAt(0)}.
               </h3>
               {getTierBadge(discussion.user?.subscriptionTier)}
-              <span className="text-xs text-black/60 font-medium" data-testid="text-time-ago">
+              <span className="text-xs text-white/50 font-medium" data-testid="text-time-ago">
                 • {getTimeAgo(discussion.createdAt)}
               </span>
             </div>
             
-            <div className="mb-3 pb-2 border-b-2 border-black/10">
+            <div className="mb-2 pb-2 border-b border-ministry-gold-exact/30">
               <div className="flex items-center flex-wrap gap-2">
-                <h4 className="font-black text-black text-xl tracking-tight" style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }} data-testid="text-discussion-title">
+                <h4 className="font-black text-white text-base sm:text-lg tracking-tight" style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }} data-testid="text-discussion-title">
                   {discussion.title}
                 </h4>
                 {discussion.studyId && (
-                  <Badge className="text-xs bg-ministry-gold-exact text-black font-bold uppercase tracking-wide rounded-sm border-2 border-black">
+                  <Badge className="text-xs bg-ministry-gold-exact text-black font-bold uppercase tracking-wide rounded-sm border border-ministry-gold-exact py-0 px-1">
                     📚 Study
                   </Badge>
                 )}
                 {discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' && (
-                  <Badge className="text-xs bg-black text-ministry-gold-exact font-bold uppercase tracking-wide rounded-sm border-2 border-ministry-gold-exact">
+                  <Badge className="text-xs bg-transparent text-ministry-gold-exact font-bold uppercase tracking-wide rounded-sm border border-ministry-gold-exact py-0 px-1">
                     {discussion.study.requiredTier.charAt(0).toUpperCase() + discussion.study.requiredTier.slice(1)} Only
                   </Badge>
                 )}
@@ -343,35 +343,28 @@ export default function DiscussionCard({
             </div>
             
             <div 
-              className="relative mb-4 p-4 rounded-lg cursor-pointer"
-              style={{ 
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 70%, rgba(252,208,0,0.3) 100%)',
-                backdropFilter: 'blur(4px)'
-              }}
+              className="relative mb-3 p-3 rounded-sm bg-white/10 border border-white/20 cursor-pointer"
               onClick={() => isLongContent && setIsExpanded(!isExpanded)}
               data-testid="content-container"
             >
               <p 
-                className={`text-base text-gray-800 leading-relaxed ${!isExpanded && isLongContent ? 'line-clamp-4' : ''}`} 
+                className={`text-sm text-white/90 leading-relaxed ${!isExpanded && isLongContent ? 'line-clamp-4' : ''}`} 
                 style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400 }} 
                 data-testid="text-discussion-content"
               >
                 {discussion.content}
               </p>
               {isLongContent && !isExpanded && (
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-12 flex items-end justify-center pb-2"
-                  style={{ background: 'linear-gradient(to top, rgba(255,255,255,0.95), transparent)' }}
-                >
-                  <span className="text-sm font-bold text-black/70 hover:text-black transition-colors">
-                    Click to read more...
+                <div className="text-center mt-2 pt-2 border-t border-white/10">
+                  <span className="text-xs font-bold text-ministry-gold-exact">
+                    Tap to read more...
                   </span>
                 </div>
               )}
               {isLongContent && isExpanded && (
-                <div className="text-center mt-3 pt-2 border-t border-black/10">
-                  <span className="text-sm font-bold text-black/70 hover:text-black transition-colors">
-                    Click to collapse
+                <div className="text-center mt-2 pt-2 border-t border-white/10">
+                  <span className="text-xs font-bold text-ministry-gold-exact">
+                    Tap to collapse
                   </span>
                 </div>
               )}
@@ -411,18 +404,18 @@ export default function DiscussionCard({
               </div>
             )}
             
-            <div className="flex flex-wrap items-center gap-2 pt-3 mt-3 border-t-2 border-black/20">
+            <div className="flex flex-wrap items-center gap-2 pt-2 mt-2 border-t border-ministry-gold-exact/30">
               <div className="flex items-center gap-2">
                 <Button 
                   variant="ghost"
                   size="sm"
                   onClick={() => toggleLike.mutate()}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm font-black uppercase text-xs tracking-wide ${
-                    userHasLiked ? 'bg-ministry-gold-exact text-black' : 'bg-black text-white hover:bg-ministry-gold-exact hover:text-black'
-                  } border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all`}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-sm font-black uppercase text-xs tracking-wide h-auto ${
+                    userHasLiked ? 'bg-ministry-gold-exact text-black' : 'bg-white/10 text-white hover:bg-ministry-gold-exact hover:text-black'
+                  } border border-ministry-gold-exact/50 transition-all`}
                   data-testid="button-like-discussion"
                 >
-                  <ChristianCross className="w-3.5 h-3.5" />
+                  <ChristianCross className="w-3 h-3" />
                   <span>{likeCount}</span>
                 </Button>
                 
@@ -430,13 +423,13 @@ export default function DiscussionCard({
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowReplies(!showReplies)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white hover:bg-ministry-gold-exact hover:text-black rounded-sm font-black uppercase text-xs tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all"
+                  className="flex items-center gap-1.5 px-2 py-1 bg-white/10 text-white hover:bg-ministry-gold-exact hover:text-black rounded-sm font-black uppercase text-xs tracking-wide border border-ministry-gold-exact/50 transition-all h-auto"
                   data-testid="button-replies"
                 >
-                  <MessageCircle className="w-3.5 h-3.5" />
+                  <MessageCircle className="w-3 h-3" />
                   <span>{discussion.replyCount || 0}</span>
                   {discussion.replyCount > 0 && (
-                    showReplies ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />
+                    showReplies ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
                   )}
                 </Button>
               </div>
@@ -460,12 +453,12 @@ export default function DiscussionCard({
                     }
                     setShowReplyForm(!showReplyForm);
                   }}
-                  className={`px-3 py-1.5 rounded-sm font-black uppercase tracking-wide text-xs border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all ${
+                  className={`px-2 py-1 rounded-sm font-black uppercase tracking-wide text-xs border border-ministry-gold-exact transition-all h-auto ${
                     discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' &&
                     !((discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
                       (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip'))
-                      ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                      : 'bg-ministry-gold-exact text-black hover:bg-yellow-400 hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]'
+                      ? 'bg-white/10 text-white/50 cursor-not-allowed'
+                      : 'bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90'
                   }`}
                   data-testid="button-reply"
                 >
@@ -481,7 +474,7 @@ export default function DiscussionCard({
                 {isOwner && (
                   <Button 
                     size="sm" 
-                    className="bg-black text-white hover:bg-ministry-gold-exact hover:text-black p-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all"
+                    className="bg-white/10 text-white hover:bg-ministry-gold-exact hover:text-black p-1.5 rounded-sm border border-ministry-gold-exact/50 transition-all h-auto"
                     onClick={() => {
                       editForm.reset({
                         title: discussion.title || '',
@@ -491,7 +484,7 @@ export default function DiscussionCard({
                     }}
                     data-testid="button-edit-discussion"
                   >
-                    <Edit className="h-3.5 w-3.5" />
+                    <Edit className="h-3 w-3" />
                   </Button>
                 )}
 
@@ -499,11 +492,11 @@ export default function DiscussionCard({
                 <div className="relative">
                   <Button 
                     size="sm" 
-                    className="bg-black text-white hover:bg-ministry-gold-exact hover:text-black p-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all"
+                    className="bg-white/10 text-white hover:bg-ministry-gold-exact hover:text-black p-1.5 rounded-sm border border-ministry-gold-exact/50 transition-all h-auto"
                     onClick={() => setShowShareMenu(!showShareMenu)}
                     data-testid="button-share-discussion"
                   >
-                    <Share2 className="h-3.5 w-3.5" />
+                    <Share2 className="h-3 w-3" />
                   </Button>
                   
                   {showShareMenu && (

@@ -71,42 +71,42 @@ function DiscussionReplies({ discussionId }: { discussionId: string }) {
   if (isLoading) {
     return (
       <div className="text-center py-4">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-ministry-navy mx-auto mb-2"></div>
-        <p className="text-sm text-ministry-slate">Loading replies...</p>
+        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-ministry-gold-exact mx-auto mb-2"></div>
+        <p className="text-xs text-white/50">Loading replies...</p>
       </div>
     );
   }
 
   if (replies.length === 0) {
     return (
-      <div className="text-center py-8">
-        <MessageCircle className="w-8 h-8 text-ministry-slate mx-auto mb-2" />
-        <p className="text-ministry-slate">No replies yet</p>
-        <p className="text-sm text-ministry-slate">Be the first to reply!</p>
+      <div className="text-center py-4">
+        <MessageCircle className="w-6 h-6 text-white/30 mx-auto mb-1" />
+        <p className="text-white/50 text-xs">No replies yet</p>
+        <p className="text-xs text-ministry-gold-exact">Be the first to reply!</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {replies.map((reply: any) => (
-        <div key={reply.id} className="flex items-start space-x-3 p-3 bg-ministry-gold-exact/10 rounded-lg">
+        <div key={reply.id} className="flex items-start space-x-2 p-2 bg-white/10 rounded-sm border border-white/20">
           <img 
-            src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=4A90B8&color=fff&size=32`}
+            src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=FCD000&color=000&size=32`}
             alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
-            className="w-8 h-8 rounded-full object-cover"
+            className="w-7 h-7 rounded-sm object-cover border border-ministry-gold-exact"
           />
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-1">
-              <span className="font-medium text-sm text-ministry-charcoal">
+              <span className="font-bold text-xs text-white uppercase">
                 {reply.user?.firstName} {reply.user?.lastName?.charAt(0)}.
               </span>
-              <span className="text-xs text-ministry-slate">
+              <span className="text-xs text-white/50">
                 • {getTimeAgo(reply.createdAt)}
               </span>
             </div>
-            <p className="text-sm text-ministry-slate">{reply.content}</p>
-            <div className="mt-2">
+            <p className="text-xs text-white/80">{reply.content}</p>
+            <div className="mt-1">
               <HonorButton
                 type="reply"
                 id={reply.id}
@@ -581,26 +581,26 @@ export default function Community() {
 
       {/* Community Stats */}
       <div className={`px-6 ${activeLiveStream ? '' : '-mt-3'} relative z-10 mb-4`}>
-        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] liquid-gold-card border-2 border-black rounded-sm" data-testid="card-stats">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div className="border-r-2 border-black">
-                <p className="text-2xl font-black text-black" data-testid="text-total-members">
+        <Card className="shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] bg-black border-2 border-ministry-gold-exact rounded-sm" data-testid="card-stats">
+          <CardContent className="p-3">
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="border-r border-ministry-gold-exact/30">
+                <p className="text-xl font-black text-ministry-gold-exact" data-testid="text-total-members">
                   {stats.totalMembers.toLocaleString()}
                 </p>
-                <p className="text-xs text-black font-bold uppercase tracking-wide">Members</p>
+                <p className="text-xs text-white font-bold uppercase tracking-wide">Members</p>
               </div>
-              <div className="border-r-2 border-black">
-                <p className="text-2xl font-black text-black" data-testid="text-active-today">
+              <div className="border-r border-ministry-gold-exact/30">
+                <p className="text-xl font-black text-ministry-gold-exact" data-testid="text-active-today">
                   {stats.activeToday}
                 </p>
-                <p className="text-xs text-black font-bold uppercase tracking-wide">Active</p>
+                <p className="text-xs text-white font-bold uppercase tracking-wide">Active</p>
               </div>
               <div>
-                <p className="text-2xl font-black text-black" data-testid="text-new-posts">
+                <p className="text-xl font-black text-ministry-gold-exact" data-testid="text-new-posts">
                   {stats.newPosts}
                 </p>
-                <p className="text-xs text-black font-bold uppercase tracking-wide">Posts</p>
+                <p className="text-xs text-white font-bold uppercase tracking-wide">Posts</p>
               </div>
             </div>
           </CardContent>
@@ -848,16 +848,16 @@ export default function Community() {
           onValueChange={(value) => setSelectedCategory(value === 'all' ? '' : value)}
         >
           <SelectTrigger 
-            className="w-full liquid-gold-card border-2 border-black text-black font-bold h-9 rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+            className="w-full bg-black border-2 border-ministry-gold-exact text-white font-bold h-9 rounded-sm shadow-[2px_2px_0px_0px_rgba(252,208,0,1)]"
             data-testid="select-popular-topics"
           >
             <div className="flex items-center">
-              <span className="text-black text-xs font-bold uppercase tracking-wide mr-2">Topic:</span>
+              <span className="text-ministry-gold-exact text-xs font-bold uppercase tracking-wide mr-2">Topic:</span>
               <SelectValue placeholder="All Topics" />
             </div>
           </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-gray-700">
-            <SelectItem value="all" className="text-white hover:bg-gray-700">
+          <SelectContent className="bg-black border-2 border-ministry-gold-exact">
+            <SelectItem value="all" className="text-white hover:bg-white/10">
               All Topics
             </SelectItem>
             {allCategories.map((category) => {
@@ -866,7 +866,7 @@ export default function Community() {
                 <SelectItem 
                   key={category.id} 
                   value={category.id}
-                  className="text-white hover:bg-gray-700"
+                  className="text-white hover:bg-white/10"
                 >
                   <div className="flex items-center">
                     <Icon className="w-4 h-4 mr-2 text-ministry-gold-exact" />
@@ -882,12 +882,12 @@ export default function Community() {
       {/* Search Bar */}
       <div className="px-6 mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black w-5 h-5 z-10" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-ministry-gold-exact w-4 h-4 z-10" />
           <Input
             placeholder="SEARCH DISCUSSIONS..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10 border-2 border-black liquid-gold-card text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide rounded-sm font-medium shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+            className="pl-10 pr-10 border-2 border-ministry-gold-exact bg-black text-white placeholder:text-white/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide rounded-sm font-medium shadow-[2px_2px_0px_0px_rgba(252,208,0,1)]"
           />
           {searchQuery && (
             <Button
