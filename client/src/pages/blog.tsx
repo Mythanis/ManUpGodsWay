@@ -97,14 +97,14 @@ export default function Blog() {
         {isLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <Card key={i} className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+              <Card key={i} className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
                 <CardContent className="p-3 relative z-10">
                   <div className="animate-pulse flex gap-3">
-                    <div className="w-20 h-20 bg-black/20 flex-shrink-0"></div>
+                    <div className="w-20 h-20 bg-white/20 flex-shrink-0"></div>
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-black/20 w-3/4"></div>
-                      <div className="h-3 bg-black/20 w-full"></div>
-                      <div className="h-3 bg-black/20 w-1/2"></div>
+                      <div className="h-4 bg-white/20 w-3/4"></div>
+                      <div className="h-3 bg-white/20 w-full"></div>
+                      <div className="h-3 bg-white/20 w-1/2"></div>
                     </div>
                   </div>
                 </CardContent>
@@ -112,10 +112,10 @@ export default function Blog() {
             ))}
           </div>
         ) : filteredBlogs.length === 0 ? (
-          <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center py-8 overflow-hidden">
+          <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] text-center py-8 overflow-hidden">
             <CardContent className="relative z-10">
-              <h3 className="text-lg font-black uppercase tracking-tighter mb-2 text-black">No Blog Posts Found</h3>
-              <p className="text-black/80 font-medium text-sm">
+              <h3 className="text-lg font-black uppercase tracking-tighter mb-2 text-white">No Blog Posts Found</h3>
+              <p className="text-white/80 font-medium text-sm">
                 {searchQuery || selectedCategory !== "all" 
                   ? "Try adjusting your search or filter criteria."
                   : "Check back soon for new content!"}
@@ -185,16 +185,14 @@ function BlogCard({ blog, featured, formatDate }: {
 
   return (
     <Card 
-      className={`border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden ${
-        featured ? 'liquid-black text-white' : 'liquid-gold-card text-black'
-      }`}
+      className={`border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden liquid-black-white`}
       onClick={() => navigate(`/blog/${blog.slug}`)}
       data-testid={`card-blog-${blog.id}`}
     >
       <CardContent className="p-0">
         <div className="flex flex-row relative z-10">
-          <div className={`w-20 h-20 flex-shrink-0 border-r-2 border-black overflow-hidden ${
-            !blog.coverImageUrl ? (featured ? 'bg-ministry-gold-exact' : 'bg-black') : ''
+          <div className={`w-20 h-20 flex-shrink-0 border-r-2 border-ministry-gold-exact overflow-hidden ${
+            !blog.coverImageUrl ? 'bg-ministry-gold-exact' : ''
           }`}>
             {blog.coverImageUrl ? (
               <img
@@ -204,28 +202,26 @@ function BlogCard({ blog, featured, formatDate }: {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <FileText className={`w-8 h-8 ${featured ? 'text-black/30' : 'text-white/30'}`} />
+                <FileText className="w-8 h-8 text-black/30" />
               </div>
             )}
           </div>
           <div className="p-3 flex-1 min-w-0">
             <div className="flex flex-wrap gap-2 mb-2">
-              <span className={`text-xs font-black uppercase px-2 py-0.5 rounded-sm ${
-                featured 
-                  ? 'bg-ministry-gold-exact text-black' 
-                  : 'bg-black text-white'
-              }`}>
+              <span className="text-xs font-black uppercase px-2 py-0.5 rounded-sm bg-ministry-gold-exact text-black">
                 {blog.category}
               </span>
+              {featured && (
+                <span className="text-xs font-black uppercase px-2 py-0.5 rounded-sm bg-white text-black flex items-center gap-1">
+                  <Star className="w-3 h-3 fill-ministry-gold-exact text-ministry-gold-exact" />
+                  Featured
+                </span>
+              )}
               <Popover>
                 <PopoverTrigger asChild>
                   <button
                     onClick={(e) => e.stopPropagation()}
-                    className={`text-xs font-bold uppercase px-2 py-1 flex items-center gap-1 hover:opacity-80 ${
-                      featured 
-                        ? 'bg-white/20 text-white' 
-                        : 'bg-black/20 text-black'
-                    }`}
+                    className="text-xs font-bold uppercase px-2 py-1 flex items-center gap-1 hover:opacity-80 bg-white/20 text-white"
                     data-testid={`button-share-blog-${blog.id}`}
                   >
                     <Share2 className="w-3 h-3" />
@@ -286,23 +282,17 @@ function BlogCard({ blog, featured, formatDate }: {
               </Popover>
             </div>
             
-            <h3 className={`text-base font-black uppercase tracking-tight mb-1 truncate ${
-              featured ? 'text-white' : 'text-black'
-            }`}>
+            <h3 className="text-base font-black uppercase tracking-tight mb-1 truncate text-white">
               {blog.title}
             </h3>
             
             {blog.excerpt && (
-              <p className={`text-xs mb-2 line-clamp-1 ${
-                featured ? 'text-white/80' : 'text-black/70'
-              }`}>
+              <p className="text-xs mb-2 line-clamp-1 text-white/80">
                 {blog.excerpt}
               </p>
             )}
             
-            <div className={`flex flex-wrap items-center gap-3 text-xs ${
-              featured ? 'text-white/60' : 'text-black/60'
-            }`}>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-white/60">
               {blog.authorName && (
                 <div className="flex items-center gap-1">
                   <User className="w-3 h-3" />
