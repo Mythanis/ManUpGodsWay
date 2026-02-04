@@ -300,8 +300,8 @@ export default function DiscussionCard({
   };
 
   return (
-    <Card className="bg-black border-2 border-ministry-gold-exact rounded-sm shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden w-full" style={{ fontFamily: "'Inter', 'DM Sans', sans-serif" }} data-testid="discussion-card">
-      <CardContent className="p-4">
+    <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden w-full" style={{ fontFamily: "'Inter', 'DM Sans', sans-serif" }} data-testid="discussion-card">
+      <CardContent className="p-4 relative z-10">
         <div className="flex items-start space-x-3">
           <img 
             src={discussion.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${discussion.user?.firstName}+${discussion.user?.lastName}&background=FCD000&color=000`}

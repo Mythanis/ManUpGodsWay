@@ -581,8 +581,8 @@ export default function Community() {
 
       {/* Community Stats */}
       <div className={`px-6 ${activeLiveStream ? '' : '-mt-3'} relative z-10 mb-4`}>
-        <Card className="shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] bg-black border-2 border-ministry-gold-exact rounded-sm" data-testid="card-stats">
-          <CardContent className="p-3">
+        <Card className="shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] liquid-black-white border-2 border-ministry-gold-exact rounded-sm" data-testid="card-stats">
+          <CardContent className="p-3 relative z-10">
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="border-r border-ministry-gold-exact/30">
                 <p className="text-xl font-black text-ministry-gold-exact" data-testid="text-total-members">

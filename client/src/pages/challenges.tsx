@@ -221,10 +221,10 @@ export default function Challenges() {
 
   const ChallengeCard = ({ challenge, isCurrentWeek = false }: { challenge: Challenge; isCurrentWeek?: boolean }) => (
     <Card 
-      className={`bg-black border-2 ${isCurrentWeek ? 'border-ministry-gold-exact shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]' : 'border-ministry-gold-exact/50 shadow-[3px_3px_0px_0px_rgba(252,208,0,0.5)]'} cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all rounded-sm overflow-hidden`}
+      className={`liquid-black-white border-2 ${isCurrentWeek ? 'border-ministry-gold-exact shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]' : 'border-ministry-gold-exact/50 shadow-[3px_3px_0px_0px_rgba(252,208,0,0.5)]'} cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all rounded-sm overflow-hidden`}
       onClick={() => openChallengeDialog(challenge)}
     >
-      <CardContent className="p-4 sm:p-5">
+      <CardContent className="p-4 sm:p-5 relative z-10">
         <div className="flex items-start space-x-3">
           <div className="flex-shrink-0">
             <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-sm flex items-center justify-center border-2 ${

@@ -85,8 +85,8 @@ function PodcastCard({
   const [expanded, setExpanded] = useState(false);
   
   return (
-    <Card className="bg-black shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all border-2 border-ministry-gold-exact rounded-sm overflow-hidden">
-      <CardContent className="p-3 sm:p-4">
+    <Card className="liquid-black-white shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all border-2 border-ministry-gold-exact rounded-sm overflow-hidden">
+      <CardContent className="p-3 sm:p-4 relative z-10">
         <div 
           className="flex items-start space-x-3 cursor-pointer"
           onClick={() => setExpanded(!expanded)}
