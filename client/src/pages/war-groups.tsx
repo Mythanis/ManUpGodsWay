@@ -175,24 +175,29 @@ export default function WarGroups() {
           <div className="space-y-2">
             {myGroups.map((group) => (
               <Link key={group.id} href={`/war-groups/${group.id}`}>
-                <Card className="liquid-gold-card border-2 border-black rounded-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                  <CardContent className="py-3 px-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col">
-                          <span className="font-black text-black text-sm tracking-tight relative z-10">{getGroupDisplayName(group)}</span>
-                          <span className="text-xs text-black/70 flex items-center gap-1 font-medium relative z-10">
-                            <MapPin className="h-3 w-3" />
+                <Card className="border-2 border-black rounded-sm hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="flex">
+                      {/* Gold section with icon */}
+                      <div className="flex-1 bg-ministry-gold-exact p-4 flex items-center gap-3">
+                        <div className="w-12 h-12 bg-black rounded-sm flex items-center justify-center flex-shrink-0 border-2 border-black">
+                          <Shield className="h-6 w-6 text-ministry-gold-exact" />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-black text-black text-sm tracking-tight truncate">{getGroupDisplayName(group)}</span>
+                          <span className="text-xs text-black/70 flex items-center gap-1 font-medium">
+                            <MapPin className="h-3 w-3 flex-shrink-0" />
                             {group.city}, {group.state}
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 relative z-10">
-                        <span className="text-xs text-black flex items-center gap-1 font-bold bg-black/10 px-2 py-0.5">
-                          <Users className="h-3 w-3" />
-                          {group.memberCount}
-                        </span>
-                        <Badge className="bg-black text-white text-xs py-0.5 rounded-sm font-bold uppercase tracking-wide">Member</Badge>
+                      {/* Black section with stats */}
+                      <div className="bg-black p-4 flex flex-col items-center justify-center gap-1 min-w-[100px]">
+                        <div className="flex items-center gap-1 text-white">
+                          <Users className="h-4 w-4 text-ministry-gold-exact" />
+                          <span className="font-black text-lg">{group.memberCount}</span>
+                        </div>
+                        <Badge className="bg-ministry-gold-exact text-black text-xs py-0.5 rounded-sm font-bold uppercase tracking-wide border-2 border-black">Member</Badge>
                       </div>
                     </div>
                   </CardContent>
