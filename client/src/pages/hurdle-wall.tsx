@@ -416,8 +416,8 @@ export default function HurdleWall() {
             </Card>
           ) : (
             posts.map((post) => (
-              <Card key={post.id} className="bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
-                <CardHeader>
+              <Card key={post.id} className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+                <CardHeader className="relative z-10">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
@@ -428,7 +428,7 @@ export default function HurdleWall() {
                           Prayer Request
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-400">{formatTimeAgo(post.createdAt)}</p>
+                      <p className="text-sm text-white/50">{formatTimeAgo(post.createdAt)}</p>
                     </div>
                     {currentUser?.id === post.userId && (
                       <Button
@@ -443,10 +443,12 @@ export default function HurdleWall() {
                     )}
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-white leading-relaxed">{post.content}</p>
+                <CardContent className="space-y-4 relative z-10">
+                  <div className="bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-sm p-3">
+                    <p className="text-black leading-relaxed">{post.content}</p>
+                  </div>
                   
-                  <Separator className="bg-gray-700" />
+                  <Separator className="bg-ministry-gold-exact/30" />
                   
                   <div className="flex items-center gap-4">
                     <Button
@@ -456,7 +458,7 @@ export default function HurdleWall() {
                       className={`flex items-center gap-2 ${
                         post.userHasPrayed 
                           ? 'text-ministry-gold-exact hover:text-yellow-300' 
-                          : 'text-gray-400 hover:text-ministry-gold-exact'
+                          : 'text-white/60 hover:text-ministry-gold-exact'
                       }`}
                       disabled={prayerMutation.isPending}
                       data-testid={`button-prayer-${post.id}`}
@@ -468,7 +470,7 @@ export default function HurdleWall() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
-                      className="flex items-center gap-2 text-gray-400 hover:text-white"
+                      className="flex items-center gap-2 text-white/60 hover:text-white"
                       data-testid={`button-toggle-comments-${post.id}`}
                     >
                       <MessageSquare className="h-4 w-4" />
@@ -478,19 +480,19 @@ export default function HurdleWall() {
 
                   {/* Comments Section */}
                   {expandedPost === post.id && (
-                    <div className="space-y-4 pt-4 border-t border-gray-700">
+                    <div className="space-y-4 pt-4 border-t border-ministry-gold-exact/30">
                       {/* Existing Comments */}
                       {post.replies && post.replies.length > 0 && (
                         <div className="space-y-3">
-                          <h4 className="text-white font-medium">Comments</h4>
+                          <h4 className="text-white font-bold text-sm uppercase tracking-wide">Comments</h4>
                           {post.replies.map((reply) => (
-                            <div key={reply.id} className="bg-gray-800 rounded-lg p-3 border-l-2 border-ministry-gold-exact">
+                            <div key={reply.id} className="bg-white rounded-sm p-3 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                               <div className="flex items-start justify-between mb-2">
-                                <span className="text-sm">
-                                  {renderUserName(reply.user, reply.isAnonymous)}
+                                <span className="text-sm font-bold text-black">
+                                  {reply.isAnonymous ? 'Anonymous' : `${reply.user.firstName} ${reply.user.lastName}`}
                                 </span>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-gray-400 text-xs">
+                                  <span className="text-black/50 text-xs">
                                     {formatTimeAgo(reply.createdAt)}
                                   </span>
                                   {currentUser?.id === reply.userId && (
@@ -498,7 +500,7 @@ export default function HurdleWall() {
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => handleDeleteComment(reply.id)}
-                                      className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-1 h-auto"
+                                      className="text-red-600 hover:text-red-500 hover:bg-red-100 p-1 h-auto"
                                       disabled={deleteCommentMutation.isPending}
                                       data-testid={`button-delete-comment-${reply.id}`}
                                     >
@@ -507,7 +509,7 @@ export default function HurdleWall() {
                                   )}
                                 </div>
                               </div>
-                              <p className="text-white text-sm leading-relaxed">{reply.content}</p>
+                              <p className="text-black text-sm leading-relaxed">{reply.content}</p>
                             </div>
                           ))}
                         </div>
@@ -522,14 +524,14 @@ export default function HurdleWall() {
                             ...prev,
                             [post.id]: e.target.value
                           }))}
-                          className="bg-gray-800 text-white border-gray-700"
+                          className="bg-white text-black border-2 border-black placeholder:text-black/50"
                           data-testid={`textarea-comment-${post.id}`}
                         />
                         <Button
                           onClick={() => handleCreateComment(post.id)}
                           disabled={createCommentMutation.isPending || !commentContent[post.id]?.trim()}
                           size="sm"
-                          className="bg-ministry-gold-exact text-black hover:bg-yellow-400"
+                          className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                           data-testid={`button-post-comment-${post.id}`}
                         >
                           <Send className="h-4 w-4 mr-2" />
