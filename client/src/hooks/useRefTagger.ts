@@ -1,10 +1,35 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 declare global {
   interface Window {
     refTagger?: {
-      tag: (element?: HTMLElement) => void;
+      tag: () => void;
     };
+    refTaggerReady?: boolean;
+  }
+}
+
+let refTaggerLoaded = false;
+const loadCallbacks: (() => void)[] = [];
+
+function onRefTaggerReady(callback: () => void) {
+  if (refTaggerLoaded && window.refTagger) {
+    callback();
+  } else {
+    loadCallbacks.push(callback);
+    if (!refTaggerLoaded) {
+      const checkReady = setInterval(() => {
+        if (window.refTagger && typeof window.refTagger.tag === 'function') {
+          refTaggerLoaded = true;
+          clearInterval(checkReady);
+          while (loadCallbacks.length > 0) {
+            const cb = loadCallbacks.shift();
+            if (cb) cb();
+          }
+        }
+      }, 200);
+      setTimeout(() => clearInterval(checkReady), 10000);
+    }
   }
 }
 
@@ -13,14 +38,14 @@ export function useRefTagger(dependencies: unknown[] = []) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (window.refTagger && typeof window.refTagger.tag === 'function') {
-        if (containerRef.current) {
-          window.refTagger.tag(containerRef.current);
-        } else {
-          window.refTagger.tag();
+      onRefTaggerReady(() => {
+        try {
+          window.refTagger?.tag();
+        } catch (e) {
+          // Non-critical: RefTagger handles most cases automatically
         }
-      }
-    }, 100);
+      });
+    }, 500);
 
     return () => clearTimeout(timer);
   }, dependencies);
@@ -28,14 +53,14 @@ export function useRefTagger(dependencies: unknown[] = []) {
   return containerRef;
 }
 
-export function triggerRefTagger(element?: HTMLElement) {
+export function triggerRefTagger() {
   setTimeout(() => {
-    if (window.refTagger && typeof window.refTagger.tag === 'function') {
-      if (element) {
-        window.refTagger.tag(element);
-      } else {
-        window.refTagger.tag();
+    onRefTaggerReady(() => {
+      try {
+        window.refTagger?.tag();
+      } catch (e) {
+        // Non-critical
       }
-    }
-  }, 100);
+    });
+  }, 500);
 }

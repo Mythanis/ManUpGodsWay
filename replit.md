@@ -66,3 +66,9 @@ The system supports a tiered content structure (free, premium, VIP) and category
 ## Replit Integration
 - @replit/vite-plugin-runtime-error-modal
 - @replit/vite-plugin-cartographer
+
+## Bible Verse Tagging
+- Logos RefTagger integration (api.reftagger.com) for automatic Bible verse reference detection
+- NASB translation with tooltips enabled
+- Custom useRefTagger hook (`client/src/hooks/useRefTagger.ts`) for triggering re-tagging on React content updates
+- Integrated in: study lessons, blog posts, devotionals, discussions, War Room, and Under Fire pages
