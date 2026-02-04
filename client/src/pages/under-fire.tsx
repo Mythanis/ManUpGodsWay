@@ -254,19 +254,19 @@ export default function UnderFire() {
           </div>
         </div>
 
-        <Card className="bg-ministry-gold-exact border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <CardHeader>
-            <CardTitle className="text-black flex items-center gap-2 text-2xl font-black tracking-tighter uppercase">
-              <Shield className="h-6 w-6" />
+        <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+          <CardHeader className="relative z-10">
+            <CardTitle className="text-white flex items-center gap-2 text-2xl font-black tracking-tighter uppercase">
+              <Shield className="h-6 w-6 text-ministry-gold-exact" />
               Request Accountability
             </CardTitle>
-            <CardDescription className="text-black text-base font-medium leading-relaxed">
+            <CardDescription className="text-white/80 text-base font-medium leading-relaxed">
               A place for men to request accountability. This accountability can be for you to grow closer to God by reading your Bible more, praying more. It can be to be healthier by exercising or eating healthier. It can be a sin you are struggling to get rid of in your life that you need someone to hold you accountable for. Whatever you need to be held accountable for this is the space. Submit your request below and someone within the community can volunteer to hold you accountable. When they offer, a direct message will be created between you and them to communicate directly. From there you are free to share your information to better hold accountability.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 relative z-10">
             <div className="space-y-2">
-              <Label htmlFor="content" className="text-black font-semibold">
+              <Label htmlFor="content" className="text-white font-semibold">
                 Accountability Request
               </Label>
               <Textarea
@@ -274,7 +274,7 @@ export default function UnderFire() {
                 placeholder="Share what you need accountability for..."
                 value={newRequestContent}
                 onChange={(e) => setNewRequestContent(e.target.value)}
-                className="min-h-[100px]"
+                className="min-h-[100px] bg-white text-black border-2 border-black placeholder:text-black/50"
                 data-testid="textarea-accountability-request"
               />
             </div>
@@ -282,7 +282,7 @@ export default function UnderFire() {
             <Button 
               onClick={handleCreateRequest}
               disabled={createRequestMutation.isPending || !newRequestContent.trim()}
-              className="w-full bg-black hover:bg-gray-900 text-white font-black text-lg py-6 rounded-sm shadow-lg border-2 border-black transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] uppercase tracking-wide"
+              className="w-full bg-ministry-gold-exact hover:bg-yellow-400 text-black font-black text-lg py-6 rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] border-2 border-black transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] uppercase tracking-wide"
               data-testid="button-share-request"
             >
               {createRequestMutation.isPending ? 'Posting...' : 'Share Request'}
@@ -300,11 +300,11 @@ export default function UnderFire() {
             </Card>
           ) : (
             requests.map((request) => (
-              <Card key={request.id} className="bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
-                <CardHeader>
+              <Card key={request.id} className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+                <CardHeader className="relative z-10">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Link href={`/users/${request.user.id}`}>
                           <span className="text-white font-medium hover:text-ministry-gold-exact cursor-pointer transition-colors">
                             {request.user.firstName} {request.user.lastName}
@@ -320,7 +320,7 @@ export default function UnderFire() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-400">{formatTimeAgo(request.createdAt)}</p>
+                      <p className="text-sm text-white/50">{formatTimeAgo(request.createdAt)}</p>
                     </div>
                     {currentUser?.id === request.userId && (
                       <Button
@@ -335,10 +335,12 @@ export default function UnderFire() {
                     )}
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-white leading-relaxed">{request.content}</p>
+                <CardContent className="space-y-4 relative z-10">
+                  <div className="bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-sm p-3">
+                    <p className="text-black leading-relaxed">{request.content}</p>
+                  </div>
                   
-                  <Separator className="bg-gray-700" />
+                  <Separator className="bg-ministry-gold-exact/30" />
                   
                   <div className="flex items-center gap-4 flex-wrap">
                     {request.assistedById ? (
@@ -356,7 +358,7 @@ export default function UnderFire() {
                             onClick={() => handleUnassist(request.id)}
                             disabled={unassistMutation.isPending}
                             size="sm"
-                            className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold rounded-sm"
+                            className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                           >
                             {unassistMutation.isPending ? 'Processing...' : 'Unassist'}
                           </Button>
@@ -366,14 +368,14 @@ export default function UnderFire() {
                       <Button
                         onClick={() => handleAssist(request.id)}
                         disabled={assistMutation.isPending}
-                        className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold rounded-sm"
+                        className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                         data-testid={`button-assist-${request.id}`}
                       >
                         <HandHelping className="h-4 w-4 mr-2" />
                         {assistMutation.isPending ? 'Processing...' : 'Assist'}
                       </Button>
                     ) : (
-                      <span className="text-gray-400 text-sm italic">Waiting for someone to assist...</span>
+                      <span className="text-white/60 text-sm italic">Waiting for someone to assist...</span>
                     )}
                   </div>
                 </CardContent>
