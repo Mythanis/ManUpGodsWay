@@ -567,7 +567,7 @@ export default function Bible() {
                     apiStatus === "connected" 
                       ? "bg-green-600 text-white" 
                       : apiStatus === "fallback" 
-                        ? "bg-yellow-600 text-black" 
+                        ? "bg-ministry-gold-exact text-black" 
                         : "bg-red-600 text-white"
                   }`}
                 >
@@ -620,7 +620,7 @@ export default function Bible() {
                   <div className="flex items-center gap-2">
                     <div className={`w-3 h-3 ${
                       apiStatus === "connected" ? "bg-green-500" : 
-                      apiStatus === "fallback" ? "bg-yellow-500" : "bg-red-500"
+                      apiStatus === "fallback" ? "bg-ministry-gold-exact" : "bg-red-500"
                     }`}></div>
                     <span className="text-xs font-semibold text-white/80">
                       {apiStatus === "connected" ? "KJV, ESV, NASB Live" : 
