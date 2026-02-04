@@ -224,7 +224,7 @@ export default function Videos() {
 
       {/* Search Bar */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="liquid-gold-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black rounded-sm overflow-hidden">
+        <Card className="liquid-black-white shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] border-2 border-ministry-gold-exact rounded-sm overflow-hidden">
           <CardContent className="p-4 relative z-10">
             <div className="relative">
               <Input
@@ -260,7 +260,7 @@ export default function Videos() {
         ) : (
           <div className="flex flex-col gap-4">
             {filteredVideos.map((video: Video) => (
-              <Card key={video.id} className={`liquid-gold-card overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-black rounded-sm ${
+              <Card key={video.id} className={`overflow-hidden shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-ministry-gold-exact rounded-sm ${
                 video.isFeatured ? 'ring-2 ring-yellow-400' : ''
               }`} style={{ fontFamily: "'Inter', sans-serif" }}>
                 <div className="aspect-video bg-gradient-to-br from-gray-900 via-gray-800 to-black relative cursor-pointer group"
@@ -298,50 +298,47 @@ export default function Videos() {
                   </div>
                 </div>
                 
-                <CardContent className="p-4 relative z-10">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-black text-black line-clamp-2 flex-1 tracking-tight text-lg uppercase">
-                      {video.title}
-                    </h3>
-                    {video.isFeatured && (
-                      <Star className="w-4 h-4 text-black fill-current ml-2 flex-shrink-0" />
-                    )}
-                  </div>
-                  {video.description && (
-                    <div 
-                      className="p-3 mb-3 rounded-sm"
-                      style={{ 
-                        background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 70%, rgba(252,208,0,0.2) 100%)'
-                      }}
-                    >
-                      <p className="text-sm text-gray-800 line-clamp-2" style={{ fontFamily: "'Inter', sans-serif" }}>
-                        {video.description}
-                      </p>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      {video.rating > 0 && (
-                        <div className="flex items-center bg-black px-2 py-1 rounded-sm">
-                          <Star className="w-4 h-4 text-ministry-gold-exact fill-current mr-1" />
-                          <span className="text-sm text-white font-bold">{video.rating}</span>
-                          <span className="text-xs text-white/70 ml-1">({video.ratingCount})</span>
-                        </div>
+                <CardContent className="p-4 liquid-black-white relative">
+                  <div className="relative z-10">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-black text-white line-clamp-2 flex-1 tracking-tight text-lg uppercase">
+                        {video.title}
+                      </h3>
+                      {video.isFeatured && (
+                        <Star className="w-4 h-4 text-ministry-gold-exact fill-current ml-2 flex-shrink-0" />
                       )}
                     </div>
-                    <Button
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedVideo(video);
-                        setShowVideoDialog(true);
-                      }}
-                      className="bg-black text-white hover:bg-ministry-gold-exact hover:text-black font-black uppercase tracking-wide rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,1)] transition-all"
-                    >
-                      <Eye className="w-4 h-4 mr-1" />
-                      Watch
-                    </Button>
+                    {video.description && (
+                      <div className="p-3 mb-3 rounded-sm bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                        <p className="text-sm text-black line-clamp-2" style={{ fontFamily: "'Inter', sans-serif" }}>
+                          {video.description}
+                        </p>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        {video.rating > 0 && (
+                          <div className="flex items-center bg-ministry-gold-exact px-2 py-1 rounded-sm border-2 border-black">
+                            <Star className="w-4 h-4 text-black fill-current mr-1" />
+                            <span className="text-sm text-black font-bold">{video.rating}</span>
+                            <span className="text-xs text-black/70 ml-1">({video.ratingCount})</span>
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedVideo(video);
+                          setShowVideoDialog(true);
+                        }}
+                        className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-black uppercase tracking-wide rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        Watch
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
