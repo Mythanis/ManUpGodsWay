@@ -21,13 +21,13 @@
     <script type="module" src="/src/main.tsx"></script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
-    <!-- Logos RefTagger - automatically tags Bible verse references with LSB translation -->
+    <!-- Logos RefTagger - automatically tags Bible verse references -->
     <script>
       var refTagger = {
         settings: {
-          bibleVersion: 'LSB',
+          bibleVersion: 'NASB',
           tagChapters: true,
-          tooltipStyle: 'light',
+          useTooltip: true,
           customStyle: {
             heading: {
               backgroundColor: '#FCD000',
@@ -36,7 +36,11 @@
           }
         }
       };
+      (function(d, t) {
+        var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
+        g.src = 'https://api.reftagger.com/v2/RefTagger.js';
+        s.parentNode.insertBefore(g, s);
+      }(document, 'script'));
     </script>
-    <script src="https://api.reftagger.com/v2/RefTagger.js"></script>
   </body>
 </html>

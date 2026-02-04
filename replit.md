@@ -69,6 +69,6 @@ The system supports a tiered content structure (free, premium, VIP) and category
 
 ## Bible Verse Tagging
 - Logos RefTagger integration (api.reftagger.com) for automatic Bible verse reference detection
-- LSB (Legacy Standard Bible) translation with light-style tooltips enabled
+- NASB translation with tooltips enabled
 - Custom useRefTagger hook (`client/src/hooks/useRefTagger.ts`) for triggering re-tagging on React content updates
 - Integrated in: study lessons, blog posts, devotionals, discussions, War Room, and Under Fire pages
