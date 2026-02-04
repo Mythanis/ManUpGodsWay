@@ -7,12 +7,14 @@ import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { BlogPost } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { useRefTagger } from "@/hooks/useRefTagger";
 import { BackButton } from "@/components/BackButton";
 
 export default function BlogDetail() {
   const { slug } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const contentRef = useRefTagger([slug]);
 
   const { data: blog, isLoading, error } = useQuery<BlogPost>({
     queryKey: ['/api/blogs', slug],
@@ -246,6 +248,7 @@ export default function BlogDetail() {
         <Card className="bg-white border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <CardContent className="p-6 md:p-8">
             <div 
+              ref={contentRef}
               className="prose prose-lg max-w-none text-black prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-a:text-black prose-a:underline prose-strong:text-black"
               dangerouslySetInnerHTML={{ __html: blog.content }}
             />

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useRefTagger } from "@/hooks/useRefTagger";
 import { ChevronLeft, ChevronRight, CheckCircle, Circle, Printer, StickyNote, Save, Loader2 } from "lucide-react";
 
 interface StudyLesson {
@@ -44,6 +45,8 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState<string>("");
   const [notesExpanded, setNotesExpanded] = useState(false);
+  
+  const contentRef = useRefTagger([currentDayIndex]);
 
   // Fetch all lessons for this study
   const { data: lessons = [], isLoading: lessonsLoading } = useQuery<StudyLesson[]>({
@@ -348,7 +351,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
         }
       `}} />
       
-      <div className="space-y-4 print:space-y-2" data-testid="embedded-lesson-viewer">
+      <div ref={contentRef} className="space-y-4 print:space-y-2" data-testid="embedded-lesson-viewer">
       {/* Lesson Navigation */}
       <div className="liquid-gold-card border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-3 print:hidden">
         <div className="flex items-center justify-between gap-2 relative z-10">

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { triggerRefTagger } from "@/hooks/useRefTagger";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -111,6 +112,12 @@ export default function Home() {
     queryKey: ["/api/devotionals/today"],
     retry: false,
   });
+  
+  useEffect(() => {
+    if (devotional) {
+      triggerRefTagger();
+    }
+  }, [devotional]);
 
   const { data: rations } = useQuery<{ balance: number }>({
     queryKey: ["/api/rations"],

@@ -3,6 +3,7 @@ import { useParams } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { triggerRefTagger } from "@/hooks/useRefTagger";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { getTierDisplayName } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
@@ -228,6 +229,12 @@ export default function StudyDetail() {
     retry: false,
     enabled: !!id,
   });
+  
+  useEffect(() => {
+    if (study) {
+      triggerRefTagger();
+    }
+  }, [study]);
 
   // Check if user has purchased this study
   const { data: hasPurchased, isLoading: purchaseLoading } = useQuery<boolean>({

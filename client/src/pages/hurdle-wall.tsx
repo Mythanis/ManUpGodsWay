@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { triggerRefTagger } from '@/hooks/useRefTagger';
 import { formatDistanceToNow } from 'date-fns';
 import { MessageSquare, HandHeart, Plus, Trash2, Search, Filter, SortDesc, Send, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -68,6 +69,12 @@ export default function HurdleWall() {
   const { data: allPosts = [], isLoading } = useQuery<HurdleWallPost[]>({
     queryKey: ['/api/hurdle-wall'],
   });
+  
+  useEffect(() => {
+    if (allPosts.length > 0) {
+      triggerRefTagger();
+    }
+  }, [allPosts]);
   
   // Filter and sort posts
   const posts = React.useMemo(() => {

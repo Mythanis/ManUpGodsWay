@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { triggerRefTagger } from '@/hooks/useRefTagger';
 import { formatDistanceToNow } from 'date-fns';
 import { Trash2, Search, SortDesc, Shield, HandHelping, CheckCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -53,6 +54,12 @@ export default function UnderFire() {
   const { data: allRequests = [], isLoading } = useQuery<AccountabilityRequest[]>({
     queryKey: ['/api/accountability-requests'],
   });
+  
+  useEffect(() => {
+    if (allRequests.length > 0) {
+      triggerRefTagger();
+    }
+  }, [allRequests]);
   
   const requests = React.useMemo(() => {
     let filtered = allRequests;

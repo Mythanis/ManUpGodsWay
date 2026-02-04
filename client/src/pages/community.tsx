@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { triggerRefTagger } from "@/hooks/useRefTagger";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -330,6 +331,12 @@ export default function Community() {
     refetchInterval: 5000, // Real-time updates every 5 seconds
     refetchIntervalInBackground: true,
   });
+  
+  useEffect(() => {
+    if (discussions.length > 0) {
+      triggerRefTagger();
+    }
+  }, [discussions]);
 
   const form = useForm({
     resolver: zodResolver(createDiscussionSchema),
