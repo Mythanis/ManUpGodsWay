@@ -21,7 +21,22 @@
     <script type="module" src="/src/main.tsx"></script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
-    <!-- LSBible RefTagger - automatically tags Bible verse references with LSB translation -->
-    <script type="text/javascript" src="https://lsbible.org/wp-content/plugins/lsbible-reftagger/dist/xref.min.js"></script>
+    <!-- Logos RefTagger - automatically tags Bible verse references with LSB translation -->
+    <script>
+      var refTagger = {
+        settings: {
+          bibleVersion: 'LSB',
+          tagChapters: true,
+          tooltipStyle: 'light',
+          customStyle: {
+            heading: {
+              backgroundColor: '#FCD000',
+              color: '#000000'
+            }
+          }
+        }
+      };
+    </script>
+    <script src="https://api.reftagger.com/v2/RefTagger.js"></script>
   </body>
 </html>

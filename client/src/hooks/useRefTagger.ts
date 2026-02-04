@@ -2,24 +2,24 @@ import { useEffect, useRef } from 'react';
 
 declare global {
   interface Window {
-    lsbXref?: {
+    refTagger?: {
       tag: () => void;
     };
   }
 }
 
-let lsbXrefLoaded = false;
+let refTaggerLoaded = false;
 const loadCallbacks: (() => void)[] = [];
 
-function onLsbXrefReady(callback: () => void) {
-  if (lsbXrefLoaded && window.lsbXref) {
+function onRefTaggerReady(callback: () => void) {
+  if (refTaggerLoaded && window.refTagger) {
     callback();
   } else {
     loadCallbacks.push(callback);
-    if (!lsbXrefLoaded) {
+    if (!refTaggerLoaded) {
       const checkReady = setInterval(() => {
-        if (window.lsbXref && typeof window.lsbXref.tag === 'function') {
-          lsbXrefLoaded = true;
+        if (window.refTagger && typeof window.refTagger.tag === 'function') {
+          refTaggerLoaded = true;
           clearInterval(checkReady);
           while (loadCallbacks.length > 0) {
             const cb = loadCallbacks.shift();
@@ -37,11 +37,11 @@ export function useRefTagger(dependencies: unknown[] = []) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      onLsbXrefReady(() => {
+      onRefTaggerReady(() => {
         try {
-          window.lsbXref?.tag();
+          window.refTagger?.tag();
         } catch (e) {
-          // Non-critical: LSB XRef handles most cases automatically
+          // Non-critical: RefTagger handles most cases automatically
         }
       });
     }, 500);
@@ -54,9 +54,9 @@ export function useRefTagger(dependencies: unknown[] = []) {
 
 export function triggerRefTagger() {
   setTimeout(() => {
-    onLsbXrefReady(() => {
+    onRefTaggerReady(() => {
       try {
-        window.lsbXref?.tag();
+        window.refTagger?.tag();
       } catch (e) {
         // Non-critical
       }
