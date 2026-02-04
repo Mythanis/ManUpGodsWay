@@ -368,20 +368,20 @@ export default function HurdleWall() {
         </div>
 
         {/* New Post Form */}
-        <Card className="bg-ministry-gold-exact border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <CardHeader>
-            <CardTitle className="text-black flex items-center gap-2 text-2xl font-black tracking-tighter uppercase">
-              <Plus className="h-6 w-6" />
+        <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+          <CardHeader className="relative z-10">
+            <CardTitle className="text-white flex items-center gap-2 text-2xl font-black tracking-tighter uppercase">
+              <Plus className="h-6 w-6 text-ministry-gold-exact" />
               Share Your Heart
             </CardTitle>
-            <CardDescription className="text-black text-base font-medium leading-relaxed">
+            <CardDescription className="text-white/80 text-base font-medium leading-relaxed">
               A place for men to bring their battles to God and stand together in prayer. Share your needs, lift up your brothers, and fight on your knees. This is where warriors seek the Lord and find strength.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 relative z-10">
             {/* Content */}
             <div className="space-y-2">
-              <Label htmlFor="content" className="text-black font-semibold">
+              <Label htmlFor="content" className="text-white font-semibold">
                 Prayer Request
               </Label>
               <Textarea
@@ -389,7 +389,7 @@ export default function HurdleWall() {
                 placeholder="Share what you'd like prayer for..."
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
-                className="min-h-[100px]"
+                className="min-h-[100px] bg-white text-black border-2 border-black placeholder:text-black/50"
                 data-testid="textarea-prayer-request"
               />
             </div>
@@ -397,7 +397,7 @@ export default function HurdleWall() {
             <Button 
               onClick={handleCreatePost}
               disabled={createPostMutation.isPending || !newPostContent.trim()}
-              className="w-full bg-black hover:bg-gray-900 text-white font-black text-lg py-6 rounded-sm shadow-lg border-2 border-black transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] uppercase tracking-wide"
+              className="w-full bg-ministry-gold-exact hover:bg-yellow-400 text-black font-black text-lg py-6 rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] border-2 border-black transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] uppercase tracking-wide"
               data-testid="button-share-post"
             >
               {createPostMutation.isPending ? 'Posting...' : 'Share Post'}
