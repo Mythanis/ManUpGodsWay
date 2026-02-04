@@ -344,8 +344,8 @@ export default function WarGroups() {
             {/* Search Section */}
             <div className="relative z-10">
               <h2 className="text-xl font-black mb-4 tracking-tight uppercase">Discover Groups</h2>
-          <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <CardContent className="pt-6">
+          <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
+            <CardContent className="pt-6 relative z-10">
               <div className="space-y-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-black pointer-events-none z-20" />
@@ -376,12 +376,12 @@ export default function WarGroups() {
                     data-testid="input-filter-state"
                   />
                 </div>
-                <div className="liquid-black p-4 border-2 border-black">
+                <div className="bg-white/10 p-4 border-2 border-ministry-gold-exact rounded-sm">
                   <div className="flex items-center justify-between mb-3">
-                    <label className="text-white font-black text-xs uppercase tracking-wide relative z-10">
+                    <label className="text-white font-black text-xs uppercase tracking-wide">
                       Search Distance
                     </label>
-                    <span className="bg-ministry-gold-exact text-black px-3 py-1 font-black text-sm" data-testid="text-distance-value">
+                    <span className="bg-ministry-gold-exact text-black px-3 py-1 font-black text-sm border-2 border-black" data-testid="text-distance-value">
                       {distanceFilter} miles
                     </span>
                   </div>
@@ -401,7 +401,7 @@ export default function WarGroups() {
                   </div>
                 </div>
                 {isFetching && (
-                  <p className="text-xs text-black text-center font-bold tracking-wide uppercase">Searching...</p>
+                  <p className="text-xs text-white text-center font-bold tracking-wide uppercase">Searching...</p>
                 )}
               </div>
             </CardContent>
