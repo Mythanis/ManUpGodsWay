@@ -343,27 +343,27 @@ export default function DiscussionCard({
             </div>
             
             <div 
-              className="relative mb-3 p-3 rounded-sm bg-white/10 border border-white/20 cursor-pointer"
+              className="relative mb-3 p-3 rounded-sm bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
               onClick={() => isLongContent && setIsExpanded(!isExpanded)}
               data-testid="content-container"
             >
               <p 
-                className={`text-sm text-white/90 leading-relaxed ${!isExpanded && isLongContent ? 'line-clamp-4' : ''}`} 
+                className={`text-sm text-black leading-relaxed ${!isExpanded && isLongContent ? 'line-clamp-4' : ''}`} 
                 style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400 }} 
                 data-testid="text-discussion-content"
               >
                 {discussion.content}
               </p>
               {isLongContent && !isExpanded && (
-                <div className="text-center mt-2 pt-2 border-t border-white/10">
-                  <span className="text-xs font-bold text-ministry-gold-exact">
+                <div className="text-center mt-2 pt-2 border-t border-black/20">
+                  <span className="text-xs font-bold text-black/70">
                     Tap to read more...
                   </span>
                 </div>
               )}
               {isLongContent && isExpanded && (
-                <div className="text-center mt-2 pt-2 border-t border-white/10">
-                  <span className="text-xs font-bold text-ministry-gold-exact">
+                <div className="text-center mt-2 pt-2 border-t border-black/20">
+                  <span className="text-xs font-bold text-black/70">
                     Tap to collapse
                   </span>
                 </div>

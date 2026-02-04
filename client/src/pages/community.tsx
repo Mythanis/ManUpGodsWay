@@ -90,22 +90,22 @@ function DiscussionReplies({ discussionId }: { discussionId: string }) {
   return (
     <div className="space-y-2">
       {replies.map((reply: any) => (
-        <div key={reply.id} className="flex items-start space-x-2 p-2 bg-white/10 rounded-sm border border-white/20">
+        <div key={reply.id} className="flex items-start space-x-2 p-2 bg-white rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
           <img 
-            src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=FCD000&color=000&size=32`}
+            src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=000&color=FCD000&size=32`}
             alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
-            className="w-7 h-7 rounded-sm object-cover border border-ministry-gold-exact"
+            className="w-7 h-7 rounded-sm object-cover border-2 border-black"
           />
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-1">
-              <span className="font-bold text-xs text-white uppercase">
+              <span className="font-bold text-xs text-black uppercase">
                 {reply.user?.firstName} {reply.user?.lastName?.charAt(0)}.
               </span>
-              <span className="text-xs text-white/50">
+              <span className="text-xs text-black/50">
                 • {getTimeAgo(reply.createdAt)}
               </span>
             </div>
-            <p className="text-xs text-white/80">{reply.content}</p>
+            <p className="text-xs text-black">{reply.content}</p>
             <div className="mt-1">
               <HonorButton
                 type="reply"
