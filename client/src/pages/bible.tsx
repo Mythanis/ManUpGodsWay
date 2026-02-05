@@ -112,7 +112,12 @@ export default function Bible() {
 
   // Search query
   const { data: searchResults, isLoading: searchLoading, refetch: executeSearch } = useQuery<any>({
-    queryKey: ['/api/bible', selectedVersionId, 'search', searchTerm],
+    queryKey: ['/api/bible/search', selectedVersionId, searchTerm],
+    queryFn: async () => {
+      const response = await fetch(`/api/bible/${selectedVersionId}/search?query=${encodeURIComponent(searchTerm)}`);
+      if (!response.ok) throw new Error('Search failed');
+      return response.json();
+    },
     enabled: false,
   });
 
