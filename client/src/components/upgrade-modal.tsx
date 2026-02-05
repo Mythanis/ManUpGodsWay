@@ -207,10 +207,9 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               {(tierPricing as TierPricing[]).map((tier: TierPricing) => {
                 const isSelected = selectedTier === tier.tier;
                 const yearlyPrice = calculateYearlyPrice(tier);
-                const yearlyMonthlyEquivalent = (parseFloat(yearlyPrice) / 12).toFixed(2);
                 const price = billingCycle === "yearly" ? yearlyPrice : tier.monthlyPrice;
                 const displayPrice = billingCycle === "yearly" 
-                  ? `$${yearlyMonthlyEquivalent}/month` 
+                  ? `$${yearlyPrice}/year` 
                   : `$${parseFloat(tier.monthlyPrice).toFixed(2)}/month`;
                 const savings = calculateSavings(tier);
                 const savingsPercent = savings.percentage;
