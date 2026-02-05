@@ -214,7 +214,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 const savings = calculateSavings(tier);
                 const savingsPercent = savings.percentage;
                 const savingsAmount = savings.amount;
-                const monthlySavingsAmount = (savings.amount / 12).toFixed(2);
+                const monthlyPriceFromYearly = (parseFloat(yearlyPrice) / 12).toFixed(2);
 
                 return (
                   <Card
@@ -241,7 +241,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                       </div>
                       {billingCycle === "yearly" && tier.yearlyPrice && savingsPercent > 0 && (
                         <div className="text-green-600 text-sm">
-                          Save {savingsPercent}% (${monthlySavingsAmount} per month)
+                          Save {savingsPercent}% (${monthlyPriceFromYearly} per month)
                         </div>
                       )}
                     </CardHeader>
