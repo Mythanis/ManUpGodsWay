@@ -207,13 +207,15 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               {(tierPricing as TierPricing[]).map((tier: TierPricing) => {
                 const isSelected = selectedTier === tier.tier;
                 const yearlyPrice = calculateYearlyPrice(tier);
+                const yearlyMonthlyEquivalent = (parseFloat(yearlyPrice) / 12).toFixed(2);
                 const price = billingCycle === "yearly" ? yearlyPrice : tier.monthlyPrice;
                 const displayPrice = billingCycle === "yearly" 
-                  ? `$${yearlyPrice}/year` 
+                  ? `$${yearlyMonthlyEquivalent}/month` 
                   : `$${parseFloat(tier.monthlyPrice).toFixed(2)}/month`;
                 const savings = calculateSavings(tier);
                 const savingsPercent = savings.percentage;
                 const savingsAmount = savings.amount;
+                const monthlySavingsAmount = (savings.amount / 12).toFixed(2);
 
                 return (
                   <Card
@@ -240,7 +242,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                       </div>
                       {billingCycle === "yearly" && tier.yearlyPrice && savingsPercent > 0 && (
                         <div className="text-green-600 text-sm">
-                          Save {savingsPercent}% (${savingsAmount.toFixed(2)} per year)
+                          Save {savingsPercent}% (${monthlySavingsAmount} per month)
                         </div>
                       )}
                     </CardHeader>
