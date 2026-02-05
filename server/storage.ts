@@ -2479,6 +2479,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUserPermanently(userId: string): Promise<void> {
+    // Clear accountability_requests where this user was the assistant
+    await db.update(accountabilityRequests)
+      .set({ assistedById: null, assistedAt: null })
+      .where(eq(accountabilityRequests.assistedById, userId));
+    
+    // Now delete the user (cascade will handle other references)
     await db.delete(users).where(eq(users.id, userId));
   }
 
