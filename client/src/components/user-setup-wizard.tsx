@@ -693,7 +693,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                   </p>
                   <ul className="list-disc list-inside text-gray-300 text-sm space-y-1 ml-2 mt-1">
                     <li>Only your email address is shared.</li>
-                    <li>You may unsubscribe using the link in any email or by emailing jody@manupgodsway.org.</li>
+                    <li>You may unsubscribe using the link in any email or by emailing info@manupgodsway.org.</li>
                   </ul>
                 </div>
                 
@@ -733,7 +733,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                   <li>Full deletion of your data</li>
                 </ul>
                 <p className="text-gray-300 text-sm leading-relaxed mt-2">
-                  Email: jody@manupgodsway.org
+                  Email: info@manupgodsway.org
                 </p>
               </section>
 
@@ -761,7 +761,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
               <section>
                 <h2 className="text-base font-bold text-ministry-gold uppercase mb-2">11. Contact</h2>
                 <p className="text-gray-300 text-sm leading-relaxed">
-                  jody@manupgodsway.org
+                  info@manupgodsway.org
                 </p>
               </section>
             </div>
