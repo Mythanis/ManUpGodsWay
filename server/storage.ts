@@ -4734,6 +4734,68 @@ export class DatabaseStorage implements IStorage {
     return challenge;
   }
 
+  // Get all challenges completed by a user
+  async getUserCompletedChallenges(userId: string): Promise<ChallengeParticipant[]> {
+    return await db
+      .select()
+      .from(challengeParticipants)
+      .where(and(
+        eq(challengeParticipants.userId, userId),
+        isNotNull(challengeParticipants.completedAt)
+      ));
+  }
+
+  // Get challenges with unlock status for progressive drip
+  async getChallengesWithUnlockStatus(userId: string | null): Promise<(Challenge & { isUnlocked: boolean; unlockIndex: number })[]> {
+    // Get all challenges ordered by release date (oldest first for progressive unlock)
+    const allChallenges = await db
+      .select()
+      .from(challenges)
+      .orderBy(asc(challenges.releaseDate));
+    
+    if (!userId) {
+      // Non-authenticated users can only see the first challenge
+      return allChallenges.map((challenge, index) => ({
+        ...challenge,
+        isUnlocked: index === 0,
+        unlockIndex: index
+      }));
+    }
+    
+    // Get user's completed challenges
+    const completedChallenges = await this.getUserCompletedChallenges(userId);
+    const completedChallengeIds = new Set(completedChallenges.map(cp => cp.challengeId));
+    
+    // Progressive unlock logic:
+    // - Challenge 0 (oldest) is always unlocked
+    // - Challenge N is unlocked if challenge N-1 is completed
+    // - Current week's challenge is always unlocked (special case)
+    const currentWeekChallenge = await this.getCurrentWeekChallenge();
+    
+    return allChallenges.map((challenge, index) => {
+      // First challenge is always unlocked
+      if (index === 0) {
+        return { ...challenge, isUnlocked: true, unlockIndex: index };
+      }
+      
+      // Current week's challenge is always unlocked
+      if (currentWeekChallenge && challenge.id === currentWeekChallenge.id) {
+        return { ...challenge, isUnlocked: true, unlockIndex: index };
+      }
+      
+      // Check if user has completed all previous challenges
+      let allPreviousCompleted = true;
+      for (let i = 0; i < index; i++) {
+        if (!completedChallengeIds.has(allChallenges[i].id)) {
+          allPreviousCompleted = false;
+          break;
+        }
+      }
+      
+      return { ...challenge, isUnlocked: allPreviousCompleted, unlockIndex: index };
+    });
+  }
+
   // Content Flagging Methods
   async flagContent(flagData: InsertContentFlag): Promise<ContentFlag> {
     const [flag] = await db

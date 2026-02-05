@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Trophy, Calendar, Filter, Target, Star, ArrowUp, ArrowDown, Clock, Users, CheckCircle, Eye } from "lucide-react";
+import { Trophy, Calendar, Filter, Target, Star, ArrowUp, ArrowDown, Clock, Users, CheckCircle, Eye, Lock, Unlock } from "lucide-react";
 import { format, startOfWeek } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -19,6 +19,8 @@ interface Challenge {
   releaseDate: string;
   createdAt: string;
   updatedAt: string;
+  isUnlocked?: boolean;
+  unlockIndex?: number;
 }
 
 export default function Challenges() {
@@ -215,62 +217,100 @@ export default function Challenges() {
   };
 
   const openChallengeDialog = (challenge: Challenge) => {
+    // Only open dialog if challenge is unlocked
+    if (challenge.isUnlocked === false) {
+      toast({
+        title: "Challenge Locked",
+        description: "Complete previous challenges to unlock this one!",
+        variant: "destructive",
+      });
+      return;
+    }
     setSelectedChallenge(challenge);
     setShowChallengeDialog(true);
   };
 
-  const ChallengeCard = ({ challenge, isCurrentWeek = false }: { challenge: Challenge; isCurrentWeek?: boolean }) => (
-    <Card 
-      className={`liquid-black-white border-2 ${isCurrentWeek ? 'border-ministry-gold-exact shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]' : 'border-ministry-gold-exact/50 shadow-[3px_3px_0px_0px_rgba(252,208,0,0.5)]'} cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all rounded-sm overflow-hidden`}
-      onClick={() => openChallengeDialog(challenge)}
-    >
-      <CardContent className="p-4 sm:p-5 relative z-10">
-        <div className="flex items-start space-x-3">
-          <div className="flex-shrink-0">
-            <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-sm flex items-center justify-center border-2 ${
-              isCurrentWeek ? 'bg-ministry-gold-exact border-ministry-gold-exact text-black' : 'bg-transparent border-ministry-gold-exact text-ministry-gold-exact'
-            }`}>
-              {isCurrentWeek ? (
-                <Star className="w-6 h-6 sm:w-7 sm:h-7 fill-current" />
-              ) : (
-                <Trophy className="w-6 h-6 sm:w-7 sm:h-7" />
-              )}
-            </div>
-          </div>
-
-          <div className="flex-1">
-            <div className="flex items-start justify-between mb-1">
-              <div>
-                <h3 className="font-black text-sm sm:text-base text-white mb-1 tracking-tight uppercase">
-                  {challenge.title}
-                  {isCurrentWeek && (
-                    <Badge className="ml-2 bg-ministry-gold-exact text-black font-black rounded-sm uppercase tracking-wide text-xs py-0 px-1">
-                      Current
-                    </Badge>
-                  )}
-                </h3>
-                <div className="flex items-center flex-wrap gap-2 text-xs text-white/60 mb-1">
-                  <Badge className="font-bold text-xs uppercase tracking-wide border border-ministry-gold-exact rounded-sm bg-transparent text-ministry-gold-exact py-0 px-1">
-                    {challenge.topic}
-                  </Badge>
-                  <div className="flex items-center">
-                    <Calendar className="w-3 h-3 mr-1" />
-                    {formatChallengeDate(challenge.releaseDate)}
-                  </div>
-                </div>
+  const ChallengeCard = ({ challenge, isCurrentWeek = false }: { challenge: Challenge; isCurrentWeek?: boolean }) => {
+    const isLocked = challenge.isUnlocked === false;
+    
+    return (
+      <Card 
+        className={`liquid-black-white border-2 ${
+          isLocked 
+            ? 'border-gray-600/50 shadow-[3px_3px_0px_0px_rgba(100,100,100,0.3)] opacity-60' 
+            : isCurrentWeek 
+              ? 'border-ministry-gold-exact shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]' 
+              : 'border-ministry-gold-exact/50 shadow-[3px_3px_0px_0px_rgba(252,208,0,0.5)]'
+        } ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px]'} transition-all rounded-sm overflow-hidden`}
+        onClick={() => openChallengeDialog(challenge)}
+      >
+        <CardContent className="p-4 sm:p-5 relative z-10">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-sm flex items-center justify-center border-2 ${
+                isLocked 
+                  ? 'bg-gray-700 border-gray-600 text-gray-400' 
+                  : isCurrentWeek 
+                    ? 'bg-ministry-gold-exact border-ministry-gold-exact text-black' 
+                    : 'bg-transparent border-ministry-gold-exact text-ministry-gold-exact'
+              }`}>
+                {isLocked ? (
+                  <Lock className="w-6 h-6 sm:w-7 sm:h-7" />
+                ) : isCurrentWeek ? (
+                  <Star className="w-6 h-6 sm:w-7 sm:h-7 fill-current" />
+                ) : (
+                  <Trophy className="w-6 h-6 sm:w-7 sm:h-7" />
+                )}
               </div>
             </div>
 
-            {challenge.description && (
-              <p className="text-white/70 text-xs line-clamp-2 mb-1">
-                {challenge.description}
-              </p>
-            )}
+            <div className="flex-1">
+              <div className="flex items-start justify-between mb-1">
+                <div>
+                  <h3 className={`font-black text-sm sm:text-base mb-1 tracking-tight uppercase ${isLocked ? 'text-gray-400' : 'text-white'}`}>
+                    {challenge.title}
+                    {isCurrentWeek && (
+                      <Badge className="ml-2 bg-ministry-gold-exact text-black font-black rounded-sm uppercase tracking-wide text-xs py-0 px-1">
+                        Current
+                      </Badge>
+                    )}
+                    {isLocked && (
+                      <Badge className="ml-2 bg-gray-600 text-gray-300 font-black rounded-sm uppercase tracking-wide text-xs py-0 px-1">
+                        Locked
+                      </Badge>
+                    )}
+                  </h3>
+                  <div className={`flex items-center flex-wrap gap-2 text-xs ${isLocked ? 'text-gray-500' : 'text-white/60'} mb-1`}>
+                    <Badge className={`font-bold text-xs uppercase tracking-wide border rounded-sm bg-transparent py-0 px-1 ${isLocked ? 'border-gray-600 text-gray-500' : 'border-ministry-gold-exact text-ministry-gold-exact'}`}>
+                      {challenge.topic}
+                    </Badge>
+                    <div className="flex items-center">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      {formatChallengeDate(challenge.releaseDate)}
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            <div className="flex items-center text-xs text-ministry-gold-exact font-bold">
-              <Eye className="w-3 h-3 mr-1" />
-              <span>Tap for details</span>
-            </div>
+              {challenge.description && (
+                <p className={`text-xs line-clamp-2 mb-1 ${isLocked ? 'text-gray-500' : 'text-white/70'}`}>
+                  {challenge.description}
+                </p>
+              )}
+
+              <div className={`flex items-center text-xs font-bold ${isLocked ? 'text-gray-500' : 'text-ministry-gold-exact'}`}>
+                {isLocked ? (
+                  <>
+                    <Lock className="w-3 h-3 mr-1" />
+                    <span>Complete previous challenge to unlock</span>
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-3 h-3 mr-1" />
+                    <span>Tap for details</span>
+                  </>
+                )}
+              </div>
 
             {/* Accept Challenge Section - Only for current week */}
             {isCurrentWeek && (
@@ -362,7 +402,8 @@ export default function Challenges() {
         </div>
       </CardContent>
     </Card>
-  );
+    );
+  };
 
   if (isLoading) {
     return (

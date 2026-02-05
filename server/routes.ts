@@ -6180,9 +6180,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Challenge routes
-  app.get('/api/challenges', async (req, res) => {
+  app.get('/api/challenges', async (req: any, res) => {
     try {
-      const challenges = await storage.getChallenges();
+      // Get userId if authenticated (optional)
+      let userId: string | null = null;
+      if (req.user?.claims?.sub) {
+        userId = req.user.claims.sub;
+      }
+      
+      // Return challenges with unlock status for progressive drip
+      const challenges = await storage.getChallengesWithUnlockStatus(userId);
       res.json(challenges);
     } catch (error) {
       console.error('Error fetching challenges:', error);
