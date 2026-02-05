@@ -10930,6 +10930,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // Bible API Routes (using API.Bible)
+  // ============================================
+  
+  const BIBLE_API_KEY = process.env.BIBLE_API_KEY;
+  const BIBLE_API_BASE = 'https://api.scripture.api.bible/v1';
+
+  // Get available Bible versions
+  app.get('/api/bible/versions', async (req, res) => {
+    try {
+      if (!BIBLE_API_KEY) {
+        return res.status(500).json({ message: 'Bible API key not configured' });
+      }
+
+      const response = await fetch(`${BIBLE_API_BASE}/bibles`, {
+        headers: { 'api-key': BIBLE_API_KEY }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API.Bible returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      // Filter to English versions and return simplified list
+      const englishBibles = data.data
+        .filter((bible: any) => bible.language?.id === 'eng')
+        .map((bible: any) => ({
+          id: bible.id,
+          name: bible.name,
+          nameLocal: bible.nameLocal,
+          abbreviation: bible.abbreviation,
+          abbreviationLocal: bible.abbreviationLocal,
+          description: bible.description
+        }));
+      
+      res.json(englishBibles);
+    } catch (error) {
+      console.error('Error fetching Bible versions:', error);
+      res.status(500).json({ message: 'Failed to fetch Bible versions' });
+    }
+  });
+
+  // Get books for a specific Bible version
+  app.get('/api/bible/:bibleId/books', async (req, res) => {
+    try {
+      if (!BIBLE_API_KEY) {
+        return res.status(500).json({ message: 'Bible API key not configured' });
+      }
+
+      const { bibleId } = req.params;
+      const response = await fetch(`${BIBLE_API_BASE}/bibles/${bibleId}/books`, {
+        headers: { 'api-key': BIBLE_API_KEY }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API.Bible returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      res.json(data.data);
+    } catch (error) {
+      console.error('Error fetching Bible books:', error);
+      res.status(500).json({ message: 'Failed to fetch Bible books' });
+    }
+  });
+
+  // Get chapters for a specific book
+  app.get('/api/bible/:bibleId/books/:bookId/chapters', async (req, res) => {
+    try {
+      if (!BIBLE_API_KEY) {
+        return res.status(500).json({ message: 'Bible API key not configured' });
+      }
+
+      const { bibleId, bookId } = req.params;
+      const response = await fetch(`${BIBLE_API_BASE}/bibles/${bibleId}/books/${bookId}/chapters`, {
+        headers: { 'api-key': BIBLE_API_KEY }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API.Bible returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      res.json(data.data);
+    } catch (error) {
+      console.error('Error fetching Bible chapters:', error);
+      res.status(500).json({ message: 'Failed to fetch Bible chapters' });
+    }
+  });
+
+  // Get chapter content (the main endpoint for reading Bible text)
+  app.get('/api/bible/:bibleId/chapters/:chapterId', async (req, res) => {
+    try {
+      if (!BIBLE_API_KEY) {
+        return res.status(500).json({ message: 'Bible API key not configured' });
+      }
+
+      const { bibleId, chapterId } = req.params;
+      // Request content with verse numbers and without footnotes for cleaner reading
+      const response = await fetch(
+        `${BIBLE_API_BASE}/bibles/${bibleId}/chapters/${chapterId}?content-type=text&include-verse-numbers=true&include-notes=false&include-titles=true`,
+        { headers: { 'api-key': BIBLE_API_KEY } }
+      );
+
+      if (!response.ok) {
+        throw new Error(`API.Bible returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      res.json(data.data);
+    } catch (error) {
+      console.error('Error fetching Bible chapter:', error);
+      res.status(500).json({ message: 'Failed to fetch Bible chapter' });
+    }
+  });
+
+  // Search the Bible
+  app.get('/api/bible/:bibleId/search', async (req, res) => {
+    try {
+      if (!BIBLE_API_KEY) {
+        return res.status(500).json({ message: 'Bible API key not configured' });
+      }
+
+      const { bibleId } = req.params;
+      const query = req.query.query as string;
+      
+      if (!query) {
+        return res.status(400).json({ message: 'Search query is required' });
+      }
+
+      const response = await fetch(
+        `${BIBLE_API_BASE}/bibles/${bibleId}/search?query=${encodeURIComponent(query)}`,
+        { headers: { 'api-key': BIBLE_API_KEY } }
+      );
+
+      if (!response.ok) {
+        throw new Error(`API.Bible returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      res.json(data.data);
+    } catch (error) {
+      console.error('Error searching Bible:', error);
+      res.status(500).json({ message: 'Failed to search Bible' });
+    }
+  });
+
   // WebSocket server for real-time notifications
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
