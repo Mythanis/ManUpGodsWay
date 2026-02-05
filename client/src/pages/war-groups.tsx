@@ -241,14 +241,14 @@ export default function WarGroups() {
               </Card>
             )}
 
-            <Card className="liquid-black border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
-              <CardHeader>
+            <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
+              <CardHeader className="relative z-10">
                 <div className="flex items-center gap-3 mb-2">
-                  <Shield className="h-8 w-8 text-ministry-gold-exact relative z-10" />
-                  <CardTitle className="text-2xl text-white font-black tracking-tight uppercase relative z-10">Welcome to War Groups</CardTitle>
+                  <Shield className="h-8 w-8 text-ministry-gold-exact" />
+                  <CardTitle className="text-2xl text-white font-black tracking-tight uppercase">Welcome to War Groups</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6 text-gray-300">
+              <CardContent className="space-y-6 text-gray-300 relative z-10">
                 <p className="text-white leading-relaxed">
                   War Groups are small, brotherhood-driven discipleship groups designed to help men grow strong in their faith, sharpen their character, and live out biblical manhood in everyday life. This is not a casual gathering or a surface-level Bible study. War Groups are about commitment, accountability, and real spiritual transformation through the Word of God.
                 </p>
