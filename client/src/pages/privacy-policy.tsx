@@ -1,6 +1,7 @@
-import { BackButton } from "@/components/BackButton";
+import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileText, ArrowLeft } from "lucide-react";
 
 export default function PrivacyPolicy() {
   return (
@@ -10,7 +11,15 @@ export default function PrivacyPolicy() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/5 via-transparent to-transparent"></div>
         
         <div className="relative z-10 px-6 pt-6 pb-8">
-          <BackButton />
+          <Link href="/privacy-security">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full w-10 h-10 bg-black hover:bg-black/80 mb-4"
+            >
+              <ArrowLeft className="h-5 w-5 text-[#FCD000]" />
+            </Button>
+          </Link>
           
           <div className="flex items-center space-x-3 mb-2">
             <div className="w-10 h-10 rounded-sm bg-ministry-gold-exact flex items-center justify-center">
