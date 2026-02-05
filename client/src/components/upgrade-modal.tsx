@@ -175,7 +175,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             {/* Current Tier Display */}
             <div className="text-center">
               <Badge className="text-sm bg-gray-100 text-gray-700">
-                Current: {currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}
+                Current: {currentTier === 'vip' ? 'VIP' : currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}
               </Badge>
             </div>
 
@@ -230,7 +230,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                       <div className="flex items-center justify-center gap-2 mb-2">
                         {getTierIcon(tier.tier)}
                         <CardTitle className="text-xl">
-                          {tier.tier.charAt(0).toUpperCase() + tier.tier.slice(1)}
+                          {tier.tier === 'vip' ? 'VIP' : tier.tier.charAt(0).toUpperCase() + tier.tier.slice(1)}
                         </CardTitle>
                         {tier.tier === 'vip' && (
                           <Star className="w-4 h-4 text-ministry-gold" />
@@ -274,7 +274,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                     Processing...
                   </>
                 ) : (
-                  `Upgrade to ${selectedTier ? selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1) : 'Selected Tier'}`
+                  `Upgrade to ${selectedTier ? (selectedTier === 'vip' ? 'VIP' : selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)) : 'Selected Tier'}`
                 )}
               </Button>
             </div>
