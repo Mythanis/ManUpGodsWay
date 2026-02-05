@@ -10949,7 +10949,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (!response.ok) {
-        throw new Error(`API.Bible returned ${response.status}`);
+        const errorText = await response.text();
+        console.error(`API.Bible error response: ${response.status} - ${errorText}`);
+        throw new Error(`API.Bible returned ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
