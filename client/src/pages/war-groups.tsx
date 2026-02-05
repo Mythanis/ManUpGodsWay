@@ -215,19 +215,19 @@ export default function WarGroups() {
           <div className="space-y-6">
             {/* Explainer Video Section */}
             {systemSettings?.warGroupsVideoUrl && getEmbedUrl(systemSettings.warGroupsVideoUrl) && (
-              <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
-                <CardHeader className="pb-3">
+              <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
+                <CardHeader className="pb-3 relative z-10">
                   <div className="flex items-center gap-3">
-                    <div className="liquid-black w-12 h-12 flex items-center justify-center border-2 border-black">
-                      <Play className="h-6 w-6 text-ministry-gold-exact relative z-10" />
+                    <div className="bg-ministry-gold-exact w-12 h-12 flex items-center justify-center border-2 border-black">
+                      <Play className="h-6 w-6 text-black" />
                     </div>
-                    <CardTitle className="text-xl text-black font-black tracking-tight uppercase relative z-10">
+                    <CardTitle className="text-xl text-white font-black tracking-tight uppercase">
                       {systemSettings.warGroupsVideoTitle || "Watch This First"}
                     </CardTitle>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="aspect-video bg-black border-2 border-black overflow-hidden">
+                <CardContent className="pt-0 relative z-10">
+                  <div className="aspect-video bg-black border-2 border-ministry-gold-exact overflow-hidden">
                     <iframe
                       src={getEmbedUrl(systemSettings.warGroupsVideoUrl) || ""}
                       className="w-full h-full"
