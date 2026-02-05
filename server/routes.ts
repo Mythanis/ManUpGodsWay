@@ -10935,7 +10935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   
   const BIBLE_API_KEY = process.env.BIBLE_API_KEY;
-  const BIBLE_API_BASE = 'https://api.scripture.api.bible/v1';
+  const BIBLE_API_BASE = 'https://rest.api.bible/v1';
 
   // Get available Bible versions
   app.get('/api/bible/versions', async (req, res) => {
