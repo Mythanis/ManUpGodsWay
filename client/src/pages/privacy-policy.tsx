@@ -21,7 +21,7 @@ export default function PrivacyPolicy() {
             </h1>
           </div>
           <p className="text-gray-400 text-sm">
-            Last updated: February 2026
+            Effective Date: 1/9/2026
           </p>
         </div>
       </div>
@@ -29,45 +29,131 @@ export default function PrivacyPolicy() {
       <div className="px-6 py-6 space-y-6">
         <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
           <CardContent className="p-6 space-y-6">
+            <div>
+              <p className="text-gray-400 text-sm mb-1">App Name: ManUp God's Way</p>
+              <p className="text-gray-400 text-sm">Operated By: ManUp God's Way</p>
+            </div>
+
             <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">Information We Collect</h2>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">1. Introduction</h2>
               <p className="text-gray-300 text-sm leading-relaxed">
-                We collect information you provide directly to us, such as when you create an account, participate in discussions, complete challenges, or contact us for support. This may include your name, email address, profile information, and any content you submit to the platform.
+                ManUp God's Way ("we," "us," or "our") respects your privacy. This Privacy Policy explains how we collect, use, store, and protect your information when you use our mobile application or related services ("the App").
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">How We Use Your Information</h2>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                We use the information we collect to provide, maintain, and improve our services, including to personalize your experience, track your spiritual growth progress, facilitate community interactions, and send you notifications about updates and new content.
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">2. Information We Collect</h2>
+              <p className="text-gray-300 text-sm leading-relaxed mb-2">
+                We collect only information you voluntarily provide:
+              </p>
+              <ul className="list-disc list-inside text-gray-300 text-sm space-y-1 ml-2">
+                <li>First name</li>
+                <li>Last name</li>
+                <li>Email address</li>
+                <li>Testimony content (text)</li>
+                <li>Uploaded pictures/images</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">3. How We Use Your Information</h2>
+              <p className="text-gray-300 text-sm leading-relaxed mb-2">
+                We use your information solely to:
+              </p>
+              <ul className="list-disc list-inside text-gray-300 text-sm space-y-1 ml-2">
+                <li>Operate and support the App</li>
+                <li>Display or manage submitted testimonies and content</li>
+                <li>Communicate with you</li>
+                <li>Send ministry-related emails</li>
+                <li>Maintain safety, integrity, and functionality of the App</li>
+              </ul>
+              <p className="text-gray-300 text-sm leading-relaxed mt-2">
+                We do not use your data for advertising, tracking, or profiling.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">Information Sharing</h2>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">4. Third-Party Services</h2>
+              <p className="text-gray-300 text-sm leading-relaxed mb-3">
+                We do not sell or share your data. We use the following service providers:
+              </p>
+              
+              <div className="mb-3">
+                <h3 className="font-bold text-white text-sm mb-1">Mailchimp</h3>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  Used only for sending ManUp God's Way emails.
+                </p>
+                <ul className="list-disc list-inside text-gray-300 text-sm space-y-1 ml-2 mt-1">
+                  <li>Only your email address is shared.</li>
+                  <li>You may unsubscribe using the link in any email or by emailing info@manupgodsway.org.</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="font-bold text-white text-sm mb-1">Replit</h3>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  Used for hosting and backend infrastructure.
+                </p>
+                <ul className="list-disc list-inside text-gray-300 text-sm space-y-1 ml-2 mt-1">
+                  <li>Your data may be stored on Replit-managed infrastructure.</li>
+                  <li>Replit acts only as a technical service provider.</li>
+                </ul>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">5. Data Retention</h2>
               <p className="text-gray-300 text-sm leading-relaxed">
-                We do not sell, trade, or otherwise transfer your personal information to outside parties. We may share information with trusted third parties who assist us in operating our platform, conducting our business, or serving our users, so long as those parties agree to keep this information confidential.
+                We retain your data only as long as needed for ministry and app operations unless legally required otherwise.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">Data Security</h2>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">6. Security</h2>
               <p className="text-gray-300 text-sm leading-relaxed">
-                We implement a variety of security measures to maintain the safety of your personal information. Your personal information is contained behind secured networks and is only accessible by a limited number of persons who have special access rights.
+                We use commercially reasonable administrative, technical, and organizational safeguards. No system is 100% secure.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">Your Rights</h2>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                You may access, update, or delete your account information at any time through your profile settings. You may also contact us to request access to, correction of, or deletion of any personal information you have provided to us.
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">7. Your Rights & Data Deletion</h2>
+              <p className="text-gray-300 text-sm leading-relaxed mb-2">
+                You may request:
+              </p>
+              <ul className="list-disc list-inside text-gray-300 text-sm space-y-1 ml-2">
+                <li>A copy of your data</li>
+                <li>Full deletion of your data</li>
+              </ul>
+              <p className="text-gray-300 text-sm leading-relaxed mt-2">
+                Email: info@manupgodsway.org
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">Contact Us</h2>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">8. Children's Privacy</h2>
               <p className="text-gray-300 text-sm leading-relaxed">
-                If you have any questions about this Privacy Policy, please contact us through the app or email us at support@manupgodsway.com.
+                Not intended for children under 13.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">9. No Tracking</h2>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                We do not track users across apps or websites.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">10. Changes</h2>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                We may update this policy. Continued use means acceptance.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">11. Contact</h2>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                info@manupgodsway.org
               </p>
             </section>
           </CardContent>

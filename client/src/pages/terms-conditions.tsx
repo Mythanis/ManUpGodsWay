@@ -17,11 +17,11 @@ export default function TermsConditions() {
               <Scale className="w-6 h-6 text-black" />
             </div>
             <h1 className="text-2xl font-black text-white uppercase tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
-              Terms & Conditions
+              Terms of Use
             </h1>
           </div>
           <p className="text-gray-400 text-sm">
-            Last updated: February 2026
+            Effective Date: 1/9/2026
           </p>
         </div>
       </div>
@@ -29,59 +29,59 @@ export default function TermsConditions() {
       <div className="px-6 py-6 space-y-6">
         <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
           <CardContent className="p-6 space-y-6">
+            <p className="text-gray-300 text-sm leading-relaxed">
+              By using this App, you agree to these Terms.
+            </p>
+
             <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">Acceptance of Terms</h2>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">1. Purpose</h2>
               <p className="text-gray-300 text-sm leading-relaxed">
-                By accessing and using Man Up God's Way, you accept and agree to be bound by the terms and provisions of this agreement. If you do not agree to abide by these terms, please do not use this service.
+                This App exists to support the Man Up God's Way ministry.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">User Accounts</h2>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">2. User Content</h2>
+              <p className="text-gray-300 text-sm leading-relaxed mb-2">
+                You retain ownership of your submissions but grant us permission to store, display, and manage them within the App.
+              </p>
               <p className="text-gray-300 text-sm leading-relaxed">
-                When you create an account with us, you must provide accurate, complete, and current information. You are responsible for safeguarding your account and for all activities that occur under your account. You agree to notify us immediately of any unauthorized access or use of your account.
+                You agree not to submit unlawful, abusive, or inappropriate content.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">Community Guidelines</h2>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">3. Account & Access</h2>
               <p className="text-gray-300 text-sm leading-relaxed">
-                As a faith-based community, we expect all users to conduct themselves with respect and integrity. You agree not to post content that is offensive, harassing, defamatory, or inappropriate. We reserve the right to remove any content and suspend accounts that violate these guidelines.
+                We may suspend or remove content or access that violates these Terms.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">Content Ownership</h2>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">4. No Warranties</h2>
               <p className="text-gray-300 text-sm leading-relaxed">
-                All content provided on Man Up God's Way, including studies, devotionals, videos, and other materials, is owned by Man Up God's Way or its content creators and is protected by copyright laws. You may not reproduce, distribute, or create derivative works from this content without express permission.
+                The App is provided "as-is" without warranties.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">Subscription & Payments</h2>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">5. Limitation of Liability</h2>
               <p className="text-gray-300 text-sm leading-relaxed">
-                Premium and VIP subscriptions provide access to additional content and features. Subscriptions are billed according to the plan you select. You may cancel your subscription at any time, but refunds are subject to our refund policy. Prices are subject to change with notice.
+                We are not liable for damages arising from use of the App.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">Limitation of Liability</h2>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">6. Termination</h2>
               <p className="text-gray-300 text-sm leading-relaxed">
-                Man Up God's Way provides spiritual and educational content for personal growth. We are not responsible for any decisions you make based on this content. The platform is provided "as is" without warranties of any kind, either express or implied.
+                We may terminate access at any time.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">Changes to Terms</h2>
+              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">7. Governing Law</h2>
               <p className="text-gray-300 text-sm leading-relaxed">
-                We reserve the right to modify these terms at any time. We will notify users of significant changes through the app or via email. Your continued use of the service after changes constitutes acceptance of the new terms.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">Contact</h2>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                For questions about these Terms & Conditions, please contact us through the app or email us at support@manupgodsway.com.
+                Governed by laws of the United States.
               </p>
             </section>
           </CardContent>
