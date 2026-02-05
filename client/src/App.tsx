@@ -45,6 +45,8 @@ import Rations from "@/pages/rations";
 import RationsStore from "@/pages/rations-store";
 import MyOrders from "@/pages/my-orders";
 import PrivacySecurity from "@/pages/privacy-security";
+import PrivacyPolicy from "@/pages/privacy-policy";
+import TermsConditions from "@/pages/terms-conditions";
 import NotFound from "@/pages/not-found";
 import Navigation from "@/components/navigation";
 import { UserSetupWizard } from "@/components/user-setup-wizard";
@@ -143,6 +145,8 @@ function Router() {
             <Route path="/rations-store" component={RationsStore} />
             <Route path="/my-orders" component={MyOrders} />
             <Route path="/privacy-security" component={PrivacySecurity} />
+            <Route path="/privacy-policy" component={PrivacyPolicy} />
+            <Route path="/terms-conditions" component={TermsConditions} />
             <Route path="/more-man-up" component={MoreManUp} />
           </>
         )}
