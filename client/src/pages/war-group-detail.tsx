@@ -874,7 +874,7 @@ export default function WarGroupDetail() {
         {/* Community Section */}
         {isMember && (
           <div className="w-full space-y-4">
-            <h2 className="text-2xl font-black uppercase tracking-tight text-black">Community</h2>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-white">Community</h2>
               {/* Create Post */}
               <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]">
                 <CardContent className="pt-4">
