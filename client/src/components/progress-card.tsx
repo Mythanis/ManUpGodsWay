@@ -28,9 +28,11 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
             <h3 className="font-black text-white text-lg mb-1 uppercase tracking-tight" data-testid="text-study-title">
               {study.title}
             </h3>
-            <p className="text-sm text-ministry-gold-exact font-bold mt-1 uppercase tracking-wide" data-testid="text-study-info">
-              {study.estimatedHours}h study
-            </p>
+            {(study.totalDays || study.estimatedHours) && (
+              <p className="text-sm text-ministry-gold-exact font-bold mt-1 uppercase tracking-wide" data-testid="text-study-info">
+                {study.totalDays ? `${study.totalDays} Day Study` : `${study.estimatedHours}h Study`}
+              </p>
+            )}
             <p className="text-sm text-white/70 font-medium mt-1">
               {isStudyCompleted 
                 ? "Study completed" 
