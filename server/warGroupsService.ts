@@ -377,6 +377,36 @@ export class WarGroupsService {
     }
   }
 
+  async getMemberNames(groupId: string, userId: string) {
+    const membership = await db.select()
+      .from(schema.warGroupMembers)
+      .where(and(
+        eq(schema.warGroupMembers.groupId, groupId),
+        eq(schema.warGroupMembers.userId, userId),
+        eq(schema.warGroupMembers.status, 'approved')
+      ))
+      .limit(1);
+    
+    if (!membership.length) {
+      throw new Error('You must be a member to view the member list');
+    }
+
+    const results = await db.select({
+      firstName: schema.users.firstName,
+      lastName: schema.users.lastName,
+      profileImageUrl: schema.users.profileImageUrl,
+      role: schema.warGroupMembers.role,
+    })
+    .from(schema.warGroupMembers)
+    .leftJoin(schema.users, eq(schema.warGroupMembers.userId, schema.users.id))
+    .where(and(
+      eq(schema.warGroupMembers.groupId, groupId),
+      eq(schema.warGroupMembers.status, 'approved')
+    ));
+    
+    return results;
+  }
+
   async getApprovedMembers(groupId: string, managerId: string) {
     const canManage = await this.canUserManageMembers(managerId, groupId);
     if (!canManage) {

@@ -9719,6 +9719,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get member names (for any group member)
+  app.get('/api/war-groups/:id/member-names', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groupId = req.params.id;
+      
+      const members = await warGroupsService.getMemberNames(groupId, userId);
+      res.json(members);
+    } catch (error: any) {
+      console.error('Error fetching member names:', error);
+      res.status(403).json({ message: error.message || 'Failed to fetch members' });
+    }
+  });
+
   // Get approved members list (for leaders and managers)
   app.get('/api/war-groups/:id/approved-members', isAuthenticated, async (req: any, res) => {
     try {

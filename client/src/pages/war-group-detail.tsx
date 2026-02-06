@@ -202,6 +202,12 @@ export default function WarGroupDetail() {
     enabled: !!id && canManageMembers,
   });
 
+  // Fetch member names (for all group members to see in About section)
+  const { data: memberNames = [] } = useQuery<{ firstName: string; lastName: string; profileImageUrl: string | null; role: string }[]>({
+    queryKey: [`/api/war-groups/${id}/member-names`],
+    enabled: !!id && isMember,
+  });
+
   const approveMutation = useMutation({
     mutationFn: async (memberId: string) => {
       return apiRequest('POST', `/api/war-groups/${id}/members/${memberId}/approve`, {});
@@ -856,6 +862,25 @@ export default function WarGroupDetail() {
                   </div>
                   <p className="text-white font-semibold text-lg">{group.leader.firstName} {group.leader.lastName}</p>
                 </div>
+
+                {memberNames.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="h-4 w-4 text-ministry-gold-exact" />
+                      <span className="text-ministry-gold-exact font-bold uppercase tracking-widest text-xs">Members</span>
+                    </div>
+                    <div className="space-y-1">
+                      {memberNames.map((member, index) => (
+                        <p key={index} className="text-white font-medium">
+                          {member.firstName} {member.lastName}
+                          {member.role === 'leader' && (
+                            <span className="ml-2 text-xs text-ministry-gold-exact font-bold uppercase">(Leader)</span>
+                          )}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {group.meetingInfo && (
                   <div>
