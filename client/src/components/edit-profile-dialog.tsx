@@ -215,7 +215,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto bg-black/95 border-2 border-ministry-gold-exact">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto !bg-black !text-white border-2 border-ministry-gold-exact [&_label]:!text-white [&_h3]:!text-ministry-gold-exact [&_h4]:!text-white [&_p]:!text-white/70">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white">
             <User className="w-5 h-5 text-ministry-gold-exact" />
