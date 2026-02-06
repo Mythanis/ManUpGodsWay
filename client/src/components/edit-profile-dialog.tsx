@@ -215,10 +215,10 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto bg-black/95 border-2 border-ministry-gold-exact">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <User className="w-5 h-5" />
+          <DialogTitle className="flex items-center gap-2 text-white">
+            <User className="w-5 h-5 text-ministry-gold-exact" />
             Edit Profile
           </DialogTitle>
         </DialogHeader>
@@ -226,7 +226,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
         <div className="space-y-6">
           {/* Profile Picture */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-ministry-charcoal">Profile Picture</h3>
+            <h3 className="text-sm font-bold text-ministry-gold-exact uppercase tracking-wide">Profile Picture</h3>
             
             <div className="flex items-center space-x-4">
               <Avatar className="w-20 h-20">
@@ -234,7 +234,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
                   src={previewUrl || (user as any)?.profileImageUrl || ''} 
                   alt={user?.firstName || 'Profile'} 
                 />
-                <AvatarFallback className="bg-ministry-gold-exact/20 text-black text-xl">
+                <AvatarFallback className="bg-ministry-gold-exact/20 text-white text-xl">
                   {user?.firstName?.[0] || user?.email?.[0].toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
@@ -254,7 +254,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="cursor-pointer"
+                      className="cursor-pointer border-ministry-gold-exact/50 text-white hover:bg-ministry-gold-exact/20"
                       asChild
                     >
                       <span data-testid="button-choose-picture">
@@ -266,7 +266,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
                 </div>
                 
                 {selectedFile && (
-                  <p className="text-sm text-ministry-gold-exact font-medium">
+                  <p className="text-sm text-ministry-gold-exact font-medium truncate">
                     New: {selectedFile.name}
                   </p>
                 )}
@@ -278,7 +278,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
                     variant="outline"
                     onClick={handleDeletePicture}
                     disabled={deleteProfilePictureMutation.isPending}
-                    className="text-red-600 border-red-500 hover:bg-red-50"
+                    className="text-red-400 border-red-500/50 hover:bg-red-500/20"
                     data-testid="button-delete-picture"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
@@ -286,7 +286,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
                   </Button>
                 )}
                 
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-white/50">
                   {selectedFile 
                     ? 'Click "Save Changes" below to upload this picture' 
                     : 'Upload an image (max 5MB)'}
@@ -295,49 +295,49 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <Separator />
+          <Separator className="bg-ministry-gold-exact/30" />
 
           {/* Personal Information */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-ministry-charcoal">Personal Information</h3>
+            <h3 className="text-sm font-bold text-ministry-gold-exact uppercase tracking-wide">Personal Information</h3>
             
             <div>
-              <Label htmlFor="edit-firstName">First Name *</Label>
+              <Label htmlFor="edit-firstName" className="text-white">First Name *</Label>
               <Input
                 id="edit-firstName"
                 value={profileData.firstName}
                 onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
                 placeholder="Enter your first name"
-                className="mt-1"
+                className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-white/40"
                 data-testid="input-first-name"
               />
             </div>
 
             <div>
-              <Label htmlFor="edit-lastName">Last Name</Label>
+              <Label htmlFor="edit-lastName" className="text-white">Last Name</Label>
               <Input
                 id="edit-lastName"
                 value={profileData.lastName}
                 onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
                 placeholder="Enter your last name"
-                className="mt-1"
+                className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-white/40"
                 data-testid="input-last-name"
               />
             </div>
           </div>
 
-          <Separator />
+          <Separator className="bg-ministry-gold-exact/30" />
 
           {/* Communication Preferences */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-ministry-charcoal">Communication Preferences</h3>
+            <h3 className="text-sm font-bold text-ministry-gold-exact uppercase tracking-wide">Communication Preferences</h3>
             
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center justify-between p-3 border border-white/20 rounded-lg">
               <div className="flex items-start space-x-3">
-                <MessageSquare className="w-4 h-4 text-ministry-navy mt-0.5" />
+                <MessageSquare className="w-4 h-4 text-ministry-gold-exact mt-0.5" />
                 <div>
-                  <h4 className="text-sm font-medium text-ministry-charcoal">Direct Messages</h4>
-                  <p className="text-xs text-muted-foreground">
+                  <h4 className="text-sm font-medium text-white">Direct Messages</h4>
+                  <p className="text-xs text-white/50">
                     Allow other members to send you private messages
                   </p>
                 </div>
@@ -350,12 +350,12 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center justify-between p-3 border border-white/20 rounded-lg">
               <div className="flex items-start space-x-3">
-                <Users className="w-4 h-4 text-ministry-navy mt-0.5" />
+                <Users className="w-4 h-4 text-ministry-gold-exact mt-0.5" />
                 <div>
-                  <h4 className="text-sm font-medium text-ministry-charcoal">Group Invites</h4>
-                  <p className="text-xs text-muted-foreground">
+                  <h4 className="text-sm font-medium text-white">Group Invites</h4>
+                  <p className="text-xs text-white/50">
                     Allow other members to invite you to group chats
                   </p>
                 </div>
@@ -369,18 +369,18 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <Separator />
+          <Separator className="bg-ministry-gold-exact/30" />
 
           {/* Profile Privacy */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-ministry-charcoal">Profile Privacy</h3>
+            <h3 className="text-sm font-bold text-ministry-gold-exact uppercase tracking-wide">Profile Privacy</h3>
             
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center justify-between p-3 border border-white/20 rounded-lg">
               <div className="flex items-start space-x-3">
-                <EyeOff className="w-4 h-4 text-ministry-navy mt-0.5" />
+                <EyeOff className="w-4 h-4 text-ministry-gold-exact mt-0.5" />
                 <div>
-                  <h4 className="text-sm font-medium text-ministry-charcoal">Hide Profile Information</h4>
-                  <p className="text-xs text-muted-foreground">
+                  <h4 className="text-sm font-medium text-white">Hide Profile Information</h4>
+                  <p className="text-xs text-white/50">
                     Hide your detailed profile information from other members
                   </p>
                 </div>
@@ -393,15 +393,15 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
               />
             </div>
 
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <p className="text-xs text-blue-700">
-                <strong>Privacy Note:</strong> When enabled, other members will only see your profile picture and action buttons (message, silence, report). Your statistics and detailed information will be hidden. Communication preferences above control messaging functionality.
+            <div className="bg-ministry-gold-exact/10 border border-ministry-gold-exact/30 p-3 rounded-lg">
+              <p className="text-xs text-white/70">
+                <strong className="text-ministry-gold-exact">Privacy Note:</strong> When enabled, other members will only see your profile picture and action buttons (message, silence, report). Your statistics and detailed information will be hidden. Communication preferences above control messaging functionality.
               </p>
             </div>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => setOpen(false)} className="border-white/30 text-white hover:bg-white/10">
               Cancel
             </Button>
             <Button
