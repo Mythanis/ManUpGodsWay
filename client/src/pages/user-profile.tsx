@@ -254,7 +254,7 @@ export default function UserProfile() {
       <BackButton fallbackPath="/brothers" />
       <h1 className="text-2xl font-black uppercase tracking-wider text-[#FCD000] mb-6" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>User Profile</h1>
 
-      <Card className="mb-6 bg-zinc-900 border border-[#FCD000]/20">
+      <Card className="mb-6 bg-black border border-[#FCD000]/20">
         <CardContent className="pt-6">
           <div className="flex items-start space-x-4">
             <img
@@ -315,7 +315,7 @@ export default function UserProfile() {
                       Report
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-zinc-900 border border-[#FCD000]/20 text-white">
+                  <DialogContent className="bg-black border border-[#FCD000]/20 text-white">
                     <DialogHeader>
                       <DialogTitle className="text-[#FCD000] font-black uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>Report User</DialogTitle>
                     </DialogHeader>
@@ -390,7 +390,7 @@ export default function UserProfile() {
       </Card>
 
       {profile.user.isProfilePrivate ? (
-        <Card className="mb-6 bg-zinc-900 border border-white/10">
+        <Card className="mb-6 bg-black border border-white/10">
           <CardContent className="text-center py-12">
             <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
               <EyeOff className="w-8 h-8 text-white/40" />
@@ -403,7 +403,7 @@ export default function UserProfile() {
         </Card>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          <Card className="overflow-hidden bg-zinc-900 border border-[#FCD000]/20">
+          <Card className="overflow-hidden bg-black border border-[#FCD000]/20">
             <CardContent className="p-4 text-center">
               <BookOpen className="w-5 h-5 text-[#FCD000] mx-auto mb-2" />
               <div className="text-2xl font-black text-[#FCD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{profile.studiesCompleted}</div>
@@ -411,7 +411,7 @@ export default function UserProfile() {
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden bg-zinc-900 border border-[#FCD000]/20">
+          <Card className="overflow-hidden bg-black border border-[#FCD000]/20">
             <CardContent className="p-4 text-center">
               <Activity className="w-5 h-5 text-[#FCD000] mx-auto mb-2" />
               <div className="text-2xl font-black text-[#FCD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{profile.daysActive}</div>
@@ -419,7 +419,7 @@ export default function UserProfile() {
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden bg-zinc-900 border border-[#FCD000]/20">
+          <Card className="overflow-hidden bg-black border border-[#FCD000]/20">
             <CardContent className="p-4 text-center">
               <MessageSquare className="w-5 h-5 text-[#FCD000] mx-auto mb-2" />
               <div className="text-2xl font-black text-[#FCD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{profile.forumPosts}</div>
@@ -427,7 +427,7 @@ export default function UserProfile() {
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden bg-zinc-900 border border-[#FCD000]/20">
+          <Card className="overflow-hidden bg-black border border-[#FCD000]/20">
             <CardContent className="p-4 text-center">
               {tierInfo.icon ? <div className={`${tierInfo.color} mx-auto mb-2 flex justify-center`}>{tierInfo.icon}</div> : <Star className="w-5 h-5 text-white/40 mx-auto mb-2" />}
               <div className={`text-lg font-black leading-tight uppercase tracking-wide ${tierInfo.color}`} style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
