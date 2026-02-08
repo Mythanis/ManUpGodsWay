@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Clock, MapPin, DollarSign, Plus, Edit, Trash2, ExternalLink } from 'lucide-react';
+import { Calendar, Clock, MapPin, DollarSign, Plus, Edit, Trash2, ExternalLink, Navigation, CalendarRange } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Event {
@@ -18,7 +18,10 @@ interface Event {
   description: string | null;
   eventDate: string;
   eventTime: string | null;
+  endDate: string | null;
+  endTime: string | null;
   location: string | null;
+  address: string | null;
   eventUrl: string | null;
   requiresPurchase: boolean;
   price: string | null;
@@ -37,7 +40,10 @@ export default function EventManagement() {
     description: '',
     eventDate: '',
     eventTime: '',
+    endDate: '',
+    endTime: '',
     location: '',
+    address: '',
     eventUrl: '',
     requiresPurchase: false,
     price: '',
@@ -121,7 +127,10 @@ export default function EventManagement() {
       description: '',
       eventDate: '',
       eventTime: '',
+      endDate: '',
+      endTime: '',
       location: '',
+      address: '',
       eventUrl: '',
       requiresPurchase: false,
       price: '',
@@ -144,7 +153,10 @@ export default function EventManagement() {
       ...formData,
       description: formData.description.trim() || null,
       eventTime: formData.eventTime || null,
+      endDate: formData.endDate || null,
+      endTime: formData.endTime || null,
       location: formData.location.trim() || null,
+      address: formData.address.trim() || null,
       eventUrl: formData.eventUrl.trim() || null,
       price: formData.requiresPurchase ? formData.price : null,
     };
@@ -161,9 +173,12 @@ export default function EventManagement() {
     setFormData({
       title: event.title,
       description: event.description || '',
-      eventDate: event.eventDate.split('T')[0], // Extract date part
+      eventDate: event.eventDate.split('T')[0],
       eventTime: event.eventTime || '',
+      endDate: event.endDate ? event.endDate.split('T')[0] : '',
+      endTime: event.endTime || '',
       location: event.location || '',
+      address: event.address || '',
       eventUrl: event.eventUrl || '',
       requiresPurchase: event.requiresPurchase,
       price: event.price || '',
@@ -225,7 +240,7 @@ export default function EventManagement() {
                 </div>
                 
                 <div>
-                  <Label htmlFor="eventDate" className="text-white">Date *</Label>
+                  <Label htmlFor="eventDate" className="text-white">Start Date *</Label>
                   <Input
                     id="eventDate"
                     type="date"
@@ -238,7 +253,7 @@ export default function EventManagement() {
                 </div>
                 
                 <div>
-                  <Label htmlFor="eventTime" className="text-white">Time</Label>
+                  <Label htmlFor="eventTime" className="text-white">Start Time</Label>
                   <Input
                     id="eventTime"
                     type="time"
@@ -248,17 +263,56 @@ export default function EventManagement() {
                     data-testid="input-event-time"
                   />
                 </div>
+
+                <div>
+                  <Label htmlFor="endDate" className="text-white">End Date</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    className="bg-gray-800 border-gray-600 text-white"
+                    data-testid="input-event-end-date"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="endTime" className="text-white">End Time</Label>
+                  <Input
+                    id="endTime"
+                    type="time"
+                    value={formData.endTime}
+                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                    className="bg-gray-800 border-gray-600 text-white"
+                    data-testid="input-event-end-time"
+                  />
+                </div>
                 
                 <div className="col-span-2">
-                  <Label htmlFor="location" className="text-white">Location</Label>
+                  <Label htmlFor="location" className="text-white">Location Name</Label>
                   <Input
                     id="location"
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="Event location"
+                    placeholder="e.g. Grace Community Church"
                     className="bg-gray-800 border-gray-600 text-white"
                     data-testid="input-event-location"
                   />
+                </div>
+
+                <div className="col-span-2">
+                  <Label htmlFor="address" className="text-white flex items-center gap-1">
+                    <Navigation className="w-3 h-3" /> Address (for map directions)
+                  </Label>
+                  <Input
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    placeholder="e.g. 123 Main St, City, State 12345"
+                    className="bg-gray-800 border-gray-600 text-white"
+                    data-testid="input-event-address"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Users will see a "Get Directions" button linking to Google Maps</p>
                 </div>
                 
                 <div className="col-span-2">
@@ -362,7 +416,7 @@ export default function EventManagement() {
               </div>
               
               <div>
-                <Label htmlFor="edit-eventDate" className="text-white">Date *</Label>
+                <Label htmlFor="edit-eventDate" className="text-white">Start Date *</Label>
                 <Input
                   id="edit-eventDate"
                   type="date"
@@ -374,7 +428,7 @@ export default function EventManagement() {
               </div>
               
               <div>
-                <Label htmlFor="edit-eventTime" className="text-white">Time</Label>
+                <Label htmlFor="edit-eventTime" className="text-white">Start Time</Label>
                 <Input
                   id="edit-eventTime"
                   type="time"
@@ -383,16 +437,52 @@ export default function EventManagement() {
                   className="bg-gray-800 border-gray-600 text-white"
                 />
               </div>
+
+              <div>
+                <Label htmlFor="edit-endDate" className="text-white">End Date</Label>
+                <Input
+                  id="edit-endDate"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  className="bg-gray-800 border-gray-600 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-endTime" className="text-white">End Time</Label>
+                <Input
+                  id="edit-endTime"
+                  type="time"
+                  value={formData.endTime}
+                  onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                  className="bg-gray-800 border-gray-600 text-white"
+                />
+              </div>
               
               <div className="col-span-2">
-                <Label htmlFor="edit-location" className="text-white">Location</Label>
+                <Label htmlFor="edit-location" className="text-white">Location Name</Label>
                 <Input
                   id="edit-location"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="Event location"
+                  placeholder="e.g. Grace Community Church"
                   className="bg-gray-800 border-gray-600 text-white"
                 />
+              </div>
+
+              <div className="col-span-2">
+                <Label htmlFor="edit-address" className="text-white flex items-center gap-1">
+                  <Navigation className="w-3 h-3" /> Address (for map directions)
+                </Label>
+                <Input
+                  id="edit-address"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  placeholder="e.g. 123 Main St, City, State 12345"
+                  className="bg-gray-800 border-gray-600 text-white"
+                />
+                <p className="text-xs text-gray-500 mt-1">Users will see a "Get Directions" button linking to Google Maps</p>
               </div>
               
               <div className="col-span-2">
@@ -504,17 +594,29 @@ export default function EventManagement() {
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
                         <span>{formatDate(event.eventDate)}</span>
+                        {event.eventTime && (
+                          <span>at {formatTime(event.eventTime)}</span>
+                        )}
                       </div>
-                      {event.eventTime && (
+                      {event.endDate && (
                         <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          <span>{formatTime(event.eventTime)}</span>
+                          <CalendarRange className="h-4 w-4" />
+                          <span>Ends {formatDate(event.endDate)}</span>
+                          {event.endTime && (
+                            <span>at {formatTime(event.endTime)}</span>
+                          )}
                         </div>
                       )}
                       {event.location && (
                         <div className="flex items-center gap-1">
                           <MapPin className="h-4 w-4" />
                           <span className="truncate max-w-48">{event.location}</span>
+                        </div>
+                      )}
+                      {event.address && (
+                        <div className="flex items-center gap-1">
+                          <Navigation className="h-4 w-4" />
+                          <span className="truncate max-w-48">{event.address}</span>
                         </div>
                       )}
                       {event.requiresPurchase && event.price && (

@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, MapPin, ExternalLink, DollarSign, Users } from 'lucide-react';
+import { Calendar, Clock, MapPin, ExternalLink, DollarSign, Users, Navigation, CalendarRange } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { BackButton } from "@/components/BackButton";
@@ -16,7 +16,10 @@ interface Event {
   description: string | null;
   eventDate: string;
   eventTime: string | null;
+  endDate: string | null;
+  endTime: string | null;
   location: string | null;
+  address: string | null;
   eventUrl: string | null;
   requiresPurchase: boolean;
   price: string | null;
@@ -196,11 +199,17 @@ export default function Events() {
                           <div className="flex items-center gap-1">
                             <Calendar className={`h-4 w-4 ${isPastEvent ? 'text-ministry-gold-exact' : 'text-black'}`} />
                             <span>{formatDate(event.eventDate)}</span>
+                            {event.eventTime && (
+                              <span>at {formatTime(event.eventTime)}</span>
+                            )}
                           </div>
-                          {event.eventTime && (
+                          {event.endDate && (
                             <div className="flex items-center gap-1">
-                              <Clock className={`h-4 w-4 ${isPastEvent ? 'text-ministry-gold-exact' : 'text-black'}`} />
-                              <span>{formatTime(event.eventTime)}</span>
+                              <CalendarRange className={`h-4 w-4 ${isPastEvent ? 'text-ministry-gold-exact' : 'text-black'}`} />
+                              <span>Ends {formatDate(event.endDate)}</span>
+                              {event.endTime && (
+                                <span>at {formatTime(event.endTime)}</span>
+                              )}
                             </div>
                           )}
                           {event.location && (
@@ -230,6 +239,19 @@ export default function Events() {
                   
                   <CardContent className="pt-0 relative">
                     <div className="flex flex-wrap gap-3 relative z-10">
+                      {event.address && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className={`border-2 border-black rounded-sm font-bold uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${isPastEvent ? 'bg-ministry-gold-exact text-black hover:bg-yellow-400' : 'bg-white text-black hover:bg-gray-100'}`}
+                        >
+                          <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.address)}`} target="_blank" rel="noopener noreferrer">
+                            <Navigation className="h-4 w-4 mr-2" />
+                            Get Directions
+                          </a>
+                        </Button>
+                      )}
                       {event.eventUrl && (
                         <Button
                           variant="outline"

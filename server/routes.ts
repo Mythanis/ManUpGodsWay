@@ -8035,6 +8035,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const eventData = insertEventSchema.parse(dataToValidate);
 
       const event = await storage.createEvent(eventData);
+
+      // Send notifications to all users about the new event
+      try {
+        const allUsers = await storage.getAllUsers(10000);
+        const targetUsers = allUsers.filter(u => u.id !== user.id);
+        
+        if (targetUsers.length > 0) {
+          const dateStr = new Date(event.eventDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+          const locationStr = event.location ? ` at ${event.location}` : '';
+          const notificationPromises = targetUsers.map(async (targetUser) => {
+            return await storage.createNotificationWithPreferences({
+              userId: targetUser.id,
+              type: 'event',
+              title: '📅 New Event Announced',
+              message: `"${event.title}" on ${dateStr}${locationStr}. Check it out!`,
+              relatedId: event.id,
+            }, { url: '/events' });
+          });
+          
+          await Promise.all(notificationPromises.filter(Boolean));
+          console.log(`Sent new event notifications to ${targetUsers.length} users`);
+        }
+      } catch (notificationError) {
+        console.error('Error sending event notifications:', notificationError);
+      }
+
       res.status(201).json(event);
     } catch (error) {
       console.error('Error creating event:', error);
