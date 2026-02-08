@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Bell, Check, CheckCheck, MessageSquare, BookOpen, Heart, Users, Trash2, X, MoreVertical, Settings, UserCheck, UserX } from "lucide-react";
+import { Bell, Check, CheckCheck, MessageSquare, BookOpen, Heart, Users, Trash2, X, MoreVertical, Settings, UserCheck, UserX, Calendar } from "lucide-react";
 import { cn, formatLocalDateTime } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { NotificationPreferences } from "./notification-preferences";
@@ -15,7 +15,7 @@ import { NotificationPreferences } from "./notification-preferences";
 interface Notification {
   id: string;
   userId: string;
-  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'discussion_reply' | 'study' | 'video' | 'new_video' | 'admin' | 'brotherhood';
+  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'discussion_reply' | 'study' | 'video' | 'new_video' | 'admin' | 'brotherhood' | 'event' | 'new_event' | 'challenge' | 'challenge_ended' | 'new_challenge' | 'war_group';
   title: string;
   message: string;
   relatedId?: string;
@@ -56,6 +56,9 @@ const getNotificationIcon = (type: string) => {
       return <MessageSquare className="h-4 w-4" />;
     case 'brotherhood':
       return <Users className="h-4 w-4" />;
+    case 'event':
+    case 'new_event':
+      return <Calendar className="h-4 w-4" />;
     default:
       return <Bell className="h-4 w-4" />;
   }
@@ -239,10 +242,14 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         }
         break;
         
+      case 'event':
+      case 'new_event':
+        setLocation('/events');
+        break;
+        
       case 'challenge':
       case 'challenge_ended':
       case 'new_challenge':
-        // Navigate to challenges page
         setLocation('/challenges');
         break;
         
@@ -608,7 +615,17 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       </Button>
 
       {showPanel && (
-        <Card className="fixed right-4 top-16 w-[340px] max-h-[80vh] z-[9999] shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col bg-black border border-[#FCD000]/30 rounded-lg overflow-hidden">
+        <>
+        <div 
+          className="fixed inset-0 z-[9998] bg-transparent" 
+          onClick={() => setShowPanel(false)}
+          onTouchMove={(e) => e.preventDefault()}
+        />
+        <Card 
+          className="fixed right-4 top-16 w-[340px] max-h-[80vh] z-[9999] shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col bg-black border border-[#FCD000]/30 rounded-lg overflow-hidden"
+          onTouchMove={(e) => e.stopPropagation()}
+          onWheel={(e) => e.stopPropagation()}
+        >
           <CardHeader className="pb-2 flex-shrink-0 bg-gradient-to-r from-black to-zinc-900 border-b border-[#FCD000]/20">
             <div className="flex items-center justify-between mb-2">
               <CardTitle className="text-sm font-semibold tracking-wide text-[#FCD000]">Notifications</CardTitle>
@@ -647,7 +664,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
             </div>
           </CardHeader>
           
-          <ScrollArea className="flex-1 max-h-[50vh]">
+          <ScrollArea className="flex-1 max-h-[50vh]" style={{ overscrollBehavior: 'contain' }}>
             <CardContent className="space-y-2 p-2 bg-black">
               {/* Message Requests */}
               {pendingRequests.map((request) => (
@@ -779,6 +796,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
             </CardContent>
           </ScrollArea>
         </Card>
+        </>
       )}
     </div>
   );
