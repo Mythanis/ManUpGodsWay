@@ -664,7 +664,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
             </div>
           </CardHeader>
           
-          <ScrollArea className="flex-1 max-h-[50vh]" style={{ overscrollBehavior: 'contain' }}>
+          <div className="flex-1 overflow-y-auto max-h-[50vh]" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}>
             <CardContent className="space-y-2 p-2 bg-black">
               {/* Message Requests */}
               {pendingRequests.map((request) => (
@@ -794,7 +794,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                 </div>
               )}
             </CardContent>
-          </ScrollArea>
+          </div>
         </Card>
         </>
       )}
