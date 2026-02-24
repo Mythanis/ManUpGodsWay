@@ -28,7 +28,7 @@ export default function Home() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   
   // Initialize WebSocket for real-time notifications
   useWebSocket(user?.id);
@@ -670,7 +670,7 @@ export default function Home() {
                 <Button 
                   className="bg-ministry-gold-exact text-black hover:bg-yellow-400 border-2 border-black rounded-sm font-black uppercase tracking-wide text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                   data-testid="button-browse-studies"
-                  onClick={() => window.location.href = '/library'}
+                  onClick={() => navigate('/library')}
                 >
                   {completedCount > 0 ? "Start New Study" : "Browse Studies"}
                 </Button>
@@ -702,7 +702,7 @@ export default function Home() {
                             <Button 
                               size="sm"
                               className="bg-black text-white hover:bg-gray-900 rounded-sm font-black uppercase tracking-wide text-xs border-2 border-black ml-3 flex-shrink-0"
-                              onClick={() => window.location.href = `/studies/${study.id}`}
+                              onClick={() => navigate(`/studies/${study.id}`)}
                             >
                               Start
                             </Button>

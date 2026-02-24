@@ -608,10 +608,11 @@
 .liquid-black {
   background: linear-gradient(
     145deg,
-    #3a3a3a 0%,
-    #252525 25%,
-    #1a1a1a 50%,
-    #0d0d0d 100%
+    #111111 0%,
+    #080808 25%,
+    #000000 50%,
+    #0a0a0a 75%,
+    #111111 100%
   ) !important;
   background-size: 200% 200%;
   animation: liquidBlack 5s ease infinite;
@@ -637,7 +638,7 @@
   height: 50%;
   background: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.08) 0%,
     transparent 100%
   );
   pointer-events: none;
