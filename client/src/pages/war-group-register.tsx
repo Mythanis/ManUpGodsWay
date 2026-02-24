@@ -352,7 +352,7 @@ export default function WarGroupRegister() {
                   <Button
                     type="submit"
                     disabled={registerMutation.isPending}
-                    className="flex-1 text-black border-2 border-black rounded-sm font-black uppercase tracking-wide hover:brightness-110 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden"
+                    className="flex-1 bg-[#FCD000] text-black border-2 border-black rounded-sm font-black uppercase tracking-wide hover:brightness-110 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden"
                     data-testid="button-submit-registration"
                   >
                     <span className="relative z-10">

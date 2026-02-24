@@ -700,12 +700,12 @@ export default function Fitness() {
   };
 
   const FitnessChallengeCard = ({ challenge, isToday = false }: { challenge: FitnessChallenge; isToday?: boolean }) => (
-    <div className={`${isToday ? '' : 'liquid-black'} rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all`}>
+    <div className={`${isToday ? 'bg-[#FCD000] text-black' : 'liquid-black'} rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all`}>
       <div className="p-6">
         <div className="flex items-start space-x-4 relative z-10">
           <div className="flex-shrink-0">
             <div className={`w-16 h-16 rounded-sm flex items-center justify-center border-2 border-black ${
-              isToday ? 'liquid-black' : ''
+              isToday ? 'liquid-black' : 'bg-[#FCD000] text-black'
             }`}>
               {isToday ? (
                 <Star className="w-8 h-8 fill-current text-[#FCD000] relative z-10" />
@@ -773,7 +773,7 @@ export default function Fitness() {
   );
 
   const ExerciseCard = ({ exercise, showRemove = false }: { exercise: Exercise; showRemove?: boolean }) => (
-    <div className="rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all p-4">
+    <div className="bg-[#FCD000] text-black rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all p-4">
       <div className="relative z-10">
         <div className="flex items-start">
           <div className="flex-1">
@@ -1287,7 +1287,7 @@ export default function Fitness() {
       <div className="min-h-screen bg-black">
         <div className="px-4 pt-6">
           <div className="flex items-center justify-center py-20">
-            <div className="p-8 rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+            <div className="bg-[#FCD000] text-black p-8 rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
               <div className="animate-spin rounded-sm h-12 w-12 border-4 border-black border-t-transparent relative z-10"></div>
             </div>
           </div>
@@ -1334,7 +1334,7 @@ export default function Fitness() {
         {/* Fitness Pillar Dialog */}
         <Dialog open={showFitnessPillarDialog} onOpenChange={setShowFitnessPillarDialog}>
           <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85vh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
-            <DialogHeader className="px-6 py-4 border-b border-[#FCD000] flex-shrink-0">
+            <DialogHeader className="bg-[#FCD000] text-black px-6 py-4 border-b border-[#FCD000] flex-shrink-0">
               <DialogTitle className="text-xl font-black uppercase tracking-wide text-black relative z-10">
                 Man Up God's Way Fitness Pillar
               </DialogTitle>
@@ -1352,7 +1352,7 @@ export default function Fitness() {
                 Scripture is clear that the Christian life requires training, self-control, and perseverance. While godliness is of greatest value, Scripture also affirms the discipline of the body when it serves obedience and purpose.
               </p>
               
-              <blockquote className="p-4 rounded-sm border-l-4 border-black overflow-hidden">
+              <blockquote className="bg-[#FCD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-medium italic relative z-10">
                   "For bodily training is only of little profit, but godliness is profitable for all things."
                 </p>
@@ -1365,7 +1365,7 @@ export default function Fitness() {
                 We do not train for vanity, comparison, or self-glory. We train to honor God, keep our word, and lead our families with strength, energy, and consistency.
               </p>
               
-              <blockquote className="p-4 rounded-sm border-l-4 border-black overflow-hidden">
+              <blockquote className="bg-[#FCD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-medium italic relative z-10">
                   "Do you not know that your body is a temple of the Holy Spirit who is in you, whom you have from God, and that you are not your own?"
                 </p>
@@ -1378,7 +1378,7 @@ export default function Fitness() {
                 Physical discipline reinforces spiritual discipline. A man who cannot govern his body will struggle to govern his habits, his home, and his calling. Strength training, proper nutrition, and daily movement are expressions of self-control, not obsession.
               </p>
               
-              <blockquote className="p-4 rounded-sm border-l-4 border-black overflow-hidden">
+              <blockquote className="bg-[#FCD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-medium italic relative z-10">
                   "Everyone who competes in the games exercises self-control in all things."
                 </p>
@@ -1391,7 +1391,7 @@ export default function Fitness() {
                 This pillar is about becoming dependable men. Men who show up. Men who endure. Men who are not ruled by comfort, excuses, or excess. Men who understand that faithfulness is proven in daily obedience.
               </p>
               
-              <blockquote className="p-4 rounded-sm border-l-4 border-black overflow-hidden">
+              <blockquote className="bg-[#FCD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-medium italic relative z-10">
                   "But I discipline my body and make it my slave."
                 </p>
@@ -1410,7 +1410,7 @@ export default function Fitness() {
         {/* Fitness Coach Dialog */}
         <Dialog open={showFitnessCoachDialog} onOpenChange={setShowFitnessCoachDialog}>
           <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85vh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
-            <DialogHeader className="px-6 py-4 border-b border-[#FCD000] flex-shrink-0">
+            <DialogHeader className="bg-[#FCD000] text-black px-6 py-4 border-b border-[#FCD000] flex-shrink-0">
               <DialogTitle className="text-xl font-black uppercase tracking-wide text-black relative z-10">
                 Meet Your Fitness Coach
               </DialogTitle>
@@ -1441,7 +1441,7 @@ export default function Fitness() {
                 He helps men lose fat, build strength, and reclaim confidence without extremes, gimmicks, or confusion. His coaching is built on proven fundamentals and steady accountability through strength training, protein-focused nutrition, and disciplined daily habits that actually fit real life.
               </p>
               
-              <div className="p-4 rounded-sm border-l-4 border-black overflow-hidden">
+              <div className="bg-[#FCD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-bold relative z-10">
                   Sean believes the body is not separate from faith. It is one of the primary tools God uses to shape discipline, consistency, and leadership in a man's life.
                 </p>
@@ -1454,7 +1454,7 @@ export default function Fitness() {
                 </p>
               </div>
               
-              <div className="p-4 rounded-sm border-l-4 border-black overflow-hidden">
+              <div className="bg-[#FCD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-bold relative z-10">
                   If you are done starting over and ready to become a man others can rely on, Sean would be honored to coach you.
                 </p>
@@ -1504,7 +1504,7 @@ export default function Fitness() {
               
               if (todaysExercises.length === 0) {
                 return (
-                  <div className="text-center py-12 rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                  <div className="text-center py-12 bg-[#FCD000] text-black rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                     <Calendar className="w-12 h-12 mx-auto text-black mb-4 relative z-10" />
                     <h3 className="text-lg font-black text-black mb-2 uppercase relative z-10">No Workout Today</h3>
                     <p className="text-black relative z-10">
@@ -1588,7 +1588,7 @@ export default function Fitness() {
                   ))}
                   
                   {/* Workout Summary */}
-                  <div className="rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden p-4 mt-6">
+                  <div className="bg-[#FCD000] text-black rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden p-4 mt-6">
                     <div className="flex items-center justify-between relative z-10">
                       <div>
                         <h4 className="font-black text-black uppercase">Today's Progress</h4>

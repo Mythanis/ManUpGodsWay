@@ -353,7 +353,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
       
       <div ref={contentRef} className="space-y-4 print:space-y-2" data-testid="embedded-lesson-viewer">
       {/* Lesson Navigation */}
-      <div className="border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-3 print:hidden">
+      <div className="bg-[#FCD000] text-black border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-3 print:hidden">
         <div className="flex items-center justify-between gap-2 relative z-10">
           <Button
             size="sm"

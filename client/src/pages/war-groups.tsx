@@ -465,7 +465,7 @@ export default function WarGroups() {
             </div>
           ) : groups.length === 0 ? (
             <div className="space-y-4">
-              <Card className="border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+              <Card className="bg-[#FCD000] text-black border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                 <CardContent className="text-center py-12">
                   <MapPin className="h-12 w-12 text-black mx-auto mb-4 relative z-10" />
                   <p className="text-black font-black text-lg mb-2 uppercase tracking-tight relative z-10">No groups found in your area</p>
@@ -514,7 +514,7 @@ export default function WarGroups() {
             <div className="space-y-2">
               {groups.map((group) => (
                 <Link key={group.id} href={`/war-groups/${group.id}`}>
-                  <Card className="border-2 border-black rounded-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                  <Card className="bg-[#FCD000] text-black border-2 border-black rounded-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                     <CardContent className="py-3 px-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">

@@ -115,7 +115,7 @@ export default function Library() {
 
       {/* Search Bar */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black rounded-sm" data-testid="card-search">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-[#FCD000] text-black border-2 border-black rounded-sm" data-testid="card-search">
           <CardContent className="p-4 relative z-10">
             <div className="relative">
               <Input
@@ -137,7 +137,7 @@ export default function Library() {
         <label className="text-xs font-black text-white mb-2 block uppercase tracking-wide">
           Category
         </label>
-        <div className="border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full md:w-64">
+        <div className="bg-[#FCD000] text-black border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full md:w-64">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="w-full bg-transparent border-0 text-black font-bold rounded-sm relative z-10" data-testid="select-category">
               <SelectValue placeholder="Select a category" />
@@ -183,7 +183,7 @@ export default function Library() {
                     <Link key={s.id} href={`/series/${s.id}`}>
                       <Button 
                         variant="outline"
-                        className="h-16 w-full flex items-center justify-between hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
+                        className="h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
                         data-testid={`series-card-${s.id}`}
                       >
                         <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
@@ -229,7 +229,7 @@ export default function Library() {
                       <Link key={study.id} href={`/studies/${study.id}`}>
                         <Button 
                           variant="outline"
-                          className="h-16 w-full flex items-center justify-between hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
+                          className="h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
                           data-testid={`study-card-${study.id}`}
                         >
                           <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
