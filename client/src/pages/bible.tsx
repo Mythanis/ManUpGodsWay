@@ -64,10 +64,13 @@ export default function Bible() {
   // Set default version when versions load
   useEffect(() => {
     if (versions && versions.length > 0 && !selectedVersionId) {
-      // Try to find KJV or first available version
       const defaultVersion = versions.find(v => 
-        v.abbreviation?.toLowerCase() === 'kjv' || 
-        v.name?.toLowerCase().includes('king james')
+        v.abbreviation?.toLowerCase() === 'nasb1995' || 
+        v.name?.toLowerCase().includes('nasb1995') ||
+        v.name?.toLowerCase().includes('new american standard 1995')
+      ) || versions.find(v =>
+        v.abbreviation?.toLowerCase() === 'nasb' ||
+        v.name?.toLowerCase().includes('new american standard')
       ) || versions[0];
       setSelectedVersionId(defaultVersion.id);
       localStorage.setItem('preferredBibleVersionId', defaultVersion.id);
