@@ -98,9 +98,9 @@ export default function Events() {
   if (!user) {
     return (
       <div className="min-h-screen bg-ministry-light-gray flex items-center justify-center px-6">
-        <div className="text-center bg-white border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-8">
-          <h1 className="text-2xl font-black uppercase tracking-tighter mb-4 text-black">Please Sign In</h1>
-          <p className="text-black/70 font-medium">You need to be logged in to access the events page.</p>
+        <div className="text-center liquid-black border-2 border-[#FCD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] p-8">
+          <h1 className="text-2xl font-black uppercase tracking-tighter mb-4 text-[#FCD000] relative z-10">Please Sign In</h1>
+          <p className="text-white/70 font-medium relative z-10">You need to be logged in to access the events page.</p>
         </div>
       </div>
     );
@@ -121,31 +121,31 @@ export default function Events() {
         {eventsLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <Card key={i} className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+              <Card key={i} className="liquid-black border-2 border-[#FCD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] overflow-hidden">
                 <CardHeader className="relative">
                   <div className="flex items-start gap-4 relative z-10">
-                    <div className="w-16 h-16 liquid-black flex-shrink-0 border-2 border-black animate-pulse"></div>
+                    <div className="w-16 h-16 bg-gray-800 flex-shrink-0 border-2 border-[#FCD000]/30 animate-pulse rounded-sm"></div>
                     <div className="flex-1 animate-pulse">
-                      <div className="h-5 bg-black/20 rounded-sm w-3/4 mb-3"></div>
-                      <div className="h-3 bg-black/20 rounded-sm w-1/2"></div>
+                      <div className="h-5 bg-gray-700 rounded-sm w-3/4 mb-3"></div>
+                      <div className="h-3 bg-gray-700 rounded-sm w-1/2"></div>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="relative">
                   <div className="animate-pulse space-y-2 relative z-10">
-                    <div className="h-3 bg-black/20 rounded-sm w-full"></div>
-                    <div className="h-3 bg-black/20 rounded-sm w-2/3"></div>
+                    <div className="h-3 bg-gray-700 rounded-sm w-full"></div>
+                    <div className="h-3 bg-gray-700 rounded-sm w-2/3"></div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : events.length === 0 ? (
-          <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center py-12 overflow-hidden">
+          <Card className="liquid-black border-2 border-[#FCD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] text-center py-12 overflow-hidden">
             <CardContent className="relative">
-              <Calendar className="mx-auto mb-4 h-16 w-16 text-black relative z-10" />
-              <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-black relative z-10">No Events Scheduled</h3>
-              <p className="text-black/80 font-medium relative z-10">
+              <Calendar className="mx-auto mb-4 h-16 w-16 text-[#FCD000] relative z-10" />
+              <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-[#FCD000] relative z-10">No Events Scheduled</h3>
+              <p className="text-white/70 font-medium relative z-10">
                 There are no upcoming events at this time. Check back soon for new announcements!
               </p>
             </CardContent>
@@ -158,46 +158,45 @@ export default function Events() {
               const isPastEvent = eventDate < new Date();
               
               return (
-                <Card key={event.id} className={`${isPastEvent ? 'liquid-black' : 'liquid-gold-card'} border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 overflow-hidden`}>
+                <Card key={event.id} className={`liquid-black border-2 border-[#FCD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(252,208,0,0.3)] transition-all duration-200 overflow-hidden ${isPastEvent ? 'opacity-70' : ''}`}>
                   <CardHeader className="relative">
                     <div className="flex items-start gap-4 relative z-10">
-                      {/* Icon Box - like Popular section */}
-                      <div className={`w-16 h-16 ${isPastEvent ? 'liquid-gold-card' : 'liquid-black'} flex-shrink-0 flex items-center justify-center border-2 border-black`}>
-                        <Calendar className={`h-7 w-7 ${isPastEvent ? 'text-black' : 'text-white'} relative z-10`} />
+                      <div className="w-16 h-16 bg-[#FCD000] flex-shrink-0 flex items-center justify-center border-2 border-[#FCD000]/50 rounded-sm">
+                        <Calendar className="h-7 w-7 text-black relative z-10" />
                       </div>
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between flex-wrap gap-2">
-                          <CardTitle className={`text-xl mb-2 font-black uppercase tracking-tighter ${isPastEvent ? 'text-white' : 'text-black'}`}>
+                          <CardTitle className="text-xl mb-2 font-black uppercase tracking-tighter text-[#FCD000]">
                             {event.title}
                           </CardTitle>
                           <div className="flex items-center gap-2 flex-wrap">
                             {isPastEvent && (
-                              <Badge className="bg-ministry-gold-exact text-black font-bold uppercase tracking-wide text-xs rounded-sm border-2 border-black">
+                              <Badge className="bg-gray-700 text-gray-300 font-bold uppercase tracking-wide text-xs rounded-sm border border-gray-600">
                                 Past Event
                               </Badge>
                             )}
                             {isRegistered && (
-                              <Badge className={`font-bold uppercase tracking-wide text-xs rounded-sm border-2 border-black ${isPastEvent ? 'bg-ministry-gold-exact text-black' : 'bg-black text-white'}`}>
+                              <Badge className="font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FCD000]/50 bg-[#FCD000]/20 text-[#FCD000]">
                                 <Users className="h-3 w-3 mr-1" />
                                 Registered
                               </Badge>
                             )}
                             {event.requiresPurchase && !isPastEvent && (
-                              <Badge className="bg-black text-ministry-gold-exact font-bold uppercase tracking-wide text-xs rounded-sm border-2 border-black">
+                              <Badge className="bg-[#FCD000]/20 text-[#FCD000] font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FCD000]/50">
                                 Paid Event
                               </Badge>
                             )}
                             {!event.requiresPurchase && !isPastEvent && (
-                              <Badge className="bg-black text-ministry-gold-exact font-bold uppercase tracking-wide text-xs rounded-sm border-2 border-black">
+                              <Badge className="bg-[#FCD000]/20 text-[#FCD000] font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FCD000]/50">
                                 Free Event
                               </Badge>
                             )}
                           </div>
                         </div>
-                        <div className={`flex flex-wrap gap-3 text-sm font-medium ${isPastEvent ? 'text-gray-300' : 'text-black/70'}`}>
+                        <div className="flex flex-wrap gap-3 text-sm font-medium text-white/70">
                           <div className="flex items-center gap-1">
-                            <Calendar className={`h-4 w-4 ${isPastEvent ? 'text-ministry-gold-exact' : 'text-black'}`} />
+                            <Calendar className="h-4 w-4 text-[#FCD000]" />
                             <span>{formatDate(event.eventDate)}</span>
                             {event.eventTime && (
                               <span>at {formatTime(event.eventTime)}</span>
@@ -205,7 +204,7 @@ export default function Events() {
                           </div>
                           {event.endDate && (
                             <div className="flex items-center gap-1">
-                              <CalendarRange className={`h-4 w-4 ${isPastEvent ? 'text-ministry-gold-exact' : 'text-black'}`} />
+                              <CalendarRange className="h-4 w-4 text-[#FCD000]" />
                               <span>Ends {formatDate(event.endDate)}</span>
                               {event.endTime && (
                                 <span>at {formatTime(event.endTime)}</span>
@@ -214,13 +213,13 @@ export default function Events() {
                           )}
                           {event.location && (
                             <div className="flex items-center gap-1">
-                              <MapPin className={`h-4 w-4 ${isPastEvent ? 'text-ministry-gold-exact' : 'text-black'}`} />
+                              <MapPin className="h-4 w-4 text-[#FCD000]" />
                               <span className="truncate max-w-48">{event.location}</span>
                             </div>
                           )}
                           {event.requiresPurchase && event.price && (
                             <div className="flex items-center gap-1">
-                              <DollarSign className={`h-4 w-4 ${isPastEvent ? 'text-ministry-gold-exact' : 'text-black'}`} />
+                              <DollarSign className="h-4 w-4 text-[#FCD000]" />
                               <span>${event.price}</span>
                             </div>
                           )}
@@ -231,7 +230,7 @@ export default function Events() {
                   
                   {event.description && (
                     <CardContent className="pt-0 relative">
-                      <CardDescription className={`leading-relaxed font-medium relative z-10 ${isPastEvent ? 'text-gray-300' : 'text-black/70'}`}>
+                      <CardDescription className="leading-relaxed font-medium relative z-10 text-white/60">
                         {event.description}
                       </CardDescription>
                     </CardContent>
@@ -244,7 +243,7 @@ export default function Events() {
                           variant="outline"
                           size="sm"
                           asChild
-                          className={`border-2 border-black rounded-sm font-bold uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${isPastEvent ? 'bg-ministry-gold-exact text-black hover:bg-yellow-400' : 'bg-white text-black hover:bg-gray-100'}`}
+                          className="border-2 border-[#FCD000]/50 rounded-sm font-bold uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(252,208,0,0.2)] bg-[#FCD000] text-black hover:bg-[#FCD000]/90"
                         >
                           <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.address)}`} target="_blank" rel="noopener noreferrer">
                             <Navigation className="h-4 w-4 mr-2" />
@@ -257,7 +256,7 @@ export default function Events() {
                           variant="outline"
                           size="sm"
                           asChild
-                          className={`border-2 border-black rounded-sm font-bold uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${isPastEvent ? 'bg-ministry-gold-exact text-black hover:bg-yellow-400' : 'bg-white text-black hover:bg-gray-100'}`}
+                          className="border-2 border-[#FCD000]/50 rounded-sm font-bold uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(252,208,0,0.2)] bg-[#FCD000] text-black hover:bg-[#FCD000]/90"
                         >
                           <a href={event.eventUrl} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-4 w-4 mr-2" />
@@ -270,7 +269,7 @@ export default function Events() {
                         <Button
                           onClick={() => registerMutation.mutate(event.id)}
                           disabled={registerMutation.isPending}
-                          className="bg-black text-ministry-gold-exact hover:bg-gray-900 font-black uppercase tracking-wide rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                          className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000] shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                           size="sm"
                           data-testid={`button-register-${event.id}`}
                         >
@@ -280,7 +279,7 @@ export default function Events() {
                       
                       {!isPastEvent && !isRegistered && event.requiresPurchase && (
                         <Button
-                          className="bg-black text-ministry-gold-exact hover:bg-gray-900 font-black uppercase tracking-wide rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                          className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000] shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                           size="sm"
                           data-testid={`button-purchase-${event.id}`}
                         >
