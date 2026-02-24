@@ -67,6 +67,14 @@ The system supports a single subscription model with configurable free trial. Ad
 - @replit/vite-plugin-runtime-error-modal
 - @replit/vite-plugin-cartographer
 
+## PWA (Progressive Web App)
+- Full PWA support for installability on iOS and Android devices
+- Web app manifest with multiple icon sizes (152, 167, 192, 384, 512px) in PNG format
+- Service worker (`client/public/sw.js`) with offline caching: network-first for API, stale-while-revalidate for static assets, navigation fallback to cached shell
+- Apple-specific meta tags, touch icons, and splash screens for all major iPhone sizes
+- Install prompt component (`client/src/components/pwa-install-prompt.tsx`) with Android native prompt and iOS Safari instructions
+- Push notification support via Web Push API and VAPID keys
+
 ## Bible Verse Tagging
 - Logos RefTagger integration (api.reftagger.com) for automatic Bible verse reference detection
 - NASB translation with tooltips enabled

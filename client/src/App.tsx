@@ -53,6 +53,7 @@ import Navigation from "@/components/navigation";
 import { UserSetupWizard } from "@/components/user-setup-wizard";
 import { AccountSettingsButton } from "@/components/account-settings-button";
 import { TopRightLogo } from "@/components/top-right-logo";
+import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 
 // Splash screen context
 const SplashContext = createContext<{
@@ -175,6 +176,7 @@ function AppContent() {
         <Router />
       </div>
       {isAuthenticated && !isLoading && splashCompleted && <Navigation />}
+      <PWAInstallPrompt />
     </div>
   );
 }
