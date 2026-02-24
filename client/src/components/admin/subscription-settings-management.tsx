@@ -266,12 +266,18 @@ export default function SubscriptionSettingsManagement() {
               >
                 <span className="text-sm text-white font-medium">{label}</span>
                 <Switch
-                  checked={formData.trialContentAreas[key] || false}
-                  onCheckedChange={() => {
-                    if (isEditing) toggleContentArea(key);
+                  checked={!!formData.trialContentAreas[key]}
+                  onCheckedChange={(checked) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      trialContentAreas: {
+                        ...prev.trialContentAreas,
+                        [key]: checked,
+                      },
+                    }));
                   }}
                   disabled={!isEditing}
-                  className="data-[state=checked]:bg-[#FCD000]"
+                  className="data-[state=checked]:bg-[#FCD000] data-[state=unchecked]:bg-gray-600 border-gray-500"
                 />
               </div>
             ))}
