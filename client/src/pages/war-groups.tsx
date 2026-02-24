@@ -330,7 +330,7 @@ export default function WarGroups() {
 
                 <div className="pt-4">
                   <Button
-                    onClick={() => navigate('/war-groups/register')}
+                    onClick={() => { navigate('/war-groups/register'); window.scrollTo(0, 0); }}
                     className="w-full bg-ministry-gold-exact text-black hover:bg-yellow-400 font-black py-4 px-4 rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] uppercase tracking-wide text-sm h-auto whitespace-normal text-center leading-tight"
                     data-testid="button-register-from-about"
                   >
