@@ -194,7 +194,7 @@ export default function Events() {
                             )}
                           </div>
                         </div>
-                        <div className="flex flex-wrap gap-3 text-sm font-medium text-white/70">
+                        <div className="flex flex-wrap gap-3 text-sm font-bold text-white">
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4 text-[#FCD000]" />
                             <span>{formatDate(event.eventDate)}</span>
@@ -230,7 +230,7 @@ export default function Events() {
                   
                   {event.description && (
                     <CardContent className="pt-0 relative">
-                      <CardDescription className="leading-relaxed font-medium relative z-10 text-white/60">
+                      <CardDescription className="leading-relaxed font-semibold relative z-10 text-white/90">
                         {event.description}
                       </CardDescription>
                     </CardContent>
