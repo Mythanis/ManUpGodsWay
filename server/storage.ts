@@ -235,6 +235,10 @@ export interface IStorage {
   // Subscription settings operations
   getSubscriptionSettings(): Promise<SubscriptionSettings | undefined>;
   updateSubscriptionSettings(settings: Partial<InsertSubscriptionSettings>): Promise<SubscriptionSettings>;
+
+  // Trial study access operations
+  getStudiesTrialAccess(): Promise<{ id: string; title: string; isTrialAccessible: boolean }[]>;
+  updateStudyTrialAccess(studyIds: string[]): Promise<void>;
   
   // Progress operations
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
@@ -1517,6 +1521,34 @@ export class DatabaseStorage implements IStorage {
         })
         .returning();
       return created;
+    }
+  }
+
+  async getStudiesTrialAccess(): Promise<{ id: string; title: string; isTrialAccessible: boolean }[]> {
+    const allStudies = await db
+      .select({
+        id: studies.id,
+        title: studies.title,
+        isTrialAccessible: studies.isTrialAccessible,
+      })
+      .from(studies)
+      .orderBy(asc(studies.title));
+    return allStudies.map(s => ({
+      id: s.id,
+      title: s.title,
+      isTrialAccessible: s.isTrialAccessible ?? false,
+    }));
+  }
+
+  async updateStudyTrialAccess(studyIds: string[]): Promise<void> {
+    await db
+      .update(studies)
+      .set({ isTrialAccessible: false });
+    if (studyIds.length > 0) {
+      await db
+        .update(studies)
+        .set({ isTrialAccessible: true })
+        .where(inArray(studies.id, studyIds));
     }
   }
 

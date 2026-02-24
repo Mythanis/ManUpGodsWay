@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { DollarSign, Save, Settings, Shield, Clock, Check } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DollarSign, Save, Settings, Shield, Clock, Check, BookOpen } from "lucide-react";
 
 interface SubscriptionSettings {
   id: string;
@@ -52,8 +53,14 @@ export default function SubscriptionSettingsManagement() {
     trialContentAreas: {} as Record<string, boolean>,
   });
 
+  const [selectedTrialStudyIds, setSelectedTrialStudyIds] = useState<Set<string>>(new Set());
+
   const { data: settings, isLoading } = useQuery<SubscriptionSettings>({
     queryKey: ["/api/admin/subscription-settings"],
+  });
+
+  const { data: allStudies = [] } = useQuery<{ id: string; title: string; isTrialAccessible: boolean }[]>({
+    queryKey: ["/api/admin/studies/trial-access"],
   });
 
   useEffect(() => {
@@ -68,33 +75,58 @@ export default function SubscriptionSettingsManagement() {
     }
   }, [settings]);
 
+  useEffect(() => {
+    if (allStudies.length > 0) {
+      setSelectedTrialStudyIds(new Set(allStudies.filter(s => s.isTrialAccessible).map(s => s.id)));
+    }
+  }, [allStudies]);
+
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
       return apiRequest("PUT", "/api/admin/subscription-settings", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/subscription-settings"] });
-      setIsEditing(false);
-      toast({ title: "Settings saved", description: "Subscription settings updated successfully." });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to update settings", variant: "destructive" });
     },
   });
 
-  const handleSave = () => {
+  const updateTrialStudiesMutation = useMutation({
+    mutationFn: async (studyIds: string[]) => {
+      return apiRequest("PUT", "/api/admin/studies/trial-access", { studyIds });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/studies/trial-access"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update trial studies", variant: "destructive" });
+    },
+  });
+
+  const handleSave = async () => {
     const featuresArray = formData.features
       .split("\n")
       .map((f) => f.trim())
       .filter((f) => f.length > 0);
 
-    updateMutation.mutate({
-      monthlyPrice: parseFloat(formData.monthlyPrice),
-      yearlyPrice: parseFloat(formData.yearlyPrice),
-      trialDurationDays: parseInt(formData.trialDurationDays),
-      features: featuresArray,
-      trialContentAreas: formData.trialContentAreas,
-    });
+    try {
+      await Promise.all([
+        updateMutation.mutateAsync({
+          monthlyPrice: parseFloat(formData.monthlyPrice),
+          yearlyPrice: parseFloat(formData.yearlyPrice),
+          trialDurationDays: parseInt(formData.trialDurationDays),
+          features: featuresArray,
+          trialContentAreas: formData.trialContentAreas,
+        }),
+        updateTrialStudiesMutation.mutateAsync(Array.from(selectedTrialStudyIds)),
+      ]);
+      setIsEditing(false);
+      toast({ title: "Settings saved", description: "Subscription settings updated successfully." });
+    } catch {
+      // errors handled by individual mutations
+    }
   };
 
   const toggleContentArea = (area: string) => {
@@ -135,7 +167,7 @@ export default function SubscriptionSettingsManagement() {
               </Button>
             ) : (
               <div className="flex gap-2">
-                <Button onClick={handleSave} disabled={updateMutation.isPending} className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-bold">
+                <Button onClick={handleSave} disabled={updateMutation.isPending || updateTrialStudiesMutation.isPending} className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-bold">
                   <Save className="w-4 h-4 mr-1" />
                   Save
                 </Button>
@@ -284,6 +316,61 @@ export default function SubscriptionSettingsManagement() {
           </div>
           {!isEditing && (
             <p className="text-xs text-white/30 mt-3">Click "Edit Settings" to change trial content access.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="bg-black border border-[#FCD000]/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-white text-lg">
+            <BookOpen className="w-5 h-5 text-[#FCD000]" />
+            Trial Study Access
+          </CardTitle>
+          <CardDescription className="text-white/50">
+            Choose which individual studies are available to trial users (even if the "Bible Studies" content area is disabled above).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {allStudies.length === 0 ? (
+            <p className="text-white/40 text-sm">No studies found.</p>
+          ) : (
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+              {allStudies.map((study) => (
+                <label
+                  key={study.id}
+                  className={`flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                    selectedTrialStudyIds.has(study.id)
+                      ? "bg-[#FCD000]/10 border-[#FCD000]/30"
+                      : "bg-white/5 border-white/10"
+                  } ${!isEditing ? "opacity-60 cursor-not-allowed" : "hover:bg-white/10"}`}
+                >
+                  <Checkbox
+                    checked={selectedTrialStudyIds.has(study.id)}
+                    onCheckedChange={(checked) => {
+                      if (!isEditing) return;
+                      setSelectedTrialStudyIds((prev) => {
+                        const next = new Set(prev);
+                        if (checked) {
+                          next.add(study.id);
+                        } else {
+                          next.delete(study.id);
+                        }
+                        return next;
+                      });
+                    }}
+                    disabled={!isEditing}
+                    className="data-[state=checked]:bg-[#FCD000] data-[state=checked]:border-[#FCD000] border-gray-500"
+                  />
+                  <span className="text-sm text-white font-medium">{study.title}</span>
+                </label>
+              ))}
+            </div>
+          )}
+          {!isEditing && (
+            <p className="text-xs text-white/30 mt-3">Click "Edit Settings" to change trial study access.</p>
+          )}
+          {isEditing && selectedTrialStudyIds.size > 0 && (
+            <p className="text-xs text-[#FCD000]/70 mt-3">{selectedTrialStudyIds.size} {selectedTrialStudyIds.size === 1 ? 'study' : 'studies'} selected for trial access.</p>
           )}
         </CardContent>
       </Card>

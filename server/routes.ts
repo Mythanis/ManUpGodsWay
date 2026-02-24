@@ -4518,6 +4518,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get studies with trial access status (admin)
+  app.get('/api/admin/studies/trial-access', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const allStudies = await storage.getStudiesTrialAccess();
+      res.json(allStudies);
+    } catch (error) {
+      console.error("Error fetching studies trial access:", error);
+      res.status(500).json({ message: "Failed to fetch studies" });
+    }
+  });
+
+  // Bulk update trial-accessible studies (admin)
+  app.put('/api/admin/studies/trial-access', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const { studyIds } = req.body;
+      if (!Array.isArray(studyIds)) {
+        return res.status(400).json({ message: "studyIds must be an array" });
+      }
+      await storage.updateStudyTrialAccess(studyIds);
+      res.json({ success: true, updatedCount: studyIds.length });
+    } catch (error) {
+      console.error("Error updating studies trial access:", error);
+      res.status(500).json({ message: "Failed to update studies trial access" });
+    }
+  });
+
   // Public subscription settings (for frontend pricing display)
   app.get('/api/subscription-settings', async (req: any, res) => {
     try {
