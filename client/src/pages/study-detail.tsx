@@ -878,7 +878,7 @@ export default function StudyDetail() {
                           <FormLabel className="text-[#FCD000] font-bold uppercase tracking-wide">Rating</FormLabel>
                           <FormControl>
                             <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
-                              <SelectTrigger className="bg-black/50 border-2 border-[#FCD000]/30 text-white rounded-sm" data-testid="select-rating">
+                              <SelectTrigger className="bg-gray-800 border-2 border-[#FCD000]/30 text-white rounded-sm" data-testid="select-rating">
                                 <SelectValue placeholder="Select rating" />
                               </SelectTrigger>
                               <SelectContent className="bg-black border-2 border-ministry-gold-exact rounded-sm">
@@ -904,7 +904,7 @@ export default function StudyDetail() {
                             <Textarea
                               {...field}
                               placeholder="Share your thoughts about this study..."
-                              className="min-h-[100px] bg-black/50 border-2 border-[#FCD000]/30 text-white placeholder:text-gray-500 rounded-sm"
+                              className="min-h-[100px] bg-gray-800 border-2 border-[#FCD000]/30 text-white placeholder:text-gray-400 rounded-sm"
                               data-testid="textarea-review"
                             />
                           </FormControl>
