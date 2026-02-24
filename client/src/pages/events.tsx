@@ -160,70 +160,63 @@ export default function Events() {
               return (
                 <Card key={event.id} className={`liquid-black border-2 border-[#FCD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(252,208,0,0.3)] transition-all duration-200 overflow-hidden ${isPastEvent ? 'opacity-70' : ''}`}>
                   <CardHeader className="relative">
-                    <div className="flex items-start gap-4 relative z-10">
-                      <div className="w-16 h-16 bg-[#FCD000] flex-shrink-0 flex items-center justify-center border-2 border-[#FCD000]/50 rounded-sm">
-                        <Calendar className="h-7 w-7 text-black relative z-10" />
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between flex-wrap gap-2">
-                          <CardTitle className="text-xl mb-2 font-black uppercase tracking-tighter text-[#FCD000]">
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 bg-[#FCD000] flex-shrink-0 flex items-center justify-center rounded-sm">
+                          <Calendar className="h-6 w-6 text-black" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-lg font-black uppercase tracking-tighter text-[#FCD000] leading-tight">
                             {event.title}
                           </CardTitle>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {isPastEvent && (
-                              <Badge className="bg-gray-700 text-gray-300 font-bold uppercase tracking-wide text-xs rounded-sm border border-gray-600">
-                                Past Event
-                              </Badge>
-                            )}
-                            {isRegistered && (
-                              <Badge className="font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FCD000]/50 bg-[#FCD000]/20 text-[#FCD000]">
-                                <Users className="h-3 w-3 mr-1" />
-                                Registered
-                              </Badge>
-                            )}
-                            {event.requiresPurchase && !isPastEvent && (
-                              <Badge className="bg-[#FCD000]/20 text-[#FCD000] font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FCD000]/50">
-                                Paid Event
-                              </Badge>
-                            )}
-                            {!event.requiresPurchase && !isPastEvent && (
-                              <Badge className="bg-[#FCD000]/20 text-[#FCD000] font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FCD000]/50">
-                                Free Event
-                              </Badge>
-                            )}
-                          </div>
                         </div>
-                        <div className="flex flex-wrap gap-3 text-sm font-bold text-white">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4 text-[#FCD000]" />
-                            <span>{formatDate(event.eventDate)}</span>
-                            {event.eventTime && (
-                              <span>at {formatTime(event.eventTime)}</span>
-                            )}
-                          </div>
-                          {event.endDate && (
-                            <div className="flex items-center gap-1">
-                              <CalendarRange className="h-4 w-4 text-[#FCD000]" />
-                              <span>Ends {formatDate(event.endDate)}</span>
-                              {event.endTime && (
-                                <span>at {formatTime(event.endTime)}</span>
-                              )}
-                            </div>
-                          )}
-                          {event.location && (
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4 text-[#FCD000]" />
-                              <span className="truncate max-w-48">{event.location}</span>
-                            </div>
-                          )}
-                          {event.requiresPurchase && event.price && (
-                            <div className="flex items-center gap-1">
-                              <DollarSign className="h-4 w-4 text-[#FCD000]" />
-                              <span>${event.price}</span>
-                            </div>
-                          )}
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap mb-3">
+                        {isPastEvent && (
+                          <Badge className="bg-gray-700 text-gray-300 font-bold uppercase tracking-wide text-xs rounded-sm border border-gray-600">
+                            Past Event
+                          </Badge>
+                        )}
+                        {isRegistered && (
+                          <Badge className="font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FCD000]/50 bg-[#FCD000]/20 text-[#FCD000]">
+                            <Users className="h-3 w-3 mr-1" />
+                            Registered
+                          </Badge>
+                        )}
+                        {event.requiresPurchase && !isPastEvent && (
+                          <Badge className="bg-[#FCD000]/20 text-[#FCD000] font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FCD000]/50">
+                            Paid Event
+                          </Badge>
+                        )}
+                        {!event.requiresPurchase && !isPastEvent && (
+                          <Badge className="bg-[#FCD000]/20 text-[#FCD000] font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FCD000]/50">
+                            Free Event
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="space-y-1.5 text-sm font-bold text-white">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-[#FCD000] flex-shrink-0" />
+                          <span>{formatDate(event.eventDate)}{event.eventTime ? ` at ${formatTime(event.eventTime)}` : ''}</span>
                         </div>
+                        {event.endDate && (
+                          <div className="flex items-center gap-2">
+                            <CalendarRange className="h-4 w-4 text-[#FCD000] flex-shrink-0" />
+                            <span>Ends {formatDate(event.endDate)}{event.endTime ? ` at ${formatTime(event.endTime)}` : ''}</span>
+                          </div>
+                        )}
+                        {event.location && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-[#FCD000] flex-shrink-0" />
+                            <span>{event.location}</span>
+                          </div>
+                        )}
+                        {event.requiresPurchase && event.price && (
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="h-4 w-4 text-[#FCD000] flex-shrink-0" />
+                            <span>${event.price}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardHeader>
