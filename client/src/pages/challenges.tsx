@@ -147,8 +147,7 @@ export default function Challenges() {
         title: "Challenge Completed!",
         description: "Congratulations! You've earned rations for completing this challenge.",
       });
-      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', currentWeekChallenge?.id, 'user-accepted'] });
-      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', selectedChallenge?.id, 'user-accepted'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
       queryClient.invalidateQueries({ queryKey: ['/api/rations'] });
     },
     onError: () => {
@@ -170,8 +169,7 @@ export default function Challenges() {
         title: "Regrouping!",
         description: "Keep your head up, soldier! The next challenge awaits.",
       });
-      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', currentWeekChallenge?.id, 'user-accepted'] });
-      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', selectedChallenge?.id, 'user-accepted'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
     },
     onError: () => {
       toast({
