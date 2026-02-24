@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useLocation } from "wouter";
 
 interface ProgressCardProps {
   study: any;
@@ -8,6 +9,7 @@ interface ProgressCardProps {
 }
 
 export default function ProgressCard({ study, progress }: ProgressCardProps) {
+  const [, navigate] = useLocation();
   const isStudyCompleted = progress.status === 'completed';
   
   // Calculate progress percentage based on completed lessons
@@ -58,7 +60,7 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
         <Button 
           className="w-full bg-ministry-gold-exact text-black py-3 rounded-sm font-black uppercase tracking-wide hover:bg-yellow-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
           data-testid="button-continue-study"
-          onClick={() => window.location.href = `/studies/${study.id}`}
+          onClick={() => navigate(`/studies/${study.id}`)}
         >
           {isStudyCompleted ? 'Review Study' : 'Continue Study'}
         </Button>
