@@ -680,40 +680,23 @@ export class DatabaseStorage implements IStorage {
     
     // Get progress for each study if user is logged in
     if (userId) {
-      // Get or create series progress to track when user started this series
-      let [seriesProgress] = await db.select().from(userSeriesProgress)
-        .where(and(
-          eq(userSeriesProgress.userId, userId),
-          eq(userSeriesProgress.seriesId, seriesId)
-        ));
-      
-      // Calculate which day the user is on (0-indexed) for daily drip using actual 24h intervals
-      let daysSinceStart = 0;
-      let startTimestamp: Date | null = null;
-      if (seriesProgress?.startedAt) {
-        startTimestamp = new Date(seriesProgress.startedAt);
-        const now = new Date();
-        // Use actual elapsed time in 24h intervals, not calendar days
-        const elapsedMs = now.getTime() - startTimestamp.getTime();
-        daysSinceStart = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
-      }
-      
       // First, get all lesson and progress data for determining lock status
       const studyCompletionStatus: Map<string, boolean> = new Map();
+      const studyCompletionTime: Map<string, Date | null> = new Map();
       
-      // Pre-calculate completion status for each study
+      // Pre-calculate completion status and completion time for each study
       for (const study of seriesStudies) {
         const lessons = await db.select().from(studyLessons)
           .where(eq(studyLessons.studyId, study.id));
         
         if (lessons.length === 0) {
-          // Study with no lessons is considered complete if user has started it
           const [progress] = await db.select().from(userProgress)
             .where(and(
               eq(userProgress.userId, userId),
               eq(userProgress.studyId, study.id)
             ));
           studyCompletionStatus.set(study.id, progress?.completed ?? false);
+          studyCompletionTime.set(study.id, progress?.completedAt ? new Date(progress.completedAt) : null);
         } else {
           const completedLessons = await db.select().from(userLessonProgress)
             .where(and(
@@ -721,7 +704,17 @@ export class DatabaseStorage implements IStorage {
               inArray(userLessonProgress.lessonId, lessons.map(l => l.id)),
               sql`${userLessonProgress.completedAt} IS NOT NULL`
             ));
-          studyCompletionStatus.set(study.id, completedLessons.length >= lessons.length);
+          const isComplete = completedLessons.length >= lessons.length;
+          studyCompletionStatus.set(study.id, isComplete);
+          if (isComplete && completedLessons.length > 0) {
+            const latestCompletion = completedLessons.reduce((latest, lp) => {
+              const t = lp.completedAt ? new Date(lp.completedAt) : new Date(0);
+              return t > latest ? t : latest;
+            }, new Date(0));
+            studyCompletionTime.set(study.id, latestCompletion);
+          } else {
+            studyCompletionTime.set(study.id, null);
+          }
         }
       }
       
@@ -732,7 +725,6 @@ export class DatabaseStorage implements IStorage {
             eq(userProgress.studyId, study.id)
           ));
         
-        // Get lesson completion count - use completedAt IS NOT NULL for consistency with other pages
         const lessons = await db.select().from(studyLessons)
           .where(eq(studyLessons.studyId, study.id));
         
@@ -747,31 +739,29 @@ export class DatabaseStorage implements IStorage {
           completedLessonsCount = completedLessons.length;
         }
         
-        // Determine if this study is locked
         let isLockedByPrevious = false;
         let isLockedByDrip = false;
         let unlocksAt: Date | null = null;
         
         if (requiresConsecutive && index > 0) {
-          // Daily drip: study unlocks after (index * 24 hours) from start time
-          if (seriesProgress && startTimestamp) {
-            isLockedByDrip = index > daysSinceStart;
-            if (isLockedByDrip) {
-              // Calculate exact unlock time: startTime + (index * 24 hours)
-              unlocksAt = new Date(startTimestamp.getTime() + (index * 24 * 60 * 60 * 1000));
-            }
-          } else {
-            // User hasn't started series yet - first study is always available
-            isLockedByDrip = index > 0;
-          }
-          
-          // Also check if previous study is complete (must complete before moving on)
           const previousStudyId = seriesStudies[index - 1].id;
           const previousComplete = studyCompletionStatus.get(previousStudyId) ?? false;
           isLockedByPrevious = !previousComplete;
+          
+          // 24-hour drip: study unlocks 24 hours after previous study was completed
+          if (previousComplete) {
+            const prevCompletionTime = studyCompletionTime.get(previousStudyId);
+            if (prevCompletionTime) {
+              const now = new Date();
+              const unlockTime = new Date(prevCompletionTime.getTime() + (24 * 60 * 60 * 1000));
+              if (now < unlockTime) {
+                isLockedByDrip = true;
+                unlocksAt = unlockTime;
+              }
+            }
+          }
         }
         
-        // Study is locked if either drip or completion lock applies
         const isLocked = isLockedByDrip || isLockedByPrevious;
         
         return {
@@ -4185,26 +4175,60 @@ export class DatabaseStorage implements IStorage {
       return { isLocked: false, previousStudyTitle: null, previousStudyId: null, message: null, studyNumber, totalStudiesInSeries };
     }
 
-    // Check daily drip lock first
-    const [seriesProgress] = await db.select().from(userSeriesProgress)
-      .where(and(
-        eq(userSeriesProgress.userId, userId),
-        eq(userSeriesProgress.seriesId, study.seriesId)
-      ));
+    // Check if previous study is complete
+    const previousStudy = seriesStudiesData[studyIndex - 1];
     
-    if (seriesProgress?.startedAt) {
-      const startTimestamp = new Date(seriesProgress.startedAt);
+    const prevLessons = await db.select().from(studyLessons)
+      .where(eq(studyLessons.studyId, previousStudy.id));
+    
+    let previousComplete = false;
+    let prevCompletionTime: Date | null = null;
+    
+    if (prevLessons.length === 0) {
+      const [progress] = await db.select().from(userProgress)
+        .where(and(
+          eq(userProgress.userId, userId),
+          eq(userProgress.studyId, previousStudy.id)
+        ));
+      previousComplete = progress?.completed ?? false;
+      prevCompletionTime = progress?.completedAt ? new Date(progress.completedAt) : null;
+    } else {
+      const completedLessons = await db.select().from(userLessonProgress)
+        .where(and(
+          eq(userLessonProgress.userId, userId),
+          inArray(userLessonProgress.lessonId, prevLessons.map(l => l.id)),
+          sql`${userLessonProgress.completedAt} IS NOT NULL`
+        ));
+      previousComplete = completedLessons.length >= prevLessons.length;
+      if (previousComplete && completedLessons.length > 0) {
+        prevCompletionTime = completedLessons.reduce((latest, lp) => {
+          const t = lp.completedAt ? new Date(lp.completedAt) : new Date(0);
+          return t > latest ? t : latest;
+        }, new Date(0));
+      }
+    }
+
+    // If previous study is not complete, lock this study
+    if (!previousComplete) {
+      return {
+        isLocked: true,
+        previousStudyTitle: previousStudy.title,
+        previousStudyId: previousStudy.id,
+        message: `Complete "${previousStudy.title}" first`,
+        studyNumber,
+        totalStudiesInSeries
+      };
+    }
+
+    // Previous study is complete - check 24-hour drip timer
+    if (prevCompletionTime) {
       const now = new Date();
-      const elapsedMs = now.getTime() - startTimestamp.getTime();
-      const daysSinceStart = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
-      
-      // If this study hasn't unlocked yet by time, it's locked
-      if (studyIndex > daysSinceStart) {
-        const unlocksAt = new Date(startTimestamp.getTime() + (studyIndex * 24 * 60 * 60 * 1000));
-        const hoursRemaining = Math.ceil((unlocksAt.getTime() - now.getTime()) / (1000 * 60 * 60));
+      const unlockTime = new Date(prevCompletionTime.getTime() + (24 * 60 * 60 * 1000));
+      if (now < unlockTime) {
+        const hoursRemaining = Math.ceil((unlockTime.getTime() - now.getTime()) / (1000 * 60 * 60));
         const timeMessage = hoursRemaining < 24 
           ? `Unlocks in ${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''}`
-          : `Unlocks ${unlocksAt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`;
+          : `Unlocks ${unlockTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`;
         
         return {
           isLocked: true,
@@ -4214,49 +4238,12 @@ export class DatabaseStorage implements IStorage {
           studyNumber,
           totalStudiesInSeries,
           isLockedByDrip: true,
-          unlocksAt: unlocksAt.toISOString()
+          unlocksAt: unlockTime.toISOString()
         };
       }
-    } else if (studyIndex > 0) {
-      // User hasn't started series yet - all studies after first are locked
-      return {
-        isLocked: true,
-        previousStudyTitle: null,
-        previousStudyId: null,
-        message: 'Start the series first',
-        studyNumber,
-        totalStudiesInSeries
-      };
     }
 
-    // Check if previous study is complete
-    const previousStudy = seriesStudiesData[studyIndex - 1];
-    
-    // Get lessons for the previous study
-    const prevLessons = await db.select().from(studyLessons)
-      .where(eq(studyLessons.studyId, previousStudy.id));
-    
-    let previousComplete = false;
-    
-    if (prevLessons.length === 0) {
-      // Study with no lessons - check userProgress
-      const [progress] = await db.select().from(userProgress)
-        .where(and(
-          eq(userProgress.userId, userId),
-          eq(userProgress.studyId, previousStudy.id)
-        ));
-      previousComplete = progress?.completed ?? false;
-    } else {
-      // Check if all lessons are completed
-      const completedLessons = await db.select().from(userLessonProgress)
-        .where(and(
-          eq(userLessonProgress.userId, userId),
-          inArray(userLessonProgress.lessonId, prevLessons.map(l => l.id)),
-          sql`${userLessonProgress.completedAt} IS NOT NULL`
-        ));
-      previousComplete = completedLessons.length >= prevLessons.length;
-    }
-
+    // Previous study complete and 24 hours have passed - unlocked
     if (previousComplete) {
       return { isLocked: false, previousStudyTitle: null, previousStudyId: null, message: null, studyNumber, totalStudiesInSeries };
     }
