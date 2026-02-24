@@ -836,38 +836,38 @@ export default function Home() {
         
         <div className="space-y-3">
           {completedCount > 0 && (
-            <Card className="border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="activity-completed-study">
+            <Card className="bg-black border-2 border-[#FCD000] rounded-sm shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)]" data-testid="activity-completed-study">
               <CardContent className="p-4 relative z-10">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-sm liquid-black flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 rounded-sm bg-[#FCD000] flex items-center justify-center">
+                    <svg className="w-5 h-5 text-black relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-black text-black uppercase tracking-wide">
+                    <p className="text-sm font-black text-white uppercase tracking-wide">
                       Completed {completedCount} {completedCount === 1 ? 'study' : 'studies'}
                     </p>
-                    <p className="text-xs text-black/70 font-medium">Keep up the great work!</p>
+                    <p className="text-xs text-white/70 font-medium">Keep up the great work!</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           )}
           
-          <Card className="border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="activity-streak">
+          <Card className="bg-black border-2 border-[#FCD000] rounded-sm shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)]" data-testid="activity-streak">
             <CardContent className="p-4 relative z-10">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-sm liquid-black flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 rounded-sm bg-[#FCD000] flex items-center justify-center">
+                  <svg className="w-5 h-5 text-black relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-black text-black uppercase tracking-wide">
+                  <p className="text-sm font-black text-white uppercase tracking-wide">
                     {appOpenStreak}-day streak
                   </p>
-                  <p className="text-xs text-ministry-slate">Consecutive days on the app</p>
+                  <p className="text-xs text-white/70">Consecutive days on the app</p>
                 </div>
               </div>
             </CardContent>
