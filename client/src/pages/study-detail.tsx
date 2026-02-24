@@ -519,27 +519,26 @@ export default function StudyDetail() {
 
       {/* Study Info */}
       <div className="px-6 mt-4 mb-6">
-        <div className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-study-info">
+        <div className="liquid-black border-2 border-[#FCD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]" data-testid="card-study-info">
           <div className="p-6 relative z-10">
             {study.thumbnailUrl && (
               <img 
                 src={study.thumbnailUrl} 
                 alt={study.title}
-                className="w-full h-48 object-cover rounded-sm mb-4 border-2 border-black"
+                className="w-full h-48 object-cover rounded-sm mb-4 border-2 border-[#FCD000]/30"
                 data-testid="img-study-thumbnail"
               />
             )}
             
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
-                {/* Only show tier badge if study doesn't require purchase for this user */}
                 {!(study.requiresPurchase && study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free') && !hasPurchased) && (
-                  <Badge className="bg-black text-[#FCD000] font-bold uppercase tracking-wide rounded-sm border-2 border-black" data-testid="badge-study-tier">
+                  <Badge className="bg-[#FCD000] text-black font-bold uppercase tracking-wide rounded-sm border-2 border-[#FCD000]" data-testid="badge-study-tier">
                     {study.requiredTier !== 'free' ? 'Subscribers Only' : 'Free'}
                   </Badge>
                 )}
                 {(study.rating && parseFloat(study.rating.toString()) > 0) && (
-                  <div className="flex items-center space-x-1 bg-black px-2 py-1 rounded-sm border-2 border-black" data-testid="rating-display">
+                  <div className="flex items-center space-x-1 bg-black/50 px-2 py-1 rounded-sm border border-[#FCD000]/30" data-testid="rating-display">
                     <Star className="w-4 h-4 text-[#FCD000] fill-current" />
                     <span className="text-sm font-bold text-white">{study.rating}</span>
                     <span className="text-xs text-gray-400">({study.ratingCount})</span>
@@ -547,18 +546,18 @@ export default function StudyDetail() {
                 )}
               </div>
               <div className="flex items-center space-x-4 text-sm">
-                <div className="flex items-center space-x-1 bg-black px-2 py-1 rounded-sm border-2 border-black">
+                <div className="flex items-center space-x-1 bg-black/50 px-2 py-1 rounded-sm border border-[#FCD000]/30">
                   <Clock className="w-4 h-4 text-[#FCD000]" />
                   <span className="text-white font-bold">{study.estimatedHours}h</span>
                 </div>
-                <div className="flex items-center space-x-1 bg-black px-2 py-1 rounded-sm border-2 border-black">
+                <div className="flex items-center space-x-1 bg-black/50 px-2 py-1 rounded-sm border border-[#FCD000]/30">
                   <Users className="w-4 h-4 text-[#FCD000]" />
                   <span className="text-white font-bold">{study.difficulty}</span>
                 </div>
               </div>
             </div>
 
-            <p className="text-black font-medium mb-6" data-testid="text-study-description">
+            <p className="text-white/90 font-medium mb-6" data-testid="text-study-description">
               {study.description}
             </p>
 
