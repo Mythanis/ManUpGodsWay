@@ -618,7 +618,7 @@ export default function Podcasts() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold"></div>
           </div>
         ) : filteredPodcasts.length === 0 ? (
-          <Card className="text-center py-12 liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+          <Card className="text-center py-12 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
             <CardContent className="relative z-10">
               <Headphones className="w-12 h-12 mx-auto text-black mb-4" />
               <h3 className="text-lg font-black text-black mb-2 tracking-tight">No Podcasts Found</h3>

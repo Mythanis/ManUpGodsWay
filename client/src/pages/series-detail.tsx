@@ -205,7 +205,7 @@ export default function SeriesDetail() {
       {/* Progress Overview */}
       {isAuthenticated && studies.length > 0 && (
         <div className="px-6 mt-6 mb-6">
-          <Card className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <Card className="border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <CardContent className="p-4 relative z-10">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm text-black font-bold uppercase tracking-wide">Series Progress</span>
@@ -250,8 +250,8 @@ export default function SeriesDetail() {
                   isConsecutiveLocked 
                     ? 'bg-zinc-800 opacity-80' 
                     : hasAccess 
-                      ? 'liquid-gold-card hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all' 
-                      : 'liquid-gold-card opacity-75'
+                      ? 'hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all' 
+                      : 'opacity-75'
                 }`}
                 data-testid={`study-card-${study.id}`}
               >

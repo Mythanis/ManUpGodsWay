@@ -543,7 +543,7 @@ export default function Home() {
                 className="w-12 h-12 rounded-sm object-cover border-2 border-ministry-gold-exact"
               />
               <Link href="/rations">
-                <div className="liquid-gold-card text-black px-3 py-1 rounded-sm text-xs font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-1">
+                <div className="text-black px-3 py-1 rounded-sm text-xs font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-1">
                   <Coins className="w-3 h-3 relative z-10" />
                   <span className="relative z-10">{rations?.balance?.toLocaleString() || 0} rations</span>
                 </div>
@@ -566,7 +566,7 @@ export default function Home() {
         
         {/* Subscription Banner */}
         {(user as any)?.subscriptionStatus !== 'active' && (
-          <div className="liquid-gold-card glow-gold text-black rounded-sm border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="banner-subscription">
+          <div className="glow-gold text-black rounded-sm border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="banner-subscription">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-black text-sm text-black uppercase tracking-tight">Subscribe Now</h3>
@@ -684,7 +684,7 @@ export default function Home() {
                 <p className="text-sm text-[#FCD000] mb-4 font-black uppercase tracking-wide">{completedCount > 0 ? "Continue Your Faith Journey" : "Start Your Growth Today"}</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
-                    <Card key={study.id} className="border-2 border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all liquid-gold-card rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                    <Card key={study.id} className="border-2 border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                       <CardContent className="p-0">
                         <div className="flex items-stretch">
                           <div className="w-14 liquid-black flex items-center justify-center flex-shrink-0">
@@ -725,7 +725,7 @@ export default function Home() {
         <div className="space-y-2">
           <Button 
             variant="outline"
-            className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
+            className="h-16 w-full flex items-center justify-between hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
             data-testid="button-current-challenge"
             onClick={() => setShowChallengeDialog(true)}
           >
@@ -740,7 +740,7 @@ export default function Home() {
             </div>
           </Button>
 
-          <Link href="/videos" className="block h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-watch-videos">
+          <Link href="/videos" className="block h-16 w-full flex items-center justify-between hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-watch-videos">
             <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
               <Play className="w-6 h-6 text-white relative z-10" />
             </div>
@@ -752,7 +752,7 @@ export default function Home() {
             </div>
           </Link>
           
-          <Link href="/hurdle-wall" className="block h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-hurdle-wall">
+          <Link href="/hurdle-wall" className="block h-16 w-full flex items-center justify-between hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-hurdle-wall">
             <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
               <Shield className="w-6 h-6 text-white relative z-10" />
             </div>
@@ -764,7 +764,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <Link href="/community" className="block h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-join-discussion">
+          <Link href="/community" className="block h-16 w-full flex items-center justify-between hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-join-discussion">
             <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
               <MessageSquare className="w-6 h-6 text-white relative z-10" />
             </div>
@@ -776,7 +776,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <Link href="/blog" className="block h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-blog">
+          <Link href="/blog" className="block h-16 w-full flex items-center justify-between hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-blog">
             <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
               <Newspaper className="w-6 h-6 text-white relative z-10" />
             </div>
@@ -790,7 +790,7 @@ export default function Home() {
 
           <Button 
             variant="outline"
-            className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
+            className="h-16 w-full flex items-center justify-between hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
             data-testid="button-prayer-time"
             onClick={() => isPraying ? endPrayerTime() : setShowPrayerDialog(true)}
           >
@@ -813,7 +813,7 @@ export default function Home() {
 
           <Button 
             variant="outline"
-            className="h-16 w-full flex items-center justify-between liquid-gold-card hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
+            className="h-16 w-full flex items-center justify-between hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
             data-testid="button-track-progress"
             onClick={() => setShowProgressDialog(true)}
           >
@@ -836,7 +836,7 @@ export default function Home() {
         
         <div className="space-y-3">
           {completedCount > 0 && (
-            <Card className="border-2 border-black liquid-gold-card rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="activity-completed-study">
+            <Card className="border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="activity-completed-study">
               <CardContent className="p-4 relative z-10">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-sm liquid-black flex items-center justify-center">
@@ -855,7 +855,7 @@ export default function Home() {
             </Card>
           )}
           
-          <Card className="border-2 border-black liquid-gold-card rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="activity-streak">
+          <Card className="border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="activity-streak">
             <CardContent className="p-4 relative z-10">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-sm liquid-black flex items-center justify-center">
@@ -1063,7 +1063,7 @@ export default function Home() {
       {/* Full Devotional Modal */}
       <Dialog open={showFullDevotional} onOpenChange={setShowFullDevotional}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85vh] overflow-y-auto liquid-header border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] p-0">
-          <div className="liquid-gold-card p-4 border-b-2 border-black">
+          <div className="p-4 border-b-2 border-black">
             <DialogHeader>
               <DialogTitle className="text-black text-lg font-black uppercase tracking-tight relative z-10">
                 {devotional?.title}
@@ -1227,7 +1227,7 @@ export default function Home() {
       {/* Challenge Dialog */}
       <Dialog open={showChallengeDialog} onOpenChange={setShowChallengeDialog}>
         <DialogContent className="max-w-2xl liquid-header border-2 border-ministry-gold-exact rounded-sm">
-          <DialogHeader className="liquid-gold-card p-4 -m-6 mb-4 border-b-2 border-black">
+          <DialogHeader className="p-4 -m-6 mb-4 border-b-2 border-black">
             <DialogTitle className="flex items-center space-x-2 relative z-10">
               <Target className="w-5 h-5 text-black" />
               <span className="text-black font-bold uppercase tracking-tight">This Week's Challenge</span>

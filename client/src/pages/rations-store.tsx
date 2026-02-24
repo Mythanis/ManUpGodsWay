@@ -298,7 +298,7 @@ export default function RationsStorePage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 liquid-gold-card border-2 border-black rounded-sm flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <div className="w-12 h-12 border-2 border-black rounded-sm flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                   <Coins className="w-6 h-6 text-black" />
                 </div>
                 <div>

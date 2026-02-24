@@ -586,7 +586,7 @@ export default function Challenges() {
               </div>
 
               {/* Participant Count Banner */}
-              <div className="liquid-gold-card border-2 border-black rounded-sm p-4 overflow-hidden">
+              <div className="border-2 border-black rounded-sm p-4 overflow-hidden">
                 <div className="flex items-center justify-between flex-wrap gap-3 relative z-10">
                   <div className="flex items-center space-x-2">
                     <Users className="w-5 h-5 text-black" />

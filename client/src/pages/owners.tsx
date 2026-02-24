@@ -824,12 +824,12 @@ export default function Owners() {
                   className={`h-14 min-w-[200px] flex items-center justify-between border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all flex-shrink-0 cursor-pointer ${
                     isActive 
                       ? 'liquid-black border-ministry-gold-exact shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]' 
-                      : 'liquid-gold-card'
+                      : ''
                   }`}
                   data-testid={`tab-${tab.id}`}
                 >
                   <div className={`h-full w-14 flex items-center justify-center flex-shrink-0 ${
-                    isActive ? 'liquid-gold-card' : 'liquid-black'
+                    isActive ? '' : 'liquid-black'
                   }`}>
                     <IconComponent className={`w-5 h-5 relative z-10 ${isActive ? 'text-black' : 'text-white'}`} />
                   </div>
