@@ -10274,6 +10274,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete('/api/admin/war-groups/:id', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await warGroupsService.deleteGroup(id);
+      res.json({ success: true, message: 'War group deleted successfully' });
+    } catch (error: any) {
+      console.error('Error deleting war group:', error);
+      res.status(500).json({ message: error.message || 'Failed to delete war group' });
+    }
+  });
+
   // War Group Registration Routes
   app.post('/api/war-groups/register', isAuthenticated, async (req: any, res) => {
     try {

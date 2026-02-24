@@ -85,6 +85,7 @@ export default function WarGroupsManagement() {
   const [selectedGroup, setSelectedGroup] = useState<WarGroup | null>(null);
   const [showChangeLeaderDialog, setShowChangeLeaderDialog] = useState(false);
   const [showMembersDialog, setShowMembersDialog] = useState(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [selectedNewLeader, setSelectedNewLeader] = useState("");
 
@@ -210,6 +211,33 @@ export default function WarGroupsManagement() {
       toast({
         title: "Error",
         description: error.message || "Failed to update HQ status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteGroupMutation = useMutation({
+    mutationFn: async (groupId: string) => {
+      const response = await fetch(`/api/admin/war-groups/${groupId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error('Failed to delete war group');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/war-groups"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/war-groups"] });
+      setShowDeleteConfirmDialog(false);
+      setSelectedGroup(null);
+      toast({
+        title: "War Group Deleted",
+        description: "The war group and all its data have been permanently removed.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete war group",
         variant: "destructive",
       });
     },
@@ -416,6 +444,19 @@ export default function WarGroupsManagement() {
                             <Users className="w-4 h-4 mr-2" />
                             View Members
                           </Button>
+                          <Button
+                            data-testid={`button-delete-group-${group.id}`}
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => {
+                              setSelectedGroup(group);
+                              setShowDeleteConfirmDialog(true);
+                            }}
+                            className="bg-red-700 hover:bg-red-600 text-white border-red-600"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -567,6 +608,71 @@ export default function WarGroupsManagement() {
                 ))}
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Group Confirmation Dialog */}
+      <Dialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
+        <DialogContent className="bg-charcoal border-red-600/40">
+          <DialogHeader>
+            <DialogTitle className="text-red-400 flex items-center gap-2">
+              <Trash2 className="w-5 h-5" />
+              Delete War Group
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              You are about to delete <span className="text-white font-semibold">{selectedGroup ? getGroupDisplayName(selectedGroup) : ''}</span> ({selectedGroup?.city}, {selectedGroup?.state}).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="bg-red-950/30 border border-red-700/40 rounded-lg p-4">
+              <p className="text-sm text-red-300 font-medium mb-2">This action will permanently:</p>
+              <ul className="text-sm text-slate-300 space-y-1 list-disc list-inside">
+                <li>Remove all members from the group</li>
+                <li>Delete all group messages and posts</li>
+                <li>Delete all group challenges and announcements</li>
+                <li>Delete the War Group entirely</li>
+              </ul>
+              <p className="text-sm text-red-400 font-bold mt-3">This cannot be undone.</p>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteConfirmDialog(false);
+                  setSelectedGroup(null);
+                }}
+                className="bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteConfirmDialog(false);
+                  setShowChangeLeaderDialog(true);
+                }}
+                className="bg-gold hover:bg-gold/90 text-charcoal font-bold border-gold"
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                Assign New Leader Instead
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (selectedGroup) {
+                    deleteGroupMutation.mutate(selectedGroup.id);
+                  }
+                }}
+                disabled={deleteGroupMutation.isPending}
+                className="bg-red-700 hover:bg-red-600 text-white"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                {deleteGroupMutation.isPending ? "Deleting..." : "Delete War Group"}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

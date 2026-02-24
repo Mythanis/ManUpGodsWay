@@ -1029,6 +1029,17 @@ export class WarGroupsService {
 
     return { success: true, isPinned: !post.isPinned };
   }
+  async deleteGroup(groupId: string) {
+    const group = await this.getGroupById(groupId);
+    if (!group) {
+      throw new Error('Group not found');
+    }
+
+    await db.delete(schema.warGroups)
+      .where(eq(schema.warGroups.id, groupId));
+
+    return { success: true };
+  }
 }
 
 export const warGroupsService = new WarGroupsService();
