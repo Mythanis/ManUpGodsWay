@@ -865,9 +865,9 @@ export default function StudyDetail() {
 
           {/* Rating Section */}
           <div className="px-6 mb-6">
-            <div className="liquid-gold-card border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-rating">
+            <div className="liquid-black border-2 border-[#FCD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]" data-testid="card-rating">
               <div className="p-6 relative z-10">
-                <h2 className="text-lg font-black uppercase tracking-tight text-black mb-4">Rate This Study</h2>
+                <h2 className="text-lg font-black uppercase tracking-tight text-[#FCD000] mb-4">Rate This Study</h2>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmitRating)} className="space-y-4">
                     <FormField
@@ -875,10 +875,10 @@ export default function StudyDetail() {
                       name="rating"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-black font-bold uppercase tracking-wide">Rating</FormLabel>
+                          <FormLabel className="text-[#FCD000] font-bold uppercase tracking-wide">Rating</FormLabel>
                           <FormControl>
                             <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
-                              <SelectTrigger className="bg-black border-2 border-black text-white rounded-sm" data-testid="select-rating">
+                              <SelectTrigger className="bg-black/50 border-2 border-[#FCD000]/30 text-white rounded-sm" data-testid="select-rating">
                                 <SelectValue placeholder="Select rating" />
                               </SelectTrigger>
                               <SelectContent className="bg-black border-2 border-ministry-gold-exact rounded-sm">
@@ -899,12 +899,12 @@ export default function StudyDetail() {
                       name="review"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-black font-bold uppercase tracking-wide">Review (Optional)</FormLabel>
+                          <FormLabel className="text-[#FCD000] font-bold uppercase tracking-wide">Review (Optional)</FormLabel>
                           <FormControl>
                             <Textarea
                               {...field}
                               placeholder="Share your thoughts about this study..."
-                              className="min-h-[100px] bg-black border-2 border-black text-white placeholder:text-gray-500 rounded-sm"
+                              className="min-h-[100px] bg-black/50 border-2 border-[#FCD000]/30 text-white placeholder:text-gray-500 rounded-sm"
                               data-testid="textarea-review"
                             />
                           </FormControl>
@@ -915,7 +915,7 @@ export default function StudyDetail() {
                     <Button
                       type="submit"
                       disabled={rateStudy.isPending}
-                      className="w-full bg-black text-ministry-gold-exact hover:bg-gray-900 font-bold uppercase tracking-wide rounded-sm border-2 border-black"
+                      className="w-full bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-bold uppercase tracking-wide rounded-sm border-2 border-[#FCD000]"
                       data-testid="button-submit-rating"
                     >
                       {rateStudy.isPending ? "Submitting..." : "Submit Rating"}
