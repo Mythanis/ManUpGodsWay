@@ -9,43 +9,71 @@ interface WebSocketMessage {
   partnerName?: string;
 }
 
+const PING_INTERVAL = 25000;
+const RECONNECT_BASE_DELAY = 2000;
+const RECONNECT_MAX_DELAY = 30000;
+
 export function useWebSocket(userId?: string) {
   const wsRef = useRef<WebSocket | null>(null);
+  const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectAttempts = useRef(0);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   useEffect(() => {
     if (!userId) return;
 
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
+    let unmounted = false;
 
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-      // Authenticate the connection
-      ws.send(JSON.stringify({
-        type: 'auth',
-        userId: userId
-      }));
+    function connect() {
+      if (unmounted) return;
+
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
       
-      // Refresh all queries when reconnecting to catch any missed updates
-      queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
-      queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
-    };
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
 
-    ws.onmessage = (event) => {
-      try {
-        const message: WebSocketMessage = JSON.parse(event.data);
-        console.log('WebSocket message received:', message);
+      function startPing() {
+        stopPing();
+        pingIntervalRef.current = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'ping' }));
+          }
+        }, PING_INTERVAL);
+      }
 
-        switch (message.type) {
-          case 'auth_success':
-            console.log('WebSocket authentication successful');
-            break;
+      function stopPing() {
+        if (pingIntervalRef.current) {
+          clearInterval(pingIntervalRef.current);
+          pingIntervalRef.current = null;
+        }
+      }
+
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+        reconnectAttempts.current = 0;
+        ws.send(JSON.stringify({
+          type: 'auth',
+          userId: userId
+        }));
+        startPing();
+        queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
+        queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const message: WebSocketMessage = JSON.parse(event.data);
+          if (message.type === 'pong') return;
+          console.log('WebSocket message received:', message);
+
+          switch (message.type) {
+            case 'auth_success':
+              console.log('WebSocket authentication successful');
+              break;
           
           case 'brotherhood_request':
             // Show toast notification for new brotherhood request
@@ -173,27 +201,34 @@ export function useWebSocket(userId?: string) {
       }
     };
 
-    ws.onclose = () => {
-      console.log('WebSocket disconnected - attempting reconnection in 2 seconds...');
-      // Automatically reconnect after a short delay
-      setTimeout(() => {
-        if (userId) {
-          console.log('Reconnecting WebSocket...');
-          // Trigger a re-render to establish new connection
-          const reconnectEvent = new CustomEvent('websocket-reconnect');
-          window.dispatchEvent(reconnectEvent);
-        }
-      }, 2000);
-    };
+      ws.onclose = () => {
+        stopPing();
+        if (unmounted) return;
+        const delay = Math.min(RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttempts.current), RECONNECT_MAX_DELAY);
+        reconnectAttempts.current++;
+        console.log(`WebSocket disconnected - reconnecting in ${delay / 1000}s...`);
+        reconnectTimeoutRef.current = setTimeout(connect, delay);
+      };
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+    }
 
-    // Cleanup on unmount
+    connect();
+
     return () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.close();
+      unmounted = true;
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
+        pingIntervalRef.current = null;
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.close();
       }
     };
   }, [userId, queryClient, toast]);

@@ -11271,14 +11271,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Store connected clients with their user IDs
   const connectedClients = new Map<string, WebSocket>();
   
-  wss.on('connection', (ws, req) => {
+  const PING_INTERVAL = 30000;
+
+  const pingInterval = setInterval(() => {
+    wss.clients.forEach((ws: any) => {
+      if (ws.isAlive === false) {
+        ws.terminate();
+        return;
+      }
+      ws.isAlive = false;
+      ws.ping();
+    });
+  }, PING_INTERVAL);
+
+  wss.on('close', () => {
+    clearInterval(pingInterval);
+  });
+
+  wss.on('connection', (ws: any, req) => {
     console.log('WebSocket connection established');
+    ws.isAlive = true;
+
+    ws.on('pong', () => {
+      ws.isAlive = true;
+    });
     
-    ws.on('message', (message) => {
+    ws.on('message', (message: any) => {
       try {
         const data = JSON.parse(message.toString());
+        if (data.type === 'ping') {
+          ws.send(JSON.stringify({ type: 'pong' }));
+          return;
+        }
         if (data.type === 'auth' && data.userId) {
-          // Store the connection with user ID for targeted messaging
           connectedClients.set(data.userId, ws);
           console.log(`User ${data.userId} connected to WebSocket`);
           
@@ -11293,7 +11318,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
     
     ws.on('close', () => {
-      // Remove client from connected clients when they disconnect
       Array.from(connectedClients.entries()).forEach(([userId, client]) => {
         if (client === ws) {
           connectedClients.delete(userId);
