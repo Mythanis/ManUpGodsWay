@@ -13,13 +13,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Shield, Check, Loader2 } from "lucide-react";
+import { Shield, Check, Loader2, Clock, CreditCard } from "lucide-react";
 
 interface SubscriptionInfo {
   monthlyPrice: string;
   yearlyPrice: string;
   trialDurationDays: number;
   features: string[];
+}
+
+interface TrialEligibility {
+  eligible: boolean;
+  trialDays: number;
+  currentStatus: string;
 }
 
 interface UpgradeModalProps {
@@ -37,8 +43,13 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
     enabled: isOpen,
   });
 
+  const { data: trialEligibility } = useQuery<TrialEligibility>({
+    queryKey: ["/api/subscription/trial-eligibility"],
+    enabled: isOpen,
+  });
+
   const createCheckoutMutation = useMutation({
-    mutationFn: async (data: { billingCycle: string }) => {
+    mutationFn: async (data: { billingCycle: string; startTrial?: boolean }) => {
       const response = await apiRequest('POST', '/api/create-subscription-checkout', data);
       return response.json();
     },
@@ -54,8 +65,8 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
     },
   });
 
-  const handleSubscribe = () => {
-    createCheckoutMutation.mutate({ billingCycle });
+  const handleSubscribe = (startTrial: boolean) => {
+    createCheckoutMutation.mutate({ billingCycle, startTrial });
   };
 
   const monthlyPrice = parseFloat(subscriptionInfo?.monthlyPrice || "9.99");
@@ -72,8 +83,9 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
     "Weekly challenges and fitness plans",
   ];
 
-  const isTrialUser = user?.subscriptionStatus === 'trial';
-  const isExpired = user?.subscriptionStatus === 'expired' || user?.subscriptionStatus === 'cancelled';
+  const isTrialEligible = trialEligibility?.eligible ?? false;
+  const trialDays = trialEligibility?.trialDays ?? 7;
+  const isExpired = (user as any)?.subscriptionStatus === 'expired' || (user as any)?.subscriptionStatus === 'cancelled';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -142,26 +154,64 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               ))}
             </div>
 
-            <Button
-              onClick={handleSubscribe}
-              disabled={createCheckoutMutation.isPending}
-              className="w-full py-3 text-lg bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wider"
-              style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-              size="lg"
-            >
-              {createCheckoutMutation.isPending ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                "Subscribe Now"
+            <div className="space-y-3">
+              {isTrialEligible && (
+                <Button
+                  onClick={() => handleSubscribe(true)}
+                  disabled={createCheckoutMutation.isPending}
+                  className="w-full py-3 text-lg bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wider"
+                  style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+                  size="lg"
+                >
+                  {createCheckoutMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="w-5 h-5 mr-2" />
+                      Start {trialDays}-Day Free Trial
+                    </>
+                  )}
+                </Button>
               )}
-            </Button>
+
+              <Button
+                onClick={() => handleSubscribe(false)}
+                disabled={createCheckoutMutation.isPending}
+                className={isTrialEligible
+                  ? "w-full py-3 text-lg bg-white/10 text-white hover:bg-white/20 font-black uppercase tracking-wider border border-[#FCD000]/30"
+                  : "w-full py-3 text-lg bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wider"
+                }
+                style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+                size="lg"
+                variant={isTrialEligible ? "outline" : "default"}
+              >
+                {createCheckoutMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-5 h-5 mr-2" />
+                    Subscribe Now — ${displayPrice}{priceLabel}
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {isTrialEligible && (
+              <div className="text-center text-xs text-white/40 space-y-1">
+                <p>Free trial requires a card on file. You won't be charged until after {trialDays} days.</p>
+                <p>Cancel anytime during your trial — no charge.</p>
+              </div>
+            )}
 
             <div className="text-center text-xs text-white/40">
               <p>Secure payment powered by Stripe</p>
-              <p>Cancel anytime - No hidden fees</p>
+              {!isTrialEligible && <p>Cancel anytime - No hidden fees</p>}
             </div>
           </div>
         )}

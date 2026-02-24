@@ -4635,29 +4635,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
 
-      const { billingCycle } = req.body;
+      const { billingCycle, startTrial } = req.body;
 
       if (!billingCycle || !['monthly', 'yearly'].includes(billingCycle)) {
         return res.status(400).json({ message: "Invalid billing cycle" });
       }
 
-      // Get subscription pricing settings
       const subSettings = await storage.getSubscriptionSettings();
       if (!subSettings) {
         return res.status(404).json({ message: "Subscription pricing not configured" });
       }
 
+      const trialDays = subSettings.trialDurationDays || 7;
+      const hasUsedTrial = !!(user as any).trialStartDate || (user as any).subscriptionStatus === 'active';
+      const applyTrial = startTrial && !hasUsedTrial;
+
       const price = billingCycle === 'yearly' 
         ? (subSettings.yearlyPrice || subSettings.monthlyPrice)
         : subSettings.monthlyPrice;
 
-      // Create Stripe checkout session
       const { default: Stripe } = await import('stripe');
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
         apiVersion: '2023-10-16',
       });
-      
-      const session = await stripe.checkout.sessions.create({
+
+      const sessionParams: any = {
         payment_method_types: ['card'],
         mode: 'subscription',
         customer_email: user.email,
@@ -4680,15 +4682,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: {
           userId: user.id,
           billingCycle: billingCycle,
+          startTrial: applyTrial ? 'true' : 'false',
         },
-        success_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile?upgrade=success`,
+        success_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile?upgrade=success${applyTrial ? '&trial=true' : ''}`,
         cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile?upgrade=cancelled`,
-      });
+      };
+
+      sessionParams.subscription_data = {
+        metadata: {
+          userId: user.id,
+          billingCycle: billingCycle,
+        },
+      };
+
+      if (applyTrial) {
+        sessionParams.subscription_data.trial_period_days = trialDays;
+      }
+
+      const session = await stripe.checkout.sessions.create(sessionParams);
 
       res.json({ checkoutUrl: session.url });
     } catch (error) {
       console.error("Error creating checkout session:", error);
       res.status(500).json({ message: "Failed to create checkout session" });
+    }
+  });
+
+  // Check if user is eligible for a free trial
+  app.get('/api/subscription/trial-eligibility', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      const subSettings = await storage.getSubscriptionSettings();
+      const trialDays = subSettings?.trialDurationDays || 7;
+      const hasUsedTrial = !!(user as any).trialStartDate || (user as any).subscriptionStatus === 'active';
+      res.json({
+        eligible: !hasUsedTrial,
+        trialDays,
+        currentStatus: (user as any).subscriptionStatus || 'trial',
+      });
+    } catch (error) {
+      console.error("Error checking trial eligibility:", error);
+      res.status(500).json({ message: "Failed to check trial eligibility" });
     }
   });
 
@@ -4743,63 +4780,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
 
-        // Only handle subscription checkouts (not one-time payments)
         if (session.mode === 'subscription') {
-          const { userId, billingCycle } = session.metadata;
+          const { userId, billingCycle, startTrial } = session.metadata;
 
           if (userId) {
-            const now = new Date();
-            const expirationDate = new Date(now);
-            if (billingCycle === 'yearly') {
-              expirationDate.setFullYear(now.getFullYear() + 1);
-            } else {
-              expirationDate.setMonth(now.getMonth() + 1);
-            }
-
             const subscription = await stripe.subscriptions.list({
               customer: session.customer,
               limit: 1,
             });
 
-            await storage.updateUserSubscriptionDetails(userId, {
-              subscriptionTier: 'subscriber',
-              subscriptionStatus: 'active',
-              subscriptionExpiresAt: expirationDate,
-              stripeCustomerId: session.customer,
-              stripeSubscriptionId: subscription.data[0]?.id,
-            });
+            const stripeSubscription = subscription.data[0];
+            const isTrialSubscription = startTrial === 'true' && stripeSubscription?.trial_end;
 
-            console.log(`User ${userId} subscribed via Stripe (expires: ${expirationDate.toISOString()})`);
-
-            const user = await storage.getUser(userId);
-            if (user) {
-              const notification = await storage.createNotification({
-                userId: user.id,
-                type: 'admin',
-                title: 'Subscription Activated!',
-                message: `Welcome! Your subscription is now active. You have full access to all content and features.`,
-                relatedId: null,
+            if (isTrialSubscription) {
+              const trialEnd = new Date(stripeSubscription.trial_end! * 1000);
+              await storage.updateUserSubscriptionDetails(userId, {
+                subscriptionTier: 'subscriber',
+                subscriptionStatus: 'active',
+                trialStartDate: new Date(),
+                trialEndDate: trialEnd,
+                subscriptionExpiresAt: trialEnd,
+                stripeCustomerId: session.customer,
+                stripeSubscriptionId: stripeSubscription.id,
               });
 
-              if ((req.app as any).sendRealtimeNotification) {
-                (req.app as any).sendRealtimeNotification(user.id, notification);
+              console.log(`User ${userId} started free trial via Stripe (trial ends: ${trialEnd.toISOString()})`);
+
+              const user = await storage.getUser(userId);
+              if (user) {
+                const notification = await storage.createNotification({
+                  userId: user.id,
+                  type: 'admin',
+                  title: 'Free Trial Started!',
+                  message: `Welcome! Your free trial is now active. You have full access to all content and features until ${trialEnd.toLocaleDateString()}.`,
+                  relatedId: null,
+                });
+                if ((req.app as any).sendRealtimeNotification) {
+                  (req.app as any).sendRealtimeNotification(user.id, notification);
+                }
+              }
+            } else {
+              const now = new Date();
+              const expirationDate = new Date(now);
+              if (billingCycle === 'yearly') {
+                expirationDate.setFullYear(now.getFullYear() + 1);
+              } else {
+                expirationDate.setMonth(now.getMonth() + 1);
+              }
+
+              await storage.updateUserSubscriptionDetails(userId, {
+                subscriptionTier: 'subscriber',
+                subscriptionStatus: 'active',
+                subscriptionExpiresAt: expirationDate,
+                stripeCustomerId: session.customer,
+                stripeSubscriptionId: stripeSubscription?.id,
+              });
+
+              console.log(`User ${userId} subscribed via Stripe (expires: ${expirationDate.toISOString()})`);
+
+              const user = await storage.getUser(userId);
+              if (user) {
+                const notification = await storage.createNotification({
+                  userId: user.id,
+                  type: 'admin',
+                  title: 'Subscription Activated!',
+                  message: `Welcome! Your subscription is now active. You have full access to all content and features.`,
+                  relatedId: null,
+                });
+                if ((req.app as any).sendRealtimeNotification) {
+                  (req.app as any).sendRealtimeNotification(user.id, notification);
+                }
               }
             }
           }
         }
       }
 
-      // Handle subscription cancellations
+      // Handle subscription updates (trial conversion + cancellations)
       if (event.type === 'customer.subscription.updated') {
         const subscription = event.data.object;
-        
+        const previousAttributes = event.data.previous_attributes;
+
+        // Trial converted to paid subscription
+        if (previousAttributes?.trial_end && !subscription.trial_end && subscription.status === 'active') {
+          const userId = subscription.metadata?.userId;
+          if (userId) {
+            const expirationDate = new Date(subscription.current_period_end * 1000);
+
+            await storage.updateUserSubscriptionDetails(userId, {
+              subscriptionTier: 'subscriber',
+              subscriptionStatus: 'active',
+              subscriptionExpiresAt: expirationDate,
+            });
+
+            console.log(`User ${userId} trial converted to paid subscription (expires: ${expirationDate.toISOString()})`);
+
+            const user = await storage.getUser(userId);
+            if (user) {
+              const notification = await storage.createNotification({
+                userId: user.id,
+                type: 'admin',
+                title: 'Trial Converted to Subscription!',
+                message: `Your free trial has ended and your subscription is now active. Thank you for subscribing!`,
+                relatedId: null,
+              });
+              if ((req.app as any).sendRealtimeNotification) {
+                (req.app as any).sendRealtimeNotification(user.id, notification);
+              }
+            }
+          }
+        }
+
+        // User cancelled but subscription continues until period end
         if (subscription.cancel_at_period_end) {
-          // User has cancelled but subscription continues until period end
           const user = await storage.getUser(subscription.metadata?.userId);
           if (user && user.stripeSubscriptionId === subscription.id) {
             await storage.cancelUserSubscription(user.id);
             
-            // Send notification about cancellation
             const notification = await storage.createNotification({
               userId: user.id,
               type: 'admin',

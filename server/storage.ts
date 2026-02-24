@@ -323,6 +323,8 @@ export interface IStorage {
     subscriptionExpiresAt?: Date;
     stripeCustomerId?: string;
     stripeSubscriptionId?: string;
+    trialStartDate?: Date;
+    trialEndDate?: Date;
   }): Promise<User>;
   cancelUserSubscription(userId: string): Promise<User>;
   checkExpiredSubscriptions(): Promise<User[]>;
@@ -2453,6 +2455,8 @@ export class DatabaseStorage implements IStorage {
     subscriptionExpiresAt?: Date;
     stripeCustomerId?: string;
     stripeSubscriptionId?: string;
+    trialStartDate?: Date;
+    trialEndDate?: Date;
   }): Promise<User> {
     const [updatedUser] = await db
       .update(users)

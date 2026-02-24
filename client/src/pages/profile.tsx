@@ -49,19 +49,19 @@ export default function Profile() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const upgradeStatus = urlParams.get('upgrade');
-    const tier = urlParams.get('tier');
+    const isTrial = urlParams.get('trial') === 'true';
 
-    if (upgradeStatus === 'success' && tier) {
-      // Clear URL parameters
+    if (upgradeStatus === 'success') {
       window.history.replaceState({}, document.title, window.location.pathname);
       
-      // Invalidate auth cache to refresh user data
       queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       
-      // Show success message
       toast({
-        title: "Subscription Activated!",
-        description: `Welcome! You now have access to all subscriber content.`,
+        title: isTrial ? "Free Trial Started!" : "Subscription Activated!",
+        description: isTrial 
+          ? "Welcome! Your free trial is active. You have full access to all content."
+          : "Welcome! You now have access to all subscriber content.",
         variant: "default",
       });
     } else if (upgradeStatus === 'cancelled') {
