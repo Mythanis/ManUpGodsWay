@@ -75,6 +75,29 @@ async function upsertUser(
   const existingUser = await storage.getUser(claims["sub"]);
   const isNewUser = !existingUser;
   
+  // Set trial dates for new users
+  if (isNewUser) {
+    const now = new Date();
+    const trialEnd = new Date(now);
+    
+    // Get trial duration from subscription settings
+    let trialDays = 7;
+    try {
+      const settings = await storage.getSubscriptionSettings();
+      if (settings?.trialDurationDays) {
+        trialDays = settings.trialDurationDays;
+      }
+    } catch (e) {
+      console.error("Error fetching subscription settings for trial:", e);
+    }
+    
+    trialEnd.setDate(now.getDate() + trialDays);
+    userData.subscriptionStatus = 'trial';
+    userData.subscriptionTier = 'free';
+    userData.trialStartDate = now;
+    userData.trialEndDate = trialEnd;
+  }
+  
   await storage.upsertUser(userData);
   
   // Subscribe new users to Mailchimp mailing list

@@ -60,9 +60,8 @@ const categories = [
 ];
 
 const tiers = [
-  { id: 'free', label: 'Free' },
-  { id: 'premium', label: 'Premium' },
-  { id: 'vip', label: 'VIP' },
+  { id: 'free', label: 'Free - Everyone' },
+  { id: 'premium', label: 'Subscribers Only' },
 ];
 
 export default function StudyBuilder() {

@@ -10,13 +10,13 @@ Preferred communication style: Simple, everyday language.
 The frontend is built with React 18 and TypeScript, using Vite. It employs Wouter for routing, shadcn/ui (based on Radix UI) for components, and Tailwind CSS for styling with a custom ministry-themed color palette. TanStack Query manages server state, while React Hook Form with Zod handles form validation. The application features a mobile-first responsive design with a bottom navigation and card-based layouts.
 
 ## Backend Architecture
-The backend is an Express.js server in TypeScript, following a RESTful API design. It utilizes session-based authentication integrated with Replit's OIDC, storing sessions in PostgreSQL. Middleware is used for logging, error handling, and role-based access control (user, admin) with subscription tiers (free, premium, VIP).
+The backend is an Express.js server in TypeScript, following a RESTful API design. It utilizes session-based authentication integrated with Replit's OIDC, storing sessions in PostgreSQL. Middleware is used for logging, error handling, and role-based access control (user, admin) with a single subscription model (trial/active/expired/cancelled).
 
 ## Database Design
 PostgreSQL, hosted on Neon Database, is used with Drizzle ORM for type-safe queries and migrations. The schema includes tables for study series, individual studies, lessons, user progress (overall and per-lesson), users, discussions, devotionals, podcasts, challenges, testimonies, exercises, and challenge participants.
 
 ## Content Management
-The system supports a tiered content structure (free, premium, VIP) and category-based organization. Features include progress tracking, search, and a comprehensive admin panel.
+The system supports a single subscription model with configurable free trial. Admins can set trial duration, pricing, and selectively enable content areas and individual items for trial access. Features include progress tracking, search, and a comprehensive admin panel.
 - **Study Content**: Supports embedded, day-by-day lessons with rich text editing, scripture, questions, and key takeaways. Includes a bulk import tool for converting document-based content (Word/PDF) into structured lessons. Progress tracking is integrated at various levels (lesson, study, series). Series can require consecutive completion, where studies unlock only after completing the previous one. Users receive notifications when the next study becomes available.
 - **Devotional Content**: Admins can upload custom thumbnail images and utilize a bulk import tool for up to 30 devotionals, which supports automated daily posting and validation.
 

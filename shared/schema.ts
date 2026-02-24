@@ -36,9 +36,11 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   role: varchar("role").default("user"), // user, admin, owner
-  subscriptionTier: varchar("subscription_tier").default("free"), // free, premium, vip
-  subscriptionStatus: varchar("subscription_status").default("active"), // active, cancelled, expired
+  subscriptionTier: varchar("subscription_tier").default("free"), // legacy field kept for compatibility - now: free = trial/expired, subscriber = active paid
+  subscriptionStatus: varchar("subscription_status").default("trial"), // trial, active, cancelled, expired
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
+  trialStartDate: timestamp("trial_start_date"),
+  trialEndDate: timestamp("trial_end_date"),
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
   streakDays: integer("streak_days").default(0),
@@ -74,7 +76,8 @@ export const videos = pgTable("videos", {
   duration: integer("duration"), // in seconds
   thumbnailUrl: varchar("thumbnail_url"),
   uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
-  requiredTier: varchar("required_tier").notNull().default("free"), // free, premium, vip
+  requiredTier: varchar("required_tier").notNull().default("free"), // legacy - kept for compatibility
+  isTrialAccessible: boolean("is_trial_accessible").default(false),
   category: varchar("category").notNull().default("general"), // leadership, marriage, fatherhood, character, general
   rating: decimal("rating", { precision: 2, scale: 1 }).default("0.0"),
   ratingCount: integer("rating_count").default(0),
@@ -93,7 +96,8 @@ export const studySeries = pgTable("study_series", {
   description: text("description"),
   thumbnailUrl: varchar("thumbnail_url"),
   category: varchar("category").notNull().default("general"),
-  requiredTier: varchar("required_tier").default("free"),
+  requiredTier: varchar("required_tier").default("free"), // legacy
+  isTrialAccessible: boolean("is_trial_accessible").default(false),
   displayOrder: integer("display_order").default(0),
   isPublished: boolean("is_published").default(false),
   requiresConsecutiveCompletion: boolean("requires_consecutive_completion").default(false), // Studies must be completed in order
@@ -127,7 +131,8 @@ export const studies = pgTable("studies", {
   wordFileSize: integer("word_file_size"),
   videoId: varchar("video_id").references(() => videos.id), // Reference to videos table
   videoUrl: varchar("video_url"), // Keep for backward compatibility with external URLs
-  requiredTier: varchar("required_tier").default("free"), // free, premium, vip
+  requiredTier: varchar("required_tier").default("free"), // legacy
+  isTrialAccessible: boolean("is_trial_accessible").default(false),
   requiresPurchase: boolean("requires_purchase").default(false), // Whether study requires purchase
   price: decimal("price", { precision: 10, scale: 2 }), // Price for purchase (if required)
   purchaseRequiredTiers: text("purchase_required_tiers").array().default(sql`'{}'::text[]`), // Which tiers require purchase: free, premium, vip
@@ -378,7 +383,8 @@ export const preBuiltFitnessPlans = pgTable("pre_built_fitness_plans", {
   difficulty: varchar("difficulty").default("beginner"), // beginner, intermediate, advanced
   duration: integer("duration").default(60), // in minutes
   equipment: text("equipment"), // equipment needed
-  tier: varchar("tier").default("free"), // free, premium, vip
+  tier: varchar("tier").default("free"), // legacy
+  isTrialAccessible: boolean("is_trial_accessible").default(false),
   thumbnailUrl: varchar("thumbnail_url"),
   downloadUrl: varchar("download_url"), // URL to downloadable PDF/document
   downloadFileName: varchar("download_file_name"), // Original filename for download
@@ -497,7 +503,8 @@ export const insertPreBuiltFitnessPlanSchema = createInsertSchema(preBuiltFitnes
   description: z.string().optional(),
   category: z.enum(["strength", "cardio", "flexibility", "general"]).default("general"),
   difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
-  tier: z.enum(["free", "premium", "vip"]).default("free"),
+  tier: z.string().default("free"),
+  isTrialAccessible: z.boolean().default(false),
   duration: z.number().int().min(1).default(60),
   equipment: z.string().optional(),
   thumbnailUrl: z.string().optional(),
@@ -839,7 +846,8 @@ export const insertVideoSchema = createInsertSchema(videos, {
   filename: z.string().min(1, "Filename is required"),
   originalName: z.string().min(1, "Original name is required"),
   mimeType: z.string().min(1, "MIME type is required"),
-  requiredTier: z.enum(["free", "premium", "vip"]).default("free"),
+  requiredTier: z.string().default("free"),
+  isTrialAccessible: z.boolean().default(false),
   category: z.string().min(1, "Category is required").default("general"),
   fileSize: z.number().int().min(1, "File size must be greater than 0"),
   duration: z.number().int().optional(),
@@ -860,7 +868,8 @@ export const insertStudySeriesSchema = createInsertSchema(studySeries, {
   description: z.string().optional(),
   thumbnailUrl: z.string().optional(),
   category: z.string().default("general"),
-  requiredTier: z.enum(["free", "premium", "vip"]).default("free"),
+  requiredTier: z.string().default("free"),
+  isTrialAccessible: z.boolean().default(false),
   displayOrder: z.number().int().default(0),
   isPublished: z.boolean().default(false),
   requiresConsecutiveCompletion: z.boolean().default(false),
@@ -878,10 +887,11 @@ export const insertStudySchema = createInsertSchema(studies, {
   difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
   estimatedHours: z.number().int().min(1).default(1),
   totalDays: z.number().int().min(0).default(0),
-  requiredTier: z.enum(["free", "premium", "vip"]).default("free"),
+  requiredTier: z.string().default("free"),
+  isTrialAccessible: z.boolean().default(false),
   requiresPurchase: z.boolean().default(false),
   price: z.string().nullable().optional(),
-  purchaseRequiredTiers: z.array(z.enum(["free", "premium", "vip"])).default([]),
+  purchaseRequiredTiers: z.array(z.string()).default([]),
   isPublished: z.boolean().default(false),
   videoId: z.string().optional(),
   seriesId: z.string().nullable().optional(),
@@ -1629,13 +1639,32 @@ export const insertExerciseSchema = createInsertSchema(exercises).omit({
 export type Exercise = typeof exercises.$inferSelect;
 export type InsertExercise = z.infer<typeof insertExerciseSchema>;
 
-// Tier pricing configuration table
+// Subscription settings - single row config for the one-tier subscription model
+export const subscriptionSettings = pgTable("subscription_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  monthlyPrice: decimal("monthly_price", { precision: 10, scale: 2 }).notNull().default("9.99"),
+  yearlyPrice: decimal("yearly_price", { precision: 10, scale: 2 }).default("99.99"),
+  trialDurationDays: integer("trial_duration_days").default(7),
+  features: text("features").array().default(sql`'{}'::text[]`),
+  trialContentAreas: jsonb("trial_content_areas").default(sql`'{"studies":false,"devotionals":false,"videos":false,"podcasts":false,"blog":false,"warRoom":false,"underFire":false,"warGroups":false,"fitness":false,"discussions":false}'::jsonb`),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSubscriptionSettingsSchema = createInsertSchema(subscriptionSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Keep legacy tierPricing table definition for migration compatibility
 export const tierPricing = pgTable("tier_pricing", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  tier: varchar("tier").notNull().unique(), // premium, vip
+  tier: varchar("tier").notNull().unique(),
   monthlyPrice: decimal("monthly_price", { precision: 10, scale: 2 }).notNull(),
   yearlyPrice: decimal("yearly_price", { precision: 10, scale: 2 }),
-  features: text("features").array().default(sql`'{}'::text[]`), // Array of feature descriptions
+  features: text("features").array().default(sql`'{}'::text[]`),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -1658,6 +1687,9 @@ export type InsertStudyEditableSection = z.infer<typeof insertStudyEditableSecti
 // User study responses types
 export type UserStudyResponse = typeof userStudyResponses.$inferSelect;
 export type InsertUserStudyResponse = z.infer<typeof insertUserStudyResponseSchema>;
+
+export type SubscriptionSettings = typeof subscriptionSettings.$inferSelect;
+export type InsertSubscriptionSettings = z.infer<typeof insertSubscriptionSettingsSchema>;
 
 export type TierPricing = typeof tierPricing.$inferSelect;
 export type InsertTierPricing = z.infer<typeof insertTierPricingSchema>;

@@ -221,11 +221,8 @@ export default function Library() {
                     const hasStarted = !!progress && !isCompleted;
                     
                     const getTierLabel = (tier: string) => {
-                      switch (tier) {
-                        case 'premium': return 'Premium';
-                        case 'vip': return 'VIP';
-                        default: return 'Free';
-                      }
+                      if (tier !== 'free') return 'Subscribers Only';
+                      return 'Free';
                     };
                     
                     return (

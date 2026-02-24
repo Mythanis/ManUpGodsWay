@@ -208,14 +208,10 @@ export default function UserManagement() {
   };
 
   const getTierBadge = (tier: string) => {
-    switch (tier) {
-      case 'vip':
-        return <Badge className="bg-ministry-gold-exact text-black text-xs">VIP</Badge>;
-      case 'premium':
-        return <Badge className="bg-ministry-steel/20 text-ministry-steel text-xs">Premium</Badge>;
-      default:
-        return <Badge variant="outline" className="text-xs">Free</Badge>;
+    if (tier !== 'free') {
+      return <Badge className="bg-ministry-gold-exact text-black text-xs">Subscriber</Badge>;
     }
+    return <Badge variant="outline" className="text-xs">Free</Badge>;
   };
 
   const getRoleBadge = (role: string) => {
@@ -385,8 +381,7 @@ export default function UserManagement() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="free">Free</SelectItem>
-                            <SelectItem value="premium">Premium</SelectItem>
-                            <SelectItem value="vip">VIP</SelectItem>
+                            <SelectItem value="premium">Subscriber</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

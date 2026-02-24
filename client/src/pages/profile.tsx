@@ -60,8 +60,8 @@ export default function Profile() {
       
       // Show success message
       toast({
-        title: "Subscription Upgraded!",
-        description: `Welcome to ${tier.charAt(0).toUpperCase() + tier.slice(1)}! You now have access to exclusive content.`,
+        title: "Subscription Activated!",
+        description: `Welcome! You now have access to all subscriber content.`,
         variant: "default",
       });
     } else if (upgradeStatus === 'cancelled') {
@@ -132,11 +132,17 @@ export default function Profile() {
   const currentStudies = progress.filter((p: any) => !p.isCompleted);
 
   const getTierBadge = (tier: string) => {
+    const status = (user as any)?.subscriptionStatus;
+    if (status === 'active') {
+      return <Badge className="bg-ministry-gold-exact text-black rounded-sm font-black uppercase tracking-wide">Subscriber</Badge>;
+    }
+    if (status === 'trial') {
+      return <Badge className="bg-blue-500 text-white rounded-sm font-black uppercase tracking-wide">Trial</Badge>;
+    }
+    if (status === 'expired' || status === 'cancelled') {
+      return <Badge className="bg-gray-500 text-white rounded-sm font-black uppercase tracking-wide">Expired</Badge>;
+    }
     switch (tier) {
-      case 'premium':
-        return <Badge className="bg-ministry-steel/20 text-ministry-steel rounded-sm font-black uppercase tracking-wide">Premium Member</Badge>;
-      case 'vip':
-        return <Badge className="bg-ministry-gold-exact text-black rounded-sm font-black uppercase tracking-wide">VIP Member</Badge>;
       default:
         return <Badge variant="outline" className="rounded-sm font-black uppercase tracking-wide">Free Member</Badge>;
     }
@@ -261,8 +267,9 @@ export default function Profile() {
                 </div>
                 <div className="flex-1 px-4 relative z-10">
                   <span className="font-black text-sm text-black uppercase tracking-wide">
-                    {user?.subscriptionTier === 'free' ? 'Free Plan' : 
-                     user?.subscriptionTier === 'premium' ? 'Premium Plan' : 'VIP Plan'}
+                    {(user as any)?.subscriptionStatus === 'active' ? 'Active Subscription' :
+                     (user as any)?.subscriptionStatus === 'trial' ? 'Trial' :
+                     (user as any)?.subscriptionStatus === 'expired' || (user as any)?.subscriptionStatus === 'cancelled' ? 'Expired' : 'No Subscription'}
                   </span>
                 </div>
                 <Button 
@@ -271,15 +278,15 @@ export default function Profile() {
                   data-testid="button-manage-subscription"
                   disabled={openBillingPortalMutation.isPending}
                   onClick={() => {
-                    if (user?.subscriptionTier === 'free') {
-                      setShowUpgradeModal(true);
-                    } else {
+                    if ((user as any)?.subscriptionStatus === 'active') {
                       openBillingPortalMutation.mutate();
+                    } else {
+                      setShowUpgradeModal(true);
                     }
                   }}
                 >
                   {openBillingPortalMutation.isPending ? 'Loading...' : 
-                   user?.subscriptionTier === 'free' ? 'Upgrade' : 'Manage'}
+                   (user as any)?.subscriptionStatus === 'active' ? 'Manage' : 'Subscribe'}
                 </Button>
               </div>
               

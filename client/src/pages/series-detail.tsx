@@ -88,10 +88,7 @@ export default function SeriesDetail() {
   const canAccessStudy = (study: StudyInSeries) => {
     if (study.requiredTier === 'free') return true;
     if (!user) return false;
-    const tierOrder = ['free', 'premium', 'vip'];
-    const userTierIndex = tierOrder.indexOf(user.subscriptionTier || 'free');
-    const requiredTierIndex = tierOrder.indexOf(study.requiredTier);
-    return userTierIndex >= requiredTierIndex;
+    return (user.subscriptionTier || 'free') !== 'free';
   };
 
   const isLockedByConsecutive = (study: StudyInSeries) => {
@@ -285,7 +282,7 @@ export default function SeriesDetail() {
                         </h3>
                         {study.requiredTier !== 'free' && (
                           <span className="text-xs px-2 py-0.5 rounded-sm text-white bg-black font-bold uppercase border border-black">
-                            {study.requiredTier.toUpperCase()}
+                            Subscribers Only
                           </span>
                         )}
                       </div>
@@ -367,7 +364,7 @@ export default function SeriesDetail() {
                             className="border-2 border-black text-black/50 rounded-sm font-bold uppercase"
                           >
                             <Lock className="w-3 h-3 mr-1" />
-                            {study.requiredTier.toUpperCase()} Only
+                            Subscribers Only
                           </Button>
                         )}
                       </div>

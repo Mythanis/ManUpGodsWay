@@ -42,9 +42,8 @@ const difficulties = [
 ];
 
 const tiers = [
-  { id: 'free', label: 'Free' },
-  { id: 'premium', label: 'Premium' },
-  { id: 'vip', label: 'VIP' },
+  { id: 'free', label: 'Free - Everyone' },
+  { id: 'premium', label: 'Subscribers Only' },
 ];
 
 const createStudySchema = insertStudySchema.extend({
@@ -55,7 +54,7 @@ const createStudySchema = insertStudySchema.extend({
   videoId: z.string().optional(),
   requiresPurchase: z.boolean().default(false),
   price: z.string().optional(),
-  purchaseRequiredTiers: z.array(z.enum(["free", "premium", "vip"])).default([]),
+  purchaseRequiredTiers: z.array(z.enum(["free", "premium"])).default([]),
   scheduledPublishDate: z.string().optional(),
 });
 

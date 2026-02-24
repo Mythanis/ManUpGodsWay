@@ -173,15 +173,13 @@ function DiscussionReplyForm({ discussionId, currentUserTier, discussion }: {
       return;
     }
     
-    // Check tier access for study discussions
     if (discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free') {
-      const hasAccess = (discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
-                       (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip');
+      const hasAccess = currentUserTier !== 'free';
       
       if (!hasAccess) {
         toast({
           title: "Access Restricted",
-          description: `This study discussion requires ${discussion.study.requiredTier} subscription to participate.`,
+          description: `This study discussion requires an active subscription to participate.`,
           variant: "destructive",
         });
         return;
@@ -193,8 +191,7 @@ function DiscussionReplyForm({ discussionId, currentUserTier, discussion }: {
 
   // Check if user has access to reply
   const hasReplyAccess = discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' ?
-    ((discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
-     (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip')) : true;
+    currentUserTier !== 'free' : true;
 
   return (
     <Form {...form}>
@@ -206,7 +203,7 @@ function DiscussionReplyForm({ discussionId, currentUserTier, discussion }: {
             <FormItem>
               <FormControl>
                 <Textarea
-                  placeholder={hasReplyAccess ? "Write your reply..." : `${getTierDisplayName(discussion.study?.requiredTier || 'premium')} subscription required to reply`}
+                  placeholder={hasReplyAccess ? "Write your reply..." : "Subscription required to reply"}
                   className="min-h-[80px] resize-none"
                   disabled={!hasReplyAccess || createReply.isPending}
                   {...field}

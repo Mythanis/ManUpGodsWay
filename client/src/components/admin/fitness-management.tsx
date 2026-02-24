@@ -474,17 +474,14 @@ export default function FitnessManagement() {
   };
 
   const getTierColor = (tier: string) => {
-    const colors: Record<string, string> = {
-      free: 'bg-gray-100 text-gray-800',
-      premium: 'bg-yellow-100 text-yellow-800',
-      vip: 'bg-purple-100 text-purple-800',
-    };
-    return colors[tier] || 'bg-gray-100 text-gray-800';
+    if (tier !== 'free') {
+      return 'bg-ministry-gold-exact/20 text-ministry-gold';
+    }
+    return 'bg-gray-100 text-gray-800';
   };
 
   const getTierIcon = (tier: string) => {
-    if (tier === 'vip') return <Crown className="w-3 h-3 mr-1" />;
-    if (tier === 'premium') return <Star className="w-3 h-3 mr-1" />;
+    if (tier !== 'free') return <Crown className="w-3 h-3 mr-1" />;
     return null;
   };
 
@@ -618,7 +615,7 @@ export default function FitnessManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-ministry-charcoal">Pre-built Fitness Plans</h2>
-          <p className="text-ministry-slate">Create downloadable workout plans with tier access</p>
+          <p className="text-ministry-slate">Create downloadable workout plans with subscriber access</p>
         </div>
         <Button 
           onClick={handlePlanCreate}
@@ -662,7 +659,7 @@ export default function FitnessManagement() {
                       <div className="flex flex-wrap items-center gap-2 mt-1">
                         <Badge className={`text-xs capitalize flex items-center ${getTierColor(plan.tier)}`}>
                           {getTierIcon(plan.tier)}
-                          {plan.tier}
+                          {plan.tier !== 'free' ? 'Subscribers Only' : 'Free'}
                         </Badge>
                         <Badge className={`text-xs capitalize ${getDifficultyColor(plan.difficulty)}`}>
                           {plan.difficulty}
@@ -814,15 +811,14 @@ export default function FitnessManagement() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="plan-tier">Tier Access *</Label>
+                <Label htmlFor="plan-tier">Access Level *</Label>
                 <Select value={planFormData.tier} onValueChange={(value: any) => setPlanFormData({ ...planFormData, tier: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
-                    <SelectItem value="vip">VIP</SelectItem>
+                    <SelectItem value="free">Free - Everyone</SelectItem>
+                    <SelectItem value="premium">Subscribers Only</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

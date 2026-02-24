@@ -960,25 +960,17 @@ export default function StudyManagement() {
   };
 
   const getTierIcon = (tier: string) => {
-    switch (tier) {
-      case "premium":
-        return <Crown className="w-4 h-4 text-yellow-600" />;
-      case "vip":
-        return <Gem className="w-4 h-4 text-ministry-gold" />;
-      default:
-        return <Users className="w-4 h-4 text-black" />;
+    if (tier !== 'free') {
+      return <Crown className="w-4 h-4 text-ministry-gold" />;
     }
+    return <Users className="w-4 h-4 text-black" />;
   };
 
   const getTierBadgeColor = (tier: string) => {
-    switch (tier) {
-      case "premium":
-        return "bg-yellow-100 text-yellow-800";
-      case "vip":
-        return "bg-ministry-gold-exact text-black";
-      default:
-        return "bg-white text-black border border-gray-300";
+    if (tier !== 'free') {
+      return "bg-ministry-gold-exact text-black";
     }
+    return "bg-white text-black border border-gray-300";
   };
 
   if (isLoading) {
@@ -1430,15 +1422,14 @@ export default function StudyManagement() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="edit-series-tier">Access Tier</Label>
+                <Label htmlFor="edit-series-tier">Access Level</Label>
                 <Select value={seriesFormData.requiredTier} onValueChange={(val) => setSeriesFormData({ ...seriesFormData, requiredTier: val })}>
                   <SelectTrigger data-testid="select-edit-series-tier">
-                    <SelectValue placeholder="Select tier" />
+                    <SelectValue placeholder="Select access" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
-                    <SelectItem value="vip">VIP</SelectItem>
+                    <SelectItem value="free">Free - Everyone</SelectItem>
+                    <SelectItem value="premium">Subscribers Only</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1628,7 +1619,7 @@ export default function StudyManagement() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="edit-tier">Required Tier</Label>
+                <Label htmlFor="edit-tier">Access Level</Label>
                 <Select
                   value={formData.requiredTier}
                   onValueChange={(value) => setFormData({ ...formData, requiredTier: value })}
@@ -1637,9 +1628,8 @@ export default function StudyManagement() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
-                    <SelectItem value="vip">VIP</SelectItem>
+                    <SelectItem value="free">Free - Everyone</SelectItem>
+                    <SelectItem value="premium">Subscribers Only</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1761,7 +1751,7 @@ export default function StudyManagement() {
                       checked={formData.purchaseRequiredTiers.length === 3}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setFormData({ ...formData, purchaseRequiredTiers: ['free', 'premium', 'vip'] });
+                          setFormData({ ...formData, purchaseRequiredTiers: ['free', 'premium'] });
                         } else {
                           setFormData({ ...formData, purchaseRequiredTiers: [] });
                         }
@@ -1775,7 +1765,7 @@ export default function StudyManagement() {
                   </div>
                   
                   {/* Individual tier checkboxes */}
-                  {[{ id: 'free', label: 'Free' }, { id: 'premium', label: 'Premium' }, { id: 'vip', label: 'VIP' }].map((tier) => (
+                  {[{ id: 'free', label: 'Free Users' }, { id: 'premium', label: 'Subscribers' }].map((tier) => (
                     <div key={tier.id} className="flex items-center space-x-2">
                       <input
                         type="checkbox"

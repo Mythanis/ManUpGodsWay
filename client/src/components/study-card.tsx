@@ -22,18 +22,15 @@ interface StudyCardProps {
 export default function StudyCard({ study, isCompleted = false, completedAt, hasStarted = false, hideTierBadge = false, requiresPurchase = false, hasPurchased = false, allowPreviewAccess = false, onPurchase }: StudyCardProps) {
   const [showReviews, setShowReviews] = useState(false);
   const getTierColor = (tier: string) => {
-    switch (tier) {
-      case 'premium':
-        return 'bg-ministry-steel/20 text-ministry-steel';
-      case 'vip':
-        return 'bg-ministry-gold-exact text-black';
-      default:
-        return 'bg-white text-black border border-gray-300';
+    if (tier !== 'free') {
+      return 'bg-ministry-gold-exact text-black';
     }
+    return 'bg-white text-black border border-gray-300';
   };
 
   const getTierLabel = (tier: string) => {
-    return tier.charAt(0).toUpperCase() + tier.slice(1);
+    if (tier !== 'free') return 'Subscribers Only';
+    return 'Free';
   };
 
   return (

@@ -388,8 +388,10 @@ export default function Owners() {
   };
 
   const tierColors = {
-    vip: 'bg-gold text-black',
-    premium: 'bg-yellow-600 text-white', 
+    active: 'bg-gold text-black',
+    trial: 'bg-blue-500 text-white',
+    expired: 'bg-gray-400 text-white',
+    cancelled: 'bg-gray-400 text-white',
     free: 'bg-gray-400 text-white'
   };
 

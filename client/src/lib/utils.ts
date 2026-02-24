@@ -70,9 +70,9 @@ export function parseDateSafely(dateString: string): Date {
 // Map internal tier names to display names
 export function getTierDisplayName(tier: string): string {
   const tierNames: Record<string, string> = {
-    'free': 'Recruit',
-    'premium': 'Soldier',
-    'vip': 'Warrior'
+    'free': 'Free',
+    'premium': 'Subscriber',
+    'vip': 'Subscriber'
   };
   return tierNames[tier?.toLowerCase()] || tier;
 }

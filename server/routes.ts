@@ -74,6 +74,46 @@ function hasOwnerPrivileges(user: any): boolean {
   return isOwner(user);
 }
 
+// Subscription access checking helpers
+function hasActiveSubscription(user: any): boolean {
+  return user && (user.subscriptionStatus === 'active' || user.role === 'admin' || user.role === 'owner');
+}
+
+function isOnTrial(user: any): boolean {
+  if (!user || user.subscriptionStatus !== 'trial') return false;
+  if (!user.trialEndDate) return false;
+  return new Date(user.trialEndDate) > new Date();
+}
+
+function hasAnyAccess(user: any): boolean {
+  return hasActiveSubscription(user) || isOnTrial(user);
+}
+
+async function canAccessContentArea(user: any, area: string): Promise<boolean> {
+  if (hasActiveSubscription(user)) return true;
+  if (!isOnTrial(user)) return false;
+  
+  try {
+    const settings = await storage.getSubscriptionSettings();
+    if (!settings?.trialContentAreas) return false;
+    const trialAreas = settings.trialContentAreas as Record<string, boolean>;
+    return trialAreas[area] === true;
+  } catch {
+    return false;
+  }
+}
+
+async function canAccessContent(user: any, area: string, isTrialAccessible?: boolean): Promise<boolean> {
+  if (hasActiveSubscription(user)) return true;
+  if (!isOnTrial(user)) return false;
+  
+  // Check if specific item is marked as trial accessible
+  if (isTrialAccessible) return true;
+  
+  // Check if the whole content area is enabled for trial
+  return canAccessContentArea(user, area);
+}
+
 // Admin middleware
 const requireAdmin = async (req: any, res: any, next: any) => {
   try {
@@ -904,14 +944,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "User not found" });
       }
       
-      // Check tier access
-      const userTier = user.subscriptionTier || 'free';
-      const hasAccess = study.requiredTier === 'free' ||
-                       (study.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
-                       (study.requiredTier === 'vip' && userTier === 'vip');
-      
-      if (!hasAccess) {
-        return res.status(403).json({ message: "Insufficient subscription tier to access this study discussion" });
+      // Check subscription access
+      const studyAccess = await canAccessContent(user, 'studies', study.isTrialAccessible ?? false);
+      if (!studyAccess) {
+        return res.status(403).json({ message: "Active subscription required to access this study discussion" });
       }
       
       const discussion = await storage.getStudyDiscussion(studyId);
@@ -954,26 +990,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let targetUsers: any[] = [];
         
         // Determine target users based on study's required tier
-        switch (study.requiredTier) {
-          case 'free':
-            // Everyone can access free studies
-            targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
-            break;
-          case 'premium':
-            // Premium and VIP users can access premium studies
-            targetUsers = allUsers.filter(targetUser => 
-              targetUser.id !== user.id && 
-              ['premium', 'vip'].includes(targetUser.subscriptionTier || 'free')
-            );
-            break;
-          case 'vip':
-            // Only VIP users can access VIP studies
-            targetUsers = allUsers.filter(targetUser => 
-              targetUser.id !== user.id && 
-              (targetUser.subscriptionTier || 'free') === 'vip'
-            );
-            break;
-        }
+        targetUsers = allUsers.filter(targetUser => 
+          targetUser.id !== user.id && hasAnyAccess(targetUser)
+        );
         
         // Send notifications to eligible users
         if (targetUsers.length > 0) {
@@ -1026,32 +1045,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isBeingPublished = studyData.isPublished === true;
       
       if (wasUnpublished && isBeingPublished) {
-        // Send real-time notifications to users based on tier access
+        // Send real-time notifications to users with active subscriptions/trials
         try {
           const allUsers = await storage.getAllUsers();
-          let targetUsers: any[] = [];
-          
-          // Determine target users based on study's required tier
-          switch (study.requiredTier || 'free') {
-            case 'free':
-              // Everyone can access free studies
-              targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
-              break;
-            case 'premium':
-              // Premium and VIP users can access premium studies
-              targetUsers = allUsers.filter(targetUser => 
-                targetUser.id !== user.id && 
-                ['premium', 'vip'].includes(targetUser.subscriptionTier || 'free')
-              );
-              break;
-            case 'vip':
-              // Only VIP users can access VIP studies
-              targetUsers = allUsers.filter(targetUser => 
-                targetUser.id !== user.id && 
-                (targetUser.subscriptionTier || 'free') === 'vip'
-              );
-              break;
-          }
+          let targetUsers = allUsers.filter(targetUser => 
+            targetUser.id !== user.id && hasAnyAccess(targetUser)
+          );
           
           // Send notifications to eligible users
           if (targetUsers.length > 0) {
@@ -1106,29 +1105,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isBeingPublished = studyData.isPublished === true;
       
       if (wasUnpublished && isBeingPublished) {
-        // Send real-time notifications to users based on tier access
+        // Send real-time notifications to users with active subscriptions/trials
         try {
           const allUsers = await storage.getAllUsers();
-          let targetUsers: any[] = [];
-          
-          // Determine target users based on study's required tier
-          switch (study.requiredTier || 'free') {
-            case 'free':
-              targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
-              break;
-            case 'premium':
-              targetUsers = allUsers.filter(targetUser => 
-                targetUser.id !== user.id && 
-                ['premium', 'vip'].includes(targetUser.subscriptionTier || 'free')
-              );
-              break;
-            case 'vip':
-              targetUsers = allUsers.filter(targetUser => 
-                targetUser.id !== user.id && 
-                (targetUser.subscriptionTier || 'free') === 'vip'
-              );
-              break;
-          }
+          let targetUsers = allUsers.filter(targetUser => 
+            targetUser.id !== user.id && hasAnyAccess(targetUser)
+          );
           
           if (targetUsers.length > 0) {
             const notificationPromises = targetUsers.map(async (targetUser) => {
@@ -2520,13 +2502,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: "Access denied" });
         }
         
-        const userTier = user.subscriptionTier || 'free';
-        const hasAccess = study.requiredTier === 'free' ||
-                         (study.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
-                         (study.requiredTier === 'vip' && userTier === 'vip');
-        
-        if (!hasAccess) {
-          return res.status(403).json({ message: "Insufficient subscription tier to participate in this study discussion" });
+        const studyAccess = await canAccessContent(user, 'studies', study.isTrialAccessible ?? false);
+        if (!studyAccess) {
+          return res.status(403).json({ message: "Active subscription required to participate in this study discussion" });
         }
       }
       
@@ -4126,6 +4104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email,
         profileImageUrl: user.profileImageUrl,
         subscriptionTier: user.subscriptionTier,
+        subscriptionStatus: user.subscriptionStatus,
         allowDirectMessages: user.allowDirectMessages,
         allowGroupInvites: user.allowGroupInvites
       }));
@@ -4182,12 +4161,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const { subscriptionTier } = req.body;
-      if (!subscriptionTier || !['free', 'premium', 'vip'].includes(subscriptionTier)) {
-        return res.status(400).json({ message: "Invalid subscription tier" });
+      const { subscriptionStatus } = req.body;
+      if (!subscriptionStatus || !['trial', 'active', 'expired', 'cancelled'].includes(subscriptionStatus)) {
+        return res.status(400).json({ message: "Invalid subscription status" });
       }
 
-      const updatedUser = await storage.updateUserSubscription(req.params.id, subscriptionTier);
+      const targetUser = await storage.getUser(req.params.id);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const updateData: any = { subscriptionStatus };
+      if (subscriptionStatus === 'active') {
+        updateData.subscriptionTier = 'subscriber';
+      } else if (subscriptionStatus === 'expired') {
+        updateData.subscriptionTier = 'free';
+      } else if (subscriptionStatus === 'trial') {
+        const now = new Date();
+        const trialEnd = new Date(now);
+        let trialDays = 7;
+        try {
+          const settings = await storage.getSubscriptionSettings();
+          if (settings?.trialDurationDays) trialDays = settings.trialDurationDays;
+        } catch {}
+        trialEnd.setDate(now.getDate() + trialDays);
+        updateData.trialStartDate = now;
+        updateData.trialEndDate = trialEnd;
+        updateData.subscriptionTier = 'free';
+      }
+
+      const updatedUser = await storage.updateUserSubscriptionDetails(req.params.id, updateData);
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating user subscription:", error);
@@ -4478,7 +4481,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Tier Pricing Management API Routes
+  // Subscription Settings API Routes
+  app.get('/api/admin/subscription-settings', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const settings = await storage.getSubscriptionSettings();
+      res.json(settings || {});
+    } catch (error) {
+      console.error("Error fetching subscription settings:", error);
+      res.status(500).json({ message: "Failed to fetch subscription settings" });
+    }
+  });
+
+  app.put('/api/admin/subscription-settings', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const { monthlyPrice, yearlyPrice, trialDurationDays, features, trialContentAreas } = req.body;
+      const updateData: any = {};
+      if (monthlyPrice !== undefined) updateData.monthlyPrice = parseFloat(monthlyPrice).toFixed(2);
+      if (yearlyPrice !== undefined) updateData.yearlyPrice = parseFloat(yearlyPrice).toFixed(2);
+      if (trialDurationDays !== undefined) updateData.trialDurationDays = parseInt(trialDurationDays);
+      if (features !== undefined) updateData.features = features;
+      if (trialContentAreas !== undefined) updateData.trialContentAreas = trialContentAreas;
+      
+      const updated = await storage.updateSubscriptionSettings(updateData);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating subscription settings:", error);
+      res.status(500).json({ message: "Failed to update subscription settings" });
+    }
+  });
+
+  // Public subscription settings (for frontend pricing display)
+  app.get('/api/subscription-settings', async (req: any, res) => {
+    try {
+      const settings = await storage.getSubscriptionSettings();
+      if (settings) {
+        res.json({
+          monthlyPrice: settings.monthlyPrice,
+          yearlyPrice: settings.yearlyPrice,
+          trialDurationDays: settings.trialDurationDays,
+          features: settings.features,
+        });
+      } else {
+        res.json({ monthlyPrice: "9.99", yearlyPrice: "99.99", trialDurationDays: 7, features: [] });
+      }
+    } catch (error) {
+      console.error("Error fetching subscription settings:", error);
+      res.status(500).json({ message: "Failed to fetch subscription settings" });
+    }
+  });
+
+  // Legacy Tier Pricing Management API Routes (kept for backward compatibility)
   app.get('/api/admin/tier-pricing', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
@@ -4541,30 +4601,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
 
-      const { tier, billingCycle } = req.body;
-
-      if (!tier || !['premium', 'vip'].includes(tier)) {
-        return res.status(400).json({ message: "Invalid tier" });
-      }
+      const { billingCycle } = req.body;
 
       if (!billingCycle || !['monthly', 'yearly'].includes(billingCycle)) {
         return res.status(400).json({ message: "Invalid billing cycle" });
       }
 
-      // Get tier pricing
-      const tierPricing = await storage.getTierPricingByTier(tier);
-      if (!tierPricing) {
-        return res.status(404).json({ message: "Tier pricing not found" });
+      // Get subscription pricing settings
+      const subSettings = await storage.getSubscriptionSettings();
+      if (!subSettings) {
+        return res.status(404).json({ message: "Subscription pricing not configured" });
       }
 
-      // Calculate yearly pricing with new discount structure
-      let price = tierPricing.monthlyPrice;
-      if (billingCycle === 'yearly') {
-        const monthlyPrice = parseFloat(tierPricing.monthlyPrice);
-        const discountPercent = tier === 'premium' ? 5 : tier === 'vip' ? 10 : 0;
-        const yearlyPrice = (monthlyPrice * 12 * (1 - discountPercent / 100)).toFixed(2);
-        price = yearlyPrice;
-      }
+      const price = billingCycle === 'yearly' 
+        ? (subSettings.yearlyPrice || subSettings.monthlyPrice)
+        : subSettings.monthlyPrice;
 
       // Create Stripe checkout session
       const { default: Stripe } = await import('stripe');
@@ -4581,10 +4632,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             price_data: {
               currency: 'usd',
               product_data: {
-                name: `${tier.charAt(0).toUpperCase() + tier.slice(1)} Subscription`,
-                description: tierPricing.features.join(', '),
+                name: "Man Up God's Way Subscription",
+                description: (subSettings.features || []).join(', '),
               },
-              unit_amount: Math.round(parseFloat(price) * 100), // Convert to cents
+              unit_amount: Math.round(parseFloat(price) * 100),
               recurring: {
                 interval: billingCycle === 'yearly' ? 'year' : 'month',
               },
@@ -4594,10 +4645,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ],
         metadata: {
           userId: user.id,
-          tier: tier,
           billingCycle: billingCycle,
         },
-        success_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile?upgrade=success&tier=${tier}`,
+        success_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile?upgrade=success`,
         cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile?upgrade=cancelled`,
       });
 
@@ -4661,10 +4711,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Only handle subscription checkouts (not one-time payments)
         if (session.mode === 'subscription') {
-          const { userId, tier, billingCycle } = session.metadata;
+          const { userId, billingCycle } = session.metadata;
 
-          if (userId && tier) {
-            // Calculate subscription expiration date
+          if (userId) {
             const now = new Date();
             const expirationDate = new Date(now);
             if (billingCycle === 'yearly') {
@@ -4673,35 +4722,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
               expirationDate.setMonth(now.getMonth() + 1);
             }
 
-            // Get subscription from Stripe to store subscription ID
             const subscription = await stripe.subscriptions.list({
               customer: session.customer,
               limit: 1,
             });
 
-            // Update user subscription with full details
             await storage.updateUserSubscriptionDetails(userId, {
-              subscriptionTier: tier,
+              subscriptionTier: 'subscriber',
               subscriptionStatus: 'active',
               subscriptionExpiresAt: expirationDate,
               stripeCustomerId: session.customer,
               stripeSubscriptionId: subscription.data[0]?.id,
             });
 
-            console.log(`Updated user ${userId} to ${tier} tier via Stripe webhook (expires: ${expirationDate.toISOString()})`);
+            console.log(`User ${userId} subscribed via Stripe (expires: ${expirationDate.toISOString()})`);
 
-            // Send real-time notification to user about upgrade success
             const user = await storage.getUser(userId);
             if (user) {
               const notification = await storage.createNotification({
                 userId: user.id,
                 type: 'admin',
-                title: 'Subscription Upgraded!',
-                message: `Your subscription has been upgraded to ${tier.charAt(0).toUpperCase() + tier.slice(1)}. You now have access to exclusive content and features.`,
+                title: 'Subscription Activated!',
+                message: `Welcome! Your subscription is now active. You have full access to all content and features.`,
                 relatedId: null,
               });
 
-              // Send real-time notification if WebSocket is connected
               if ((req.app as any).sendRealtimeNotification) {
                 (req.app as any).sendRealtimeNotification(user.id, notification);
               }
@@ -4793,16 +4838,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (req.user) {
-        // Check tier access for authenticated users
         const user = await storage.getUser(req.user.claims.sub);
         if (user) {
-          const userTier = user.subscriptionTier || 'free';
-          const hasAccess = video.requiredTier === 'free' ||
-                           (video.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
-                           (video.requiredTier === 'vip' && userTier === 'vip');
-
-          if (!hasAccess) {
-            return res.status(403).json({ message: "Insufficient subscription tier" });
+          const videoAccess = await canAccessContent(user, 'videos', video.isTrialAccessible ?? false);
+          if (!videoAccess) {
+            return res.status(403).json({ message: "Active subscription required" });
           }
         }
       }
@@ -5471,21 +5511,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { category, sortBy, limit } = req.query;
       
-      // Get user tier for filtering
-      let userTier = 'free';
-      if (req.user) {
-        try {
-          const user = await storage.getUser(req.user.claims.sub);
-          userTier = user?.subscriptionTier || 'free';
-        } catch (error) {
-          console.log("Could not get user tier, defaulting to free:", error);
-        }
-      }
-      
       const videos = await storage.getVideos(
         category as string,
-        undefined, // requiredTier filter
-        userTier,
+        undefined,
+        undefined,
         sortBy as string,
         limit ? parseInt(limit as string) : undefined
       );
@@ -7049,14 +7078,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all published pre-built fitness plans (public, filtered by user tier)
   app.get('/api/pre-built-fitness-plans', async (req: any, res) => {
     try {
-      let userTier = 'free';
-      
-      // Check if user is authenticated to get their tier
+      let user: any = null;
       if (req.user?.claims?.sub) {
-        const user = await storage.getUser(req.user.claims.sub);
-        if (user) {
-          userTier = user.subscriptionTier || 'free';
-        }
+        user = await storage.getUser(req.user.claims.sub);
       }
       
       const plans = await db.select()
@@ -7064,19 +7088,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(schema.preBuiltFitnessPlans.isPublished, true))
         .orderBy(desc(schema.preBuiltFitnessPlans.createdAt));
       
-      // Filter by tier access
-      const tierHierarchy: Record<string, number> = { free: 0, premium: 1, vip: 2 };
-      const userTierLevel = tierHierarchy[userTier] || 0;
-      
-      const accessiblePlans = plans.map(plan => {
-        const planTierLevel = tierHierarchy[plan.tier || 'free'] || 0;
-        const hasAccess = userTierLevel >= planTierLevel;
+      const accessiblePlansPromises = plans.map(async (plan) => {
+        const planAccess = user ? await canAccessContent(user, 'fitness', plan.isTrialAccessible ?? false) : false;
         return {
           ...plan,
-          hasAccess,
-          downloadUrl: hasAccess ? plan.downloadUrl : null // Hide download URL if no access
+          hasAccess: planAccess,
+          downloadUrl: planAccess ? plan.downloadUrl : null
         };
       });
+      const accessiblePlans = await Promise.all(accessiblePlansPromises);
       
       res.json(accessiblePlans);
     } catch (error) {
@@ -7259,15 +7279,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Plan not found' });
       }
       
-      // Check tier access
-      const tierHierarchy: Record<string, number> = { free: 0, premium: 1, vip: 2 };
-      const userTierLevel = tierHierarchy[user.subscriptionTier || 'free'] || 0;
-      const planTierLevel = tierHierarchy[plan.tier || 'free'] || 0;
-      
-      if (userTierLevel < planTierLevel) {
+      const planAccess = await canAccessContent(user, 'fitness', plan.isTrialAccessible ?? false);
+      if (!planAccess) {
         return res.status(403).json({ 
-          message: `This plan requires ${plan.tier} tier access`,
-          requiredTier: plan.tier
+          message: 'Active subscription required to download this plan'
         });
       }
       

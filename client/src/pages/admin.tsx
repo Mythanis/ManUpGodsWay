@@ -25,7 +25,7 @@ import PodcastManagement from "@/components/admin/podcast-management";
 import ChallengeManagement from "@/components/admin/challenge-management";
 import FitnessManagement from "@/components/admin/fitness-management";
 import EventManagement from "@/components/admin/event-management";
-import TierPricingManagement from "@/components/admin/tier-pricing-management";
+import SubscriptionSettingsManagement from "@/components/admin/subscription-settings-management";
 import CarouselManagement from "@/components/admin/carousel-management";
 import BlogManagement from "@/components/admin/blog-management";
 import WarGroupsManagement from "@/components/admin/war-groups-management";
@@ -73,7 +73,7 @@ const adminTabs = [
   { id: "rations", label: "Rations", icon: Coins },
   { id: "store", label: "Store", icon: ShoppingBag },
   { id: "logo", label: "Logo", icon: Image },
-  { id: "tiers", label: "Tiers", icon: DollarSign },
+  { id: "tiers", label: "Subscription", icon: DollarSign },
   { id: "settings", label: "Settings", icon: Settings },
   { id: "users", label: "Users", icon: Users },
 ];
@@ -756,8 +756,7 @@ export default function Admin() {
 
           {activeTab === "tiers" && (
             <div>
-              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Tier Pricing Configuration</h2>
-              <TierPricingManagement />
+              <SubscriptionSettingsManagement />
             </div>
           )}
 
@@ -1054,7 +1053,7 @@ export default function Admin() {
                   </div>
                   
                   {/* Individual tier checkboxes */}
-                  {[{ id: 'free', label: 'Free' }, { id: 'premium', label: 'Premium' }, { id: 'vip', label: 'VIP' }].map((tier) => (
+                  {[{ id: 'free', label: 'Free' }, { id: 'premium', label: 'Subscriber' }].map((tier) => (
                     <div key={tier.id} className="flex items-center space-x-2">
                       <input
                         type="checkbox"

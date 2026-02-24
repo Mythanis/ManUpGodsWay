@@ -458,14 +458,10 @@ export default function StudyDetail() {
     : 0;
 
   const getTierColor = (tier: string) => {
-    switch (tier) {
-      case 'premium':
-        return 'bg-ministry-steel/20 text-ministry-steel';
-      case 'vip':
-        return 'bg-ministry-gold-exact text-ministry-gold';
-      default:
-        return 'bg-ministry-success/20 text-ministry-success';
+    if (tier !== 'free') {
+      return 'bg-ministry-gold-exact text-ministry-gold';
     }
+    return 'bg-ministry-success/20 text-ministry-success';
   };
 
   // Check access based on purchase status or tier
@@ -483,16 +479,12 @@ export default function StudyDetail() {
         return false; // Need to purchase
       }
       
-      // If their tier doesn't require purchase, check normal tier access
-      return study.requiredTier === 'free' || 
-             (study.requiredTier === 'premium' && ['premium', 'vip'].includes(userTier)) ||
-             (study.requiredTier === 'vip' && userTier === 'vip');
+      // If their tier doesn't require purchase, check subscription access
+      return study.requiredTier === 'free' || userTier !== 'free';
     }
     
-    // Normal tier-based access for non-purchasable studies
-    return study.requiredTier === 'free' || 
-           (study.requiredTier === 'premium' && ['premium', 'vip'].includes(user?.subscriptionTier || '')) ||
-           (study.requiredTier === 'vip' && user?.subscriptionTier === 'vip');
+    // Subscription-based access for non-purchasable studies
+    return study.requiredTier === 'free' || (user?.subscriptionTier || 'free') !== 'free';
   };
 
   const hasAccess = canAccess();
@@ -543,7 +535,7 @@ export default function StudyDetail() {
                 {/* Only show tier badge if study doesn't require purchase for this user */}
                 {!(study.requiresPurchase && study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free') && !hasPurchased) && (
                   <Badge className="bg-black text-[#FCD000] font-bold uppercase tracking-wide rounded-sm border-2 border-black" data-testid="badge-study-tier">
-                    {getTierDisplayName(study.requiredTier || 'free')}
+                    {study.requiredTier !== 'free' ? 'Subscribers Only' : 'Free'}
                   </Badge>
                 )}
                 {(study.rating && parseFloat(study.rating.toString()) > 0) && (
@@ -647,15 +639,15 @@ export default function StudyDetail() {
 
             {!hasAccess && (!study.requiresPurchase || !study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free')) && (
               <div className="bg-black border-2 border-ministry-gold-exact rounded-sm p-4 mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="access-restriction">
-                <h3 className="font-black uppercase tracking-tight text-ministry-gold-exact mb-2">Premium Content</h3>
+                <h3 className="font-black uppercase tracking-tight text-ministry-gold-exact mb-2">Subscribers Only</h3>
                 <p className="text-sm text-gray-400 mb-3">
-                  This study requires a {getTierDisplayName(study.requiredTier || 'free')} subscription to access.
+                  This study requires an active subscription to access.
                 </p>
                 <Button 
                   className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold uppercase tracking-wide rounded-sm border-2 border-black"
                   data-testid="button-upgrade-access"
                 >
-                  Upgrade to {getTierDisplayName(study.requiredTier || 'free')}
+                  Subscribe Now
                 </Button>
               </div>
             )}
@@ -695,7 +687,7 @@ export default function StudyDetail() {
                   <div>
                     <h3 className="font-medium text-white">Study Discussion Available</h3>
                     <p className="text-sm text-gray-400">
-                      Upgrade to {getTierDisplayName(study.requiredTier || 'free')} to join the study discussion
+                      Subscribe to join the study discussion
                     </p>
                   </div>
                 </div>
@@ -704,7 +696,7 @@ export default function StudyDetail() {
                   className="bg-gray-800 text-gray-500 font-bold uppercase tracking-wide rounded-sm border-2 border-gray-600 opacity-50"
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
-                  {getTierDisplayName(study.requiredTier || 'free')} Required
+                  Subscription Required
                 </Button>
               </div>
             )}
@@ -988,7 +980,7 @@ export default function StudyDetail() {
                   <div className="text-center py-8">
                     <p className="text-sm text-ministry-slate">
                       {study?.requiredTier && study.requiredTier !== 'free' 
-                        ? `${getTierDisplayName(study.requiredTier || 'free')} subscription required to participate in this discussion.`
+                        ? 'An active subscription is required to participate in this discussion.'
                         : 'You need access to this study to participate in the discussion.'
                       }
                     </p>
@@ -1138,13 +1130,12 @@ function StudyDiscussionReplyForm({ discussionId, currentUserTier, study }: {
     
     // Check tier access for study discussions
     if (study?.requiredTier && study.requiredTier !== 'free') {
-      const hasAccess = (study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
-                       (study.requiredTier === 'vip' && currentUserTier === 'vip');
+      const hasAccess = currentUserTier !== 'free';
       
       if (!hasAccess) {
         toast({
           title: "Access Restricted",
-          description: `This study discussion requires ${getTierDisplayName(study.requiredTier || 'free')} subscription to participate.`,
+          description: `This study discussion requires an active subscription to participate.`,
           variant: "destructive",
         });
         return;
@@ -1156,8 +1147,7 @@ function StudyDiscussionReplyForm({ discussionId, currentUserTier, study }: {
 
   // Check if user has access to reply
   const hasReplyAccess = study?.requiredTier && study.requiredTier !== 'free' ?
-    ((study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
-     (study.requiredTier === 'vip' && currentUserTier === 'vip')) : true;
+    currentUserTier !== 'free' : true;
 
   return (
     <Form {...form}>
@@ -1169,7 +1159,7 @@ function StudyDiscussionReplyForm({ discussionId, currentUserTier, study }: {
             <FormItem>
               <FormControl>
                 <Textarea
-                  placeholder={hasReplyAccess ? "Write your reply..." : `${getTierDisplayName(study?.requiredTier || 'premium')} subscription required to reply`}
+                  placeholder={hasReplyAccess ? "Write your reply..." : "Subscription required to reply"}
                   className="min-h-[80px] resize-none"
                   disabled={!hasReplyAccess || createReply.isPending}
                   {...field}

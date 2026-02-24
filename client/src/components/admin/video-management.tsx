@@ -258,29 +258,20 @@ export default function VideoManagement() {
   };
 
   const getTierBadge = (tier: string) => {
-    switch (tier) {
-      case 'vip':
-        return (
-          <Badge className="bg-ministry-gold-exact text-black flex items-center space-x-1">
-            <Crown className="w-3 h-3" />
-            <span>VIP</span>
-          </Badge>
-        );
-      case 'premium':
-        return (
-          <Badge className="bg-blue-100 text-blue-800 flex items-center space-x-1">
-            <Gem className="w-3 h-3" />
-            <span>Premium</span>
-          </Badge>
-        );
-      default:
-        return (
-          <Badge className="bg-muted text-foreground flex items-center space-x-1">
-            <Zap className="w-3 h-3" />
-            <span>Free</span>
-          </Badge>
-        );
+    if (tier !== 'free') {
+      return (
+        <Badge className="bg-ministry-gold-exact text-black flex items-center space-x-1">
+          <Crown className="w-3 h-3" />
+          <span>Subscribers Only</span>
+        </Badge>
+      );
     }
+    return (
+      <Badge className="bg-muted text-foreground flex items-center space-x-1">
+        <Zap className="w-3 h-3" />
+        <span>Free</span>
+      </Badge>
+    );
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -581,8 +572,7 @@ export default function VideoManagement() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="free">Free - All users can access</SelectItem>
-                          <SelectItem value="premium">Premium - Premium and VIP users only</SelectItem>
-                          <SelectItem value="vip">VIP - VIP users only</SelectItem>
+                          <SelectItem value="premium">Subscribers Only</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -719,8 +709,7 @@ export default function VideoManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="free">Free - All users can access</SelectItem>
-                      <SelectItem value="premium">Premium - Premium and VIP users only</SelectItem>
-                      <SelectItem value="vip">VIP - VIP users only</SelectItem>
+                      <SelectItem value="premium">Subscribers Only</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

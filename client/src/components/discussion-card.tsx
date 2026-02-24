@@ -278,14 +278,14 @@ export default function DiscussionCard({
     await createReply.mutateAsync(data);
   };
   const getTierBadge = (subscriptionTier: string) => {
-    switch (subscriptionTier) {
-      case 'vip':
-        return <Badge className="bg-ministry-gold-exact text-black text-xs">VIP</Badge>;
-      case 'premium':
-        return <Badge className="bg-black text-white text-xs">Premium</Badge>;
-      default:
-        return null;
+    const status = discussion.user?.subscriptionStatus;
+    if (status === 'active') {
+      return <Badge className="bg-ministry-gold-exact text-black text-xs">Subscriber</Badge>;
     }
+    if (status === 'trial') {
+      return <Badge className="bg-blue-500 text-white text-xs">Trial</Badge>;
+    }
+    return null;
   };
 
   const getTimeAgo = (date: string) => {

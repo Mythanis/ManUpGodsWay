@@ -194,29 +194,37 @@ export default function UserProfile() {
       };
     }
 
-    switch (tier) {
-      case 'vip':
-        return {
-          label: 'VIP Member',
-          icon: <Crown className="w-4 h-4" />,
-          color: 'text-[#FCD000]',
-          bgColor: 'bg-[#FCD000]/20 border border-[#FCD000]/30',
-        };
-      case 'premium':
-        return {
-          label: 'Premium Member',
-          icon: <Star className="w-4 h-4" />,
-          color: 'text-blue-400',
-          bgColor: 'bg-blue-500/20 border border-blue-500/30',
-        };
-      default:
-        return {
-          label: 'Free Member',
-          icon: null,
-          color: 'text-white/60',
-          bgColor: 'bg-white/10 border border-white/20',
-        };
+    const status = (profile?.user as any)?.subscriptionStatus;
+    if (status === 'active') {
+      return {
+        label: 'Subscriber',
+        icon: <Crown className="w-4 h-4" />,
+        color: 'text-[#FCD000]',
+        bgColor: 'bg-[#FCD000]/20 border border-[#FCD000]/30',
+      };
     }
+    if (status === 'trial') {
+      return {
+        label: 'Trial',
+        icon: <Star className="w-4 h-4" />,
+        color: 'text-blue-400',
+        bgColor: 'bg-blue-500/20 border border-blue-500/30',
+      };
+    }
+    if (status === 'expired' || status === 'cancelled') {
+      return {
+        label: 'Expired',
+        icon: null,
+        color: 'text-white/40',
+        bgColor: 'bg-white/5 border border-white/10',
+      };
+    }
+    return {
+      label: 'Member',
+      icon: null,
+      color: 'text-white/60',
+      bgColor: 'bg-white/10 border border-white/20',
+    };
   };
 
   if (isLoading) {

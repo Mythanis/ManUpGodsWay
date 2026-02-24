@@ -165,7 +165,7 @@ export default function RationsStorePage() {
   };
 
   const userBalance = rations?.balance || 0;
-  const isVip = user?.subscriptionTier === "vip";
+  const isSubscriber = (user as any)?.subscriptionStatus === 'active' || (user as any)?.subscriptionStatus === 'trial';
 
   const bronzeProducts = products.filter(p => p.tier === "bronze");
   const silverProducts = products.filter(p => p.tier === "silver");
@@ -173,7 +173,7 @@ export default function RationsStorePage() {
 
   const renderProductCard = (product: StoreProduct) => {
     const canAfford = userBalance >= product.rationCost;
-    const meetsVipRequirement = !product.isVipOnly || isVip;
+    const meetsVipRequirement = !product.isVipOnly || isSubscriber;
     const inStock = product.stock === null || product.stock > 0;
     const canRedeem = canAfford && meetsVipRequirement && inStock;
     const tierConfig = TIER_CONFIG[product.tier as keyof typeof TIER_CONFIG];
@@ -202,7 +202,7 @@ export default function RationsStorePage() {
             <h3 className="font-bold text-white uppercase tracking-tight text-sm line-clamp-2">{product.name}</h3>
             {product.isVipOnly && (
               <Badge className="bg-ministry-gold text-black text-[10px] font-bold uppercase ml-2 flex-shrink-0 rounded-sm">
-                Warrior
+                Subscribers Only
               </Badge>
             )}
           </div>
@@ -310,10 +310,10 @@ export default function RationsStorePage() {
                   </p>
                 </div>
               </div>
-              {isVip && (
+              {isSubscriber && (
                 <Badge className="bg-ministry-gold text-black font-bold uppercase rounded-sm border-2 border-black">
                   <Crown className="w-3 h-3 mr-1" />
-                  Warrior
+                  Subscriber
                 </Badge>
               )}
             </div>
@@ -384,7 +384,7 @@ export default function RationsStorePage() {
                 <Crown className="w-4 h-4 text-ministry-gold" />
                 <span className="font-bold text-ministry-gold uppercase text-sm">Gold Tier</span>
               </div>
-              <p className="text-xs text-yellow-300/70">Premium items including t-shirts, hats, and exclusive gear - Warrior members only!</p>
+              <p className="text-xs text-yellow-300/70">Premium items including t-shirts, hats, and exclusive gear - Subscribers only!</p>
             </div>
             {isLoading ? (
               <div className="flex justify-center py-12">

@@ -42,6 +42,7 @@ import {
   hurdleWallReplies,
   hurdleWallPrayers,
   tierPricing,
+  subscriptionSettings,
   userPrayerStats,
   userPurchases,
   studyEditableSections,
@@ -155,6 +156,8 @@ import {
   type InsertUserStudyResponse,
   type TierPricing,
   type InsertTierPricing,
+  type SubscriptionSettings,
+  type InsertSubscriptionSettings,
   type CarouselItem,
   type InsertCarouselItem,
   type LiveStream,
@@ -224,10 +227,14 @@ export interface IStorage {
   saveUserResponse(response: InsertUserStudyResponse): Promise<UserStudyResponse>;
   updateUserResponse(userId: string, sectionId: string, responseText: string): Promise<UserStudyResponse>;
   
-  // Tier pricing operations
+  // Tier pricing operations (legacy)
   getTierPricing(): Promise<TierPricing[]>;
   getTierPricingByTier(tier: string): Promise<TierPricing | undefined>;
   updateTierPricing(tier: string, pricing: Partial<InsertTierPricing>): Promise<TierPricing>;
+  
+  // Subscription settings operations
+  getSubscriptionSettings(): Promise<SubscriptionSettings | undefined>;
+  updateSubscriptionSettings(settings: Partial<InsertSubscriptionSettings>): Promise<SubscriptionSettings>;
   
   // Progress operations
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
@@ -1490,6 +1497,39 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  // Subscription settings operations
+  async getSubscriptionSettings(): Promise<SubscriptionSettings | undefined> {
+    const [settings] = await db
+      .select()
+      .from(subscriptionSettings)
+      .where(eq(subscriptionSettings.isActive, true))
+      .limit(1);
+    return settings;
+  }
+
+  async updateSubscriptionSettings(settings: Partial<InsertSubscriptionSettings>): Promise<SubscriptionSettings> {
+    const existing = await this.getSubscriptionSettings();
+    if (existing) {
+      const [updated] = await db
+        .update(subscriptionSettings)
+        .set({
+          ...settings,
+          updatedAt: new Date(),
+        })
+        .where(eq(subscriptionSettings.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(subscriptionSettings)
+        .values({
+          ...settings,
+        })
+        .returning();
+      return created;
+    }
+  }
+
   // Carousel operations
   async getActiveCarouselItems(): Promise<CarouselItem[]> {
     return await db
@@ -2417,37 +2457,63 @@ export class DatabaseStorage implements IStorage {
 
   async checkExpiredSubscriptions(): Promise<User[]> {
     const now = new Date();
-    const expiredUsers = await db
+    
+    // Check for expired trials
+    const expiredTrialUsers = await db
+      .select()
+      .from(users)
+      .where(
+        and(
+          eq(users.subscriptionStatus, 'trial'),
+          lt(users.trialEndDate, now)
+        )
+      );
+
+    if (expiredTrialUsers.length > 0) {
+      await db
+        .update(users)
+        .set({ 
+          subscriptionTier: 'free',
+          subscriptionStatus: 'expired',
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(users.subscriptionStatus, 'trial'),
+            lt(users.trialEndDate, now)
+          )
+        );
+    }
+
+    // Check for cancelled subscriptions past their expiration
+    const expiredSubUsers = await db
       .select()
       .from(users)
       .where(
         and(
           eq(users.subscriptionStatus, 'cancelled'),
-          lt(users.subscriptionExpiresAt, now),
-          ne(users.subscriptionTier, 'free')
+          lt(users.subscriptionExpiresAt, now)
         )
       );
 
-    // Update expired users to free tier
-    if (expiredUsers.length > 0) {
+    if (expiredSubUsers.length > 0) {
       await db
         .update(users)
         .set({ 
           subscriptionTier: 'free',
-          subscriptionStatus: 'active',
+          subscriptionStatus: 'expired',
           subscriptionExpiresAt: null,
           updatedAt: new Date()
         })
         .where(
           and(
             eq(users.subscriptionStatus, 'cancelled'),
-            lt(users.subscriptionExpiresAt, now),
-            ne(users.subscriptionTier, 'free')
+            lt(users.subscriptionExpiresAt, now)
           )
         );
     }
 
-    return expiredUsers;
+    return [...expiredTrialUsers, ...expiredSubUsers];
   }
 
   async banUser(userId: string, reason: string): Promise<User> {

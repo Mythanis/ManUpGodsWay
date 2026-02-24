@@ -373,7 +373,7 @@ export default function StoreManagement() {
                             <div className="flex items-center gap-2">
                               {getTierBadge(product.tier)}
                               {product.isVipOnly && (
-                                <Crown className="w-4 h-4 text-ministry-gold" />
+                                <Badge className="bg-ministry-gold-exact text-black text-xs">Subscribers Only</Badge>
                               )}
                             </div>
                           </TableCell>
@@ -706,7 +706,7 @@ export default function StoreManagement() {
                   checked={productForm.isVipOnly}
                   onCheckedChange={(checked) => setProductForm({ ...productForm, isVipOnly: checked })}
                 />
-                <Label className="text-zinc-400">VIP Only</Label>
+                <Label className="text-zinc-400">Subscribers Only</Label>
               </div>
               <div className="flex items-center gap-2">
                 <Switch

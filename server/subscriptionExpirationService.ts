@@ -49,16 +49,18 @@ class SubscriptionExpirationService {
         return;
       }
 
-      console.log(`Found ${expiredUsers.length} expired subscription(s), users downgraded to free tier`);
+      console.log(`Found ${expiredUsers.length} expired subscription(s)/trial(s)`);
 
-      // Send notifications to users about their subscription expiration
       for (const user of expiredUsers) {
         try {
+          const isTrialExpiry = user.subscriptionStatus === 'trial' || (!user.stripeSubscriptionId && user.trialEndDate);
           await storage.createNotification({
             userId: user.id,
             type: 'admin',
-            title: 'Subscription Expired',
-            message: `Your subscription has expired and you've been moved to the free tier. Upgrade anytime to regain access to premium content and features.`,
+            title: isTrialExpiry ? 'Free Trial Ended' : 'Subscription Expired',
+            message: isTrialExpiry 
+              ? `Your free trial has ended. Subscribe now to continue accessing all content and features.`
+              : `Your subscription has expired. Resubscribe anytime to regain access to all content and features.`,
             relatedId: null,
           });
         } catch (error) {

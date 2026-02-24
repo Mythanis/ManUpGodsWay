@@ -164,29 +164,20 @@ export default function Videos() {
   });
 
   const getTierBadge = (tier: string) => {
-    switch (tier) {
-      case 'vip':
-        return (
-          <Badge className="bg-ministry-gold-exact text-black flex items-center space-x-1 rounded-sm font-black uppercase tracking-wide">
-            <Crown className="w-3 h-3" />
-            <span>VIP</span>
-          </Badge>
-        );
-      case 'premium':
-        return (
-          <Badge className="bg-blue-100 text-blue-800 flex items-center space-x-1 rounded-sm font-black uppercase tracking-wide">
-            <Gem className="w-3 h-3" />
-            <span>Premium</span>
-          </Badge>
-        );
-      default:
-        return (
-          <Badge className="bg-white text-black border-2 border-black flex items-center space-x-1 rounded-sm font-bold uppercase tracking-wide">
-            <Zap className="w-3 h-3" />
-            <span>Free</span>
-          </Badge>
-        );
+    if (tier !== 'free') {
+      return (
+        <Badge className="bg-ministry-gold-exact text-black flex items-center space-x-1 rounded-sm font-black uppercase tracking-wide">
+          <Crown className="w-3 h-3" />
+          <span>Subscribers Only</span>
+        </Badge>
+      );
     }
+    return (
+      <Badge className="bg-white text-black border-2 border-black flex items-center space-x-1 rounded-sm font-bold uppercase tracking-wide">
+        <Zap className="w-3 h-3" />
+        <span>Free</span>
+      </Badge>
+    );
   };
 
   const formatDuration = (seconds?: number) => {
