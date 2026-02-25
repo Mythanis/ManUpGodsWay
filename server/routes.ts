@@ -4782,7 +4782,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
 
-        if (session.mode === 'subscription') {
+        // Handle fitness membership subscription
+        if (session.mode === 'subscription' && session.metadata?.type === 'fitness_membership') {
+          const { userId } = session.metadata;
+          if (userId) {
+            const subscriptions = await stripe.subscriptions.list({ customer: session.customer as string, limit: 1 });
+            const sub = subscriptions.data[0];
+            const periodEnd = sub ? new Date(sub.current_period_end * 1000) : null;
+
+            await db.insert(schema.fitnessMemberships).values({
+              userId,
+              stripeSubscriptionId: sub?.id,
+              stripeCustomerId: session.customer as string,
+              status: 'active',
+              currentPeriodEnd: periodEnd,
+              cancelAtPeriodEnd: false,
+            }).onConflictDoUpdate({
+              target: schema.fitnessMemberships.userId,
+              set: {
+                stripeSubscriptionId: sub?.id,
+                stripeCustomerId: session.customer as string,
+                status: 'active',
+                currentPeriodEnd: periodEnd,
+                cancelAtPeriodEnd: false,
+                updatedAt: new Date(),
+              }
+            });
+
+            await storage.createNotification({
+              userId,
+              type: 'admin',
+              title: 'Fitness Community Access Unlocked!',
+              message: 'Welcome to the Man Up God\'s Way Fitness Community! You now have full access to workouts, plans, and the exercise library.',
+              relatedId: null,
+            });
+            console.log(`[Fitness] Membership activated for user ${userId}`);
+          }
+        }
+
+        // Handle individual fitness plan purchase
+        if (session.mode === 'payment' && session.metadata?.type === 'fitness_plan_purchase') {
+          const { userId, planId } = session.metadata;
+          if (userId && planId) {
+            await db.insert(schema.fitnessPlanPurchases).values({
+              userId,
+              planId,
+              stripePaymentIntentId: session.payment_intent as string,
+              amountPaid: session.amount_total || 0,
+            }).onConflictDoNothing();
+
+            await storage.createNotification({
+              userId,
+              type: 'admin',
+              title: 'Fitness Plan Purchased!',
+              message: `Your fitness plan "${session.metadata.planTitle}" is now available to download in the Fitness section.`,
+              relatedId: null,
+            });
+            console.log(`[Fitness] Plan ${planId} purchased by user ${userId}`);
+          }
+        }
+
+        if (session.mode === 'subscription' && session.metadata?.type !== 'fitness_membership') {
           const { userId, billingCycle, startTrial } = session.metadata;
 
           if (userId) {
@@ -7450,6 +7510,165 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.redirect(plan.downloadUrl);
     } catch (error) {
       console.error('Error downloading fitness plan:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // ==========================================
+  // FITNESS MEMBERSHIP ROUTES ($4.99/month)
+  // ==========================================
+
+  // Get current user's fitness membership status
+  app.get('/api/fitness/membership', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const [membership] = await db.select().from(schema.fitnessMemberships).where(eq(schema.fitnessMemberships.userId, userId)).limit(1);
+      if (!membership) return res.json({ hasMembership: false });
+      const isActive = membership.status === 'active' && (!membership.currentPeriodEnd || membership.currentPeriodEnd > new Date());
+      res.json({ hasMembership: isActive, membership });
+    } catch (error) {
+      console.error('Error checking fitness membership:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Create Stripe checkout session for fitness membership
+  app.post('/api/fitness/membership/subscribe', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      // Check if already active member
+      const [existing] = await db.select().from(schema.fitnessMemberships).where(eq(schema.fitnessMemberships.userId, userId)).limit(1);
+      if (existing && existing.status === 'active' && existing.currentPeriodEnd && existing.currentPeriodEnd > new Date()) {
+        return res.status(400).json({ message: 'Already an active fitness member' });
+      }
+
+      const { default: Stripe } = await import('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        mode: 'subscription',
+        customer_email: user.email || undefined,
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            unit_amount: 499, // $4.99
+            recurring: { interval: 'month' },
+            product_data: {
+              name: 'Fitness Community Membership',
+              description: 'Full access to the Man Up God\'s Way Fitness Community — workouts, plans, exercise library, and progress tracking.',
+            },
+          },
+          quantity: 1,
+        }],
+        metadata: { userId, type: 'fitness_membership' },
+        success_url: `${baseUrl}/fitness?membership=success`,
+        cancel_url: `${baseUrl}/fitness?membership=cancelled`,
+      });
+
+      res.json({ url: session.url });
+    } catch (error: any) {
+      console.error('Error creating fitness membership checkout:', error);
+      res.status(500).json({ message: error.message || 'Failed to create checkout session' });
+    }
+  });
+
+  // Cancel fitness membership
+  app.post('/api/fitness/membership/cancel', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const [membership] = await db.select().from(schema.fitnessMemberships).where(eq(schema.fitnessMemberships.userId, userId)).limit(1);
+      if (!membership || !membership.stripeSubscriptionId) {
+        return res.status(404).json({ message: 'No active fitness membership found' });
+      }
+
+      const { default: Stripe } = await import('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
+
+      await stripe.subscriptions.update(membership.stripeSubscriptionId, { cancel_at_period_end: true });
+      await db.update(schema.fitnessMemberships).set({ cancelAtPeriodEnd: true, updatedAt: new Date() }).where(eq(schema.fitnessMemberships.userId, userId));
+
+      res.json({ message: 'Membership will cancel at end of billing period' });
+    } catch (error: any) {
+      console.error('Error cancelling fitness membership:', error);
+      res.status(500).json({ message: error.message || 'Failed to cancel membership' });
+    }
+  });
+
+  // Create Stripe Checkout session for individual fitness plan purchase
+  app.post('/api/fitness/plans/:id/purchase-intent', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+      const { id } = req.params;
+
+      const [plan] = await db.select().from(schema.preBuiltFitnessPlans).where(eq(schema.preBuiltFitnessPlans.id, id)).limit(1);
+      if (!plan || !plan.isPurchasable || !plan.price) {
+        return res.status(404).json({ message: 'Plan not available for purchase' });
+      }
+
+      // Check if already purchased
+      const [existingPurchase] = await db.select().from(schema.fitnessPlanPurchases)
+        .where(and(eq(schema.fitnessPlanPurchases.userId, userId), eq(schema.fitnessPlanPurchases.planId, id))).limit(1);
+      if (existingPurchase) return res.status(400).json({ message: 'Already purchased this plan' });
+
+      const { default: Stripe } = await import('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        mode: 'payment',
+        customer_email: user.email || undefined,
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            unit_amount: plan.price,
+            product_data: {
+              name: `Fitness Plan: ${plan.title}`,
+              description: plan.description || undefined,
+            },
+          },
+          quantity: 1,
+        }],
+        metadata: { userId, planId: id, planTitle: plan.title, type: 'fitness_plan_purchase' },
+        success_url: `${baseUrl}/fitness?plan_purchase=success&planId=${id}`,
+        cancel_url: `${baseUrl}/fitness?plan_purchase=cancelled`,
+      });
+
+      res.json({ url: session.url });
+    } catch (error: any) {
+      console.error('Error creating fitness plan purchase:', error);
+      res.status(500).json({ message: error.message || 'Failed to create checkout session' });
+    }
+  });
+
+  // Get user's purchased fitness plans
+  app.get('/api/fitness/purchases', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const purchases = await db.select().from(schema.fitnessPlanPurchases).where(eq(schema.fitnessPlanPurchases.userId, userId));
+      res.json(purchases.map(p => p.planId));
+    } catch (error) {
+      console.error('Error fetching fitness purchases:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Admin: get all fitness memberships
+  app.get('/api/admin/fitness/memberships', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const memberships = await db.select().from(schema.fitnessMemberships).orderBy(desc(schema.fitnessMemberships.createdAt));
+      res.json(memberships);
+    } catch (error) {
+      console.error('Error fetching fitness memberships:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

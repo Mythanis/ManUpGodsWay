@@ -390,10 +390,39 @@ export const preBuiltFitnessPlans = pgTable("pre_built_fitness_plans", {
   downloadFileName: varchar("download_file_name"), // Original filename for download
   isPublished: boolean("is_published").default(false),
   publishedAt: timestamp("published_at"),
+  price: integer("price"), // price in cents; null = included with membership
+  isPurchasable: boolean("is_purchasable").default(false), // sold individually
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// Fitness community memberships ($4.99/month add-on)
+export const fitnessMemberships = pgTable("fitness_memberships", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  status: varchar("status").notNull().default("active"), // active, cancelled, expired
+  currentPeriodEnd: timestamp("current_period_end"),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId),
+]);
+
+// Individual fitness plan purchases
+export const fitnessPlanPurchases = pgTable("fitness_plan_purchases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  planId: varchar("plan_id").notNull().references(() => preBuiltFitnessPlans.id, { onDelete: 'cascade' }),
+  stripePaymentIntentId: varchar("stripe_payment_intent_id"),
+  amountPaid: integer("amount_paid").notNull(), // in cents
+  purchasedAt: timestamp("purchased_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.planId),
+]);
 
 // User favorite exercises from ExerciseDB API
 export const favoriteExercises = pgTable("favorite_exercises", {
@@ -2360,3 +2389,6 @@ export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions
 
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;
+
+export type FitnessMembership = typeof fitnessMemberships.$inferSelect;
+export type FitnessPlanPurchase = typeof fitnessPlanPurchases.$inferSelect;

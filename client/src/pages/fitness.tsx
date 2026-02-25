@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +35,12 @@ import {
   Settings,
   X,
   Info,
-  User
+  User,
+  Lock,
+  CreditCard,
+  ShieldCheck,
+  Download,
+  ShoppingCart
 } from "lucide-react";
 import { format, isToday, isPast, isFuture } from "date-fns";
 import { Link } from "wouter";
@@ -140,6 +146,22 @@ interface PreBuiltExercise {
   notes?: string;
 }
 
+interface AdminFitnessPlan {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  duration: number;
+  equipment: string;
+  thumbnailUrl?: string;
+  downloadUrl?: string;
+  downloadFileName?: string;
+  price?: number;
+  isPurchasable: boolean;
+  isPublished: boolean;
+}
+
 export default function Fitness() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterCategory, setFilterCategory] = useState<string>('all');
@@ -189,6 +211,78 @@ export default function Fitness() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
+  const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
+
+  // Check fitness membership status
+  const { data: membershipData, isLoading: membershipLoading } = useQuery<{ hasMembership: boolean; membership?: any }>({
+    queryKey: ['/api/fitness/membership'],
+    retry: false,
+  });
+
+  const hasMembership = membershipData?.hasMembership ?? false;
+
+  // Fetch admin-created fitness plans
+  const { data: adminPlans = [] } = useQuery<AdminFitnessPlan[]>({
+    queryKey: ['/api/pre-built-fitness-plans'],
+    enabled: hasMembership,
+  });
+
+  // Fetch user's purchased plan IDs
+  const { data: purchasedPlanIds = [] } = useQuery<string[]>({
+    queryKey: ['/api/fitness/purchases'],
+    enabled: hasMembership,
+  });
+
+  // Subscribe to fitness membership
+  const subscribeMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', '/api/fitness/membership/subscribe');
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.url) window.location.href = data.url;
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to start checkout', variant: 'destructive' });
+    },
+  });
+
+  // Cancel fitness membership
+  const cancelMembershipMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', '/api/fitness/membership/cancel');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/fitness/membership'] });
+      toast({ title: 'Membership Cancelled', description: 'Your membership will remain active until the end of your billing period.' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to cancel membership', variant: 'destructive' });
+    },
+  });
+
+  // Handle Stripe redirect params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('membership') === 'success') {
+      toast({ title: 'Welcome to the Fitness Community!', description: 'Your membership is now active. Enjoy full access to all fitness content.' });
+      queryClient.invalidateQueries({ queryKey: ['/api/fitness/membership'] });
+      window.history.replaceState({}, '', '/fitness');
+    } else if (params.get('membership') === 'cancelled') {
+      toast({ title: 'Checkout Cancelled', description: 'No charge was made.' });
+      window.history.replaceState({}, '', '/fitness');
+    }
+    if (params.get('plan_purchase') === 'success') {
+      toast({ title: 'Plan Purchased!', description: 'Your fitness plan is now available to download.' });
+      queryClient.invalidateQueries({ queryKey: ['/api/fitness/purchases'] });
+      window.history.replaceState({}, '', '/fitness');
+    } else if (params.get('plan_purchase') === 'cancelled') {
+      toast({ title: 'Purchase Cancelled', description: 'No charge was made.' });
+      window.history.replaceState({}, '', '/fitness');
+    }
+  }, []);
 
   // Effect to generate plans when filters change
   useEffect(() => {
@@ -1331,6 +1425,68 @@ export default function Fitness() {
 
       {/* Main Content */}
       <div className="px-4 pt-6 space-y-6 pb-20">
+
+      {/* Fitness Membership Paywall */}
+      {!membershipLoading && !hasMembership && (
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="w-full max-w-md">
+            <div className="bg-[#FCD000] border-4 border-black rounded-sm shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 text-center mb-4">
+              <Lock className="w-12 h-12 mx-auto mb-4 text-black" />
+              <h2 className="text-2xl font-black uppercase tracking-tight text-black mb-2">Fitness Community</h2>
+              <p className="text-black font-semibold text-sm mb-1">This section is a paid add-on</p>
+              <p className="text-black/70 text-xs mb-6">Not included in your main subscription</p>
+
+              <div className="bg-black rounded-sm p-4 mb-6 text-left space-y-2">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#FCD000] flex-shrink-0" />
+                  <span className="text-white text-sm">Full exercise library (330+ exercises)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#FCD000] flex-shrink-0" />
+                  <span className="text-white text-sm">Custom workout plan builder</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#FCD000] flex-shrink-0" />
+                  <span className="text-white text-sm">Progress tracking & completion</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#FCD000] flex-shrink-0" />
+                  <span className="text-white text-sm">Pre-built plans by our fitness coach</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#FCD000] flex-shrink-0" />
+                  <span className="text-white text-sm">Workout reminders & scheduling</span>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <span className="text-4xl font-black text-black">$4.99</span>
+                <span className="text-black/70 font-medium">/month</span>
+              </div>
+
+              <Button
+                onClick={() => subscribeMutation.mutate()}
+                disabled={subscribeMutation.isPending}
+                className="w-full h-14 bg-black text-[#FCD000] font-black text-lg uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(252,208,0,0.6)] hover:bg-zinc-900 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+              >
+                <CreditCard className="w-5 h-5 mr-2" />
+                {subscribeMutation.isPending ? 'Loading...' : 'Join Fitness Community'}
+              </Button>
+            </div>
+            <p className="text-white/50 text-xs text-center">Cancel anytime. Billed monthly via Stripe.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Membership loading state */}
+      {membershipLoading && (
+        <div className="flex items-center justify-center h-40">
+          <Dumbbell className="w-8 h-8 text-[#FCD000] animate-pulse" />
+        </div>
+      )}
+
+      {/* Fitness content — only shown to members */}
+      {hasMembership && (<>
         {/* Fitness Pillar Dialog */}
         <Dialog open={showFitnessPillarDialog} onOpenChange={setShowFitnessPillarDialog}>
           <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85vh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
@@ -1462,6 +1618,28 @@ export default function Fitness() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Membership Status Banner */}
+        {membershipData?.membership && (
+          <div className="bg-zinc-900 border border-[#FCD000]/30 rounded-sm px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#FCD000]" />
+              <span className="text-white text-sm font-bold">Fitness Community Member</span>
+              {membershipData.membership.cancelAtPeriodEnd && (
+                <Badge className="bg-red-900 text-red-200 text-xs">Cancels {membershipData.membership.currentPeriodEnd ? new Date(membershipData.membership.currentPeriodEnd).toLocaleDateString() : ''}</Badge>
+              )}
+            </div>
+            {!membershipData.membership.cancelAtPeriodEnd && (
+              <button
+                onClick={() => { if (confirm('Cancel your fitness membership? You will keep access until the end of your billing period.')) cancelMembershipMutation.mutate(); }}
+                className="text-white/40 hover:text-white/70 text-xs transition-colors"
+                disabled={cancelMembershipMutation.isPending}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Tab Navigation */}
         <Tabs defaultValue="workout" className="w-full">
@@ -1814,6 +1992,81 @@ export default function Fitness() {
 
           {/* Pre-built Plans Tab */}
           <TabsContent value="pre-built-plans" className="space-y-6">
+            {/* Admin-created plans for purchase */}
+            {adminPlans.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-black text-[#FCD000] uppercase tracking-wide border-b border-[#FCD000]/30 pb-2">
+                  Fitness Plans by Coach
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {adminPlans.map((plan) => {
+                    const alreadyPurchased = purchasedPlanIds.includes(plan.id);
+                    const isFree = !plan.isPurchasable;
+                    return (
+                      <div key={plan.id} className="bg-zinc-900 border-2 border-[#FCD000]/30 rounded-sm overflow-hidden">
+                        {plan.thumbnailUrl && (
+                          <img src={plan.thumbnailUrl} alt={plan.title} className="w-full h-32 object-cover" />
+                        )}
+                        <div className="p-4">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <h4 className="font-black text-white uppercase text-sm">{plan.title}</h4>
+                            {isFree ? (
+                              <Badge className="bg-green-600 text-white text-xs flex-shrink-0">Included</Badge>
+                            ) : alreadyPurchased ? (
+                              <Badge className="bg-[#FCD000] text-black text-xs flex-shrink-0">Purchased</Badge>
+                            ) : (
+                              <Badge className="bg-black border border-[#FCD000] text-[#FCD000] text-xs flex-shrink-0">
+                                ${((plan.price || 0) / 100).toFixed(2)}
+                              </Badge>
+                            )}
+                          </div>
+                          {plan.description && (
+                            <p className="text-white/60 text-xs mb-3 line-clamp-2">{plan.description}</p>
+                          )}
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            <Badge variant="outline" className="text-[#FCD000] border-[#FCD000]/40 text-xs capitalize">{plan.difficulty}</Badge>
+                            <Badge variant="outline" className="text-white/50 border-white/20 text-xs capitalize">{plan.category}</Badge>
+                            {plan.duration && <Badge variant="outline" className="text-white/50 border-white/20 text-xs">{plan.duration} min</Badge>}
+                          </div>
+                          {(isFree || alreadyPurchased) && plan.downloadUrl ? (
+                            <a href={plan.downloadUrl} download={plan.downloadFileName || plan.title} target="_blank" rel="noreferrer">
+                              <Button size="sm" className="w-full bg-[#FCD000] text-black font-black border-2 border-black">
+                                <Download className="w-4 h-4 mr-2" />
+                                Download Plan
+                              </Button>
+                            </a>
+                          ) : !isFree && !alreadyPurchased ? (
+                            <Button
+                              size="sm"
+                              className="w-full bg-[#FCD000] text-black font-black border-2 border-black"
+                              disabled={purchasingPlanId === plan.id}
+                              onClick={async () => {
+                                setPurchasingPlanId(plan.id);
+                                try {
+                                  const res = await apiRequest('POST', `/api/fitness/plans/${plan.id}/purchase-intent`);
+                                  const data = await res.json();
+                                  if (data.url) window.location.href = data.url;
+                                } catch (err: any) {
+                                  toast({ title: 'Error', description: err.message || 'Failed to start purchase', variant: 'destructive' });
+                                } finally {
+                                  setPurchasingPlanId(null);
+                                }
+                              }}
+                            >
+                              <ShoppingCart className="w-4 h-4 mr-2" />
+                              {purchasingPlanId === plan.id ? 'Loading...' : `Buy $${((plan.price || 0) / 100).toFixed(2)}`}
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="border-t border-[#FCD000]/30 pt-4">
+                  <h3 className="text-lg font-black text-[#FCD000] uppercase tracking-wide pb-2">Build Your Own Plan</h3>
+                </div>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">Pre-built Workout Plans</h2>
             </div>
@@ -2280,6 +2533,7 @@ export default function Fitness() {
             )}
           </TabsContent>
         </Tabs>
+      </>)}
       </div>
 
       {/* Plan Exercises Modal */}

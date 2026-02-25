@@ -70,6 +70,8 @@ interface PreBuiltFitnessPlan {
   downloadUrl?: string;
   downloadFileName?: string;
   isPublished: boolean;
+  isPurchasable?: boolean;
+  price?: number;
   publishedAt?: string;
   createdAt: string;
   updatedAt: string;
@@ -83,6 +85,8 @@ interface PreBuiltPlanFormData {
   duration: number;
   equipment: string;
   tier: 'free' | 'premium' | 'vip';
+  isPurchasable: boolean;
+  priceInCents: string;
 }
 
 export default function FitnessManagement() {
@@ -102,7 +106,9 @@ export default function FitnessManagement() {
     difficulty: 'beginner',
     duration: 60,
     equipment: '',
-    tier: 'free'
+    tier: 'free',
+    isPurchasable: false,
+    priceInCents: '',
   });
   const [uploadingPlanId, setUploadingPlanId] = useState<string | null>(null);
   
@@ -432,7 +438,9 @@ export default function FitnessManagement() {
       difficulty: 'beginner',
       duration: 60,
       equipment: '',
-      tier: 'free'
+      tier: 'free',
+      isPurchasable: false,
+      priceInCents: '',
     });
   };
 
@@ -450,7 +458,9 @@ export default function FitnessManagement() {
       difficulty: plan.difficulty,
       duration: plan.duration,
       equipment: plan.equipment || '',
-      tier: plan.tier
+      tier: plan.tier,
+      isPurchasable: plan.isPurchasable || false,
+      priceInCents: plan.price ? String(plan.price / 100) : '',
     });
     setShowPlanEditDialog(true);
   };
@@ -460,10 +470,18 @@ export default function FitnessManagement() {
       toast({ title: "Error", description: "Title is required", variant: "destructive" });
       return;
     }
+    if (planFormData.isPurchasable && (!planFormData.priceInCents || isNaN(parseFloat(planFormData.priceInCents)) || parseFloat(planFormData.priceInCents) <= 0)) {
+      toast({ title: "Error", description: "Enter a valid price for this purchasable plan", variant: "destructive" });
+      return;
+    }
+    const submitData = {
+      ...planFormData,
+      price: planFormData.isPurchasable ? Math.round(parseFloat(planFormData.priceInCents) * 100) : null,
+    };
     if (selectedPlan) {
-      updatePlanMutation.mutate({ id: selectedPlan.id, data: planFormData });
+      updatePlanMutation.mutate({ id: selectedPlan.id, data: submitData });
     } else {
-      createPlanMutation.mutate(planFormData);
+      createPlanMutation.mutate(submitData);
     }
   };
 
@@ -682,6 +700,11 @@ export default function FitnessManagement() {
                             Has Document
                           </Badge>
                         )}
+                        {plan.isPurchasable && plan.price && (
+                          <Badge className="bg-[#FCD000]/20 text-[#b8960a] text-xs">
+                            ${(plan.price / 100).toFixed(2)}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -874,6 +897,40 @@ export default function FitnessManagement() {
                 onChange={(e) => setPlanFormData({ ...planFormData, equipment: e.target.value })}
                 placeholder="Required equipment"
               />
+            </div>
+
+            <div className="border-t pt-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="plan-purchasable"
+                  checked={planFormData.isPurchasable}
+                  onChange={(e) => setPlanFormData({ ...planFormData, isPurchasable: e.target.checked, priceInCents: e.target.checked ? planFormData.priceInCents : '' })}
+                  className="w-4 h-4 accent-[#FCD000]"
+                />
+                <Label htmlFor="plan-purchasable" className="cursor-pointer">
+                  Sell this plan individually (Stripe checkout)
+                </Label>
+              </div>
+              {planFormData.isPurchasable && (
+                <div>
+                  <Label htmlFor="plan-price">Price (USD)</Label>
+                  <div className="relative mt-1">
+                    <span className="absolute left-3 top-2.5 text-gray-500 text-sm">$</span>
+                    <Input
+                      id="plan-price"
+                      type="number"
+                      min="0.50"
+                      step="0.01"
+                      value={planFormData.priceInCents}
+                      onChange={(e) => setPlanFormData({ ...planFormData, priceInCents: e.target.value })}
+                      placeholder="9.99"
+                      className="pl-7"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Users who are fitness members will see it as included. Non-members can purchase it individually.</p>
+                </div>
+              )}
             </div>
           </div>
 
