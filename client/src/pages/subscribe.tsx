@@ -90,7 +90,7 @@ export default function Subscribe() {
     <div className="min-h-screen bg-black pb-24">
       <div className="max-w-lg mx-auto px-4 py-6">
         <button
-          onClick={() => setLocation('/home')}
+          onClick={() => window.history.back()}
           className="flex items-center gap-2 text-white/60 hover:text-white mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
