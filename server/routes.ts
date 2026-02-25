@@ -4571,9 +4571,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           yearlyPrice: settings.yearlyPrice,
           trialDurationDays: settings.trialDurationDays,
           features: settings.features,
+          trialContentAreas: settings.trialContentAreas || {},
         });
       } else {
-        res.json({ monthlyPrice: "9.99", yearlyPrice: "99.99", trialDurationDays: 7, features: [] });
+        res.json({ monthlyPrice: "9.99", yearlyPrice: "99.99", trialDurationDays: 7, features: [], trialContentAreas: {} });
       }
     } catch (error) {
       console.error("Error fetching subscription settings:", error);
