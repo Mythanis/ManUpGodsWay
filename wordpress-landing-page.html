@@ -8,26 +8,22 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
-/* ═══════════════════════════════════════
-   RESET & ROOT
-═══════════════════════════════════════ */
+/* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --gold:      #FCD000;
-  --gold-dark: #d9b100;
-  --black:     #000000;
-  --near-black:#0a0a0a;
-  --zinc:      #111111;
-  --zinc2:     #181818;
-  --zinc3:     #222222;
-  --white:     #ffffff;
-  --muted:     rgba(255,255,255,0.62);
-  --muted2:    rgba(255,255,255,0.38);
-  --shadow-gold: 5px 5px 0 rgba(252,208,0,0.35);
-}
-
 html { scroll-behavior: smooth; }
+
+/* ── TOKENS ── */
+:root {
+  --gold:       #FCD000;
+  --gold-dark:  #d9b100;
+  --black:      #000000;
+  --card-bg:    #111111;
+  --card-border:#222222;
+  --white:      #ffffff;
+  --muted:      rgba(255,255,255,0.60);
+  --radius:     10px;
+  --max-w:      1140px;
+}
 
 body {
   font-family: 'Inter', sans-serif;
@@ -37,7 +33,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4, h5 {
+h1, h2, h3 {
   font-family: 'Oswald', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -45,817 +41,679 @@ h1, h2, h3, h4, h5 {
 }
 
 a { color: inherit; text-decoration: none; }
-img { display: block; max-width: 100%; }
 
-/* ═══════════════════════════════════════
-   UTILITIES
-═══════════════════════════════════════ */
-.mu-wrap {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 0 24px;
+/* ── UTILITY ── */
+.wrap {
+  width: 100%;
+  max-width: var(--max-w);
+  margin-inline: auto;
+  padding-inline: 24px;
 }
 
-.mu-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--gold);
-  color: var(--black);
+.gold { color: var(--gold); }
+
+.btn {
+  display: inline-block;
   font-family: 'Oswald', sans-serif;
-  font-weight: 700;
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 5px 14px;
-  border: 2px solid rgba(0,0,0,0.15);
-  margin-bottom: 22px;
-}
-
-.mu-section-title {
-  font-size: clamp(2rem, 5vw, 3.2rem);
-  color: var(--white);
-  margin-bottom: 14px;
-}
-
-.mu-section-title span { color: var(--gold); }
-
-.mu-section-sub {
-  color: var(--muted);
-  font-size: clamp(0.95rem, 2vw, 1.08rem);
-  max-width: 580px;
-  font-weight: 400;
-}
-
-/* ═══════════════════════════════════════
-   CTA BUTTON
-═══════════════════════════════════════ */
-.mu-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--gold);
-  color: var(--black);
-  font-family: 'Oswald', sans-serif;
-  font-weight: 700;
-  font-size: 1rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 17px 38px;
-  border: 3px solid var(--black);
-  box-shadow: 4px 4px 0 var(--black);
-  cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-  white-space: nowrap;
-}
-.mu-btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 var(--black);
-  background: #f5c800;
-}
-.mu-btn--dark {
-  background: var(--black);
-  color: var(--gold);
-  border-color: var(--gold);
-  box-shadow: 4px 4px 0 var(--gold);
-}
-.mu-btn--dark:hover {
-  box-shadow: 6px 6px 0 var(--gold);
-  background: #0d0d0d;
-}
-.mu-btn--lg {
   font-size: 1.1rem;
-  padding: 20px 48px;
-}
-
-/* ═══════════════════════════════════════
-   TOP BAR
-═══════════════════════════════════════ */
-.mu-topbar {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   background: var(--gold);
   color: var(--black);
-  text-align: center;
-  padding: 10px 20px;
-  font-family: 'Oswald', sans-serif;
-  font-weight: 700;
-  font-size: 0.82rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  padding: 16px 40px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.12s;
 }
-.mu-topbar a {
-  color: var(--black);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.btn:hover { background: var(--gold-dark); transform: translateY(-2px); }
+
+.section-label {
+  display: inline-block;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid rgba(252,208,0,0.35);
+  border-radius: 100px;
+  padding: 5px 16px;
+  margin-bottom: 18px;
 }
 
-/* ═══════════════════════════════════════
-   HERO
-═══════════════════════════════════════ */
-.mu-hero {
-  background: var(--black);
-  border-bottom: 4px solid var(--gold);
-  padding: 88px 24px 80px;
-  text-align: center;
+/* ════════════════════════════════════════
+   1. HERO
+════════════════════════════════════════ */
+.hero {
   position: relative;
+  min-height: 92vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   overflow: hidden;
+  padding: 80px 24px;
 }
-.mu-hero::before {
+
+/* Radial gold glow behind the headline */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  width: 700px;
+  height: 500px;
+  background: radial-gradient(ellipse at center, rgba(252,208,0,0.18) 0%, transparent 68%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Fine grid overlay */
+.hero::after {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(ellipse 70% 55% at 50% 0%, rgba(252,208,0,0.09) 0%, transparent 70%);
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
   pointer-events: none;
+  z-index: 0;
 }
-.mu-hero-inner { position: relative; z-index: 1; }
-.mu-hero h1 {
-  font-size: clamp(2.8rem, 8vw, 5.6rem);
-  color: var(--white);
-  max-width: 860px;
-  margin: 0 auto 22px;
-  text-shadow: 0 2px 24px rgba(0,0,0,0.5);
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 820px;
 }
-.mu-hero h1 span { color: var(--gold); }
-.mu-hero-sub {
-  font-size: clamp(1.05rem, 2.5vw, 1.28rem);
+
+.hero-eyebrow {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 24px;
+}
+
+.hero h1 {
+  font-size: clamp(2.6rem, 7vw, 5.2rem);
+  font-weight: 700;
+  line-height: 1.0;
+  margin-bottom: 28px;
+}
+
+.hero h1 em {
+  font-style: normal;
+  color: var(--gold);
+}
+
+.hero-sub {
+  font-size: clamp(1rem, 2.2vw, 1.25rem);
   color: var(--muted);
   max-width: 600px;
   margin: 0 auto 44px;
-  font-weight: 400;
-}
-.mu-hero-pills {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px 20px;
-  margin-top: 28px;
-  font-size: 0.83rem;
-  color: var(--muted);
-  font-weight: 500;
-}
-.mu-hero-pills span {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.mu-hero-pills span::before {
-  content: '✓';
-  color: var(--gold);
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-/* ═══════════════════════════════════════
-   SCRIPTURE BAND
-═══════════════════════════════════════ */
-.mu-scripture {
-  background: var(--near-black);
-  border-top: 1px solid #1d1d1d;
-  border-bottom: 1px solid #1d1d1d;
-  padding: 52px 24px;
-}
-.mu-scripture-inner {
-  max-width: 820px;
-  margin: 0 auto;
-  border-left: 5px solid var(--gold);
-  padding-left: 32px;
-}
-.mu-scripture blockquote {
-  font-family: 'Oswald', sans-serif;
-  font-size: clamp(1.35rem, 3.2vw, 2.1rem);
-  font-weight: 600;
-  color: var(--white);
-  font-style: italic;
-  margin-bottom: 12px;
-  line-height: 1.3;
-}
-.mu-scripture cite {
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--gold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-style: normal;
-}
-
-/* ═══════════════════════════════════════
-   FEATURES
-═══════════════════════════════════════ */
-.mu-features {
-  background: var(--zinc);
-  border-top: 2px solid #1c1c1c;
-  border-bottom: 2px solid #1c1c1c;
-  padding: 80px 24px;
-}
-.mu-features-hd {
-  text-align: center;
-  margin-bottom: 60px;
-}
-.mu-features-hd .mu-section-sub {
-  margin: 0 auto;
-}
-
-.mu-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-}
-
-@media (max-width: 900px) {
-  .mu-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 560px) {
-  .mu-grid { grid-template-columns: 1fr; }
-}
-
-.mu-card {
-  background: var(--zinc2);
-  border: 2px solid #272727;
-  border-top: 4px solid var(--gold);
-  padding: 28px 24px 26px;
-  position: relative;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-}
-.mu-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--gold);
-  box-shadow: var(--shadow-gold);
-}
-.mu-card-icon {
-  font-size: 2rem;
-  margin-bottom: 12px;
-  display: block;
-  line-height: 1;
-}
-.mu-card h3 {
-  font-size: 1.1rem;
-  color: var(--gold);
-  margin-bottom: 10px;
-}
-.mu-card p {
-  font-size: 0.875rem;
-  color: var(--muted);
-  line-height: 1.6;
-  margin-bottom: 0;
-}
-.mu-card-list {
-  margin-top: 14px;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.mu-card-list li {
-  font-size: 0.82rem;
-  color: var(--muted);
-  display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  line-height: 1.45;
-}
-.mu-card-list li::before {
-  content: '›';
-  color: var(--gold);
-  font-weight: 700;
-  font-size: 1rem;
-  line-height: 1.3;
-  flex-shrink: 0;
-}
-.mu-addon-badge {
-  display: inline-block;
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  border: 1.5px solid var(--gold);
-  color: var(--gold);
-  padding: 2px 9px;
-  margin-bottom: 10px;
-}
-
-/* ═══════════════════════════════════════
-   WHY SECTION
-═══════════════════════════════════════ */
-.mu-why {
-  background: var(--black);
-  padding: 80px 24px;
-}
-.mu-why-hd {
-  margin-bottom: 56px;
-}
-.mu-why-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 40px;
-}
-@media (max-width: 800px) {
-  .mu-why-grid { grid-template-columns: 1fr; gap: 44px; }
-}
-.mu-why-item {
-  border-top: 3px solid var(--gold);
-  padding-top: 28px;
-}
-.mu-why-num {
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 14px;
-  display: block;
-}
-.mu-why-item h3 {
-  font-size: 1.25rem;
-  color: var(--white);
-  margin-bottom: 12px;
-}
-.mu-why-item p {
-  color: var(--muted);
-  font-size: 0.92rem;
   line-height: 1.7;
 }
 
-/* ═══════════════════════════════════════
-   INSTALL STEPS
-═══════════════════════════════════════ */
-.mu-install {
-  background: var(--zinc);
-  border-top: 4px solid var(--gold);
-  padding: 80px 24px;
+.hero-note {
+  margin-top: 20px;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.38);
+  letter-spacing: 0.04em;
 }
-.mu-install-hd {
-  text-align: center;
-  margin-bottom: 56px;
-}
-.mu-install-hd .mu-section-sub { margin: 0 auto; }
 
-.mu-steps {
+/* ════════════════════════════════════════
+   2. STATS BAR
+════════════════════════════════════════ */
+.stats {
+  background: #0c0c0c;
+  border-top: 1px solid #1a1a1a;
+  border-bottom: 1px solid #1a1a1a;
+  padding: 28px 24px;
+}
+
+.stats-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
   justify-content: center;
-  margin-bottom: 44px;
-}
-.mu-step {
-  flex: 1 1 260px;
-  max-width: 320px;
-  background: var(--zinc2);
-  border: 2px solid #2b2b2b;
-  padding: 36px 26px 30px;
+  gap: 20px 48px;
   text-align: center;
-  position: relative;
 }
-.mu-step-num {
-  width: 54px;
-  height: 54px;
-  background: var(--gold);
-  color: var(--black);
+
+.stat-num {
   font-family: 'Oswald', sans-serif;
+  font-size: 2rem;
   font-weight: 700;
-  font-size: 1.6rem;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.stat-lbl {
+  font-size: 0.78rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* ════════════════════════════════════════
+   3. FEATURE GRID (9 pillars)
+════════════════════════════════════════ */
+.features {
+  padding: 100px 0;
+}
+
+.section-head {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.section-head h2 {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  margin-bottom: 14px;
+}
+
+.section-head p {
+  color: var(--muted);
+  max-width: 560px;
+  margin-inline: auto;
+  font-size: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 36px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.card:hover {
+  border-color: rgba(252,208,0,0.4);
+  transform: translateY(-3px);
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: rgba(252,208,0,0.10);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 3px solid var(--black);
-  margin: 0 auto 20px;
+  font-size: 1.5rem;
+  flex-shrink: 0;
 }
-.mu-step h4 {
-  font-size: 1.05rem;
-  color: var(--white);
-  margin-bottom: 10px;
-}
-.mu-step p {
-  color: var(--muted);
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-.mu-step p strong { color: var(--gold); font-weight: 600; }
 
-.mu-install-notes {
+.card h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.card p {
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.card-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(252,208,0,0.12);
+  color: var(--gold);
+  border-radius: 100px;
+  padding: 3px 10px;
+  margin-top: auto;
+  width: fit-content;
+}
+
+/* ════════════════════════════════════════
+   4. WHY MAN UP
+════════════════════════════════════════ */
+.why {
+  padding: 100px 0;
+  background: #080808;
+  border-top: 1px solid #1a1a1a;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.why-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 40px;
+  margin-top: 64px;
+}
+
+.why-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.why-num {
+  font-family: 'Oswald', sans-serif;
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: rgba(252,208,0,0.15);
+  line-height: 1;
+}
+
+.why-item h3 {
+  font-size: 1.25rem;
+  color: var(--white);
+}
+
+.why-item p {
+  font-size: 0.93rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* ════════════════════════════════════════
+   5. HOW TO GET THE APP (PWA)
+════════════════════════════════════════ */
+.install {
+  padding: 100px 0;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 32px;
+  margin-top: 64px;
+}
+
+.step {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 36px 28px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 16px;
 }
-.mu-install-note {
-  background: var(--zinc2);
-  border: 1.5px solid #2b2b2b;
-  border-left: 4px solid var(--gold);
-  padding: 22px 20px;
-}
-.mu-install-note h4 {
+
+.step-num {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--black);
   font-family: 'Oswald', sans-serif;
-  font-size: 0.88rem;
+  font-size: 1.5rem;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step h3 {
+  font-size: 1.1rem;
+  color: var(--white);
+}
+
+.step p {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.install-note {
+  margin-top: 48px;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.install-note-col h4 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--gold);
-  margin-bottom: 9px;
+  margin-bottom: 8px;
 }
-.mu-install-note p {
+
+.install-note-col p {
+  font-size: 0.85rem;
   color: var(--muted);
-  font-size: 0.84rem;
   line-height: 1.6;
 }
-.mu-install-note p strong { color: var(--white); font-weight: 600; }
 
-/* ═══════════════════════════════════════
-   SOCIAL PROOF / STATS BAND
-═══════════════════════════════════════ */
-.mu-stats {
+@media (max-width: 560px) {
+  .install-note { grid-template-columns: 1fr; }
+}
+
+/* ════════════════════════════════════════
+   6. FINAL CTA BANNER
+════════════════════════════════════════ */
+.cta-banner {
   background: var(--gold);
-  border-top: 4px solid var(--black);
-  border-bottom: 4px solid var(--black);
-  padding: 52px 24px;
-}
-.mu-stats-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 56px;
-}
-.mu-stat {
+  padding: 80px 24px;
   text-align: center;
-  min-width: 140px;
 }
-.mu-stat-val {
-  font-family: 'Oswald', sans-serif;
-  font-size: clamp(2.4rem, 5vw, 3.4rem);
-  font-weight: 700;
+
+.cta-banner h2 {
   color: var(--black);
-  line-height: 1;
-  display: block;
-  margin-bottom: 6px;
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  margin-bottom: 16px;
 }
-.mu-stat-label {
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+
+.cta-banner p {
   color: rgba(0,0,0,0.65);
+  font-size: 1.05rem;
+  max-width: 500px;
+  margin: 0 auto 40px;
 }
 
-/* ═══════════════════════════════════════
-   FINAL CTA
-═══════════════════════════════════════ */
-.mu-cta {
+.btn-dark {
   background: var(--black);
-  border-top: 2px solid #1c1c1c;
-  padding: 96px 24px 88px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
+  color: var(--gold);
 }
-.mu-cta::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 60% 60% at 50% 100%, rgba(252,208,0,0.08) 0%, transparent 70%);
-  pointer-events: none;
-}
-.mu-cta-inner { position: relative; z-index: 1; }
-.mu-cta h2 {
-  font-size: clamp(2.4rem, 7vw, 5rem);
-  color: var(--white);
-  max-width: 780px;
-  margin: 0 auto 20px;
-}
-.mu-cta h2 span { color: var(--gold); }
-.mu-cta p {
-  color: var(--muted);
-  font-size: clamp(1rem, 2vw, 1.15rem);
-  max-width: 520px;
-  margin: 0 auto 44px;
-  font-weight: 400;
-}
-.mu-cta-small {
-  margin-top: 20px;
-  font-size: 0.8rem;
-  color: var(--muted2);
-  letter-spacing: 0.05em;
-}
+.btn-dark:hover { background: #1a1a1a; transform: translateY(-2px); }
 
-/* ═══════════════════════════════════════
+/* ════════════════════════════════════════
    FOOTER
-═══════════════════════════════════════ */
-.mu-footer {
-  background: var(--near-black);
-  border-top: 1px solid #1c1c1c;
-  padding: 28px 24px;
+════════════════════════════════════════ */
+.footer {
+  background: #050505;
+  border-top: 1px solid #181818;
+  padding: 40px 24px;
   text-align: center;
 }
-.mu-footer p {
-  font-size: 0.78rem;
-  color: var(--muted2);
-  letter-spacing: 0.04em;
-}
-.mu-footer a { color: var(--gold); }
 
-/* ═══════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════ */
+.footer-brand {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.footer p {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.28);
+}
+
+/* ════════════════════════════════════════
+   RESPONSIVE TWEAKS
+════════════════════════════════════════ */
 @media (max-width: 600px) {
-  .mu-hero { padding: 64px 20px 56px; }
-  .mu-why { padding: 60px 20px; }
-  .mu-features { padding: 60px 20px; }
-  .mu-install { padding: 60px 20px; }
-  .mu-cta { padding: 72px 20px; }
-  .mu-steps { flex-direction: column; align-items: center; }
-  .mu-step { max-width: 100%; }
+  .stats-grid { gap: 16px 32px; }
+  .grid { grid-template-columns: 1fr; }
+  .why-grid { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
 
-<!-- ══ TOP BAR ══ -->
-<div class="mu-topbar">
-  Free trial — No App Store required — Works on iPhone &amp; Android &nbsp;·&nbsp;
-  <a href="https://www.manupgodsway.org/app">Get started at manupgodsway.org/app</a>
-</div>
-
-<!-- ══════════════════════════════════════════
+<!-- ════════════════════════════════════════
      HERO
-══════════════════════════════════════════ -->
-<section class="mu-hero">
-  <div class="mu-hero-inner">
-    <div class="mu-eyebrow">
-      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-      Now Available — Free Trial Included
-    </div>
-    <h1>Built for Men.<br /><span>Grounded in Scripture.</span></h1>
-    <p class="mu-hero-sub">A complete digital discipleship platform designed to help men grow in faith, build real brotherhood, and live out biblical manhood — every single day.</p>
-    <a class="mu-btn mu-btn--lg" href="https://www.manupgodsway.org/app">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-      Get the App — Free to Start
-    </a>
-    <div class="mu-hero-pills">
-      <span>No download required</span>
-      <span>Works on any device</span>
-      <span>Free trial included</span>
-      <span>Cancel anytime</span>
-    </div>
+════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Man Up God's Way &mdash; Biblical Discipleship for Men</div>
+    <h1>Built for Men.<br><em>Grounded in Scripture.</em></h1>
+    <p class="hero-sub">
+      Bible studies, daily devotionals, prayer, accountability, and community &mdash;
+      everything a man needs to grow stronger in faith, leadership, and purpose.
+    </p>
+    <a href="https://www.manupgodsway.org/app" class="btn">Get Started Free &rarr;</a>
+    <p class="hero-note">No App Store required &mdash; installs directly from your browser on iOS &amp; Android</p>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════
-     SCRIPTURE BAND
-══════════════════════════════════════════ -->
-<div class="mu-scripture">
-  <div class="mu-scripture-inner">
-    <blockquote>"Be watchful, stand firm in the faith, act like men, be strong. Let all that you do be done in love."</blockquote>
-    <cite>— 1 Corinthians 16:13–14 (ESV)</cite>
+<!-- ════════════════════════════════════════
+     STATS BAR
+════════════════════════════════════════ -->
+<div class="stats">
+  <div class="wrap">
+    <div class="stats-grid">
+      <div>
+        <div class="stat-num">9</div>
+        <div class="stat-lbl">Discipleship Pillars</div>
+      </div>
+      <div>
+        <div class="stat-num">40+</div>
+        <div class="stat-lbl">Missions to Complete</div>
+      </div>
+      <div>
+        <div class="stat-num">330+</div>
+        <div class="stat-lbl">Exercises in the Library</div>
+      </div>
+      <div>
+        <div class="stat-num">5</div>
+        <div class="stat-lbl">Ranks to Earn</div>
+      </div>
+      <div>
+        <div class="stat-num">$0</div>
+        <div class="stat-lbl">to Start</div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     FEATURES
-══════════════════════════════════════════ -->
-<section class="mu-features">
-  <div class="mu-wrap">
-    <div class="mu-features-hd">
-      <div class="mu-eyebrow">Everything in One Place</div>
-      <h2 class="mu-section-title">Nine Pillars of<br /><span>Biblical Manhood</span></h2>
-      <p class="mu-section-sub">Every feature is intentionally built to help you grow spiritually, stay accountable, and lead well — in your home, your church, and your community.</p>
+<!-- ════════════════════════════════════════
+     FEATURE GRID
+════════════════════════════════════════ -->
+<section class="features">
+  <div class="wrap">
+
+    <div class="section-head">
+      <div class="section-label">Everything You Need</div>
+      <h2>Nine Pillars of <span class="gold">Biblical Manhood</span></h2>
+      <p>Every feature is built around Scripture and designed to help men grow where it matters most.</p>
     </div>
 
-    <div class="mu-grid">
+    <div class="grid">
 
-      <div class="mu-card">
-        <span class="mu-card-icon">📖</span>
+      <!-- 1 -->
+      <div class="card">
+        <div class="card-icon">📖</div>
         <h3>Bible Studies</h3>
-        <p>Structured, day-by-day studies that guide you through Scripture at an intentional pace — with accountability built in.</p>
-        <ul class="mu-card-list">
-          <li>Series with consecutive lesson unlocks</li>
-          <li>Progress tracking at every level</li>
-          <li>Scripture, reflection questions &amp; key takeaways</li>
-          <li>Push notifications when your next study unlocks</li>
-        </ul>
+        <p>Day-by-day structured lessons with scripture, reflection questions, and key takeaways. Series unlock consecutively so you stay the course.</p>
+        <span class="card-tag">Core Feature</span>
       </div>
 
-      <div class="mu-card">
-        <span class="mu-card-icon">🌅</span>
+      <!-- 2 -->
+      <div class="card">
+        <div class="card-icon">🌅</div>
         <h3>Daily Devotionals</h3>
-        <p>Start every morning grounded in God's Word. A new devotional posts automatically — with images, scripture, and a challenge for the day.</p>
-        <ul class="mu-card-list">
-          <li>Automated daily delivery</li>
-          <li>Optional push notification reminders</li>
-          <li>Rich content with custom thumbnails</li>
-        </ul>
+        <p>Fresh devotionals delivered each day with push notifications. Admins schedule content in advance so you never miss your morning anchor.</p>
+        <span class="card-tag">Core Feature</span>
       </div>
 
-      <div class="mu-card">
-        <span class="mu-card-icon">🙏</span>
+      <!-- 3 -->
+      <div class="card">
+        <div class="card-icon">🙏</div>
         <h3>War Room</h3>
-        <p>A dedicated prayer space where men post real requests using real names. No hiding. No anonymity. Just brothers going to war in prayer.</p>
-        <ul class="mu-card-list">
-          <li>Post and receive prayer requests</li>
-          <li>Comment and mark when you've prayed</li>
-          <li>Real-time updates via live connection</li>
-        </ul>
+        <p>A sacred space for real prayer requests using real names. See who's praying, add your voice, and carry one another's burdens as the Word commands.</p>
+        <span class="card-tag">Community</span>
       </div>
 
-      <div class="mu-card">
-        <span class="mu-card-icon">⚔️</span>
+      <!-- 4 -->
+      <div class="card">
+        <div class="card-icon">🗺️</div>
         <h3>War Groups</h3>
-        <p>Licensed discipleship groups built for real-world community. Find a group near you or start your own and lead men well.</p>
-        <ul class="mu-card-list">
-          <li>Interactive map-based group discovery</li>
-          <li>Leader &amp; member management</li>
-          <li>Private group discussion boards</li>
-          <li>Media uploads &amp; group resources</li>
-        </ul>
+        <p>Licensed discipleship groups with city-based discovery and an interactive map. Join a local band of brothers, or register your own group for others to find.</p>
+        <span class="card-tag">Community</span>
       </div>
 
-      <div class="mu-card">
-        <span class="mu-card-icon">🎙️</span>
+      <!-- 5 -->
+      <div class="card">
+        <div class="card-icon">🎙️</div>
         <h3>Podcasts &amp; Videos</h3>
-        <p>A growing library of gospel-centered teaching content organized by topic — available on demand, any time, anywhere.</p>
-        <ul class="mu-card-list">
-          <li>Full podcast episode library</li>
-          <li>Video teachings with tiered access</li>
-          <li>Topic classification &amp; community ratings</li>
-        </ul>
+        <p>A full media library organized by topic. Rate episodes, track what you've watched, and get content matched to where you are in your faith journey.</p>
+        <span class="card-tag">Media</span>
       </div>
 
-      <div class="mu-card">
-        <span class="mu-card-icon">🔥</span>
+      <!-- 6 -->
+      <div class="card">
+        <div class="card-icon">🛡️</div>
         <h3>Under Fire — Accountability</h3>
-        <p>Post a struggle or specific area where you need accountability. Brothers step up, assist, and walk with you through it.</p>
-        <ul class="mu-card-list">
-          <li>Post specific accountability requests</li>
-          <li>Brothers "Assist" to become your partner</li>
-          <li>Auto-opens a private direct message thread</li>
-        </ul>
+        <p>Post an accountability request and let a brother step up to assist. One tap starts a private conversation so the partnership is real, not performative.</p>
+        <span class="card-tag">Accountability</span>
       </div>
 
-      <div class="mu-card">
-        <span class="mu-card-icon">🤝</span>
-        <h3>Community</h3>
-        <p>More than a feed — a brotherhood. Connect with men at your level, share testimonies, and sharpen each other daily.</p>
-        <ul class="mu-card-list">
-          <li>Discussion boards &amp; threaded replies</li>
-          <li>User profiles with faith journey stages</li>
-          <li>Discipleship tag-based discovery</li>
-          <li>Direct &amp; group messaging</li>
-        </ul>
+      <!-- 7 -->
+      <div class="card">
+        <div class="card-icon">💬</div>
+        <h3>Community Discussions</h3>
+        <p>Engage with the brotherhood through discussions, user profiles, discipleship tags, and faith journey stages. Iron sharpens iron — here it's built in.</p>
+        <span class="card-tag">Community</span>
       </div>
 
-      <div class="mu-card">
-        <span class="mu-card-icon">🏋️</span>
+      <!-- 8 -->
+      <div class="card">
+        <div class="card-icon">💪</div>
         <h3>Fitness Center</h3>
-        <div class="mu-addon-badge">Add-On</div>
-        <p>Train your body as a servant of righteousness. Build strength, track workouts, and follow plans built for men of faith.</p>
-        <ul class="mu-card-list">
-          <li>330+ exercise library with guides</li>
-          <li>Custom workout plan builder</li>
-          <li>Coach-designed downloadable plans</li>
-          <li>Workout reminders &amp; scheduling</li>
-        </ul>
+        <p>A 330+ exercise library, custom workout builder, and coach-created plans. Train the body you've been given. Available as an affordable add-on.</p>
+        <span class="card-tag">Add-On</span>
       </div>
 
-      <div class="mu-card">
-        <span class="mu-card-icon">🎖️</span>
+      <!-- 9 -->
+      <div class="card">
+        <div class="card-icon">⚔️</div>
         <h3>Rations &amp; Ranks</h3>
-        <p>Every mission you complete earns rations. Rations build your rank. Your rank reflects your faithfulness and your engagement with the platform.</p>
-        <ul class="mu-card-list">
-          <li>40+ mission types across every feature</li>
-          <li>5-tier military-inspired rank system</li>
-          <li>Streak tracking &amp; grace bonuses</li>
-          <li>Leaderboard recognition</li>
-        </ul>
+        <p>Earn rations by completing missions across every feature. Work through 5 military-inspired ranks — from Recruit to Elite — as your discipleship deepens.</p>
+        <span class="card-tag">Gamification</span>
       </div>
 
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════
-     WHY SECTION
-══════════════════════════════════════════ -->
-<section class="mu-why">
-  <div class="mu-wrap">
-    <div class="mu-why-hd">
-      <div class="mu-eyebrow">Why Man Up God's Way</div>
-      <h2 class="mu-section-title">One Platform.<br /><span>Total Discipleship.</span></h2>
-      <p class="mu-section-sub">No more scattered apps, disconnected podcasts, and forgotten Bible reading plans. Everything a man needs to grow is in one place.</p>
-    </div>
-    <div class="mu-why-grid">
-      <div class="mu-why-item">
-        <span class="mu-why-num">01 — Foundation</span>
-        <h3>Scripture at the Center</h3>
-        <p>Every feature begins with the Word. Studies, devotionals, accountability, and community are all anchored in biblical truth — not motivational fluff, cultural trends, or self-help philosophy.</p>
-      </div>
-      <div class="mu-why-item">
-        <span class="mu-why-num">02 — Brotherhood</span>
-        <h3>Built for Real Accountability</h3>
-        <p>The War Room, Under Fire, and War Groups are designed to eliminate isolation. Real names. Real struggles. Real brothers walking beside you — not just liking your posts.</p>
-      </div>
-      <div class="mu-why-item">
-        <span class="mu-why-num">03 — Discipline</span>
-        <h3>Progress That Actually Sticks</h3>
-        <p>Structured studies with lesson-by-lesson tracking, daily streaks, a ranks system, and push reminders work together to build the consistent habits of a disciplined man of God.</p>
-      </div>
-    </div>
-  </div>
-</section>
+<!-- ════════════════════════════════════════
+     WHY MAN UP
+════════════════════════════════════════ -->
+<section class="why">
+  <div class="wrap">
 
-<!-- ══════════════════════════════════════════
-     STATS BAND
-══════════════════════════════════════════ -->
-<div class="mu-stats">
-  <div class="mu-wrap">
-    <div class="mu-stats-grid">
-      <div class="mu-stat">
-        <span class="mu-stat-val">9</span>
-        <span class="mu-stat-label">Platform Pillars</span>
-      </div>
-      <div class="mu-stat">
-        <span class="mu-stat-val">40+</span>
-        <span class="mu-stat-label">Mission Types</span>
-      </div>
-      <div class="mu-stat">
-        <span class="mu-stat-val">330+</span>
-        <span class="mu-stat-label">Exercises</span>
-      </div>
-      <div class="mu-stat">
-        <span class="mu-stat-val">5</span>
-        <span class="mu-stat-label">Rank Tiers</span>
-      </div>
-      <div class="mu-stat">
-        <span class="mu-stat-val">$0</span>
-        <span class="mu-stat-label">To Get Started</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     HOW TO GET THE APP
-══════════════════════════════════════════ -->
-<section class="mu-install">
-  <div class="mu-wrap">
-    <div class="mu-install-hd">
-      <div class="mu-eyebrow">No App Store Needed</div>
-      <h2 class="mu-section-title">Three Steps<br /><span>to Get Started</span></h2>
-      <p class="mu-section-sub">Man Up God's Way is a Progressive Web App — it installs directly from your browser on any phone or tablet. No download, no account required to browse.</p>
+    <div class="section-head">
+      <div class="section-label">Why It's Different</div>
+      <h2>Not Just Another <span class="gold">Devotional App</span></h2>
+      <p>Man Up God's Way is a full discipleship ecosystem — every piece works together.</p>
     </div>
 
-    <div class="mu-steps">
-      <div class="mu-step">
-        <div class="mu-step-num">1</div>
-        <h4>Visit the App</h4>
-        <p>Open your phone's browser and go to <strong>manupgodsway.org/app</strong> — no download or App Store required.</p>
-      </div>
-      <div class="mu-step">
-        <div class="mu-step-num">2</div>
-        <h4>Add to Home Screen</h4>
-        <p>Tap the share or menu icon in your browser and choose <strong>"Add to Home Screen."</strong> The icon appears on your device just like a native app.</p>
-      </div>
-      <div class="mu-step">
-        <div class="mu-step-num">3</div>
-        <h4>Man Up. Get to Work.</h4>
-        <p>Create your account, start your free trial, and begin your first study. Brotherhood and accountability are waiting.</p>
-      </div>
-    </div>
+    <div class="why-grid">
 
-    <div class="mu-install-notes">
-      <div class="mu-install-note">
-        <h4>📱 iPhone — Safari</h4>
-        <p>Open Safari → tap the <strong>Share icon</strong> at the bottom → scroll and tap <strong>"Add to Home Screen"</strong> → tap <strong>"Add"</strong> in the top right. Done.</p>
+      <div class="why-item">
+        <div class="why-num">01</div>
+        <h3>Scripture First, Always</h3>
+        <p>Every study, devotional, discussion prompt, and challenge is rooted in God's Word. There's no self-help fluff here — just biblical truth for men who are serious about growing.</p>
       </div>
-      <div class="mu-install-note">
-        <h4>🤖 Android — Chrome</h4>
-        <p>Open Chrome → tap the <strong>three-dot menu</strong> in the top right → tap <strong>"Add to Home Screen"</strong> → tap <strong>"Add"</strong> when prompted. Done.</p>
+
+      <div class="why-item">
+        <div class="why-num">02</div>
+        <h3>Built for Accountability</h3>
+        <p>Real men need real accountability. Between War Room prayer, Under Fire partnerships, War Groups, and direct messaging, you're never alone in the fight.</p>
       </div>
+
+      <div class="why-item">
+        <div class="why-num">03</div>
+        <h3>Progress You Can Measure</h3>
+        <p>Track streaks, complete missions, earn rations, and climb the ranks. Your growth is visible — which keeps you moving forward even when motivation runs low.</p>
+      </div>
+
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════
-     FINAL CTA
-══════════════════════════════════════════ -->
-<section class="mu-cta">
-  <div class="mu-cta-inner">
-    <div class="mu-eyebrow" style="background:var(--gold);color:var(--black);">Your Brotherhood Is Waiting</div>
-    <h2>Man Up.<br /><span>Start Today.</span></h2>
-    <p>Free trial included. No credit card required to get started. Cancel anytime. The only thing standing between you and the man God made you to be is a decision.</p>
-    <a class="mu-btn mu-btn--lg" href="https://www.manupgodsway.org/app">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-      Open the App at manupgodsway.org/app
-    </a>
-    <p class="mu-cta-small">Works on iPhone, Android, and desktop. No App Store. No download.</p>
+<!-- ════════════════════════════════════════
+     HOW TO GET THE APP (PWA)
+════════════════════════════════════════ -->
+<section class="install">
+  <div class="wrap">
+
+    <div class="section-head">
+      <div class="section-label">No App Store Needed</div>
+      <h2>Get the App in <span class="gold">Three Steps</span></h2>
+      <p>Man Up God's Way is a Progressive Web App — it installs like a native app straight from your browser on any device.</p>
+    </div>
+
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Visit the Site</h3>
+        <p>Open your browser and go to <strong>www.manupgodsway.org/app</strong> on your phone or tablet.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Add to Home Screen</h3>
+        <p>Tap the share icon (iOS) or the menu icon (Android) and select <strong>"Add to Home Screen."</strong> The app icon will appear just like any other app.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Start Your Journey</h3>
+        <p>Sign in, complete your profile, and begin your first Bible study. Your free trial starts immediately — no credit card required.</p>
+      </div>
+
+    </div>
+
+    <div class="install-note">
+      <div class="install-note-col">
+        <h4>📱 iPhone &amp; iPad (iOS Safari)</h4>
+        <p>Tap the <strong>Share</strong> button at the bottom of Safari, scroll down and tap <strong>Add to Home Screen</strong>, then tap <strong>Add</strong> in the top right.</p>
+      </div>
+      <div class="install-note-col">
+        <h4>🤖 Android (Chrome)</h4>
+        <p>Tap the <strong>three-dot menu</strong> in Chrome, tap <strong>Add to Home Screen</strong> (or "Install App" if prompted automatically), then tap <strong>Install</strong>.</p>
+      </div>
+    </div>
+
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════
+<!-- ════════════════════════════════════════
+     FINAL CTA BANNER
+════════════════════════════════════════ -->
+<section class="cta-banner">
+  <div class="wrap">
+    <h2>Man Up. Start Today.</h2>
+    <p>Your free trial is waiting. No excuses, no App Store, no credit card. Just open your browser and go.</p>
+    <a href="https://www.manupgodsway.org/app" class="btn btn-dark">Begin Your Free Trial &rarr;</a>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════
      FOOTER
-══════════════════════════════════════════ -->
-<div class="mu-footer">
-  <p>© 2025 Man Up God's Way. All rights reserved. &nbsp;·&nbsp; <a href="https://www.manupgodsway.org">manupgodsway.org</a></p>
-</div>
+════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="footer-brand">Man Up God's Way</div>
+  <p>Biblical masculinity, leadership, and spiritual growth &mdash; for men who are serious about the call.</p>
+</footer>
 
 </body>
 </html>
