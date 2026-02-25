@@ -1485,16 +1485,14 @@ export default function Fitness() {
         </div>
       )}
 
-      {/* Fitness content — only shown to members */}
-      {hasMembership && (<>
-        {/* Fitness Pillar Dialog */}
-        <Dialog open={showFitnessPillarDialog} onOpenChange={setShowFitnessPillarDialog}>
-          <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85vh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
-            <DialogHeader className="bg-[#FCD000] text-black px-6 py-4 border-b border-[#FCD000] flex-shrink-0">
-              <DialogTitle className="text-xl font-black uppercase tracking-wide text-black relative z-10">
-                Man Up God's Way Fitness Pillar
-              </DialogTitle>
-            </DialogHeader>
+      {/* Fitness Pillar Dialog — available to all users */}
+      <Dialog open={showFitnessPillarDialog} onOpenChange={setShowFitnessPillarDialog}>
+        <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85vh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
+          <DialogHeader className="bg-[#FCD000] text-black px-6 py-4 border-b border-[#FCD000] flex-shrink-0">
+            <DialogTitle className="text-xl font-black uppercase tracking-wide text-black relative z-10">
+              Man Up God's Way Fitness Pillar
+            </DialogTitle>
+          </DialogHeader>
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-black">
               <h2 className="text-2xl font-black text-[#FCD000] uppercase tracking-wide text-center">
                 Strength for the Glory of God
@@ -1618,6 +1616,9 @@ export default function Fitness() {
             </div>
           </DialogContent>
         </Dialog>
+
+      {/* Fitness content — only shown to members */}
+      {hasMembership && (<>
 
         {/* Membership Status Banner */}
         {membershipData?.membership && (
