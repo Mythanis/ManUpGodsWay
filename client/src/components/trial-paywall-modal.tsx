@@ -6,17 +6,21 @@ import { Lock, CreditCard, X } from "lucide-react";
 interface TrialPaywallModalProps {
   open: boolean;
   reason: "trial_restricted" | "not_subscribed" | null;
+  backTo?: string;
 }
 
-export default function TrialPaywallModal({ open, reason }: TrialPaywallModalProps) {
+export default function TrialPaywallModal({ open, reason, backTo = "/" }: TrialPaywallModalProps) {
   const [, setLocation] = useLocation();
 
-  const handleSubscribe = () => {
-    setLocation("/subscribe");
+  const handleClose = () => {
+    setLocation(backTo);
   };
 
-  const handleClose = () => {
-    window.history.back();
+  const handleSubscribe = () => {
+    // Replace the blocked-page history entry with the safe previous page,
+    // so the browser back button from /subscribe goes there — not the paywall.
+    window.history.replaceState(null, "", backTo);
+    setLocation("/subscribe");
   };
 
   const message =

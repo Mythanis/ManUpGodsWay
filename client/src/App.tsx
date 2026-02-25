@@ -1,5 +1,5 @@
-import { useState, useEffect, createContext, useContext } from "react";
-import { Switch, Route } from "wouter";
+import { useState, useEffect, useRef, createContext, useContext } from "react";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -57,10 +57,15 @@ import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { useTrialAccess } from "@/hooks/useTrialAccess";
 import TrialPaywallModal from "@/components/trial-paywall-modal";
 
+// Tracks the last path the user was on before navigating to the current one,
+// so the paywall can send them back somewhere sensible.
+const PrevLocationCtx = createContext<string>("/");
+
 function TrialPageGuard({ area, children }: { area: string; children: React.ReactNode }) {
   const { blocked, reason, isLoading } = useTrialAccess(area);
+  const backTo = useContext(PrevLocationCtx);
 
-  // While auth/settings are loading, render nothing to avoid a flash
+  // While auth/settings are loading, show a spinner to avoid a flash
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -73,7 +78,7 @@ function TrialPageGuard({ area, children }: { area: string; children: React.Reac
     // Don't render the page at all — show a dark backdrop with the paywall modal
     return (
       <div className="min-h-screen bg-black">
-        <TrialPaywallModal open={true} reason={reason} />
+        <TrialPaywallModal open={true} reason={reason} backTo={backTo} />
       </div>
     );
   }
@@ -105,6 +110,17 @@ const useSplash = () => useContext(SplashContext);
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const { splashCompleted, setSplashCompleted } = useSplash();
+
+  // Track previous location so the paywall can send the user back somewhere sensible
+  const [location] = useLocation();
+  const locationRef = useRef(location);
+  const [prevLocation, setPrevLocation] = useState("/");
+  useEffect(() => {
+    if (location !== locationRef.current) {
+      setPrevLocation(locationRef.current);
+      locationRef.current = location;
+    }
+  }, [location]);
 
   // Skip splash screen for purchase pages
   const isPurchasePage = window.location.pathname.includes('/purchase');
@@ -140,64 +156,66 @@ function Router() {
   }
 
   return (
-    <>
-      <Switch>
-        {!isAuthenticated ? (
-          <Route path="/" component={Landing} />
-        ) : (
-          <>
-            <Route path="/" component={Home} />
-            <Route path="/library" component={LibraryGuarded} />
-            <Route path="/series/:id" component={SeriesDetail} />
-            <Route path="/videos" component={VideosGuarded} />
-            <Route path="/podcasts" component={PodcastsGuarded} />
-            <Route path="/challenges" component={Challenges} />
-            <Route path="/fitness" component={Fitness} />
-            <Route path="/fitness/plans/:planId" component={ViewPlan} />
-            <Route path="/create-plan" component={CreatePlan} />
-            <Route path="/edit-plan/:planId" component={EditPlan} />
-            <Route path="/events" component={Events} />
-            <Route path="/community" component={CommunityGuarded} />
-            <Route path="/brothers" component={Brothers} />
-            <Route path="/messages" component={Messages} />
-            <Route path="/profile" component={Profile} />
-            <Route path="/admin" component={Admin} />
-            <Route path="/admin/studies/:id/edit-word" component={AdminWordEditor} />
-            <Route path="/owners" component={Owners} />
-            <Route path="/studies/:id" component={StudyDetail} />
-            <Route path="/studies/:id/document" component={DocumentViewer} />
-            <Route path="/studies/:id/word" component={WordViewer} />
-            <Route path="/users/:userId" component={UserProfile} />
-            <Route path="/notification-preferences" component={NotificationPreferences} />
-            <Route path="/blog" component={BlogGuarded} />
-            <Route path="/blog/:slug" component={BlogDetail} />
-            <Route path="/hurdle-wall" component={HurdleWallGuarded} />
-            <Route path="/under-fire" component={UnderFireGuarded} />
-            <Route path="/war-groups" component={WarGroupsGuarded} />
-            <Route path="/war-groups/register" component={WarGroupRegister} />
-            <Route path="/war-groups/:id" component={WarGroupDetail} />
-            <Route path="/subscribe" component={Subscribe} />
-            <Route path="/purchase" component={Purchase} />
-            <Route path="/purchase/:studyId" component={Purchase} />
-            <Route path="/bible" component={Bible} />
-            <Route path="/rations" component={Rations} />
-            <Route path="/rations-store" component={RationsStore} />
-            <Route path="/my-orders" component={MyOrders} />
-            <Route path="/privacy-security" component={PrivacySecurity} />
-            <Route path="/privacy-policy" component={PrivacyPolicy} />
-            <Route path="/terms-conditions" component={TermsConditions} />
-            <Route path="/more-man-up" component={MoreManUp} />
-          </>
-        )}
-        <Route component={NotFound} />
-      </Switch>
-      
-      {/* Persistent Account Settings Button for authenticated users */}
-      {isAuthenticated && <AccountSettingsButton />}
-      
-      {/* Persistent Top Right Logo for authenticated users */}
-      {isAuthenticated && <TopRightLogo />}
-    </>
+    <PrevLocationCtx.Provider value={prevLocation}>
+      <>
+        <Switch>
+          {!isAuthenticated ? (
+            <Route path="/" component={Landing} />
+          ) : (
+            <>
+              <Route path="/" component={Home} />
+              <Route path="/library" component={LibraryGuarded} />
+              <Route path="/series/:id" component={SeriesDetail} />
+              <Route path="/videos" component={VideosGuarded} />
+              <Route path="/podcasts" component={PodcastsGuarded} />
+              <Route path="/challenges" component={Challenges} />
+              <Route path="/fitness" component={Fitness} />
+              <Route path="/fitness/plans/:planId" component={ViewPlan} />
+              <Route path="/create-plan" component={CreatePlan} />
+              <Route path="/edit-plan/:planId" component={EditPlan} />
+              <Route path="/events" component={Events} />
+              <Route path="/community" component={CommunityGuarded} />
+              <Route path="/brothers" component={Brothers} />
+              <Route path="/messages" component={Messages} />
+              <Route path="/profile" component={Profile} />
+              <Route path="/admin" component={Admin} />
+              <Route path="/admin/studies/:id/edit-word" component={AdminWordEditor} />
+              <Route path="/owners" component={Owners} />
+              <Route path="/studies/:id" component={StudyDetail} />
+              <Route path="/studies/:id/document" component={DocumentViewer} />
+              <Route path="/studies/:id/word" component={WordViewer} />
+              <Route path="/users/:userId" component={UserProfile} />
+              <Route path="/notification-preferences" component={NotificationPreferences} />
+              <Route path="/blog" component={BlogGuarded} />
+              <Route path="/blog/:slug" component={BlogDetail} />
+              <Route path="/hurdle-wall" component={HurdleWallGuarded} />
+              <Route path="/under-fire" component={UnderFireGuarded} />
+              <Route path="/war-groups" component={WarGroupsGuarded} />
+              <Route path="/war-groups/register" component={WarGroupRegister} />
+              <Route path="/war-groups/:id" component={WarGroupDetail} />
+              <Route path="/subscribe" component={Subscribe} />
+              <Route path="/purchase" component={Purchase} />
+              <Route path="/purchase/:studyId" component={Purchase} />
+              <Route path="/bible" component={Bible} />
+              <Route path="/rations" component={Rations} />
+              <Route path="/rations-store" component={RationsStore} />
+              <Route path="/my-orders" component={MyOrders} />
+              <Route path="/privacy-security" component={PrivacySecurity} />
+              <Route path="/privacy-policy" component={PrivacyPolicy} />
+              <Route path="/terms-conditions" component={TermsConditions} />
+              <Route path="/more-man-up" component={MoreManUp} />
+            </>
+          )}
+          <Route component={NotFound} />
+        </Switch>
+
+        {/* Persistent Account Settings Button for authenticated users */}
+        {isAuthenticated && <AccountSettingsButton />}
+
+        {/* Persistent Top Right Logo for authenticated users */}
+        {isAuthenticated && <TopRightLogo />}
+      </>
+    </PrevLocationCtx.Provider>
   );
 }
 
