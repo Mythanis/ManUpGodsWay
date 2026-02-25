@@ -22,6 +22,7 @@ interface User {
   profileImageUrl?: string;
   role: string;
   subscriptionTier: string;
+  subscriptionStatus: string;
   streakDays: number;
   allowDirectMessages: boolean;
   allowGroupInvites: boolean;
@@ -70,8 +71,8 @@ export default function UserManagement() {
   });
 
   const updateUserSubscription = useMutation({
-    mutationFn: async ({ userId, subscriptionTier }: { userId: string; subscriptionTier: string }) => {
-      await apiRequest('PUT', `/api/admin/users/${userId}/subscription`, { subscriptionTier });
+    mutationFn: async ({ userId, subscriptionStatus }: { userId: string; subscriptionStatus: string }) => {
+      await apiRequest('PUT', `/api/admin/users/${userId}/subscription`, { subscriptionStatus });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -176,8 +177,8 @@ export default function UserManagement() {
       }
       
       // Save subscription change if it was modified
-      if (editedUser.subscriptionTier && editedUser.subscriptionTier !== selectedUser.subscriptionTier) {
-        promises.push(updateUserSubscription.mutateAsync({ userId: selectedUser.id, subscriptionTier: editedUser.subscriptionTier }));
+      if (editedUser.subscriptionStatus && editedUser.subscriptionStatus !== selectedUser.subscriptionStatus) {
+        promises.push(updateUserSubscription.mutateAsync({ userId: selectedUser.id, subscriptionStatus: editedUser.subscriptionStatus }));
       }
       
       // Wait for all changes to be saved
@@ -187,7 +188,7 @@ export default function UserManagement() {
       setSelectedUser(prev => prev ? { 
         ...prev, 
         role: editedUser.role || prev.role,
-        subscriptionTier: editedUser.subscriptionTier || prev.subscriptionTier
+        subscriptionStatus: editedUser.subscriptionStatus || prev.subscriptionStatus
       } : null);
       
       // Clear edited state
@@ -368,11 +369,11 @@ export default function UserManagement() {
                     <div className="flex items-center space-x-3">
                       <CreditCard className="w-5 h-5 text-ministry-gold" />
                       <div>
-                        <p className="text-sm font-medium text-foreground">Subscription</p>
+                        <p className="text-sm font-medium text-foreground">Subscription Status</p>
                         <Select
-                          value={editedUser.subscriptionTier || selectedUser.subscriptionTier}
-                          onValueChange={(subscriptionTier) => {
-                            setEditedUser(prev => ({ ...prev, subscriptionTier }));
+                          value={editedUser.subscriptionStatus || selectedUser.subscriptionStatus || 'expired'}
+                          onValueChange={(subscriptionStatus) => {
+                            setEditedUser(prev => ({ ...prev, subscriptionStatus }));
                             setHasUnsavedChanges(true);
                           }}
                         >
@@ -380,8 +381,10 @@ export default function UserManagement() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="free">Free</SelectItem>
-                            <SelectItem value="premium">Subscriber</SelectItem>
+                            <SelectItem value="active">Active (Subscriber)</SelectItem>
+                            <SelectItem value="trial">Trial</SelectItem>
+                            <SelectItem value="expired">Expired (Free)</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

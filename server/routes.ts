@@ -4163,7 +4163,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const { subscriptionStatus } = req.body;
+      let { subscriptionStatus, subscriptionTier } = req.body;
+
+      // Accept subscriptionTier from the frontend and translate to subscriptionStatus
+      if (!subscriptionStatus && subscriptionTier) {
+        if (subscriptionTier === 'free') subscriptionStatus = 'expired';
+        else if (subscriptionTier === 'premium' || subscriptionTier === 'subscriber') subscriptionStatus = 'active';
+      }
+
       if (!subscriptionStatus || !['trial', 'active', 'expired', 'cancelled'].includes(subscriptionStatus)) {
         return res.status(400).json({ message: "Invalid subscription status" });
       }
