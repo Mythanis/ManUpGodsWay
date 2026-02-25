@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DollarSign, Save, Settings, Shield, Clock, Check, BookOpen } from "lucide-react";
+import { DollarSign, Save, Settings, Shield, Clock, Check, BookOpen, Loader2 } from "lucide-react";
 
 interface SubscriptionSettings {
   id: string;
@@ -43,7 +43,9 @@ const CONTENT_AREA_LABELS: Record<string, string> = {
 export default function SubscriptionSettingsManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingPricing, setIsEditingPricing] = useState(false);
+  const [savingArea, setSavingArea] = useState<string | null>(null);
+  const [savingStudy, setSavingStudy] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     monthlyPrice: "9.99",
@@ -105,38 +107,58 @@ export default function SubscriptionSettingsManagement() {
     },
   });
 
-  const handleSave = async () => {
+  const handleSavePricing = async () => {
     const featuresArray = formData.features
       .split("\n")
       .map((f) => f.trim())
       .filter((f) => f.length > 0);
 
     try {
-      await Promise.all([
-        updateMutation.mutateAsync({
-          monthlyPrice: parseFloat(formData.monthlyPrice),
-          yearlyPrice: parseFloat(formData.yearlyPrice),
-          trialDurationDays: parseInt(formData.trialDurationDays),
-          features: featuresArray,
-          trialContentAreas: formData.trialContentAreas,
-        }),
-        updateTrialStudiesMutation.mutateAsync(Array.from(selectedTrialStudyIds)),
-      ]);
-      setIsEditing(false);
-      toast({ title: "Settings saved", description: "Subscription settings updated successfully." });
+      await updateMutation.mutateAsync({
+        monthlyPrice: parseFloat(formData.monthlyPrice),
+        yearlyPrice: parseFloat(formData.yearlyPrice),
+        trialDurationDays: parseInt(formData.trialDurationDays),
+        features: featuresArray,
+        trialContentAreas: formData.trialContentAreas,
+      });
+      setIsEditingPricing(false);
+      toast({ title: "Settings saved", description: "Pricing and trial duration updated." });
     } catch {
-      // errors handled by individual mutations
+      // errors handled by mutation
     }
   };
 
-  const toggleContentArea = (area: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      trialContentAreas: {
-        ...prev.trialContentAreas,
-        [area]: !prev.trialContentAreas[area],
-      },
-    }));
+  const handleToggleContentArea = async (area: string, checked: boolean) => {
+    const newAreas = { ...formData.trialContentAreas, [area]: checked };
+    setFormData((prev) => ({ ...prev, trialContentAreas: newAreas }));
+    setSavingArea(area);
+    try {
+      await updateMutation.mutateAsync({
+        monthlyPrice: parseFloat(formData.monthlyPrice),
+        yearlyPrice: parseFloat(formData.yearlyPrice),
+        trialDurationDays: parseInt(formData.trialDurationDays),
+        features: formData.features.split("\n").map(f => f.trim()).filter(f => f.length > 0),
+        trialContentAreas: newAreas,
+      });
+    } finally {
+      setSavingArea(null);
+    }
+  };
+
+  const handleToggleStudy = async (studyId: string, checked: boolean) => {
+    const next = new Set(selectedTrialStudyIds);
+    if (checked) {
+      next.add(studyId);
+    } else {
+      next.delete(studyId);
+    }
+    setSelectedTrialStudyIds(next);
+    setSavingStudy(studyId);
+    try {
+      await updateTrialStudiesMutation.mutateAsync(Array.from(next));
+    } finally {
+      setSavingStudy(null);
+    }
   };
 
   if (isLoading) {
@@ -149,6 +171,8 @@ export default function SubscriptionSettingsManagement() {
 
   return (
     <div className="space-y-6">
+
+      {/* Pricing & Trial Duration */}
       <Card className="bg-black border border-[#FCD000]/20">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -158,20 +182,20 @@ export default function SubscriptionSettingsManagement() {
                 Subscription Settings
               </CardTitle>
               <CardDescription className="text-white/60">
-                Configure pricing, free trial duration, and trial content access for your single subscription plan.
+                Configure pricing, trial duration, and subscription features.
               </CardDescription>
             </div>
-            {!isEditing ? (
-              <Button onClick={() => setIsEditing(true)} className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-bold">
+            {!isEditingPricing ? (
+              <Button onClick={() => setIsEditingPricing(true)} className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-bold">
                 Edit Settings
               </Button>
             ) : (
               <div className="flex gap-2">
-                <Button onClick={handleSave} disabled={updateMutation.isPending || updateTrialStudiesMutation.isPending} className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-bold">
+                <Button onClick={handleSavePricing} disabled={updateMutation.isPending} className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-bold">
                   <Save className="w-4 h-4 mr-1" />
                   Save
                 </Button>
-                <Button onClick={() => setIsEditing(false)} variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                <Button onClick={() => setIsEditingPricing(false)} variant="outline" className="border-white/20 text-white hover:bg-white/10">
                   Cancel
                 </Button>
               </div>
@@ -189,7 +213,7 @@ export default function SubscriptionSettingsManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {isEditing ? (
+            {isEditingPricing ? (
               <>
                 <div>
                   <Label className="text-white/70">Monthly Price ($)</Label>
@@ -249,7 +273,7 @@ export default function SubscriptionSettingsManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {isEditing ? (
+            {isEditingPricing ? (
               <div>
                 <Label className="text-white/70">Trial Duration (days)</Label>
                 <Input
@@ -275,6 +299,7 @@ export default function SubscriptionSettingsManagement() {
         </Card>
       </div>
 
+      {/* Trial Content Areas — toggles immediately */}
       <Card className="bg-black border border-[#FCD000]/20">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-white text-lg">
@@ -282,7 +307,7 @@ export default function SubscriptionSettingsManagement() {
             Trial Content Access
           </CardTitle>
           <CardDescription className="text-white/50">
-            Toggle which content areas are available during the free trial. You can also mark individual items as trial-accessible from their edit pages.
+            Toggle which content areas are available during the free trial. Changes save automatically.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -297,29 +322,22 @@ export default function SubscriptionSettingsManagement() {
                 }`}
               >
                 <span className="text-sm text-white font-medium">{label}</span>
-                <Switch
-                  checked={!!formData.trialContentAreas[key]}
-                  onCheckedChange={(checked) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      trialContentAreas: {
-                        ...prev.trialContentAreas,
-                        [key]: checked,
-                      },
-                    }));
-                  }}
-                  disabled={!isEditing}
-                  className="data-[state=checked]:bg-[#FCD000] data-[state=unchecked]:bg-gray-600 border-gray-500"
-                />
+                {savingArea === key ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-[#FCD000]" />
+                ) : (
+                  <Switch
+                    checked={!!formData.trialContentAreas[key]}
+                    onCheckedChange={(checked) => handleToggleContentArea(key, checked)}
+                    className="data-[state=checked]:bg-[#FCD000] data-[state=unchecked]:bg-gray-600 border-gray-500"
+                  />
+                )}
               </div>
             ))}
           </div>
-          {!isEditing && (
-            <p className="text-xs text-white/30 mt-3">Click "Edit Settings" to change trial content access.</p>
-          )}
         </CardContent>
       </Card>
 
+      {/* Trial Study Access — checkboxes immediately */}
       <Card className="bg-black border border-[#FCD000]/20">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-white text-lg">
@@ -327,7 +345,7 @@ export default function SubscriptionSettingsManagement() {
             Trial Study Access
           </CardTitle>
           <CardDescription className="text-white/50">
-            Choose which individual studies are available to trial users (even if the "Bible Studies" content area is disabled above).
+            Choose which individual studies are available to trial users. Changes save automatically.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -342,39 +360,29 @@ export default function SubscriptionSettingsManagement() {
                     selectedTrialStudyIds.has(study.id)
                       ? "bg-[#FCD000]/10 border-[#FCD000]/30"
                       : "bg-white/5 border-white/10"
-                  } ${!isEditing ? "opacity-60 cursor-not-allowed" : "hover:bg-white/10"}`}
+                  } hover:bg-white/10`}
                 >
-                  <Checkbox
-                    checked={selectedTrialStudyIds.has(study.id)}
-                    onCheckedChange={(checked) => {
-                      if (!isEditing) return;
-                      setSelectedTrialStudyIds((prev) => {
-                        const next = new Set(prev);
-                        if (checked) {
-                          next.add(study.id);
-                        } else {
-                          next.delete(study.id);
-                        }
-                        return next;
-                      });
-                    }}
-                    disabled={!isEditing}
-                    className="data-[state=checked]:bg-[#FCD000] data-[state=checked]:border-[#FCD000] border-gray-500"
-                  />
+                  {savingStudy === study.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-[#FCD000] flex-shrink-0" />
+                  ) : (
+                    <Checkbox
+                      checked={selectedTrialStudyIds.has(study.id)}
+                      onCheckedChange={(checked) => handleToggleStudy(study.id, !!checked)}
+                      className="data-[state=checked]:bg-[#FCD000] data-[state=checked]:border-[#FCD000] border-gray-500"
+                    />
+                  )}
                   <span className="text-sm text-white font-medium">{study.title}</span>
                 </label>
               ))}
             </div>
           )}
-          {!isEditing && (
-            <p className="text-xs text-white/30 mt-3">Click "Edit Settings" to change trial study access.</p>
-          )}
-          {isEditing && selectedTrialStudyIds.size > 0 && (
-            <p className="text-xs text-[#FCD000]/70 mt-3">{selectedTrialStudyIds.size} {selectedTrialStudyIds.size === 1 ? 'study' : 'studies'} selected for trial access.</p>
+          {selectedTrialStudyIds.size > 0 && (
+            <p className="text-xs text-[#FCD000]/70 mt-3">{selectedTrialStudyIds.size} {selectedTrialStudyIds.size === 1 ? 'study' : 'studies'} enabled for trial access.</p>
           )}
         </CardContent>
       </Card>
 
+      {/* Subscription Features */}
       <Card className="bg-black border border-[#FCD000]/20">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-white text-lg">
@@ -382,11 +390,11 @@ export default function SubscriptionSettingsManagement() {
             Subscription Features
           </CardTitle>
           <CardDescription className="text-white/50">
-            List the features shown to users on the subscription page (one per line).
+            List the features shown to users on the subscription page (one per line). Click "Edit Settings" above to modify.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isEditing ? (
+          {isEditingPricing ? (
             <Textarea
               value={formData.features}
               onChange={(e) => setFormData({ ...formData, features: e.target.value })}
