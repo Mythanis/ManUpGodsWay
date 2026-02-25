@@ -74,6 +74,7 @@ const adminTabs = [
   { id: "store", label: "Store", icon: ShoppingBag },
   { id: "logo", label: "Logo", icon: Image },
   { id: "tiers", label: "Subscription", icon: DollarSign },
+  { id: "notifications", label: "Push Notifications", icon: Bell },
   { id: "settings", label: "Settings", icon: Settings },
   { id: "users", label: "Users", icon: Users },
 ];
@@ -605,7 +606,11 @@ export default function Admin() {
                 key={tab.id}
                 onClick={() => {
                   setActiveTab(tab.id);
-                  setShowContentDialog(true);
+                  if (tab.id === "notifications") {
+                    setShowNotificationDialog(true);
+                  } else {
+                    setShowContentDialog(true);
+                  }
                 }}
                 className="h-16 w-full flex items-center justify-between bg-[#FCD000] border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(252,208,0,0.6)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.8)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer glow-gold"
                 data-testid={`tab-${tab.id}`}
