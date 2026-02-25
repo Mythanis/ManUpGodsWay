@@ -543,7 +543,7 @@ export default function Home() {
                 className="w-12 h-12 rounded-sm object-cover border-2 border-ministry-gold-exact"
               />
               <Link href="/rations">
-                <div className="text-black px-3 py-1 rounded-sm text-xs font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-1">
+                <div className="bg-[#FCD000] text-black px-3 py-1 rounded-sm text-xs font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-[#e6bc00] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-1">
                   <Coins className="w-3 h-3 relative z-10" />
                   <span className="relative z-10">{rations?.balance?.toLocaleString() || 0} rations</span>
                 </div>
