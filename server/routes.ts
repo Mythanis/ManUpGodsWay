@@ -547,7 +547,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const userId = req.user?.claims?.sub;
       const studies = await storage.getStudiesInSeries(id, userId);
-      res.json(studies);
+      // Filter to trial-accessible only for trial users
+      let filtered = studies;
+      if (userId) {
+        try {
+          const user = await storage.getUser(userId);
+          if (user?.subscriptionStatus === 'trial' && !hasAdminPrivileges(user)) {
+            filtered = studies.filter((s: any) => s.isTrialAccessible);
+          }
+        } catch {}
+      }
+      res.json(filtered);
     } catch (error) {
       console.error("Error fetching studies in series:", error);
       res.status(500).json({ message: "Failed to fetch studies in series" });
@@ -687,12 +697,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { category, tier, individual } = req.query;
       
-      // Check if user is admin
+      // Check user roles and subscription status
       let isAdmin = false;
+      let isTrialUser = false;
       if (req.user) {
         try {
           const user = await storage.getUser(req.user.claims.sub);
           isAdmin = hasAdminPrivileges(user);
+          isTrialUser = user?.subscriptionStatus === 'trial';
         } catch (error) {
           // If there's an error getting user info, continue as non-admin
           console.log("Could not verify admin status:", error);
@@ -702,7 +714,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If individual=true, only return studies not in any series
       if (individual === 'true') {
         const studies = await storage.getIndividualStudies(category as string);
-        return res.json(studies);
+        const filtered = isTrialUser ? studies.filter(s => s.isTrialAccessible) : studies;
+        return res.json(filtered);
       }
       
       const studies = await storage.getStudies(
@@ -710,7 +723,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tier as string,
         isAdmin
       );
-      res.json(studies);
+      // Trial users only see trial-accessible studies
+      const filtered = isTrialUser ? studies.filter(s => s.isTrialAccessible) : studies;
+      res.json(filtered);
     } catch (error) {
       console.error("Error fetching studies:", error);
       res.status(500).json({ message: "Failed to fetch studies" });

@@ -54,6 +54,18 @@ import { UserSetupWizard } from "@/components/user-setup-wizard";
 import { AccountSettingsButton } from "@/components/account-settings-button";
 import { TopRightLogo } from "@/components/top-right-logo";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
+import { useTrialAccess } from "@/hooks/useTrialAccess";
+import TrialPaywallModal from "@/components/trial-paywall-modal";
+
+function TrialPageGuard({ area, children }: { area: string; children: React.ReactNode }) {
+  const { blocked, reason } = useTrialAccess(area);
+  return (
+    <>
+      <TrialPaywallModal open={blocked} reason={reason} onClose={() => {}} />
+      {children}
+    </>
+  );
+}
 
 // Splash screen context
 const SplashContext = createContext<{
@@ -111,17 +123,25 @@ function Router() {
         ) : (
           <>
             <Route path="/" component={Home} />
-            <Route path="/library" component={Library} />
+            <Route path="/library">
+              <TrialPageGuard area="studies"><Library /></TrialPageGuard>
+            </Route>
             <Route path="/series/:id" component={SeriesDetail} />
-            <Route path="/videos" component={Videos} />
-            <Route path="/podcasts" component={Podcasts} />
+            <Route path="/videos">
+              <TrialPageGuard area="videos"><Videos /></TrialPageGuard>
+            </Route>
+            <Route path="/podcasts">
+              <TrialPageGuard area="podcasts"><Podcasts /></TrialPageGuard>
+            </Route>
             <Route path="/challenges" component={Challenges} />
             <Route path="/fitness" component={Fitness} />
             <Route path="/fitness/plans/:planId" component={ViewPlan} />
             <Route path="/create-plan" component={CreatePlan} />
             <Route path="/edit-plan/:planId" component={EditPlan} />
             <Route path="/events" component={Events} />
-            <Route path="/community" component={Community} />
+            <Route path="/community">
+              <TrialPageGuard area="discussions"><Community /></TrialPageGuard>
+            </Route>
             <Route path="/brothers" component={Brothers} />
             <Route path="/messages" component={Messages} />
             <Route path="/profile" component={Profile} />
@@ -133,11 +153,19 @@ function Router() {
             <Route path="/studies/:id/word" component={WordViewer} />
             <Route path="/users/:userId" component={UserProfile} />
             <Route path="/notification-preferences" component={NotificationPreferences} />
-            <Route path="/blog" component={Blog} />
+            <Route path="/blog">
+              <TrialPageGuard area="blog"><Blog /></TrialPageGuard>
+            </Route>
             <Route path="/blog/:slug" component={BlogDetail} />
-            <Route path="/hurdle-wall" component={HurdleWall} />
-            <Route path="/under-fire" component={UnderFire} />
-            <Route path="/war-groups" component={WarGroups} />
+            <Route path="/hurdle-wall">
+              <TrialPageGuard area="warRoom"><HurdleWall /></TrialPageGuard>
+            </Route>
+            <Route path="/under-fire">
+              <TrialPageGuard area="underFire"><UnderFire /></TrialPageGuard>
+            </Route>
+            <Route path="/war-groups">
+              <TrialPageGuard area="warGroups"><WarGroups /></TrialPageGuard>
+            </Route>
             <Route path="/war-groups/register" component={WarGroupRegister} />
             <Route path="/war-groups/:id" component={WarGroupDetail} />
             <Route path="/subscribe" component={Subscribe} />
