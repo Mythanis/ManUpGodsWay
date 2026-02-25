@@ -89,6 +89,7 @@ export default function SubscriptionSettingsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/subscription-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription-settings"] });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to update settings", variant: "destructive" });

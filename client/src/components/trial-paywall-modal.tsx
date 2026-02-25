@@ -6,23 +6,26 @@ import { Lock, CreditCard, X } from "lucide-react";
 interface TrialPaywallModalProps {
   open: boolean;
   reason: "trial_restricted" | "not_subscribed" | null;
-  onClose: () => void;
 }
 
-export default function TrialPaywallModal({ open, reason, onClose }: TrialPaywallModalProps) {
+export default function TrialPaywallModal({ open, reason }: TrialPaywallModalProps) {
   const [, setLocation] = useLocation();
 
   const handleSubscribe = () => {
     setLocation("/subscribe");
   };
 
+  const handleClose = () => {
+    window.history.back();
+  };
+
   const message =
-    reason === "trial_restricted"
-      ? "This page is only accessible with a subscription. Please subscribe to continue."
-      : "Your subscription has expired. Please subscribe to regain full access.";
+    reason === "not_subscribed"
+      ? "Your subscription has expired. Please subscribe to regain full access."
+      : "This page is restricted to subscribers. Please subscribe to continue.";
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
       <DialogContent className="max-w-sm p-0 border-0 bg-transparent shadow-none [&>button]:hidden">
         <div className="bg-black border-4 border-[#FCD000] shadow-[6px_6px_0px_0px_rgba(252,208,0,0.5)] rounded-sm overflow-hidden">
           <div className="bg-[#FCD000] px-6 py-4 flex items-center gap-3">
@@ -45,11 +48,11 @@ export default function TrialPaywallModal({ open, reason, onClose }: TrialPaywal
               </Button>
               <Button
                 variant="ghost"
-                onClick={() => { onClose(); window.history.back(); }}
+                onClick={handleClose}
                 className="w-full h-10 text-white/60 hover:text-white hover:bg-white/10 font-bold uppercase text-sm"
               >
                 <X className="w-4 h-4 mr-2" />
-                Go Back
+                Close
               </Button>
             </div>
           </div>

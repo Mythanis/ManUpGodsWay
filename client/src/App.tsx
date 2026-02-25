@@ -58,14 +58,38 @@ import { useTrialAccess } from "@/hooks/useTrialAccess";
 import TrialPaywallModal from "@/components/trial-paywall-modal";
 
 function TrialPageGuard({ area, children }: { area: string; children: React.ReactNode }) {
-  const { blocked, reason } = useTrialAccess(area);
-  return (
-    <>
-      <TrialPaywallModal open={blocked} reason={reason} onClose={() => {}} />
-      {children}
-    </>
-  );
+  const { blocked, reason, isLoading } = useTrialAccess(area);
+
+  // While auth/settings are loading, render nothing to avoid a flash
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#FCD000]" />
+      </div>
+    );
+  }
+
+  if (blocked) {
+    // Don't render the page at all — show a dark backdrop with the paywall modal
+    return (
+      <div className="min-h-screen bg-black">
+        <TrialPaywallModal open={true} reason={reason} />
+      </div>
+    );
+  }
+
+  return <>{children}</>;
 }
+
+// Stable module-level wrapper components (Wouter v3 requires component= prop for conditional rendering)
+const LibraryGuarded    = () => <TrialPageGuard area="studies"><Library /></TrialPageGuard>;
+const VideosGuarded     = () => <TrialPageGuard area="videos"><Videos /></TrialPageGuard>;
+const PodcastsGuarded   = () => <TrialPageGuard area="podcasts"><Podcasts /></TrialPageGuard>;
+const CommunityGuarded  = () => <TrialPageGuard area="discussions"><Community /></TrialPageGuard>;
+const BlogGuarded       = () => <TrialPageGuard area="blog"><Blog /></TrialPageGuard>;
+const HurdleWallGuarded = () => <TrialPageGuard area="warRoom"><HurdleWall /></TrialPageGuard>;
+const UnderFireGuarded  = () => <TrialPageGuard area="underFire"><UnderFire /></TrialPageGuard>;
+const WarGroupsGuarded  = () => <TrialPageGuard area="warGroups"><WarGroups /></TrialPageGuard>;
 
 // Splash screen context
 const SplashContext = createContext<{
@@ -123,25 +147,17 @@ function Router() {
         ) : (
           <>
             <Route path="/" component={Home} />
-            <Route path="/library">
-              <TrialPageGuard area="studies"><Library /></TrialPageGuard>
-            </Route>
+            <Route path="/library" component={LibraryGuarded} />
             <Route path="/series/:id" component={SeriesDetail} />
-            <Route path="/videos">
-              <TrialPageGuard area="videos"><Videos /></TrialPageGuard>
-            </Route>
-            <Route path="/podcasts">
-              <TrialPageGuard area="podcasts"><Podcasts /></TrialPageGuard>
-            </Route>
+            <Route path="/videos" component={VideosGuarded} />
+            <Route path="/podcasts" component={PodcastsGuarded} />
             <Route path="/challenges" component={Challenges} />
             <Route path="/fitness" component={Fitness} />
             <Route path="/fitness/plans/:planId" component={ViewPlan} />
             <Route path="/create-plan" component={CreatePlan} />
             <Route path="/edit-plan/:planId" component={EditPlan} />
             <Route path="/events" component={Events} />
-            <Route path="/community">
-              <TrialPageGuard area="discussions"><Community /></TrialPageGuard>
-            </Route>
+            <Route path="/community" component={CommunityGuarded} />
             <Route path="/brothers" component={Brothers} />
             <Route path="/messages" component={Messages} />
             <Route path="/profile" component={Profile} />
@@ -153,19 +169,11 @@ function Router() {
             <Route path="/studies/:id/word" component={WordViewer} />
             <Route path="/users/:userId" component={UserProfile} />
             <Route path="/notification-preferences" component={NotificationPreferences} />
-            <Route path="/blog">
-              <TrialPageGuard area="blog"><Blog /></TrialPageGuard>
-            </Route>
+            <Route path="/blog" component={BlogGuarded} />
             <Route path="/blog/:slug" component={BlogDetail} />
-            <Route path="/hurdle-wall">
-              <TrialPageGuard area="warRoom"><HurdleWall /></TrialPageGuard>
-            </Route>
-            <Route path="/under-fire">
-              <TrialPageGuard area="underFire"><UnderFire /></TrialPageGuard>
-            </Route>
-            <Route path="/war-groups">
-              <TrialPageGuard area="warGroups"><WarGroups /></TrialPageGuard>
-            </Route>
+            <Route path="/hurdle-wall" component={HurdleWallGuarded} />
+            <Route path="/under-fire" component={UnderFireGuarded} />
+            <Route path="/war-groups" component={WarGroupsGuarded} />
             <Route path="/war-groups/register" component={WarGroupRegister} />
             <Route path="/war-groups/:id" component={WarGroupDetail} />
             <Route path="/subscribe" component={Subscribe} />
