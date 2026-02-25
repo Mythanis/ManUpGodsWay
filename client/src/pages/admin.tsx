@@ -607,7 +607,7 @@ export default function Admin() {
                   setActiveTab(tab.id);
                   setShowContentDialog(true);
                 }}
-                className="h-16 w-full flex items-center justify-between border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
+                className="h-16 w-full flex items-center justify-between bg-[#FCD000] border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(252,208,0,0.6)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.8)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer glow-gold"
                 data-testid={`tab-${tab.id}`}
               >
                 <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
@@ -640,14 +640,8 @@ export default function Admin() {
             <div className="space-y-4">
               <button 
                 onClick={() => setActiveTab("videos")}
-                className="p-4 rounded-2xl transition-colors flex items-center space-x-3 w-full cursor-pointer border-none"
-                style={{
-                  backgroundColor: 'hsl(215, 25%, 27%)',
-                  color: 'white'
-                }}
+                className="p-4 rounded-sm transition-all flex items-center space-x-3 w-full cursor-pointer border-2 border-black bg-[#FCD000] text-black font-black uppercase tracking-wide shadow-[3px_3px_0px_0px_rgba(252,208,0,0.6)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.8)] hover:translate-x-[-1px] hover:translate-y-[-1px] glow-gold"
                 data-testid="button-manage-videos"
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(213, 12%, 47%)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(215, 25%, 27%)'}
               >
                 <Video className="w-6 h-6" />
                 <span className="font-medium">Manage Videos</span>
@@ -655,14 +649,8 @@ export default function Admin() {
               
               <button
                 onClick={() => setShowNotificationDialog(true)}
-                className="p-4 rounded-2xl border-none flex items-center space-x-3 w-full cursor-pointer transition-colors"
-                style={{
-                  backgroundColor: 'hsl(49, 100%, 49%)',
-                  color: 'hsl(215, 25%, 27%)'
-                }}
+                className="p-4 rounded-sm transition-all flex items-center space-x-3 w-full cursor-pointer border-2 border-black bg-[#FCD000] text-black font-black uppercase tracking-wide shadow-[3px_3px_0px_0px_rgba(252,208,0,0.6)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.8)] hover:translate-x-[-1px] hover:translate-y-[-1px] glow-gold"
                 data-testid="button-send-notification"
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(49, 100%, 44%)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(49, 100%, 49%)'}
               >
                 <Bell className="w-6 h-6" />
                 <span className="font-medium">Send Push Notification</span>
