@@ -11549,7 +11549,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Store connected clients with their user IDs
   const connectedClients = new Map<string, WebSocket>();
   
-  const PING_INTERVAL = 30000;
+  const PING_INTERVAL = 60000;
 
   const pingInterval = setInterval(() => {
     wss.clients.forEach((ws: any) => {
@@ -11558,7 +11558,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
       ws.isAlive = false;
-      ws.ping();
+      try {
+        ws.ping();
+      } catch (err) {
+        // Socket may already be closing — terminate cleanly instead of crashing
+        try { ws.terminate(); } catch (_) {}
+      }
     });
   }, PING_INTERVAL);
 
@@ -11569,6 +11574,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   wss.on('connection', (ws: any, req) => {
     console.log('WebSocket connection established');
     ws.isAlive = true;
+
+    // Prevent unhandled 'error' events from crashing the process
+    ws.on('error', (err: Error) => {
+      console.error('[WS] Connection error:', err.message);
+    });
 
     ws.on('pong', () => {
       ws.isAlive = true;
