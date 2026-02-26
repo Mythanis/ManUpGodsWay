@@ -1,18 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script>
-      // Suppress Vite HMR fallback WebSocket errors in the Replit proxy environment.
-      // Without this, the error propagates to the runtime error overlay which
-      // reports it to the Vite server, triggering process.exit(1).
-      window.addEventListener('unhandledrejection', function(e) {
-        if (e.reason && e.reason.message &&
-            e.reason.message.indexOf('wss://localhost:undefined') !== -1) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-        }
-      }, true);
-    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <title>Man Up God's Way</title>

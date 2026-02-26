@@ -76,8 +76,10 @@ export default function Messages() {
   const { data: conversations = [], isLoading: conversationsLoading } = useQuery<Conversation[]>({
     queryKey: ["/api/conversations"],
     retry: false,
-    refetchInterval: 10000, // Poll every 10 seconds as WebSocket handles real-time
-    staleTime: 5000,
+    refetchInterval: 2000, // Poll every 2 seconds for real-time updates
+    refetchIntervalInBackground: true, // Continue polling when tab is not focused
+    staleTime: 0, // Always consider data stale to ensure fresh fetches for new senders
+    gcTime: 1000, // Keep cache for only 1 second
   });
 
   // Handle URL parameters to select conversation automatically
@@ -135,8 +137,10 @@ export default function Messages() {
     queryKey: ["/api/conversations", selectedConversation?.id, "messages"],
     enabled: !!selectedConversation,
     retry: false,
-    refetchInterval: 5000, // Poll every 5 seconds as WebSocket handles real-time
-    staleTime: 3000,
+    refetchInterval: 1500, // Poll every 1.5 seconds for real-time messages
+    refetchIntervalInBackground: true, // Continue polling when tab is not focused
+    staleTime: 0, // Always fetch fresh messages
+    gcTime: 500, // Keep cache briefly
   });
 
   // Send message mutation

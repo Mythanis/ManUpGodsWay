@@ -64,7 +64,8 @@ function DiscussionReplies({ discussionId }: { discussionId: string }) {
   const { data: replies = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/discussions", discussionId, "replies"],
     retry: false,
-    refetchInterval: 15000,
+    refetchInterval: 3000,
+    refetchIntervalInBackground: true,
   });
 
   if (isLoading) {
@@ -302,7 +303,8 @@ export default function Community() {
   }>({
     queryKey: ["/api/community/stats"],
     retry: false,
-    refetchInterval: 60000,
+    refetchInterval: 10000, // Refetch every 10 seconds for live updates
+    refetchIntervalInBackground: true, // Continue refetching when tab is not focused
   });
 
   const { data: discussions = [], isLoading } = useQuery<any[]>({
@@ -323,7 +325,8 @@ export default function Community() {
       return response.json();
     },
     retry: false,
-    refetchInterval: 30000,
+    refetchInterval: 5000, // Real-time updates every 5 seconds
+    refetchIntervalInBackground: true,
   });
   
   useEffect(() => {

@@ -59,7 +59,8 @@ export default function Videos() {
       return await response.json();
     },
     retry: false,
-    refetchInterval: 60000,
+    refetchInterval: 8000,
+    refetchIntervalInBackground: true,
   });
 
   const { data: videoReviews = [] } = useQuery({

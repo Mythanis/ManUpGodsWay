@@ -45,7 +45,7 @@ export default function ChallengeManagement() {
       return response.json();
     },
     staleTime: 0,
-    refetchInterval: 30000,
+    refetchInterval: 5000, // Poll every 5 seconds for admin challenges
   });
 
   // Fetch current week's challenge to determine which one is "Current"
@@ -62,7 +62,10 @@ export default function ChallengeManagement() {
       if (!response.ok) return null;
       return response.json();
     },
-    refetchInterval: 30000,
+    staleTime: 0, // Always consider data stale to enable faster updates
+    gcTime: 0, // Don't cache at all (gcTime is the new name for cacheTime)
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchInterval: 3000, // Poll every 3 seconds for real-time updates
   });
 
   // Create challenge mutation
