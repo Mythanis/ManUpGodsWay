@@ -8,6 +8,33 @@ import { fitnessReminderService } from "./fitnessReminderService";
 import { warGroupsGeocodingService } from "./warGroupsGeocodingService";
 import { challengeNotificationService } from "./challengeNotificationService";
 
+// Intercept process.exit to capture stack trace before death
+const _origExit = process.exit.bind(process);
+(process as any).exit = (code?: number) => {
+  console.error(`[EXIT INTERCEPTED] code=${code} stack=`, new Error().stack);
+  _origExit(code);
+};
+
+// Capture ALL process exits - fires even for process.exit() calls
+process.on('exit', (code) => {
+  console.error(`[PROCESS EXIT] Process exiting with code: ${code}`);
+});
+process.on('SIGTERM', () => {
+  console.error('[PROCESS SIGTERM] Received SIGTERM signal');
+  process.exit(0);
+});
+process.on('SIGINT', () => {
+  console.error('[PROCESS SIGINT] Received SIGINT signal');
+  process.exit(0);
+});
+// Capture unhandled errors BEFORE they silently kill the process
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[FATAL] Unhandled Promise Rejection at:', promise, 'reason:', reason);
+});
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

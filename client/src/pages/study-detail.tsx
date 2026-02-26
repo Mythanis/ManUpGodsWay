@@ -1028,8 +1028,7 @@ function StudyDiscussionReplies({ discussionId }: { discussionId: string }) {
   const { data: replies = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/discussions", discussionId, "replies"],
     retry: false,
-    refetchInterval: 3000,
-    refetchIntervalInBackground: true,
+    refetchInterval: 15000,
   });
 
   if (isLoading) {

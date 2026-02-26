@@ -81,8 +81,7 @@ export default function DiscussionCard({
     queryKey: ["/api/discussions", discussion.id, "replies"],
     enabled: showReplies,
     retry: false,
-    refetchInterval: showReplies ? 3000 : false, // Real-time updates every 3 seconds when expanded
-    refetchIntervalInBackground: true,
+    refetchInterval: showReplies ? 15000 : false,
   });
 
   const form = useForm({
