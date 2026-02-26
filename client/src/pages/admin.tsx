@@ -96,7 +96,7 @@ export default function Admin() {
     title: "",
     message: "",
     type: "general" as "general" | "devotional" | "announcement",
-    targetAudience: "everyone" as "everyone" | "vip" | "premium" | "individual",
+    targetAudience: "everyone" as "everyone" | "free" | "subscriber" | "individual",
     selectedUserIds: [] as string[]
   });
   const [userSearchQuery, setUserSearchQuery] = useState("");
@@ -1309,7 +1309,7 @@ export default function Admin() {
               </Label>
               <Select
                 value={notificationData.targetAudience}
-                onValueChange={(value: "everyone" | "vip" | "premium" | "individual") => {
+                onValueChange={(value: "everyone" | "free" | "subscriber" | "individual") => {
                   setNotificationData({ ...notificationData, targetAudience: value, selectedUserIds: [] });
                   setUserSearchQuery("");
                 }}
@@ -1319,8 +1319,8 @@ export default function Admin() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="everyone">Everyone</SelectItem>
-                  <SelectItem value="vip">VIP Users Only</SelectItem>
-                  <SelectItem value="premium">Premium Users Only</SelectItem>
+                  <SelectItem value="free">Free (Trial Users)</SelectItem>
+                  <SelectItem value="subscriber">Subscriber (Paid)</SelectItem>
                   <SelectItem value="individual">Individual Users</SelectItem>
                 </SelectContent>
               </Select>

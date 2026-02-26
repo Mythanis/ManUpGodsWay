@@ -5381,11 +5381,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 'everyone':
           targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
           break;
-        case 'vip':
-          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && targetUser.subscriptionTier === 'vip');
+        case 'free':
+          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && targetUser.subscriptionStatus === 'trial');
           break;
-        case 'premium':
-          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && targetUser.subscriptionTier === 'premium');
+        case 'subscriber':
+          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && targetUser.subscriptionStatus === 'active');
           break;
         case 'individual':
           if (!selectedUserIds || selectedUserIds.length === 0) {
@@ -5439,11 +5439,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let successMessage = "";
       switch (targetAudience) {
-        case 'vip':
-          successMessage = `Notification sent to ${targetUsers.length} VIP user(s) successfully`;
+        case 'free':
+          successMessage = `Notification sent to ${targetUsers.length} Free (trial) user(s) successfully`;
           break;
-        case 'premium':
-          successMessage = `Notification sent to ${targetUsers.length} Premium user(s) successfully`;
+        case 'subscriber':
+          successMessage = `Notification sent to ${targetUsers.length} Subscriber(s) successfully`;
           break;
         case 'individual':
           successMessage = `Notification sent to ${targetUsers.length} selected user(s) successfully`;
