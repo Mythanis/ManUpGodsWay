@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle } from "lucide-react";
+import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell } from "lucide-react";
 
 interface User {
   id: string;
@@ -29,6 +29,7 @@ interface User {
   isBanned: boolean;
   bannedAt?: string;
   bannedReason?: string;
+  fitnessSubscribed: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -131,6 +132,27 @@ export default function UserManagement() {
       toast({
         title: "Error",
         description: "Failed to unban user. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleFitnessSubscription = useMutation({
+    mutationFn: async ({ userId, fitnessSubscribed }: { userId: string; fitnessSubscribed: boolean }) => {
+      await apiRequest('PUT', `/api/admin/users/${userId}/fitness-subscription`, { fitnessSubscribed });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setSelectedUser(prev => prev ? { ...prev, fitnessSubscribed: variables.fitnessSubscribed } : null);
+      toast({
+        title: "Success",
+        description: variables.fitnessSubscribed ? "Fitness access granted." : "Fitness access removed.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update fitness access. Please try again.",
         variant: "destructive",
       });
     },
@@ -431,6 +453,32 @@ export default function UserManagement() {
                   </div>
                 </div>
               </div>
+
+              {/* Fitness Access */}
+              <Card className={selectedUser.fitnessSubscribed ? "border-green-300" : ""}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Dumbbell className={`w-5 h-5 ${selectedUser.fitnessSubscribed ? "text-green-600" : "text-ministry-slate"}`} />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Fitness Access</p>
+                        <p className="text-xs text-ministry-slate">
+                          {selectedUser.fitnessSubscribed ? "Admin-granted access to Fitness page" : "No admin fitness access"}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={selectedUser.fitnessSubscribed ? "destructive" : "default"}
+                      onClick={() => toggleFitnessSubscription.mutate({ userId: selectedUser.id, fitnessSubscribed: !selectedUser.fitnessSubscribed })}
+                      disabled={toggleFitnessSubscription.isPending}
+                      className={selectedUser.fitnessSubscribed ? "" : "bg-green-600 hover:bg-green-700 text-white"}
+                    >
+                      {toggleFitnessSubscription.isPending ? "Saving..." : selectedUser.fitnessSubscribed ? "Revoke Access" : "Grant Access"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Privacy Settings */}
               <Card>

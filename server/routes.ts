@@ -7545,6 +7545,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/fitness/membership', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+
+      // Check admin-granted fitness flag first
+      const user = await storage.getUser(userId);
+      if (user?.fitnessSubscribed) {
+        return res.json({ hasMembership: true, adminGranted: true });
+      }
+
       const [membership] = await db.select().from(schema.fitnessMemberships).where(eq(schema.fitnessMemberships.userId, userId)).limit(1);
       if (!membership) return res.json({ hasMembership: false });
       const isActive = membership.status === 'active' && (!membership.currentPeriodEnd || membership.currentPeriodEnd > new Date());
@@ -7552,6 +7559,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error checking fitness membership:', error);
       res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Admin: toggle fitness subscription flag for a user
+  app.put('/api/admin/users/:id/fitness-subscription', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { fitnessSubscribed } = req.body;
+      await db.update(schema.users)
+        .set({ fitnessSubscribed: !!fitnessSubscribed })
+        .where(eq(schema.users.id, req.params.id));
+      res.json({ success: true, fitnessSubscribed: !!fitnessSubscribed });
+    } catch (error) {
+      console.error('Error updating fitness subscription:', error);
+      res.status(500).json({ message: 'Failed to update fitness subscription' });
     }
   });
 
