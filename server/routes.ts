@@ -4186,7 +4186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         else if (subscriptionTier === 'premium' || subscriptionTier === 'subscriber') subscriptionStatus = 'active';
       }
 
-      if (!subscriptionStatus || !['trial', 'active', 'expired', 'cancelled'].includes(subscriptionStatus)) {
+      if (!subscriptionStatus || !['trial', 'active', 'expired', 'cancelled', 'past_due'].includes(subscriptionStatus)) {
         return res.status(400).json({ message: "Invalid subscription status" });
       }
 
@@ -5034,6 +5034,208 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch (err) {
             console.error('[Fitness] Error revoking fitness access on subscription cancel:', err);
           }
+        }
+      }
+
+      // T001: invoice.payment_failed — suspend access immediately
+      if (event.type === 'invoice.payment_failed') {
+        const invoice = event.data.object as any;
+        const subscriptionId = invoice.subscription;
+        if (subscriptionId) {
+          // Main subscription
+          try {
+            const [affectedUser] = await db
+              .select()
+              .from(schema.users)
+              .where(eq(schema.users.stripeSubscriptionId, subscriptionId))
+              .limit(1);
+            if (affectedUser) {
+              await storage.updateUserSubscriptionDetails(affectedUser.id, {
+                subscriptionStatus: 'past_due',
+              });
+              const notification = await storage.createNotification({
+                userId: affectedUser.id,
+                type: 'admin',
+                title: 'Payment Failed',
+                message: 'Your last payment was declined. Please update your payment method to restore your access.',
+                relatedId: null,
+              });
+              if ((req.app as any).sendRealtimeNotification) {
+                (req.app as any).sendRealtimeNotification(affectedUser.id, notification);
+              }
+              console.log(`[Billing] Main subscription payment failed for user ${affectedUser.id} — status set to past_due`);
+            }
+          } catch (err) {
+            console.error('[Billing] Error handling payment_failed for main subscription:', err);
+          }
+
+          // Fitness membership
+          try {
+            const [fitnessMembership] = await db
+              .select()
+              .from(schema.fitnessMemberships)
+              .where(eq(schema.fitnessMemberships.stripeSubscriptionId, subscriptionId))
+              .limit(1);
+            if (fitnessMembership) {
+              await db.update(schema.fitnessMemberships)
+                .set({ status: 'past_due', updatedAt: new Date() })
+                .where(eq(schema.fitnessMemberships.id, fitnessMembership.id));
+              await storage.setUserFitnessAccess(fitnessMembership.userId, false);
+              const notification = await storage.createNotification({
+                userId: fitnessMembership.userId,
+                type: 'admin',
+                title: 'Fitness Payment Failed',
+                message: 'Your fitness membership payment failed. Please update your payment method to restore fitness access.',
+                relatedId: null,
+              });
+              if ((req.app as any).sendRealtimeNotification) {
+                (req.app as any).sendRealtimeNotification(fitnessMembership.userId, notification);
+              }
+              console.log(`[Billing] Fitness membership payment failed for user ${fitnessMembership.userId} — access revoked`);
+            }
+          } catch (err) {
+            console.error('[Billing] Error handling payment_failed for fitness membership:', err);
+          }
+        }
+      }
+
+      // T002: invoice.paid — renew access on successful charge (renewals + payment recovery)
+      if (event.type === 'invoice.paid') {
+        const invoice = event.data.object as any;
+        const subscriptionId = invoice.subscription;
+        const billingReason = invoice.billing_reason;
+        // Skip first-time checkout — already handled by checkout.session.completed
+        if (subscriptionId && billingReason !== 'subscription_create') {
+          // Main subscription renewal / recovery
+          try {
+            const [affectedUser] = await db
+              .select()
+              .from(schema.users)
+              .where(eq(schema.users.stripeSubscriptionId, subscriptionId))
+              .limit(1);
+            if (affectedUser) {
+              const { default: Stripe } = await import('stripe');
+              const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
+              const subscription = await stripeClient.subscriptions.retrieve(subscriptionId);
+              const newPeriodEnd = new Date(subscription.current_period_end * 1000);
+              await storage.updateUserSubscriptionDetails(affectedUser.id, {
+                subscriptionStatus: 'active',
+                subscriptionExpiresAt: newPeriodEnd,
+              });
+              // If this was a recovery from past_due, notify the user
+              if (affectedUser.subscriptionStatus === 'past_due') {
+                const notification = await storage.createNotification({
+                  userId: affectedUser.id,
+                  type: 'admin',
+                  title: 'Payment Successful — Access Restored',
+                  message: 'Your payment went through and your subscription is active again. Welcome back!',
+                  relatedId: null,
+                });
+                if ((req.app as any).sendRealtimeNotification) {
+                  (req.app as any).sendRealtimeNotification(affectedUser.id, notification);
+                }
+              }
+              console.log(`[Billing] Main subscription renewed for user ${affectedUser.id} — expires ${newPeriodEnd.toISOString()}`);
+            }
+          } catch (err) {
+            console.error('[Billing] Error handling invoice.paid for main subscription:', err);
+          }
+
+          // Fitness membership renewal / recovery
+          try {
+            const [fitnessMembership] = await db
+              .select()
+              .from(schema.fitnessMemberships)
+              .where(eq(schema.fitnessMemberships.stripeSubscriptionId, subscriptionId))
+              .limit(1);
+            if (fitnessMembership) {
+              const { default: Stripe } = await import('stripe');
+              const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
+              const subscription = await stripeClient.subscriptions.retrieve(subscriptionId);
+              const newPeriodEnd = new Date(subscription.current_period_end * 1000);
+              await db.update(schema.fitnessMemberships)
+                .set({ status: 'active', currentPeriodEnd: newPeriodEnd, cancelAtPeriodEnd: false, updatedAt: new Date() })
+                .where(eq(schema.fitnessMemberships.id, fitnessMembership.id));
+              await storage.setUserFitnessAccess(fitnessMembership.userId, true);
+              if (fitnessMembership.status === 'past_due') {
+                const notification = await storage.createNotification({
+                  userId: fitnessMembership.userId,
+                  type: 'admin',
+                  title: 'Fitness Access Restored',
+                  message: 'Your fitness membership payment went through. You have full fitness access again!',
+                  relatedId: null,
+                });
+                if ((req.app as any).sendRealtimeNotification) {
+                  (req.app as any).sendRealtimeNotification(fitnessMembership.userId, notification);
+                }
+              }
+              console.log(`[Billing] Fitness membership renewed for user ${fitnessMembership.userId} — expires ${newPeriodEnd.toISOString()}`);
+            }
+          } catch (err) {
+            console.error('[Billing] Error handling invoice.paid for fitness membership:', err);
+          }
+        }
+      }
+
+      // T003: customer.subscription.deleted — fully revoke access after all retries exhausted or period ends
+      if (event.type === 'customer.subscription.deleted') {
+        const subscription = event.data.object as any;
+
+        // Main subscription
+        try {
+          const [affectedUser] = await db
+            .select()
+            .from(schema.users)
+            .where(eq(schema.users.stripeSubscriptionId, subscription.id))
+            .limit(1);
+          if (affectedUser) {
+            await storage.updateUserSubscriptionDetails(affectedUser.id, {
+              subscriptionStatus: 'expired',
+              subscriptionTier: 'free',
+              stripeSubscriptionId: undefined,
+            });
+            const notification = await storage.createNotification({
+              userId: affectedUser.id,
+              type: 'admin',
+              title: 'Subscription Ended',
+              message: 'Your subscription has ended. Subscribe again anytime to restore full access.',
+              relatedId: null,
+            });
+            if ((req.app as any).sendRealtimeNotification) {
+              (req.app as any).sendRealtimeNotification(affectedUser.id, notification);
+            }
+            console.log(`[Billing] Main subscription deleted for user ${affectedUser.id} — status set to expired`);
+          }
+        } catch (err) {
+          console.error('[Billing] Error handling subscription.deleted for main subscription:', err);
+        }
+
+        // Fitness membership
+        try {
+          const [fitnessMembership] = await db
+            .select()
+            .from(schema.fitnessMemberships)
+            .where(eq(schema.fitnessMemberships.stripeSubscriptionId, subscription.id))
+            .limit(1);
+          if (fitnessMembership) {
+            await db.update(schema.fitnessMemberships)
+              .set({ status: 'cancelled', updatedAt: new Date() })
+              .where(eq(schema.fitnessMemberships.id, fitnessMembership.id));
+            await storage.setUserFitnessAccess(fitnessMembership.userId, false);
+            const notification = await storage.createNotification({
+              userId: fitnessMembership.userId,
+              type: 'admin',
+              title: 'Fitness Membership Ended',
+              message: 'Your fitness membership has ended. Rejoin anytime to restore access to fitness content.',
+              relatedId: null,
+            });
+            if ((req.app as any).sendRealtimeNotification) {
+              (req.app as any).sendRealtimeNotification(fitnessMembership.userId, notification);
+            }
+            console.log(`[Billing] Fitness membership deleted for user ${fitnessMembership.userId} — access revoked`);
+          }
+        } catch (err) {
+          console.error('[Billing] Error handling subscription.deleted for fitness membership:', err);
         }
       }
 

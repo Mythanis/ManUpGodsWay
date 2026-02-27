@@ -407,6 +407,7 @@ export default function UserManagement() {
                             <SelectItem value="trial">Trial</SelectItem>
                             <SelectItem value="expired">Expired (Free)</SelectItem>
                             <SelectItem value="cancelled">Cancelled</SelectItem>
+                            <SelectItem value="past_due">Past Due (Payment Failed)</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
