@@ -4267,6 +4267,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedUser = await storage.banUser(req.params.id, reason.trim());
+
+      // Immediately destroy all active sessions for the banned user
+      try {
+        await db.execute(
+          sql`DELETE FROM sessions WHERE sess::jsonb @> ${JSON.stringify({ passport: { user: { claims: { sub: req.params.id } } } })}::jsonb`
+        );
+      } catch (sessionErr) {
+        console.error("Error destroying sessions for banned user:", sessionErr);
+      }
+
       res.json(updatedUser);
     } catch (error) {
       console.error("Error banning user:", error);

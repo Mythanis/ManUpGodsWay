@@ -38,6 +38,7 @@ import UnderFire from "@/pages/under-fire";
 import WarGroups from "@/pages/war-groups";
 import WarGroupDetail from "@/pages/war-group-detail";
 import WarGroupRegister from "@/pages/war-group-register";
+import Banned from "@/pages/banned";
 import SeriesDetail from "@/pages/series-detail";
 import Purchase from "@/pages/purchase";
 import Subscribe from "@/pages/subscribe";
@@ -159,6 +160,7 @@ function Router() {
     <PrevLocationCtx.Provider value={prevLocation}>
       <>
         <Switch>
+          <Route path="/banned" component={Banned} />
           {!isAuthenticated ? (
             <Route path="/" component={Landing} />
           ) : (

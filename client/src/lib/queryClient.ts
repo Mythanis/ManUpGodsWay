@@ -35,9 +35,8 @@ export async function apiRequest(
     }
     
     if (res.status === 401) {
-      // Redirect to login on unauthorized
-      window.location.href = "/api/login";
-      throw new Error("Unauthorized - redirecting to login");
+      window.location.href = errorData?.banned ? "/banned" : "/api/login";
+      throw new Error("Unauthorized - redirecting");
     }
     
     // Create error object that mimics axios error structure

@@ -124,9 +124,15 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
+    const claims = tokens.claims();
+    // Block banned users from logging in
+    const existingUser = await storage.getUser(claims["sub"]);
+    if (existingUser?.isBanned) {
+      return verified(null, false);
+    }
     const user = {};
     updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
+    await upsertUser(claims);
     verified(null, user);
   };
 
@@ -157,7 +163,7 @@ export async function setupAuth(app: Express) {
   app.get("/api/callback", (req, res, next) => {
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
+      failureRedirect: "/banned",
     })(req, res, next);
   });
 
@@ -173,6 +179,30 @@ export async function setupAuth(app: Express) {
   });
 }
 
+async function checkBanAndUpdateActivity(userId: string, req: any, res: any): Promise<boolean> {
+  const currentUser = await storage.getUser(userId);
+  if (currentUser?.isBanned) {
+    req.logout(() => {});
+    res.status(401).json({ message: "Your account has been banned.", banned: true });
+    return false;
+  }
+  // Update lastActiveDate if it's a new day
+  if (currentUser) {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const lastActiveDate = currentUser.lastActiveDate ? new Date(currentUser.lastActiveDate) : null;
+      const lastActiveDateOnly = lastActiveDate ? new Date(lastActiveDate.getFullYear(), lastActiveDate.getMonth(), lastActiveDate.getDate()) : null;
+      if (!lastActiveDateOnly || lastActiveDateOnly.getTime() < today.getTime()) {
+        await storage.upsertUser({ ...currentUser, lastActiveDate: new Date() });
+      }
+    } catch (error) {
+      console.error("Error updating user lastActiveDate:", error);
+    }
+  }
+  return true;
+}
+
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
@@ -182,32 +212,11 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   const now = Math.floor(Date.now() / 1000);
   if (now <= user.expires_at) {
-    // Update user's lastActiveDate if it's a new day
-    try {
-      const userId = user.claims?.sub;
-      if (userId) {
-        const currentUser = await storage.getUser(userId);
-        if (currentUser) {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          
-          const lastActiveDate = currentUser.lastActiveDate ? new Date(currentUser.lastActiveDate) : null;
-          const lastActiveDateOnly = lastActiveDate ? new Date(lastActiveDate.getFullYear(), lastActiveDate.getMonth(), lastActiveDate.getDate()) : null;
-          
-          // Update if user has no lastActiveDate or if it's from a previous day
-          if (!lastActiveDateOnly || lastActiveDateOnly.getTime() < today.getTime()) {
-            await storage.upsertUser({
-              ...currentUser,
-              lastActiveDate: new Date(),
-            });
-          }
-        }
-      }
-    } catch (error) {
-      // Don't fail the request if this update fails, just log it
-      console.error("Error updating user lastActiveDate:", error);
+    const userId = user.claims?.sub;
+    if (userId) {
+      const allowed = await checkBanAndUpdateActivity(userId, req, res);
+      if (!allowed) return;
     }
-    
     return next();
   }
 
@@ -221,32 +230,11 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     const config = await getOidcConfig();
     const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
     updateUserSession(user, tokenResponse);
-    
-    // Also update lastActiveDate after token refresh
-    try {
-      const userId = user.claims?.sub;
-      if (userId) {
-        const currentUser = await storage.getUser(userId);
-        if (currentUser) {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          
-          const lastActiveDate = currentUser.lastActiveDate ? new Date(currentUser.lastActiveDate) : null;
-          const lastActiveDateOnly = lastActiveDate ? new Date(lastActiveDate.getFullYear(), lastActiveDate.getMonth(), lastActiveDate.getDate()) : null;
-          
-          // Update if user has no lastActiveDate or if it's from a previous day
-          if (!lastActiveDateOnly || lastActiveDateOnly.getTime() < today.getTime()) {
-            await storage.upsertUser({
-              ...currentUser,
-              lastActiveDate: new Date(),
-            });
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error updating user lastActiveDate:", error);
+    const userId = user.claims?.sub;
+    if (userId) {
+      const allowed = await checkBanAndUpdateActivity(userId, req, res);
+      if (!allowed) return;
     }
-    
     return next();
   } catch (error) {
     res.status(401).json({ message: "Unauthorized" });
