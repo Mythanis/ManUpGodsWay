@@ -17,6 +17,7 @@ import { SilencedUsersButton } from "@/components/silenced-users-button";
 import { TestimonyForm } from "@/components/testimony-form";
 import UpgradeModal from "@/components/upgrade-modal";
 import { BackButton } from "@/components/BackButton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   User, 
   Bell, 
@@ -32,13 +33,22 @@ import {
   Coins,
   Medal,
   TrendingUp,
-  ShoppingBag
+  ShoppingBag,
+  Dumbbell,
+  Calendar,
+  RefreshCw,
+  AlertTriangle,
+  X
 } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Profile() {
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showManageModal, setShowManageModal] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showFitnessManageModal, setShowFitnessManageModal] = useState(false);
+  const [showFitnessCancelConfirm, setShowFitnessCancelConfirm] = useState(false);
   const { user } = useAuth();
   const { theme, setTheme, effectiveTheme } = useTheme();
   const [, setLocation] = useLocation();
@@ -102,29 +112,105 @@ export default function Profile() {
   };
   const rankConfig = RANK_CONFIG[rations?.rank || "recruit"] || RANK_CONFIG.recruit;
 
-  // Mutation for opening Stripe billing portal
-  const openBillingPortalMutation = useMutation({
+  // Subscription details from Stripe (only fetch when user has active subscription)
+  const subStatus = (user as any)?.subscriptionStatus;
+  const { data: subDetails } = useQuery<{
+    hasSubscription: boolean;
+    billingCycle?: 'monthly' | 'yearly';
+    currentPeriodEnd?: string;
+    cancelAtPeriodEnd?: boolean;
+    amount?: number;
+    status?: string;
+  }>({
+    queryKey: ['/api/subscription/details'],
+    enabled: subStatus === 'active' || subStatus === 'cancelled',
+    retry: false,
+  });
+
+  // Fitness membership status
+  const { data: fitnessMembership } = useQuery<{
+    hasMembership: boolean;
+    membership?: {
+      status: string;
+      currentPeriodEnd?: string;
+      cancelAtPeriodEnd?: boolean;
+    };
+  }>({
+    queryKey: ['/api/fitness/membership'],
+    retry: false,
+  });
+
+  // Cancel main subscription
+  const cancelSubscriptionMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/create-billing-portal');
-      return response.json();
+      const res = await apiRequest('POST', '/api/subscription/cancel');
+      return res.json();
     },
     onSuccess: (data) => {
-      if (data.portalUrl) {
-        window.location.href = data.portalUrl;
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to open subscription management",
-          variant: "destructive",
-        });
-      }
+      queryClient.invalidateQueries({ queryKey: ['/api/subscription/details'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      setShowCancelConfirm(false);
+      setShowManageModal(false);
+      toast({
+        title: 'Subscription Cancelled',
+        description: `Your subscription will remain active until ${new Date(data.currentPeriodEnd).toLocaleDateString()}.`,
+      });
     },
     onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to cancel subscription', variant: 'destructive' });
+    },
+  });
+
+  // Switch billing cycle
+  const switchBillingMutation = useMutation({
+    mutationFn: async (newBillingCycle: 'monthly' | 'yearly') => {
+      const res = await apiRequest('POST', '/api/subscription/switch-billing', { newBillingCycle });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/subscription/details'] });
+      setShowManageModal(false);
       toast({
-        title: "Error",
-        description: error.message || "Failed to open subscription management",
-        variant: "destructive",
+        title: 'Billing Updated',
+        description: `You are now billed ${data.billingCycle}. Next renewal: ${new Date(data.currentPeriodEnd).toLocaleDateString()}.`,
       });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to switch billing cycle', variant: 'destructive' });
+    },
+  });
+
+  // Subscribe to fitness add-on
+  const subscribeFitnessMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', '/api/fitness/membership/subscribe');
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.url) window.location.href = data.url;
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to start fitness checkout', variant: 'destructive' });
+    },
+  });
+
+  // Cancel fitness membership
+  const cancelFitnessMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', '/api/fitness/membership/cancel');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/fitness/membership'] });
+      setShowFitnessCancelConfirm(false);
+      setShowFitnessManageModal(false);
+      toast({
+        title: 'Fitness Membership Cancelled',
+        description: 'Your fitness access will remain active until the end of your current billing period.',
+      });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to cancel fitness membership', variant: 'destructive' });
     },
   });
 
@@ -261,6 +347,7 @@ export default function Profile() {
             <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>Account & Subscription</h2>
             
             <div className="space-y-4">
+              {/* Main Subscription Row */}
               <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                 <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                   <Crown className="w-6 h-6 text-white relative z-10" />
@@ -269,25 +356,71 @@ export default function Profile() {
                   <span className="font-black text-sm text-black uppercase tracking-wide">
                     {(user as any)?.subscriptionStatus === 'active' ? 'Active Subscription' :
                      (user as any)?.subscriptionStatus === 'trial' ? 'Trial' :
-                     (user as any)?.subscriptionStatus === 'expired' || (user as any)?.subscriptionStatus === 'cancelled' ? 'Expired' : 'No Subscription'}
+                     (user as any)?.subscriptionStatus === 'cancelled' ? 'Cancels Soon' :
+                     (user as any)?.subscriptionStatus === 'past_due' ? 'Payment Failed' :
+                     (user as any)?.subscriptionStatus === 'expired' ? 'Expired' : 'No Subscription'}
                   </span>
+                  {subDetails?.cancelAtPeriodEnd && subDetails.currentPeriodEnd && (
+                    <p className="text-[10px] text-black/60 font-semibold">
+                      Active until {new Date(subDetails.currentPeriodEnd).toLocaleDateString()}
+                    </p>
+                  )}
                 </div>
                 <Button 
                   variant="ghost"
                   className="text-black font-black text-sm hover:bg-black/10 relative z-10 uppercase tracking-wide pr-4"
                   data-testid="button-manage-subscription"
-                  disabled={openBillingPortalMutation.isPending}
                   onClick={() => {
-                    if ((user as any)?.subscriptionStatus === 'active') {
-                      openBillingPortalMutation.mutate();
+                    if ((user as any)?.subscriptionStatus === 'active' || (user as any)?.subscriptionStatus === 'cancelled') {
+                      setShowManageModal(true);
                     } else {
                       setShowUpgradeModal(true);
                     }
                   }}
                 >
-                  {openBillingPortalMutation.isPending ? 'Loading...' : 
-                   (user as any)?.subscriptionStatus === 'active' ? 'Manage' : 'Subscribe'}
+                  {(user as any)?.subscriptionStatus === 'active' || (user as any)?.subscriptionStatus === 'cancelled' ? 'Manage' : 'Subscribe'}
                 </Button>
+              </div>
+
+              {/* Fitness Add-on Row */}
+              <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                  <Dumbbell className="w-6 h-6 text-white relative z-10" />
+                </div>
+                <div className="flex-1 px-4 relative z-10">
+                  <span className="font-black text-sm text-black uppercase tracking-wide">
+                    {fitnessMembership?.hasMembership || (user as any)?.hasFitnessAccess ? 'Fitness Add-on' : 'Fitness Add-on'}
+                  </span>
+                  <p className="text-[10px] text-black/60 font-semibold">
+                    {fitnessMembership?.hasMembership
+                      ? fitnessMembership.membership?.cancelAtPeriodEnd
+                        ? `Cancels ${fitnessMembership.membership.currentPeriodEnd ? new Date(fitnessMembership.membership.currentPeriodEnd).toLocaleDateString() : ''}`
+                        : 'Active — $4.99/mo'
+                      : (user as any)?.hasFitnessAccess
+                        ? 'Access granted'
+                        : '$4.99/mo'}
+                  </p>
+                </div>
+                {fitnessMembership?.hasMembership ? (
+                  <Button 
+                    variant="ghost"
+                    className="text-black font-black text-sm hover:bg-black/10 relative z-10 uppercase tracking-wide pr-4"
+                    onClick={() => setShowFitnessManageModal(true)}
+                  >
+                    Manage
+                  </Button>
+                ) : (user as any)?.hasFitnessAccess ? (
+                  <span className="text-black/50 font-black text-xs uppercase tracking-wide pr-4">Granted</span>
+                ) : (
+                  <Button 
+                    variant="ghost"
+                    className="text-black font-black text-sm hover:bg-black/10 relative z-10 uppercase tracking-wide pr-4"
+                    disabled={subscribeFitnessMutation.isPending}
+                    onClick={() => subscribeFitnessMutation.mutate()}
+                  >
+                    {subscribeFitnessMutation.isPending ? 'Loading...' : 'Add'}
+                  </Button>
+                )}
               </div>
               
               <EditProfileDialog>
@@ -512,6 +645,193 @@ export default function Profile() {
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
       />
+
+      {/* Subscription Manage Modal */}
+      <Dialog open={showManageModal} onOpenChange={setShowManageModal}>
+        <DialogContent className="bg-black border-2 border-ministry-gold-exact text-white max-w-sm mx-auto rounded-sm">
+          <DialogHeader>
+            <DialogTitle className="text-white font-black uppercase tracking-wide text-lg">Manage Subscription</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            {/* Current plan info */}
+            <div className="bg-white/5 border border-white/10 rounded-sm p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-white/60 uppercase tracking-wide font-bold">Plan</span>
+                <span className="text-sm font-black text-ministry-gold-exact uppercase">
+                  {subDetails?.billingCycle === 'yearly' ? 'Annual' : 'Monthly'}
+                </span>
+              </div>
+              {subDetails?.amount && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/60 uppercase tracking-wide font-bold">Amount</span>
+                  <span className="text-sm font-black text-white">${subDetails.amount}/{subDetails.billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
+                </div>
+              )}
+              {subDetails?.currentPeriodEnd && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/60 uppercase tracking-wide font-bold flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {subDetails.cancelAtPeriodEnd ? 'Active Until' : 'Next Renewal'}
+                  </span>
+                  <span className="text-sm font-black text-white">{new Date(subDetails.currentPeriodEnd).toLocaleDateString()}</span>
+                </div>
+              )}
+              {subDetails?.cancelAtPeriodEnd && (
+                <p className="text-xs text-red-400 font-semibold mt-1">Subscription scheduled to cancel — no further charges.</p>
+              )}
+            </div>
+
+            {/* Switch billing cycle */}
+            {!subDetails?.cancelAtPeriodEnd && (
+              <div className="space-y-2">
+                <p className="text-xs text-white/50 uppercase tracking-wide font-bold">Change Billing Cycle</p>
+                {subDetails?.billingCycle === 'monthly' ? (
+                  <Button
+                    className="w-full bg-ministry-gold-exact hover:bg-yellow-400 text-black font-black uppercase tracking-wide rounded-sm"
+                    disabled={switchBillingMutation.isPending}
+                    onClick={() => switchBillingMutation.mutate('yearly')}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    {switchBillingMutation.isPending ? 'Switching...' : 'Switch to Annual Billing'}
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full bg-ministry-gold-exact hover:bg-yellow-400 text-black font-black uppercase tracking-wide rounded-sm"
+                    disabled={switchBillingMutation.isPending}
+                    onClick={() => switchBillingMutation.mutate('monthly')}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    {switchBillingMutation.isPending ? 'Switching...' : 'Switch to Monthly Billing'}
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Cancel subscription */}
+            {!subDetails?.cancelAtPeriodEnd && (
+              <div className="space-y-2">
+                <p className="text-xs text-white/50 uppercase tracking-wide font-bold">Cancel</p>
+                {!showCancelConfirm ? (
+                  <Button
+                    variant="outline"
+                    className="w-full border-red-500/50 text-red-400 hover:bg-red-500/10 font-black uppercase tracking-wide rounded-sm"
+                    onClick={() => setShowCancelConfirm(true)}
+                  >
+                    Cancel Subscription
+                  </Button>
+                ) : (
+                  <div className="bg-red-950/50 border border-red-500/50 rounded-sm p-4 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-red-300">
+                        Your access will continue until {subDetails?.currentPeriodEnd ? new Date(subDetails.currentPeriodEnd).toLocaleDateString() : 'end of billing period'}. No further charges will occur.
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 border-white/20 text-white hover:bg-white/10 font-black uppercase rounded-sm"
+                        onClick={() => setShowCancelConfirm(false)}
+                      >
+                        Keep Plan
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white font-black uppercase rounded-sm"
+                        disabled={cancelSubscriptionMutation.isPending}
+                        onClick={() => cancelSubscriptionMutation.mutate()}
+                      >
+                        {cancelSubscriptionMutation.isPending ? 'Cancelling...' : 'Confirm Cancel'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Fitness Manage Modal */}
+      <Dialog open={showFitnessManageModal} onOpenChange={(open) => { setShowFitnessManageModal(open); if (!open) setShowFitnessCancelConfirm(false); }}>
+        <DialogContent className="bg-black border-2 border-ministry-gold-exact text-white max-w-sm mx-auto rounded-sm">
+          <DialogHeader>
+            <DialogTitle className="text-white font-black uppercase tracking-wide text-lg flex items-center gap-2">
+              <Dumbbell className="w-5 h-5 text-ministry-gold-exact" />
+              Fitness Add-on
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="bg-white/5 border border-white/10 rounded-sm p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-white/60 uppercase tracking-wide font-bold">Status</span>
+                <span className="text-sm font-black text-ministry-gold-exact uppercase">
+                  {fitnessMembership?.membership?.cancelAtPeriodEnd ? 'Cancels Soon' : 'Active'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-white/60 uppercase tracking-wide font-bold">Amount</span>
+                <span className="text-sm font-black text-white">$4.99/mo</span>
+              </div>
+              {fitnessMembership?.membership?.currentPeriodEnd && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/60 uppercase tracking-wide font-bold flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {fitnessMembership.membership.cancelAtPeriodEnd ? 'Access Until' : 'Next Renewal'}
+                  </span>
+                  <span className="text-sm font-black text-white">{new Date(fitnessMembership.membership.currentPeriodEnd).toLocaleDateString()}</span>
+                </div>
+              )}
+              {fitnessMembership?.membership?.cancelAtPeriodEnd && (
+                <p className="text-xs text-red-400 font-semibold mt-1">Cancellation scheduled — no further charges.</p>
+              )}
+            </div>
+
+            {!fitnessMembership?.membership?.cancelAtPeriodEnd && (
+              <div className="space-y-2">
+                <p className="text-xs text-white/50 uppercase tracking-wide font-bold">Cancel</p>
+                {!showFitnessCancelConfirm ? (
+                  <Button
+                    variant="outline"
+                    className="w-full border-red-500/50 text-red-400 hover:bg-red-500/10 font-black uppercase tracking-wide rounded-sm"
+                    onClick={() => setShowFitnessCancelConfirm(true)}
+                  >
+                    Cancel Fitness Membership
+                  </Button>
+                ) : (
+                  <div className="bg-red-950/50 border border-red-500/50 rounded-sm p-4 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-red-300">
+                        Your fitness access will continue until {fitnessMembership?.membership?.currentPeriodEnd ? new Date(fitnessMembership.membership.currentPeriodEnd).toLocaleDateString() : 'end of billing period'}. No further charges will occur.
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 border-white/20 text-white hover:bg-white/10 font-black uppercase rounded-sm"
+                        onClick={() => setShowFitnessCancelConfirm(false)}
+                      >
+                        Keep It
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white font-black uppercase rounded-sm"
+                        disabled={cancelFitnessMutation.isPending}
+                        onClick={() => cancelFitnessMutation.mutate()}
+                      >
+                        {cancelFitnessMutation.isPending ? 'Cancelling...' : 'Confirm Cancel'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

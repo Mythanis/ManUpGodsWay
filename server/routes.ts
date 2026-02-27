@@ -4805,6 +4805,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current subscription details from Stripe
+  app.get('/api/subscription/details', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !user.stripeSubscriptionId) {
+        return res.json({ hasSubscription: false });
+      }
+
+      const { default: Stripe } = await import('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
+
+      const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId, {
+        expand: ['items.data.price'],
+      });
+
+      const price = subscription.items.data[0]?.price as any;
+      const interval = price?.recurring?.interval;
+
+      res.json({
+        hasSubscription: true,
+        billingCycle: interval === 'year' ? 'yearly' : 'monthly',
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        amount: price?.unit_amount ? price.unit_amount / 100 : null,
+        status: subscription.status,
+      });
+    } catch (error: any) {
+      console.error('Error fetching subscription details:', error);
+      res.status(500).json({ message: 'Failed to fetch subscription details' });
+    }
+  });
+
+  // Cancel main subscription (at period end)
+  app.post('/api/subscription/cancel', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !user.stripeSubscriptionId) {
+        return res.status(404).json({ message: 'No active subscription found' });
+      }
+
+      const { default: Stripe } = await import('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
+
+      const subscription = await stripe.subscriptions.update(user.stripeSubscriptionId, {
+        cancel_at_period_end: true,
+      });
+
+      await storage.cancelUserSubscription(user.id);
+
+      res.json({
+        message: 'Subscription will cancel at end of current billing period',
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+      });
+    } catch (error: any) {
+      console.error('Error cancelling subscription:', error);
+      res.status(500).json({ message: error.message || 'Failed to cancel subscription' });
+    }
+  });
+
+  // Switch subscription billing cycle (monthly ↔ yearly)
+  app.post('/api/subscription/switch-billing', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !user.stripeSubscriptionId) {
+        return res.status(404).json({ message: 'No active subscription found' });
+      }
+
+      const { newBillingCycle } = req.body;
+      if (!newBillingCycle || !['monthly', 'yearly'].includes(newBillingCycle)) {
+        return res.status(400).json({ message: 'newBillingCycle must be "monthly" or "yearly"' });
+      }
+
+      const { default: Stripe } = await import('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
+
+      const [subSettings] = await db.select().from(schema.subscriptionSettings).limit(1);
+      const price = newBillingCycle === 'yearly'
+        ? (subSettings?.yearlyPrice || '99.99')
+        : (subSettings?.monthlyPrice || '9.99');
+
+      const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+      const currentItemId = subscription.items.data[0].id;
+
+      const updated = await stripe.subscriptions.update(user.stripeSubscriptionId, {
+        items: [{
+          id: currentItemId,
+          price_data: {
+            currency: 'usd',
+            product_data: { name: "Man Up God's Way Subscription" },
+            unit_amount: Math.round(parseFloat(price) * 100),
+            recurring: { interval: newBillingCycle === 'yearly' ? 'year' : 'month' },
+          },
+        }],
+        proration_behavior: 'always_invoice',
+      });
+
+      const newPeriodEnd = new Date(updated.current_period_end * 1000);
+      await storage.updateUserSubscriptionDetails(user.id, { subscriptionExpiresAt: newPeriodEnd });
+
+      res.json({
+        message: `Billing switched to ${newBillingCycle}`,
+        billingCycle: newBillingCycle,
+        currentPeriodEnd: newPeriodEnd.toISOString(),
+        amount: parseFloat(price),
+      });
+    } catch (error: any) {
+      console.error('Error switching billing cycle:', error);
+      res.status(500).json({ message: error.message || 'Failed to switch billing cycle' });
+    }
+  });
+
   // Stripe webhook to handle subscription events
   app.post('/api/stripe/webhook', async (req, res) => {
     try {
