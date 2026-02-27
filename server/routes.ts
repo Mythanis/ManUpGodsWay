@@ -9697,8 +9697,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { postId } = req.params;
+      const user = await storage.getUser(userId);
+      const isAdmin = user?.role === 'admin';
 
-      const success = await storage.deleteHurdleWallPost(postId, userId);
+      const success = await storage.deleteHurdleWallPost(postId, userId, isAdmin);
       
       if (!success) {
         return res.status(403).json({ message: "You can only delete your own posts" });
@@ -9725,8 +9727,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { replyId } = req.params;
+      const user = await storage.getUser(userId);
+      const isAdmin = user?.role === 'admin';
 
-      const success = await storage.deleteHurdleWallReply(replyId, userId);
+      const success = await storage.deleteHurdleWallReply(replyId, userId, isAdmin);
       
       if (!success) {
         return res.status(403).json({ message: "You can only delete your own replies" });

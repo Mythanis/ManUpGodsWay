@@ -60,7 +60,7 @@ export default function HurdleWall() {
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
   
   // Get current user
-  const { data: currentUser } = useQuery<{ id: string }>({ queryKey: ['/api/auth/user'] });
+  const { data: currentUser } = useQuery<{ id: string; role?: string }>({ queryKey: ['/api/auth/user'] });
   
   // Set up real-time WebSocket connection
   useWebSocket(currentUser?.id);
@@ -430,13 +430,14 @@ export default function HurdleWall() {
                       </div>
                       <p className="text-sm text-white/50">{formatTimeAgo(post.createdAt)}</p>
                     </div>
-                    {currentUser?.id === post.userId && (
+                    {(currentUser?.id === post.userId || currentUser?.role === 'admin') && (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeletePost(post.id)}
                         className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-1 h-auto"
                         disabled={deletePostMutation.isPending}
+                        title="Delete post"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -495,7 +496,7 @@ export default function HurdleWall() {
                                   <span className="text-black/50 text-xs">
                                     {formatTimeAgo(reply.createdAt)}
                                   </span>
-                                  {currentUser?.id === reply.userId && (
+                                  {(currentUser?.id === reply.userId || currentUser?.role === 'admin') && (
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -503,6 +504,7 @@ export default function HurdleWall() {
                                       className="text-red-600 hover:text-red-500 hover:bg-red-100 p-1 h-auto"
                                       disabled={deleteCommentMutation.isPending}
                                       data-testid={`button-delete-comment-${reply.id}`}
+                                      title="Delete comment"
                                     >
                                       <Trash2 className="h-3 w-3" />
                                     </Button>

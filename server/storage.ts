@@ -6077,15 +6077,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userPrayerStats.userId, userId));
   }
 
-  async deleteHurdleWallPost(postId: string, userId: string): Promise<boolean> {
+  async deleteHurdleWallPost(postId: string, userId: string, isAdmin = false): Promise<boolean> {
     try {
-      // First verify the user owns this post
+      // First verify the user owns this post (or is admin)
       const [post] = await db
         .select()
         .from(hurdleWallPosts)
         .where(eq(hurdleWallPosts.id, postId));
       
-      if (!post || post.userId !== userId) {
+      if (!post || (!isAdmin && post.userId !== userId)) {
         return false;
       }
       
@@ -6103,15 +6103,15 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async deleteHurdleWallReply(replyId: string, userId: string): Promise<boolean> {
+  async deleteHurdleWallReply(replyId: string, userId: string, isAdmin = false): Promise<boolean> {
     try {
-      // First verify the user owns this reply
+      // First verify the user owns this reply (or is admin)
       const [reply] = await db
         .select()
         .from(hurdleWallReplies)
         .where(eq(hurdleWallReplies.id, replyId));
       
-      if (!reply || reply.userId !== userId) {
+      if (!reply || (!isAdmin && reply.userId !== userId)) {
         return false;
       }
       
