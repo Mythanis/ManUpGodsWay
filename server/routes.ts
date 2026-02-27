@@ -4257,6 +4257,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/admin/users/:id/fitness-access', isAuthenticated, async (req: any, res) => {
+    try {
+      const adminUser = await storage.getUser(req.user.claims.sub);
+      if (!adminUser || !isAdmin(adminUser)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const { hasAccess } = req.body;
+      if (typeof hasAccess !== 'boolean') {
+        return res.status(400).json({ message: "hasAccess must be a boolean" });
+      }
+      const updatedUser = await storage.setUserFitnessAccess(req.params.id, hasAccess);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating fitness access:", error);
+      res.status(500).json({ message: "Failed to update fitness access" });
+    }
+  });
+
   app.delete('/api/admin/users/:id', isAuthenticated, async (req: any, res) => {
     try {
       const adminUser = await storage.getUser(req.user.claims.sub);
@@ -4832,6 +4850,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             });
 
+            await storage.setUserFitnessAccess(userId, true);
+
             await storage.createNotification({
               userId,
               type: 'admin',
@@ -4993,6 +5013,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if ((req.app as any).sendRealtimeNotification) {
               (req.app as any).sendRealtimeNotification(user.id, notification);
             }
+          }
+        }
+
+        // Fitness membership: revoke access when subscription is fully cancelled
+        if (subscription.status === 'canceled') {
+          try {
+            const [fitnessMembership] = await db
+              .select()
+              .from(schema.fitnessMemberships)
+              .where(eq(schema.fitnessMemberships.stripeSubscriptionId, subscription.id))
+              .limit(1);
+            if (fitnessMembership) {
+              await db.update(schema.fitnessMemberships)
+                .set({ status: 'cancelled', updatedAt: new Date() })
+                .where(eq(schema.fitnessMemberships.id, fitnessMembership.id));
+              await storage.setUserFitnessAccess(fitnessMembership.userId, false);
+              console.log(`[Fitness] Membership cancelled and access revoked for user ${fitnessMembership.userId}`);
+            }
+          } catch (err) {
+            console.error('[Fitness] Error revoking fitness access on subscription cancel:', err);
           }
         }
       }

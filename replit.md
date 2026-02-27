@@ -31,7 +31,7 @@ The system supports a single subscription model with configurable free trial. Ad
 - **War Room**: A dedicated prayer request space where users can post prayer requests (real names only), comment, and indicate they've prayed, with real-time updates via WebSockets.
 - **Under Fire**: An accountability space where users post requests, and others can "Assist" to become accountability partners, initiating a direct message.
 - **War Groups**: Licensed discipleship groups with city-based discovery, interactive map view (OpenStreetMap Nominatim API), leader/member management, and private discussion boards supporting media uploads. Includes a registration and approval workflow for new groups with admin notifications.
-- **Fitness Integration**: Local exercise database for fitness plans.
+- **Fitness Integration**: Local exercise database for fitness plans. Gated by a per-user `hasFitnessAccess` boolean flag. Users gain access via Stripe checkout (fitness membership $4.99/mo) which sets the flag via webhook on `checkout.session.completed`. Access is revoked on `customer.subscription.updated` when status becomes `canceled`. Admins can manually grant or revoke access per-user via the admin user management panel (`PUT /api/admin/users/:id/fitness-access`).
 - **Gamification (Rations & Ranks)**: A system where users earn "rations" for completing missions (40+ types across features) to progress through a 5-tier rank system. Includes anti-abuse guardrails and a grace bonus for returning users.
 
 # External Dependencies

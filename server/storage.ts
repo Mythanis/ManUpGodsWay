@@ -317,6 +317,7 @@ export interface IStorage {
   getAllUsers(limit?: number): Promise<User[]>;
   updateUserRole(userId: string, role: string): Promise<User>;
   updateUserSubscription(userId: string, subscriptionTier: string): Promise<User>;
+  setUserFitnessAccess(userId: string, hasAccess: boolean): Promise<User>;
   updateUserSubscriptionDetails(userId: string, details: {
     subscriptionTier?: string;
     subscriptionStatus?: string;
@@ -2444,6 +2445,15 @@ export class DatabaseStorage implements IStorage {
     const [updatedUser] = await db
       .update(users)
       .set({ subscriptionTier, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  async setUserFitnessAccess(userId: string, hasAccess: boolean): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ hasFitnessAccess: hasAccess, updatedAt: new Date() })
       .where(eq(users.id, userId))
       .returning();
     return updatedUser;

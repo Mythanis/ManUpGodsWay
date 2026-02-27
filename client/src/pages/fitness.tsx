@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { BackButton } from "@/components/BackButton";
 import { 
@@ -213,6 +214,7 @@ export default function Fitness() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
+  const { user: authUser } = useAuth();
 
   // Check fitness membership status
   const { data: membershipData, isLoading: membershipLoading } = useQuery<{ hasMembership: boolean; membership?: any }>({
@@ -220,7 +222,8 @@ export default function Fitness() {
     retry: false,
   });
 
-  const hasMembership = membershipData?.hasMembership ?? false;
+  // User has access if they have an active Stripe membership OR admin-granted access
+  const hasMembership = (membershipData?.hasMembership ?? false) || ((authUser as any)?.hasFitnessAccess === true);
 
   // Fetch admin-created fitness plans
   const { data: adminPlans = [] } = useQuery<AdminFitnessPlan[]>({

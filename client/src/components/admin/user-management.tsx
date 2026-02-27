@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle } from "lucide-react";
+import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell } from "lucide-react";
 
 interface User {
   id: string;
@@ -29,6 +29,7 @@ interface User {
   isBanned: boolean;
   bannedAt?: string;
   bannedReason?: string;
+  hasFitnessAccess: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -131,6 +132,27 @@ export default function UserManagement() {
       toast({
         title: "Error",
         description: "Failed to unban user. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const setFitnessAccess = useMutation({
+    mutationFn: async ({ userId, hasAccess }: { userId: string; hasAccess: boolean }) => {
+      await apiRequest('PUT', `/api/admin/users/${userId}/fitness-access`, { hasAccess });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setSelectedUser(prev => prev ? { ...prev, hasFitnessAccess: variables.hasAccess } : null);
+      toast({
+        title: "Success",
+        description: variables.hasAccess ? "Fitness access granted." : "Fitness access revoked.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update fitness access.",
         variant: "destructive",
       });
     },
@@ -449,6 +471,49 @@ export default function UserManagement() {
                     <Badge variant={selectedUser.allowGroupInvites ? "default" : "secondary"}>
                       {selectedUser.allowGroupInvites ? "Enabled" : "Disabled"}
                     </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Fitness Access */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center space-x-2">
+                    <Dumbbell className="w-5 h-5 text-ministry-gold" />
+                    <span>Fitness Access</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-foreground">Fitness Community ($4.99/mo add-on)</p>
+                      <p className="text-xs text-ministry-slate">Grant or revoke manual fitness access for this user</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant={selectedUser.hasFitnessAccess ? "default" : "secondary"}>
+                        {selectedUser.hasFitnessAccess ? "Granted" : "No Access"}
+                      </Badge>
+                      {selectedUser.hasFitnessAccess ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 border-red-300 hover:bg-red-50"
+                          onClick={() => setFitnessAccess.mutate({ userId: selectedUser.id, hasAccess: false })}
+                          disabled={setFitnessAccess.isPending}
+                        >
+                          Revoke
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="bg-ministry-gold hover:bg-yellow-500 text-black"
+                          onClick={() => setFitnessAccess.mutate({ userId: selectedUser.id, hasAccess: true })}
+                          disabled={setFitnessAccess.isPending}
+                        >
+                          Grant Access
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
