@@ -80,9 +80,3 @@ The system supports a single subscription model with configurable free trial. Ad
 - NASB translation with tooltips enabled
 - Custom useRefTagger hook (`client/src/hooks/useRefTagger.ts`) for triggering re-tagging on React content updates
 - Integrated in: study lessons, blog posts, devotionals, discussions, War Room, and Under Fire pages
-
-## Production Server Stability (Critical)
-- **SIGHUP handling**: Replit's terminal manager sends SIGHUP to Node.js processes ~57 seconds after startup. The default SIGHUP behavior terminates the process. The server MUST ignore SIGHUP to stay alive (`process.on("SIGHUP", () => {})` in `server/index.ts`).
-- **DB pool config**: `idleTimeoutMillis: 60000`, `connectionTimeoutMillis: 10000`, `max: 2` in `server/db.ts`.
-- **Background services**: Staggered start times (0s, 5s, 10s, 15s, 20s) to prevent simultaneous DB load.
-- Never add high-frequency logging (>1 per second) — it causes pipe overflow crashes.

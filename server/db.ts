@@ -11,16 +11,5 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Limit pool to 2 connections to keep memory usage under control on free tier.
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 2,
-  idleTimeoutMillis: 60000,
-  connectionTimeoutMillis: 10000,
-});
-
-pool.on('error', (err) => {
-  console.error('[DB POOL] Client error (handled):', err.message);
-});
-
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle({ client: pool, schema });

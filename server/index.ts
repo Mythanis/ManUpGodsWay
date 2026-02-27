@@ -45,31 +45,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Catch uncaught exceptions and unhandled rejections so the process never
-// dies silently.
-process.on("uncaughtException", (err) => {
-  console.error("[FATAL] Uncaught exception:", err);
-});
-process.on("unhandledRejection", (reason) => {
-  console.error("[FATAL] Unhandled promise rejection:", reason);
-});
-process.on("SIGTERM", () => {
-  console.error("[SIGNAL] SIGTERM received");
-  process.exit(0);
-});
-process.on("SIGINT", () => {
-  console.error("[SIGNAL] SIGINT received");
-  process.exit(0);
-});
-process.on("SIGHUP", () => {
-  console.error("[SIGNAL] SIGHUP received — ignoring (daemon mode)");
-  // SIGHUP is sent by Replit when the terminal session refreshes.
-  // Ignore it so the server keeps running.
-});
-process.on("exit", (code) => {
-  console.error(`[EXIT] Process exiting with code ${code}`);
-});
-
 (async () => {
   const server = await registerRoutes(app);
 
@@ -77,12 +52,8 @@ process.on("exit", (code) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    if (!res.headersSent) {
-      res.status(status).json({ message });
-    }
-    // Do NOT re-throw — re-throwing after a response is sent creates an
-    // uncaught exception that kills the process.
-    console.error("[Express error]", err);
+    res.status(status).json({ message });
+    throw err;
   });
 
   // importantly only setup vite in development and after
@@ -105,13 +76,20 @@ process.on("exit", (code) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
-
-    // Stagger background service starts by 5 seconds each so they don't all
-    // hit the database simultaneously at startup, which spikes memory.
+    
+    // Start the devotional notification service
     devotionalNotificationService.start();
-    setTimeout(() => subscriptionExpirationService.start(), 5000);
-    setTimeout(() => fitnessReminderService.start(), 10000);
-    setTimeout(() => warGroupsGeocodingService.start(), 15000);
-    setTimeout(() => challengeNotificationService.start(), 20000);
+    
+    // Start the subscription expiration service
+    subscriptionExpirationService.start();
+    
+    // Start the fitness reminder service
+    fitnessReminderService.start();
+    
+    // Start the war groups geocoding service
+    warGroupsGeocodingService.start();
+    
+    // Start the challenge notification service
+    challengeNotificationService.start();
   });
 })();

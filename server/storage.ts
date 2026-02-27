@@ -3072,22 +3072,15 @@ export class DatabaseStorage implements IStorage {
     
     const newNotification = await this.createNotification(notification);
     
-    // Also send push notification if available – use a 8-second timeout so
-    // that a slow or unreachable FCM endpoint never blocks the process.
+    // Also send push notification if available
     try {
       const { sendPushNotification } = await import('./pushNotificationService');
-      const timeout = new Promise<void>((_, reject) =>
-        setTimeout(() => reject(new Error('Push notification timed out after 8s')), 8000)
-      );
-      await Promise.race([
-        sendPushNotification(notification.userId, {
-          title: notification.title,
-          body: notification.message,
-          url: pushPayload?.url || '/',
-          tag: notification.type,
-        }),
-        timeout,
-      ]);
+      await sendPushNotification(notification.userId, {
+        title: notification.title,
+        body: notification.message,
+        url: pushPayload?.url || '/',
+        tag: notification.type,
+      });
     } catch (error) {
       console.error('Failed to send push notification:', error);
     }

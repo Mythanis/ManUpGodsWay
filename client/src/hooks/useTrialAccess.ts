@@ -8,7 +8,7 @@ export function useTrialAccess(area: string) {
   const { data: user } = useQuery<any>({ queryKey: ["/api/auth/user"] });
   const { data: settings } = useQuery<SubscriptionSettings>({
     queryKey: ["/api/subscription-settings"],
-    staleTime: 30 * 1000,
+    staleTime: 0,
   });
 
   const isActiveSubscriber = user?.subscriptionStatus === "active" || user?.role === "admin" || user?.role === "owner";

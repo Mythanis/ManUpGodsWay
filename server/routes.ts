@@ -5381,11 +5381,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 'everyone':
           targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
           break;
-        case 'free':
-          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && targetUser.subscriptionStatus === 'trial');
+        case 'vip':
+          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && targetUser.subscriptionTier === 'vip');
           break;
-        case 'subscriber':
-          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && targetUser.subscriptionStatus === 'active');
+        case 'premium':
+          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && targetUser.subscriptionTier === 'premium');
           break;
         case 'individual':
           if (!selectedUserIds || selectedUserIds.length === 0) {
@@ -5439,11 +5439,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let successMessage = "";
       switch (targetAudience) {
-        case 'free':
-          successMessage = `Notification sent to ${targetUsers.length} Free (trial) user(s) successfully`;
+        case 'vip':
+          successMessage = `Notification sent to ${targetUsers.length} VIP user(s) successfully`;
           break;
-        case 'subscriber':
-          successMessage = `Notification sent to ${targetUsers.length} Subscriber(s) successfully`;
+        case 'premium':
+          successMessage = `Notification sent to ${targetUsers.length} Premium user(s) successfully`;
           break;
         case 'individual':
           successMessage = `Notification sent to ${targetUsers.length} selected user(s) successfully`;
@@ -7545,13 +7545,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/fitness/membership', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-
-      // Check admin-granted fitness flag first
-      const user = await storage.getUser(userId);
-      if (user?.fitnessSubscribed) {
-        return res.json({ hasMembership: true, adminGranted: true });
-      }
-
       const [membership] = await db.select().from(schema.fitnessMemberships).where(eq(schema.fitnessMemberships.userId, userId)).limit(1);
       if (!membership) return res.json({ hasMembership: false });
       const isActive = membership.status === 'active' && (!membership.currentPeriodEnd || membership.currentPeriodEnd > new Date());
@@ -7559,20 +7552,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error checking fitness membership:', error);
       res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-
-  // Admin: toggle fitness subscription flag for a user
-  app.put('/api/admin/users/:id/fitness-subscription', isAuthenticated, requireAdmin, async (req: any, res) => {
-    try {
-      const { fitnessSubscribed } = req.body;
-      await db.update(schema.users)
-        .set({ fitnessSubscribed: !!fitnessSubscribed })
-        .where(eq(schema.users.id, req.params.id));
-      res.json({ success: true, fitnessSubscribed: !!fitnessSubscribed });
-    } catch (error) {
-      console.error('Error updating fitness subscription:', error);
-      res.status(500).json({ message: 'Failed to update fitness subscription' });
     }
   });
 
@@ -11570,7 +11549,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Store connected clients with their user IDs
   const connectedClients = new Map<string, WebSocket>();
   
-  const PING_INTERVAL = 60000;
+  const PING_INTERVAL = 30000;
 
   const pingInterval = setInterval(() => {
     wss.clients.forEach((ws: any) => {
@@ -11579,12 +11558,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
       ws.isAlive = false;
-      try {
-        ws.ping();
-      } catch (err) {
-        // Socket may already be closing — terminate cleanly instead of crashing
-        try { ws.terminate(); } catch (_) {}
-      }
+      ws.ping();
     });
   }, PING_INTERVAL);
 
@@ -11595,11 +11569,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   wss.on('connection', (ws: any, req) => {
     console.log('WebSocket connection established');
     ws.isAlive = true;
-
-    // Prevent unhandled 'error' events from crashing the process
-    ws.on('error', (err: Error) => {
-      console.error('[WS] Connection error:', err.message);
-    });
 
     ws.on('pong', () => {
       ws.isAlive = true;

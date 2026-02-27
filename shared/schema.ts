@@ -60,7 +60,6 @@ export const users = pgTable("users", {
   bannedAt: timestamp("banned_at"),
   bannedReason: text("banned_reason"),
   hasSeenWelcome: boolean("has_seen_welcome").default(false),
-  fitnessSubscribed: boolean("fitness_subscribed").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
