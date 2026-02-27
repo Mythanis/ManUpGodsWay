@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus, Edit, Share2 } from "lucide-react";
+import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus, Edit, Share2, Trash2 } from "lucide-react";
 
 // Custom Christian Cross icon component
 const ChristianCross = ({ className }: { className?: string }) => (
@@ -70,8 +70,10 @@ export default function DiscussionCard({
   const isLongContent = discussion.content && discussion.content.length > 280;
   const { user } = useAuth();
   
-  // Check if current user owns this discussion
+  // Check if current user owns this discussion or is admin
   const isOwner = user && (user as any).id === discussion.userId;
+  const isAdmin = user && (user as any).role === 'admin';
+  const canDelete = isOwner || isAdmin;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -135,6 +137,45 @@ export default function DiscussionCard({
       });
     },
   });
+
+  const deleteDiscussion = useMutation({
+    mutationFn: async () => {
+      return apiRequest('DELETE', `/api/discussions/${discussion.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
+      toast({ title: "Deleted", description: "Discussion removed successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to delete discussion", variant: "destructive" });
+    },
+  });
+
+  const deleteReply = useMutation({
+    mutationFn: async (replyId: string) => {
+      return apiRequest('DELETE', `/api/discussions/${discussion.id}/replies/${replyId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/discussions", discussion.id, "replies"] });
+      toast({ title: "Deleted", description: "Reply removed successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to delete reply", variant: "destructive" });
+    },
+  });
+
+  const handleDeleteDiscussion = () => {
+    if (window.confirm('Are you sure you want to delete this discussion? This cannot be undone.')) {
+      deleteDiscussion.mutate();
+    }
+  };
+
+  const handleDeleteReply = (replyId: string) => {
+    if (window.confirm('Are you sure you want to delete this reply?')) {
+      deleteReply.mutate(replyId);
+    }
+  };
 
   const toggleLike = useMutation({
     mutationFn: async () => {
@@ -567,6 +608,18 @@ export default function DiscussionCard({
                     </Button>
                   }
                 />
+                {canDelete && (
+                  <Button
+                    size="sm"
+                    onClick={handleDeleteDiscussion}
+                    disabled={deleteDiscussion.isPending}
+                    className="bg-black text-red-400 hover:bg-red-600 hover:text-white p-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] transition-all"
+                    title="Delete discussion"
+                    data-testid="button-delete-discussion"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -598,7 +651,7 @@ export default function DiscussionCard({
                     </div>
                     <p className="text-sm text-gray-300 leading-relaxed">{reply.content}</p>
                     
-                    {/* Like and Flag Reply Buttons */}
+                    {/* Like, Flag, and Delete Reply Buttons */}
                     <div className="flex justify-between items-center mt-2">
                       <Button 
                         variant="ghost"
@@ -609,15 +662,30 @@ export default function DiscussionCard({
                         <ChristianCross className="w-3 h-3" />
                         <span className="text-xs font-bold">{reply.likes || 0}</span>
                       </Button>
-                      <FlagContentDialog 
-                        contentType="reply" 
-                        contentId={reply.id}
-                        triggerElement={
-                          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-red-500 hover:bg-red-500/10 p-1 rounded-sm transition-all">
-                            <Flag className="h-3 w-3" />
+                      <div className="flex items-center gap-1">
+                        <FlagContentDialog 
+                          contentType="reply" 
+                          contentId={reply.id}
+                          triggerElement={
+                            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-red-500 hover:bg-red-500/10 p-1 rounded-sm transition-all">
+                              <Flag className="h-3 w-3" />
+                            </Button>
+                          }
+                        />
+                        {(isAdmin || (user && (user as any).id === reply.userId)) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteReply(reply.id)}
+                            disabled={deleteReply.isPending}
+                            className="text-red-400 hover:text-red-500 hover:bg-red-500/10 p-1 rounded-sm transition-all"
+                            title="Delete reply"
+                            data-testid={`button-delete-reply-${reply.id}`}
+                          >
+                            <Trash2 className="h-3 w-3" />
                           </Button>
-                        }
-                      />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -2054,6 +2054,51 @@ export class DatabaseStorage implements IStorage {
     return updatedDiscussion;
   }
 
+  async deleteDiscussion(discussionId: string, userId: string, isAdmin = false): Promise<boolean> {
+    try {
+      const [discussion] = await db
+        .select()
+        .from(discussions)
+        .where(eq(discussions.id, discussionId))
+        .limit(1);
+
+      if (!discussion) return false;
+      if (!isAdmin && discussion.userId !== userId) return false;
+
+      await db.delete(discussionReplies).where(eq(discussionReplies.discussionId, discussionId));
+      await db.delete(discussions).where(eq(discussions.id, discussionId));
+      return true;
+    } catch (error) {
+      console.error('Error deleting discussion:', error);
+      return false;
+    }
+  }
+
+  async deleteDiscussionReply(replyId: string, userId: string, isAdmin = false): Promise<boolean> {
+    try {
+      const [reply] = await db
+        .select()
+        .from(discussionReplies)
+        .where(eq(discussionReplies.id, replyId))
+        .limit(1);
+
+      if (!reply) return false;
+      if (!isAdmin && reply.userId !== userId) return false;
+
+      await db.delete(discussionReplies).where(eq(discussionReplies.id, replyId));
+
+      await db
+        .update(discussions)
+        .set({ replyCount: sql`GREATEST(${discussions.replyCount} - 1, 0)`, updatedAt: new Date() })
+        .where(eq(discussions.id, reply.discussionId));
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting discussion reply:', error);
+      return false;
+    }
+  }
+
   // Reply operations
   async createReply(reply: InsertDiscussionReply): Promise<DiscussionReply> {
     const [newReply] = await db.insert(discussionReplies).values(reply).returning();

@@ -2582,6 +2582,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete('/api/discussions/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const isAdmin = user?.role === 'admin';
+      const success = await storage.deleteDiscussion(req.params.id, userId, isAdmin);
+      if (!success) {
+        return res.status(403).json({ message: "You can only delete your own discussions" });
+      }
+      res.json({ message: "Discussion deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting discussion:", error);
+      res.status(500).json({ message: "Failed to delete discussion" });
+    }
+  });
+
+  app.delete('/api/discussions/:id/replies/:replyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const isAdmin = user?.role === 'admin';
+      const success = await storage.deleteDiscussionReply(req.params.replyId, userId, isAdmin);
+      if (!success) {
+        return res.status(403).json({ message: "You can only delete your own replies" });
+      }
+      res.json({ message: "Reply deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting discussion reply:", error);
+      res.status(500).json({ message: "Failed to delete reply" });
+    }
+  });
+
   app.post('/api/discussions/:id/like', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
