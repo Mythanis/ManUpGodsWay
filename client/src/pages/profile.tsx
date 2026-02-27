@@ -392,16 +392,20 @@ export default function Profile() {
                     {fitnessMembership?.hasMembership || (user as any)?.hasFitnessAccess ? 'Fitness Add-on' : 'Fitness Add-on'}
                   </span>
                   <p className="text-[10px] text-black/60 font-semibold">
-                    {fitnessMembership?.hasMembership
+                    {fitnessMembership?.membership
                       ? fitnessMembership.membership?.cancelAtPeriodEnd
                         ? `Cancels ${fitnessMembership.membership.currentPeriodEnd ? new Date(fitnessMembership.membership.currentPeriodEnd).toLocaleDateString() : ''}`
-                        : 'Active — $4.99/mo'
+                        : fitnessMembership.membership?.status === 'active'
+                          ? 'Active — $4.99/mo'
+                          : fitnessMembership.membership?.status === 'past_due'
+                            ? 'Payment failed — update payment method'
+                            : 'Active — $4.99/mo'
                       : (user as any)?.hasFitnessAccess
                         ? 'Access granted'
                         : '$4.99/mo'}
                   </p>
                 </div>
-                {fitnessMembership?.hasMembership ? (
+                {fitnessMembership?.membership ? (
                   <Button 
                     variant="ghost"
                     className="text-black font-black text-sm hover:bg-black/10 relative z-10 uppercase tracking-wide pr-4"
