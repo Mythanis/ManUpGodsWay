@@ -3,12 +3,29 @@ import { Button } from "@/components/ui/button";
 import { Home, BookOpen, Video, Users, MessageCircle, Settings, Headphones, Trophy, ExternalLink, FileText, UserPlus, Dumbbell, Shield, Crown, Book, Calendar, MoreHorizontal, MapPin, Flame } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useCallback } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+const LS_KEY_STUDIES = "nav_seen_studies";
+const LS_KEY_COMMUNITY = "nav_seen_community";
+
+function getSeenTs(key: string): number {
+  const val = localStorage.getItem(key);
+  if (val) return parseInt(val, 10);
+  const now = Date.now();
+  localStorage.setItem(key, String(now));
+  return now;
+}
+
+function markSeen(key: string) {
+  localStorage.setItem(key, String(Date.now()));
+}
 
 const navItems = [
   { id: 'home', path: '/', label: 'Home', icon: Home },
@@ -29,61 +46,111 @@ const navItems = [
   { id: 'more-man-up', path: '/more-man-up', label: 'Man Up', icon: ExternalLink },
 ];
 
+function NavBadgeDot() {
+  return (
+    <span
+      className="absolute top-1 right-1 w-4 h-4 bg-red-600 rounded-full border-2 border-card flex items-center justify-center"
+      style={{ minWidth: 14, minHeight: 14 }}
+    />
+  );
+}
+
 export default function Navigation() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
 
-  // Add admin/owner tabs based on user role
+  const studiesSince = getSeenTs(LS_KEY_STUDIES);
+  const communitySince = getSeenTs(LS_KEY_COMMUNITY);
+
+  const { data: badges, refetch: refetchBadges } = useQuery<{ studies: boolean; community: boolean }>({
+    queryKey: ['/api/nav/badges', studiesSince, communitySince],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/nav/badges?studiesSince=${studiesSince}&communitySince=${communitySince}`,
+        { credentials: "include" }
+      );
+      if (!res.ok) return { studies: false, community: false };
+      return res.json();
+    },
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
+    retry: false,
+  });
+
+  const handleNavClick = useCallback((itemId: string) => {
+    if (itemId === 'library') {
+      markSeen(LS_KEY_STUDIES);
+      refetchBadges();
+    }
+    if (itemId === 'community') {
+      markSeen(LS_KEY_COMMUNITY);
+      refetchBadges();
+    }
+  }, [refetchBadges]);
+
+  useEffect(() => {
+    if (location.startsWith('/library') || location === '/library') {
+      markSeen(LS_KEY_STUDIES);
+    }
+    if (location.startsWith('/community') || location === '/community') {
+      markSeen(LS_KEY_COMMUNITY);
+    }
+  }, [location]);
+
   let allNavItems = navItems;
-  
   if ((user as any)?.role === 'admin') {
     allNavItems = [...navItems, { id: 'admin', path: '/admin', label: 'Admin', icon: Settings }];
   } else if ((user as any)?.role === 'owner') {
-    allNavItems = [...navItems, 
+    allNavItems = [...navItems,
       { id: 'admin', path: '/admin', label: 'Admin', icon: Settings },
       { id: 'owners', path: '/owners', label: 'Owners', icon: Crown }
     ];
   }
 
-  // Define primary tabs (always visible)
   const primaryTabIds = ['home', 'library', 'community', 'war-groups'];
-  
-  // Split items into primary and dropdown items
   const primaryItems = allNavItems.filter(item => primaryTabIds.includes(item.id));
   const dropdownItems = allNavItems.filter(item => !primaryTabIds.includes(item.id));
 
   const isActive = (itemPath: string) => {
-    return location === itemPath || 
+    return location === itemPath ||
            (itemPath === '/' && location === '/') ||
            (itemPath !== '/' && location.startsWith(itemPath));
   };
 
-  // Check if any dropdown item is active
   const isDropdownActive = dropdownItems.some(item => isActive(item.path));
 
+  const hasBadge = (itemId: string) => {
+    if (itemId === 'library') return badges?.studies === true;
+    if (itemId === 'community') return badges?.community === true;
+    return false;
+  };
+
   return (
-    <nav 
+    <nav
       className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-card border-t border-ministry-charcoal z-50 h-16"
       data-testid="navigation-bottom"
     >
       <div className="flex items-center justify-around h-full px-2">
-        {/* Primary navigation items */}
         {primaryItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
-          
+          const badge = hasBadge(item.id);
+
           return (
-            <Link key={item.id} href={item.path}>
+            <Link key={item.id} href={item.path} onClick={() => handleNavClick(item.id)}>
               <Button
                 variant="ghost"
-                className={`flex flex-col items-center justify-center h-full px-3 py-1 min-w-[60px] max-w-[80px] flex-shrink-0 rounded-sm ${
-                  active 
-                    ? 'text-ministry-gold font-semibold bg-ministry-gold/10' 
+                className={`relative flex flex-col items-center justify-center h-full px-3 py-1 min-w-[60px] max-w-[80px] flex-shrink-0 rounded-sm ${
+                  active
+                    ? 'text-ministry-gold font-semibold bg-ministry-gold/10'
                     : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                 }`}
                 data-testid={`nav-${item.id}`}
               >
-                <Icon className="w-5 h-5 mb-0.5 flex-shrink-0" />
+                <span className="relative">
+                  <Icon className="w-5 h-5 mb-0.5 flex-shrink-0" />
+                  {badge && <NavBadgeDot />}
+                </span>
                 <span className="font-medium text-[10px] leading-tight truncate w-full text-center">
                   {item.label}
                 </span>
@@ -92,14 +159,13 @@ export default function Navigation() {
           );
         })}
 
-        {/* More dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               className={`flex flex-col items-center justify-center h-full px-3 py-1 min-w-[60px] max-w-[80px] flex-shrink-0 rounded-sm ${
                 isDropdownActive
-                  ? 'text-ministry-gold font-semibold bg-ministry-gold/10' 
+                  ? 'text-ministry-gold font-semibold bg-ministry-gold/10'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
               }`}
               data-testid="nav-more"
@@ -110,8 +176,8 @@ export default function Navigation() {
               </span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end" 
+          <DropdownMenuContent
+            align="end"
             side="top"
             className="w-52 mb-2 bg-zinc-900 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-1"
             data-testid="dropdown-more-menu"
@@ -119,14 +185,14 @@ export default function Navigation() {
             {dropdownItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
-              
+
               return (
                 <DropdownMenuItem
                   key={item.id}
                   onClick={() => setLocation(item.path)}
                   className={`cursor-pointer rounded-sm font-bold uppercase text-xs tracking-wide ${
-                    active 
-                      ? 'text-black bg-ministry-gold-exact' 
+                    active
+                      ? 'text-black bg-ministry-gold-exact'
                       : 'text-white hover:bg-ministry-gold-exact hover:text-black'
                   }`}
                   data-testid={`dropdown-nav-${item.id}`}

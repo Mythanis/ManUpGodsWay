@@ -17,7 +17,7 @@ import { warGroupsService } from "./warGroupsService";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
 import * as schema from "@shared/schema";
-import { eq, and, sql, desc, asc } from "drizzle-orm";
+import { eq, and, sql, desc, asc, gt } from "drizzle-orm";
 import { 
   insertStudySchema, 
   insertStudySeriesSchema,
@@ -755,6 +755,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching featured study:", error);
       res.status(500).json({ message: "Failed to fetch featured study" });
+    }
+  });
+
+  app.get('/api/nav/badges', isAuthenticated, async (req: any, res) => {
+    try {
+      const studiesSince = req.query.studiesSince ? new Date(parseInt(req.query.studiesSince as string)) : null;
+      const communitySince = req.query.communitySince ? new Date(parseInt(req.query.communitySince as string)) : null;
+
+      const [newestStudy] = studiesSince
+        ? await db.select({ createdAt: schema.studies.createdAt }).from(schema.studies)
+            .where(gt(schema.studies.createdAt, studiesSince))
+            .orderBy(desc(schema.studies.createdAt)).limit(1)
+        : [];
+
+      const [newestDiscussion] = communitySince
+        ? await db.select({ createdAt: schema.discussions.createdAt }).from(schema.discussions)
+            .where(gt(schema.discussions.createdAt, communitySince))
+            .orderBy(desc(schema.discussions.createdAt)).limit(1)
+        : [];
+
+      res.json({
+        studies: !!newestStudy,
+        community: !!newestDiscussion,
+      });
+    } catch (error) {
+      res.json({ studies: false, community: false });
     }
   });
 
