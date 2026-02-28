@@ -763,24 +763,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studiesSince = req.query.studiesSince ? new Date(parseInt(req.query.studiesSince as string)) : null;
       const communitySince = req.query.communitySince ? new Date(parseInt(req.query.communitySince as string)) : null;
 
-      const [newestStudy] = studiesSince
-        ? await db.select({ createdAt: schema.studies.createdAt }).from(schema.studies)
+      const [studyRow] = studiesSince
+        ? await db.select({ count: sql<number>`count(*)::int` }).from(schema.studies)
             .where(gt(schema.studies.createdAt, studiesSince))
-            .orderBy(desc(schema.studies.createdAt)).limit(1)
-        : [];
+        : [{ count: 0 }];
 
-      const [newestDiscussion] = communitySince
-        ? await db.select({ createdAt: schema.discussions.createdAt }).from(schema.discussions)
+      const [discussionRow] = communitySince
+        ? await db.select({ count: sql<number>`count(*)::int` }).from(schema.discussions)
             .where(gt(schema.discussions.createdAt, communitySince))
-            .orderBy(desc(schema.discussions.createdAt)).limit(1)
-        : [];
+        : [{ count: 0 }];
 
       res.json({
-        studies: !!newestStudy,
-        community: !!newestDiscussion,
+        studies: studyRow?.count ?? 0,
+        community: discussionRow?.count ?? 0,
       });
     } catch (error) {
-      res.json({ studies: false, community: false });
+      res.json({ studies: 0, community: 0 });
     }
   });
 

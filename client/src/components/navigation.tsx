@@ -46,12 +46,21 @@ const navItems = [
   { id: 'more-man-up', path: '/more-man-up', label: 'Man Up', icon: ExternalLink },
 ];
 
-function NavBadgeDot() {
+function NavBadge({ count }: { count: number }) {
+  const label = count > 99 ? "99+" : String(count);
   return (
     <span
-      className="absolute top-1 right-1 w-4 h-4 bg-red-600 rounded-full border-2 border-card flex items-center justify-center"
-      style={{ minWidth: 14, minHeight: 14 }}
-    />
+      className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full border-2 border-card flex items-center justify-center font-black leading-none"
+      style={{
+        fontSize: 9,
+        minWidth: label.length > 1 ? 18 : 16,
+        height: 16,
+        paddingLeft: label.length > 1 ? 3 : 0,
+        paddingRight: label.length > 1 ? 3 : 0,
+      }}
+    >
+      {label}
+    </span>
   );
 }
 
@@ -62,14 +71,14 @@ export default function Navigation() {
   const studiesSince = getSeenTs(LS_KEY_STUDIES);
   const communitySince = getSeenTs(LS_KEY_COMMUNITY);
 
-  const { data: badges, refetch: refetchBadges } = useQuery<{ studies: boolean; community: boolean }>({
+  const { data: badges, refetch: refetchBadges } = useQuery<{ studies: number; community: number }>({
     queryKey: ['/api/nav/badges', studiesSince, communitySince],
     queryFn: async () => {
       const res = await fetch(
         `/api/nav/badges?studiesSince=${studiesSince}&communitySince=${communitySince}`,
         { credentials: "include" }
       );
-      if (!res.ok) return { studies: false, community: false };
+      if (!res.ok) return { studies: 0, community: 0 };
       return res.json();
     },
     refetchInterval: 5 * 60 * 1000,
@@ -119,10 +128,10 @@ export default function Navigation() {
 
   const isDropdownActive = dropdownItems.some(item => isActive(item.path));
 
-  const hasBadge = (itemId: string) => {
-    if (itemId === 'library') return badges?.studies === true;
-    if (itemId === 'community') return badges?.community === true;
-    return false;
+  const getBadgeCount = (itemId: string): number => {
+    if (itemId === 'library') return badges?.studies ?? 0;
+    if (itemId === 'community') return badges?.community ?? 0;
+    return 0;
   };
 
   return (
@@ -134,7 +143,7 @@ export default function Navigation() {
         {primaryItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
-          const badge = hasBadge(item.id);
+          const count = getBadgeCount(item.id);
 
           return (
             <Link key={item.id} href={item.path} onClick={() => handleNavClick(item.id)}>
@@ -147,10 +156,8 @@ export default function Navigation() {
                 }`}
                 data-testid={`nav-${item.id}`}
               >
-                <span className="relative">
-                  <Icon className="w-5 h-5 mb-0.5 flex-shrink-0" />
-                  {badge && <NavBadgeDot />}
-                </span>
+                {count > 0 && <NavBadge count={count} />}
+                <Icon className="w-5 h-5 mb-0.5 flex-shrink-0" />
                 <span className="font-medium text-[10px] leading-tight truncate w-full text-center">
                   {item.label}
                 </span>
