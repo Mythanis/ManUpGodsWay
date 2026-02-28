@@ -72,7 +72,7 @@ export default function Navigation() {
   const communitySince = getSeenTs(LS_KEY_COMMUNITY);
 
   const { data: badges, refetch: refetchBadges } = useQuery<{ studies: number; community: number }>({
-    queryKey: ['/api/nav/badges', studiesSince, communitySince],
+    queryKey: ['/api/nav/badges/v2', studiesSince, communitySince],
     queryFn: async () => {
       const res = await fetch(
         `/api/nav/badges?studiesSince=${studiesSince}&communitySince=${communitySince}`,
@@ -129,9 +129,10 @@ export default function Navigation() {
   const isDropdownActive = dropdownItems.some(item => isActive(item.path));
 
   const getBadgeCount = (itemId: string): number => {
-    if (itemId === 'library') return badges?.studies ?? 0;
-    if (itemId === 'community') return badges?.community ?? 0;
-    return 0;
+    const raw = itemId === 'library' ? badges?.studies : itemId === 'community' ? badges?.community : undefined;
+    if (raw === undefined || raw === null) return 0;
+    const n = Number(raw);
+    return isNaN(n) ? 0 : n;
   };
 
   return (
