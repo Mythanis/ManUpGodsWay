@@ -91,7 +91,9 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
     refetchInterval: 15000, // Poll every 15 seconds
   });
 
-  const unreadCount = unreadData?.count || 0;
+  const COMMUNITY_TYPES = ['new_discussion', 'discussion', 'discussion_reply'];
+  const filteredNotifications = notifications.filter(n => !COMMUNITY_TYPES.includes(n.type));
+  const unreadCount = filteredNotifications.filter(n => !n.isRead).length;
   const pendingRequests = messageRequests.filter(r => r.status === 'pending');
 
   // Mark notification as read
@@ -403,7 +405,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                     Mark all read
                   </Button>
                 )}
-                {notifications.length > 0 && (
+                {filteredNotifications.length > 0 && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -459,7 +461,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                 ))}
 
                 {/* Regular Notifications */}
-                {notifications.map((notification) => (
+                {filteredNotifications.map((notification) => (
                   <div
                     key={notification.id}
                     className={cn(
@@ -583,7 +585,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                   </div>
                 ))}
 
-                {notifications.length === 0 && pendingRequests.length === 0 && (
+                {filteredNotifications.length === 0 && pendingRequests.length === 0 && (
                   <div className="text-center py-4 text-sm text-muted-foreground">
                     No notifications yet
                   </div>
@@ -650,7 +652,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                   Mark all read
                 </Button>
               )}
-              {notifications.length > 0 && (
+              {filteredNotifications.length > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -705,7 +707,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
               ))}
 
               {/* Regular Notifications */}
-              {notifications.map((notification) => (
+              {filteredNotifications.map((notification) => (
                 <div
                   key={notification.id}
                   className="flex bg-zinc-900 border border-white/10 rounded-lg overflow-hidden transition-all hover:border-[#FCD000]/40 hover:bg-zinc-800"
@@ -787,7 +789,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                 </div>
               ))}
 
-              {notifications.length === 0 && pendingRequests.length === 0 && (
+              {filteredNotifications.length === 0 && pendingRequests.length === 0 && (
                 <div className="text-center py-8 text-xs text-white/40">
                   <Bell className="h-6 w-6 mx-auto mb-2 text-white/20" />
                   No notifications yet
