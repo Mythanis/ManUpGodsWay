@@ -253,7 +253,7 @@ export default function Events() {
                         >
                           <a href={event.eventUrl} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-4 w-4 mr-2" />
-                            Event Link
+                            Event Details
                           </a>
                         </Button>
                       )}
@@ -274,9 +274,16 @@ export default function Events() {
                         <Button
                           className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000] shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                           size="sm"
+                          asChild={!!event.eventUrl}
                           data-testid={`button-purchase-${event.id}`}
                         >
-                          Purchase Ticket - ${event.price}
+                          {event.eventUrl ? (
+                            <a href={event.eventUrl} target="_blank" rel="noopener noreferrer">
+                              Purchase Ticket - ${event.price}
+                            </a>
+                          ) : (
+                            <span>Purchase Ticket - ${event.price}</span>
+                          )}
                         </Button>
                       )}
                     </div>
