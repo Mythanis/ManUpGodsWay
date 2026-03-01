@@ -21,12 +21,13 @@ interface Video {
   title: string;
   description?: string;
   category?: string;
-  filename: string;
-  originalName: string;
-  mimeType: string;
-  fileSize: number;
+  filename?: string;
+  originalName?: string;
+  mimeType?: string;
+  fileSize?: number;
   duration?: number;
   thumbnailUrl?: string;
+  videoUrl?: string;
   uploadedBy: string;
   requiredTier: string;
   isFeatured: boolean;
@@ -759,14 +760,28 @@ export default function VideoManagement() {
               {/* Video Preview */}
               <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden relative">
                 {isWatchingVideo ? (
-                  <video 
-                    src={`/api/videos/${selectedVideo.id}/stream`}
-                    controls
-                    className="w-full h-full object-contain"
-                    onEnded={() => setIsWatchingVideo(false)}
-                  >
-                    Your browser does not support the video tag.
-                  </video>
+                  selectedVideo.videoUrl ? (
+                    (() => {
+                      const ytMatch = selectedVideo.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+                      const vimeoMatch = selectedVideo.videoUrl.match(/vimeo\.com\/(\d+)/);
+                      if (ytMatch) {
+                        return <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0`} className="w-full h-full" allowFullScreen allow="autoplay; encrypted-media" title={selectedVideo.title} />;
+                      }
+                      if (vimeoMatch) {
+                        return <iframe src={`https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`} className="w-full h-full" allowFullScreen allow="autoplay" title={selectedVideo.title} />;
+                      }
+                      return <video src={selectedVideo.videoUrl} controls autoPlay className="w-full h-full object-contain" />;
+                    })()
+                  ) : (
+                    <video 
+                      src={`/api/videos/${selectedVideo.id}/stream`}
+                      controls
+                      className="w-full h-full object-contain"
+                      onEnded={() => setIsWatchingVideo(false)}
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  )
                 ) : (
                   <div className="relative w-full h-full">
                     {selectedVideo.thumbnailUrl ? (
@@ -871,6 +886,22 @@ export default function VideoManagement() {
                 />
               </div>
 
+              {/* Thumbnail URL Field */}
+              <div>
+                <Label className="text-sm font-medium">Thumbnail Image URL</Label>
+                <Input
+                  value={selectedVideo.thumbnailUrl || ''}
+                  onChange={(e) => {
+                    setSelectedVideo(prev => prev ? { ...prev, thumbnailUrl: e.target.value } : null);
+                  }}
+                  placeholder="https://example.com/thumbnail.jpg"
+                  className="mt-1"
+                />
+                <p className="text-xs text-ministry-slate mt-1">
+                  Paste a direct image URL. The preview above will update when you save.
+                </p>
+              </div>
+
               {/* Featured Toggle */}
               <div 
                 className="flex items-center justify-between p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-lg shadow-sm cursor-pointer hover:from-yellow-100 hover:to-orange-100 transition-all duration-200"
@@ -939,7 +970,8 @@ export default function VideoManagement() {
                           description: selectedVideo.description,
                           category: selectedVideo.category,
                           requiredTier: selectedVideo.requiredTier,
-                          isFeatured: selectedVideo.isFeatured
+                          isFeatured: selectedVideo.isFeatured,
+                          thumbnailUrl: selectedVideo.thumbnailUrl || null,
                         }
                       });
                     }
