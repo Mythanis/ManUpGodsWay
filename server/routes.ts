@@ -9164,6 +9164,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get tiers for an event
+  app.get('/api/events/:id/tiers', async (req, res) => {
+    try {
+      const tiers = await storage.getEventTiers(req.params.id);
+      res.json(tiers);
+    } catch (error) {
+      console.error('Error fetching event tiers:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Replace tiers for an event (admin only)
+  app.post('/api/admin/events/:id/tiers', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const { tiers } = req.body;
+      if (!Array.isArray(tiers)) {
+        return res.status(400).json({ message: "tiers must be an array" });
+      }
+      const saved = await storage.replaceEventTiers(req.params.id, tiers);
+      res.json(saved);
+    } catch (error) {
+      console.error('Error saving event tiers:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Register for event (free events)
   app.post('/api/events/:id/register', isAuthenticated, async (req: any, res) => {
     try {

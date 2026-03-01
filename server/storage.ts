@@ -37,6 +37,7 @@ import {
   fitnessPlanReminders,
   exerciseCompletions,
   events,
+  eventTiers,
   eventRegistrations,
   hurdleWallPosts,
   hurdleWallReplies,
@@ -136,6 +137,8 @@ import {
   type InsertExerciseCompletion,
   type Event,
   type InsertEvent,
+  type EventTier,
+  type InsertEventTier,
   type EventRegistration,
   type InsertEventRegistration,
   type HurdleWallPost,
@@ -546,11 +549,13 @@ export interface IStorage {
   getExerciseCompletions(userId: string, planId: string): Promise<ExerciseCompletion[]>;
 
   // Events operations
-  getEvents(): Promise<Event[]>;
-  getEventById(id: string): Promise<Event | undefined>;
+  getEvents(): Promise<(Event & { tiers: EventTier[] })[]>;
+  getEventById(id: string): Promise<(Event & { tiers: EventTier[] }) | undefined>;
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: string, updates: Partial<InsertEvent>): Promise<Event>;
   deleteEvent(id: string): Promise<void>;
+  getEventTiers(eventId: string): Promise<EventTier[]>;
+  replaceEventTiers(eventId: string, tiers: Omit<InsertEventTier, 'eventId'>[]): Promise<EventTier[]>;
   registerForEvent(registration: InsertEventRegistration): Promise<EventRegistration>;
   getEventRegistration(eventId: string, userId: string): Promise<EventRegistration | undefined>;
   getUserEventRegistrations(userId: string): Promise<(EventRegistration & { event: Event })[]>;
@@ -6193,19 +6198,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Events implementation methods
-  async getEvents(): Promise<Event[]> {
-    return await db
+  async getEvents(): Promise<(Event & { tiers: EventTier[] })[]> {
+    const allEvents = await db
       .select()
       .from(events)
       .orderBy(desc(events.eventDate));
+    const allTiers = await db.select().from(eventTiers).orderBy(asc(eventTiers.sortOrder));
+    return allEvents.map(ev => ({
+      ...ev,
+      tiers: allTiers.filter(t => t.eventId === ev.id),
+    }));
   }
 
-  async getEventById(id: string): Promise<Event | undefined> {
+  async getEventById(id: string): Promise<(Event & { tiers: EventTier[] }) | undefined> {
     const [event] = await db
       .select()
       .from(events)
       .where(eq(events.id, id));
-    return event;
+    if (!event) return undefined;
+    const tiers = await db.select().from(eventTiers).where(eq(eventTiers.eventId, id)).orderBy(asc(eventTiers.sortOrder));
+    return { ...event, tiers };
   }
 
   async createEvent(event: InsertEvent): Promise<Event> {
@@ -6232,6 +6244,24 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(events)
       .where(eq(events.id, id));
+  }
+
+  async getEventTiers(eventId: string): Promise<EventTier[]> {
+    return await db
+      .select()
+      .from(eventTiers)
+      .where(eq(eventTiers.eventId, eventId))
+      .orderBy(asc(eventTiers.sortOrder));
+  }
+
+  async replaceEventTiers(eventId: string, tiers: Omit<InsertEventTier, 'eventId'>[]): Promise<EventTier[]> {
+    await db.delete(eventTiers).where(eq(eventTiers.eventId, eventId));
+    if (tiers.length === 0) return [];
+    const inserted = await db
+      .insert(eventTiers)
+      .values(tiers.map((t, i) => ({ ...t, eventId, sortOrder: i })))
+      .returning();
+    return inserted;
   }
 
   async registerForEvent(registration: InsertEventRegistration): Promise<EventRegistration> {
@@ -6293,7 +6323,7 @@ export class DatabaseStorage implements IStorage {
       userId: r.userId,
       registrationType: r.registrationType,
       paymentStatus: r.paymentStatus,
-      stripePaymentIntentId: r.stripePaymentIntentId,
+      stripePaymentIntentId: (r as any).paymentIntentId ?? null,
       registeredAt: r.registeredAt,
       event: r.event
     }));

@@ -13,7 +13,7 @@ The frontend is built with React 18 and TypeScript, using Vite. It employs Woute
 The backend is an Express.js server in TypeScript, following a RESTful API design. It utilizes session-based authentication integrated with Replit's OIDC, storing sessions in PostgreSQL. Middleware is used for logging, error handling, and role-based access control (user, admin) with a single subscription model (trial/active/expired/cancelled).
 
 ## Database Design
-PostgreSQL, hosted on Neon Database, is used with Drizzle ORM for type-safe queries and migrations. The schema includes tables for study series, individual studies, lessons, user progress (overall and per-lesson), users, discussions, devotionals, podcasts, challenges, testimonies, exercises, and challenge participants.
+PostgreSQL, hosted on Neon Database, is used with Drizzle ORM for type-safe queries and migrations. The schema includes tables for study series, individual studies, lessons, user progress (overall and per-lesson), users, discussions, devotionals, podcasts, challenges, testimonies, exercises, challenge participants, events, and event_tiers.
 
 ## Content Management
 The system supports a single subscription model with configurable free trial. Admins can set trial duration, pricing, and selectively enable content areas and individual items for trial access. Features include progress tracking, search, and a comprehensive admin panel.

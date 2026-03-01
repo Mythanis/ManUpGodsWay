@@ -1375,6 +1375,8 @@ export const events = pgTable("events", {
   address: varchar("address"),
   url: varchar("url"),
   requiresPurchase: boolean("requires_purchase").default(false),
+  purchaseUrl: varchar("purchase_url"),
+  multiTier: boolean("multi_tier").default(false),
   price: decimal("price", { precision: 10, scale: 2 }),
   maxAttendees: integer("max_attendees"),
   currentAttendees: integer("current_attendees").default(0),
@@ -1383,6 +1385,19 @@ export const events = pgTable("events", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const eventTiers = pgTable("event_tiers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").notNull().references(() => events.id, { onDelete: 'cascade' }),
+  name: varchar("name").notNull(),
+  price: varchar("price").notNull(),
+  url: varchar("url").notNull(),
+  sortOrder: integer("sort_order").default(0),
+});
+
+export const insertEventTierSchema = createInsertSchema(eventTiers).omit({ id: true });
+export type InsertEventTier = z.infer<typeof insertEventTierSchema>;
+export type EventTier = typeof eventTiers.$inferSelect;
 
 export const insertEventSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -1395,6 +1410,8 @@ export const insertEventSchema = z.object({
   address: z.string().nullable().optional(),
   url: z.string().nullable().optional(),
   requiresPurchase: z.boolean().optional().default(false),
+  purchaseUrl: z.string().nullable().optional(),
+  multiTier: z.boolean().optional().default(false),
   price: z.string().nullable().optional(),
   maxAttendees: z.number().optional(),
   isPublished: z.boolean().optional().default(true),
