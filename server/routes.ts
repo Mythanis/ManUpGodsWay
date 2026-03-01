@@ -9194,6 +9194,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create payment intent for event ticket purchase
+  app.post('/api/events/:id/payment-intent', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const eventId = req.params.id;
+      const { amount, tierName } = req.body;
+
+      if (!amount || typeof amount !== 'number' || amount <= 0) {
+        return res.status(400).json({ message: 'Valid amount is required' });
+      }
+
+      const event = await storage.getEventById(eventId);
+      if (!event) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+
+      const Stripe = require('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100),
+        currency: 'usd',
+        metadata: {
+          eventId,
+          eventTitle: event.title,
+          tierName: tierName || '',
+          userId,
+        },
+        description: tierName
+          ? `${event.title} — ${tierName}`
+          : event.title,
+      });
+
+      res.json({ clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id });
+    } catch (error: any) {
+      console.error('Error creating event payment intent:', error);
+      res.status(500).json({ message: error.message || 'Failed to create payment intent' });
+    }
+  });
+
   // Register for event (free events)
   app.post('/api/events/:id/register', isAuthenticated, async (req: any, res) => {
     try {

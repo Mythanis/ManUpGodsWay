@@ -6,10 +6,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Calendar, MapPin, ExternalLink, DollarSign, Users, Navigation, CalendarRange, Ticket, Layers } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink, DollarSign, Users, Navigation, CalendarRange, Ticket, Layers, ArrowLeft, CreditCard, CheckCircle, Loader2, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { BackButton } from "@/components/BackButton";
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+
+const stripePromise = (() => {
+  const key = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+  if (!key) return null;
+  return loadStripe(key);
+})();
 
 interface EventTier {
   id: string;
@@ -52,15 +60,219 @@ interface EventRegistration {
   event: Event;
 }
 
+interface PurchaseModalState {
+  eventId: string;
+  eventTitle: string;
+  tierName?: string;
+  amount: number;
+  clientSecret: string;
+}
+
+function parsePriceAmount(priceStr: string): number {
+  return parseFloat(priceStr.replace(/[^0-9.]/g, '')) || 0;
+}
+
+function EventPaymentForm({
+  amount,
+  eventTitle,
+  tierName,
+  onSuccess,
+  onCancel,
+}: {
+  amount: number;
+  eventTitle: string;
+  tierName?: string;
+  onSuccess: () => void;
+  onCancel: () => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { toast } = useToast();
+  const [processing, setProcessing] = useState(false);
+  const [succeeded, setSucceeded] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setProcessing(true);
+    try {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {},
+        redirect: 'if_required',
+      });
+      if (error) {
+        toast({ title: 'Payment Failed', description: error.message, variant: 'destructive' });
+      } else if (paymentIntent?.status === 'succeeded') {
+        setSucceeded(true);
+      } else {
+        toast({ title: 'Payment Processing', description: 'Your payment is being processed.' });
+        setSucceeded(true);
+      }
+    } catch (err: any) {
+      toast({ title: 'Payment Error', description: err.message || 'An unexpected error occurred.', variant: 'destructive' });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  if (succeeded) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+        <div className="w-20 h-20 rounded-full bg-[#FCD000]/20 border-2 border-[#FCD000] flex items-center justify-center mb-6">
+          <CheckCircle className="h-10 w-10 text-[#FCD000]" />
+        </div>
+        <h2 className="text-3xl font-black text-[#FCD000] uppercase tracking-wider mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+          You're In!
+        </h2>
+        <p className="text-white/70 text-sm mb-2">{eventTitle}</p>
+        {tierName && <p className="text-[#FCD000] font-bold text-sm mb-6">{tierName}</p>}
+        <p className="text-white/50 text-xs mb-8">Your ticket purchase was successful. Check your email for confirmation.</p>
+        <Button
+          onClick={onSuccess}
+          className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wide"
+        >
+          Back to Events
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6 px-6 pb-8">
+      <div className="bg-white/5 border border-[#FCD000]/30 rounded-sm p-4">
+        <p className="text-white/50 text-xs uppercase tracking-wide font-bold mb-1">Order Summary</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-white font-bold text-sm">{eventTitle}</p>
+            {tierName && <p className="text-[#FCD000] text-xs font-semibold">{tierName}</p>}
+          </div>
+          <p className="text-[#FCD000] font-black text-2xl" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+            ${amount.toFixed(2)}
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-white/40">
+          <Shield className="h-3.5 w-3.5 flex-shrink-0" />
+          <span className="text-xs">Secured with 256-bit SSL encryption</span>
+        </div>
+        <PaymentElement
+          options={{
+            layout: 'tabs',
+          }}
+        />
+      </div>
+
+      <div className="flex gap-3 pt-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={processing}
+          className="flex-1 border-white/20 text-white/60 hover:text-white hover:border-white/40 rounded-sm font-bold uppercase tracking-wide text-sm"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1.5" />
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={!stripe || processing}
+          className="flex-1 bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wide rounded-sm"
+        >
+          {processing ? (
+            <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Processing...</>
+          ) : (
+            <><CreditCard className="h-4 w-4 mr-2" />Pay ${amount.toFixed(2)}</>
+          )}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function EventPurchaseModal({
+  modal,
+  onClose,
+}: {
+  modal: PurchaseModalState;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black overflow-y-auto">
+      <div className="min-h-full flex flex-col">
+        <div className="flex items-center gap-3 px-4 py-4 border-b border-[#FCD000]/30">
+          <button
+            onClick={onClose}
+            className="text-white/60 hover:text-white transition-colors p-1"
+            aria-label="Close"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div className="w-8 h-8 bg-[#FCD000] rounded-sm flex items-center justify-center flex-shrink-0">
+            <Ticket className="h-4 w-4 text-black" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[#FCD000] font-black uppercase tracking-tight text-sm leading-tight truncate">
+              {modal.eventTitle}
+            </p>
+            {modal.tierName && (
+              <p className="text-white/50 text-xs font-semibold truncate">{modal.tierName}</p>
+            )}
+          </div>
+          <p className="text-[#FCD000] font-black text-xl flex-shrink-0" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+            ${modal.amount.toFixed(2)}
+          </p>
+        </div>
+
+        <div className="flex-1 max-w-lg mx-auto w-full pt-6">
+          {stripePromise ? (
+            <Elements
+              stripe={stripePromise}
+              options={{
+                clientSecret: modal.clientSecret,
+                appearance: {
+                  theme: 'night',
+                  variables: {
+                    colorPrimary: '#FCD000',
+                    colorBackground: '#1a1a1a',
+                    colorText: '#ffffff',
+                    colorDanger: '#ef4444',
+                    borderRadius: '2px',
+                  },
+                },
+              }}
+            >
+              <EventPaymentForm
+                amount={modal.amount}
+                eventTitle={modal.eventTitle}
+                tierName={modal.tierName}
+                onSuccess={onClose}
+                onCancel={onClose}
+              />
+            </Elements>
+          ) : (
+            <div className="px-6 py-12 text-center">
+              <p className="text-white/50 text-sm">Payment system not configured.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function TierSelectionModal({
   event,
   onSelectTier,
   onClose,
+  loading,
 }: {
   event: Event;
   onSelectTier: (tier: EventTier) => void;
   onClose: () => void;
+  loading?: boolean;
 }) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -90,10 +302,10 @@ function TierSelectionModal({
               </div>
               <Button
                 onClick={() => onSelectTier(tier)}
-                className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000] shadow-[2px_2px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-xs"
+                disabled={loading}
+                className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000] text-xs"
               >
-                <Ticket className="h-3 w-3 mr-1.5" />
-                Purchase
+                {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Ticket className="h-3 w-3 mr-1.5" />Purchase</>}
               </Button>
             </div>
           ))}
@@ -102,6 +314,7 @@ function TierSelectionModal({
           <Button
             variant="outline"
             onClick={onClose}
+            disabled={loading}
             className="w-full border-2 border-white/20 text-white/60 hover:text-white hover:border-white/40 rounded-sm font-bold uppercase tracking-wide text-xs"
           >
             Cancel
@@ -118,6 +331,8 @@ export default function Events() {
   const queryClient = useQueryClient();
 
   const [tierModalEvent, setTierModalEvent] = useState<Event | null>(null);
+  const [purchaseModal, setPurchaseModal] = useState<PurchaseModalState | null>(null);
+  const [loadingPayment, setLoadingPayment] = useState(false);
 
   const { data: events = [], isLoading: eventsLoading } = useQuery<Event[]>({
     queryKey: ['/api/events'],
@@ -134,13 +349,45 @@ export default function Events() {
       return await apiRequest('POST', `/api/events/${eventId}/register`);
     },
     onSuccess: () => {
-      toast({ title: "Registration Successful", description: "You have been registered for this event!" });
+      toast({ title: 'Registration Successful', description: 'You have been registered for this event!' });
       queryClient.invalidateQueries({ queryKey: ['/api/events/registrations/my'] });
     },
     onError: (error: any) => {
-      toast({ title: "Registration Failed", description: error.message || "An error occurred while registering for the event.", variant: "destructive" });
+      toast({ title: 'Registration Failed', description: error.message || 'An error occurred.', variant: 'destructive' });
     },
   });
+
+  const openPaymentModal = async (eventId: string, eventTitle: string, amount: number, tierName?: string) => {
+    if (!amount || amount <= 0) {
+      toast({ title: 'Invalid Price', description: 'This event does not have a valid price configured.', variant: 'destructive' });
+      return;
+    }
+    setLoadingPayment(true);
+    try {
+      const data = await apiRequest('POST', `/api/events/${eventId}/payment-intent`, { amount, tierName });
+      setPurchaseModal({ eventId, eventTitle, tierName, amount, clientSecret: data.clientSecret });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Could not set up payment. Please try again.', variant: 'destructive' });
+    } finally {
+      setLoadingPayment(false);
+    }
+  };
+
+  const handlePurchaseClick = async (event: Event) => {
+    if (event.multiTier && event.tiers && event.tiers.length > 0) {
+      setTierModalEvent(event);
+    } else if (event.price) {
+      const amount = parsePriceAmount(event.price);
+      await openPaymentModal(event.id, event.title, amount);
+    }
+  };
+
+  const handleTierSelect = async (tier: EventTier) => {
+    if (!tierModalEvent) return;
+    const amount = parsePriceAmount(tier.price);
+    setTierModalEvent(null);
+    await openPaymentModal(tierModalEvent.id, tierModalEvent.title, amount, tier.name);
+  };
 
   const isRegisteredForEvent = (eventId: string) =>
     userRegistrations.some(reg => reg.eventId === eventId && reg.paymentStatus === 'completed');
@@ -151,19 +398,6 @@ export default function Events() {
     const date = new Date();
     date.setHours(parseInt(hours), parseInt(minutes));
     return format(date, 'h:mm a');
-  };
-
-  const handlePurchaseClick = (event: Event) => {
-    if (event.multiTier && event.tiers && event.tiers.length > 0) {
-      setTierModalEvent(event);
-    } else if (event.purchaseUrl) {
-      window.open(event.purchaseUrl, '_blank', 'noopener,noreferrer');
-    }
-  };
-
-  const handleTierSelect = (tier: EventTier) => {
-    setTierModalEvent(null);
-    window.open(tier.url, '_blank', 'noopener,noreferrer');
   };
 
   if (!user) {
@@ -179,11 +413,19 @@ export default function Events() {
 
   return (
     <div className="min-h-screen bg-ministry-light-gray pb-20">
-      {tierModalEvent && (
+      {purchaseModal && (
+        <EventPurchaseModal
+          modal={purchaseModal}
+          onClose={() => setPurchaseModal(null)}
+        />
+      )}
+
+      {tierModalEvent && !purchaseModal && (
         <TierSelectionModal
           event={tierModalEvent}
           onSelectTier={handleTierSelect}
           onClose={() => setTierModalEvent(null)}
+          loading={loadingPayment}
         />
       )}
 
@@ -230,7 +472,9 @@ export default function Events() {
               const isRegistered = isRegisteredForEvent(event.id);
               const isPastEvent = new Date(event.eventDate) < new Date();
               const hasPurchaseAction = event.requiresPurchase &&
-                (event.multiTier ? (event.tiers && event.tiers.length > 0) : !!event.purchaseUrl);
+                (event.multiTier
+                  ? (event.tiers && event.tiers.length > 0)
+                  : !!event.price);
 
               return (
                 <Card key={event.id} className={`liquid-black border-2 border-[#FCD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(252,208,0,0.3)] transition-all duration-200 overflow-hidden ${isPastEvent ? 'opacity-70' : ''}`}>
@@ -340,14 +584,21 @@ export default function Events() {
                       {!isPastEvent && !isRegistered && hasPurchaseAction && (
                         <Button
                           onClick={() => handlePurchaseClick(event)}
+                          disabled={loadingPayment}
                           className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000] shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                           size="sm"
                           data-testid={`button-purchase-${event.id}`}
                         >
-                          <Ticket className="h-4 w-4 mr-2" />
-                          {event.multiTier
-                            ? 'Purchase Ticket'
-                            : `Purchase Ticket${event.price ? ` - $${event.price}` : ''}`}
+                          {loadingPayment ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Ticket className="h-4 w-4 mr-2" />
+                              {event.multiTier
+                                ? 'Purchase Ticket'
+                                : `Purchase Ticket${event.price ? ` - $${event.price}` : ''}`}
+                            </>
+                          )}
                         </Button>
                       )}
 
