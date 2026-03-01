@@ -9417,6 +9417,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Import blogs from RSS feed (admin only)
+  // Import from WordPress REST API — fetches all posts with proper featured images
+  app.post('/api/admin/blogs/import-wordpress', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { siteUrl } = req.body;
+      if (!siteUrl) {
+        return res.status(400).json({ message: "WordPress site URL is required" });
+      }
+
+      const base = siteUrl.replace(/\/$/, '');
+      const apiBase = `${base}/wp-json/wp/v2/posts`;
+
+      // Probe total pages
+      const probeRes = await fetch(`${apiBase}?per_page=1`, { method: 'HEAD' });
+      if (!probeRes.ok) {
+        return res.status(422).json({ message: `Cannot reach WordPress REST API at ${apiBase}. Make sure the site has REST API enabled.` });
+      }
+      const totalPages = parseInt(probeRes.headers.get('x-wp-totalpages') || '1', 10);
+      const totalPosts = parseInt(probeRes.headers.get('x-wp-total') || '0', 10);
+
+      // Load existing posts for duplicate detection
+      const existingBlogs = await db.select().from(schema.blogPosts);
+      const existingGuids = new Set(existingBlogs.filter(b => b.rssGuid).map(b => b.rssGuid));
+      const existingSlugs = new Set(existingBlogs.map(b => b.slug));
+
+      const imported: any[] = [];
+      const skipped: any[] = [];
+
+      for (let page = 1; page <= totalPages; page++) {
+        const pageRes = await fetch(`${apiBase}?per_page=100&page=${page}&_embed=1`);
+        if (!pageRes.ok) break;
+        const posts: any[] = await pageRes.json();
+
+        for (const post of posts) {
+          try {
+            const guid = post.guid?.rendered || post.link || post.id?.toString();
+
+            if (existingGuids.has(guid)) {
+              skipped.push({ title: post.title?.rendered || '', reason: 'Already imported' });
+              continue;
+            }
+
+            // Slug
+            let baseSlug = (post.slug || post.title?.rendered || 'untitled')
+              .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            let slug = baseSlug;
+            let counter = 1;
+            while (existingSlugs.has(slug)) { slug = `${baseSlug}-${counter++}`; }
+
+            // Featured image — prefer WordPress media, fall back to content extraction
+            let coverImageUrl: string | null = null;
+            const featuredMedia = post._embedded?.['wp:featuredmedia'];
+            if (Array.isArray(featuredMedia) && featuredMedia[0]?.source_url) {
+              coverImageUrl = featuredMedia[0].source_url;
+            }
+            if (!coverImageUrl) {
+              const content = post.content?.rendered || '';
+              const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+              if (imgMatch) coverImageUrl = imgMatch[1];
+            }
+
+            // Strip HTML from excerpt
+            const rawExcerpt = (post.excerpt?.rendered || '').replace(/<[^>]+>/g, '').trim();
+            const content = post.content?.rendered || '';
+
+            const blogData = {
+              title: post.title?.rendered?.replace(/&#(\d+);/g, (_: any, n: string) => String.fromCharCode(parseInt(n))) || 'Untitled',
+              slug,
+              excerpt: rawExcerpt.length > 300 ? rawExcerpt.substring(0, 297) + '...' : rawExcerpt,
+              content,
+              coverImageUrl,
+              authorName: post._embedded?.['author']?.[0]?.name || 'Man Up God\'s Way',
+              isPublished: true,
+              isFeatured: false,
+              publishedAt: post.date ? new Date(post.date) : new Date(),
+              externalSource: base,
+              rssGuid: guid,
+              externalUrl: post.link || null,
+              category: 'general',
+            };
+
+            const newBlog = await db.insert(schema.blogPosts).values(blogData).returning();
+            imported.push(newBlog[0]);
+            existingGuids.add(guid);
+            existingSlugs.add(slug);
+          } catch (err) {
+            console.error('WP import error for post', post.id, err);
+            skipped.push({ title: post.title?.rendered || String(post.id), reason: err instanceof Error ? err.message : 'Unknown error' });
+          }
+        }
+      }
+
+      res.json({ success: true, total: totalPosts, imported: imported.length, skipped: skipped.length, details: { importedBlogs: imported.map(b => ({ id: b.id, title: b.title })), skippedBlogs: skipped } });
+    } catch (error) {
+      console.error('WordPress import error:', error);
+      res.status(500).json({ message: 'Failed to import from WordPress', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   app.post('/api/admin/blogs/import-rss', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);

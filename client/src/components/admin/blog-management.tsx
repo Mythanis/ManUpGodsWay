@@ -15,7 +15,8 @@ import type { BlogPost } from "@shared/schema";
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
 
-const IGNITE_CHURCH_RSS_URL = "https://ignitechurchstl.church/blog/rss";
+const MANUP_SITE_URL = "https://manupgodsway.org";
+const MANUP_RSS_URL = "https://manupgodsway.org/feed/";
 
 const CATEGORIES = [
   { value: "general", label: "General" },
@@ -32,8 +33,10 @@ export default function BlogManagement() {
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
   const [showRssDialog, setShowRssDialog] = useState(false);
+  const [showWpDialog, setShowWpDialog] = useState(false);
   const [editingBlog, setEditingBlog] = useState<BlogPost | null>(null);
   const [rssUrl, setRssUrl] = useState("");
+  const [wpSiteUrl, setWpSiteUrl] = useState(MANUP_SITE_URL);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -126,6 +129,26 @@ export default function BlogManagement() {
         title: "Import Failed", 
         description: error.message || "Failed to import RSS feed", 
         variant: "destructive" 
+      });
+    },
+  });
+
+  const importWordPressMutation = useMutation({
+    mutationFn: (siteUrl: string) => apiRequest('POST', '/api/admin/blogs/import-wordpress', { siteUrl }),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/blogs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/blogs'] });
+      toast({
+        title: "WordPress Import Complete",
+        description: `Imported ${data.imported} of ${data.total} posts (${data.skipped} already existed)`,
+      });
+      setShowWpDialog(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Import Failed",
+        description: error.message || "Failed to import from WordPress",
+        variant: "destructive",
       });
     },
   });
@@ -304,6 +327,14 @@ export default function BlogManagement() {
           <p className="text-sm text-white/70 font-medium">Create and manage blog posts</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={() => setShowWpDialog(true)}
+            variant="outline"
+            className="bg-ministry-navy text-white border-2 border-black rounded-sm font-bold uppercase tracking-wide hover:bg-blue-900"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Import from WordPress
+          </Button>
           <Button
             onClick={() => setShowRssDialog(true)}
             variant="outline"
@@ -632,21 +663,20 @@ export default function BlogManagement() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-sm text-black/70 font-medium">
-              Import blog posts from Ignite Church RSS feed. Duplicate posts (by GUID) will be skipped.
+              Import blog posts from any RSS feed. Duplicate posts (by GUID) will be skipped. Note: RSS feeds are limited to the most recent posts — use "Import from WordPress" for all posts.
             </p>
-            
+
             <div className="bg-black/10 p-3 border-2 border-black">
-              <Label className="font-bold uppercase text-black text-xs">Ignite Church Feed (Default)</Label>
+              <Label className="font-bold uppercase text-black text-xs">Man Up God's Way Feed</Label>
               <div className="flex items-center gap-2 mt-1">
                 <code className="text-xs bg-white px-2 py-1 border border-black flex-1 truncate">
-                  {IGNITE_CHURCH_RSS_URL}
+                  {MANUP_RSS_URL}
                 </code>
                 <Button
                   type="button"
                   size="sm"
-                  onClick={() => setRssUrl(IGNITE_CHURCH_RSS_URL)}
+                  onClick={() => setRssUrl(MANUP_RSS_URL)}
                   className="bg-black text-white rounded-sm text-xs hover:bg-gray-800"
-                  data-testid="button-use-ignite-rss"
                 >
                   Use This
                 </Button>
@@ -659,7 +689,7 @@ export default function BlogManagement() {
                 id="rss-url"
                 value={rssUrl}
                 onChange={(e) => setRssUrl(e.target.value)}
-                placeholder="https://example.com/feed.xml"
+                placeholder="https://example.com/feed/"
                 className="rounded-sm border-2 border-black"
                 data-testid="input-rss-url"
               />
@@ -680,6 +710,67 @@ export default function BlogManagement() {
               data-testid="button-import-rss-confirm"
             >
               {importRssMutation.isPending ? "Importing..." : "Import Posts"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* WordPress Import Dialog */}
+      <Dialog open={showWpDialog} onOpenChange={setShowWpDialog}>
+        <DialogContent className="bg-ministry-gold-exact border-2 border-black rounded-sm">
+          <DialogHeader>
+            <DialogTitle className="font-black text-2xl uppercase tracking-tighter text-black">
+              Import from WordPress
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-black/70 font-medium">
+              Imports <strong>all blog posts</strong> from a WordPress site using the REST API, including featured images. Duplicate posts are skipped automatically.
+            </p>
+
+            <div className="bg-black/10 p-3 border-2 border-black">
+              <Label className="font-bold uppercase text-black text-xs">Man Up God's Way</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <code className="text-xs bg-white px-2 py-1 border border-black flex-1 truncate">
+                  {MANUP_SITE_URL}
+                </code>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setWpSiteUrl(MANUP_SITE_URL)}
+                  className="bg-black text-white rounded-sm text-xs hover:bg-gray-800"
+                >
+                  Use This
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="wp-site-url" className="font-bold uppercase text-black">WordPress Site URL *</Label>
+              <Input
+                id="wp-site-url"
+                value={wpSiteUrl}
+                onChange={(e) => setWpSiteUrl(e.target.value)}
+                placeholder="https://yoursite.com"
+                className="rounded-sm border-2 border-black mt-1"
+              />
+              <p className="text-xs text-black/60 mt-1">Enter the root URL of the WordPress site (no /blog or /feed suffix needed).</p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowWpDialog(false)}
+              className="rounded-sm border-2 border-black text-black hover:bg-black hover:text-white"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => importWordPressMutation.mutate(wpSiteUrl)}
+              disabled={!wpSiteUrl || importWordPressMutation.isPending}
+              className="bg-black text-white rounded-sm border-2 border-black hover:bg-gray-800 shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]"
+            >
+              {importWordPressMutation.isPending ? "Importing all posts…" : "Import All Posts"}
             </Button>
           </DialogFooter>
         </DialogContent>
