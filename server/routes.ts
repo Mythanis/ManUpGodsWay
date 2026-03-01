@@ -3495,11 +3495,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const logoX = Math.round((W - logoW) / 2);
         const logoY = H - logoH - 22;
         ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
-        // URL below logo
-        ctx.fillStyle = 'rgba(255,255,255,0.75)';
-        ctx.font = 'bold 14px sans-serif';
+        // URL below logo — white with subtle shadow for legibility
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.9)';
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 17px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('manupgodsway.org/app/', W / 2, H - 6);
+        ctx.fillText('manupgodsway.org/app/', W / 2, H - 5);
+        ctx.restore();
       } catch (logoErr) {
         // Fallback text if logo fails to load
         ctx.fillStyle = '#FCD000';
