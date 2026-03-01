@@ -3485,33 +3485,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ctx.font = `bold ${Math.round(vfs * 0.80)}px sans-serif`;
       ctx.fillText(devotional.verseReference || '', rightX, vy);
 
-      // === BOTTOM CENTER: Cross logo + "MAN UP GOD'S WAY" ===
-      // Anchored inside the logo bar at the very bottom
-      const logoBaseY = H - 14;
-      const logoCX = W / 2;
-
-      // Cross
-      const cVH = 44, cVW = 8;
-      const cBarW = 34, cBarH = 8;
-      const cTopY = logoBaseY - 16 - cVH;
-      const cBarY = cTopY + Math.round(cVH * 0.28);
-      const cX = logoCX - 44;
-      ctx.fillStyle = '#FCD000';
-      ctx.fillRect(cX - cVW / 2, cTopY, cVW, cVH);
-      ctx.fillRect(cX - cBarW / 2, cBarY, cBarW, cBarH);
-
-      // "UP"
-      const upSize = 38;
-      ctx.font = `bold ${upSize}px sans-serif`;
-      ctx.fillStyle = '#FCD000';
-      ctx.textAlign = 'left';
-      ctx.fillText('UP', cX + 10, cTopY + upSize - 2);
-
-      // "MAN UP GOD'S WAY"
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 15px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText("MAN UP GOD'S WAY", logoCX, logoBaseY - 2);
+      // === BOTTOM CENTER: Real Man Up God's Way logo ===
+      const logoPath = nodePath.join(process.cwd(), 'client/public/man-up-logo.png');
+      try {
+        const logoImg = await loadImage(logoPath);
+        // Scale logo to fit in the bottom bar (target ~78px tall)
+        const logoH = 78;
+        const logoW = Math.round(logoImg.width * (logoH / logoImg.height));
+        const logoX = Math.round((W - logoW) / 2);
+        const logoY = H - logoH - 10;
+        ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+      } catch (logoErr) {
+        // Fallback text if logo fails to load
+        ctx.fillStyle = '#FCD000';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText("MAN UP GOD'S WAY", W / 2, H - 20);
+      }
 
       // Set response headers
       res.setHeader('Content-Type', 'image/png');
