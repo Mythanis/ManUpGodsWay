@@ -273,11 +273,11 @@ export default function Home() {
         });
         toast({ title: "Shared!", description: "Devotional shared successfully" });
       } else if (navigator.share) {
-        // Fallback to text-only share if files not supported
+        // Fallback: share the devotional's dedicated share page so Facebook/X shows the meme image
         await navigator.share({
           title: devotional.title,
           text: shareText,
-          url: 'https://www.manupgodsway.org',
+          url: `https://www.manupgodsway.org/share/devotional/${devotional.id}`,
         });
         toast({ title: "Shared!", description: "Devotional shared successfully" });
       } else {

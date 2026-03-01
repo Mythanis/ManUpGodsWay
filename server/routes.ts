@@ -12060,5 +12060,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   };
   
+  // Social share page for devotionals — returns HTML with Open Graph meta tags
+  // Facebook/X crawlers scrape this page to show the meme image in link previews
+  app.get('/share/devotional/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const devotional = await storage.getDevotional(id);
+      if (!devotional) {
+        return res.redirect('/');
+      }
+      const title = `${devotional.title} — Man Up God's Way Daily Devotional`;
+      const description = devotional.verse
+        ? `"${devotional.verse}" — ${devotional.verseReference}`
+        : 'Start your day with God\'s Word at manupgodsway.org';
+      const imageUrl = `https://www.manupgodsway.org/api/devotionals/${id}/share-image`;
+      const pageUrl = `https://www.manupgodsway.org/share/devotional/${id}`;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title}</title>
+  <!-- Open Graph (Facebook, Instagram, etc.) -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="${title}" />
+  <meta property="og:description" content="${description}" />
+  <meta property="og:image" content="${imageUrl}" />
+  <meta property="og:image:width" content="1080" />
+  <meta property="og:image:height" content="1080" />
+  <meta property="og:url" content="${pageUrl}" />
+  <meta property="og:site_name" content="Man Up God's Way" />
+  <!-- Twitter / X card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${title}" />
+  <meta name="twitter:description" content="${description}" />
+  <meta name="twitter:image" content="${imageUrl}" />
+  <meta name="twitter:site" content="@ManUpGodsWay" />
+  <!-- Redirect to app after crawlers have what they need -->
+  <meta http-equiv="refresh" content="0; url=/" />
+  <style>
+    body { margin: 0; background: #000; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; }
+    .box { text-align: center; color: #fff; padding: 40px; }
+    img { max-width: 400px; width: 100%; border-radius: 8px; margin-bottom: 24px; }
+    h1 { color: #FCD000; font-size: 1.4rem; margin: 0 0 12px; }
+    p { color: #ccc; margin: 0 0 20px; }
+    a { color: #FCD000; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <img src="${imageUrl}" alt="${devotional.title}" />
+    <h1>${devotional.title}</h1>
+    <p>${description}</p>
+    <p><a href="/">Open Man Up God's Way</a></p>
+  </div>
+</body>
+</html>`);
+    } catch (error) {
+      console.error("Error serving share page:", error);
+      res.redirect('/');
+    }
+  });
+
   return httpServer;
 }
