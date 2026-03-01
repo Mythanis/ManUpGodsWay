@@ -3489,12 +3489,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const logoPath = nodePath.join(process.cwd(), 'client/public/man-up-logo.png');
       try {
         const logoImg = await loadImage(logoPath);
-        // Scale logo to fit in the bottom bar (target ~78px tall)
-        const logoH = 78;
+        // Scale logo to fit in the bottom bar (target ~68px tall, leaving room for URL)
+        const logoH = 68;
         const logoW = Math.round(logoImg.width * (logoH / logoImg.height));
         const logoX = Math.round((W - logoW) / 2);
-        const logoY = H - logoH - 10;
+        const logoY = H - logoH - 22;
         ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+        // URL below logo
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('manupgodsway.org/app/', W / 2, H - 6);
       } catch (logoErr) {
         // Fallback text if logo fails to load
         ctx.fillStyle = '#FCD000';
