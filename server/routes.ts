@@ -3371,22 +3371,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ctx.fillRect(0, 0, W, H);
       }
 
-      // === STEP 2: Dark overlay to make text readable ===
-      // Heavy black overlay over whole image so text pops
-      ctx.fillStyle = 'rgba(0,0,0,0.62)';
+      // === STEP 2: Subtle dark overlays so text pops without killing the image ===
+      // Light global tint — just enough to ensure contrast
+      ctx.fillStyle = 'rgba(0,0,0,0.30)';
       ctx.fillRect(0, 0, W, H);
 
-      // Extra darkening on left panel (title area) for strong contrast
+      // Left panel: slightly darker so gold title is very legible
       const leftDark = ctx.createLinearGradient(0, 0, W * 0.55, 0);
-      leftDark.addColorStop(0,   'rgba(0,0,0,0.45)');
-      leftDark.addColorStop(0.7, 'rgba(0,0,0,0)');
+      leftDark.addColorStop(0,   'rgba(0,0,0,0.40)');
+      leftDark.addColorStop(0.8, 'rgba(0,0,0,0)');
       ctx.fillStyle = leftDark;
       ctx.fillRect(0, 0, W, H);
 
-      // Edge vignette (all sides) for cinematic depth
-      const vig = ctx.createRadialGradient(W/2, H/2, H * 0.20, W/2, H/2, H * 0.85);
+      // Edge vignette for cinematic depth
+      const vig = ctx.createRadialGradient(W/2, H/2, H * 0.20, W/2, H/2, H * 0.90);
       vig.addColorStop(0, 'rgba(0,0,0,0)');
-      vig.addColorStop(1, 'rgba(0,0,0,0.60)');
+      vig.addColorStop(1, 'rgba(0,0,0,0.50)');
       ctx.fillStyle = vig;
       ctx.fillRect(0, 0, W, H);
 
