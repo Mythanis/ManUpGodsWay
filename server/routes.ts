@@ -5797,6 +5797,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate thumbnail from video (ffmpeg for uploads, YouTube/Vimeo CDN for URL-based)
+  app.post('/api/admin/videos/:id/generate-thumbnail', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const video = await storage.getVideo(req.params.id);
+      if (!video) return res.status(404).json({ message: "Video not found" });
+
+      let thumbnailUrl: string | null = null;
+
+      // YouTube — use public YouTube CDN thumbnail (no API key needed)
+      if (video.videoUrl) {
+        const ytMatch = video.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        if (ytMatch) {
+          // Try maxresdefault first, fall back to hqdefault
+          thumbnailUrl = `https://img.youtube.com/vi/${ytMatch[1]}/maxresdefault.jpg`;
+          await storage.updateVideo(video.id, { thumbnailUrl });
+          return res.json({ thumbnailUrl });
+        }
+
+        // Vimeo — use public oEmbed API (no auth needed)
+        const vimeoMatch = video.videoUrl.match(/vimeo\.com\/(\d+)/);
+        if (vimeoMatch) {
+          const oembedRes = await fetch(`https://vimeo.com/api/oembed.json?url=https://vimeo.com/${vimeoMatch[1]}&width=640`);
+          if (oembedRes.ok) {
+            const oembed = await oembedRes.json() as any;
+            if (oembed.thumbnail_url) {
+              thumbnailUrl = oembed.thumbnail_url;
+              await storage.updateVideo(video.id, { thumbnailUrl });
+              return res.json({ thumbnailUrl });
+            }
+          }
+          return res.status(422).json({ message: "Could not fetch Vimeo thumbnail. Try adding a thumbnail URL manually." });
+        }
+
+        return res.status(422).json({ message: "Auto-thumbnail is only supported for YouTube and Vimeo links. Paste a thumbnail URL manually for other video types." });
+      }
+
+      // Local uploaded file — run ffmpeg to extract a frame
+      if (!video.filename) {
+        return res.status(422).json({ message: "No video file or supported URL found to generate a thumbnail from." });
+      }
+
+      const videoPath = path.join(process.cwd(), 'uploads', 'videos', video.filename);
+      if (!fs.existsSync(videoPath)) {
+        return res.status(422).json({ message: "Video file not found on disk." });
+      }
+
+      const thumbnailDir = path.join(process.cwd(), 'uploads', 'video-thumbnails');
+      if (!fs.existsSync(thumbnailDir)) fs.mkdirSync(thumbnailDir, { recursive: true });
+
+      const thumbnailFilename = `thumb_${Date.now()}_${video.filename.replace(/\.[^.]+$/, '.jpg')}`;
+      const thumbnailPath = path.join(thumbnailDir, thumbnailFilename);
+
+      await execAsync(`ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2" -y "${thumbnailPath}"`);
+
+      if (!fs.existsSync(thumbnailPath)) {
+        return res.status(500).json({ message: "ffmpeg ran but no thumbnail was produced." });
+      }
+
+      thumbnailUrl = `/uploads/video-thumbnails/${thumbnailFilename}`;
+      await storage.updateVideo(video.id, { thumbnailUrl });
+      console.log(`[Video] Regenerated thumbnail for ${video.id}: ${thumbnailUrl}`);
+      res.json({ thumbnailUrl });
+    } catch (error) {
+      console.error("Error generating thumbnail:", error);
+      res.status(500).json({ message: "Failed to generate thumbnail" });
+    }
+  });
+
   app.put('/api/admin/videos/:id', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);

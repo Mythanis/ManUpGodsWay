@@ -168,6 +168,23 @@ export default function VideoManagement() {
     },
   });
 
+  const generateThumbnail = useMutation({
+    mutationFn: async (videoId: string) =>
+      apiRequest('POST', `/api/admin/videos/${videoId}/generate-thumbnail`, {}),
+    onSuccess: (data: any) => {
+      setSelectedVideo(prev => prev ? { ...prev, thumbnailUrl: data.thumbnailUrl } : null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/videos"] });
+      toast({ title: "Thumbnail generated", description: "Thumbnail updated successfully." });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Could not generate thumbnail",
+        description: error?.message || "Try pasting a thumbnail URL manually.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const addVideoFromUrl = useMutation({
     mutationFn: async (payload: object) => apiRequest('POST', '/api/admin/videos/from-url', payload),
     onSuccess: () => {
@@ -889,16 +906,28 @@ export default function VideoManagement() {
               {/* Thumbnail URL Field */}
               <div>
                 <Label className="text-sm font-medium">Thumbnail Image URL</Label>
-                <Input
-                  value={selectedVideo.thumbnailUrl || ''}
-                  onChange={(e) => {
-                    setSelectedVideo(prev => prev ? { ...prev, thumbnailUrl: e.target.value } : null);
-                  }}
-                  placeholder="https://example.com/thumbnail.jpg"
-                  className="mt-1"
-                />
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    value={selectedVideo.thumbnailUrl || ''}
+                    onChange={(e) => {
+                      setSelectedVideo(prev => prev ? { ...prev, thumbnailUrl: e.target.value } : null);
+                    }}
+                    placeholder="https://example.com/thumbnail.jpg"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 text-xs border-ministry-navy text-ministry-navy hover:bg-ministry-navy hover:text-white"
+                    disabled={generateThumbnail.isPending}
+                    onClick={() => selectedVideo && generateThumbnail.mutate(selectedVideo.id)}
+                  >
+                    {generateThumbnail.isPending ? 'Generating…' : 'Generate from Video'}
+                  </Button>
+                </div>
                 <p className="text-xs text-ministry-slate mt-1">
-                  Paste a direct image URL. The preview above will update when you save.
+                  Click "Generate from Video" to auto-create a thumbnail, or paste a direct image URL.
                 </p>
               </div>
 
