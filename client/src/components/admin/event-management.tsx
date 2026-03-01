@@ -351,8 +351,7 @@ export default function EventManagement() {
 
   const createEventMutation = useMutation({
     mutationFn: async (eventData: any) => {
-      const res = await apiRequest('POST', '/api/events', eventData);
-      return res.json();
+      return await apiRequest('POST', '/api/events', eventData);
     },
     onSuccess: async (event) => {
       await saveTiers(event.id, createForm);
@@ -368,8 +367,7 @@ export default function EventManagement() {
 
   const updateEventMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const res = await apiRequest('PUT', `/api/events/${id}`, data);
-      return res.json();
+      return await apiRequest('PUT', `/api/events/${id}`, data);
     },
     onSuccess: async (event) => {
       await saveTiers(event.id, editForm);
