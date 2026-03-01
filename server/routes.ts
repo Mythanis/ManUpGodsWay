@@ -5821,18 +5821,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Vimeo — use public oEmbed API (no auth needed)
-        const vimeoMatch = video.videoUrl.match(/vimeo\.com\/(\d+)/);
+        // Match multiple Vimeo URL formats:
+        // https://vimeo.com/123456789
+        // https://player.vimeo.com/video/123456789
+        // https://vimeo.com/channels/staff/123456789
+        const vimeoMatch = video.videoUrl.match(/vimeo\.com(?:\/video)?\/(\d+)/);
         if (vimeoMatch) {
-          const oembedRes = await fetch(`https://vimeo.com/api/oembed.json?url=https://vimeo.com/${vimeoMatch[1]}&width=640`);
-          if (oembedRes.ok) {
-            const oembed = await oembedRes.json() as any;
-            if (oembed.thumbnail_url) {
-              thumbnailUrl = oembed.thumbnail_url;
-              await storage.updateVideo(video.id, { thumbnailUrl });
-              return res.json({ thumbnailUrl });
+          const vimeoId = vimeoMatch[1];
+          const ua = 'Mozilla/5.0 (compatible; ManUpGodsWay/1.0)';
+
+          // Try oEmbed API first
+          try {
+            const oembedRes = await fetch(
+              `https://vimeo.com/api/oembed.json?url=https://vimeo.com/${vimeoId}&width=640`,
+              { headers: { 'User-Agent': ua } }
+            );
+            if (oembedRes.ok) {
+              const oembed = await oembedRes.json() as any;
+              if (oembed.thumbnail_url) {
+                thumbnailUrl = oembed.thumbnail_url;
+                await storage.updateVideo(video.id, { thumbnailUrl });
+                return res.json({ thumbnailUrl });
+              }
             }
+          } catch (oembedErr) {
+            console.warn('[Vimeo] oEmbed failed, trying v2 API:', oembedErr);
           }
-          return res.status(422).json({ message: "Could not fetch Vimeo thumbnail. Try adding a thumbnail URL manually." });
+
+          // Fallback: Vimeo simple API v2
+          try {
+            const v2Res = await fetch(
+              `https://vimeo.com/api/v2/video/${vimeoId}.json`,
+              { headers: { 'User-Agent': ua } }
+            );
+            if (v2Res.ok) {
+              const v2Data = await v2Res.json() as any[];
+              const thumb = v2Data?.[0]?.thumbnail_large || v2Data?.[0]?.thumbnail_medium;
+              if (thumb) {
+                thumbnailUrl = thumb;
+                await storage.updateVideo(video.id, { thumbnailUrl });
+                return res.json({ thumbnailUrl });
+              }
+            }
+            console.warn('[Vimeo] v2 API status:', v2Res.status);
+          } catch (v2Err) {
+            console.error('[Vimeo] v2 API failed:', v2Err);
+          }
+
+          return res.status(422).json({ message: "Could not fetch Vimeo thumbnail — the video may be private. Try pasting a thumbnail URL manually." });
         }
 
         return res.status(422).json({ message: "Auto-thumbnail is only supported for YouTube and Vimeo links. Paste a thumbnail URL manually for other video types." });
