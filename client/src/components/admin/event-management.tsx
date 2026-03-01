@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Clock, MapPin, DollarSign, Plus, Edit, Trash2, ExternalLink, Navigation, CalendarRange, Layers } from 'lucide-react';
+import { Calendar, MapPin, DollarSign, Plus, Edit, Trash2, ExternalLink, Navigation, CalendarRange, Layers } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface EventTier {
@@ -43,9 +43,26 @@ interface Event {
   updatedAt: string;
 }
 
+type FormData = {
+  title: string;
+  description: string;
+  eventDate: string;
+  eventTime: string;
+  endDate: string;
+  endTime: string;
+  location: string;
+  address: string;
+  url: string;
+  requiresPurchase: boolean;
+  purchaseUrl: string;
+  multiTier: boolean;
+  price: string;
+  tiers: { name: string; price: string; url: string }[];
+};
+
 const emptyTier = () => ({ name: '', price: '', url: '' });
 
-const defaultForm = () => ({
+const defaultForm = (): FormData => ({
   title: '',
   description: '',
   eventDate: '',
@@ -62,20 +79,273 @@ const defaultForm = () => ({
   tiers: [emptyTier(), emptyTier()],
 });
 
+function EventForm({
+  formData,
+  setFormData,
+  onSubmit,
+  onCancel,
+  isPending,
+  isEdit,
+}: {
+  formData: FormData;
+  setFormData: (d: FormData) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onCancel: () => void;
+  isPending: boolean;
+  isEdit: boolean;
+}) {
+  const updateTier = (index: number, field: 'name' | 'price' | 'url', value: string) => {
+    const updated = formData.tiers.map((t, i) => i === index ? { ...t, [field]: value } : t);
+    setFormData({ ...formData, tiers: updated });
+  };
+
+  const setTierCount = (count: number) => {
+    const clamped = Math.max(2, Math.min(10, count));
+    let updated = [...formData.tiers];
+    while (updated.length < clamped) updated.push(emptyTier());
+    updated = updated.slice(0, clamped);
+    setFormData({ ...formData, tiers: updated });
+  };
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="col-span-2">
+          <Label className="text-white">Title *</Label>
+          <Input
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            placeholder="Event title"
+            className="bg-gray-800 border-gray-600 text-white"
+            required
+            data-testid="input-event-title"
+          />
+        </div>
+
+        <div>
+          <Label className="text-white">Start Date *</Label>
+          <Input
+            type="date"
+            value={formData.eventDate}
+            onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
+            className="bg-gray-800 border-gray-600 text-white"
+            required
+            data-testid="input-event-date"
+          />
+        </div>
+
+        <div>
+          <Label className="text-white">Start Time</Label>
+          <Input
+            type="time"
+            value={formData.eventTime}
+            onChange={(e) => setFormData({ ...formData, eventTime: e.target.value })}
+            className="bg-gray-800 border-gray-600 text-white"
+            data-testid="input-event-time"
+          />
+        </div>
+
+        <div>
+          <Label className="text-white">End Date</Label>
+          <Input
+            type="date"
+            value={formData.endDate}
+            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+            className="bg-gray-800 border-gray-600 text-white"
+            data-testid="input-event-end-date"
+          />
+        </div>
+
+        <div>
+          <Label className="text-white">End Time</Label>
+          <Input
+            type="time"
+            value={formData.endTime}
+            onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+            className="bg-gray-800 border-gray-600 text-white"
+            data-testid="input-event-end-time"
+          />
+        </div>
+
+        <div className="col-span-2">
+          <Label className="text-white">Location Name</Label>
+          <Input
+            value={formData.location}
+            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+            placeholder="e.g. Grace Community Church"
+            className="bg-gray-800 border-gray-600 text-white"
+            data-testid="input-event-location"
+          />
+        </div>
+
+        <div className="col-span-2">
+          <Label className="text-white flex items-center gap-1">
+            <Navigation className="w-3 h-3" /> Address (for map directions)
+          </Label>
+          <Input
+            value={formData.address}
+            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            placeholder="e.g. 123 Main St, City, State 12345"
+            className="bg-gray-800 border-gray-600 text-white"
+            data-testid="input-event-address"
+          />
+          <p className="text-xs text-gray-500 mt-1">Users will see a "Get Directions" button linking to Google Maps</p>
+        </div>
+
+        <div className="col-span-2">
+          <Label className="text-white">Event URL (info page)</Label>
+          <Input
+            type="url"
+            value={formData.url}
+            onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+            placeholder="https://example.com/event"
+            className="bg-gray-800 border-gray-600 text-white"
+            data-testid="input-event-url"
+          />
+        </div>
+
+        <div className="col-span-2">
+          <Label className="text-white">Description</Label>
+          <Textarea
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            placeholder="Event description"
+            className="bg-gray-800 border-gray-600 text-white min-h-20"
+            data-testid="textarea-event-description"
+          />
+        </div>
+
+        <div className="col-span-2 flex items-center space-x-2">
+          <Switch
+            checked={formData.requiresPurchase}
+            onCheckedChange={(checked) => setFormData({ ...formData, requiresPurchase: checked, multiTier: false })}
+            data-testid="switch-requires-purchase"
+          />
+          <Label className="text-white">Requires Purchase</Label>
+        </div>
+
+        {formData.requiresPurchase && (
+          <>
+            <div className="col-span-2 flex items-center space-x-2">
+              <Switch
+                checked={formData.multiTier}
+                onCheckedChange={(checked) => setFormData({ ...formData, multiTier: checked })}
+              />
+              <Label className="text-white">More than one Paid Tier</Label>
+            </div>
+
+            {!formData.multiTier && (
+              <>
+                <div>
+                  <Label className="text-white">Price ($)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    placeholder="0.00"
+                    className="bg-gray-800 border-gray-600 text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white">Purchase URL (Stripe link)</Label>
+                  <Input
+                    type="url"
+                    value={formData.purchaseUrl}
+                    onChange={(e) => setFormData({ ...formData, purchaseUrl: e.target.value })}
+                    placeholder="https://buy.stripe.com/..."
+                    className="bg-gray-800 border-gray-600 text-white"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Opens inside the app — users won't leave</p>
+                </div>
+              </>
+            )}
+
+            {formData.multiTier && (
+              <div className="col-span-2 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Label className="text-white whitespace-nowrap">How many tiers?</Label>
+                  <Input
+                    type="number"
+                    min="2"
+                    max="10"
+                    value={formData.tiers.length}
+                    onChange={(e) => setTierCount(parseInt(e.target.value) || 2)}
+                    className="bg-gray-800 border-gray-600 text-white w-20"
+                  />
+                </div>
+                <div className="space-y-3">
+                  {formData.tiers.map((tier, i) => (
+                    <div key={i} className="grid grid-cols-3 gap-2 p-3 bg-gray-800 rounded-md border border-gray-700">
+                      <div>
+                        <Label className="text-gray-400 text-xs">Tier {i + 1} Name</Label>
+                        <Input
+                          value={tier.name}
+                          onChange={(e) => updateTier(i, 'name', e.target.value)}
+                          placeholder="e.g. General Admission"
+                          className="bg-gray-700 border-gray-600 text-white text-sm mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-gray-400 text-xs">Price</Label>
+                        <Input
+                          value={tier.price}
+                          onChange={(e) => updateTier(i, 'price', e.target.value)}
+                          placeholder="$29.99"
+                          className="bg-gray-700 border-gray-600 text-white text-sm mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-gray-400 text-xs">Purchase URL</Label>
+                        <Input
+                          value={tier.url}
+                          onChange={(e) => updateTier(i, 'url', e.target.value)}
+                          placeholder="https://buy.stripe.com/..."
+                          className="bg-gray-700 border-gray-600 text-white text-sm mt-1"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <div className="flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="bg-[rgb(251,208,0)] text-black hover:bg-[rgb(251,208,0)]/90"
+          data-testid={isEdit ? undefined : "button-create-event"}
+        >
+          {isPending ? (isEdit ? 'Updating...' : 'Creating...') : (isEdit ? 'Update Event' : 'Create Event')}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 export default function EventManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [formData, setFormData] = useState(defaultForm());
+  const [createForm, setCreateForm] = useState<FormData>(defaultForm());
+  const [editForm, setEditForm] = useState<FormData>(defaultForm());
 
   const { data: events = [], isLoading } = useQuery<Event[]>({
     queryKey: ['/api/events'],
   });
 
-  const saveTiers = async (eventId: string) => {
-    if (!formData.requiresPurchase || !formData.multiTier) return;
-    const validTiers = formData.tiers.filter(t => t.name.trim() && t.price.trim() && t.url.trim());
+  const saveTiers = async (eventId: string, form: FormData) => {
+    if (!form.requiresPurchase || !form.multiTier) return;
+    const validTiers = form.tiers.filter(t => t.name.trim() && t.price.trim() && t.url.trim());
     await apiRequest('POST', `/api/admin/events/${eventId}/tiers`, { tiers: validTiers });
   };
 
@@ -85,11 +355,11 @@ export default function EventManagement() {
       return res.json();
     },
     onSuccess: async (event) => {
-      await saveTiers(event.id);
+      await saveTiers(event.id, createForm);
       toast({ title: "Event Created", description: "The event has been created successfully." });
       queryClient.invalidateQueries({ queryKey: ['/api/events'] });
       setShowCreateDialog(false);
-      setFormData(defaultForm());
+      setCreateForm(defaultForm());
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to create event.", variant: "destructive" });
@@ -102,11 +372,11 @@ export default function EventManagement() {
       return res.json();
     },
     onSuccess: async (event) => {
-      await saveTiers(event.id);
+      await saveTiers(event.id, editForm);
       toast({ title: "Event Updated", description: "The event has been updated successfully." });
       queryClient.invalidateQueries({ queryKey: ['/api/events'] });
       setEditingEvent(null);
-      setFormData(defaultForm());
+      setEditForm(defaultForm());
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to update event.", variant: "destructive" });
@@ -126,37 +396,43 @@ export default function EventManagement() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const buildEventData = (form: FormData) => ({
+    ...form,
+    description: form.description.trim() || null,
+    eventTime: form.eventTime || null,
+    endDate: form.endDate || null,
+    endTime: form.endTime || null,
+    location: form.location.trim() || null,
+    address: form.address.trim() || null,
+    url: form.url.trim() || null,
+    purchaseUrl: form.requiresPurchase && !form.multiTier ? (form.purchaseUrl.trim() || null) : null,
+    multiTier: form.requiresPurchase ? form.multiTier : false,
+    price: form.requiresPurchase && !form.multiTier ? (form.price || null) : null,
+  });
+
+  const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim() || !formData.eventDate) {
+    if (!createForm.title.trim() || !createForm.eventDate) {
       toast({ title: "Validation Error", description: "Title and event date are required.", variant: "destructive" });
       return;
     }
+    createEventMutation.mutate(buildEventData(createForm));
+  };
 
-    const eventData = {
-      ...formData,
-      description: formData.description.trim() || null,
-      eventTime: formData.eventTime || null,
-      endDate: formData.endDate || null,
-      endTime: formData.endTime || null,
-      location: formData.location.trim() || null,
-      address: formData.address.trim() || null,
-      url: formData.url.trim() || null,
-      purchaseUrl: formData.requiresPurchase && !formData.multiTier ? (formData.purchaseUrl.trim() || null) : null,
-      multiTier: formData.requiresPurchase ? formData.multiTier : false,
-      price: formData.requiresPurchase && !formData.multiTier ? (formData.price || null) : null,
-    };
-
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editForm.title.trim() || !editForm.eventDate) {
+      toast({ title: "Validation Error", description: "Title and event date are required.", variant: "destructive" });
+      return;
+    }
     if (editingEvent) {
-      updateEventMutation.mutate({ id: editingEvent.id, data: eventData });
-    } else {
-      createEventMutation.mutate(eventData);
+      updateEventMutation.mutate({ id: editingEvent.id, data: buildEventData(editForm) });
     }
   };
 
   const handleEdit = (event: Event) => {
     setEditingEvent(event);
-    setFormData({
+    setEditForm({
       title: event.title,
       description: event.description || '',
       eventDate: event.eventDate.split('T')[0],
@@ -182,20 +458,6 @@ export default function EventManagement() {
     }
   };
 
-  const updateTier = (index: number, field: 'name' | 'price' | 'url', value: string) => {
-    const updated = formData.tiers.map((t, i) => i === index ? { ...t, [field]: value } : t);
-    setFormData({ ...formData, tiers: updated });
-  };
-
-  const setTierCount = (count: number) => {
-    const clamped = Math.max(2, Math.min(10, count));
-    const current = formData.tiers;
-    let updated = [...current];
-    while (updated.length < clamped) updated.push(emptyTier());
-    updated = updated.slice(0, clamped);
-    setFormData({ ...formData, tiers: updated });
-  };
-
   const formatDate = (dateString: string) => format(new Date(dateString), 'EEEE, MMMM d, yyyy');
   const formatTime = (timeString: string) => {
     if (!timeString) return null;
@@ -205,215 +467,6 @@ export default function EventManagement() {
     return format(date, 'h:mm a');
   };
 
-  const PurchaseFields = () => (
-    <>
-      <div className="col-span-2 flex items-center space-x-2">
-        <Switch
-          checked={formData.multiTier}
-          onCheckedChange={(checked) => setFormData({ ...formData, multiTier: checked })}
-        />
-        <Label className="text-white">More than one Paid Tier</Label>
-      </div>
-
-      {!formData.multiTier && (
-        <>
-          <div>
-            <Label className="text-white">Price ($)</Label>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              placeholder="0.00"
-              className="bg-gray-800 border-gray-600 text-white"
-            />
-          </div>
-          <div>
-            <Label className="text-white">Purchase URL (Stripe link)</Label>
-            <Input
-              type="url"
-              value={formData.purchaseUrl}
-              onChange={(e) => setFormData({ ...formData, purchaseUrl: e.target.value })}
-              placeholder="https://buy.stripe.com/..."
-              className="bg-gray-800 border-gray-600 text-white"
-            />
-            <p className="text-xs text-gray-500 mt-1">Opens inside the app — users won't leave</p>
-          </div>
-        </>
-      )}
-
-      {formData.multiTier && (
-        <div className="col-span-2 space-y-4">
-          <div className="flex items-center gap-3">
-            <Label className="text-white whitespace-nowrap">How many tiers?</Label>
-            <Input
-              type="number"
-              min="2"
-              max="10"
-              value={formData.tiers.length}
-              onChange={(e) => setTierCount(parseInt(e.target.value) || 2)}
-              className="bg-gray-800 border-gray-600 text-white w-20"
-            />
-          </div>
-          <div className="space-y-3">
-            {formData.tiers.map((tier, i) => (
-              <div key={i} className="grid grid-cols-3 gap-2 p-3 bg-gray-800 rounded-md border border-gray-700">
-                <div>
-                  <Label className="text-gray-400 text-xs">Tier {i + 1} Name</Label>
-                  <Input
-                    value={tier.name}
-                    onChange={(e) => updateTier(i, 'name', e.target.value)}
-                    placeholder="e.g. General Admission"
-                    className="bg-gray-700 border-gray-600 text-white text-sm mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-gray-400 text-xs">Price</Label>
-                  <Input
-                    value={tier.price}
-                    onChange={(e) => updateTier(i, 'price', e.target.value)}
-                    placeholder="$29.99"
-                    className="bg-gray-700 border-gray-600 text-white text-sm mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-gray-400 text-xs">Purchase URL</Label>
-                  <Input
-                    value={tier.url}
-                    onChange={(e) => updateTier(i, 'url', e.target.value)}
-                    placeholder="https://buy.stripe.com/..."
-                    className="bg-gray-700 border-gray-600 text-white text-sm mt-1"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </>
-  );
-
-  const FormFields = () => (
-    <div className="grid grid-cols-2 gap-4">
-      <div className="col-span-2">
-        <Label className="text-white">Title *</Label>
-        <Input
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          placeholder="Event title"
-          className="bg-gray-800 border-gray-600 text-white"
-          required
-          data-testid="input-event-title"
-        />
-      </div>
-
-      <div>
-        <Label className="text-white">Start Date *</Label>
-        <Input
-          type="date"
-          value={formData.eventDate}
-          onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-          className="bg-gray-800 border-gray-600 text-white"
-          required
-          data-testid="input-event-date"
-        />
-      </div>
-
-      <div>
-        <Label className="text-white">Start Time</Label>
-        <Input
-          type="time"
-          value={formData.eventTime}
-          onChange={(e) => setFormData({ ...formData, eventTime: e.target.value })}
-          className="bg-gray-800 border-gray-600 text-white"
-          data-testid="input-event-time"
-        />
-      </div>
-
-      <div>
-        <Label className="text-white">End Date</Label>
-        <Input
-          type="date"
-          value={formData.endDate}
-          onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-          className="bg-gray-800 border-gray-600 text-white"
-          data-testid="input-event-end-date"
-        />
-      </div>
-
-      <div>
-        <Label className="text-white">End Time</Label>
-        <Input
-          type="time"
-          value={formData.endTime}
-          onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-          className="bg-gray-800 border-gray-600 text-white"
-          data-testid="input-event-end-time"
-        />
-      </div>
-
-      <div className="col-span-2">
-        <Label className="text-white">Location Name</Label>
-        <Input
-          value={formData.location}
-          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-          placeholder="e.g. Grace Community Church"
-          className="bg-gray-800 border-gray-600 text-white"
-          data-testid="input-event-location"
-        />
-      </div>
-
-      <div className="col-span-2">
-        <Label className="text-white flex items-center gap-1">
-          <Navigation className="w-3 h-3" /> Address (for map directions)
-        </Label>
-        <Input
-          value={formData.address}
-          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-          placeholder="e.g. 123 Main St, City, State 12345"
-          className="bg-gray-800 border-gray-600 text-white"
-          data-testid="input-event-address"
-        />
-        <p className="text-xs text-gray-500 mt-1">Users will see a "Get Directions" button linking to Google Maps</p>
-      </div>
-
-      <div className="col-span-2">
-        <Label className="text-white">Event URL (info page)</Label>
-        <Input
-          type="url"
-          value={formData.url}
-          onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-          placeholder="https://example.com/event"
-          className="bg-gray-800 border-gray-600 text-white"
-          data-testid="input-event-url"
-        />
-      </div>
-
-      <div className="col-span-2">
-        <Label className="text-white">Description</Label>
-        <Textarea
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          placeholder="Event description"
-          className="bg-gray-800 border-gray-600 text-white min-h-20"
-          data-testid="textarea-event-description"
-        />
-      </div>
-
-      <div className="col-span-2 flex items-center space-x-2">
-        <Switch
-          checked={formData.requiresPurchase}
-          onCheckedChange={(checked) => setFormData({ ...formData, requiresPurchase: checked, multiTier: false })}
-          data-testid="switch-requires-purchase"
-        />
-        <Label className="text-white">Requires Purchase</Label>
-      </div>
-
-      {formData.requiresPurchase && <PurchaseFields />}
-    </div>
-  );
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -421,12 +474,9 @@ export default function EventManagement() {
           <h2 className="text-2xl font-bold text-white">Event Management</h2>
           <p className="text-gray-400">Create and manage ministry events</p>
         </div>
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <Dialog open={showCreateDialog} onOpenChange={(open) => { setShowCreateDialog(open); if (open) setCreateForm(defaultForm()); }}>
           <DialogTrigger asChild>
-            <Button
-              className="bg-[rgb(251,208,0)] text-black hover:bg-[rgb(251,208,0)]/90"
-              onClick={() => setFormData(defaultForm())}
-            >
+            <Button className="bg-[rgb(251,208,0)] text-black hover:bg-[rgb(251,208,0)]/90">
               <Plus className="w-4 h-4 mr-2" />
               Create Event
             </Button>
@@ -438,28 +488,19 @@ export default function EventManagement() {
                 Create a new ministry event. Required fields are marked with an asterisk.
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <FormFields />
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => { setShowCreateDialog(false); setFormData(defaultForm()); }}>
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createEventMutation.isPending}
-                  className="bg-[rgb(251,208,0)] text-black hover:bg-[rgb(251,208,0)]/90"
-                  data-testid="button-create-event"
-                >
-                  {createEventMutation.isPending ? 'Creating...' : 'Create Event'}
-                </Button>
-              </div>
-            </form>
+            <EventForm
+              formData={createForm}
+              setFormData={setCreateForm}
+              onSubmit={handleCreateSubmit}
+              onCancel={() => { setShowCreateDialog(false); setCreateForm(defaultForm()); }}
+              isPending={createEventMutation.isPending}
+              isEdit={false}
+            />
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Edit Event Dialog */}
-      <Dialog open={!!editingEvent} onOpenChange={(open) => { if (!open) { setEditingEvent(null); setFormData(defaultForm()); } }}>
+      <Dialog open={!!editingEvent} onOpenChange={(open) => { if (!open) { setEditingEvent(null); setEditForm(defaultForm()); } }}>
         <DialogContent className="bg-gray-900 border-gray-700 max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-white">Edit Event</DialogTitle>
@@ -467,25 +508,17 @@ export default function EventManagement() {
               Update event details. Required fields are marked with an asterisk.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <FormFields />
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => { setEditingEvent(null); setFormData(defaultForm()); }}>
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={updateEventMutation.isPending}
-                className="bg-[rgb(251,208,0)] text-black hover:bg-[rgb(251,208,0)]/90"
-              >
-                {updateEventMutation.isPending ? 'Updating...' : 'Update Event'}
-              </Button>
-            </div>
-          </form>
+          <EventForm
+            formData={editForm}
+            setFormData={setEditForm}
+            onSubmit={handleEditSubmit}
+            onCancel={() => { setEditingEvent(null); setEditForm(defaultForm()); }}
+            isPending={updateEventMutation.isPending}
+            isEdit={true}
+          />
         </DialogContent>
       </Dialog>
 
-      {/* Events List */}
       <div className="space-y-4">
         {isLoading ? (
           <div className="space-y-4">
