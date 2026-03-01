@@ -25,7 +25,7 @@ The system supports a single subscription model with configurable free trial. Ad
 - **Messaging**: Real-time direct and group messaging.
 - **Studies & Devotionals**: Management for Bible studies (lesson-based) and devotionals (with thumbnail uploads).
 - **Community**: Interactive discussions, user profiles, and a discipleship system with tag-based user discovery and faith journey stages.
-- **Video & Podcast Management**: Full upload, storage, processing, and management with tiered access, topic classification, ratings, and RSS feed import capabilities (e.g., Podomatic).
+- **Video & Podcast Management**: Full upload, storage, processing, and management with tiered access, topic classification, ratings, and RSS feed import capabilities (e.g., Podomatic). Videos support both direct file uploads (up to 100MB) and external URL-based videos (YouTube, Vimeo, or any direct .mp4 link — no size limit). The admin upload dialog has two tabs: "Upload File" and "Add by URL". YouTube and Vimeo URLs are auto-detected and rendered as embedded iframes; other URLs play in a `<video>` tag. The `videos` table has a nullable `videoUrl` column and nullable file-related columns to support both modes.
 - **Notifications**: Enhanced system for native push notifications (via Web Push API and Service Workers), daily devotionals, content updates, and discussion replies. Users can enable/disable push notifications per device in settings.
 - **User Engagement**: Streak tracking, prayer time system, weekly challenges with participation tracking, and a testimony system.
 - **War Room**: A dedicated prayer request space where users can post prayer requests (real names only), comment, and indicate they've prayed, with real-time updates via WebSockets.

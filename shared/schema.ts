@@ -70,12 +70,13 @@ export const videos = pgTable("videos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: varchar("title").notNull(),
   description: text("description"),
-  filename: varchar("filename").notNull(),
-  originalName: varchar("original_name").notNull(),
-  mimeType: varchar("mime_type").notNull(),
-  fileSize: integer("file_size").notNull(),
+  filename: varchar("filename"),
+  originalName: varchar("original_name"),
+  mimeType: varchar("mime_type"),
+  fileSize: integer("file_size"),
   duration: integer("duration"), // in seconds
   thumbnailUrl: varchar("thumbnail_url"),
+  videoUrl: varchar("video_url"), // External video URL (YouTube, Vimeo, or direct link)
   uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
   requiredTier: varchar("required_tier").notNull().default("free"), // legacy - kept for compatibility
   isTrialAccessible: boolean("is_trial_accessible").default(false),

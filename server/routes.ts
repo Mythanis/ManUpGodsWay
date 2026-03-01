@@ -5596,6 +5596,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create video from external URL (YouTube, Vimeo, or direct link)
+  app.post('/api/admin/videos/from-url', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { title, description, videoUrl, category = 'general', requiredTier = 'free', thumbnailUrl, isTrialAccessible } = req.body;
+
+      if (!title || title.trim() === '') {
+        return res.status(400).json({ message: "Title is required" });
+      }
+      if (!videoUrl || videoUrl.trim() === '') {
+        return res.status(400).json({ message: "Video URL is required" });
+      }
+
+      const videoData = {
+        title: title.trim(),
+        description: description || '',
+        videoUrl: videoUrl.trim(),
+        filename: '',
+        originalName: videoUrl.trim(),
+        mimeType: 'video/external',
+        fileSize: 0,
+        thumbnailUrl: thumbnailUrl || null,
+        uploadedBy: user.id,
+        requiredTier,
+        category,
+        isTrialAccessible: isTrialAccessible === true || isTrialAccessible === 'true',
+        isProcessed: true,
+        processingStatus: 'completed',
+      };
+
+      const video = await storage.createVideo(videoData);
+      console.log(`[Video] URL-based video created by ${user.id}: "${video.title}" (${videoUrl})`);
+      res.json(video);
+    } catch (error) {
+      console.error("Error creating video from URL:", error);
+      res.status(500).json({ message: "Failed to create video" });
+    }
+  });
+
   app.post('/api/admin/videos/upload', isAuthenticated, upload.single('video'), async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);

@@ -29,7 +29,20 @@ interface Video {
   ratingCount: number;
   duration?: number;
   thumbnailUrl?: string;
+  videoUrl?: string;
   createdAt: string;
+}
+
+function getVideoEmbed(url: string): { type: 'youtube' | 'vimeo' | 'direct'; embedUrl: string } {
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  if (ytMatch) {
+    return { type: 'youtube', embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}?rel=0` };
+  }
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) {
+    return { type: 'vimeo', embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}` };
+  }
+  return { type: 'direct', embedUrl: url };
 }
 
 export default function Videos() {
@@ -352,7 +365,33 @@ export default function Videos() {
             <div className="space-y-6">
               {/* Video Player */}
               <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden">
-                {videoStreamUrl ? (
+                {selectedVideo.videoUrl ? (
+                  (() => {
+                    const embed = getVideoEmbed(selectedVideo.videoUrl);
+                    if (embed.type === 'youtube' || embed.type === 'vimeo') {
+                      return (
+                        <iframe
+                          src={embed.embedUrl}
+                          className="w-full h-full"
+                          allowFullScreen
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          title={selectedVideo.title}
+                        />
+                      );
+                    }
+                    return (
+                      <video
+                        className="w-full h-full"
+                        controls
+                        preload="metadata"
+                        src={embed.embedUrl}
+                        poster={selectedVideo.thumbnailUrl}
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    );
+                  })()
+                ) : videoStreamUrl ? (
                   <video 
                     className="w-full h-full"
                     controls

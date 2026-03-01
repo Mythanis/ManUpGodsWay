@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Search, Upload, Play, Trash2, Eye, Edit, Video as VideoIcon, FileText, Clock, HardDrive, Crown, Gem, Zap, Star } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Upload, Play, Trash2, Eye, Edit, Video as VideoIcon, FileText, Clock, HardDrive, Crown, Gem, Zap, Star, Link } from "lucide-react";
 
 interface Video {
   id: string;
@@ -51,6 +52,13 @@ export default function VideoManagement() {
   const [uploadTags, setUploadTags] = useState('');
   const [titleExists, setTitleExists] = useState(false);
   const [checkingTitle, setCheckingTitle] = useState(false);
+  const [urlVideoUrl, setUrlVideoUrl] = useState('');
+  const [urlTitle, setUrlTitle] = useState('');
+  const [urlDescription, setUrlDescription] = useState('');
+  const [urlCategory, setUrlCategory] = useState('general');
+  const [urlTier, setUrlTier] = useState('free');
+  const [urlThumbnail, setUrlThumbnail] = useState('');
+  const [urlSubmitting, setUrlSubmitting] = useState(false);
   const { toast } = useToast();
   const { effectiveTheme } = useTheme();
   const queryClient = useQueryClient();
@@ -154,6 +162,30 @@ export default function VideoManagement() {
       toast({
         title: "Upload Failed",
         description: errorMessage,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const addVideoFromUrl = useMutation({
+    mutationFn: async (payload: object) => apiRequest('POST', '/api/admin/videos/from-url', payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/videos"] });
+      setShowUploadDialog(false);
+      setUrlVideoUrl('');
+      setUrlTitle('');
+      setUrlDescription('');
+      setUrlCategory('general');
+      setUrlTier('free');
+      setUrlThumbnail('');
+      setUrlSubmitting(false);
+      toast({ title: "Success", description: "Video added successfully!" });
+    },
+    onError: (error: any) => {
+      setUrlSubmitting(false);
+      toast({
+        title: "Failed",
+        description: error?.message || "Could not add video. Please try again.",
         variant: "destructive",
       });
     },
@@ -481,128 +513,231 @@ export default function VideoManagement() {
 
       {/* Upload Dialog */}
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Upload Video</DialogTitle>
+            <DialogTitle>Add Video</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
-            {!uploading ? (
-              <>
-                <div>
-                  <Label htmlFor="video-file" className="text-sm font-medium">
-                    Select Video File
-                  </Label>
-                  <Input
-                    id="video-file"
-                    type="file"
-                    accept="video/*"
-                    onChange={handleFileSelect}
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-ministry-slate mt-1">
-                    Supported formats: MP4, MOV, AVI, etc. Max size: 100MB
-                  </p>
-                </div>
-                
-                {selectedFile && (
+          <Tabs defaultValue="upload">
+            <TabsList className="w-full">
+              <TabsTrigger value="upload" className="flex-1">
+                <Upload className="w-4 h-4 mr-2" />
+                Upload File
+              </TabsTrigger>
+              <TabsTrigger value="url" className="flex-1">
+                <Link className="w-4 h-4 mr-2" />
+                Add by URL
+              </TabsTrigger>
+            </TabsList>
+
+            {/* ── Upload File Tab ── */}
+            <TabsContent value="upload">
+              <div className="space-y-4 pt-2">
+                {!uploading ? (
                   <>
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-medium text-foreground mb-1">Selected File:</p>
-                      <p className="text-sm text-ministry-slate">{selectedFile.name}</p>
-                      <p className="text-xs text-ministry-slate">{formatFileSize(selectedFile.size)}</p>
-                    </div>
-                    
                     <div>
-                      <Label htmlFor="video-title" className="text-sm font-medium">
-                        Video Title *
+                      <Label htmlFor="video-file" className="text-sm font-medium">
+                        Select Video File
                       </Label>
                       <Input
-                        id="video-title"
-                        value={uploadTitle}
-                        onChange={(e) => setUploadTitle(e.target.value)}
-                        placeholder="Enter video title"
-                        className="mt-1"
-                      />
-                      {titleExists && (
-                        <p className="text-red-500 text-sm mt-1">Title exists</p>
-                      )}
-                      {checkingTitle && (
-                        <p className="text-muted-foreground text-sm mt-1">Checking title...</p>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="video-description" className="text-sm font-medium">
-                        Description
-                      </Label>
-                      <Textarea
-                        id="video-description"
-                        value={uploadDescription}
-                        onChange={(e) => setUploadDescription(e.target.value)}
-                        placeholder="Enter video description (optional)"
-                        className="mt-1"
-                        rows={3}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="video-tags" className="text-sm font-medium">
-                        Search Tags
-                      </Label>
-                      <Input
-                        id="video-tags"
-                        value={uploadTags}
-                        onChange={(e) => setUploadTags(e.target.value)}
-                        placeholder="Enter tags separated by commas (e.g. leadership, faith, prayer)"
+                        id="video-file"
+                        type="file"
+                        accept="video/*"
+                        onChange={handleFileSelect}
                         className="mt-1"
                       />
                       <p className="text-xs text-ministry-slate mt-1">
-                        Tags help users find this video when searching
+                        MP4, MOV, AVI, etc. Max size: 100MB. For larger videos use the "Add by URL" tab.
                       </p>
                     </div>
-                    
-                    <div>
-                      <Label htmlFor="video-tier" className="text-sm font-medium">
-                        Access Tier
-                      </Label>
-                      <Select value={uploadTier} onValueChange={setUploadTier}>
-                        <SelectTrigger className="mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="free">Free - All users can access</SelectItem>
-                          <SelectItem value="premium">Subscribers Only</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <button 
-                      onClick={handleUpload}
-                      disabled={!uploadTitle.trim() || titleExists || checkingTitle}
-                      className="w-full px-4 py-2 rounded-lg transition-colors cursor-pointer flex items-center justify-center bg-ministry-navy hover:bg-ministry-charcoal text-white border-none disabled:opacity-50"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Video
-                    </button>
+
+                    {selectedFile && (
+                      <>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <p className="text-sm font-medium text-foreground mb-1">Selected File:</p>
+                          <p className="text-sm text-ministry-slate">{selectedFile.name}</p>
+                          <p className="text-xs text-ministry-slate">{formatFileSize(selectedFile.size)}</p>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="video-title" className="text-sm font-medium">
+                            Video Title *
+                          </Label>
+                          <Input
+                            id="video-title"
+                            value={uploadTitle}
+                            onChange={(e) => setUploadTitle(e.target.value)}
+                            placeholder="Enter video title"
+                            className="mt-1"
+                          />
+                          {titleExists && <p className="text-red-500 text-sm mt-1">Title already exists</p>}
+                          {checkingTitle && <p className="text-muted-foreground text-sm mt-1">Checking title...</p>}
+                        </div>
+
+                        <div>
+                          <Label htmlFor="video-description" className="text-sm font-medium">Description</Label>
+                          <Textarea
+                            id="video-description"
+                            value={uploadDescription}
+                            onChange={(e) => setUploadDescription(e.target.value)}
+                            placeholder="Enter video description (optional)"
+                            className="mt-1"
+                            rows={3}
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="video-tags" className="text-sm font-medium">Search Tags</Label>
+                          <Input
+                            id="video-tags"
+                            value={uploadTags}
+                            onChange={(e) => setUploadTags(e.target.value)}
+                            placeholder="leadership, faith, prayer"
+                            className="mt-1"
+                          />
+                          <p className="text-xs text-ministry-slate mt-1">Comma-separated tags help users find this video</p>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="video-tier" className="text-sm font-medium">Access Tier</Label>
+                          <Select value={uploadTier} onValueChange={setUploadTier}>
+                            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="free">Free — All users</SelectItem>
+                              <SelectItem value="premium">Subscribers Only</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <button
+                          onClick={handleUpload}
+                          disabled={!uploadTitle.trim() || titleExists || checkingTitle}
+                          className="w-full px-4 py-2 rounded-lg transition-colors cursor-pointer flex items-center justify-center bg-ministry-navy hover:bg-ministry-charcoal text-white border-none disabled:opacity-50"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Video
+                        </button>
+                      </>
+                    )}
                   </>
-                )}
-              </>
-            ) : (
-              <div className="space-y-4">
-                <div className="text-center">
-                  <p className="text-sm text-ministry-charcoal mb-2">Uploading video...</p>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-ministry-navy h-2 rounded-full transition-all duration-300" 
-                      style={{ width: `${uploadProgress}%` }}
-                    ></div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <p className="text-sm text-ministry-charcoal mb-2">Uploading video...</p>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-ministry-navy h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-ministry-slate mt-1">{Math.round(uploadProgress)}% complete</p>
+                    </div>
                   </div>
-                  <p className="text-xs text-ministry-slate mt-1">{Math.round(uploadProgress)}% complete</p>
-                </div>
+                )}
               </div>
-            )}
-          </div>
+            </TabsContent>
+
+            {/* ── Add by URL Tab ── */}
+            <TabsContent value="url">
+              <div className="space-y-4 pt-2">
+                <div>
+                  <Label htmlFor="url-video-url" className="text-sm font-medium">Video URL *</Label>
+                  <Input
+                    id="url-video-url"
+                    value={urlVideoUrl}
+                    onChange={(e) => setUrlVideoUrl(e.target.value)}
+                    placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-ministry-slate mt-1">
+                    YouTube, Vimeo, or any direct .mp4 link — no file size limit
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="url-title" className="text-sm font-medium">Title *</Label>
+                  <Input
+                    id="url-title"
+                    value={urlTitle}
+                    onChange={(e) => setUrlTitle(e.target.value)}
+                    placeholder="Enter video title"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="url-description" className="text-sm font-medium">Description</Label>
+                  <Textarea
+                    id="url-description"
+                    value={urlDescription}
+                    onChange={(e) => setUrlDescription(e.target.value)}
+                    placeholder="Enter video description (optional)"
+                    className="mt-1"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="url-category" className="text-sm font-medium">Category</Label>
+                    <Select value={urlCategory} onValueChange={setUrlCategory}>
+                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="general">General</SelectItem>
+                        <SelectItem value="leadership">Leadership</SelectItem>
+                        <SelectItem value="marriage">Marriage</SelectItem>
+                        <SelectItem value="fatherhood">Fatherhood</SelectItem>
+                        <SelectItem value="character">Character</SelectItem>
+                        <SelectItem value="faith">Faith</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="url-tier" className="text-sm font-medium">Access Tier</Label>
+                    <Select value={urlTier} onValueChange={setUrlTier}>
+                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">Free — All users</SelectItem>
+                        <SelectItem value="premium">Subscribers Only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="url-thumbnail" className="text-sm font-medium">Thumbnail Image URL</Label>
+                  <Input
+                    id="url-thumbnail"
+                    value={urlThumbnail}
+                    onChange={(e) => setUrlThumbnail(e.target.value)}
+                    placeholder="https://example.com/thumbnail.jpg (optional)"
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-ministry-slate mt-1">Paste a direct image URL for the video card thumbnail</p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    if (!urlTitle.trim() || !urlVideoUrl.trim()) return;
+                    setUrlSubmitting(true);
+                    addVideoFromUrl.mutate({
+                      title: urlTitle.trim(),
+                      description: urlDescription.trim(),
+                      videoUrl: urlVideoUrl.trim(),
+                      category: urlCategory,
+                      requiredTier: urlTier,
+                      thumbnailUrl: urlThumbnail.trim() || undefined,
+                    });
+                  }}
+                  disabled={!urlTitle.trim() || !urlVideoUrl.trim() || urlSubmitting}
+                  className="w-full px-4 py-2 rounded-lg transition-colors cursor-pointer flex items-center justify-center bg-ministry-navy hover:bg-ministry-charcoal text-white border-none disabled:opacity-50"
+                >
+                  <Link className="w-4 h-4 mr-2" />
+                  {urlSubmitting ? "Saving..." : "Add Video"}
+                </button>
+              </div>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
