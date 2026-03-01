@@ -17,7 +17,7 @@ import { warGroupsService } from "./warGroupsService";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
 import * as schema from "@shared/schema";
-import { eq, and, sql, desc, asc, gt } from "drizzle-orm";
+import { eq, and, sql, desc, asc, gt, ne } from "drizzle-orm";
 import { 
   insertStudySchema, 
   insertStudySeriesSchema,
@@ -2990,7 +2990,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           p => studyLessonIds.includes(p.lessonId) && p.isCompleted
         );
         
+        let studyCompleted = false;
+        let nextStudyData: any = null;
+
         if (completedLessons.length === lessons.length && lessons.length > 0) {
+          studyCompleted = true;
           // Get the study's configured reward from DB
           const [study] = await db.select({ 
             rationReward: schema.studies.rationReward, 
@@ -3004,37 +3008,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userId, studyReward, 'study', `Completed study: ${study?.title || 'Unknown'}`, 'complete_study', studyId, 'study'
           );
           
-          // Check if there's a next study in a consecutive series and notify user
+          // Find next study in the same series (any series, consecutive or not)
           if (study?.seriesId) {
             const [series] = await db.select()
               .from(schema.studySeries)
               .where(eq(schema.studySeries.id, study.seriesId));
             
-            if (series?.requiresConsecutiveCompletion) {
-              // Get all studies in the series ordered properly to find the next one
-              const allSeriesStudies = await db.select()
-                .from(schema.studies)
-                .where(and(
-                  eq(schema.studies.seriesId, study.seriesId),
-                  eq(schema.studies.isPublished, true)
-                ))
-                .orderBy(asc(schema.studies.seriesOrder), asc(schema.studies.createdAt));
-              
-              // Find current study index and get the next one
-              const currentIndex = allSeriesStudies.findIndex(s => s.id === studyId);
-              const nextStudy = currentIndex >= 0 && currentIndex < allSeriesStudies.length - 1
-                ? allSeriesStudies[currentIndex + 1]
-                : null;
-              
-              if (nextStudy) {
-                // Check user's notification preferences
+            const allSeriesStudies = await db.select()
+              .from(schema.studies)
+              .where(and(
+                eq(schema.studies.seriesId, study.seriesId),
+                eq(schema.studies.isPublished, true)
+              ))
+              .orderBy(asc(schema.studies.seriesOrder), asc(schema.studies.createdAt));
+            
+            const currentIndex = allSeriesStudies.findIndex(s => s.id === studyId);
+            const nextStudy = currentIndex >= 0 && currentIndex < allSeriesStudies.length - 1
+              ? allSeriesStudies[currentIndex + 1]
+              : null;
+            
+            if (nextStudy) {
+              nextStudyData = {
+                id: nextStudy.id,
+                title: nextStudy.title,
+                description: nextStudy.description,
+                thumbnailUrl: nextStudy.thumbnailUrl,
+                totalDays: nextStudy.totalDays,
+                seriesTitle: series?.title,
+              };
+
+              // Send notification for consecutive series
+              if (series?.requiresConsecutiveCompletion) {
                 const [userPrefs] = await db.select()
                   .from(schema.notificationPreferences)
                   .where(eq(schema.notificationPreferences.userId, userId));
                 
-                // Send notification if user has nextStudyNotifications enabled (default true)
                 const shouldNotify = userPrefs?.nextStudyNotifications !== false;
-                
                 if (shouldNotify) {
                   await storage.createNotification({
                     userId,
@@ -3047,10 +3056,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
           }
+
+          // If no series next study, find a recommended study
+          if (!nextStudyData) {
+            const [recommended] = await db.select({
+              id: schema.studies.id,
+              title: schema.studies.title,
+              description: schema.studies.description,
+              thumbnailUrl: schema.studies.thumbnailUrl,
+              totalDays: schema.studies.totalDays,
+            })
+              .from(schema.studies)
+              .where(and(
+                eq(schema.studies.isPublished, true),
+                ne(schema.studies.id, studyId)
+              ))
+              .orderBy(asc(schema.studies.seriesOrder), asc(schema.studies.createdAt))
+              .limit(1);
+            if (recommended) nextStudyData = recommended;
+          }
         }
       }
 
-      res.json({ ...progress, rations: rationResult });
+      res.json({ ...progress, rations: rationResult, studyCompleted, nextStudy: nextStudyData });
     } catch (error) {
       console.error("Error marking lesson complete:", error);
       res.status(500).json({ message: "Failed to mark lesson complete" });

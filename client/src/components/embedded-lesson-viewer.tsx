@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useRefTagger } from "@/hooks/useRefTagger";
-import { ChevronLeft, ChevronRight, CheckCircle, Circle, Printer, StickyNote, Save, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle, Circle, Printer, StickyNote, Save, Loader2, Trophy, ArrowRight, BookOpen } from "lucide-react";
 
 interface StudyLesson {
   id: string;
@@ -38,13 +40,25 @@ interface EmbeddedLessonViewerProps {
   userId: string;
 }
 
+interface NextStudySuggestion {
+  id: string;
+  title: string;
+  description?: string;
+  thumbnailUrl?: string;
+  totalDays?: number;
+  seriesTitle?: string;
+}
+
 export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLessonViewerProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState<string>("");
   const [notesExpanded, setNotesExpanded] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [nextStudySuggestion, setNextStudySuggestion] = useState<NextStudySuggestion | null>(null);
   
   const contentRef = useRefTagger([currentDayIndex]);
 
@@ -79,14 +93,19 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
         answers: Object.keys(answers).length > 0 ? answers : undefined,
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/lesson-progress`] });
       queryClient.invalidateQueries({ queryKey: [`/api/studies/${studyId}/progress`] });
-      toast({
-        title: "Lesson Completed!",
-        description: `You've completed Day ${currentLesson.dayNumber}`,
-      });
       setAnswers({});
+      if (data?.studyCompleted) {
+        setNextStudySuggestion(data.nextStudy || null);
+        setShowCompleteModal(true);
+      } else {
+        toast({
+          title: "Lesson Completed!",
+          description: `You've completed Day ${currentLesson.dayNumber}`,
+        });
+      }
     },
     onError: (error: any) => {
       toast({
@@ -637,6 +656,91 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
         })}
       </div>
       </div>
+
+      {/* Study Complete Modal */}
+      <Dialog open={showCompleteModal} onOpenChange={setShowCompleteModal}>
+        <DialogContent className="bg-[#1a1a1a] border-2 border-[#FCD000] text-white max-w-md mx-auto">
+          <DialogHeader>
+            <div className="flex flex-col items-center text-center gap-3 pt-2">
+              <div className="bg-[#FCD000] rounded-full p-4">
+                <Trophy className="w-8 h-8 text-black" />
+              </div>
+              <DialogTitle className="text-2xl font-black text-[#FCD000] uppercase tracking-wide">
+                Study Complete!
+              </DialogTitle>
+              <p className="text-gray-300 text-sm">
+                Well done, soldier. You've finished this study. Keep pushing forward.
+              </p>
+            </div>
+          </DialogHeader>
+
+          {nextStudySuggestion ? (
+            <div className="mt-2">
+              <p className="text-xs text-gray-400 uppercase tracking-widest mb-3 text-center font-bold">
+                {nextStudySuggestion.seriesTitle ? `Next in ${nextStudySuggestion.seriesTitle}` : "Suggested Next Study"}
+              </p>
+              <div className="border-2 border-gray-700 rounded-sm overflow-hidden">
+                {nextStudySuggestion.thumbnailUrl && (
+                  <img
+                    src={nextStudySuggestion.thumbnailUrl}
+                    alt={nextStudySuggestion.title}
+                    className="w-full h-32 object-cover"
+                  />
+                )}
+                <div className="p-3 bg-[#111]">
+                  <div className="flex items-center gap-2 mb-1">
+                    <BookOpen className="w-4 h-4 text-[#FCD000]" />
+                    <span className="font-bold text-white text-sm">{nextStudySuggestion.title}</span>
+                  </div>
+                  {nextStudySuggestion.totalDays && (
+                    <p className="text-xs text-gray-400">{nextStudySuggestion.totalDays}-day study</p>
+                  )}
+                  {nextStudySuggestion.description && (
+                    <p className="text-xs text-gray-300 mt-1 line-clamp-2">{nextStudySuggestion.description}</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-800"
+                  onClick={() => setShowCompleteModal(false)}
+                >
+                  Stay Here
+                </Button>
+                <Button
+                  className="flex-1 bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase"
+                  onClick={() => {
+                    setShowCompleteModal(false);
+                    setLocation(`/studies/${nextStudySuggestion.id}`);
+                  }}
+                >
+                  Start Next <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-2 flex flex-col gap-3">
+              <Button
+                className="w-full bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase"
+                onClick={() => {
+                  setShowCompleteModal(false);
+                  setLocation("/studies");
+                }}
+              >
+                Browse More Studies <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
+                onClick={() => setShowCompleteModal(false)}
+              >
+                Close
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
