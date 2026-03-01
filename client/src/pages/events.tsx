@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Calendar, MapPin, ExternalLink, DollarSign, Users, Navigation, CalendarRange, X, Ticket, Layers } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink, DollarSign, Users, Navigation, CalendarRange, Ticket, Layers } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { BackButton } from "@/components/BackButton";
@@ -52,38 +52,6 @@ interface EventRegistration {
   event: Event;
 }
 
-function InAppPurchaseModal({ url, title, onClose }: { url: string; title: string; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black">
-      <div className="flex items-center justify-between px-4 py-3 bg-black border-b-2 border-[#FCD000] flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#FCD000] rounded-sm flex items-center justify-center">
-            <Ticket className="h-5 w-5 text-black" />
-          </div>
-          <div>
-            <p className="text-[#FCD000] font-black uppercase tracking-tight text-sm leading-tight">Purchase Ticket</p>
-            <p className="text-white/60 text-xs font-semibold truncate max-w-48">{title}</p>
-          </div>
-        </div>
-        <button
-          onClick={onClose}
-          className="text-white/60 hover:text-white transition-colors p-1"
-          aria-label="Close"
-        >
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-      <div className="flex-1 bg-white">
-        <iframe
-          src={url}
-          title={`Purchase ticket for ${title}`}
-          className="w-full h-full border-none"
-          allow="payment"
-        />
-      </div>
-    </div>
-  );
-}
 
 function TierSelectionModal({
   event,
@@ -149,8 +117,6 @@ export default function Events() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [purchaseModalUrl, setPurchaseModalUrl] = useState<string | null>(null);
-  const [purchaseModalTitle, setPurchaseModalTitle] = useState('');
   const [tierModalEvent, setTierModalEvent] = useState<Event | null>(null);
 
   const { data: events = [], isLoading: eventsLoading } = useQuery<Event[]>({
@@ -165,8 +131,7 @@ export default function Events() {
 
   const registerMutation = useMutation({
     mutationFn: async (eventId: string) => {
-      const response = await apiRequest('POST', `/api/events/${eventId}/register`);
-      return response.json();
+      return await apiRequest('POST', `/api/events/${eventId}/register`);
     },
     onSuccess: () => {
       toast({ title: "Registration Successful", description: "You have been registered for this event!" });
@@ -188,22 +153,17 @@ export default function Events() {
     return format(date, 'h:mm a');
   };
 
-  const openPurchaseModal = (url: string, title: string) => {
-    setPurchaseModalUrl(url);
-    setPurchaseModalTitle(title);
-  };
-
   const handlePurchaseClick = (event: Event) => {
     if (event.multiTier && event.tiers && event.tiers.length > 0) {
       setTierModalEvent(event);
     } else if (event.purchaseUrl) {
-      openPurchaseModal(event.purchaseUrl, event.title);
+      window.open(event.purchaseUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
   const handleTierSelect = (tier: EventTier) => {
     setTierModalEvent(null);
-    openPurchaseModal(tier.url, `${tierModalEvent?.title ?? ''} — ${tier.name}`);
+    window.open(tier.url, '_blank', 'noopener,noreferrer');
   };
 
   if (!user) {
@@ -219,14 +179,6 @@ export default function Events() {
 
   return (
     <div className="min-h-screen bg-ministry-light-gray pb-20">
-      {purchaseModalUrl && (
-        <InAppPurchaseModal
-          url={purchaseModalUrl}
-          title={purchaseModalTitle}
-          onClose={() => { setPurchaseModalUrl(null); setPurchaseModalTitle(''); }}
-        />
-      )}
-
       {tierModalEvent && (
         <TierSelectionModal
           event={tierModalEvent}
