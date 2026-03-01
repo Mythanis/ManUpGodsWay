@@ -3355,7 +3355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ctx = canvas.getContext('2d');
 
       // === STEP 1: Draw Bible background image, cover-scaled ===
-      const bgPath = nodePath.join(process.cwd(), 'client/public/devotional-bg.webp');
+      const bgPath = nodePath.join(process.cwd(), 'client/public/devotional-bg.jpg');
       try {
         const bgImg = await loadImage(bgPath);
         // Cover-scale: fill canvas while maintaining aspect ratio
