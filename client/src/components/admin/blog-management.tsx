@@ -16,7 +16,7 @@ import type { BlogPost } from "@shared/schema";
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
 
 const MANUP_SITE_URL = "https://manupgodsway.org";
-const MANUP_RSS_URL = "https://manupgodsway.org/feed/";
+const MANUP_RSS_URL = "https://manupgodsway.org/blog/rss";
 
 const CATEGORIES = [
   { value: "general", label: "General" },
