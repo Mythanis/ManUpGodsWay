@@ -20,7 +20,7 @@ interface Event {
   endTime: string | null;
   location: string | null;
   address: string | null;
-  eventUrl: string | null;
+  url: string | null;
   requiresPurchase: boolean;
   price: string | null;
   createdBy: string;
@@ -244,14 +244,14 @@ export default function Events() {
                           </a>
                         </Button>
                       )}
-                      {event.eventUrl && (
+                      {event.url && (
                         <Button
                           variant="outline"
                           size="sm"
                           asChild
                           className="border-2 border-[#FCD000]/50 rounded-sm font-bold uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(252,208,0,0.2)] bg-[#FCD000] text-black hover:bg-[#FCD000]/90"
                         >
-                          <a href={event.eventUrl} target="_blank" rel="noopener noreferrer">
+                          <a href={event.url} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-4 w-4 mr-2" />
                             Event Details
                           </a>
@@ -274,11 +274,11 @@ export default function Events() {
                         <Button
                           className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000] shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                           size="sm"
-                          asChild={!!event.eventUrl}
+                          asChild={!!event.url}
                           data-testid={`button-purchase-${event.id}`}
                         >
-                          {event.eventUrl ? (
-                            <a href={event.eventUrl} target="_blank" rel="noopener noreferrer">
+                          {event.url ? (
+                            <a href={event.url} target="_blank" rel="noopener noreferrer">
                               Purchase Ticket - ${event.price}
                             </a>
                           ) : (

@@ -22,7 +22,7 @@ interface Event {
   endTime: string | null;
   location: string | null;
   address: string | null;
-  eventUrl: string | null;
+  url: string | null;
   requiresPurchase: boolean;
   price: string | null;
   createdBy: string;
@@ -44,7 +44,7 @@ export default function EventManagement() {
     endTime: '',
     location: '',
     address: '',
-    eventUrl: '',
+    url: '',
     requiresPurchase: false,
     price: '',
   });
@@ -131,7 +131,7 @@ export default function EventManagement() {
       endTime: '',
       location: '',
       address: '',
-      eventUrl: '',
+      url: '',
       requiresPurchase: false,
       price: '',
     });
@@ -157,7 +157,7 @@ export default function EventManagement() {
       endTime: formData.endTime || null,
       location: formData.location.trim() || null,
       address: formData.address.trim() || null,
-      eventUrl: formData.eventUrl.trim() || null,
+      url: formData.url.trim() || null,
       price: formData.requiresPurchase ? formData.price : null,
     };
 
@@ -179,7 +179,7 @@ export default function EventManagement() {
       endTime: event.endTime || '',
       location: event.location || '',
       address: event.address || '',
-      eventUrl: event.eventUrl || '',
+      url: event.url || '',
       requiresPurchase: event.requiresPurchase,
       price: event.price || '',
     });
@@ -320,8 +320,8 @@ export default function EventManagement() {
                   <Input
                     id="eventUrl"
                     type="url"
-                    value={formData.eventUrl}
-                    onChange={(e) => setFormData({ ...formData, eventUrl: e.target.value })}
+                    value={formData.url}
+                    onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                     placeholder="https://example.com/event"
                     className="bg-gray-800 border-gray-600 text-white"
                     data-testid="input-event-url"
@@ -490,8 +490,8 @@ export default function EventManagement() {
                 <Input
                   id="edit-eventUrl"
                   type="url"
-                  value={formData.eventUrl}
-                  onChange={(e) => setFormData({ ...formData, eventUrl: e.target.value })}
+                  value={formData.url}
+                  onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                   placeholder="https://example.com/event"
                   className="bg-gray-800 border-gray-600 text-white"
                 />
@@ -628,14 +628,14 @@ export default function EventManagement() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {event.eventUrl && (
+                    {event.url && (
                       <Button
                         variant="outline"
                         size="sm"
                         asChild
                         className="border-gray-600 text-gray-300 hover:bg-gray-700"
                       >
-                        <a href={event.eventUrl} target="_blank" rel="noopener noreferrer">
+                        <a href={event.url} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="h-4 w-4" />
                         </a>
                       </Button>

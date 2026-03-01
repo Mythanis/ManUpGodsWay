@@ -1393,7 +1393,7 @@ export const insertEventSchema = z.object({
   endTime: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
-  eventUrl: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
   requiresPurchase: z.boolean().optional().default(false),
   price: z.string().nullable().optional(),
   maxAttendees: z.number().optional(),
