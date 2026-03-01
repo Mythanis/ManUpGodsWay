@@ -3413,25 +3413,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const titleRaw = devotional.title.toUpperCase();
       const titleAreaTop = 92;
       const titleAreaBot = H - 110;
+      const titleMaxW = splitX - leftPad - 24;
       let tfs = 140;
-      ctx.font = `bold ${tfs}px sans-serif`;
-      let tLines = wrapTextSimple(ctx, titleRaw, splitX - leftPad - 16);
-      while (tfs > 46) {
+      let tLines: string[] = [];
+      while (tfs > 38) {
         ctx.font = `bold ${tfs}px sans-serif`;
-        tLines = wrapTextSimple(ctx, titleRaw, splitX - leftPad - 16);
+        tLines = wrapTextSimple(ctx, titleRaw, titleMaxW);
         const needed = tLines.length * tfs * 1.06;
-        if (tLines.length <= 4 && needed <= (titleAreaBot - titleAreaTop)) break;
-        tfs -= 4;
+        const maxLineW = Math.max(...tLines.map(l => ctx.measureText(l).width));
+        if (tLines.length <= 4 && needed <= (titleAreaBot - titleAreaTop) && maxLineW <= titleMaxW) break;
+        tfs -= 3;
       }
       const tLH = tfs * 1.06;
       const totalTH = tLines.length * tLH;
       let ty = titleAreaTop + (titleAreaBot - titleAreaTop - totalTH) / 2 + tfs;
       ctx.fillStyle = '#FCD000';
       ctx.textAlign = 'left';
+      // Clip left panel so title text cannot bleed into the right panel
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, splitX - 8, H);
+      ctx.clip();
       tLines.forEach(line => {
         ctx.fillText(line, leftPad, ty);
         ty += tLH;
       });
+      ctx.restore();
 
       // === RIGHT PANEL: verse text + reference ===
       const verseRaw = `\u201C${devotional.verse || ''}\u201D`;
