@@ -3346,157 +3346,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Devotional not found" });
       }
 
-      const { createCanvas, loadImage } = await import('canvas');
+      const { createCanvas } = await import('canvas');
 
-      // Landscape format — optimal for Facebook/X/Instagram sharing
-      const width = 1200;
-      const height = 630;
-      const canvas = createCanvas(width, height);
+      // 1200x800 — close to reference image proportions (3:2)
+      const W = 1200, H = 800;
+      const canvas = createCanvas(W, H);
       const ctx = canvas.getContext('2d');
 
-      // Split point: left panel is 44% of width
-      const splitX = Math.round(width * 0.44);
-      const footerH = 90;
-      const footerY = height - footerH;
+      // === STEP 1: Base gradient — very dark left blending into dark concrete right ===
+      const bgGrad = ctx.createLinearGradient(0, 0, W, 0);
+      bgGrad.addColorStop(0,    '#0c0b0a');
+      bgGrad.addColorStop(0.32, '#141210');
+      bgGrad.addColorStop(0.5,  '#1e1c18');
+      bgGrad.addColorStop(0.75, '#28251f');
+      bgGrad.addColorStop(1,    '#2e2b25');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, W, H);
 
-      // === LEFT PANEL — near-black charcoal ===
-      ctx.fillStyle = '#111110';
-      ctx.fillRect(0, 0, splitX, height);
-
-      // === RIGHT PANEL — dark concrete tone ===
-      ctx.fillStyle = '#2c2925';
-      ctx.fillRect(splitX, 0, width - splitX, height);
-
-      // Subtle noise texture on right panel via thin semi-transparent lines
-      ctx.strokeStyle = 'rgba(255,255,255,0.025)';
-      ctx.lineWidth = 1;
-      for (let gy = 0; gy < height; gy += 4) {
-        ctx.beginPath();
-        ctx.moveTo(splitX, gy);
-        ctx.lineTo(width, gy);
-        ctx.stroke();
+      // === STEP 2: Concrete grain texture ===
+      const imgData = ctx.getImageData(0, 0, W, H);
+      const d = imgData.data;
+      for (let py = 0; py < H; py++) {
+        for (let px = 0; px < W; px++) {
+          const i = (py * W + px) * 4;
+          const intensity = 10 + (px / W) * 35;
+          const g1 = Math.sin(px * 127.1 + py * 311.7) * 43758.5453;
+          const g2 = Math.sin(px * 269.5 + py * 183.3) * 43758.5453;
+          const frac1 = g1 - Math.floor(g1);
+          const frac2 = g2 - Math.floor(g2);
+          const grain = (frac1 * 0.65 + frac2 * 0.35 - 0.5) * intensity;
+          d[i]   = Math.max(0, Math.min(255, d[i]   + grain));
+          d[i+1] = Math.max(0, Math.min(255, d[i+1] + grain * 0.92));
+          d[i+2] = Math.max(0, Math.min(255, d[i+2] + grain * 0.80));
+        }
       }
+      ctx.putImageData(imgData, 0, 0);
 
-      // Gold vertical separator
-      ctx.fillStyle = '#FCD000';
-      ctx.fillRect(splitX - 2, 0, 4, footerY);
+      // === STEP 3: Darken left side further (heavy shadow) ===
+      const leftShadow = ctx.createLinearGradient(0, 0, W * 0.52, 0);
+      leftShadow.addColorStop(0,   'rgba(0,0,0,0.55)');
+      leftShadow.addColorStop(0.6, 'rgba(0,0,0,0.08)');
+      leftShadow.addColorStop(1,   'rgba(0,0,0,0)');
+      ctx.fillStyle = leftShadow;
+      ctx.fillRect(0, 0, W, H);
 
-      // === FOOTER BAND — spans full width ===
-      ctx.fillStyle = '#0a0a0a';
-      ctx.fillRect(0, footerY, width, footerH);
-      ctx.fillStyle = '#FCD000';
-      ctx.fillRect(0, footerY, width, 3);
+      // Edge vignette (all sides)
+      const vig = ctx.createRadialGradient(W/2, H/2, H * 0.22, W/2, H/2, H * 0.82);
+      vig.addColorStop(0, 'rgba(0,0,0,0)');
+      vig.addColorStop(1, 'rgba(0,0,0,0.55)');
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, W, H);
 
-      // === LEFT PANEL CONTENT ===
-      const leftPad = 48;
-      const leftContentW = splitX - leftPad * 2;
+      // === LAYOUT ===
+      const splitX = Math.round(W * 0.44);
+      const leftPad = 54;
+      const rightPad = 62;
+      const rightX = splitX + rightPad;
+      const rightW = W - splitX - rightPad - 30;
+
+      // === LEFT PANEL: "DAILY DEVOTION" label + huge gold title ===
 
       // "DAILY DEVOTION" label
-      ctx.fillStyle = '#AAAAAA';
-      ctx.font = 'bold 18px sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText('DAILY DEVOTION', leftPad, 58);
-
-      // Gold underline beneath label
+      ctx.fillStyle = '#aaaaa0';
+      ctx.font = 'bold 21px sans-serif';
+      ctx.textAlign = 'center';
+      const labelCX = splitX / 2;
+      ctx.fillText('DAILY DEVOTION', labelCX, 68);
+      // Gold underline
       ctx.fillStyle = '#FCD000';
-      ctx.fillRect(leftPad, 66, 80, 3);
+      ctx.fillRect(labelCX - 70, 76, 140, 3);
 
-      // Large bold gold title — fills the panel
+      // Auto-size the title to fill the left panel nicely
       const titleRaw = devotional.title.toUpperCase();
-      const titleLines = wrapTextSimple(ctx, titleRaw, leftContentW);
-      const titleShown = titleLines.slice(0, 4);
-
-      // Pick font size so the title fills space nicely
-      const availTitleH = footerY - 100;
-      let titleSize = Math.min(110, Math.floor(availTitleH / Math.max(titleShown.length, 1) * 0.85));
-      titleSize = Math.max(titleSize, 52);
-      ctx.font = `bold ${titleSize}px sans-serif`;
-
-      // Re-wrap at chosen size
-      const titleLinesF = wrapTextSimple(ctx, titleRaw, leftContentW).slice(0, 4);
-      const titleLineH = titleSize * 1.08;
-      const totalTitleH = titleLinesF.length * titleLineH;
-      let ty = 90 + (availTitleH - totalTitleH) / 2 + titleSize;
-
+      const titleAreaTop = 92;
+      const titleAreaBot = H - 110;
+      let tfs = 140;
+      ctx.font = `bold ${tfs}px sans-serif`;
+      let tLines = wrapTextSimple(ctx, titleRaw, splitX - leftPad - 16);
+      while (tfs > 46) {
+        ctx.font = `bold ${tfs}px sans-serif`;
+        tLines = wrapTextSimple(ctx, titleRaw, splitX - leftPad - 16);
+        const needed = tLines.length * tfs * 1.06;
+        if (tLines.length <= 4 && needed <= (titleAreaBot - titleAreaTop)) break;
+        tfs -= 4;
+      }
+      const tLH = tfs * 1.06;
+      const totalTH = tLines.length * tLH;
+      let ty = titleAreaTop + (titleAreaBot - titleAreaTop - totalTH) / 2 + tfs;
       ctx.fillStyle = '#FCD000';
       ctx.textAlign = 'left';
-      titleLinesF.forEach(line => {
+      tLines.forEach(line => {
         ctx.fillText(line, leftPad, ty);
-        ty += titleLineH;
+        ty += tLH;
       });
 
-      // === RIGHT PANEL CONTENT ===
-      const rightPad = 52;
-      const rightX = splitX + rightPad;
-      const rightContentW = width - splitX - rightPad * 2;
-      const verseAreaTop = 60;
-      const verseAreaBottom = footerY - 20;
-
-      // Opening quotation mark decoration
-      ctx.fillStyle = 'rgba(252,208,0,0.25)';
-      ctx.font = `bold 130px sans-serif`;
-      ctx.textAlign = 'left';
-      ctx.fillText('\u201C', rightX - 10, verseAreaTop + 90);
-
-      // Verse text — white italic
+      // === RIGHT PANEL: verse text + reference ===
       const verseRaw = `\u201C${devotional.verse || ''}\u201D`;
-      const verseLines = wrapTextSimple(ctx, verseRaw, rightContentW);
-      const verseLinesShown = verseLines.slice(0, 6);
+      const verseTop = 58;
+      const verseBot = H - 130;
 
-      // Pick verse font size
-      const verseAreaH = verseAreaBottom - verseAreaTop - 80;
-      let verseSize = Math.min(36, Math.floor(verseAreaH / Math.max(verseLinesShown.length + 1.5, 1) * 0.85));
-      verseSize = Math.max(verseSize, 22);
-      const verseLineH = verseSize * 1.45;
+      let vfs = 40;
+      ctx.font = `italic ${vfs}px sans-serif`;
+      let vLines = wrapTextSimple(ctx, verseRaw, rightW);
+      while (vfs > 22) {
+        ctx.font = `italic ${vfs}px sans-serif`;
+        vLines = wrapTextSimple(ctx, verseRaw, rightW);
+        const vNeeded = vLines.length * vfs * 1.52 + vfs * 0.9;
+        if (vLines.length <= 8 && vNeeded <= (verseBot - verseTop)) break;
+        vfs -= 2;
+      }
+      const vLH = vfs * 1.52;
+      const refH = vfs * 0.85;
+      const totalVH = vLines.length * vLH + 18 + refH;
+      let vy = verseTop + (verseBot - verseTop - totalVH) / 2 + vfs;
 
-      ctx.font = `italic ${verseSize}px sans-serif`;
       ctx.fillStyle = '#FFFFFF';
+      ctx.font = `italic ${vfs}px sans-serif`;
       ctx.textAlign = 'left';
-
-      const totalVerseH = verseLinesShown.length * verseLineH;
-      let vy = verseAreaTop + (verseAreaH - totalVerseH) / 2 + verseSize + 20;
-
-      verseLinesShown.forEach(line => {
+      vLines.forEach(line => {
         ctx.fillText(line, rightX, vy);
-        vy += verseLineH;
+        vy += vLH;
       });
-
-      // Verse reference — gold, bold
-      vy += 14;
-      ctx.font = `bold ${Math.round(verseSize * 0.8)}px sans-serif`;
+      // Verse reference in gold
+      vy += 18;
       ctx.fillStyle = '#FCD000';
+      ctx.font = `bold ${Math.round(vfs * 0.82)}px sans-serif`;
       ctx.fillText(devotional.verseReference || '', rightX, vy);
 
-      // === FOOTER CONTENT ===
-      const footerMidY = footerY + footerH / 2;
+      // === BOTTOM CENTER: Cross logo + "MAN UP GOD'S WAY" ===
+      // Positioned bottom-center across the split
+      const logoBaseY = H - 28;
+      const logoCX = W / 2 - 15;
 
-      // Try to load and draw logo
-      let logoDrawn = false;
-      try {
-        const logoSettings = await storage.getLogoSettings();
-        if (logoSettings?.logoUrl) {
-          const logoImg = await loadImage(logoSettings.logoUrl);
-          const lh = 50;
-          const lw = (logoImg.width / logoImg.height) * lh;
-          const lx = width / 2 - lw / 2 - 120;
-          ctx.drawImage(logoImg, lx, footerMidY - lh / 2, lw, lh);
-          logoDrawn = true;
-        }
-      } catch (_) { /* use text fallback */ }
-
-      ctx.textAlign = 'center';
-      if (!logoDrawn) {
-        ctx.fillStyle = '#FCD000';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText('✝', width / 2 - 90, footerMidY + 8);
-      }
-
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 22px sans-serif';
-      ctx.fillText('MAN UP GOD\'S WAY', width / 2, footerMidY - 8);
+      // Draw cross symbol (†) in gold
+      const cVH = 54, cVW = 10;
+      const cBarW = 42, cBarH = 10;
+      const cTopY = logoBaseY - cVH - 20;
+      const cBarY = cTopY + Math.round(cVH * 0.30);
+      const cX = logoCX - 52;
       ctx.fillStyle = '#FCD000';
-      ctx.font = '17px sans-serif';
-      ctx.fillText('www.manupgodsway.org', width / 2, footerMidY + 16);
+      ctx.fillRect(cX - cVW / 2, cTopY, cVW, cVH);          // vertical
+      ctx.fillRect(cX - cBarW / 2, cBarY, cBarW, cBarH);     // crossbar
+
+      // "UP" to the right of the cross
+      const upSize = 46;
+      ctx.font = `bold ${upSize}px sans-serif`;
+      ctx.fillStyle = '#FCD000';
+      ctx.textAlign = 'left';
+      ctx.fillText('UP', cX + 14, cTopY + upSize - 2);
+
+      // "MAN UP GOD'S WAY" centred below
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("MAN UP GOD'S WAY", logoCX, logoBaseY - 4);
 
       // Set response headers
       res.setHeader('Content-Type', 'image/png');
@@ -12101,7 +12104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <meta property="og:description" content="${description}" />
   <meta property="og:image" content="${imageUrl}" />
   <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <meta property="og:image:height" content="800" />
   <meta property="og:url" content="${pageUrl}" />
   <meta property="og:site_name" content="Man Up God's Way" />
   <!-- Twitter / X card -->
