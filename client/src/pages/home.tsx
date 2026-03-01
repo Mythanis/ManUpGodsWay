@@ -1065,7 +1065,7 @@ export default function Home() {
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85vh] overflow-y-auto liquid-header border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] p-0">
           <div className="p-4 border-b-2 border-black">
             <DialogHeader>
-              <DialogTitle className="text-black text-lg font-black uppercase tracking-tight relative z-10">
+              <DialogTitle className="text-white text-lg font-black uppercase tracking-tight relative z-10">
                 {devotional?.title}
               </DialogTitle>
             </DialogHeader>
