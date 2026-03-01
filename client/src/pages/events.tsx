@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
@@ -199,8 +200,8 @@ function EventPurchaseModal({
   modal: PurchaseModalState;
   onClose: () => void;
 }) {
-  return (
-    <div className="fixed inset-0 z-50 bg-black overflow-y-auto">
+  return createPortal(
+    <div className="fixed inset-0 bg-black overflow-y-auto" style={{ zIndex: 9999 }}>
       <div className="min-h-full flex flex-col">
         <div className="flex items-center gap-3 px-4 py-4 border-b border-[#FCD000]/30">
           <button
@@ -259,7 +260,8 @@ function EventPurchaseModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
