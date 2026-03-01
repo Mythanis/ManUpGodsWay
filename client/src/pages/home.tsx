@@ -1098,10 +1098,12 @@ export default function Home() {
               </div>
               
               {/* Full Content */}
-              <div className="bg-black p-4 border-2 border-ministry-gold-exact rounded-sm">
-                <p className="text-gray-100 text-sm leading-relaxed whitespace-pre-wrap">
-                  {devotional.content}
-                </p>
+              <div className="bg-black p-4 border-2 border-ministry-gold-exact rounded-sm space-y-4">
+                {devotional.content.split(/\n\n+/).map((para: string, i: number) => (
+                  <p key={i} className="text-gray-100 text-sm leading-relaxed">
+                    {para.trim()}
+                  </p>
+                ))}
               </div>
               
               {/* Actions */}
