@@ -3391,48 +3391,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ctx.fillRect(0, 0, W, H);
 
       // === LAYOUT ===
-      const splitX = Math.round(W * 0.44);
+      const splitX = Math.round(W * 0.46);   // 46% left / 54% right
       const leftPad = 54;
-      const rightPad = 62;
+      const rightPad = 80;                    // generous gap from split to verse
       const rightX = splitX + rightPad;
-      const rightW = W - splitX - rightPad - 30;
+      const rightW = W - rightX - 40;
+
+      // Thin gold separator line between panels
+      ctx.strokeStyle = 'rgba(252,208,0,0.35)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(splitX, 28);
+      ctx.lineTo(splitX, H - 28);
+      ctx.stroke();
+
+      // === BOTTOM LOGO BAR: dark gradient so logo always readable ===
+      const barTop = H - 100;
+      const barGrad = ctx.createLinearGradient(0, barTop, 0, H);
+      barGrad.addColorStop(0,   'rgba(0,0,0,0)');
+      barGrad.addColorStop(0.35,'rgba(0,0,0,0.72)');
+      barGrad.addColorStop(1,   'rgba(0,0,0,0.88)');
+      ctx.fillStyle = barGrad;
+      ctx.fillRect(0, barTop, W, H - barTop);
 
       // === LEFT PANEL: "DAILY DEVOTION" label + huge gold title ===
-
-      // "DAILY DEVOTION" label
-      ctx.fillStyle = '#aaaaa0';
-      ctx.font = 'bold 21px sans-serif';
-      ctx.textAlign = 'center';
-      const labelCX = splitX / 2;
-      ctx.fillText('DAILY DEVOTION', labelCX, 68);
+      ctx.fillStyle = '#ccccbb';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('DAILY DEVOTION', leftPad, 62);
       // Gold underline
       ctx.fillStyle = '#FCD000';
-      ctx.fillRect(labelCX - 70, 76, 140, 3);
+      ctx.fillRect(leftPad, 70, 148, 2);
 
-      // Auto-size the title to fill the left panel nicely
+      // Auto-size the title to fill the left panel
       const titleRaw = devotional.title.toUpperCase();
-      const titleAreaTop = 92;
-      const titleAreaBot = H - 110;
-      const titleMaxW = splitX - leftPad - 24;
-      let tfs = 140;
+      const titleAreaTop = 88;
+      const titleAreaBot = H - 108;          // leave room for logo bar
+      const titleMaxW = splitX - leftPad - 20;
+      let tfs = 120;                          // start smaller — max 120px
       let tLines: string[] = [];
-      while (tfs > 38) {
+      while (tfs > 36) {
         ctx.font = `bold ${tfs}px sans-serif`;
         tLines = wrapTextSimple(ctx, titleRaw, titleMaxW);
-        const needed = tLines.length * tfs * 1.06;
+        const needed = tLines.length * tfs * 1.08;
         const maxLineW = Math.max(...tLines.map(l => ctx.measureText(l).width));
-        if (tLines.length <= 4 && needed <= (titleAreaBot - titleAreaTop) && maxLineW <= titleMaxW) break;
+        if (tLines.length <= 5 && needed <= (titleAreaBot - titleAreaTop) && maxLineW <= titleMaxW) break;
         tfs -= 3;
       }
-      const tLH = tfs * 1.06;
+      const tLH = tfs * 1.08;
       const totalTH = tLines.length * tLH;
       let ty = titleAreaTop + (titleAreaBot - titleAreaTop - totalTH) / 2 + tfs;
       ctx.fillStyle = '#FCD000';
       ctx.textAlign = 'left';
-      // Clip left panel so title text cannot bleed into the right panel
+      // Hard clip so title can never bleed past the separator
       ctx.save();
       ctx.beginPath();
-      ctx.rect(0, 0, splitX - 8, H);
+      ctx.rect(0, 0, splitX - 4, H);
       ctx.clip();
       tLines.forEach(line => {
         ctx.fillText(line, leftPad, ty);
@@ -3442,22 +3456,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // === RIGHT PANEL: verse text + reference ===
       const verseRaw = `\u201C${devotional.verse || ''}\u201D`;
-      const verseTop = 58;
-      const verseBot = H - 130;
+      const verseTop = 52;
+      const verseBot = H - 108;             // leave room for logo bar
 
-      let vfs = 40;
-      ctx.font = `italic ${vfs}px sans-serif`;
-      let vLines = wrapTextSimple(ctx, verseRaw, rightW);
-      while (vfs > 22) {
+      let vfs = 38;
+      let vLines: string[] = [];
+      while (vfs > 20) {
         ctx.font = `italic ${vfs}px sans-serif`;
         vLines = wrapTextSimple(ctx, verseRaw, rightW);
-        const vNeeded = vLines.length * vfs * 1.52 + vfs * 0.9;
-        if (vLines.length <= 8 && vNeeded <= (verseBot - verseTop)) break;
+        const vNeeded = vLines.length * vfs * 1.5 + vfs;
+        if (vLines.length <= 9 && vNeeded <= (verseBot - verseTop)) break;
         vfs -= 2;
       }
-      const vLH = vfs * 1.52;
+      const vLH = vfs * 1.5;
       const refH = vfs * 0.85;
-      const totalVH = vLines.length * vLH + 18 + refH;
+      const totalVH = vLines.length * vLH + 20 + refH;
       let vy = verseTop + (verseBot - verseTop - totalVH) / 2 + vfs;
 
       ctx.fillStyle = '#FFFFFF';
@@ -3467,39 +3480,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ctx.fillText(line, rightX, vy);
         vy += vLH;
       });
-      // Verse reference in gold
-      vy += 18;
+      vy += 20;
       ctx.fillStyle = '#FCD000';
-      ctx.font = `bold ${Math.round(vfs * 0.82)}px sans-serif`;
+      ctx.font = `bold ${Math.round(vfs * 0.80)}px sans-serif`;
       ctx.fillText(devotional.verseReference || '', rightX, vy);
 
       // === BOTTOM CENTER: Cross logo + "MAN UP GOD'S WAY" ===
-      // Positioned bottom-center across the split
-      const logoBaseY = H - 28;
-      const logoCX = W / 2 - 15;
+      // Anchored inside the logo bar at the very bottom
+      const logoBaseY = H - 14;
+      const logoCX = W / 2;
 
-      // Draw cross symbol (†) in gold
-      const cVH = 54, cVW = 10;
-      const cBarW = 42, cBarH = 10;
-      const cTopY = logoBaseY - cVH - 20;
-      const cBarY = cTopY + Math.round(cVH * 0.30);
-      const cX = logoCX - 52;
+      // Cross
+      const cVH = 44, cVW = 8;
+      const cBarW = 34, cBarH = 8;
+      const cTopY = logoBaseY - 16 - cVH;
+      const cBarY = cTopY + Math.round(cVH * 0.28);
+      const cX = logoCX - 44;
       ctx.fillStyle = '#FCD000';
-      ctx.fillRect(cX - cVW / 2, cTopY, cVW, cVH);          // vertical
-      ctx.fillRect(cX - cBarW / 2, cBarY, cBarW, cBarH);     // crossbar
+      ctx.fillRect(cX - cVW / 2, cTopY, cVW, cVH);
+      ctx.fillRect(cX - cBarW / 2, cBarY, cBarW, cBarH);
 
-      // "UP" to the right of the cross
-      const upSize = 46;
+      // "UP"
+      const upSize = 38;
       ctx.font = `bold ${upSize}px sans-serif`;
       ctx.fillStyle = '#FCD000';
       ctx.textAlign = 'left';
-      ctx.fillText('UP', cX + 14, cTopY + upSize - 2);
+      ctx.fillText('UP', cX + 10, cTopY + upSize - 2);
 
-      // "MAN UP GOD'S WAY" centred below
+      // "MAN UP GOD'S WAY"
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 18px sans-serif';
+      ctx.font = 'bold 15px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText("MAN UP GOD'S WAY", logoCX, logoBaseY - 4);
+      ctx.fillText("MAN UP GOD'S WAY", logoCX, logoBaseY - 2);
 
       // Set response headers
       res.setHeader('Content-Type', 'image/png');
