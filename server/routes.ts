@@ -3346,54 +3346,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Devotional not found" });
       }
 
-      const { createCanvas } = await import('canvas');
+      const { createCanvas, loadImage } = await import('canvas');
+      const nodePath = await import('path');
 
       // 1200x800 — close to reference image proportions (3:2)
       const W = 1200, H = 800;
       const canvas = createCanvas(W, H);
       const ctx = canvas.getContext('2d');
 
-      // === STEP 1: Base gradient — very dark left blending into dark concrete right ===
-      const bgGrad = ctx.createLinearGradient(0, 0, W, 0);
-      bgGrad.addColorStop(0,    '#0c0b0a');
-      bgGrad.addColorStop(0.32, '#141210');
-      bgGrad.addColorStop(0.5,  '#1e1c18');
-      bgGrad.addColorStop(0.75, '#28251f');
-      bgGrad.addColorStop(1,    '#2e2b25');
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, W, H);
-
-      // === STEP 2: Concrete grain texture ===
-      const imgData = ctx.getImageData(0, 0, W, H);
-      const d = imgData.data;
-      for (let py = 0; py < H; py++) {
-        for (let px = 0; px < W; px++) {
-          const i = (py * W + px) * 4;
-          const intensity = 10 + (px / W) * 35;
-          const g1 = Math.sin(px * 127.1 + py * 311.7) * 43758.5453;
-          const g2 = Math.sin(px * 269.5 + py * 183.3) * 43758.5453;
-          const frac1 = g1 - Math.floor(g1);
-          const frac2 = g2 - Math.floor(g2);
-          const grain = (frac1 * 0.65 + frac2 * 0.35 - 0.5) * intensity;
-          d[i]   = Math.max(0, Math.min(255, d[i]   + grain));
-          d[i+1] = Math.max(0, Math.min(255, d[i+1] + grain * 0.92));
-          d[i+2] = Math.max(0, Math.min(255, d[i+2] + grain * 0.80));
-        }
+      // === STEP 1: Draw Bible background image, cover-scaled ===
+      const bgPath = nodePath.join(process.cwd(), 'client/public/devotional-bg.webp');
+      try {
+        const bgImg = await loadImage(bgPath);
+        // Cover-scale: fill canvas while maintaining aspect ratio
+        const scale = Math.max(W / bgImg.width, H / bgImg.height);
+        const sw = bgImg.width * scale;
+        const sh = bgImg.height * scale;
+        const sx = (W - sw) / 2;
+        const sy = (H - sh) / 2;
+        ctx.drawImage(bgImg, sx, sy, sw, sh);
+      } catch (bgErr) {
+        // Fallback to dark background if image fails to load
+        ctx.fillStyle = '#111110';
+        ctx.fillRect(0, 0, W, H);
       }
-      ctx.putImageData(imgData, 0, 0);
 
-      // === STEP 3: Darken left side further (heavy shadow) ===
-      const leftShadow = ctx.createLinearGradient(0, 0, W * 0.52, 0);
-      leftShadow.addColorStop(0,   'rgba(0,0,0,0.55)');
-      leftShadow.addColorStop(0.6, 'rgba(0,0,0,0.08)');
-      leftShadow.addColorStop(1,   'rgba(0,0,0,0)');
-      ctx.fillStyle = leftShadow;
+      // === STEP 2: Dark overlay to make text readable ===
+      // Heavy black overlay over whole image so text pops
+      ctx.fillStyle = 'rgba(0,0,0,0.62)';
       ctx.fillRect(0, 0, W, H);
 
-      // Edge vignette (all sides)
-      const vig = ctx.createRadialGradient(W/2, H/2, H * 0.22, W/2, H/2, H * 0.82);
+      // Extra darkening on left panel (title area) for strong contrast
+      const leftDark = ctx.createLinearGradient(0, 0, W * 0.55, 0);
+      leftDark.addColorStop(0,   'rgba(0,0,0,0.45)');
+      leftDark.addColorStop(0.7, 'rgba(0,0,0,0)');
+      ctx.fillStyle = leftDark;
+      ctx.fillRect(0, 0, W, H);
+
+      // Edge vignette (all sides) for cinematic depth
+      const vig = ctx.createRadialGradient(W/2, H/2, H * 0.20, W/2, H/2, H * 0.85);
       vig.addColorStop(0, 'rgba(0,0,0,0)');
-      vig.addColorStop(1, 'rgba(0,0,0,0.55)');
+      vig.addColorStop(1, 'rgba(0,0,0,0.60)');
       ctx.fillStyle = vig;
       ctx.fillRect(0, 0, W, H);
 
