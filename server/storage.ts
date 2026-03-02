@@ -559,6 +559,7 @@ export interface IStorage {
   registerForEvent(registration: InsertEventRegistration): Promise<EventRegistration>;
   getEventRegistration(eventId: string, userId: string): Promise<EventRegistration | undefined>;
   getUserEventRegistrations(userId: string): Promise<(EventRegistration & { event: Event })[]>;
+  getEventRegistrations(eventId: string): Promise<{ registrationId: string; userId: string; firstName: string | null; lastName: string | null; email: string | null; registrationType: string; paymentStatus: string; amountPaid: string | null; registeredAt: Date | null }[]>;
 
   // Live stream operations
   getLiveStreams(): Promise<LiveStream[]>;
@@ -6283,6 +6284,26 @@ export class DatabaseStorage implements IStorage {
         )
       );
     return registration;
+  }
+
+  async getEventRegistrations(eventId: string): Promise<{ registrationId: string; userId: string; firstName: string | null; lastName: string | null; email: string | null; registrationType: string; paymentStatus: string; amountPaid: string | null; registeredAt: Date | null }[]> {
+    const rows = await db
+      .select({
+        registrationId: eventRegistrations.id,
+        userId: eventRegistrations.userId,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        registrationType: eventRegistrations.registrationType,
+        paymentStatus: eventRegistrations.paymentStatus,
+        amountPaid: eventRegistrations.amountPaid,
+        registeredAt: eventRegistrations.registeredAt,
+      })
+      .from(eventRegistrations)
+      .innerJoin(users, eq(eventRegistrations.userId, users.id))
+      .where(eq(eventRegistrations.eventId, eventId))
+      .orderBy(asc(eventRegistrations.registeredAt));
+    return rows;
   }
 
   async getUserEventRegistrations(userId: string): Promise<(EventRegistration & { event: Event })[]> {

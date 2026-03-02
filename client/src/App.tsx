@@ -23,6 +23,7 @@ import Brothers from "@/pages/brothers";
 import Messages from "@/pages/messages";
 import Profile from "@/pages/profile";
 import Admin from "@/pages/admin";
+import AdminEventRegistrants from "@/pages/admin-event-registrants";
 import Owners from "@/pages/owners";
 import StudyDetail from "@/pages/study-detail";
 import DocumentViewer from "@/pages/document-viewer";
@@ -181,6 +182,7 @@ function Router() {
               <Route path="/messages" component={Messages} />
               <Route path="/profile" component={Profile} />
               <Route path="/admin" component={Admin} />
+              <Route path="/admin/events/:id/registrants" component={AdminEventRegistrants} />
               <Route path="/admin/studies/:id/edit-word" component={AdminWordEditor} />
               <Route path="/owners" component={Owners} />
               <Route path="/studies/:id" component={StudyDetail} />

@@ -10,7 +10,8 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, MapPin, DollarSign, Plus, Edit, Trash2, ExternalLink, Navigation, CalendarRange, Layers } from 'lucide-react';
+import { Calendar, MapPin, DollarSign, Plus, Edit, Trash2, ExternalLink, Navigation, CalendarRange, Layers, Users } from 'lucide-react';
+import { useLocation } from 'wouter';
 import { format } from 'date-fns';
 
 interface EventTier {
@@ -334,6 +335,7 @@ function EventForm({
 export default function EventManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [createForm, setCreateForm] = useState<FormData>(defaultForm());
@@ -594,6 +596,15 @@ export default function EventManagement() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/admin/events/${event.id}/registrants`)}
+                      className="border-[#FCD000]/50 text-[#FCD000] hover:bg-[#FCD000]/10"
+                      title="View Registrants"
+                    >
+                      <Users className="h-4 w-4" />
+                    </Button>
                     {event.url && (
                       <Button variant="outline" size="sm" asChild className="border-gray-600 text-gray-300 hover:bg-gray-700">
                         <a href={event.url} target="_blank" rel="noopener noreferrer">

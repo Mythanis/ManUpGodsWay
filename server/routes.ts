@@ -9194,6 +9194,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all registrants for an event (admin only)
+  app.get('/api/admin/events/:id/registrations', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+      const registrants = await storage.getEventRegistrations(req.params.id);
+      res.json(registrants);
+    } catch (error) {
+      console.error('Error fetching event registrations:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Create payment intent for event ticket purchase
   app.post('/api/events/:id/payment-intent', isAuthenticated, async (req: any, res) => {
     try {
