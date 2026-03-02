@@ -376,6 +376,11 @@ function ExternalTierPurchaseModal({
   confirming: boolean;
 }) {
   const price = modal.tier.price.startsWith('$') ? modal.tier.price : `$${modal.tier.price}`;
+
+  const openPaymentLink = () => {
+    window.open(modal.tier.url, '_blank', 'noopener,noreferrer');
+  };
+
   return createPortal(
     <div className="fixed inset-0 bg-black flex flex-col" style={{ zIndex: 9999 }}>
       <div className="flex items-center gap-3 px-4 py-4 border-b border-[#FCD000]/30 flex-shrink-0">
@@ -400,18 +405,34 @@ function ExternalTierPurchaseModal({
         </p>
       </div>
 
-      <iframe
-        src={modal.tier.url}
-        className="flex-1 w-full border-0"
-        allow="payment"
-        title={`Purchase ${modal.tier.name} ticket`}
-      />
+      <div className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-6">
+        <div className="w-20 h-20 bg-[#FCD000]/10 border-2 border-[#FCD000]/30 rounded-full flex items-center justify-center">
+          <Shield className="h-10 w-10 text-[#FCD000]" />
+        </div>
+        <div>
+          <p className="text-white font-black uppercase tracking-tight text-xl mb-2">Secure Checkout</p>
+          <p className="text-white/60 text-sm font-medium leading-relaxed">
+            Your payment is processed securely by Stripe. Tap the button below to open the checkout page, then return here once your purchase is complete.
+          </p>
+        </div>
+        <div className="w-full max-w-sm bg-[#FCD000]/5 border border-[#FCD000]/20 rounded-sm px-4 py-3">
+          <p className="text-[#FCD000] font-bold text-sm uppercase tracking-wide">{modal.tier.name}</p>
+          <p className="text-white font-black text-2xl" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{price}</p>
+        </div>
+        <button
+          onClick={openPaymentLink}
+          className="w-full max-w-sm py-3 bg-[#FCD000] text-black font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000] text-sm flex items-center justify-center gap-2"
+        >
+          <ExternalLink className="h-4 w-4" />
+          Open Secure Checkout
+        </button>
+      </div>
 
       <div className="flex-shrink-0 px-4 py-4 border-t border-[#FCD000]/30 bg-black space-y-2">
         <button
           onClick={onConfirm}
           disabled={confirming}
-          className="w-full py-3 bg-[#FCD000] text-black font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000] text-sm disabled:opacity-60 flex items-center justify-center gap-2"
+          className="w-full py-3 bg-[#FCD000]/10 text-[#FCD000] font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000]/50 text-sm disabled:opacity-60 flex items-center justify-center gap-2 hover:bg-[#FCD000]/20 transition-colors"
         >
           {confirming ? (
             <Loader2 className="h-4 w-4 animate-spin" />
