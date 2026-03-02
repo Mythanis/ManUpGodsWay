@@ -358,6 +358,80 @@ function TierSelectionModal({
   );
 }
 
+interface ExternalTierModalState {
+  eventId: string;
+  eventTitle: string;
+  tier: EventTier;
+}
+
+function ExternalTierPurchaseModal({
+  modal,
+  onClose,
+  onConfirm,
+  confirming,
+}: {
+  modal: ExternalTierModalState;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+  confirming: boolean;
+}) {
+  const price = modal.tier.price.startsWith('$') ? modal.tier.price : `$${modal.tier.price}`;
+  return createPortal(
+    <div className="fixed inset-0 bg-black flex flex-col" style={{ zIndex: 9999 }}>
+      <div className="flex items-center gap-3 px-4 py-4 border-b border-[#FCD000]/30 flex-shrink-0">
+        <button
+          onClick={onClose}
+          className="text-white/60 hover:text-white transition-colors p-1"
+          aria-label="Close"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div className="w-8 h-8 bg-[#FCD000] rounded-sm flex items-center justify-center flex-shrink-0">
+          <Ticket className="h-4 w-4 text-black" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[#FCD000] font-black uppercase tracking-tight text-sm leading-tight truncate">
+            {modal.eventTitle}
+          </p>
+          <p className="text-white/50 text-xs font-semibold truncate">{modal.tier.name}</p>
+        </div>
+        <p className="text-[#FCD000] font-black text-xl flex-shrink-0" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+          {price}
+        </p>
+      </div>
+
+      <iframe
+        src={modal.tier.url}
+        className="flex-1 w-full border-0"
+        allow="payment"
+        title={`Purchase ${modal.tier.name} ticket`}
+      />
+
+      <div className="flex-shrink-0 px-4 py-4 border-t border-[#FCD000]/30 bg-black space-y-2">
+        <button
+          onClick={onConfirm}
+          disabled={confirming}
+          className="w-full py-3 bg-[#FCD000] text-black font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000] text-sm disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {confirming ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <><CheckCircle className="h-4 w-4" />I've Completed My Purchase</>
+          )}
+        </button>
+        <button
+          onClick={onClose}
+          disabled={confirming}
+          className="w-full py-2.5 bg-transparent text-white/50 font-bold uppercase tracking-wide text-xs border border-white/20 rounded-sm hover:border-white/40 hover:text-white/70 transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 export default function Events() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -366,6 +440,8 @@ export default function Events() {
   const [tierModalEvent, setTierModalEvent] = useState<Event | null>(null);
   const [purchaseModal, setPurchaseModal] = useState<PurchaseModalState | null>(null);
   const [loadingPayment, setLoadingPayment] = useState(false);
+  const [externalTierModal, setExternalTierModal] = useState<ExternalTierModalState | null>(null);
+  const [confirmingExternalPurchase, setConfirmingExternalPurchase] = useState(false);
 
   const { data: events = [], isLoading: eventsLoading } = useQuery<Event[]>({
     queryKey: ['/api/events'],
@@ -417,9 +493,35 @@ export default function Events() {
 
   const handleTierSelect = async (tier: EventTier) => {
     if (!tierModalEvent) return;
-    const amount = parsePriceAmount(tier.price);
     setTierModalEvent(null);
-    await openPaymentModal(tierModalEvent.id, tierModalEvent.title, amount, tier.name);
+    if (tier.url) {
+      setExternalTierModal({ eventId: tierModalEvent.id, eventTitle: tierModalEvent.title, tier });
+    } else {
+      const amount = parsePriceAmount(tier.price);
+      await openPaymentModal(tierModalEvent.id, tierModalEvent.title, amount, tier.name);
+    }
+  };
+
+  const handleConfirmExternalPurchase = async () => {
+    if (!externalTierModal) return;
+    setConfirmingExternalPurchase(true);
+    try {
+      await apiRequest('POST', `/api/events/${externalTierModal.eventId}/register-external-purchase`, {
+        tierName: externalTierModal.tier.name,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/events/registrations/my'] });
+      setExternalTierModal(null);
+      toast({ title: "You're Registered!", description: `Your ${externalTierModal.tier.name} ticket has been confirmed.` });
+    } catch (err: any) {
+      if (err.message?.includes('409') || err.message?.includes('Already registered')) {
+        setExternalTierModal(null);
+        toast({ title: 'Already Registered', description: 'You are already registered for this event.' });
+      } else {
+        toast({ title: 'Error', description: err.message || 'Could not confirm registration. Please contact support.', variant: 'destructive' });
+      }
+    } finally {
+      setConfirmingExternalPurchase(false);
+    }
   };
 
   const isRegisteredForEvent = (eventId: string) =>
@@ -458,7 +560,16 @@ export default function Events() {
         />
       )}
 
-      {tierModalEvent && !purchaseModal && (
+      {externalTierModal && (
+        <ExternalTierPurchaseModal
+          modal={externalTierModal}
+          onClose={() => setExternalTierModal(null)}
+          onConfirm={handleConfirmExternalPurchase}
+          confirming={confirmingExternalPurchase}
+        />
+      )}
+
+      {tierModalEvent && !purchaseModal && !externalTierModal && (
         <TierSelectionModal
           event={tierModalEvent}
           onSelectTier={handleTierSelect}

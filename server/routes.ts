@@ -9287,6 +9287,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Register for event after completing payment via an external (hosted) Stripe URL
+  app.post('/api/events/:id/register-external-purchase', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const eventId = req.params.id;
+      const { tierName } = req.body;
+
+      const event = await storage.getEventById(eventId);
+      if (!event) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+
+      const existing = await storage.getEventRegistration(eventId, userId);
+      if (existing) {
+        return res.status(409).json({ message: 'Already registered for this event' });
+      }
+
+      const registration = await storage.registerForEvent({
+        eventId,
+        userId,
+        registrationType: 'paid',
+        paymentStatus: 'completed',
+        tierName: tierName ?? null,
+      });
+
+      res.status(201).json(registration);
+    } catch (error: any) {
+      console.error('Error registering external purchase:', error);
+      res.status(500).json({ message: error.message || 'Failed to register purchase' });
+    }
+  });
+
   // Register for event (free events)
   app.post('/api/events/:id/register', isAuthenticated, async (req: any, res) => {
     try {
