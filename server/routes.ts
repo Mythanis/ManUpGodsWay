@@ -9234,6 +9234,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Confirm paid event registration after successful Stripe payment
+  app.post('/api/events/:id/confirm-purchase', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const eventId = req.params.id;
+      const { paymentIntentId, amountPaid } = req.body;
+
+      if (!paymentIntentId) {
+        return res.status(400).json({ message: 'paymentIntentId is required' });
+      }
+
+      const event = await storage.getEventById(eventId);
+      if (!event) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+
+      const existing = await storage.getEventRegistration(eventId, userId);
+      if (existing) {
+        return res.status(409).json({ message: 'Already registered for this event' });
+      }
+
+      const registration = await storage.registerForEvent({
+        eventId,
+        userId,
+        registrationType: 'paid',
+        paymentStatus: 'completed',
+        paymentIntentId,
+        amountPaid: amountPaid?.toString() ?? '0',
+      });
+
+      res.status(201).json(registration);
+    } catch (error: any) {
+      console.error('Error confirming event purchase:', error);
+      res.status(500).json({ message: error.message || 'Failed to confirm purchase' });
+    }
+  });
+
   // Register for event (free events)
   app.post('/api/events/:id/register', isAuthenticated, async (req: any, res) => {
     try {

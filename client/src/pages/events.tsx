@@ -74,21 +74,26 @@ function parsePriceAmount(priceStr: string): number {
 }
 
 function EventPaymentForm({
+  eventId,
   amount,
   eventTitle,
   tierName,
+  purchaserName,
   onSuccess,
   onCancel,
 }: {
+  eventId: string;
   amount: number;
   eventTitle: string;
   tierName?: string;
+  purchaserName: string;
   onSuccess: () => void;
   onCancel: () => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [processing, setProcessing] = useState(false);
   const [succeeded, setSucceeded] = useState(false);
 
@@ -105,9 +110,26 @@ function EventPaymentForm({
       if (error) {
         toast({ title: 'Payment Failed', description: error.message, variant: 'destructive' });
       } else if (paymentIntent?.status === 'succeeded') {
+        try {
+          await apiRequest('POST', `/api/events/${eventId}/confirm-purchase`, {
+            paymentIntentId: paymentIntent.id,
+            amountPaid: amount,
+            tierName,
+          });
+          queryClient.invalidateQueries({ queryKey: ['/api/events/registrations/my'] });
+        } catch {
+        }
         setSucceeded(true);
       } else {
-        toast({ title: 'Payment Processing', description: 'Your payment is being processed.' });
+        try {
+          await apiRequest('POST', `/api/events/${eventId}/confirm-purchase`, {
+            paymentIntentId: paymentIntent?.id,
+            amountPaid: amount,
+            tierName,
+          });
+          queryClient.invalidateQueries({ queryKey: ['/api/events/registrations/my'] });
+        } catch {
+        }
         setSucceeded(true);
       }
     } catch (err: any) {
@@ -141,8 +163,8 @@ function EventPaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 px-6 pb-8">
-      <div className="bg-white/5 border border-[#FCD000]/30 rounded-sm p-4">
-        <p className="text-white/50 text-xs uppercase tracking-wide font-bold mb-1">Order Summary</p>
+      <div className="bg-white/5 border border-[#FCD000]/30 rounded-sm p-4 space-y-3">
+        <p className="text-white/50 text-xs uppercase tracking-wide font-bold">Order Summary</p>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-white font-bold text-sm">{eventTitle}</p>
@@ -150,6 +172,11 @@ function EventPaymentForm({
           </div>
           <p className="text-[#FCD000] font-black text-2xl" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
             ${amount.toFixed(2)}
+          </p>
+        </div>
+        <div className="border-t border-[#FCD000]/20 pt-2">
+          <p className="text-white/40 text-xs">
+            Purchasing as: <span className="text-white/70 font-semibold">{purchaserName}</span>
           </p>
         </div>
       </div>
@@ -195,9 +222,11 @@ function EventPaymentForm({
 
 function EventPurchaseModal({
   modal,
+  purchaserName,
   onClose,
 }: {
   modal: PurchaseModalState;
+  purchaserName: string;
   onClose: () => void;
 }) {
   return createPortal(
@@ -246,9 +275,11 @@ function EventPurchaseModal({
               }}
             >
               <EventPaymentForm
+                eventId={modal.eventId}
                 amount={modal.amount}
                 eventTitle={modal.eventTitle}
                 tierName={modal.tierName}
+                purchaserName={purchaserName}
                 onSuccess={onClose}
                 onCancel={onClose}
               />
@@ -418,6 +449,11 @@ export default function Events() {
       {purchaseModal && (
         <EventPurchaseModal
           modal={purchaseModal}
+          purchaserName={
+            user?.firstName && user?.lastName
+              ? `${user.firstName} ${user.lastName}`
+              : user?.email || 'Your Account'
+          }
           onClose={() => setPurchaseModal(null)}
         />
       )}
