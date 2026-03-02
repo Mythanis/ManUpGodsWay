@@ -1430,6 +1430,7 @@ export const eventRegistrations = pgTable("event_registrations", {
   paymentIntentId: varchar("payment_intent_id"), // Stripe payment intent ID for paid events
   paymentStatus: varchar("payment_status").default("pending"), // pending, completed, failed, refunded
   amountPaid: decimal("amount_paid", { precision: 10, scale: 2 }),
+  tierName: varchar("tier_name"), // Name of the ticket tier purchased (for tiered events)
   registeredAt: timestamp("registered_at").defaultNow(),
   cancelledAt: timestamp("cancelled_at"),
 }, (table) => ({

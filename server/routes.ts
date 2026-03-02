@@ -9254,7 +9254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const eventId = req.params.id;
-      const { paymentIntentId, amountPaid } = req.body;
+      const { paymentIntentId, amountPaid, tierName } = req.body;
 
       if (!paymentIntentId) {
         return res.status(400).json({ message: 'paymentIntentId is required' });
@@ -9277,6 +9277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentStatus: 'completed',
         paymentIntentId,
         amountPaid: amountPaid?.toString() ?? '0',
+        tierName: tierName ?? null,
       });
 
       res.status(201).json(registration);

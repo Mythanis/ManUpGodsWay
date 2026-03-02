@@ -16,6 +16,7 @@ interface Registrant {
   registrationType: string;
   paymentStatus: string;
   amountPaid: string | null;
+  tierName: string | null;
   registeredAt: string | null;
 }
 
@@ -92,11 +93,12 @@ export default function AdminEventRegistrants() {
   const pendingCount = registrants.filter(r => r.registrationType !== 'free' && r.paymentStatus !== 'completed').length;
 
   const exportCsv = () => {
-    const header = 'First Name,Last Name,Email,Type,Payment Status,Amount Paid,Registered At';
+    const header = 'First Name,Last Name,Email,Ticket Tier,Type,Payment Status,Amount Paid,Registered At';
     const rows = registrants.map(r => [
       r.firstName || '',
       r.lastName || '',
       r.email || '',
+      r.tierName || '',
       r.registrationType,
       r.paymentStatus,
       r.amountPaid ? `$${r.amountPaid}` : 'N/A',
@@ -214,8 +216,13 @@ export default function AdminEventRegistrants() {
                             <p className="text-gray-400 text-xs truncate">{r.email}</p>
                           </div>
                         )}
+                        {r.tierName && (
+                          <p className="text-[#FCD000] text-xs font-semibold mt-1 truncate">
+                            {r.tierName}
+                          </p>
+                        )}
                         {r.registeredAt && (
-                          <p className="text-gray-600 text-xs mt-1">
+                          <p className="text-gray-600 text-xs mt-0.5">
                             Registered {format(new Date(r.registeredAt), 'MMM d, yyyy')}
                           </p>
                         )}
