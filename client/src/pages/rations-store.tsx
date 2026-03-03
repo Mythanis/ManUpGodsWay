@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -12,9 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { getTierDisplayName } from "@/lib/utils";
 import { BackButton } from "@/components/BackButton";
-import { Coins, ShoppingBag, Tag, Gift, Crown, Package, Check, Loader2, ClipboardList } from "lucide-react";
+import { Coins, ShoppingBag, Tag, Gift, Crown, Check, Loader2, ClipboardList } from "lucide-react";
 
 interface StoreProduct {
   id: string;
@@ -49,32 +47,6 @@ interface ShippingInfo {
   shippingZip: string;
 }
 
-const TIER_CONFIG = {
-  bronze: { 
-    label: "Bronze", 
-    description: "Discount codes & coupons",
-    color: "bg-orange-800", 
-    textColor: "text-orange-400",
-    borderColor: "border-orange-600",
-    icon: Tag
-  },
-  silver: { 
-    label: "Silver", 
-    description: "Small items & accessories",
-    color: "bg-zinc-600", 
-    textColor: "text-zinc-300",
-    borderColor: "border-zinc-400",
-    icon: Package
-  },
-  gold: { 
-    label: "Gold", 
-    description: "Premium items for Warriors",
-    color: "bg-yellow-700", 
-    textColor: "text-ministry-gold",
-    borderColor: "border-ministry-gold",
-    icon: Crown
-  },
-};
 
 export default function RationsStorePage() {
   const { user } = useAuth();
@@ -167,16 +139,11 @@ export default function RationsStorePage() {
   const userBalance = rations?.balance || 0;
   const isSubscriber = (user as any)?.subscriptionStatus === 'active' || (user as any)?.subscriptionStatus === 'trial';
 
-  const bronzeProducts = products.filter(p => p.tier === "bronze");
-  const silverProducts = products.filter(p => p.tier === "silver");
-  const goldProducts = products.filter(p => p.tier === "gold");
-
   const renderProductCard = (product: StoreProduct) => {
     const canAfford = userBalance >= product.rationCost;
     const meetsVipRequirement = !product.isVipOnly || isSubscriber;
     const inStock = product.stock === null || product.stock > 0;
     const canRedeem = canAfford && meetsVipRequirement && inStock;
-    const tierConfig = TIER_CONFIG[product.tier as keyof typeof TIER_CONFIG];
 
     return (
       <Card 
@@ -252,26 +219,6 @@ export default function RationsStorePage() {
     );
   };
 
-  const renderTierContent = (tierProducts: StoreProduct[], tierKey: string) => {
-    const tierConfig = TIER_CONFIG[tierKey as keyof typeof TIER_CONFIG];
-    const TierIcon = tierConfig.icon;
-
-    if (tierProducts.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <TierIcon className={`w-16 h-16 ${tierConfig.textColor} mb-4 opacity-50`} />
-          <h3 className="text-white font-bold uppercase mb-2">No Products Available</h3>
-          <p className="text-zinc-500 text-sm">Check back soon for new {tierConfig.label} tier rewards!</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid grid-cols-2 gap-3">
-        {tierProducts.map(renderProductCard)}
-      </div>
-    );
-  };
 
   return (
     <div className="pb-20 bg-background min-h-screen">
@@ -322,79 +269,21 @@ export default function RationsStorePage() {
       </div>
 
       <div className="px-4 py-4">
-        <Tabs defaultValue="bronze" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-zinc-900 rounded-sm border-2 border-zinc-700 p-1">
-            <TabsTrigger 
-              value="bronze" 
-              className="rounded-sm data-[state=active]:bg-orange-800 data-[state=active]:text-white font-bold uppercase text-xs"
-            >
-              Bronze
-            </TabsTrigger>
-            <TabsTrigger 
-              value="silver"
-              className="rounded-sm data-[state=active]:bg-zinc-600 data-[state=active]:text-white font-bold uppercase text-xs"
-            >
-              Silver
-            </TabsTrigger>
-            <TabsTrigger 
-              value="gold"
-              className="rounded-sm data-[state=active]:bg-yellow-700 data-[state=active]:text-ministry-gold font-bold uppercase text-xs"
-            >
-              Gold
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="bronze" className="mt-4">
-            <div className="mb-4 p-3 bg-orange-950 border-2 border-orange-800 rounded-sm">
-              <div className="flex items-center gap-2 mb-1">
-                <Tag className="w-4 h-4 text-orange-400" />
-                <span className="font-bold text-orange-400 uppercase text-sm">Bronze Tier</span>
-              </div>
-              <p className="text-xs text-orange-300/70">Discount codes for books, coupons for shirts, and more!</p>
-            </div>
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-ministry-gold" />
-              </div>
-            ) : (
-              renderTierContent(bronzeProducts, "bronze")
-            )}
-          </TabsContent>
-
-          <TabsContent value="silver" className="mt-4">
-            <div className="mb-4 p-3 bg-zinc-900 border-2 border-zinc-600 rounded-sm">
-              <div className="flex items-center gap-2 mb-1">
-                <Package className="w-4 h-4 text-zinc-300" />
-                <span className="font-bold text-zinc-300 uppercase text-sm">Silver Tier</span>
-              </div>
-              <p className="text-xs text-zinc-500">Pens, coozies, small accessories, and other goodies!</p>
-            </div>
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-ministry-gold" />
-              </div>
-            ) : (
-              renderTierContent(silverProducts, "silver")
-            )}
-          </TabsContent>
-
-          <TabsContent value="gold" className="mt-4">
-            <div className="mb-4 p-3 bg-yellow-950 border-2 border-ministry-gold rounded-sm">
-              <div className="flex items-center gap-2 mb-1">
-                <Crown className="w-4 h-4 text-ministry-gold" />
-                <span className="font-bold text-ministry-gold uppercase text-sm">Gold Tier</span>
-              </div>
-              <p className="text-xs text-yellow-300/70">Premium items including t-shirts, hats, and exclusive gear - Subscribers only!</p>
-            </div>
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-ministry-gold" />
-              </div>
-            ) : (
-              renderTierContent(goldProducts, "gold")
-            )}
-          </TabsContent>
-        </Tabs>
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-ministry-gold" />
+          </div>
+        ) : products.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <Crown className="w-16 h-16 text-ministry-gold mb-4 opacity-50" />
+            <h3 className="text-white font-bold uppercase mb-2">No Products Available</h3>
+            <p className="text-zinc-500 text-sm">Check back soon for new rewards!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {products.map(renderProductCard)}
+          </div>
+        )}
       </div>
 
       <Dialog open={showRedeemDialog} onOpenChange={setShowRedeemDialog}>

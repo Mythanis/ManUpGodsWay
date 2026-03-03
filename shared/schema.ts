@@ -2278,7 +2278,7 @@ export const storeProducts = pgTable("store_products", {
   name: varchar("name").notNull(),
   description: text("description"),
   imageUrl: varchar("image_url"),
-  tier: varchar("tier").notNull().default("bronze"), // bronze (codes/discounts), silver (small items), gold (VIP items)
+  tier: varchar("tier").notNull().default("subscriber"),
   rationCost: integer("ration_cost").notNull().default(100),
   stock: integer("stock"), // null = unlimited
   isVipOnly: boolean("is_vip_only").default(false), // Requires VIP subscription
@@ -2300,7 +2300,7 @@ export const insertStoreProductSchema = createInsertSchema(storeProducts, {
   name: z.string().min(1, "Product name is required"),
   description: z.string().optional(),
   imageUrl: z.string().optional(),
-  tier: z.enum(["bronze", "silver", "gold"]).default("bronze"),
+  tier: z.enum(["subscriber"]).default("subscriber"),
   rationCost: z.number().int().min(1, "Ration cost must be at least 1"),
   stock: z.number().int().min(0).nullable().optional(),
   isVipOnly: z.boolean().default(false),
@@ -2372,9 +2372,7 @@ export type InsertStoreRedemption = z.infer<typeof insertStoreRedemptionSchema>;
 
 // Store tier definitions
 export const STORE_TIERS = {
-  bronze: { label: 'Bronze', description: 'Discount codes and coupons', color: '#CD7F32', minRations: 0 },
-  silver: { label: 'Silver', description: 'Small items like pens, coozies, and accessories', color: '#C0C0C0', minRations: 500 },
-  gold: { label: 'Gold', description: 'Premium items for VIP members', color: '#FFD700', minRations: 2000, vipOnly: true },
+  subscriber: { label: 'Subscriber', description: 'Available to all subscribers', color: '#FCD000', minRations: 0 },
 } as const;
 
 export type StoreTier = keyof typeof STORE_TIERS;

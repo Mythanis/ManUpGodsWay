@@ -56,9 +56,7 @@ interface StoreRedemption {
 }
 
 const TIER_OPTIONS = [
-  { value: "bronze", label: "Bronze", color: "bg-orange-800" },
-  { value: "silver", label: "Silver", color: "bg-zinc-600" },
-  { value: "gold", label: "Gold", color: "bg-yellow-700" },
+  { value: "subscriber", label: "Subscriber", color: "bg-[#FCD000]" },
 ];
 
 const PRODUCT_TYPE_OPTIONS = [
@@ -90,7 +88,7 @@ export default function StoreManagement() {
     name: "",
     description: "",
     imageUrl: "",
-    tier: "bronze",
+    tier: "subscriber",
     rationCost: 500,
     stock: null as number | null,
     isVipOnly: false,
@@ -185,7 +183,7 @@ export default function StoreManagement() {
       name: "",
       description: "",
       imageUrl: "",
-      tier: "bronze",
+      tier: "subscriber",
       rationCost: 500,
       stock: null,
       isVipOnly: false,
@@ -288,7 +286,8 @@ export default function StoreManagement() {
 
   const getTierBadge = (tier: string) => {
     const config = TIER_OPTIONS.find(t => t.value === tier);
-    return <Badge className={`${config?.color} text-white text-xs font-bold uppercase`}>{config?.label}</Badge>;
+    const isSubscriber = config?.value === "subscriber";
+    return <Badge className={`${config?.color ?? 'bg-zinc-700'} ${isSubscriber ? 'text-black' : 'text-white'} text-xs font-bold uppercase`}>{config?.label ?? tier}</Badge>;
   };
 
   const getStatusBadge = (status: string) => {
