@@ -87,7 +87,7 @@ export default function WarGroupRegister() {
           <div className="flex items-center gap-3">
             <Shield className="h-8 w-8 text-ministry-gold-exact" />
             <div>
-              <h1 className="text-3xl font-black tracking-tighter uppercase">Register a War Group</h1>
+              <h1 className="text-3xl font-black tracking-tighter uppercase">Apply for a War Group</h1>
               <p className="text-ministry-gold-exact text-xs font-bold tracking-widest uppercase mt-1">Start a Licensed Discipleship Group</p>
             </div>
           </div>

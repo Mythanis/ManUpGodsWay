@@ -133,7 +133,7 @@ export default function WarGroups() {
               data-testid="button-register-war-group"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Register Group
+              Apply for a Group
             </Button>
           </div>
           
@@ -335,7 +335,7 @@ export default function WarGroups() {
                     data-testid="button-register-from-about"
                   >
                     <Plus className="h-5 w-5 mr-2 flex-shrink-0" />
-                    <span>Ready to Start a War Group? Register Now</span>
+                    <span>Ready to Start a War Group? Apply Now</span>
                   </Button>
                 </div>
               </CardContent>
