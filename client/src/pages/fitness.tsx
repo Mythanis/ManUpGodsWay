@@ -2465,7 +2465,7 @@ export default function Fitness() {
                   <div key={plan.id} className="bg-[#FCD000] rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                     <div className="p-4">
                       <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-black text-black uppercase tracking-tight text-base leading-tight flex-1 mr-2">{plan.name}</h3>
+                        <h3 className="font-black text-black text-base leading-tight flex-1 mr-2">{plan.name}</h3>
                         {plan.isPublic && (
                           <Badge className="text-xs bg-black text-[#FCD000] font-bold rounded-sm border-none flex-shrink-0">Public</Badge>
                         )}
@@ -2473,7 +2473,7 @@ export default function Fitness() {
                       {plan.description && (
                         <p className="text-black/70 text-sm mb-2 font-medium">{plan.description}</p>
                       )}
-                      <div className="flex items-center gap-3 text-xs font-bold text-black/60 uppercase tracking-wide">
+                      <div className="flex items-center gap-3 text-xs font-bold text-black/60">
                         <span className="flex items-center gap-1">
                           <List className="w-3 h-3" />
                           {plan.exercises?.length || 0} exercises
