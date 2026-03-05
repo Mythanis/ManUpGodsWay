@@ -26,7 +26,7 @@
   --popover-foreground: hsl(220 14% 20%);
   
   /* Primary - refined gold for ministry branding */
-  --primary: hsl(45 100% 51%);
+  --primary: hsl(49 100% 49%);
   --primary-foreground: hsl(220 14% 20%);
   
   /* Secondary - soft neutral */
@@ -48,10 +48,10 @@
   /* Borders - clean and subtle */
   --border: hsl(220 13% 91%);
   --input: hsl(220 13% 91%);
-  --ring: hsl(45 100% 51%);
+  --ring: hsl(49 100% 49%);
   
   /* Chart colors - clean and distinguishable */
-  --chart-1: hsl(45 100% 51%);
+  --chart-1: hsl(49 100% 49%);
   --chart-2: hsl(142 71% 45%);
   --chart-3: hsl(220 90% 60%);
   --chart-4: hsl(280 65% 60%);
@@ -60,12 +60,12 @@
   /* Sidebar */
   --sidebar: hsl(220 14% 98%);
   --sidebar-foreground: hsl(220 14% 20%);
-  --sidebar-primary: hsl(45 100% 51%);
+  --sidebar-primary: hsl(49 100% 49%);
   --sidebar-primary-foreground: hsl(220 14% 20%);
-  --sidebar-accent: hsl(45 100% 96%);
+  --sidebar-accent: hsl(49 100% 96%);
   --sidebar-accent-foreground: hsl(220 14% 20%);
   --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(45 100% 51%);
+  --sidebar-ring: hsl(49 100% 49%);
   
   /* Typography */
   --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -93,7 +93,7 @@
   --ministry-charcoal: 220 14% 20%;
   --ministry-steel: 220 10% 46%;
   --ministry-slate: 220 12% 36%;
-  --ministry-gold: 45 100% 51%;
+  --ministry-gold: 49 100% 49%;
   --ministry-success: 142 71% 45%;
   --ministry-warm: 25 95% 53%;
 }
@@ -258,7 +258,7 @@
   --popover-foreground: hsl(0 0% 95%);
   
   /* Primary - bright gold stands out in dark mode */
-  --primary: hsl(45 100% 55%);
+  --primary: hsl(49 100% 49%);
   --primary-foreground: hsl(220 15% 10%);
   
   /* Secondary - subtle dark surface */
@@ -270,8 +270,8 @@
   --muted-foreground: hsl(220 10% 60%);
   
   /* Accent */
-  --accent: hsl(45 100% 20%);
-  --accent-foreground: hsl(45 100% 55%);
+  --accent: hsl(49 100% 20%);
+  --accent-foreground: hsl(49 100% 49%);
   
   /* Destructive */
   --destructive: hsl(0 84% 60%);
@@ -280,10 +280,10 @@
   /* Borders */
   --border: hsl(220 13% 20%);
   --input: hsl(220 13% 20%);
-  --ring: hsl(45 100% 55%);
+  --ring: hsl(49 100% 49%);
   
   /* Chart colors */
-  --chart-1: hsl(45 100% 55%);
+  --chart-1: hsl(49 100% 49%);
   --chart-2: hsl(142 71% 50%);
   --chart-3: hsl(220 90% 65%);
   --chart-4: hsl(280 65% 65%);
@@ -292,12 +292,12 @@
   /* Sidebar */
   --sidebar: hsl(220 15% 12%);
   --sidebar-foreground: hsl(0 0% 90%);
-  --sidebar-primary: hsl(45 100% 55%);
+  --sidebar-primary: hsl(49 100% 49%);
   --sidebar-primary-foreground: hsl(220 15% 10%);
-  --sidebar-accent: hsl(45 100% 20%);
-  --sidebar-accent-foreground: hsl(45 100% 55%);
+  --sidebar-accent: hsl(49 100% 20%);
+  --sidebar-accent-foreground: hsl(49 100% 49%);
   --sidebar-border: hsl(220 13% 20%);
-  --sidebar-ring: hsl(45 100% 55%);
+  --sidebar-ring: hsl(49 100% 49%);
   
   /* Typography */
   --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -321,7 +321,7 @@
   --ministry-charcoal: 220 14% 20%;
   --ministry-steel: 220 10% 60%;
   --ministry-slate: 220 12% 50%;
-  --ministry-gold: 45 100% 55%;
+  --ministry-gold: 49 100% 49%;
   --ministry-success: 142 71% 50%;
   --ministry-warm: 25 95% 58%;
 }
