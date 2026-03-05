@@ -1703,54 +1703,53 @@ export default function Fitness() {
                       <div className="flex gap-6 relative z-10">
                         {/* Exercise Details */}
                         <div className="flex-grow">
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <h4 className="font-bold text-white mb-1" data-testid={`text-workout-exercise-name-${exercise.exerciseId}`}>
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1 mr-3">
+                              <h4 className="font-black text-white uppercase tracking-tight text-base leading-tight mb-1" data-testid={`text-workout-exercise-name-${exercise.exerciseId}`}>
                                 {exercise.exerciseName}
                               </h4>
-                              <p className="text-xs text-[#FCD000]">
-                                From: {exercise.planName}
+                              <p className="text-xs text-[#FCD000] font-bold uppercase tracking-wider">
+                                {exercise.planName}
                               </p>
                             </div>
                             
                             {/* Completion Checkbox */}
-                            <div className="flex items-center space-x-2">
+                            <div className="flex flex-col items-center gap-1">
                               <Checkbox
                                 id={`exercise-${exercise.exerciseId}`}
                                 checked={completedExercises.has(exercise.exerciseId)}
                                 onCheckedChange={() => toggleExerciseCompletion(exercise.exerciseId)}
-                                className="data-[state=checked]:bg-[#FCD000] data-[state=checked]:border-[#FCD000] border-[#FCD000]"
+                                className="data-[state=checked]:bg-[#FCD000] data-[state=checked]:border-[#FCD000] border-[#FCD000] w-5 h-5"
                                 data-testid={`checkbox-complete-${exercise.exerciseId}`}
                               />
                               <label 
                                 htmlFor={`exercise-${exercise.exerciseId}`} 
-                                className="text-sm text-white cursor-pointer font-medium"
+                                className="text-xs text-[#FCD000] cursor-pointer font-black uppercase tracking-wide"
                               >
-                                {completedExercises.has(exercise.exerciseId) ? 'Completed' : 'Complete'}
+                                {completedExercises.has(exercise.exerciseId) ? 'Done' : 'Mark'}
                               </label>
                             </div>
                           </div>
                           
                           {/* Exercise Parameters */}
-                          <div className="grid grid-cols-3 gap-4 text-sm">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-white">Sets:</span>
-                              <span className="text-[#FCD000]" data-testid={`text-workout-sets-${exercise.exerciseId}`}>
+                          <div className="flex gap-4 text-sm">
+                            <div className="flex flex-col items-center bg-black/40 rounded-sm px-3 py-2 border border-zinc-700">
+                              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Sets</span>
+                              <span className="font-black text-[#FCD000] text-lg leading-none" data-testid={`text-workout-sets-${exercise.exerciseId}`}>
                                 {exercise.sets}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-white">Reps:</span>
-                              <span className="text-[#FCD000]" data-testid={`text-workout-reps-${exercise.exerciseId}`}>
+                            <div className="flex flex-col items-center bg-black/40 rounded-sm px-3 py-2 border border-zinc-700">
+                              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Reps</span>
+                              <span className="font-black text-[#FCD000] text-lg leading-none" data-testid={`text-workout-reps-${exercise.exerciseId}`}>
                                 {exercise.reps}
                               </span>
                             </div>
                             {exercise.duration && (
-                              <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-white" />
-                                <span className="font-bold text-white">Time:</span>
-                                <span className="text-[#FCD000]" data-testid={`text-workout-duration-${exercise.exerciseId}`}>
-                                  {exercise.duration} min
+                              <div className="flex flex-col items-center bg-black/40 rounded-sm px-3 py-2 border border-zinc-700">
+                                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Time</span>
+                                <span className="font-black text-[#FCD000] text-lg leading-none" data-testid={`text-workout-duration-${exercise.exerciseId}`}>
+                                  {exercise.duration}<span className="text-xs">m</span>
                                 </span>
                               </div>
                             )}
