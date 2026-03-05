@@ -1758,9 +1758,9 @@ export default function Fitness() {
 
                           {/* Notes */}
                           {exercise.notes && (
-                            <div className="mt-3 p-2 bg-[#FCD000]/20 rounded-sm border border-[#FCD000]">
-                              <p className="text-sm text-white">
-                                <strong className="text-[#FCD000]">Notes:</strong> {exercise.notes}
+                            <div className="mt-3 p-2 bg-[#FCD000] rounded-sm border-2 border-black">
+                              <p className="text-sm text-black">
+                                <strong>Notes:</strong> {exercise.notes}
                               </p>
                             </div>
                           )}
@@ -2633,8 +2633,8 @@ export default function Fitness() {
 
                               {/* Notes */}
                               {exercise.notes && (
-                                <div className="mt-2 p-2 bg-[#FCD000]/20 rounded-sm border border-[#FCD000] text-sm">
-                                  <strong className="text-[#FCD000]">Notes:</strong> {exercise.notes}
+                                <div className="mt-2 p-2 bg-[#FCD000] rounded-sm border-2 border-black text-sm text-black">
+                                  <strong>Notes:</strong> {exercise.notes}
                                 </div>
                               )}
                             </div>
@@ -2752,8 +2752,8 @@ export default function Fitness() {
 
                             {/* Notes */}
                             {exercise.notes && (
-                              <div className="mt-2 p-2 bg-[#FCD000]/20 rounded-sm border border-[#FCD000] text-sm">
-                                <strong className="text-[#FCD000]">Notes:</strong> {exercise.notes}
+                              <div className="mt-2 p-2 bg-[#FCD000] rounded-sm border-2 border-black text-sm text-black">
+                                <strong>Notes:</strong> {exercise.notes}
                               </div>
                             )}
                           </div>

@@ -463,8 +463,8 @@ export default function ViewPlan() {
 
                           {/* Notes */}
                           {exercise.notes && (
-                            <div className="mt-2 p-2 bg-[#FCD000]/20 rounded-sm border border-[#FCD000] text-sm">
-                              <strong className="text-[#FCD000]">Notes:</strong> {exercise.notes}
+                            <div className="mt-2 p-2 bg-[#FCD000] rounded-sm border-2 border-black text-sm text-black">
+                              <strong>Notes:</strong> {exercise.notes}
                             </div>
                           )}
                         </div>
