@@ -2633,9 +2633,8 @@ export default function Fitness() {
 
                               {/* Notes */}
                               {exercise.notes && (
-                                <div className="p-2 bg-ministry-gold/10 rounded text-sm">
-                                  <span className="font-medium">Notes: </span>
-                                  {exercise.notes}
+                                <div className="mt-2 p-2 bg-[#FCD000]/20 rounded-sm border border-[#FCD000] text-sm">
+                                  <strong className="text-[#FCD000]">Notes:</strong> {exercise.notes}
                                 </div>
                               )}
                             </div>
@@ -2753,9 +2752,8 @@ export default function Fitness() {
 
                             {/* Notes */}
                             {exercise.notes && (
-                              <div className="p-2 bg-ministry-gold/10 rounded text-sm">
-                                <span className="font-medium">Notes: </span>
-                                {exercise.notes}
+                              <div className="mt-2 p-2 bg-[#FCD000]/20 rounded-sm border border-[#FCD000] text-sm">
+                                <strong className="text-[#FCD000]">Notes:</strong> {exercise.notes}
                               </div>
                             )}
                           </div>
