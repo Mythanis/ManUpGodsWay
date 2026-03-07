@@ -2533,111 +2533,96 @@ export default function Fitness() {
 
       {/* Plan Exercises Modal */}
       <Dialog open={showPlanModal} onOpenChange={setShowPlanModal}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Dumbbell className="w-5 h-5" />
-              Plan Exercises
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedPlanForView && (
-            <div className="space-y-4">
-              <div className="text-center p-4 bg-ministry-gold/20 rounded-lg">
-                <h3 className="font-semibold text-lg">{selectedPlanForView.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {selectedPlanForView.exercises?.length || 0} exercises in this plan
-                </p>
-              </div>
-
-              {(() => {
-                const allExercises = selectedPlanForView.exercises || [];
-                
-                // Remove duplicates based on exerciseId
-                const seenExerciseIds = new Set<string>();
-                const uniqueExercises = allExercises.filter(exercise => {
-                  if (seenExerciseIds.has(exercise.exerciseId)) {
-                    return false;
-                  }
-                  seenExerciseIds.add(exercise.exerciseId);
-                  return true;
-                });
-                
-                if (uniqueExercises.length === 0) {
-                  return (
-                    <div className="text-center py-8">
-                      <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
-                      <p className="text-muted-foreground">
-                        No exercises in this plan
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Edit the plan to add exercises
-                      </p>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div className="space-y-3">
-                    {uniqueExercises.map((exercise, index) => (
-                      <Card key={exercise.id} className="border border-ministry-charcoal">
-                        <CardContent className="p-4">
-                          <div className="flex gap-4">
-                            {/* Exercise Details */}
-                            <div className="flex-grow">
-                              <h4 className="font-medium text-base mb-2" data-testid={`text-modal-exercise-name-${exercise.exerciseId}`}>
-                                {index + 1}. {exercise.exerciseName}
-                              </h4>
-                              
-                              {/* Sets, Reps, and Time */}
-                              <div className="grid grid-cols-3 gap-3 text-sm mb-2">
-                                <div className="flex items-center gap-1">
-                                  <span className="font-medium">Sets:</span>
-                                  <span className="text-ministry-gold" data-testid={`text-modal-sets-${exercise.exerciseId}`}>{exercise.sets}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <span className="font-medium">Reps:</span>
-                                  <span className="text-ministry-gold" data-testid={`text-modal-reps-${exercise.exerciseId}`}>{exercise.reps}</span>
-                                </div>
-                                {exercise.duration && (
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="w-4 h-4" />
-                                    <span className="font-medium">Time:</span>
-                                    <span className="text-ministry-gold" data-testid={`text-modal-minutes-${exercise.exerciseId}`}>{exercise.duration} min</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Scheduled Days */}
-                              {exercise.daysOfWeek && exercise.daysOfWeek.length > 0 && (
-                                <div className="mb-2">
-                                  <span className="text-sm font-medium">Scheduled: </span>
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {exercise.daysOfWeek.map((day: string) => (
-                                      <Badge key={day} variant="outline" className="text-xs capitalize">
-                                        {day}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Notes */}
-                              {exercise.notes && (
-                                <div className="mt-2 p-2 bg-[#FCD000] rounded-sm border-2 border-black text-sm text-black">
-                                  <strong>Notes:</strong> {exercise.notes}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                );
-              })()}
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
+          {/* Header */}
+          <div className="bg-[#FCD000] px-5 py-4 border-b-2 border-black flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <Dumbbell className="w-5 h-5 text-black" />
+              <h2 className="font-black text-black uppercase tracking-tight text-lg">Plan Exercises</h2>
             </div>
-          )}
+            {selectedPlanForView && (
+              <p className="text-black/70 text-sm font-bold mt-0.5">{selectedPlanForView.name}</p>
+            )}
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+          {selectedPlanForView && (() => {
+            const allExercises = selectedPlanForView.exercises || [];
+            const seenExerciseIds = new Set<string>();
+            const uniqueExercises = allExercises.filter(exercise => {
+              if (seenExerciseIds.has(exercise.exerciseId)) return false;
+              seenExerciseIds.add(exercise.exerciseId);
+              return true;
+            });
+
+            if (uniqueExercises.length === 0) {
+              return (
+                <div className="text-center py-12">
+                  <Dumbbell className="w-12 h-12 mx-auto text-zinc-600 mb-3" />
+                  <p className="text-white font-black uppercase tracking-tight">No exercises yet</p>
+                  <p className="text-zinc-500 text-sm mt-1">Edit the plan to add exercises</p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-3">
+                {uniqueExercises.map((exercise, index) => (
+                  <div key={exercise.id} className="liquid-black rounded-sm border-2 border-zinc-700 overflow-hidden">
+                    {/* Exercise name bar */}
+                    <div className="flex items-center gap-2 px-3 py-2 border-b border-zinc-700">
+                      <span className="text-[10px] font-black text-zinc-500 w-5 text-center">{index + 1}</span>
+                      <h4 className="font-black text-white uppercase tracking-tight text-sm leading-tight flex-1" data-testid={`text-modal-exercise-name-${exercise.exerciseId}`}>
+                        {exercise.exerciseName}
+                      </h4>
+                    </div>
+
+                    <div className="px-3 py-3 space-y-3">
+                      {/* Stat boxes */}
+                      <div className="flex gap-2">
+                        <div className="flex flex-col items-center bg-black/60 rounded-sm px-3 py-2 border border-zinc-700 flex-1">
+                          <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Sets</span>
+                          <span className="font-black text-[#FCD000] text-xl leading-none" data-testid={`text-modal-sets-${exercise.exerciseId}`}>{exercise.sets}</span>
+                        </div>
+                        <div className="flex flex-col items-center bg-black/60 rounded-sm px-3 py-2 border border-zinc-700 flex-1">
+                          <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Reps</span>
+                          <span className="font-black text-[#FCD000] text-xl leading-none" data-testid={`text-modal-reps-${exercise.exerciseId}`}>{exercise.reps}</span>
+                        </div>
+                        {exercise.duration && (
+                          <div className="flex flex-col items-center bg-black/60 rounded-sm px-3 py-2 border border-zinc-700 flex-1">
+                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Time</span>
+                            <span className="font-black text-[#FCD000] text-xl leading-none" data-testid={`text-modal-minutes-${exercise.exerciseId}`}>{exercise.duration}<span className="text-xs">m</span></span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Scheduled Days */}
+                      {exercise.daysOfWeek && exercise.daysOfWeek.length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Scheduled Days</p>
+                          <div className="flex flex-wrap gap-1">
+                            {exercise.daysOfWeek.map((day: string) => (
+                              <span key={day} className="text-[10px] font-black uppercase bg-zinc-800 text-[#FCD000] border border-zinc-600 px-2 py-0.5 rounded-sm capitalize">
+                                {day}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Notes */}
+                      {exercise.notes && (
+                        <div className="p-2 bg-[#FCD000] rounded-sm border-2 border-black text-sm text-black">
+                          <strong>Notes:</strong> {exercise.notes}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+          </div>
         </DialogContent>
       </Dialog>
 
