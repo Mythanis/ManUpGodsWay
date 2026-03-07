@@ -1746,32 +1746,36 @@ export default function Fitness() {
 
         {/* Tab Navigation */}
         <Tabs defaultValue="workout" className="w-full">
-          <TabsList className="flex w-full liquid-black rounded-sm border-2 border-black h-auto p-1 gap-1 overflow-x-auto scrollbar-hide">
-            <TabsTrigger value="workout" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
-              <Dumbbell className="w-3.5 h-3.5 flex-shrink-0" />
-              Workout
-            </TabsTrigger>
-            <TabsTrigger value="exercises" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
-              <Search className="w-3.5 h-3.5 flex-shrink-0" />
-              Exercises
-            </TabsTrigger>
-            <TabsTrigger value="favorites" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
-              <Heart className="w-3.5 h-3.5 flex-shrink-0" />
-              Favorites
-            </TabsTrigger>
-            <TabsTrigger value="pre-built-plans" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
-              <BookOpen className="w-3.5 h-3.5 flex-shrink-0" />
-              Plans
-            </TabsTrigger>
-            <TabsTrigger value="my-plans" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
-              <List className="w-3.5 h-3.5 flex-shrink-0" />
-              My Plans
-            </TabsTrigger>
-            <TabsTrigger value="community" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
-              <Users className="w-3.5 h-3.5 flex-shrink-0" />
-              Community
-            </TabsTrigger>
-          </TabsList>
+          <div className="relative">
+            <TabsList className="flex w-full liquid-black rounded-sm border-2 border-black h-auto p-1 gap-1 overflow-x-auto scrollbar-hide">
+              <TabsTrigger value="workout" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
+                <Dumbbell className="w-3.5 h-3.5 flex-shrink-0" />
+                Workout
+              </TabsTrigger>
+              <TabsTrigger value="community" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
+                <Users className="w-3.5 h-3.5 flex-shrink-0" />
+                Community
+              </TabsTrigger>
+              <TabsTrigger value="exercises" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
+                <Search className="w-3.5 h-3.5 flex-shrink-0" />
+                Exercises
+              </TabsTrigger>
+              <TabsTrigger value="favorites" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
+                <Heart className="w-3.5 h-3.5 flex-shrink-0" />
+                Favorites
+              </TabsTrigger>
+              <TabsTrigger value="pre-built-plans" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
+                <BookOpen className="w-3.5 h-3.5 flex-shrink-0" />
+                Plans
+              </TabsTrigger>
+              <TabsTrigger value="my-plans" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
+                <List className="w-3.5 h-3.5 flex-shrink-0" />
+                My Plans
+              </TabsTrigger>
+            </TabsList>
+            {/* Right fade to hint at scrollability */}
+            <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-black to-transparent rounded-r-sm" />
+          </div>
 
           {/* Daily Workout Tab */}
           <TabsContent value="workout" className="space-y-6">
