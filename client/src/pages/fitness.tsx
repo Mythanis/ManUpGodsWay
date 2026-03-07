@@ -966,7 +966,19 @@ export default function Fitness() {
         return [];
       }
 
+      // Format equipment names with proper capitalization and grammar
+      const formatEquipmentName = (s: string) =>
+        s.split(' ').map(w => w.toLowerCase() === 'ez' ? 'EZ' : w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      const formatEquipmentList = (items: string[]) => {
+        const formatted = items.map(formatEquipmentName);
+        if (formatted.length === 1) return formatted[0];
+        if (formatted.length === 2) return `${formatted[0]} and ${formatted[1]}`;
+        return `${formatted.slice(0, -1).join(', ')}, and ${formatted[formatted.length - 1]}`;
+      };
       const equipmentLabel = equipmentList.length > 1 ? equipmentList.join(' + ') : equipmentList[0];
+      const equipmentDisplay = formatEquipmentList(equipmentList);
+      const levelDisplay = level.charAt(0).toUpperCase() + level.slice(1);
+
       const weeklyPlan = generateDynamicPlan(
         exercises, 
         level as "Beginner"|"Intermediate"|"Advanced", 
@@ -976,8 +988,8 @@ export default function Fitness() {
       const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay, workoutDays);
       
       // Customize plan based on additional parameters
-      preBuiltPlan.name = `${level.charAt(0).toUpperCase() + level.slice(1)} ${equipmentLabel} Program (${duration}min)`;
-      preBuiltPlan.description = `${level} level program using ${equipmentLabel}. ${frequency} days per week, ${duration} minutes per session.`;
+      preBuiltPlan.name = `${levelDisplay} ${equipmentDisplay} Program (${duration} min)`;
+      preBuiltPlan.description = `${levelDisplay}-level program using ${equipmentDisplay}, ${frequency} days per week, ${duration} minutes per session.`;
       preBuiltPlan.workoutsPerWeek = parseInt(frequency);
       
       // Use the user's selected workout days for the schedule
