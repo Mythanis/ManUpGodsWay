@@ -1746,7 +1746,7 @@ export default function Fitness() {
 
         {/* Tab Navigation */}
         <Tabs defaultValue="workout" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 liquid-black rounded-sm border-2 border-black h-auto p-1 overflow-hidden">
+          <TabsList className="grid w-full grid-cols-6 liquid-black rounded-sm border-2 border-black h-auto p-1 overflow-hidden">
             <TabsTrigger value="workout" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-bold uppercase py-2">
               <Dumbbell className="w-4 h-4" />
               <span className="hidden sm:inline">Workout</span>
