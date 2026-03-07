@@ -1746,30 +1746,30 @@ export default function Fitness() {
 
         {/* Tab Navigation */}
         <Tabs defaultValue="workout" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 liquid-black rounded-sm border-2 border-black h-auto p-1 overflow-hidden">
-            <TabsTrigger value="workout" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-bold uppercase py-2">
-              <Dumbbell className="w-4 h-4" />
-              <span className="hidden sm:inline">Workout</span>
+          <TabsList className="flex w-full liquid-black rounded-sm border-2 border-black h-auto p-1 gap-1 overflow-x-auto scrollbar-hide">
+            <TabsTrigger value="workout" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
+              <Dumbbell className="w-3.5 h-3.5 flex-shrink-0" />
+              Workout
             </TabsTrigger>
-            <TabsTrigger value="exercises" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-bold uppercase py-2">
-              <Search className="w-4 h-4" />
-              <span className="hidden sm:inline">Exercises</span>
+            <TabsTrigger value="exercises" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
+              <Search className="w-3.5 h-3.5 flex-shrink-0" />
+              Exercises
             </TabsTrigger>
-            <TabsTrigger value="favorites" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-bold uppercase py-2">
-              <Heart className="w-4 h-4" />
-              <span className="hidden sm:inline">Favorites</span>
+            <TabsTrigger value="favorites" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
+              <Heart className="w-3.5 h-3.5 flex-shrink-0" />
+              Favorites
             </TabsTrigger>
-            <TabsTrigger value="pre-built-plans" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-bold uppercase py-2">
-              <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Plans</span>
+            <TabsTrigger value="pre-built-plans" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
+              <BookOpen className="w-3.5 h-3.5 flex-shrink-0" />
+              Plans
             </TabsTrigger>
-            <TabsTrigger value="my-plans" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-bold uppercase py-2">
-              <List className="w-4 h-4" />
-              <span className="hidden sm:inline">My Plans</span>
+            <TabsTrigger value="my-plans" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
+              <List className="w-3.5 h-3.5 flex-shrink-0" />
+              My Plans
             </TabsTrigger>
-            <TabsTrigger value="community" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-bold uppercase py-2">
-              <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Community</span>
+            <TabsTrigger value="community" className="flex-shrink-0 flex items-center gap-1.5 text-xs text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-3 whitespace-nowrap">
+              <Users className="w-3.5 h-3.5 flex-shrink-0" />
+              Community
             </TabsTrigger>
           </TabsList>
 
