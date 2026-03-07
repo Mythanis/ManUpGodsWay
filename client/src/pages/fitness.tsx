@@ -1502,7 +1502,7 @@ export default function Fitness() {
 
       {/* Fitness Pillar Dialog — available to all users */}
       <Dialog open={showFitnessPillarDialog} onOpenChange={setShowFitnessPillarDialog}>
-        <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85vh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
+        <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85svh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
           <DialogHeader className="bg-[#FCD000] text-black px-6 py-4 border-b border-[#FCD000] flex-shrink-0">
             <DialogTitle className="text-xl font-black uppercase tracking-wide text-black relative z-10">
               Man Up God's Way Fitness Pillar
@@ -1578,7 +1578,7 @@ export default function Fitness() {
 
         {/* Fitness Coach Dialog */}
         <Dialog open={showFitnessCoachDialog} onOpenChange={setShowFitnessCoachDialog}>
-          <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85vh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
+          <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85svh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
             <DialogHeader className="bg-[#FCD000] text-black px-6 py-4 border-b border-[#FCD000] flex-shrink-0">
               <DialogTitle className="text-xl font-black uppercase tracking-wide text-black relative z-10">
                 Meet Your Fitness Coach
@@ -2516,7 +2516,7 @@ export default function Fitness() {
 
       {/* Plan Exercises Modal */}
       <Dialog open={showPlanModal} onOpenChange={setShowPlanModal}>
-        <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[85svh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
           {/* Header */}
           <div className="bg-[#FCD000] px-5 py-4 border-b-2 border-black flex-shrink-0">
             <div className="flex items-center gap-2">
