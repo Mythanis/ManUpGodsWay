@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -41,7 +42,11 @@ import {
   CreditCard,
   ShieldCheck,
   Download,
-  ShoppingCart
+  ShoppingCart,
+  Users,
+  MessageSquare,
+  Send,
+  ImagePlus
 } from "lucide-react";
 import { format, isToday, isPast, isFuture } from "date-fns";
 import { Link } from "wouter";
@@ -216,6 +221,12 @@ export default function Fitness() {
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
   const { user: authUser } = useAuth();
 
+  // Community tab state
+  const [communityPostText, setCommunityPostText] = useState('');
+  const [communityCategory, setCommunityCategory] = useState('encouragement');
+  const [communityMedia, setCommunityMedia] = useState<{ url: string; type: string }[]>([]);
+  const [communityUploading, setCommunityUploading] = useState(false);
+
   // Check fitness membership status
   const { data: membershipData, isLoading: membershipLoading } = useQuery<{ hasMembership: boolean; membership?: any }>({
     queryKey: ['/api/fitness/membership'],
@@ -236,6 +247,82 @@ export default function Fitness() {
     queryKey: ['/api/fitness/purchases'],
     enabled: hasMembership,
   });
+
+  // Fitness Community queries
+  const { data: communityPosts = [], refetch: refetchCommunityPosts } = useQuery<any[]>({
+    queryKey: ['/api/fitness/community/posts'],
+    enabled: hasMembership,
+    refetchInterval: 15000,
+  });
+
+  const createPostMutation = useMutation({
+    mutationFn: async (data: { content: string; category: string; mediaUrls?: string[]; mediaTypes?: string[] }) => {
+      const res = await apiRequest('POST', '/api/fitness/community/posts', data);
+      return res.json();
+    },
+    onSuccess: () => {
+      setCommunityPostText('');
+      setCommunityCategory('encouragement');
+      setCommunityMedia([]);
+      queryClient.invalidateQueries({ queryKey: ['/api/fitness/community/posts'] });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Error', description: err.message || 'Failed to post', variant: 'destructive' });
+    },
+  });
+
+  const likePostMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      const res = await apiRequest('POST', `/api/fitness/community/posts/${postId}/like`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/fitness/community/posts'] });
+    },
+  });
+
+  const deletePostMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      const res = await apiRequest('DELETE', `/api/fitness/community/posts/${postId}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/fitness/community/posts'] });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Error', description: err.message || 'Failed to delete', variant: 'destructive' });
+    },
+  });
+
+  const handleCommunityMediaUpload = async (files: FileList) => {
+    setCommunityUploading(true);
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach(f => formData.append('media', f));
+      const res = await fetch('/api/fitness/community/upload-media', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      setCommunityMedia(prev => [...prev, ...data.files]);
+    } catch (err: any) {
+      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setCommunityUploading(false);
+    }
+  };
+
+  const handleSubmitCommunityPost = () => {
+    if (!communityPostText.trim()) return;
+    createPostMutation.mutate({
+      content: communityPostText,
+      category: communityCategory,
+      mediaUrls: communityMedia.map(m => m.url),
+      mediaTypes: communityMedia.map(m => m.type),
+    });
+  };
 
   // Subscribe to fitness membership
   const subscribeMutation = useMutation({
@@ -1680,6 +1767,10 @@ export default function Fitness() {
               <List className="w-4 h-4" />
               <span className="hidden sm:inline">My Plans</span>
             </TabsTrigger>
+            <TabsTrigger value="community" className="flex items-center gap-1 text-xs sm:text-sm text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-bold uppercase py-2">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Community</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* Daily Workout Tab */}
@@ -2510,6 +2601,201 @@ export default function Fitness() {
               </div>
             )}
           </TabsContent>
+
+          {/* ── Fitness Community Tab ─────────────────────────────────────── */}
+          <TabsContent value="community" className="space-y-4">
+
+            {/* Post Composer */}
+            <div className="rounded-sm border-2 border-zinc-700 overflow-hidden">
+              <div className="bg-[#FCD000] px-4 py-3 border-b-2 border-black">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-black" />
+                  <h2 className="font-black text-black uppercase tracking-tight text-base">Post to the Community</h2>
+                </div>
+              </div>
+              <div className="bg-zinc-900 p-4 space-y-3">
+                {/* Category picker */}
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { key: 'encouragement', label: 'Encouragement' },
+                    { key: 'help', label: 'Help / Questions' },
+                    { key: 'plan-ideas', label: 'Plan Ideas' },
+                    { key: 'nutrition', label: 'Nutrition' },
+                  ].map(cat => (
+                    <button
+                      key={cat.key}
+                      onClick={() => setCommunityCategory(cat.key)}
+                      className={`text-xs font-black uppercase px-3 py-1 rounded-sm border-2 transition-colors ${
+                        communityCategory === cat.key
+                          ? 'bg-[#FCD000] border-[#FCD000] text-black'
+                          : 'bg-transparent border-zinc-600 text-zinc-400 hover:border-zinc-400'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Text input */}
+                <Textarea
+                  placeholder="Share encouragement, ask for help, post a plan idea, or talk nutrition..."
+                  value={communityPostText}
+                  onChange={e => setCommunityPostText(e.target.value)}
+                  className="bg-black border-zinc-600 text-white placeholder:text-zinc-500 min-h-[80px] resize-none"
+                />
+
+                {/* Media preview */}
+                {communityMedia.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {communityMedia.map((m, i) => (
+                      <div key={i} className="relative">
+                        {m.type === 'video' ? (
+                          <video src={m.url} className="w-20 h-20 object-cover rounded-sm border border-zinc-600" muted />
+                        ) : (
+                          <img src={m.url} alt="" className="w-20 h-20 object-cover rounded-sm border border-zinc-600" />
+                        )}
+                        <button
+                          onClick={() => setCommunityMedia(prev => prev.filter((_, idx) => idx !== i))}
+                          className="absolute -top-1 -right-1 bg-black border border-zinc-500 rounded-full w-5 h-5 flex items-center justify-center text-white hover:bg-red-900"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Action row */}
+                <div className="flex items-center justify-between">
+                  <label className="cursor-pointer flex items-center gap-2 text-zinc-400 hover:text-[#FCD000] transition-colors">
+                    <ImagePlus className="w-5 h-5" />
+                    <span className="text-xs font-black uppercase">
+                      {communityUploading ? 'Uploading...' : 'Add Photo / Video'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      multiple
+                      className="hidden"
+                      disabled={communityUploading}
+                      onChange={e => e.target.files && handleCommunityMediaUpload(e.target.files)}
+                    />
+                  </label>
+                  <Button
+                    onClick={handleSubmitCommunityPost}
+                    disabled={!communityPostText.trim() || createPostMutation.isPending}
+                    className="bg-[#FCD000] text-black font-black border-2 border-black hover:bg-yellow-400 uppercase text-xs gap-1"
+                    size="sm"
+                  >
+                    <Send className="w-3 h-3" />
+                    {createPostMutation.isPending ? 'Posting...' : 'Post'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Feed */}
+            {communityPosts.length === 0 ? (
+              <div className="text-center py-12">
+                <Users className="w-12 h-12 mx-auto text-zinc-600 mb-3" />
+                <p className="text-white font-black uppercase tracking-tight">No posts yet</p>
+                <p className="text-zinc-500 text-sm mt-1">Be the first to post something!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {communityPosts.map((post: any) => {
+                  const categoryLabels: Record<string, string> = {
+                    encouragement: 'Encouragement',
+                    help: 'Help / Questions',
+                    'plan-ideas': 'Plan Ideas',
+                    nutrition: 'Nutrition',
+                  };
+                  const categoryColors: Record<string, string> = {
+                    encouragement: 'bg-green-800 text-green-200',
+                    help: 'bg-blue-800 text-blue-200',
+                    'plan-ideas': 'bg-purple-800 text-purple-200',
+                    nutrition: 'bg-orange-800 text-orange-200',
+                  };
+                  const isOwner = (authUser as any)?.id === post.userId || (authUser as any)?.claims?.sub === post.userId;
+                  return (
+                    <div key={post.id} className="bg-zinc-900 border-2 border-zinc-700 rounded-sm overflow-hidden">
+                      {/* Post header */}
+                      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-700">
+                        <div className="flex items-center gap-2">
+                          {post.authorProfilePicture ? (
+                            <img src={post.authorProfilePicture} alt="" className="w-8 h-8 rounded-full object-cover border border-zinc-600" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center">
+                              <User className="w-4 h-4 text-zinc-400" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-white font-black text-sm leading-none">{post.authorName}</p>
+                            <p className="text-zinc-500 text-[10px]">{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm ${categoryColors[post.category] || 'bg-zinc-700 text-zinc-300'}`}>
+                            {categoryLabels[post.category] || post.category}
+                          </span>
+                          {isOwner && (
+                            <button
+                              onClick={() => deletePostMutation.mutate(post.id)}
+                              className="text-zinc-600 hover:text-red-400 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Post content */}
+                      <div className="px-4 py-3">
+                        <p className="text-white text-sm whitespace-pre-wrap">{post.content}</p>
+                      </div>
+
+                      {/* Media grid */}
+                      {post.mediaUrls && post.mediaUrls.length > 0 && (
+                        <div className={`grid gap-1 px-4 pb-3 ${post.mediaUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                          {post.mediaUrls.map((url: string, i: number) => (
+                            post.mediaTypes?.[i] === 'video' ? (
+                              <video
+                                key={i}
+                                src={url}
+                                controls
+                                className="w-full rounded-sm max-h-64 object-cover border border-zinc-700"
+                              />
+                            ) : (
+                              <img
+                                key={i}
+                                src={url}
+                                alt=""
+                                className="w-full rounded-sm max-h-64 object-cover border border-zinc-700"
+                              />
+                            )
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Like bar */}
+                      <div className="px-4 py-2 border-t border-zinc-700 flex items-center gap-3">
+                        <button
+                          onClick={() => likePostMutation.mutate(post.id)}
+                          className={`flex items-center gap-1 text-xs font-black uppercase transition-colors ${
+                            post.likedByMe ? 'text-[#FCD000]' : 'text-zinc-500 hover:text-[#FCD000]'
+                          }`}
+                        >
+                          <Heart className={`w-4 h-4 ${post.likedByMe ? 'fill-[#FCD000]' : ''}`} />
+                          {post.likes > 0 && <span>{post.likes}</span>}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
         </Tabs>
       </>)}
       </div>

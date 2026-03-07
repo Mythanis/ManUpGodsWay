@@ -45,7 +45,8 @@ import {
   insertStudyEditableSectionSchema,
   insertUserStudyResponseSchema,
   insertWarGroupSchema,
-  insertWarGroupMemberSchema
+  insertWarGroupMemberSchema,
+  insertFitnessPostSchema
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -9036,6 +9037,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Internal server error' });
     }
   });
+
+  // ─── Fitness Community ─────────────────────────────────────────────────────
+
+  const requireFitnessAccess = async (req: any, res: any, next: any) => {
+    const user = await storage.getUser(req.user.claims.sub);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user.hasFitnessAccess) return res.status(403).json({ message: 'Fitness subscription required' });
+    req.fitnessUser = user;
+    next();
+  };
+
+  // Upload media for fitness community post
+  app.post('/api/fitness/community/upload-media', isAuthenticated, requireFitnessAccess, communityMediaUpload.array('media', 5), async (req: any, res) => {
+    try {
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ message: 'No files uploaded' });
+      }
+      const results = (req.files as Express.Multer.File[]).map(file => {
+        let mediaType = 'image';
+        if (file.mimetype.startsWith('video/')) mediaType = 'video';
+        else if (file.mimetype === 'image/gif') mediaType = 'gif';
+        return { url: `/uploads/community/${file.filename}`, type: mediaType };
+      });
+      res.json({ files: results });
+    } catch (error) {
+      console.error('Error uploading fitness community media:', error);
+      res.status(500).json({ message: 'Upload failed' });
+    }
+  });
+
+  // Get all fitness community posts
+  app.get('/api/fitness/community/posts', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+    try {
+      const userId = req.fitnessUser.id;
+      const posts = await db
+        .select({
+          id: schema.fitnessPosts.id,
+          content: schema.fitnessPosts.content,
+          mediaUrls: schema.fitnessPosts.mediaUrls,
+          mediaTypes: schema.fitnessPosts.mediaTypes,
+          category: schema.fitnessPosts.category,
+          likes: schema.fitnessPosts.likes,
+          createdAt: schema.fitnessPosts.createdAt,
+          userId: schema.fitnessPosts.userId,
+          authorName: schema.users.firstName,
+          authorLastName: schema.users.lastName,
+          authorProfilePicture: schema.users.profilePicture,
+        })
+        .from(schema.fitnessPosts)
+        .leftJoin(schema.users, eq(schema.fitnessPosts.userId, schema.users.id))
+        .orderBy(desc(schema.fitnessPosts.createdAt))
+        .limit(100);
+
+      // Get user's liked posts
+      const likedRows = await db
+        .select({ postId: schema.fitnessPostLikes.postId })
+        .from(schema.fitnessPostLikes)
+        .where(eq(schema.fitnessPostLikes.userId, userId));
+      const likedSet = new Set(likedRows.map(r => r.postId));
+
+      const result = posts.map(p => ({
+        ...p,
+        authorName: `${p.authorName || ''} ${p.authorLastName || ''}`.trim() || 'Member',
+        likedByMe: likedSet.has(p.id),
+      }));
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching fitness community posts:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Create a fitness community post
+  app.post('/api/fitness/community/posts', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+    try {
+      const userId = req.fitnessUser.id;
+      const { content, mediaUrls, mediaTypes, category } = req.body;
+      if (!content || !content.trim()) {
+        return res.status(400).json({ message: 'Content is required' });
+      }
+      const [post] = await db.insert(schema.fitnessPosts).values({
+        userId,
+        content: content.trim(),
+        mediaUrls: mediaUrls || null,
+        mediaTypes: mediaTypes || null,
+        category: category || 'encouragement',
+      }).returning();
+      res.json(post);
+    } catch (error) {
+      console.error('Error creating fitness community post:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Toggle like on a fitness community post
+  app.post('/api/fitness/community/posts/:id/like', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+    try {
+      const userId = req.fitnessUser.id;
+      const postId = req.params.id;
+
+      const existing = await db
+        .select()
+        .from(schema.fitnessPostLikes)
+        .where(and(eq(schema.fitnessPostLikes.postId, postId), eq(schema.fitnessPostLikes.userId, userId)))
+        .limit(1);
+
+      if (existing.length > 0) {
+        await db.delete(schema.fitnessPostLikes).where(
+          and(eq(schema.fitnessPostLikes.postId, postId), eq(schema.fitnessPostLikes.userId, userId))
+        );
+        await db.update(schema.fitnessPosts)
+          .set({ likes: sql`GREATEST(0, ${schema.fitnessPosts.likes} - 1)` })
+          .where(eq(schema.fitnessPosts.id, postId));
+        return res.json({ liked: false });
+      } else {
+        await db.insert(schema.fitnessPostLikes).values({ postId, userId });
+        await db.update(schema.fitnessPosts)
+          .set({ likes: sql`${schema.fitnessPosts.likes} + 1` })
+          .where(eq(schema.fitnessPosts.id, postId));
+        return res.json({ liked: true });
+      }
+    } catch (error) {
+      console.error('Error toggling fitness post like:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Delete a fitness community post (owner or admin)
+  app.delete('/api/fitness/community/posts/:id', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+    try {
+      const user = req.fitnessUser;
+      const [post] = await db
+        .select()
+        .from(schema.fitnessPosts)
+        .where(eq(schema.fitnessPosts.id, req.params.id))
+        .limit(1);
+      if (!post) return res.status(404).json({ message: 'Post not found' });
+      if (post.userId !== user.id && !isAdmin(user)) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      await db.delete(schema.fitnessPosts).where(eq(schema.fitnessPosts.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting fitness community post:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // ─── Events routes ──────────────────────────────────────────────────────────
 
   // Events routes
   app.get('/api/events', async (req, res) => {

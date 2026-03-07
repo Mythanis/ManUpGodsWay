@@ -2410,3 +2410,30 @@ export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema
 
 export type FitnessMembership = typeof fitnessMemberships.$inferSelect;
 export type FitnessPlanPurchase = typeof fitnessPlanPurchases.$inferSelect;
+
+export const fitnessPosts = pgTable("fitness_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  mediaUrls: text("media_urls").array(),
+  mediaTypes: text("media_types").array(),
+  category: varchar("category", { length: 50 }).notNull().default('encouragement'),
+  likes: integer("likes").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const fitnessPostLikes = pgTable("fitness_post_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull().references(() => fitnessPosts.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertFitnessPostSchema = createInsertSchema(fitnessPosts).omit({
+  id: true,
+  likes: true,
+  createdAt: true,
+});
+
+export type FitnessPost = typeof fitnessPosts.$inferSelect;
+export type InsertFitnessPost = z.infer<typeof insertFitnessPostSchema>;
