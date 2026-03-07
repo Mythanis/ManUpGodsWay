@@ -2082,20 +2082,23 @@ export default function Fitness() {
                 </div>
               </div>
             )}
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">Pre-built Workout Plans</h2>
-            </div>
-            
-            {/* Plan Selection Options */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {/* Level Selection */}
-              <Card className="bg-ministry-gold-exact">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-black text-sm">Fitness Level</CardTitle>
-                </CardHeader>
-                <CardContent>
+            {/* Plan Builder — all options in one box */}
+            <div className="rounded-sm border-2 border-zinc-700 overflow-hidden">
+              {/* Box header */}
+              <div className="bg-[#FCD000] px-4 py-3 border-b-2 border-black">
+                <div className="flex items-center gap-2">
+                  <Dumbbell className="w-4 h-4 text-black" />
+                  <h2 className="font-black text-black uppercase tracking-tight text-base">Build Your Workout Plan</h2>
+                </div>
+              </div>
+
+              <div className="bg-zinc-900 divide-y divide-zinc-700">
+
+                {/* 1. Fitness Level */}
+                <div className="px-4 py-4">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Fitness Level</p>
                   <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                    <SelectTrigger className="w-full" data-testid="select-fitness-level">
+                    <SelectTrigger className="w-full bg-black border-zinc-600 text-white" data-testid="select-fitness-level">
                       <SelectValue placeholder="Select level" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2104,46 +2107,41 @@ export default function Fitness() {
                       <SelectItem value="advanced">Advanced</SelectItem>
                     </SelectContent>
                   </Select>
-                </CardContent>
-              </Card>
+                </div>
 
-              {/* Equipment Selection */}
-              <Card className="bg-ministry-gold-exact">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-black text-sm">Available Equipment (Select Multiple)</CardTitle>
-                  {selectedPlanEquipment.length > 0 && (
-                    <p className="text-xs text-ministry-charcoal mt-1">
-                      Selected: {selectedPlanEquipment.length} equipment type{selectedPlanEquipment.length !== 1 ? 's' : ''}
-                    </p>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
+                {/* 2. Available Equipment */}
+                <div className="px-4 py-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Available Equipment</p>
+                    {selectedPlanEquipment.length > 0 && (
+                      <span className="text-[10px] font-black text-[#FCD000] uppercase">
+                        {selectedPlanEquipment.length} selected
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
                     {equipments.map((equipment: string) => {
-                      // Format equipment name for display
-                      const formatLabel = (eq: string) => {
-                        return eq.split(' ').map(word => 
-                          word.charAt(0).toUpperCase() + word.slice(1)
-                        ).join(' ');
-                      };
-                      
+                      const formatLabel = (eq: string) =>
+                        eq.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                      const checked = selectedPlanEquipment.includes(equipment);
                       return (
                         <div key={equipment} className="flex items-center space-x-2">
                           <Checkbox
                             id={`equipment-${equipment}`}
-                            checked={selectedPlanEquipment.includes(equipment)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
+                            checked={checked}
+                            onCheckedChange={(c) => {
+                              if (c) {
                                 setSelectedPlanEquipment([...selectedPlanEquipment, equipment]);
                               } else {
                                 setSelectedPlanEquipment(selectedPlanEquipment.filter(e => e !== equipment));
                               }
                             }}
+                            className="border-zinc-500 data-[state=checked]:bg-[#FCD000] data-[state=checked]:border-[#FCD000]"
                             data-testid={`checkbox-equipment-${equipment}`}
                           />
                           <label
                             htmlFor={`equipment-${equipment}`}
-                            className="text-sm font-medium text-black leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            className="text-sm font-medium text-white cursor-pointer leading-none"
                           >
                             {formatLabel(equipment)}
                           </label>
@@ -2151,17 +2149,13 @@ export default function Fitness() {
                       );
                     })}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
 
-              {/* Start Day Selection */}
-              <Card className="bg-ministry-gold-exact">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-black text-sm">Start Day</CardTitle>
-                </CardHeader>
-                <CardContent>
+                {/* 3. Start Day */}
+                <div className="px-4 py-4">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Start Day</p>
                   <Select value={selectedStartDay} onValueChange={setSelectedStartDay}>
-                    <SelectTrigger className="w-full" data-testid="select-start-day">
+                    <SelectTrigger className="w-full bg-black border-zinc-600 text-white" data-testid="select-start-day">
                       <SelectValue placeholder="Select start day" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2174,17 +2168,13 @@ export default function Fitness() {
                       <SelectItem value="sunday">Sunday</SelectItem>
                     </SelectContent>
                   </Select>
-                </CardContent>
-              </Card>
+                </div>
 
-              {/* Workout Duration Selection */}
-              <Card className="bg-ministry-gold-exact">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-black text-sm">Workout Duration</CardTitle>
-                </CardHeader>
-                <CardContent>
+                {/* 4. Workout Duration */}
+                <div className="px-4 py-4">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Workout Duration</p>
                   <Select value={selectedWorkoutDuration} onValueChange={setSelectedWorkoutDuration}>
-                    <SelectTrigger className="w-full" data-testid="select-workout-duration">
+                    <SelectTrigger className="w-full bg-black border-zinc-600 text-white" data-testid="select-workout-duration">
                       <SelectValue placeholder="Select duration" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2194,17 +2184,13 @@ export default function Fitness() {
                       <SelectItem value="90">90 minutes</SelectItem>
                     </SelectContent>
                   </Select>
-                </CardContent>
-              </Card>
+                </div>
 
-              {/* Frequency Selection */}
-              <Card className="bg-ministry-gold-exact">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-black text-sm">Training Frequency</CardTitle>
-                </CardHeader>
-                <CardContent>
+                {/* 5. Training Frequency */}
+                <div className="px-4 py-4">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Training Frequency</p>
                   <Select value={selectedFrequency} onValueChange={setSelectedFrequency}>
-                    <SelectTrigger className="w-full" data-testid="select-frequency">
+                    <SelectTrigger className="w-full bg-black border-zinc-600 text-white" data-testid="select-frequency">
                       <SelectValue placeholder="Workouts per week" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2214,19 +2200,20 @@ export default function Fitness() {
                       <SelectItem value="6">6 days per week</SelectItem>
                     </SelectContent>
                   </Select>
-                </CardContent>
-              </Card>
+                </div>
 
-              {/* Workout Days Selection */}
-              {selectedFrequency && (
-                <Card className="bg-ministry-gold-exact">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-black text-sm">
-                      Workout Days (Select {selectedFrequency})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-3">
+                {/* 6. Workout Days (conditional) */}
+                {selectedFrequency && (
+                  <div className="px-4 py-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                        Workout Days
+                      </p>
+                      <span className="text-[10px] font-black text-[#FCD000] uppercase">
+                        {selectedDays.length} / {selectedFrequency} selected
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
                       {[
                         { value: 'monday', label: 'Monday' },
                         { value: 'tuesday', label: 'Tuesday' },
@@ -2256,23 +2243,19 @@ export default function Fitness() {
                                 setSelectedDays(prev => prev.filter(d => d !== day.value));
                               }
                             }}
+                            className="border-zinc-500 data-[state=checked]:bg-[#FCD000] data-[state=checked]:border-[#FCD000]"
                             data-testid={`checkbox-workout-day-${day.value}`}
                           />
-                          <label htmlFor={`day-${day.value}`} className="text-sm text-black cursor-pointer">
+                          <label htmlFor={`day-${day.value}`} className="text-sm text-white cursor-pointer">
                             {day.label}
                           </label>
                         </div>
                       ))}
                     </div>
-                    {selectedDays.length > 0 && (
-                      <div className="mt-3 text-xs text-black">
-                        Selected: {selectedDays.length} of {selectedFrequency} days
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
+                  </div>
+                )}
 
+              </div>
             </div>
 
             {/* Available Plans */}
