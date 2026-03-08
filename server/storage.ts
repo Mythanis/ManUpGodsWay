@@ -2241,7 +2241,7 @@ export class DatabaseStorage implements IStorage {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // First try to get exact today's devotional
+    // First try to get a devotional with today's exact date
     const [todayDevotional] = await db
       .select()
       .from(devotionals)
@@ -2255,14 +2255,20 @@ export class DatabaseStorage implements IStorage {
       return todayDevotional;
     }
 
-    // If no devotional for today, get the most recent one
-    const [recentDevotional] = await db
+    // No exact match — rotate through all devotionals by day so it changes daily
+    const allDevotionals = await db
       .select()
       .from(devotionals)
-      .orderBy(desc(devotionals.date))
-      .limit(1);
+      .orderBy(asc(devotionals.date));
 
-    return recentDevotional;
+    if (allDevotionals.length === 0) return undefined;
+
+    // Use a fixed epoch (Jan 1, 2026) to calculate a stable day index
+    const epoch = new Date('2026-01-01T00:00:00Z').getTime();
+    const dayIndex = Math.floor((today.getTime() - epoch) / (1000 * 60 * 60 * 24));
+    const index = ((dayIndex % allDevotionals.length) + allDevotionals.length) % allDevotionals.length;
+
+    return allDevotionals[index];
   }
 
   async getDevotional(id: string): Promise<Devotional | undefined> {
