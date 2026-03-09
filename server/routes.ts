@@ -69,6 +69,10 @@ function isOwner(user: any): boolean {
   return user && user.role === 'owner';
 }
 
+function isModerator(user: any): boolean {
+  return user && (user.role === 'moderator' || user.role === 'admin' || user.role === 'owner');
+}
+
 function hasAdminPrivileges(user: any): boolean {
   return isAdmin(user);
 }
@@ -2611,8 +2615,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      const isAdmin = user?.role === 'admin';
-      const success = await storage.deleteDiscussion(req.params.id, userId, isAdmin);
+      const canModerate = isModerator(user);
+      const success = await storage.deleteDiscussion(req.params.id, userId, canModerate);
       if (!success) {
         return res.status(403).json({ message: "You can only delete your own discussions" });
       }
@@ -2627,8 +2631,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      const isAdmin = user?.role === 'admin';
-      const success = await storage.deleteDiscussionReply(req.params.replyId, userId, isAdmin);
+      const canModerate = isModerator(user);
+      const success = await storage.deleteDiscussionReply(req.params.replyId, userId, canModerate);
       if (!success) {
         return res.status(403).json({ message: "You can only delete your own replies" });
       }
@@ -4226,6 +4230,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching study reviews:", error);
       res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
+  // Delete a study rating (moderator/admin only, or own rating)
+  app.delete('/api/studies/:id/ratings/:ratingId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!isModerator(user)) {
+        return res.status(403).json({ message: "Moderator access required" });
+      }
+      const success = await storage.deleteStudyRating(req.params.ratingId);
+      if (!success) return res.status(404).json({ message: "Rating not found" });
+      res.json({ message: "Rating deleted" });
+    } catch (error) {
+      console.error("Error deleting study rating:", error);
+      res.status(500).json({ message: "Failed to delete rating" });
     }
   });
 
@@ -6415,6 +6436,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete a video rating (moderator/admin only)
+  app.delete('/api/videos/:id/ratings/:ratingId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!isModerator(user)) {
+        return res.status(403).json({ message: "Moderator access required" });
+      }
+      const success = await storage.deleteVideoRating(req.params.ratingId);
+      if (!success) return res.status(404).json({ message: "Rating not found" });
+      res.json({ message: "Rating deleted" });
+    } catch (error) {
+      console.error("Error deleting video rating:", error);
+      res.status(500).json({ message: "Failed to delete rating" });
+    }
+  });
+
   // Rate a video
   app.post('/api/videos/:id/rate', isAuthenticated, async (req: any, res) => {
     try {
@@ -6846,6 +6884,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching podcast ratings:', error);
       res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Delete a podcast rating (moderator/admin only)
+  app.delete('/api/podcasts/:id/ratings/:ratingId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!isModerator(user)) {
+        return res.status(403).json({ message: "Moderator access required" });
+      }
+      const success = await storage.deletePodcastRating(req.params.ratingId);
+      if (!success) return res.status(404).json({ message: "Rating not found" });
+      res.json({ message: "Rating deleted" });
+    } catch (error) {
+      console.error("Error deleting podcast rating:", error);
+      res.status(500).json({ message: "Failed to delete rating" });
     }
   });
 
@@ -10360,9 +10415,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { postId } = req.params;
       const user = await storage.getUser(userId);
-      const isAdmin = user?.role === 'admin';
+      const canModerate = isModerator(user);
 
-      const success = await storage.deleteHurdleWallPost(postId, userId, isAdmin);
+      const success = await storage.deleteHurdleWallPost(postId, userId, canModerate);
       
       if (!success) {
         return res.status(403).json({ message: "You can only delete your own posts" });
@@ -10390,9 +10445,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { replyId } = req.params;
       const user = await storage.getUser(userId);
-      const isAdmin = user?.role === 'admin';
+      const canModerate = isModerator(user);
 
-      const success = await storage.deleteHurdleWallReply(replyId, userId, isAdmin);
+      const success = await storage.deleteHurdleWallReply(replyId, userId, canModerate);
       
       if (!success) {
         return res.status(403).json({ message: "You can only delete your own replies" });
@@ -10552,18 +10607,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Delete own accountability request
+  // Delete accountability request (own, or any if moderator/admin)
   app.delete('/api/accountability-requests/:requestId', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { requestId } = req.params;
+      const user = await storage.getUser(userId);
       
       const request = await storage.getAccountabilityRequestById(requestId);
       if (!request) {
         return res.status(404).json({ message: "Request not found" });
       }
       
-      if (request.userId !== userId) {
+      if (request.userId !== userId && !isModerator(user)) {
         return res.status(403).json({ message: "You can only delete your own requests" });
       }
       

@@ -300,6 +300,7 @@ export interface IStorage {
   // Rating operations
   rateStudy(rating: InsertStudyRating): Promise<StudyRating>;
   getStudyReviews(studyId: string): Promise<(StudyRating & { user: { firstName: string | null; lastName: string | null; profileImageUrl?: string | null } })[]>;
+  deleteStudyRating(ratingId: string): Promise<boolean>;
   
   // Video operations
   getVideos(category?: string, requiredTier?: string, userTier?: string, sortBy?: string, limit?: number): Promise<Video[]>;
@@ -312,6 +313,7 @@ export interface IStorage {
   // Video rating operations
   rateVideo(rating: InsertVideoRating): Promise<VideoRating>;
   getVideoReviews(videoId: string): Promise<(VideoRating & { user: { firstName: string | null; lastName: string | null; profileImageUrl?: string | null } })[]>;
+  deleteVideoRating(ratingId: string): Promise<boolean>;
   
   // Title validation
   checkTitleExists(title: string, excludeStudyId?: string, excludeVideoId?: string): Promise<boolean>;
@@ -406,6 +408,7 @@ export interface IStorage {
   deletePodcast(id: string): Promise<void>;
   ratePodcast(userId: string, podcastId: string, rating: { rating: number; review?: string }): Promise<PodcastRating>;
   getPodcastRatings(podcastId: string): Promise<PodcastRating[]>;
+  deletePodcastRating(ratingId: string): Promise<boolean>;
   getUserPodcastRating(userId: string, podcastId: string): Promise<PodcastRating | undefined>;
   incrementPodcastViews(podcastId: string, userId?: string, ipAddress?: string): Promise<void>;
   // Live streaming operations
@@ -2442,6 +2445,11 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(studyRatings.createdAt));
   }
 
+  async deleteStudyRating(ratingId: string): Promise<boolean> {
+    const result = await db.delete(studyRatings).where(eq(studyRatings.id, ratingId));
+    return (result.rowCount ?? 0) > 0;
+  }
+
   async rateStudy(rating: InsertStudyRating): Promise<StudyRating> {
     // Check if user already rated this study
     const existing = await db
@@ -3733,6 +3741,11 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(videoRatings.createdAt));
   }
 
+  async deleteVideoRating(ratingId: string): Promise<boolean> {
+    const result = await db.delete(videoRatings).where(eq(videoRatings.id, ratingId));
+    return (result.rowCount ?? 0) > 0;
+  }
+
   async sendFeedbackToAdmins(userId: string, feedback: string, category: string): Promise<void> {
     // Get the user who is sending feedback
     const user = await this.getUser(userId);
@@ -4533,6 +4546,11 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(podcastRatings.userId, users.id))
       .where(eq(podcastRatings.podcastId, podcastId))
       .orderBy(desc(podcastRatings.createdAt)) as any;
+  }
+
+  async deletePodcastRating(ratingId: string): Promise<boolean> {
+    const result = await db.delete(podcastRatings).where(eq(podcastRatings.id, ratingId));
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getUserPodcastRating(userId: string, podcastId: string): Promise<PodcastRating | undefined> {

@@ -381,9 +381,10 @@ export default function Owners() {
     }
   });
 
-  const roleColors = {
+  const roleColors: Record<string, string> = {
     owner: 'bg-purple-600 text-white',
     admin: 'bg-blue-600 text-white',
+    moderator: 'bg-green-600 text-white',
     user: 'bg-gray-600 text-white'
   };
 

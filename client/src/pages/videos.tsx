@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Search, Star, Filter, Play, Clock, Eye, Crown, Gem, Zap } from "lucide-react";
+import { Search, Star, Filter, Play, Clock, Eye, Crown, Gem, Zap, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { BackButton } from "@/components/BackButton";
 
@@ -175,6 +175,22 @@ export default function Videos() {
       });
     },
   });
+
+  const deleteVideoRatingMutation = useMutation({
+    mutationFn: async (ratingId: string) => {
+      return await apiRequest("DELETE", `/api/videos/${selectedVideo?.id}/ratings/${ratingId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/videos"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/videos", selectedVideo?.id, "reviews"] });
+      toast({ title: "Review deleted" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete review", variant: "destructive" });
+    },
+  });
+
+  const canModerate = (user as any)?.role === 'admin' || (user as any)?.role === 'moderator' || (user as any)?.role === 'owner';
 
   const getTierBadge = (tier: string) => {
     if (tier !== 'free') {
@@ -458,18 +474,32 @@ export default function Videos() {
                     <div className="space-y-3 max-h-60 overflow-y-auto">
                       {videoReviews.map((review: any) => (
                         <div key={review.id} className="border-b border-ministry-charcoal pb-3 last:border-b-0">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <Star 
-                                  key={i} 
-                                  className={`w-3 h-3 ${i < review.rating ? 'text-black fill-current' : 'text-black'}`} 
-                                />
-                              ))}
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center space-x-2">
+                              <div className="flex items-center">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star 
+                                    key={i} 
+                                    className={`w-3 h-3 ${i < review.rating ? 'text-black fill-current' : 'text-black'}`} 
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-sm font-medium text-ministry-charcoal">
+                                {review.user.firstName} {review.user.lastName}
+                              </span>
                             </div>
-                            <span className="text-sm font-medium text-ministry-charcoal">
-                              {review.user.firstName} {review.user.lastName}
-                            </span>
+                            {canModerate && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteVideoRatingMutation.mutate(review.id)}
+                                disabled={deleteVideoRatingMutation.isPending}
+                                className="text-red-500 hover:text-red-600 hover:bg-red-50 p-1 h-auto"
+                                title="Delete review"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            )}
                           </div>
                           {review.review && (
                             <p className="text-sm text-ministry-slate">{review.review}</p>

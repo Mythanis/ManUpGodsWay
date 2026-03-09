@@ -46,7 +46,7 @@ export default function UnderFire() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
   
-  const { data: currentUser } = useQuery<{ id: string }>({ queryKey: ['/api/auth/user'] });
+  const { data: currentUser } = useQuery<{ id: string; role?: string }>({ queryKey: ['/api/auth/user'] });
   
   // Enable WebSocket for real-time updates when assist/unassist happens
   useWebSocket(currentUser?.id);
@@ -322,7 +322,7 @@ export default function UnderFire() {
                       </div>
                       <p className="text-sm text-white/50">{formatTimeAgo(request.createdAt)}</p>
                     </div>
-                    {currentUser?.id === request.userId && (
+                    {(currentUser?.id === request.userId || currentUser?.role === 'admin' || currentUser?.role === 'moderator' || currentUser?.role === 'owner') && (
                       <Button
                         variant="ghost"
                         size="sm"

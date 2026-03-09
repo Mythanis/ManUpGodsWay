@@ -70,9 +70,9 @@ export default function DiscussionCard({
   const isLongContent = discussion.content && discussion.content.length > 280;
   const { user } = useAuth();
   
-  // Check if current user owns this discussion or is admin
+  // Check if current user owns this discussion or is moderator/admin
   const isOwner = user && (user as any).id === discussion.userId;
-  const isAdmin = user && (user as any).role === 'admin';
+  const isAdmin = user && ((user as any).role === 'admin' || (user as any).role === 'owner' || (user as any).role === 'moderator');
   const canDelete = isOwner || isAdmin;
   const [, setLocation] = useLocation();
   const { toast } = useToast();

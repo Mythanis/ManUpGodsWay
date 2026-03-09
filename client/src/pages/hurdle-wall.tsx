@@ -430,7 +430,7 @@ export default function HurdleWall() {
                       </div>
                       <p className="text-sm text-white/50">{formatTimeAgo(post.createdAt)}</p>
                     </div>
-                    {(currentUser?.id === post.userId || currentUser?.role === 'admin') && (
+                    {(currentUser?.id === post.userId || currentUser?.role === 'admin' || currentUser?.role === 'moderator' || currentUser?.role === 'owner') && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -496,7 +496,7 @@ export default function HurdleWall() {
                                   <span className="text-black/50 text-xs">
                                     {formatTimeAgo(reply.createdAt)}
                                   </span>
-                                  {(currentUser?.id === reply.userId || currentUser?.role === 'admin') && (
+                                  {(currentUser?.id === reply.userId || currentUser?.role === 'admin' || currentUser?.role === 'moderator' || currentUser?.role === 'owner') && (
                                     <Button
                                       variant="ghost"
                                       size="sm"
