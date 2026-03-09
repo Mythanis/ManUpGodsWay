@@ -731,21 +731,21 @@ export default function WarGroupDetail() {
                         </div>
                       </div>
                       {!isMemberLeader && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col items-end gap-1 shrink-0">
                           {isLeader && (
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => toggleManagePermissionMutation.mutate(member.id)}
                               disabled={toggleManagePermissionMutation.isPending}
-                              className={member.canManageMembers 
+                              className={`text-xs px-2 py-1 h-auto ${member.canManageMembers 
                                 ? "border-blue-500 text-blue-500 hover:bg-blue-500/10 rounded-sm"
                                 : "border-white/30 text-white/70 hover:bg-white/10 rounded-sm"
-                              }
+                              }`}
                               data-testid={`button-toggle-manage-${member.id}`}
                             >
-                              <Shield className="h-4 w-4 mr-1" />
-                              {member.canManageMembers ? 'Remove Manager' : 'Make Manager'}
+                              <Shield className="h-3 w-3 mr-1" />
+                              {member.canManageMembers ? 'Remove Mgr' : 'Make Mgr'}
                             </Button>
                           )}
                           <Button
@@ -757,10 +757,10 @@ export default function WarGroupDetail() {
                               }
                             }}
                             disabled={removeMemberMutation.isPending}
-                            className="border-red-500 text-red-500 hover:bg-red-500/10 rounded-sm"
+                            className="text-xs px-2 py-1 h-auto border-red-500 text-red-500 hover:bg-red-500/10 rounded-sm"
                             data-testid={`button-remove-${member.id}`}
                           >
-                            <UserMinus className="h-4 w-4 mr-1" />
+                            <UserMinus className="h-3 w-3 mr-1" />
                             Remove
                           </Button>
                         </div>
