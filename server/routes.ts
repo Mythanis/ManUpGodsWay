@@ -4305,7 +4305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { role } = req.body;
-      if (!role || !['user', 'admin', 'owner'].includes(role)) {
+      if (!role || !['user', 'moderator', 'admin', 'owner'].includes(role)) {
         return res.status(400).json({ message: "Invalid role" });
       }
 
