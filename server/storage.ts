@@ -2283,7 +2283,7 @@ export class DatabaseStorage implements IStorage {
     return devotional;
   }
 
-  async getDevotionals(limit = 10): Promise<Devotional[]> {
+  async getDevotionals(limit = 100): Promise<Devotional[]> {
     return await db
       .select()
       .from(devotionals)
