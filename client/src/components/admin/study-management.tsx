@@ -43,6 +43,11 @@ interface StudySeries {
   title: string;
   description: string;
   category: string;
+  thumbnailUrl?: string | null;
+  requiredTier?: string;
+  isPublished?: boolean;
+  requiresConsecutiveCompletion?: boolean;
+  studyCount?: number;
 }
 
 interface StudyLesson {
@@ -1472,11 +1477,11 @@ export default function StudyManagement() {
 
       {/* Edit Series Dialog */}
       <Dialog open={showEditSeriesDialog} onOpenChange={setShowEditSeriesDialog}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Edit Series</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto flex-1 pr-1">
             <div>
               <Label htmlFor="edit-series-title">Title</Label>
               <Input
@@ -1526,7 +1531,7 @@ export default function StudyManagement() {
             {/* Series Thumbnail Upload */}
             <div className="space-y-2">
               <Label>Thumbnail Image</Label>
-              {seriesFormData.thumbnailUrl ? (
+              {seriesFormData.thumbnailUrl && !seriesThumbnailFile ? (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center space-x-3">
@@ -1548,7 +1553,7 @@ export default function StudyManagement() {
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-500">Delete to upload a new image</p>
+                  <p className="text-xs text-gray-500">Delete to replace with a new image</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -1560,20 +1565,9 @@ export default function StudyManagement() {
                     data-testid="input-edit-series-thumbnail"
                   />
                   {seriesThumbnailFile && (
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-green-600 dark:text-green-400 flex-1">
-                        Selected: {seriesThumbnailFile.name}
-                      </p>
-                      <Button
-                        size="sm"
-                        type="button"
-                        disabled={uploadingSeriesThumbnail || !editingSeriesData}
-                        onClick={() => editingSeriesData && handleSeriesThumbnailUpload(seriesThumbnailFile, editingSeriesData.id)}
-                        data-testid="button-upload-series-thumbnail"
-                      >
-                        {uploadingSeriesThumbnail ? "Uploading..." : "Upload Now"}
-                      </Button>
-                    </div>
+                    <p className="text-xs text-green-600 dark:text-green-400">
+                      Selected: {seriesThumbnailFile.name} — will upload when you save
+                    </p>
                   )}
                   <p className="text-xs text-gray-500">Upload an image — shown as the series icon in the library</p>
                 </div>
@@ -1599,15 +1593,21 @@ export default function StudyManagement() {
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0 pt-2">
             <Button variant="outline" onClick={() => setShowEditSeriesDialog(false)}>Cancel</Button>
             <Button
-              onClick={() => editingSeriesData && updateSeriesMutation.mutate({ id: editingSeriesData.id, updates: seriesFormData })}
-              disabled={!seriesFormData.title || updateSeriesMutation.isPending}
+              onClick={async () => {
+                if (!editingSeriesData) return;
+                if (seriesThumbnailFile) {
+                  await handleSeriesThumbnailUpload(seriesThumbnailFile, editingSeriesData.id);
+                }
+                updateSeriesMutation.mutate({ id: editingSeriesData.id, updates: seriesFormData });
+              }}
+              disabled={!seriesFormData.title || updateSeriesMutation.isPending || uploadingSeriesThumbnail}
               className="bg-ministry-gold-exact text-black hover:bg-yellow-500"
               data-testid="button-update-series"
             >
-              {updateSeriesMutation.isPending ? "Saving..." : "Save Changes"}
+              {uploadingSeriesThumbnail ? "Uploading..." : updateSeriesMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
