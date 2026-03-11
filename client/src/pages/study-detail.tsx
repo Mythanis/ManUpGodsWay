@@ -930,7 +930,7 @@ export default function StudyDetail() {
 
       {/* Study Discussion Dialog Pop-out */}
       <Dialog open={discussionDialogOpen} onOpenChange={setDiscussionDialogOpen}>
-        <DialogContent className="!max-w-2xl !w-[95vw] max-h-[85svh] flex flex-col p-0 overflow-hidden bg-ministry-navy text-white border-ministry-gold/30">
+        <DialogContent className="!max-w-2xl !w-[95vw] max-h-[85svh] flex flex-col p-0 overflow-hidden border border-[#FCD000]/30" style={{ backgroundColor: '#111111', color: 'white' }}>
           <DialogHeader className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-white/10">
             <DialogTitle className="flex items-center gap-2 text-base text-white">
               <MessageCircle className="w-4 h-4 text-ministry-gold-exact" />
