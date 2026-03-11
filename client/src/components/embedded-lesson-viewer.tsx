@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useRefTagger } from "@/hooks/useRefTagger";
-import { ChevronLeft, ChevronRight, CheckCircle, Circle, Printer, StickyNote, Save, Loader2, Trophy, ArrowRight, BookOpen } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle, Circle, Printer, StickyNote, Save, Loader2, Trophy, ArrowRight, BookOpen, Lock, Clock } from "lucide-react";
 
 interface StudyLesson {
   id: string;
@@ -23,6 +23,8 @@ interface StudyLesson {
   keyTakeaway?: string;
   displayOrder: number;
   estimatedMinutes?: number;
+  isLocked?: boolean;
+  unlocksAt?: string | null;
 }
 
 interface LessonProgress {
@@ -78,15 +80,24 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
     enabled: !!userId,
   });
 
-  // Auto-advance to the first incomplete lesson when data loads
+  // Auto-advance to the first unlocked incomplete lesson when data loads
   const [hasAutoAdvanced, setHasAutoAdvanced] = useState(false);
   useEffect(() => {
     if (hasAutoAdvanced || lessonsLoading || lessons.length === 0 || lessonProgressData === undefined) return;
-    const firstIncomplete = lessons.findIndex(
-      (lesson) => !lessonProgressData.find((p) => p.lessonId === lesson.id && p.completedAt)
+    // Find first lesson that is unlocked AND incomplete
+    const firstUnlockedIncomplete = lessons.findIndex(
+      (lesson) =>
+        !lesson.isLocked &&
+        !lessonProgressData.find((p) => p.lessonId === lesson.id && p.completedAt)
     );
-    if (firstIncomplete > 0) {
-      setCurrentDayIndex(firstIncomplete);
+    if (firstUnlockedIncomplete > 0) {
+      setCurrentDayIndex(firstUnlockedIncomplete);
+    } else if (firstUnlockedIncomplete === -1) {
+      // All unlocked lessons are done — stay on last completed unlocked lesson
+      const lastUnlocked = [...lessons].reverse().findIndex(l => !l.isLocked);
+      if (lastUnlocked >= 0) {
+        setCurrentDayIndex(lessons.length - 1 - lastUnlocked);
+      }
     }
     setHasAutoAdvanced(true);
   }, [lessons, lessonProgressData, lessonsLoading, hasAutoAdvanced]);
@@ -94,6 +105,23 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
   const currentLesson = lessons[currentDayIndex];
   const currentProgress = lessonProgressData.find(p => p.lessonId === currentLesson?.id);
   const isCompleted = !!currentProgress?.completedAt;
+  const isCurrentLessonLocked = !!currentLesson?.isLocked;
+
+  // Format unlock time for display
+  const formatUnlockTime = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return "tomorrow";
+    const unlockDate = new Date(dateStr);
+    const now = new Date();
+    const msRemaining = unlockDate.getTime() - now.getTime();
+    if (msRemaining <= 0) return "now";
+    const hoursRemaining = Math.ceil(msRemaining / (1000 * 60 * 60));
+    if (hoursRemaining <= 1) {
+      const minutesRemaining = Math.ceil(msRemaining / (1000 * 60));
+      return `in ${minutesRemaining} minute${minutesRemaining !== 1 ? "s" : ""}`;
+    }
+    if (hoursRemaining < 24) return `in ${hoursRemaining} hour${hoursRemaining !== 1 ? "s" : ""}`;
+    return "tomorrow";
+  };
 
   // Calculate overall progress
   const completedLessons = lessonProgressData.filter(p => p.completedAt).length;
@@ -452,6 +480,22 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           </div>
         </CardHeader>
         <CardContent className="space-y-6 relative z-10">
+          {/* Lock Banner */}
+          {isCurrentLessonLocked && (
+            <div className="flex items-center gap-3 p-4 bg-zinc-900 border-2 border-zinc-600 rounded-sm">
+              <div className="w-10 h-10 flex-shrink-0 bg-zinc-800 border-2 border-zinc-600 rounded-sm flex items-center justify-center">
+                <Lock className="w-5 h-5 text-zinc-400" />
+              </div>
+              <div>
+                <p className="text-sm font-black text-zinc-300 uppercase tracking-wide">Lesson Locked</p>
+                <p className="text-xs text-zinc-500 font-medium flex items-center gap-1 mt-0.5">
+                  <Clock className="w-3 h-3" />
+                  Unlocks {formatUnlockTime(currentLesson.unlocksAt)}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Scripture Reference */}
           {currentLesson.scripture && (
             <div className="p-4 bg-[#FCD000] rounded-sm border-l-4 border-black">
@@ -616,22 +660,31 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
 
           {/* Mark Complete Button */}
           {!isCompleted && (
-            <div className="flex justify-center pt-4 print:hidden">
-              <Button
-                onClick={() => markCompleteMutation.mutate()}
-                disabled={markCompleteMutation.isPending}
-                className="bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all px-6 py-3"
-                data-testid="button-mark-complete"
-              >
-                {markCompleteMutation.isPending ? (
-                  "Marking Complete..."
-                ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Mark as Complete
-                  </>
-                )}
-              </Button>
+            <div className="flex flex-col items-center gap-2 pt-4 print:hidden">
+              {isCurrentLessonLocked ? (
+                <div className="flex items-center gap-2 px-6 py-3 bg-zinc-800 border-2 border-zinc-600 rounded-sm">
+                  <Lock className="w-4 h-4 text-zinc-500" />
+                  <span className="text-zinc-400 font-black uppercase tracking-wide text-sm">
+                    Unlocks {formatUnlockTime(currentLesson.unlocksAt)}
+                  </span>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => markCompleteMutation.mutate()}
+                  disabled={markCompleteMutation.isPending}
+                  className="bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all px-6 py-3"
+                  data-testid="button-mark-complete"
+                >
+                  {markCompleteMutation.isPending ? (
+                    "Marking Complete..."
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Mark as Complete
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
@@ -642,6 +695,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
         {lessons.map((lesson, index) => {
           const progress = lessonProgressData.find(p => p.lessonId === lesson.id);
           const completed = !!progress?.completedAt;
+          const locked = !!lesson.isLocked;
           return (
             <button
               key={lesson.id}
@@ -654,13 +708,17 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                   ? "bg-[#FCD000] border-black scale-110"
                   : completed
                   ? "bg-green-600 border-green-800"
+                  : locked
+                  ? "bg-zinc-800 border-zinc-600 opacity-60"
                   : "bg-gray-600 border-gray-500 hover:bg-gray-500"
               }`}
-              title={`Day ${lesson.dayNumber}: ${lesson.title}${completed ? " (Completed)" : ""}`}
+              title={`Day ${lesson.dayNumber}: ${lesson.title}${completed ? " (Completed)" : locked ? " (Locked)" : ""}`}
               data-testid={`nav-dot-${index}`}
             >
               {completed ? (
                 <CheckCircle className="w-4 h-4 text-white" />
+              ) : locked ? (
+                <Lock className={`w-4 h-4 ${index === currentDayIndex ? 'text-black' : 'text-zinc-400'}`} />
               ) : (
                 <Circle className={`w-4 h-4 ${index === currentDayIndex ? 'text-black' : 'text-white'}`} />
               )}

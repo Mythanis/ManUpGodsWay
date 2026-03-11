@@ -2879,9 +2879,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Study lesson routes
-  app.get('/api/studies/:studyId/lessons', async (req, res) => {
+  app.get('/api/studies/:studyId/lessons', async (req: any, res) => {
     try {
       const lessons = await storage.getStudyLessons(req.params.studyId);
+      const userId = req.user?.claims?.sub;
+      if (userId && lessons.length > 0) {
+        const lessonIds = lessons.map((l: any) => l.id);
+        const progress = await storage.getLessonProgressForLessons(userId, lessonIds);
+        const progressMap = new Map(progress.map(p => [p.lessonId, p]));
+        const sorted = [...lessons].sort((a: any, b: any) =>
+          (a.displayOrder ?? a.dayNumber ?? 0) - (b.displayOrder ?? b.dayNumber ?? 0)
+        );
+        const withLock = sorted.map((lesson: any, index: number) => {
+          if (index === 0) return { ...lesson, isLocked: false, unlocksAt: null };
+          const prevLesson = sorted[index - 1];
+          const prevProg = progressMap.get(prevLesson.id);
+          if (!prevProg?.completedAt) return { ...lesson, isLocked: true, unlocksAt: null };
+          const prevCompleted = new Date(prevProg.completedAt);
+          const unlockTime = new Date(prevCompleted.getTime() + 24 * 60 * 60 * 1000);
+          if (new Date() < unlockTime) return { ...lesson, isLocked: true, unlocksAt: unlockTime.toISOString() };
+          return { ...lesson, isLocked: false, unlocksAt: null };
+        });
+        return res.json(withLock);
+      }
       res.json(lessons);
     } catch (error) {
       console.error("Error fetching study lessons:", error);
@@ -2991,6 +3011,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { studyId, lessonId } = req.params;
       const { answers } = req.body;
+
+      // Check lesson-a-day drip: block if previous lesson not yet completed or completed < 24h ago
+      const allLessons = await storage.getStudyLessons(studyId);
+      const sortedForDrip = [...allLessons].sort((a: any, b: any) =>
+        (a.displayOrder ?? a.dayNumber ?? 0) - (b.displayOrder ?? b.dayNumber ?? 0)
+      );
+      const lessonIndexForDrip = sortedForDrip.findIndex((l: any) => l.id === lessonId);
+      if (lessonIndexForDrip > 0) {
+        const prevLesson = sortedForDrip[lessonIndexForDrip - 1];
+        const [prevProg] = await storage.getLessonProgressForLessons(userId, [prevLesson.id]);
+        if (!prevProg?.completedAt) {
+          return res.status(403).json({ message: "Complete the previous lesson first." });
+        }
+        const prevCompleted = new Date(prevProg.completedAt);
+        const unlockTime = new Date(prevCompleted.getTime() + 24 * 60 * 60 * 1000);
+        if (new Date() < unlockTime) {
+          return res.status(403).json({
+            message: "This lesson isn't available yet. Come back tomorrow!",
+            unlocksAt: unlockTime.toISOString(),
+          });
+        }
+      }
 
       // Check if lesson was already completed
       const existingProgress = await storage.getUserLessonProgress(userId);

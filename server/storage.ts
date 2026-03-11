@@ -211,6 +211,7 @@ export interface IStorage {
   
   // Lesson progress operations
   getUserLessonProgress(userId: string, studyId?: string): Promise<UserLessonProgress[]>;
+  getLessonProgressForLessons(userId: string, lessonIds: string[]): Promise<UserLessonProgress[]>;
   markLessonComplete(userId: string, lessonId: string, answers?: Record<string, string>): Promise<UserLessonProgress>;
   saveLessonNotes(userId: string, lessonId: string, notes: string): Promise<UserLessonProgress>;
   
@@ -790,23 +791,55 @@ export class DatabaseStorage implements IStorage {
         }
         
         const isLocked = isLockedByDrip || isLockedByPrevious || isScheduledFuture;
-        
-        const lessonList = lessons.map(l => ({ id: l.id, title: l.title, dayNumber: l.dayNumber }));
-        const completedLessonIds = new Set(
-          (await db.select().from(userLessonProgress)
+
+        const sortedLessons = [...lessons].sort((a, b) =>
+          (a.displayOrder ?? a.dayNumber ?? 0) - (b.displayOrder ?? b.dayNumber ?? 0)
+        );
+
+        const lessonProgressRows = sortedLessons.length > 0
+          ? await db.select().from(userLessonProgress)
             .where(and(
               eq(userLessonProgress.userId, userId),
-              inArray(userLessonProgress.lessonId, lessons.map(l => l.id)),
-              sql`${userLessonProgress.completedAt} IS NOT NULL`
-            ))).map(lp => lp.lessonId)
-        );
+              inArray(userLessonProgress.lessonId, sortedLessons.map(l => l.id))
+            ))
+          : [];
+        const lessonProgressMap = new Map(lessonProgressRows.map(lp => [lp.lessonId, lp]));
+
+        const lessonList = sortedLessons.map((l, li) => {
+          const prog = lessonProgressMap.get(l.id);
+          const isCompleted = !!prog?.completedAt;
+          let lessonIsLocked = false;
+          let lessonUnlocksAt: string | null = null;
+          if (li > 0) {
+            const prevLesson = sortedLessons[li - 1];
+            const prevProg = lessonProgressMap.get(prevLesson.id);
+            if (!prevProg?.completedAt) {
+              lessonIsLocked = true;
+            } else {
+              const prevCompleted = new Date(prevProg.completedAt);
+              const unlockTime = new Date(prevCompleted.getTime() + 24 * 60 * 60 * 1000);
+              if (new Date() < unlockTime) {
+                lessonIsLocked = true;
+                lessonUnlocksAt = unlockTime.toISOString();
+              }
+            }
+          }
+          return {
+            id: l.id,
+            title: l.title,
+            dayNumber: l.dayNumber,
+            isCompleted,
+            isLocked: lessonIsLocked,
+            unlocksAt: lessonUnlocksAt,
+          };
+        });
 
         return {
           ...study,
           progress: progress || null,
           completedLessons: completedLessonsCount,
           totalLessons: lessons.length,
-          lessons: lessonList.map(l => ({ ...l, isCompleted: completedLessonIds.has(l.id) })),
+          lessons: lessonList,
           isLockedByPrevious: isLocked,
           isLockedByDrip,
           isScheduledFuture,
@@ -1214,6 +1247,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Lesson progress operations
+  async getLessonProgressForLessons(userId: string, lessonIds: string[]): Promise<UserLessonProgress[]> {
+    if (lessonIds.length === 0) return [];
+    return await db.select()
+      .from(userLessonProgress)
+      .where(and(
+        eq(userLessonProgress.userId, userId),
+        inArray(userLessonProgress.lessonId, lessonIds)
+      ));
+  }
+
   async getUserLessonProgress(userId: string, studyId?: string): Promise<UserLessonProgress[]> {
     const conditions = [eq(userLessonProgress.userId, userId)];
     

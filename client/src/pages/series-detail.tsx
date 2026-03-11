@@ -13,6 +13,8 @@ interface LessonInSeries {
   title: string;
   dayNumber: number;
   isCompleted: boolean;
+  isLocked: boolean;
+  unlocksAt?: string | null;
 }
 
 interface StudyInSeries {
@@ -267,11 +269,13 @@ export default function SeriesDetail() {
                   if (item.type === 'lesson') {
                     const { lesson, lessonIndex } = item;
                     const isCompleted = lesson.isCompleted;
+                    const isDripLocked = lesson.isLocked;
+                    const effectiveLocked = isConsecutiveLocked || isDripLocked;
                     return (
                       <Card
                         key={`${study.id}-lesson-${lesson.id}`}
                         className={`border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
-                          isConsecutiveLocked
+                          effectiveLocked
                             ? 'bg-zinc-800 opacity-80'
                             : 'bg-[#FCD000] text-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all'
                         }`}
@@ -280,16 +284,25 @@ export default function SeriesDetail() {
                         <CardContent className="p-4 relative z-10">
                           <div className="flex items-center gap-4">
                             <div className={`w-12 h-12 flex-shrink-0 rounded-sm flex items-center justify-center font-black text-lg border-2 border-black ${
-                              isConsecutiveLocked ? 'bg-zinc-700 text-zinc-400' : isCompleted ? 'bg-black text-[#FCD000]' : 'bg-white text-black'
+                              effectiveLocked ? 'bg-zinc-700 text-zinc-400' : isCompleted ? 'bg-black text-[#FCD000]' : 'bg-white text-black'
                             }`}>
-                              {isCompleted ? <CheckCircle className="w-6 h-6" /> : itemIndex + 1}
+                              {isCompleted ? <CheckCircle className="w-6 h-6" /> : effectiveLocked ? <Lock className="w-5 h-5" /> : itemIndex + 1}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className={`font-black uppercase tracking-wide line-clamp-2 ${isConsecutiveLocked ? 'text-zinc-400' : 'text-black'}`}>
+                              <h3 className={`font-black uppercase tracking-wide line-clamp-2 ${effectiveLocked ? 'text-zinc-400' : 'text-black'}`}>
                                 {lesson.title}
                               </h3>
+                              {isDripLocked && lesson.unlocksAt && (
+                                <p className="text-xs text-zinc-500 font-medium flex items-center gap-1 mt-0.5">
+                                  <Clock className="w-3 h-3" />
+                                  Unlocks {formatUnlockDate(lesson.unlocksAt)}
+                                </p>
+                              )}
+                              {isDripLocked && !lesson.unlocksAt && (
+                                <p className="text-xs text-zinc-500 font-medium mt-0.5">Complete previous lesson first</p>
+                              )}
                             </div>
-                            {isConsecutiveLocked ? (
+                            {effectiveLocked ? (
                               <Button size="sm" variant="outline" disabled className="border-2 border-zinc-600 text-zinc-500 bg-zinc-700 rounded-sm font-bold uppercase flex-shrink-0">
                                 <Lock className="w-3 h-3 mr-1" />Locked
                               </Button>
