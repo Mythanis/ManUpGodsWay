@@ -364,6 +364,18 @@ export default function StudyDetail() {
     enabled: !!id,
   });
 
+  // Fetch sibling studies in series to determine if this is the last one
+  const { data: seriesStudies = [] } = useQuery<any[]>({
+    queryKey: ["/api/study-series", study?.seriesId, "studies"],
+    enabled: !!study?.seriesId,
+  });
+
+  // Show rating if: standalone study (no series) OR last study in series
+  const isLastInSeries = seriesStudies.length > 0
+    ? Math.max(...seriesStudies.map((s: any) => s.seriesOrder ?? 0)) === (study?.seriesOrder ?? 0)
+    : false;
+  const showRating = !study?.seriesId || isLastInSeries;
+
   // Progress data is handled directly from the query
 
   // Determine video URL - use direct stream URL for uploaded videos
@@ -863,8 +875,8 @@ export default function StudyDetail() {
             </div>
           </div>
 
-          {/* Rating Section */}
-          <div className="px-6 mb-6">
+          {/* Rating Section — shown on standalone studies or the last study in a series */}
+          {showRating && <div className="px-6 mb-6">
             <div className="liquid-black border-2 border-[#FCD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]" data-testid="card-rating">
               <div className="p-6 relative z-10">
                 <h2 className="text-lg font-black uppercase tracking-tight text-[#FCD000] mb-4">Rate This Study</h2>
@@ -924,7 +936,7 @@ export default function StudyDetail() {
                 </Form>
               </div>
             </div>
-          </div>
+          </div>}
         </>
       )}
 
