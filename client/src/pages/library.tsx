@@ -186,8 +186,12 @@ export default function Library() {
                         className="h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
                         data-testid={`series-card-${s.id}`}
                       >
-                        <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
-                          <Layers className="w-6 h-6 text-white relative z-10" />
+                        <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {s.thumbnailUrl ? (
+                            <img src={s.thumbnailUrl} alt={s.title} className="h-full w-full object-cover" />
+                          ) : (
+                            <Layers className="w-6 h-6 text-white relative z-10" />
+                          )}
                         </div>
                         <div className="flex-1 text-left px-4">
                           <span className="font-black text-sm text-black uppercase tracking-wide relative z-10 line-clamp-1" data-testid={`text-series-title-${s.id}`}>{s.title}</span>
@@ -232,8 +236,12 @@ export default function Library() {
                           className="h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
                           data-testid={`study-card-${study.id}`}
                         >
-                          <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
-                            <BookOpen className="w-6 h-6 text-white relative z-10" />
+                          <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {study.thumbnailUrl ? (
+                              <img src={study.thumbnailUrl} alt={study.title} className="h-full w-full object-cover" />
+                            ) : (
+                              <BookOpen className="w-6 h-6 text-white relative z-10" />
+                            )}
                           </div>
                           <div className="flex-1 text-left px-4">
                             <span className="font-black text-sm text-black uppercase tracking-wide relative z-10 line-clamp-1" data-testid={`text-study-title-${study.id}`}>{study.title}</span>
