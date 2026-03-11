@@ -433,6 +433,7 @@ export default function StudyManagement() {
 
   const handleEditSeries = (series: StudySeries) => {
     setEditingSeriesData(series);
+    setSeriesThumbnailFile(null); // reset any leftover file state
     setSeriesFormData({
       title: series.title,
       description: series.description || "",
@@ -1536,18 +1537,21 @@ export default function StudyManagement() {
             {/* Series Thumbnail Upload */}
             <div className="space-y-2">
               <Label>Thumbnail Image</Label>
-              {seriesFormData.thumbnailUrl && !seriesThumbnailFile ? (
+              {seriesFormData.thumbnailUrl ? (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 rounded overflow-hidden bg-gray-100 dark:bg-gray-900 flex-shrink-0">
+                      <div className="w-14 h-14 rounded overflow-hidden bg-gray-100 dark:bg-gray-900 flex-shrink-0 border">
                         <img
                           src={seriesFormData.thumbnailUrl}
                           alt="Thumbnail"
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <span className="text-sm text-gray-700 dark:text-gray-300">Current Thumbnail</span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Current Thumbnail</p>
+                        <p className="text-xs text-gray-500">Delete to upload a new one</p>
+                      </div>
                     </div>
                     <Button
                       size="sm"
@@ -1558,23 +1562,41 @@ export default function StudyManagement() {
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-500">Delete to replace with a new image</p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <Input
-                    id="edit-series-thumbnail"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setSeriesThumbnailFile(e.target.files?.[0] || null)}
-                    data-testid="input-edit-series-thumbnail"
-                  />
+                <div className="space-y-3">
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                    <input
+                      id="edit-series-thumbnail"
+                      type="file"
+                      accept="image/*"
+                      className="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-ministry-gold-exact file:text-black hover:file:bg-yellow-400 cursor-pointer"
+                      onChange={(e) => setSeriesThumbnailFile(e.target.files?.[0] || null)}
+                      data-testid="input-edit-series-thumbnail"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">PNG, JPG, GIF up to 10MB — shown as the icon in the library</p>
+                  </div>
                   {seriesThumbnailFile && (
-                    <p className="text-xs text-green-600 dark:text-green-400">
-                      Selected: {seriesThumbnailFile.name} — will upload when you save
-                    </p>
+                    <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                      <span className="text-xs text-green-700 dark:text-green-300 truncate flex-1 mr-2">
+                        ✓ {seriesThumbnailFile.name}
+                      </span>
+                      <Button
+                        size="sm"
+                        type="button"
+                        disabled={uploadingSeriesThumbnail || !editingSeriesData}
+                        onClick={async () => {
+                          if (!editingSeriesData || !seriesThumbnailFile) return;
+                          const url = await handleSeriesThumbnailUpload(seriesThumbnailFile, editingSeriesData.id);
+                          if (url) setSeriesFormData(prev => ({ ...prev, thumbnailUrl: url }));
+                        }}
+                        className="bg-ministry-gold-exact text-black hover:bg-yellow-400 flex-shrink-0"
+                        data-testid="button-upload-series-thumbnail"
+                      >
+                        {uploadingSeriesThumbnail ? "Uploading…" : "Upload"}
+                      </Button>
+                    </div>
                   )}
-                  <p className="text-xs text-gray-500">Upload an image — shown as the series icon in the library</p>
                 </div>
               )}
             </div>
