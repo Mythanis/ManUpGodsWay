@@ -249,6 +249,7 @@ export default function StudyBuilder() {
       queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
       resetForm();
+      setActiveTab("manage");
     },
     onError: (error: any) => {
       toast({
@@ -319,6 +320,7 @@ export default function StudyBuilder() {
       queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
       queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
       resetForm();
+      setActiveTab("manage");
     },
     onError: (error: any) => {
       toast({
@@ -524,30 +526,25 @@ export default function StudyBuilder() {
                 </div>
               )}
 
-              <div className="border rounded-lg p-4 space-y-4">
+              <div className="border rounded-lg p-4 space-y-3">
                 <h4 className="font-medium flex items-center gap-2">
                   <Image className="w-4 h-4" />
                   Thumbnail
                 </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Upload Image</Label>
-                    <Input
+                <div className="space-y-2">
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-3">
+                    <input
                       type="file"
                       accept="image/*"
+                      className="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-yellow-400 file:text-black hover:file:bg-yellow-500 cursor-pointer"
                       onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
                       data-testid="input-thumbnail-file"
                     />
+                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF — optional, shown in the library</p>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Or Image URL</Label>
-                    <Input
-                      placeholder="https://..."
-                      value={formData.thumbnailUrl}
-                      onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                      data-testid="input-thumbnail-url"
-                    />
-                  </div>
+                  {thumbnailFile && (
+                    <p className="text-xs text-green-600 dark:text-green-400">✓ {thumbnailFile.name}</p>
+                  )}
                 </div>
               </div>
 
@@ -983,7 +980,7 @@ export default function StudyBuilder() {
           setEditingSeries(null);
         }
       }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Series</DialogTitle>
           </DialogHeader>
@@ -1016,6 +1013,8 @@ function EditStudyForm({ study, seriesList, onSave, onCancel }: {
   onSave: (data: Partial<Study>) => Promise<void>;
   onCancel: () => void;
 }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
   const [formData, setFormData] = useState({
     title: study.title,
     description: study.description,
@@ -1031,6 +1030,40 @@ function EditStudyForm({ study, seriesList, onSave, onCancel }: {
     price: study.price || '',
   });
   const [saving, setSaving] = useState(false);
+  const [thumbFile, setThumbFile] = useState<File | null>(null);
+  const [uploadingThumb, setUploadingThumb] = useState(false);
+
+  const uploadStudyThumbnail = async (file: File) => {
+    setUploadingThumb(true);
+    try {
+      const fd = new FormData();
+      fd.append('thumbnail', file);
+      const res = await fetch(`/api/studies/${study.id}/upload-thumbnail`, { method: 'POST', body: fd, credentials: 'include' });
+      if (!res.ok) throw new Error('Upload failed');
+      const updated = await res.json();
+      setFormData(prev => ({ ...prev, thumbnailUrl: updated.thumbnailUrl || '' }));
+      setThumbFile(null);
+      qc.invalidateQueries({ queryKey: ['/api/studies'] });
+      toast({ title: 'Thumbnail uploaded' });
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    } finally {
+      setUploadingThumb(false);
+    }
+  };
+
+  const deleteStudyThumbnail = async () => {
+    if (!confirm('Remove thumbnail?')) return;
+    try {
+      const res = await fetch(`/api/studies/${study.id}/delete-thumbnail`, { method: 'DELETE', credentials: 'include' });
+      if (!res.ok) throw new Error('Delete failed');
+      setFormData(prev => ({ ...prev, thumbnailUrl: '' }));
+      qc.invalidateQueries({ queryKey: ['/api/studies'] });
+      toast({ title: 'Thumbnail removed' });
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    }
+  };
 
   const handleSubmit = async () => {
     setSaving(true);
@@ -1127,12 +1160,38 @@ function EditStudyForm({ study, seriesList, onSave, onCancel }: {
         </div>
       )}
       <div className="space-y-2">
-        <Label>Thumbnail URL</Label>
-        <Input
-          value={formData.thumbnailUrl}
-          onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-          placeholder="https://..."
-        />
+        <Label>Thumbnail Image</Label>
+        {formData.thumbnailUrl ? (
+          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+            <div className="flex items-center gap-3">
+              <img src={formData.thumbnailUrl} alt="Thumbnail" className="w-14 h-14 rounded object-cover border" />
+              <span className="text-sm text-gray-600 dark:text-gray-400">Current thumbnail</span>
+            </div>
+            <Button size="sm" variant="destructive" type="button" onClick={deleteStudyThumbnail}>
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-3">
+              <input
+                type="file"
+                accept="image/*"
+                className="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-yellow-400 file:text-black hover:file:bg-yellow-500 cursor-pointer"
+                onChange={(e) => setThumbFile(e.target.files?.[0] || null)}
+              />
+              <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF — shown as the study icon in the library</p>
+            </div>
+            {thumbFile && (
+              <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                <span className="text-xs text-green-700 dark:text-green-300 truncate flex-1 mr-2">✓ {thumbFile.name}</span>
+                <Button size="sm" type="button" disabled={uploadingThumb} onClick={() => uploadStudyThumbnail(thumbFile)} className="bg-yellow-400 text-black hover:bg-yellow-500 flex-shrink-0">
+                  {uploadingThumb ? 'Uploading…' : 'Upload Now'}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div className="space-y-2">
         <Label>Video URL</Label>
@@ -1182,6 +1241,8 @@ function EditSeriesForm({ series, onSave, onCancel }: {
   onSave: (data: Partial<StudySeries>) => Promise<void>;
   onCancel: () => void;
 }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
   const [formData, setFormData] = useState({
     title: series.title,
     description: series.description,
@@ -1192,6 +1253,42 @@ function EditSeriesForm({ series, onSave, onCancel }: {
     requiresConsecutiveCompletion: series.requiresConsecutiveCompletion ?? false,
   });
   const [saving, setSaving] = useState(false);
+  const [thumbFile, setThumbFile] = useState<File | null>(null);
+  const [uploadingThumb, setUploadingThumb] = useState(false);
+
+  const uploadSeriesThumbnail = async (file: File) => {
+    setUploadingThumb(true);
+    try {
+      const fd = new FormData();
+      fd.append('thumbnail', file);
+      const res = await fetch(`/api/study-series/${series.id}/upload-thumbnail`, { method: 'POST', body: fd, credentials: 'include' });
+      if (!res.ok) throw new Error('Upload failed');
+      const updated = await res.json();
+      setFormData(prev => ({ ...prev, thumbnailUrl: updated.thumbnailUrl || '' }));
+      setThumbFile(null);
+      qc.invalidateQueries({ queryKey: ['/api/study-series'] });
+      qc.invalidateQueries({ queryKey: ['/api/admin/study-series'] });
+      toast({ title: 'Thumbnail uploaded' });
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    } finally {
+      setUploadingThumb(false);
+    }
+  };
+
+  const deleteSeriesThumbnail = async () => {
+    if (!confirm('Remove thumbnail?')) return;
+    try {
+      const res = await fetch(`/api/study-series/${series.id}/delete-thumbnail`, { method: 'DELETE', credentials: 'include' });
+      if (!res.ok) throw new Error('Delete failed');
+      setFormData(prev => ({ ...prev, thumbnailUrl: '' }));
+      qc.invalidateQueries({ queryKey: ['/api/study-series'] });
+      qc.invalidateQueries({ queryKey: ['/api/admin/study-series'] });
+      toast({ title: 'Thumbnail removed' });
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    }
+  };
 
   const handleSubmit = async () => {
     setSaving(true);
@@ -1243,12 +1340,38 @@ function EditSeriesForm({ series, onSave, onCancel }: {
         </div>
       </div>
       <div className="space-y-2">
-        <Label>Thumbnail URL</Label>
-        <Input
-          value={formData.thumbnailUrl}
-          onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-          placeholder="https://..."
-        />
+        <Label>Thumbnail Image</Label>
+        {formData.thumbnailUrl ? (
+          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+            <div className="flex items-center gap-3">
+              <img src={formData.thumbnailUrl} alt="Thumbnail" className="w-14 h-14 rounded object-cover border" />
+              <span className="text-sm text-gray-600 dark:text-gray-400">Current thumbnail</span>
+            </div>
+            <Button size="sm" variant="destructive" type="button" onClick={deleteSeriesThumbnail}>
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-3">
+              <input
+                type="file"
+                accept="image/*"
+                className="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-yellow-400 file:text-black hover:file:bg-yellow-500 cursor-pointer"
+                onChange={(e) => setThumbFile(e.target.files?.[0] || null)}
+              />
+              <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF — shown as the series icon in the library</p>
+            </div>
+            {thumbFile && (
+              <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                <span className="text-xs text-green-700 dark:text-green-300 truncate flex-1 mr-2">✓ {thumbFile.name}</span>
+                <Button size="sm" type="button" disabled={uploadingThumb} onClick={() => uploadSeriesThumbnail(thumbFile)} className="bg-yellow-400 text-black hover:bg-yellow-500 flex-shrink-0">
+                  {uploadingThumb ? 'Uploading…' : 'Upload Now'}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div className="flex items-center justify-between border rounded-lg p-3">
         <Label>Published</Label>
