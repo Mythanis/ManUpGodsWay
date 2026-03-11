@@ -78,6 +78,19 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
     enabled: !!userId,
   });
 
+  // Auto-advance to the first incomplete lesson when data loads
+  const [hasAutoAdvanced, setHasAutoAdvanced] = useState(false);
+  useEffect(() => {
+    if (hasAutoAdvanced || lessonsLoading || lessons.length === 0 || lessonProgressData === undefined) return;
+    const firstIncomplete = lessons.findIndex(
+      (lesson) => !lessonProgressData.find((p) => p.lessonId === lesson.id && p.completedAt)
+    );
+    if (firstIncomplete > 0) {
+      setCurrentDayIndex(firstIncomplete);
+    }
+    setHasAutoAdvanced(true);
+  }, [lessons, lessonProgressData, lessonsLoading, hasAutoAdvanced]);
+
   const currentLesson = lessons[currentDayIndex];
   const currentProgress = lessonProgressData.find(p => p.lessonId === currentLesson?.id);
   const isCompleted = !!currentProgress?.completedAt;
