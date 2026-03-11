@@ -274,55 +274,69 @@ export default function SeriesDetail() {
                     return (
                       <Card
                         key={`${study.id}-lesson-${lesson.id}`}
-                        className={`border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
+                        className={`border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden ${
                           effectiveLocked
                             ? 'bg-zinc-800 opacity-80'
-                            : 'bg-[#FCD000] text-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all'
+                            : 'bg-[#111111] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all'
                         }`}
                         data-testid={`lesson-card-${lesson.id}`}
                       >
-                        <CardContent className="p-4 relative z-10">
-                          <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 flex-shrink-0 rounded-sm flex items-center justify-center font-black text-lg border-2 border-black ${
-                              effectiveLocked ? 'bg-zinc-700 text-zinc-400' : isCompleted ? 'bg-black text-[#FCD000]' : 'bg-white text-black'
+                        <CardContent className="p-0 relative z-10">
+                          <div className="flex items-stretch gap-0">
+                            {/* Left accent strip */}
+                            <div className={`w-1 flex-shrink-0 ${effectiveLocked ? 'bg-zinc-600' : isCompleted ? 'bg-green-500' : 'bg-[#FCD000]'}`} />
+                            {/* Day number badge */}
+                            <div className={`w-14 flex-shrink-0 flex items-center justify-center font-black text-lg border-r-2 border-black/40 ${
+                              effectiveLocked ? 'bg-zinc-700 text-zinc-500' : isCompleted ? 'bg-green-900/40 text-green-400' : 'bg-[#FCD000]/10 text-[#FCD000]'
                             }`}>
-                              {isCompleted ? <CheckCircle className="w-6 h-6" /> : effectiveLocked ? <Lock className="w-5 h-5" /> : itemIndex + 1}
+                              {isCompleted ? <CheckCircle className="w-5 h-5" /> : effectiveLocked ? <Lock className="w-4 h-4" /> : <span className="text-sm">{itemIndex + 1}</span>}
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className={`font-black uppercase tracking-wide line-clamp-2 ${effectiveLocked ? 'text-zinc-400' : 'text-black'}`}>
+                            {/* Title + metadata */}
+                            <div className="flex-1 min-w-0 py-3 px-3">
+                              <p className={`text-[10px] font-black uppercase tracking-widest mb-0.5 ${effectiveLocked ? 'text-zinc-600' : 'text-[#FCD000]'}`}>
+                                Day {lesson.dayNumber}
+                              </p>
+                              <h3 className={`font-black uppercase tracking-wide text-sm leading-tight line-clamp-2 ${effectiveLocked ? 'text-zinc-500' : 'text-white'}`}>
                                 {lesson.title}
                               </h3>
                               {isDripLocked && lesson.unlocksAt && (
-                                <p className="text-xs text-zinc-500 font-medium flex items-center gap-1 mt-0.5">
+                                <p className="text-xs text-zinc-500 font-medium flex items-center gap-1 mt-1">
                                   <Clock className="w-3 h-3" />
                                   Unlocks {formatUnlockDate(lesson.unlocksAt)}
                                 </p>
                               )}
                               {isDripLocked && !lesson.unlocksAt && (
-                                <p className="text-xs text-zinc-500 font-medium mt-0.5">Complete previous lesson first</p>
+                                <p className="text-xs text-zinc-600 font-medium mt-1">Complete previous lesson first</p>
                               )}
                             </div>
-                            {effectiveLocked ? (
-                              <Button size="sm" variant="outline" disabled className="border-2 border-zinc-600 text-zinc-500 bg-zinc-700 rounded-sm font-bold uppercase flex-shrink-0">
-                                <Lock className="w-3 h-3 mr-1" />Locked
-                              </Button>
-                            ) : hasAccess ? (
-                              <Link href={`/studies/${study.id}`}>
-                                <Button
-                                  size="sm"
-                                  className={`font-black uppercase tracking-wide rounded-sm border-2 border-black flex-shrink-0 ${isCompleted ? 'bg-black text-[#FCD000]' : 'bg-black text-white hover:bg-gray-800'}`}
-                                  onClick={() => handleStudyClick(study, item.studyIndex)}
-                                  data-testid={`button-lesson-${lesson.id}`}
-                                >
-                                  {isCompleted ? 'Review' : lessonIndex === 0 && !study.progress ? 'Start' : 'Continue'}
-                                  <ChevronRight className="w-4 h-4 ml-1" />
-                                </Button>
-                              </Link>
-                            ) : (
-                              <Button size="sm" variant="outline" disabled className="border-2 border-black text-black/50 rounded-sm font-bold uppercase flex-shrink-0">
-                                <Lock className="w-3 h-3 mr-1" />Subscribers Only
-                              </Button>
-                            )}
+                            {/* Action button */}
+                            <div className="flex items-center pr-3">
+                              {effectiveLocked ? (
+                                <div className="w-8 h-8 flex items-center justify-center rounded-sm bg-zinc-700 border border-zinc-600">
+                                  <Lock className="w-3.5 h-3.5 text-zinc-500" />
+                                </div>
+                              ) : hasAccess ? (
+                                <Link href={`/studies/${study.id}`}>
+                                  <Button
+                                    size="sm"
+                                    className={`font-black uppercase tracking-wide rounded-sm border-2 flex-shrink-0 text-xs px-3 py-1 h-auto ${
+                                      isCompleted
+                                        ? 'bg-transparent border-green-600 text-green-400 hover:bg-green-900/30'
+                                        : 'bg-[#FCD000] border-[#FCD000] text-black hover:bg-yellow-300'
+                                    }`}
+                                    onClick={() => handleStudyClick(study, item.studyIndex)}
+                                    data-testid={`button-lesson-${lesson.id}`}
+                                  >
+                                    {isCompleted ? 'Review' : lessonIndex === 0 && !study.progress ? 'Start' : 'Go'}
+                                    <ChevronRight className="w-3 h-3 ml-0.5" />
+                                  </Button>
+                                </Link>
+                              ) : (
+                                <div className="w-8 h-8 flex items-center justify-center rounded-sm bg-zinc-800 border border-zinc-700">
+                                  <Lock className="w-3.5 h-3.5 text-zinc-500" />
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
