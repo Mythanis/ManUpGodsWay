@@ -930,13 +930,10 @@ export default function StudyDetail() {
 
       {/* Study Discussion Dialog Pop-out */}
       <Dialog open={discussionDialogOpen} onOpenChange={setDiscussionDialogOpen}>
-        <DialogContent 
-          className={`!max-w-4xl !w-[95vw] !h-[85vh] sm:!h-auto sm:!max-h-[80vh] flex flex-col p-3 sm:p-6 mx-auto overflow-hidden ${isKeyboardVisible ? 'keyboard-visible' : ''}`}
-          style={{ width: '95vw', maxWidth: '56rem', height: '85vh' }}
-        >
-          <DialogHeader className="flex-shrink-0 pb-2 sm:pb-4">
-            <DialogTitle className="flex items-center space-x-2 text-lg sm:text-xl">
-              <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-ministry-navy" />
+        <DialogContent className="!max-w-2xl !w-[95vw] max-h-[85svh] flex flex-col p-0 overflow-hidden bg-ministry-navy text-white border-ministry-gold/30">
+          <DialogHeader className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-white/10">
+            <DialogTitle className="flex items-center gap-2 text-base text-white">
+              <MessageCircle className="w-4 h-4 text-ministry-gold-exact" />
               <span className="truncate">Study Discussion: {study?.title}</span>
             </DialogTitle>
           </DialogHeader>
@@ -944,40 +941,22 @@ export default function StudyDetail() {
           {studyDiscussion && (
             <>
               {/* Discussion Content Area - Scrollable */}
-              <div className="discussion-content-area">
+              <div className="discussion-content-area overflow-y-auto flex-1 px-4 py-3 space-y-4">
                 {/* Discussion Header */}
-                <div className="border-b pb-4 mb-4">
-                  <div className="flex items-start space-x-3 mb-2">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-ministry-navy/10 flex items-center justify-center">
-                      <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-ministry-navy" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="font-bold text-base sm:text-lg text-ministry-charcoal truncate">
-                          {studyDiscussion.title}
-                        </h3>
-                        <Badge variant="default" className="text-xs bg-ministry-navy text-white flex-shrink-0">
-                          📚 Study
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-ministry-slate mb-1 truncate">Discussion for "{study?.title}" study</p>
-                      <p className="text-sm text-ministry-slate mb-2">{studyDiscussion.content}</p>
-                      <div className="flex items-center justify-end">
-                        <DiscussionSubscriptionButton discussionId={studyDiscussion.id} />
-                      </div>
-                    </div>
+                <div className="border-b border-white/10 pb-3">
+                  <p className="text-sm text-white/70">{studyDiscussion.content}</p>
+                  <div className="flex items-center justify-end mt-2">
+                    <DiscussionSubscriptionButton discussionId={studyDiscussion.id} />
                   </div>
                 </div>
 
                 {/* Replies Section */}
-                <div className="space-y-4">
-                  <StudyDiscussionReplies discussionId={studyDiscussion.id} />
-                </div>
+                <StudyDiscussionReplies discussionId={studyDiscussion.id} />
 
                 {/* Access Warning for users without permission */}
                 {!canAccess && (
                   <div className="text-center py-8">
-                    <p className="text-sm text-ministry-slate">
+                    <p className="text-sm text-white/60">
                       {study?.requiredTier && study.requiredTier !== 'free' 
                         ? 'An active subscription is required to participate in this discussion.'
                         : 'You need access to this study to participate in the discussion.'
@@ -987,9 +966,9 @@ export default function StudyDetail() {
                 )}
               </div>
 
-              {/* Reply Form - Fixed at Bottom */}
+              {/* Reply Form - Normal flow at bottom */}
               {hasAccess && (
-                <div className="discussion-reply-form">
+                <div className="discussion-reply-form px-4 py-3 bg-ministry-navy/90">
                   <StudyDiscussionReplyForm 
                     discussionId={studyDiscussion.id}
                     currentUserTier={(user as any)?.subscriptionTier || 'free'}
@@ -1035,8 +1014,8 @@ function StudyDiscussionReplies({ discussionId }: { discussionId: string }) {
   if (isLoading) {
     return (
       <div className="text-center py-4">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-ministry-navy mx-auto mb-2"></div>
-        <p className="text-sm text-ministry-slate">Loading replies...</p>
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-ministry-gold-exact mx-auto mb-2"></div>
+        <p className="text-sm text-white/60">Loading replies...</p>
       </div>
     );
   }
@@ -1044,9 +1023,9 @@ function StudyDiscussionReplies({ discussionId }: { discussionId: string }) {
   if (replies.length === 0) {
     return (
       <div className="text-center py-8">
-        <MessageCircle className="w-8 h-8 text-ministry-slate mx-auto mb-2" />
-        <p className="text-ministry-slate">No replies yet</p>
-        <p className="text-sm text-ministry-slate">Be the first to reply!</p>
+        <MessageCircle className="w-8 h-8 text-white/30 mx-auto mb-2" />
+        <p className="text-white/60">No replies yet</p>
+        <p className="text-sm text-white/40">Be the first to reply!</p>
       </div>
     );
   }
@@ -1054,22 +1033,22 @@ function StudyDiscussionReplies({ discussionId }: { discussionId: string }) {
   return (
     <div className="space-y-3">
       {replies.map((reply: any) => (
-        <div key={reply.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+        <div key={reply.id} className="flex items-start space-x-3 p-3 bg-white/5 rounded-lg border border-white/10">
           <img 
-            src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=4A90B8&color=fff&size=32`}
+            src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=1B3B6F&color=fff&size=32`}
             alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
-            className="w-8 h-8 rounded-full object-cover"
+            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
           />
-          <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-1">
-              <span className="font-medium text-sm text-ministry-charcoal">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-semibold text-sm text-white">
                 {reply.user?.firstName} {reply.user?.lastName?.charAt(0)}.
               </span>
-              <span className="text-xs text-ministry-slate">
-                • {getTimeAgo(reply.createdAt)}
+              <span className="text-xs text-white/50">
+                {getTimeAgo(reply.createdAt)}
               </span>
             </div>
-            <p className="text-sm text-ministry-slate">{reply.content}</p>
+            <p className="text-sm text-white/80">{reply.content}</p>
           </div>
         </div>
       ))}
@@ -1159,7 +1138,7 @@ function StudyDiscussionReplyForm({ discussionId, currentUserTier, study }: {
               <FormControl>
                 <Textarea
                   placeholder={hasReplyAccess ? "Write your reply..." : "Subscription required to reply"}
-                  className="min-h-[80px] resize-none"
+                  className="min-h-[80px] resize-none bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-ministry-gold-exact"
                   disabled={!hasReplyAccess || createReply.isPending}
                   {...field}
                 />
@@ -1173,21 +1152,7 @@ function StudyDiscussionReplyForm({ discussionId, currentUserTier, study }: {
           <button
             type="submit"
             disabled={createReply.isPending || !hasReplyAccess}
-            style={{
-              backgroundColor: 'hsl(0 0% 0%)',
-              color: 'white',
-              border: '1px solid hsl(0 0% 0%)',
-              borderRadius: '0.375rem',
-              padding: '0.375rem 0.75rem',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              cursor: (createReply.isPending || !hasReplyAccess) ? 'default' : 'pointer',
-              opacity: (createReply.isPending || !hasReplyAccess) ? 0.6 : 1,
-              transition: 'opacity 0.2s'
-            }}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-semibold bg-ministry-gold-exact text-black hover:bg-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
           >
             <Send className="w-3 h-3" />
             {createReply.isPending ? "Posting..." : "Post Reply"}
