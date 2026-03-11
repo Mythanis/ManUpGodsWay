@@ -552,17 +552,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const userId = req.user?.claims?.sub;
       const studies = await storage.getStudiesInSeries(id, userId);
-      // Filter to trial-accessible only for trial users
-      let filtered = studies;
-      if (userId) {
-        try {
-          const user = await storage.getUser(userId);
-          if (user?.subscriptionStatus === 'trial' && !hasAdminPrivileges(user)) {
-            filtered = studies.filter((s: any) => s.isTrialAccessible);
-          }
-        } catch {}
-      }
-      res.json(filtered);
+      res.json(studies);
     } catch (error) {
       console.error("Error fetching studies in series:", error);
       res.status(500).json({ message: "Failed to fetch studies in series" });
