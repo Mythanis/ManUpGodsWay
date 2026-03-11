@@ -86,9 +86,11 @@ export default function StudyManagement() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [wordFile, setWordFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [seriesThumbnailFile, setSeriesThumbnailFile] = useState<File | null>(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [uploadingWord, setUploadingWord] = useState(false);
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [uploadingSeriesThumbnail, setUploadingSeriesThumbnail] = useState(false);
   const [showLessonsDialog, setShowLessonsDialog] = useState(false);
   const [managingLessonsStudy, setManagingLessonsStudy] = useState<Study | null>(null);
   const [editingLesson, setEditingLesson] = useState<StudyLesson | null>(null);
@@ -820,6 +822,45 @@ export default function StudyManagement() {
     }
   };
 
+  const handleSeriesThumbnailUpload = async (file: File, seriesId: string) => {
+    const formData = new FormData();
+    formData.append('thumbnail', file);
+    try {
+      setUploadingSeriesThumbnail(true);
+      const response = await fetch(`/api/study-series/${seriesId}/upload-thumbnail`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to upload thumbnail');
+      toast({ title: "Success", description: "Thumbnail uploaded successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to upload thumbnail", variant: "destructive" });
+    } finally {
+      setUploadingSeriesThumbnail(false);
+      setSeriesThumbnailFile(null);
+    }
+  };
+
+  const handleSeriesThumbnailDelete = async (seriesId: string) => {
+    if (!confirm('Are you sure you want to remove this thumbnail?')) return;
+    try {
+      const response = await fetch(`/api/study-series/${seriesId}/delete-thumbnail`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to delete thumbnail');
+      toast({ title: "Success", description: "Thumbnail removed" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      setSeriesFormData(prev => ({ ...prev, thumbnailUrl: "" }));
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to remove thumbnail", variant: "destructive" });
+    }
+  };
+
   const handleThumbnailDelete = async () => {
     if (!editingStudy) return;
 
@@ -1482,15 +1523,61 @@ export default function StudyManagement() {
                 </Select>
               </div>
             </div>
-            <div>
-              <Label htmlFor="edit-series-thumbnail">Thumbnail URL</Label>
-              <Input
-                id="edit-series-thumbnail"
-                value={seriesFormData.thumbnailUrl}
-                onChange={(e) => setSeriesFormData({ ...seriesFormData, thumbnailUrl: e.target.value })}
-                placeholder="https://..."
-                data-testid="input-edit-series-thumbnail"
-              />
+            {/* Series Thumbnail Upload */}
+            <div className="space-y-2">
+              <Label>Thumbnail Image</Label>
+              {seriesFormData.thumbnailUrl ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 rounded overflow-hidden bg-gray-100 dark:bg-gray-900 flex-shrink-0">
+                        <img
+                          src={seriesFormData.thumbnailUrl}
+                          alt="Thumbnail"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Current Thumbnail</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => editingSeriesData && handleSeriesThumbnailDelete(editingSeriesData.id)}
+                      data-testid="button-delete-series-thumbnail"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500">Delete to upload a new image</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Input
+                    id="edit-series-thumbnail"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setSeriesThumbnailFile(e.target.files?.[0] || null)}
+                    data-testid="input-edit-series-thumbnail"
+                  />
+                  {seriesThumbnailFile && (
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-green-600 dark:text-green-400 flex-1">
+                        Selected: {seriesThumbnailFile.name}
+                      </p>
+                      <Button
+                        size="sm"
+                        type="button"
+                        disabled={uploadingSeriesThumbnail || !editingSeriesData}
+                        onClick={() => editingSeriesData && handleSeriesThumbnailUpload(seriesThumbnailFile, editingSeriesData.id)}
+                        data-testid="button-upload-series-thumbnail"
+                      >
+                        {uploadingSeriesThumbnail ? "Uploading..." : "Upload Now"}
+                      </Button>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500">Upload an image — shown as the series icon in the library</p>
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-between border rounded-lg p-3">
               <Label>Published</Label>
@@ -1857,18 +1944,18 @@ export default function StudyManagement() {
             {/* Thumbnail Image Management */}
             <div className="space-y-2">
               <Label>Thumbnail Image</Label>
-              {editingStudy && (editingStudy as any).thumbnailFilename ? (
+              {editingStudy && (editingStudy as any).thumbnailUrl ? (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 rounded overflow-hidden bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 rounded overflow-hidden bg-gray-100 dark:bg-gray-900 flex-shrink-0">
                         <img 
                           src={(editingStudy as any).thumbnailUrl} 
                           alt="Thumbnail" 
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <span className="text-sm text-gray-700 dark:text-gray-300">Custom Thumbnail</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Current Thumbnail</span>
                     </div>
                     <Button
                       size="sm"
@@ -1880,7 +1967,7 @@ export default function StudyManagement() {
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Delete thumbnail to show logo instead
+                    Delete to upload a new image
                   </p>
                 </div>
               ) : (
@@ -1893,11 +1980,11 @@ export default function StudyManagement() {
                     data-testid="input-edit-thumbnail"
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Upload a custom thumbnail or logo will be shown by default
+                    Upload an image — shown as the study icon in the library
                   </p>
                   {thumbnailFile && (
                     <p className="text-xs text-green-600 dark:text-green-400">
-                      Selected: {thumbnailFile.name} - will upload when you save changes
+                      Selected: {thumbnailFile.name} — will upload when you save
                     </p>
                   )}
                 </div>

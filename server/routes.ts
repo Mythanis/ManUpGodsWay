@@ -1800,6 +1800,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload thumbnail for study series
+  app.post('/api/study-series/:id/upload-thumbnail', isAuthenticated, thumbnailUpload.single('thumbnail'), async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "Thumbnail image is required" });
+      }
+      const thumbnailUrl = `/uploads/thumbnails/${file.filename}`;
+      const series = await storage.updateStudySeries(req.params.id, { thumbnailUrl });
+      res.json(series);
+    } catch (error) {
+      console.error("Error uploading series thumbnail:", error);
+      res.status(500).json({ message: "Failed to upload thumbnail" });
+    }
+  });
+
+  // Delete thumbnail for study series
+  app.delete('/api/study-series/:id/delete-thumbnail', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const series = await storage.updateStudySeries(req.params.id, { thumbnailUrl: null });
+      res.json(series);
+    } catch (error) {
+      console.error("Error deleting series thumbnail:", error);
+      res.status(500).json({ message: "Failed to delete thumbnail" });
+    }
+  });
+
   // Download PDF document for study
   app.get('/api/studies/:id/download-pdf', isAuthenticated, async (req: any, res) => {
     try {
