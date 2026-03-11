@@ -688,9 +688,9 @@ export class DatabaseStorage implements IStorage {
     const seriesStudies = await db.select().from(studies)
       .where(and(
         eq(studies.seriesId, seriesId),
-        eq(studies.isPublished, true),
-        // Exclude studies scheduled for the future
-        sql`(${studies.scheduledPublishDate} IS NULL OR ${studies.scheduledPublishDate} <= NOW())`
+        eq(studies.isPublished, true)
+        // Note: future-scheduled studies are included so the full series roadmap is visible
+        // They are shown as locked with their scheduled unlock date
       ))
       .orderBy(asc(studies.seriesOrder), asc(studies.createdAt));
     
@@ -757,7 +757,18 @@ export class DatabaseStorage implements IStorage {
         
         let isLockedByPrevious = false;
         let isLockedByDrip = false;
+        let isScheduledFuture = false;
         let unlocksAt: Date | null = null;
+        
+        // Check if this study has a future scheduled publish date
+        if (study.scheduledPublishDate) {
+          const now = new Date();
+          const scheduleDate = new Date(study.scheduledPublishDate);
+          if (scheduleDate > now) {
+            isScheduledFuture = true;
+            unlocksAt = scheduleDate;
+          }
+        }
         
         if (requiresConsecutive && index > 0) {
           const previousStudyId = seriesStudies[index - 1].id;
@@ -778,7 +789,7 @@ export class DatabaseStorage implements IStorage {
           }
         }
         
-        const isLocked = isLockedByDrip || isLockedByPrevious;
+        const isLocked = isLockedByDrip || isLockedByPrevious || isScheduledFuture;
         
         return {
           ...study,
@@ -787,6 +798,7 @@ export class DatabaseStorage implements IStorage {
           totalLessons: lessons.length,
           isLockedByPrevious: isLocked,
           isLockedByDrip,
+          isScheduledFuture,
           unlocksAt: unlocksAt?.toISOString() || null,
           studyNumber: index + 1,
           totalStudiesInSeries: seriesStudies.length,
@@ -801,12 +813,17 @@ export class DatabaseStorage implements IStorage {
       const lessons = await db.select().from(studyLessons)
         .where(eq(studyLessons.studyId, study.id));
       
+      const isScheduledFuture = !!(study.scheduledPublishDate && new Date(study.scheduledPublishDate) > new Date());
+      const isLocked = (requiresConsecutive && index > 0) || isScheduledFuture;
+      
       return {
         ...study,
         progress: null,
         completedLessons: 0,
         totalLessons: lessons.length,
-        isLockedByPrevious: requiresConsecutive && index > 0,
+        isLockedByPrevious: isLocked,
+        isScheduledFuture,
+        unlocksAt: isScheduledFuture ? new Date(study.scheduledPublishDate!).toISOString() : null,
         studyNumber: index + 1,
         totalStudiesInSeries: seriesStudies.length,
       };

@@ -24,6 +24,7 @@ interface StudyInSeries {
   totalLessons: number;
   isLockedByPrevious?: boolean;
   isLockedByDrip?: boolean;
+  isScheduledFuture?: boolean;
   unlocksAt?: string | null;
   studyNumber?: number;
   totalStudiesInSeries?: number;
@@ -257,20 +258,25 @@ export default function SeriesDetail() {
               >
                 <CardContent className="p-4 relative z-10">
                   <div className="flex items-start gap-4">
-                    {/* Order Number */}
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-sm flex items-center justify-center font-black text-lg border-2 border-black ${
-                      isConsecutiveLocked 
-                        ? 'bg-zinc-700 text-zinc-400' 
-                        : study.progress?.isCompleted 
-                          ? 'bg-black text-[#FCD000]' 
-                          : 'bg-white text-black'
-                    }`}>
-                      {isConsecutiveLocked ? (
-                        <Lock className="w-5 h-5" />
-                      ) : study.progress?.isCompleted ? (
-                        <CheckCircle className="w-6 h-6" />
-                      ) : (
-                        index + 1
+                    {/* Order Number — always visible, lock badge overlaid when locked */}
+                    <div className="relative flex-shrink-0">
+                      <div className={`w-12 h-12 rounded-sm flex items-center justify-center font-black text-lg border-2 border-black ${
+                        isConsecutiveLocked 
+                          ? 'bg-zinc-700 text-zinc-400' 
+                          : study.progress?.isCompleted 
+                            ? 'bg-black text-[#FCD000]' 
+                            : 'bg-white text-black'
+                      }`}>
+                        {study.progress?.isCompleted ? (
+                          <CheckCircle className="w-6 h-6" />
+                        ) : (
+                          index + 1
+                        )}
+                      </div>
+                      {isConsecutiveLocked && (
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-zinc-900 border border-zinc-600 rounded-full flex items-center justify-center">
+                          <Lock className="w-2.5 h-2.5 text-zinc-400" />
+                        </div>
                       )}
                     </div>
 
@@ -293,7 +299,12 @@ export default function SeriesDetail() {
                       {/* Locked message */}
                       {isConsecutiveLocked && (
                         <div className="mb-3 p-2 bg-zinc-900 border border-zinc-700 rounded-sm">
-                          {study.isLockedByDrip && study.unlocksAt ? (
+                          {study.isScheduledFuture && study.unlocksAt ? (
+                            <p className="text-xs text-zinc-400 font-medium">
+                              <Clock className="w-3 h-3 inline mr-1" />
+                              Coming {formatUnlockDate(study.unlocksAt)}
+                            </p>
+                          ) : study.isLockedByDrip && study.unlocksAt ? (
                             <p className="text-xs text-zinc-400 font-medium">
                               <Clock className="w-3 h-3 inline mr-1" />
                               Unlocks {formatUnlockDate(study.unlocksAt)}
