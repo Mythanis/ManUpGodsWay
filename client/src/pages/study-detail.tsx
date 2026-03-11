@@ -370,12 +370,8 @@ export default function StudyDetail() {
     enabled: !!study?.seriesId,
   });
 
-  // Show rating only after ALL lessons are completed, and only on standalone studies or the last study in a series
-  const isLastInSeries = seriesStudies.length > 0
-    ? Math.max(...seriesStudies.map((s: any) => s.seriesOrder ?? 0)) === (study?.seriesOrder ?? 0)
-    : false;
-  const allLessonsCompleted = lessonsForThisStudy.length === 0 || progressPercent === 100;
-  const showRating = allLessonsCompleted && (!study?.seriesId || isLastInSeries);
+  // isLastInSeries / allLessonsCompleted / showRating are computed after lessonsForThisStudy
+  // is defined (post early-return) — placeholder to preserve hook order
 
   // Progress data is handled directly from the query
 
@@ -469,6 +465,13 @@ export default function StudyDetail() {
   const progressPercent = lessonsForThisStudy.length > 0 
     ? Math.round((completedLessonsForThisStudy.length / lessonsForThisStudy.length) * 100)
     : 0;
+
+  // Show rating only after ALL lessons are completed, and only on standalone studies or the last study in a series
+  const isLastInSeries = seriesStudies.length > 0
+    ? Math.max(...seriesStudies.map((s: any) => s.seriesOrder ?? 0)) === (study?.seriesOrder ?? 0)
+    : false;
+  const allLessonsCompleted = lessonsForThisStudy.length === 0 || progressPercent === 100;
+  const showRating = allLessonsCompleted && (!study?.seriesId || isLastInSeries);
 
   const getTierColor = (tier: string) => {
     if (tier !== 'free') {
