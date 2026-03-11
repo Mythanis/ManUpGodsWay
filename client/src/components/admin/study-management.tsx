@@ -827,7 +827,7 @@ export default function StudyManagement() {
     }
   };
 
-  const handleSeriesThumbnailUpload = async (file: File, seriesId: string) => {
+  const handleSeriesThumbnailUpload = async (file: File, seriesId: string): Promise<string | null> => {
     const formData = new FormData();
     formData.append('thumbnail', file);
     try {
@@ -838,11 +838,16 @@ export default function StudyManagement() {
         credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to upload thumbnail');
-      toast({ title: "Success", description: "Thumbnail uploaded successfully" });
+      const updated = await response.json();
+      const newUrl = updated.thumbnailUrl || null;
+      // Update form state so the subsequent PUT doesn't overwrite with empty string
+      setSeriesFormData(prev => ({ ...prev, thumbnailUrl: newUrl || "" }));
       queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
       queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      return newUrl;
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Failed to upload thumbnail", variant: "destructive" });
+      return null;
     } finally {
       setUploadingSeriesThumbnail(false);
       setSeriesThumbnailFile(null);
@@ -1598,10 +1603,15 @@ export default function StudyManagement() {
             <Button
               onClick={async () => {
                 if (!editingSeriesData) return;
+                let thumbnailUrl = seriesFormData.thumbnailUrl;
                 if (seriesThumbnailFile) {
-                  await handleSeriesThumbnailUpload(seriesThumbnailFile, editingSeriesData.id);
+                  const uploadedUrl = await handleSeriesThumbnailUpload(seriesThumbnailFile, editingSeriesData.id);
+                  if (uploadedUrl) thumbnailUrl = uploadedUrl;
                 }
-                updateSeriesMutation.mutate({ id: editingSeriesData.id, updates: seriesFormData });
+                updateSeriesMutation.mutate({
+                  id: editingSeriesData.id,
+                  updates: { ...seriesFormData, thumbnailUrl },
+                });
               }}
               disabled={!seriesFormData.title || updateSeriesMutation.isPending || uploadingSeriesThumbnail}
               className="bg-ministry-gold-exact text-black hover:bg-yellow-500"
