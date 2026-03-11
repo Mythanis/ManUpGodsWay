@@ -79,6 +79,7 @@ export default function StudyBuilder() {
     thumbnailUrl: "",
     videoUrl: "",
     seriesId: "",
+    seriesOrder: 1,
     requiresPurchase: false,
     price: "",
     isPublished: true,
@@ -117,6 +118,7 @@ export default function StudyBuilder() {
       thumbnailUrl: "",
       videoUrl: "",
       seriesId: "",
+      seriesOrder: 1,
       requiresPurchase: false,
       price: "",
       isPublished: true,
@@ -523,6 +525,21 @@ export default function StudyBuilder() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              )}
+
+              {contentType === "study" && formData.seriesId && (
+                <div className="space-y-2">
+                  <Label>Study Number in Series</Label>
+                  <p className="text-xs text-gray-500">The position of this study in the series (1 = first, 2 = second, etc.)</p>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={formData.seriesOrder}
+                    onChange={(e) => setFormData({ ...formData, seriesOrder: parseInt(e.target.value) || 1 })}
+                    placeholder="e.g. 1"
+                    data-testid="input-series-order"
+                  />
                 </div>
               )}
 
@@ -1025,6 +1042,7 @@ function EditStudyForm({ study, seriesList, onSave, onCancel }: {
     thumbnailUrl: study.thumbnailUrl || '',
     videoUrl: study.videoUrl || '',
     seriesId: study.seriesId || '',
+    seriesOrder: study.seriesOrder || 1,
     isPublished: study.isPublished ?? false,
     requiresPurchase: study.requiresPurchase ?? false,
     price: study.price || '',
@@ -1157,6 +1175,19 @@ function EditStudyForm({ study, seriesList, onSave, onCancel }: {
               ))}
             </SelectContent>
           </Select>
+        </div>
+      )}
+      {formData.seriesId && (
+        <div className="space-y-2">
+          <Label>Study Number in Series</Label>
+          <p className="text-xs text-gray-500">The position of this study in the series (1 = first, 2 = second, etc.)</p>
+          <Input
+            type="number"
+            min={1}
+            value={formData.seriesOrder}
+            onChange={(e) => setFormData({ ...formData, seriesOrder: parseInt(e.target.value) || 1 })}
+            placeholder="e.g. 2"
+          />
         </div>
       )}
       <div className="space-y-2">

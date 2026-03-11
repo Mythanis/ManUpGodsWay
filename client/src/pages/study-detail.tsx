@@ -370,11 +370,12 @@ export default function StudyDetail() {
     enabled: !!study?.seriesId,
   });
 
-  // Show rating if: standalone study (no series) OR last study in series
+  // Show rating only after ALL lessons are completed, and only on standalone studies or the last study in a series
   const isLastInSeries = seriesStudies.length > 0
     ? Math.max(...seriesStudies.map((s: any) => s.seriesOrder ?? 0)) === (study?.seriesOrder ?? 0)
     : false;
-  const showRating = !study?.seriesId || isLastInSeries;
+  const allLessonsCompleted = lessonsForThisStudy.length === 0 || progressPercent === 100;
+  const showRating = allLessonsCompleted && (!study?.seriesId || isLastInSeries);
 
   // Progress data is handled directly from the query
 
