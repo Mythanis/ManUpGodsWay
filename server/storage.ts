@@ -791,11 +791,22 @@ export class DatabaseStorage implements IStorage {
         
         const isLocked = isLockedByDrip || isLockedByPrevious || isScheduledFuture;
         
+        const lessonList = lessons.map(l => ({ id: l.id, title: l.title, dayNumber: l.dayNumber }));
+        const completedLessonIds = new Set(
+          (await db.select().from(userLessonProgress)
+            .where(and(
+              eq(userLessonProgress.userId, userId),
+              inArray(userLessonProgress.lessonId, lessons.map(l => l.id)),
+              sql`${userLessonProgress.completedAt} IS NOT NULL`
+            ))).map(lp => lp.lessonId)
+        );
+
         return {
           ...study,
           progress: progress || null,
           completedLessons: completedLessonsCount,
           totalLessons: lessons.length,
+          lessons: lessonList.map(l => ({ ...l, isCompleted: completedLessonIds.has(l.id) })),
           isLockedByPrevious: isLocked,
           isLockedByDrip,
           isScheduledFuture,
@@ -821,6 +832,7 @@ export class DatabaseStorage implements IStorage {
         progress: null,
         completedLessons: 0,
         totalLessons: lessons.length,
+        lessons: lessons.map(l => ({ id: l.id, title: l.title, dayNumber: l.dayNumber, isCompleted: false })),
         isLockedByPrevious: isLocked,
         isScheduledFuture,
         unlocksAt: isScheduledFuture ? new Date(study.scheduledPublishDate!).toISOString() : null,
