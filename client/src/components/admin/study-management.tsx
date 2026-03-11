@@ -96,6 +96,9 @@ export default function StudyManagement() {
   const [bulkImportText, setBulkImportText] = useState("");
   const [parsedLessons, setParsedLessons] = useState<any[]>([]);
   const [isImporting, setIsImporting] = useState(false);
+  const [bulkImportMode, setBulkImportMode] = useState<"text" | "word">("text");
+  const [wordImportFile, setWordImportFile] = useState<File | null>(null);
+  const [isParsingWord, setIsParsingWord] = useState(false);
   const [lessonFormData, setLessonFormData] = useState({
     dayNumber: 1,
     title: "",
@@ -923,6 +926,43 @@ export default function StudyManagement() {
     });
   };
 
+  // Parse Word document for lesson import
+  const handleWordFileParse = async () => {
+    if (!wordImportFile || !managingLessonsStudy) return;
+    setIsParsingWord(true);
+    try {
+      const formData = new FormData();
+      formData.append('word', wordImportFile);
+      const response = await fetch('/api/parse-word-lessons', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || 'Failed to parse Word document');
+      }
+      const data = await response.json();
+      const maxDisplayOrder = lessons.length > 0 ? Math.max(...lessons.map(l => l.displayOrder)) : 0;
+      const mapped = (data.lessons || []).map((l: any, i: number) => ({
+        dayNumber: l.dayNumber || i + 1,
+        title: l.title || `Lesson ${i + 1}`,
+        content: l.content || '',
+        scripture: l.scripture || '',
+        keyTakeaway: l.keyTakeaway || '',
+        displayOrder: maxDisplayOrder + i + 1,
+        estimatedMinutes: l.estimatedMinutes || 15,
+        questions: l.questions || [],
+      }));
+      setParsedLessons(mapped);
+      toast({ title: "Success", description: `Parsed ${mapped.length} lessons from Word document` });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || 'Failed to parse Word document', variant: 'destructive' });
+    } finally {
+      setIsParsingWord(false);
+    }
+  };
+
   // Bulk import lessons
   const handleBulkImport = async () => {
     if (!managingLessonsStudy || parsedLessons.length === 0) {
@@ -983,25 +1023,26 @@ export default function StudyManagement() {
 
   const renderStudyCard = (study: Study) => (
     <Card key={study.id} className="border-gray-200">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg text-foreground mb-2">
-              {study.title}
-            </CardTitle>
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-              <Badge variant="secondary" className="text-xs">
-                {study.category}
-              </Badge>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${study.isPublished ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                {study.isPublished ? '● Published' : '○ Draft'}
+              </span>
+              <Badge variant="secondary" className="text-xs capitalize">{study.category}</Badge>
               <Badge className={`text-xs ${getTierBadgeColor(study.requiredTier)}`}>
                 <span className="flex items-center gap-1">
                   {getTierIcon(study.requiredTier)}
                   {study.requiredTier.toUpperCase()}
                 </span>
               </Badge>
-              <span className="text-xs text-muted-foreground">
-                {study.duration} min
-              </span>
+              {study.totalDays != null && study.totalDays > 0 && (
+                <Badge variant="outline" className="text-xs">
+                  <Book className="w-3 h-3 mr-1" />
+                  {study.totalDays} {study.totalDays === 1 ? 'lesson' : 'lessons'}
+                </Badge>
+              )}
               {study.requiresPurchase && study.price && (
                 <Badge className="text-xs bg-ministry-gold text-black">
                   ${parseFloat(String(study.price)).toFixed(2)}
@@ -1012,58 +1053,49 @@ export default function StudyManagement() {
                   {allSeries.find(s => s.id === study.seriesId)?.title || 'In Series'}
                 </Badge>
               )}
-              {!study.seriesId && (
-                <Badge className="text-xs bg-gray-100 text-gray-600 border border-gray-300">
-                  Individual
-                </Badge>
-              )}
             </div>
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {study.description}
-            </p>
+            <h3 className="font-semibold text-base text-foreground mb-1 leading-tight">{study.title}</h3>
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{study.description}</p>
+            <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+              <span>By {study.author}</span>
+              <span>•</span>
+              <span>{study.duration} min</span>
+              <span>•</span>
+              <span>{new Date(study.createdAt).toLocaleDateString()}</span>
+            </div>
           </div>
-          <div className="flex items-center space-x-2 ml-4">
+          <div className="flex flex-col gap-1.5 shrink-0">
             <Button
               size="sm"
-              variant="outline"
               onClick={() => handleManageLessons(study)}
-              className="bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal"
+              className="bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal text-xs"
               data-testid={`button-manage-lessons-${study.id}`}
             >
-              <List className="w-4 h-4 mr-1" />
+              <List className="w-3 h-3 mr-1" />
               Lessons
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={() => handleEdit(study)}
+              className="text-xs"
               data-testid={`button-edit-study-${study.id}`}
             >
-              <Edit className="w-4 h-4" />
+              <Edit className="w-3 h-3 mr-1" />
+              Edit
             </Button>
             <Button
               size="sm"
               variant="destructive"
               onClick={() => handleDelete(study.id)}
               disabled={deleteStudyMutation.isPending}
+              className="text-xs"
               data-testid={`button-delete-study-${study.id}`}
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3 h-3 mr-1" />
+              Delete
             </Button>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span>By {study.author}</span>
-          <span>•</span>
-          <span>Created {new Date(study.createdAt).toLocaleDateString()}</span>
-          {study.tags && study.tags.length > 0 && (
-            <>
-              <span>•</span>
-              <span>Tags: {study.tags.join(", ")}</span>
-            </>
-          )}
         </div>
       </CardContent>
     </Card>
@@ -1191,25 +1223,41 @@ export default function StudyManagement() {
                   ) : (
                     <div className="space-y-2">
                       {series.studies.map((study, index) => (
-                        <div key={study.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                        <div key={study.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg gap-2">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <span className="w-6 h-6 bg-ministry-gold-exact text-black text-xs font-bold rounded-full flex items-center justify-center flex-shrink-0">
                               {index + 1}
                             </span>
-                            <span className="text-sm font-medium text-foreground truncate">{study.title}</span>
-                            <Badge className={`text-xs flex-shrink-0 ${getTierBadgeColor(study.requiredTier)}`}>
-                              {study.requiredTier}
-                            </Badge>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-sm font-medium text-foreground truncate">{study.title}</span>
+                                <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${study.isPublished ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                  {study.isPublished ? 'Published' : 'Draft'}
+                                </span>
+                                {study.totalDays != null && study.totalDays > 0 && (
+                                  <span className="text-xs text-muted-foreground">{study.totalDays} lessons</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
                           <div className="flex items-center gap-1 flex-shrink-0">
-                            <Button size="sm" variant="ghost" onClick={() => handleEdit(study)}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleManageLessons(study)}
+                              className="text-ministry-gold hover:text-ministry-gold/80 hover:bg-ministry-gold/10 h-7 px-2 text-xs"
+                            >
+                              <List className="w-3 h-3 mr-1" />
+                              Lessons
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => handleEdit(study)} className="h-7 w-7 p-0">
                               <Edit className="w-3 h-3" />
                             </Button>
                             <Button 
                               size="sm" 
                               variant="ghost" 
                               onClick={() => handleRemoveStudyFromSeries(study.id)}
-                              className="text-red-500 hover:text-red-700"
+                              className="text-red-500 hover:text-red-700 h-7 w-7 p-0"
                             >
                               <X className="w-3 h-3" />
                             </Button>
@@ -1706,13 +1754,11 @@ export default function StudyManagement() {
               </Select>
             </div>
 
-            {/* Purchase Options Section - HIGHLY VISIBLE */}
-            <div className="flex items-center justify-between rounded-lg border-4 border-red-500 p-6 bg-red-100">
+            {/* Purchase Options Section */}
+            <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4 bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
               <div className="space-y-0.5">
-                <Label className="text-xl font-bold text-red-900">🔴 REQUIRES PURCHASE - TEST VISIBILITY</Label>
-                <div className="text-lg font-bold text-red-900">
-                  Make this study available for purchase
-                </div>
+                <Label className="font-medium">Requires Purchase</Label>
+                <p className="text-xs text-muted-foreground">Make this study available for purchase separately</p>
               </div>
               <Switch
                 checked={formData.requiresPurchase}
@@ -2427,61 +2473,123 @@ export default function StudyManagement() {
         if (!open) {
           setBulkImportText("");
           setParsedLessons([]);
+          setWordImportFile(null);
+          setBulkImportMode("text");
         }
       }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Bulk Import Lessons - {managingLessonsStudy?.title}
+              Bulk Import Lessons — {managingLessonsStudy?.title}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            {/* Instructions */}
-            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <h4 className="font-semibold text-sm mb-2">Formatting Instructions</h4>
-              <p className="text-sm text-muted-foreground mb-2">
-                Paste your study content below. Use one of these formats for each day:
-              </p>
-              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
-                <li><code>Day 1: Title of Lesson</code> or <code>### Day 1: Title</code></li>
-                <li>Include <code>Scripture: John 3:16</code> for scripture references</li>
-                <li>Include <code>Key Takeaway: Summary text</code> for takeaways</li>
-              </ul>
-              <div className="mt-3 text-xs font-mono bg-white dark:bg-gray-900 p-2 rounded">
-                <div>Day 1: Foundation of Biblical Manhood</div>
-                <div>Scripture: Genesis 2:15-18</div>
-                <div>Content goes here...</div>
-                <div>Key Takeaway: God created man with purpose</div>
-                <div className="mt-2">Day 2: Leadership in the Home</div>
-                <div>Content for day 2...</div>
-              </div>
+            {/* Mode Toggle */}
+            <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+              <button
+                onClick={() => { setBulkImportMode("text"); setParsedLessons([]); }}
+                className={`flex-1 py-2 text-sm font-medium transition-colors ${bulkImportMode === "text" ? "bg-ministry-gold text-ministry-charcoal" : "bg-white text-muted-foreground hover:bg-gray-50"}`}
+              >
+                Paste Text
+              </button>
+              <button
+                onClick={() => { setBulkImportMode("word"); setParsedLessons([]); }}
+                className={`flex-1 py-2 text-sm font-medium transition-colors ${bulkImportMode === "word" ? "bg-ministry-gold text-ministry-charcoal" : "bg-white text-muted-foreground hover:bg-gray-50"}`}
+              >
+                Upload Word Doc
+              </button>
             </div>
 
-            {/* Paste Area */}
-            <div>
-              <Label>Paste Study Content</Label>
-              <Textarea
-                value={bulkImportText}
-                onChange={(e) => {
-                  setBulkImportText(e.target.value);
-                  setParsedLessons([]); // Clear preview when text changes
-                }}
-                placeholder="Paste your study content here..."
-                rows={12}
-                className="font-mono text-sm"
-                data-testid="textarea-bulk-import"
-              />
-            </div>
+            {bulkImportMode === "text" ? (
+              <>
+                {/* Instructions */}
+                <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <h4 className="font-semibold text-sm mb-2">Formatting Instructions</h4>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Paste your study content below. Start each lesson with a day heading:
+                  </p>
+                  <div className="text-xs font-mono bg-white dark:bg-gray-900 p-3 rounded border border-blue-100 dark:border-blue-800 space-y-1">
+                    <div className="font-semibold text-blue-700 dark:text-blue-300">Day 1: Foundation of Biblical Manhood</div>
+                    <div className="text-gray-500">Scripture: Genesis 2:15-18</div>
+                    <div>Content goes here. Write as much as you need.</div>
+                    <div className="text-gray-500">Key Takeaway: God created man with purpose</div>
+                    <div className="mt-2 font-semibold text-blue-700 dark:text-blue-300">Day 2: Leadership in the Home</div>
+                    <div>Content for day 2...</div>
+                  </div>
+                </div>
 
-            {/* Parse Button */}
-            <Button
-              onClick={() => parseBulkContent(bulkImportText)}
-              disabled={!bulkImportText.trim()}
-              className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal"
-              data-testid="button-parse-content"
-            >
-              Parse Content into Lessons
-            </Button>
+                {/* Paste Area */}
+                <div>
+                  <Label>Paste Study Content</Label>
+                  <Textarea
+                    value={bulkImportText}
+                    onChange={(e) => {
+                      setBulkImportText(e.target.value);
+                      setParsedLessons([]);
+                    }}
+                    placeholder="Paste your study content here..."
+                    rows={12}
+                    className="font-mono text-sm"
+                    data-testid="textarea-bulk-import"
+                  />
+                </div>
+
+                <Button
+                  onClick={() => parseBulkContent(bulkImportText)}
+                  disabled={!bulkImportText.trim()}
+                  className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal"
+                  data-testid="button-parse-content"
+                >
+                  Parse Content into Lessons
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <h4 className="font-semibold text-sm mb-1">Upload a Word Document (.docx)</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Format your Word doc with headings like <strong>Day 1: Lesson Title</strong> at the start of each lesson, followed by the content. Optional labels <strong>Scripture:</strong> and <strong>Key Takeaway:</strong> are supported.
+                  </p>
+                </div>
+
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <input
+                    type="file"
+                    accept=".docx"
+                    id="word-import-input"
+                    className="hidden"
+                    onChange={(e) => {
+                      setWordImportFile(e.target.files?.[0] || null);
+                      setParsedLessons([]);
+                    }}
+                  />
+                  <label htmlFor="word-import-input" className="cursor-pointer">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                      </svg>
+                    </div>
+                    {wordImportFile ? (
+                      <p className="text-sm font-medium text-green-700">{wordImportFile.name}</p>
+                    ) : (
+                      <>
+                        <p className="text-sm font-medium text-gray-700">Click to choose a .docx file</p>
+                        <p className="text-xs text-muted-foreground mt-1">Only .docx files are supported</p>
+                      </>
+                    )}
+                  </label>
+                </div>
+
+                <Button
+                  onClick={handleWordFileParse}
+                  disabled={!wordImportFile || isParsingWord}
+                  className="w-full bg-ministry-gold hover:bg-ministry-gold/90 text-ministry-charcoal"
+                  data-testid="button-parse-word"
+                >
+                  {isParsingWord ? "Parsing..." : "Parse Word Document"}
+                </Button>
+              </>
+            )}
 
             {/* Preview Parsed Lessons */}
             {parsedLessons.length > 0 && (
