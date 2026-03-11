@@ -51,6 +51,8 @@ export default function SeriesManagement() {
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [editingSeries, setEditingSeries] = useState<StudySeries | null>(null);
   const [assigningSeries, setAssigningSeries] = useState<StudySeries | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -144,14 +146,60 @@ export default function SeriesManagement() {
       displayOrder: 0,
       requiresConsecutiveCompletion: false,
     });
+    setThumbnailFile(null);
   };
 
-  const handleCreate = () => {
-    createMutation.mutate(formData);
+  const handleThumbnailUpload = async (file: File, seriesId: string): Promise<string | null> => {
+    setUploadingThumbnail(true);
+    try {
+      const fd = new FormData();
+      fd.append("thumbnail", file);
+      const res = await fetch(`/api/study-series/${seriesId}/upload-thumbnail`, {
+        method: "POST",
+        body: fd,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const updated = await res.json();
+      const url = updated.thumbnailUrl || null;
+      setThumbnailFile(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      toast({ title: "Thumbnail uploaded" });
+      return url;
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to upload thumbnail", variant: "destructive" });
+      return null;
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  };
+
+  const handleThumbnailDelete = async (seriesId: string) => {
+    if (!confirm("Remove thumbnail?")) return;
+    try {
+      const res = await fetch(`/api/study-series/${seriesId}/delete-thumbnail`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      setFormData(prev => ({ ...prev, thumbnailUrl: "" }));
+      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      toast({ title: "Thumbnail removed" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to remove thumbnail", variant: "destructive" });
+    }
+  };
+
+  const handleCreate = async () => {
+    const created = await createMutation.mutateAsync(formData).catch(() => null);
+    if (created && thumbnailFile) {
+      await handleThumbnailUpload(thumbnailFile, (created as any).id);
+    }
   };
 
   const handleEdit = (series: StudySeries) => {
     setEditingSeries(series);
+    setThumbnailFile(null);
     setFormData({
       title: series.title,
       description: series.description || "",
@@ -293,11 +341,11 @@ export default function SeriesManagement() {
       )}
 
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Create New Series</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto flex-1 pr-1">
             <div>
               <Label htmlFor="title">Title</Label>
               <Input
@@ -334,15 +382,21 @@ export default function SeriesManagement() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="thumbnailUrl">Thumbnail URL (optional)</Label>
-              <Input
-                id="thumbnailUrl"
-                value={formData.thumbnailUrl}
-                onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                placeholder="https://..."
-                data-testid="input-series-thumbnail"
-              />
+            <div className="space-y-2">
+              <Label>Thumbnail Image (optional)</Label>
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-yellow-400 file:text-black hover:file:bg-yellow-500 cursor-pointer"
+                  onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+                  data-testid="input-series-thumbnail"
+                />
+                <p className="text-xs text-gray-500 mt-2">PNG, JPG, GIF — shown as the series icon in the library</p>
+              </div>
+              {thumbnailFile && (
+                <p className="text-xs text-green-600 dark:text-green-400">✓ {thumbnailFile.name} — will upload after creating</p>
+              )}
             </div>
             <div className="flex items-center justify-between py-2 px-3 bg-muted rounded-md">
               <div className="space-y-0.5">
@@ -361,26 +415,26 @@ export default function SeriesManagement() {
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0">
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
             <Button
               onClick={handleCreate}
-              disabled={!formData.title || createMutation.isPending}
+              disabled={!formData.title || createMutation.isPending || uploadingThumbnail}
               className="bg-ministry-gold-exact text-black hover:bg-yellow-500"
               data-testid="button-save-series"
             >
-              {createMutation.isPending ? "Creating..." : "Create Series"}
+              {createMutation.isPending || uploadingThumbnail ? "Creating..." : "Create Series"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Edit Series</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto flex-1 pr-1">
             <div>
               <Label htmlFor="edit-title">Title</Label>
               <Input
@@ -415,14 +469,62 @@ export default function SeriesManagement() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="edit-thumbnailUrl">Thumbnail URL (optional)</Label>
-              <Input
-                id="edit-thumbnailUrl"
-                value={formData.thumbnailUrl}
-                onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                data-testid="input-edit-series-thumbnail"
-              />
+            {/* Thumbnail */}
+            <div className="space-y-2">
+              <Label>Thumbnail Image</Label>
+              {formData.thumbnailUrl ? (
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-3">
+                    <div className="w-14 h-14 rounded overflow-hidden bg-gray-100 flex-shrink-0 border">
+                      <img src={formData.thumbnailUrl} alt="Thumbnail" className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Current Thumbnail</p>
+                      <p className="text-xs text-gray-500">Delete to upload a new one</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => editingSeries && handleThumbnailDelete(editingSeries.id)}
+                    data-testid="button-delete-series-thumbnail"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-yellow-400 file:text-black hover:file:bg-yellow-500 cursor-pointer"
+                      onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+                      data-testid="input-edit-series-thumbnail"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">PNG, JPG, GIF — shown as the series icon in the library</p>
+                  </div>
+                  {thumbnailFile && (
+                    <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                      <span className="text-xs text-green-700 dark:text-green-300 truncate flex-1 mr-2">✓ {thumbnailFile.name}</span>
+                      <Button
+                        size="sm"
+                        type="button"
+                        disabled={uploadingThumbnail || !editingSeries}
+                        onClick={async () => {
+                          if (!editingSeries || !thumbnailFile) return;
+                          const url = await handleThumbnailUpload(thumbnailFile, editingSeries.id);
+                          if (url) setFormData(prev => ({ ...prev, thumbnailUrl: url }));
+                        }}
+                        className="bg-yellow-400 text-black hover:bg-yellow-500 flex-shrink-0"
+                        data-testid="button-upload-series-thumbnail"
+                      >
+                        {uploadingThumbnail ? "Uploading…" : "Upload Now"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-between py-2 px-3 bg-muted rounded-md">
               <div className="space-y-0.5">
@@ -441,7 +543,7 @@ export default function SeriesManagement() {
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0">
             <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
             <Button
               onClick={handleUpdate}
