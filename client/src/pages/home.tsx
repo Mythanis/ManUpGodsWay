@@ -1229,10 +1229,10 @@ export default function Home() {
       {/* Challenge Dialog */}
       <Dialog open={showChallengeDialog} onOpenChange={setShowChallengeDialog}>
         <DialogContent className="max-w-2xl liquid-header border-2 border-ministry-gold-exact rounded-sm">
-          <DialogHeader className="p-4 -m-6 mb-4 border-b-2 border-black">
+          <DialogHeader className="p-4 -m-6 mb-4 border-b-2 border-ministry-gold-exact">
             <DialogTitle className="flex items-center space-x-2 relative z-10">
-              <Target className="w-5 h-5 text-black" />
-              <span className="text-black font-bold uppercase tracking-tight">This Week's Challenge</span>
+              <Target className="w-5 h-5 text-ministry-gold-exact" />
+              <span className="text-white font-bold uppercase tracking-tight">This Week's Challenge</span>
             </DialogTitle>
           </DialogHeader>
           
@@ -1253,7 +1253,7 @@ export default function Home() {
                   </span>
                 </div>
                 
-                <h3 className="text-xl font-bold mb-3">
+                <h3 className="text-xl font-bold mb-3 capitalize">
                   {(currentChallenge as any)?.title}
                 </h3>
                 
