@@ -675,27 +675,27 @@ export default function StudyDetail() {
                     <MessageCircle className="w-5 h-5 text-black" />
                   </div>
                   <div>
-                    <h3 className="font-bold uppercase tracking-wide text-white">
-                      Join Study Discussion
-                      {(studyDiscussion.replyCount ?? 0) > 0 && (
-                        <span className="ml-2 text-xs bg-ministry-gold-exact text-black font-black px-2 py-0.5 rounded-sm">
-                          {studyDiscussion.replyCount} {studyDiscussion.replyCount === 1 ? 'comment' : 'comments'}
-                        </span>
-                      )}
-                    </h3>
+                    <h3 className="font-bold uppercase tracking-wide text-white">Join Study Discussion</h3>
                     <p className="text-sm text-gray-400">
                       Connect with other members studying "{study.title}"
                     </p>
                   </div>
                 </div>
-                <Button
-                  onClick={() => setDiscussionDialogOpen(true)}
-                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold uppercase tracking-wide rounded-sm border-2 border-black"
-                  data-testid="button-join-discussion"
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Join
-                </Button>
+                <div className="flex flex-col items-center gap-1">
+                  <Button
+                    onClick={() => setDiscussionDialogOpen(true)}
+                    className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold uppercase tracking-wide rounded-sm border-2 border-black"
+                    data-testid="button-join-discussion"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Join
+                  </Button>
+                  {(studyDiscussion.replyCount ?? 0) > 0 && (
+                    <span className="text-xs text-ministry-gold-exact font-bold">
+                      {studyDiscussion.replyCount} {studyDiscussion.replyCount === 1 ? 'comment' : 'comments'}
+                    </span>
+                  )}
+                </div>
               </div>
             )}
             
