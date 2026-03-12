@@ -608,15 +608,10 @@ export default function Community() {
       <div className="px-6 mb-4">
         <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] liquid-black border-2 border-ministry-gold-exact rounded-sm" data-testid="card-quick-post">
           <CardContent className="p-3">
-            <div className="flex items-center gap-3">
-              <img 
-                src={(user as any)?.profileImageUrl || `https://ui-avatars.com/api/?name=${(user as any)?.firstName || 'U'}+${(user as any)?.lastName || ''}&background=FCD000&color=000&size=40`}
-                alt="Your avatar"
-                className="w-10 h-10 rounded-sm object-cover"
-              />
+            <div className="flex items-center gap-0">
               <button
                 onClick={() => setDialogOpen(true)}
-                className="flex-1 text-left px-4 py-2.5 rounded-sm bg-white text-gray-500 hover:bg-gray-100 transition-colors text-sm font-medium uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                className="w-full text-left px-4 py-2.5 rounded-sm bg-white text-gray-500 hover:bg-gray-100 transition-colors text-sm font-medium uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                 data-testid="button-quick-post"
               >
                 <span className="block text-black font-black">Post Here</span>
