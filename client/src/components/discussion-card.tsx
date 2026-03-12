@@ -627,7 +627,7 @@ export default function DiscussionCard({
         
         {/* Show replies if expanded */}
         {showReplies && discussion.replyCount > 0 && (
-          <div className="mt-4 pt-4 border-t-2 border-black/20 relative z-10">
+          <div className="mt-4 pt-4 -mx-4 px-4 border-t-2 border-black/20 relative z-10">
             <div className="space-y-3">
               {(replies as any[])?.map((reply: any) => (
                 <div key={reply.id} className="flex items-start space-x-3 p-3 bg-black rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
@@ -695,7 +695,7 @@ export default function DiscussionCard({
         )}
 
         {showReplyForm && (
-          <div className="mt-4 pt-4 border-t-2 border-black/20 bg-black rounded-sm p-4 relative z-10 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+          <div className="mt-4 pt-4 pb-4 -mx-4 px-4 border-t-2 border-black/20 bg-black relative z-10">
             <h4 className="text-sm font-black text-ministry-gold-exact mb-3 uppercase tracking-wide">Write your reply</h4>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmitReply)} className="space-y-3">
