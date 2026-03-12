@@ -631,11 +631,11 @@ export default function DiscussionCard({
           <div className="mt-4 pt-3 -mx-4 border-t-2 border-black/20 relative z-10">
             <div className="space-y-0">
               {(replies as any[])?.map((reply: any) => (
-                <div key={reply.id} className="flex items-start space-x-3 px-4 py-3 bg-black border-b border-black/30">
+                <div key={reply.id} className="flex items-start space-x-3 px-4 py-3 bg-white border-b border-gray-200">
                   <img 
                     src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=FCD000&color=000&size=32`}
                     alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
-                    className="w-8 h-8 rounded-sm object-cover cursor-pointer border-2 border-ministry-gold-exact hover:border-white transition-colors"
+                    className="w-8 h-8 rounded-sm object-cover cursor-pointer border-2 border-ministry-gold-exact hover:border-black transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       setLocation(`/users/${reply.userId}`);
@@ -643,21 +643,21 @@ export default function DiscussionCard({
                   />
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className="font-black text-xs text-ministry-gold-exact uppercase tracking-wide">
+                      <span className="font-black text-xs text-black uppercase tracking-wide">
                         {reply.user?.firstName} {reply.user?.lastName?.charAt(0)}.
                       </span>
-                      <span className="text-xs text-gray-400 font-medium">
+                      <span className="text-xs text-gray-500 font-medium">
                         • {getTimeAgo(reply.createdAt)}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-300 leading-relaxed">{reply.content}</p>
+                    <p className="text-sm text-black leading-relaxed">{reply.content}</p>
                     
                     {/* Like, Flag, and Delete Reply Buttons */}
                     <div className="flex justify-between items-center mt-2">
                       <Button 
                         variant="ghost"
                         size="sm"
-                        className="flex items-center gap-1 text-white hover:text-black hover:bg-ministry-gold-exact px-2 py-1 rounded-sm border border-ministry-gold-exact/50 transition-all"
+                        className="flex items-center gap-1 text-black hover:text-black hover:bg-ministry-gold-exact px-2 py-1 rounded-sm border border-ministry-gold-exact/50 transition-all"
                         data-testid={`button-like-reply-${reply.id}`}
                       >
                         <ChristianCross className="w-3 h-3" />
@@ -668,7 +668,7 @@ export default function DiscussionCard({
                           contentType="reply" 
                           contentId={reply.id}
                           triggerElement={
-                            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-red-500 hover:bg-red-500/10 p-1 rounded-sm transition-all">
+                            <Button variant="ghost" size="sm" className="text-gray-500 hover:text-red-500 hover:bg-red-500/10 p-1 rounded-sm transition-all">
                               <Flag className="h-3 w-3" />
                             </Button>
                           }
