@@ -10623,6 +10623,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: initialMessage,
       });
       
+      // Notify the request owner that someone has stepped up to assist
+      try {
+        await storage.createNotificationWithPreferences({
+          userId: request.userId,
+          type: 'new_message',
+          title: 'Someone Stepped Up For You',
+          message: `${assister?.firstName || 'A brother'} ${assister?.lastName || ''} saw your accountability request and is ready to assist. Check your messages!`.trim(),
+          relatedId: conversation.id,
+        });
+      } catch (notifError) {
+        console.error("Error sending accountability assist notification:", notifError);
+      }
+
       // Broadcast real-time update to all clients
       if ((req.app as any).broadcastToAll) {
         (req.app as any).broadcastToAll({
