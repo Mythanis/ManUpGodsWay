@@ -343,46 +343,49 @@ export default function DiscussionCard({
   return (
     <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden w-full" style={{ fontFamily: "'Inter', 'DM Sans', sans-serif" }} data-testid="discussion-card">
       <CardContent className="p-4 relative z-10">
-        <div className="flex items-start space-x-3">
+        {/* Header row: avatar + name/badges/time — compact, does NOT constrain content below */}
+        <div className="flex items-center gap-2 mb-2">
           <img 
             src={discussion.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${discussion.user?.firstName}+${discussion.user?.lastName}&background=FCD000&color=000`}
             alt={`${discussion.user?.firstName} ${discussion.user?.lastName}`}
-            className="w-10 h-10 rounded-sm object-cover cursor-pointer border-2 border-ministry-gold-exact hover:border-white transition-colors"
+            className="w-8 h-8 rounded-sm object-cover cursor-pointer border-2 border-ministry-gold-exact hover:border-white transition-colors flex-shrink-0"
             onClick={(e) => {
               e.stopPropagation();
               setLocation(`/users/${discussion.userId}`);
             }}
             data-testid="img-user-avatar"
           />
-          <div className="flex-1">
-            <div className="flex items-center flex-wrap gap-2 mb-1">
-              <h3 className="font-black text-sm text-white uppercase tracking-wide" style={{ fontFamily: "'Inter', sans-serif" }} data-testid="text-user-name">
-                {discussion.user?.firstName} {discussion.user?.lastName?.charAt(0)}.
-              </h3>
-              {getTierBadge(discussion.user?.subscriptionTier)}
-              <span className="text-xs text-white/50 font-medium" data-testid="text-time-ago">
-                • {getTimeAgo(discussion.createdAt)}
-              </span>
-            </div>
-            
-            <div className="mb-2 pb-2 border-b border-ministry-gold-exact/30">
-              <div className="flex items-center flex-wrap gap-2">
-                <h4 className="font-black text-white text-base sm:text-lg tracking-tight" style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }} data-testid="text-discussion-title">
-                  {discussion.title}
-                </h4>
-                {discussion.studyId && (
-                  <Badge className="text-xs bg-ministry-gold-exact text-black font-bold uppercase tracking-wide rounded-sm border border-ministry-gold-exact py-0 px-1">
-                    📚 Study
-                  </Badge>
-                )}
-                {discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' && (
-                  <Badge className="text-xs bg-transparent text-ministry-gold-exact font-bold uppercase tracking-wide rounded-sm border border-ministry-gold-exact py-0 px-1">
-                    {discussion.study.requiredTier.charAt(0).toUpperCase() + discussion.study.requiredTier.slice(1)} Only
-                  </Badge>
-                )}
-              </div>
-            </div>
-            
+          <div className="flex items-center flex-wrap gap-2 min-w-0">
+            <h3 className="font-black text-sm text-white uppercase tracking-wide" style={{ fontFamily: "'Inter', sans-serif" }} data-testid="text-user-name">
+              {discussion.user?.firstName} {discussion.user?.lastName?.charAt(0)}.
+            </h3>
+            {getTierBadge(discussion.user?.subscriptionTier)}
+            <span className="text-xs text-white/50 font-medium" data-testid="text-time-ago">
+              • {getTimeAgo(discussion.createdAt)}
+            </span>
+          </div>
+        </div>
+
+        {/* Title + badges — full width */}
+        <div className="mb-2 pb-2 border-b border-ministry-gold-exact/30">
+          <div className="flex items-center flex-wrap gap-2">
+            <h4 className="font-black text-white text-base sm:text-lg tracking-tight" style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }} data-testid="text-discussion-title">
+              {discussion.title}
+            </h4>
+            {discussion.studyId && (
+              <Badge className="text-xs bg-ministry-gold-exact text-black font-bold uppercase tracking-wide rounded-sm border border-ministry-gold-exact py-0 px-1">
+                📚 Study
+              </Badge>
+            )}
+            {discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' && (
+              <Badge className="text-xs bg-transparent text-ministry-gold-exact font-bold uppercase tracking-wide rounded-sm border border-ministry-gold-exact py-0 px-1">
+                {discussion.study.requiredTier.charAt(0).toUpperCase() + discussion.study.requiredTier.slice(1)} Only
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* Content box — full card width */}
             <div 
               className="relative mb-3 p-3 rounded-sm bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
               onClick={() => isLongContent && setIsExpanded(!isExpanded)}
@@ -622,8 +625,6 @@ export default function DiscussionCard({
                 )}
               </div>
             </div>
-          </div>
-        </div>
         
         {/* Show replies if expanded */}
         {showReplies && discussion.replyCount > 0 && (
