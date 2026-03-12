@@ -1071,32 +1071,32 @@ function PostCard({
   });
 
   return (
-    <Card className="bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" data-testid={`post-${post.id}`}>
-      <CardContent className="p-6">
-        {/* Post Header */}
-        <div className="flex items-start justify-between mb-4">
+    <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]" data-testid={`post-${post.id}`}>
+      <CardContent className="p-4">
+        {/* Post Header — dark area */}
+        <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
             {post.user?.profileImageUrl ? (
               <img 
                 src={post.user.profileImageUrl} 
                 alt={post.user.firstName || "User"}
-                className="h-10 w-10 rounded-full object-cover ring-2 ring-black/20"
+                className="h-9 w-9 rounded-full object-cover ring-2 ring-ministry-gold-exact/50"
               />
             ) : (
-              <div className="h-10 w-10 rounded-full bg-ministry-gold-exact flex items-center justify-center">
-                <User className="h-5 w-5 text-black" />
+              <div className="h-9 w-9 rounded-full bg-ministry-gold-exact flex items-center justify-center">
+                <User className="h-4 w-4 text-black" />
               </div>
             )}
             <div>
-              <p className="text-black font-bold uppercase tracking-wide text-sm">
+              <p className="text-ministry-gold-exact font-bold uppercase tracking-wide text-sm">
                 {post.user?.firstName} {post.user?.lastName}
               </p>
-              <p className="text-black/50 text-xs font-medium tracking-wide">
+              <p className="text-white/50 text-xs font-medium tracking-wide">
                 {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {post.isPinned && (
               <Badge className="bg-ministry-gold-exact text-black font-bold uppercase tracking-wide text-xs">
                 <Pin className="h-3 w-3 mr-1" />
@@ -1108,7 +1108,7 @@ function PostCard({
                 variant="ghost"
                 size="icon"
                 onClick={onPin}
-                className="text-black/60 hover:text-ministry-gold-exact hover:bg-black/5"
+                className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10"
                 data-testid={`button-pin-${post.id}`}
               >
                 <Pin className="h-4 w-4" />
@@ -1119,7 +1119,7 @@ function PostCard({
                 variant="ghost"
                 size="icon"
                 onClick={onDelete}
-                className="text-black/60 hover:text-red-500 hover:bg-red-50"
+                className="text-white/60 hover:text-red-500 hover:bg-white/10"
                 data-testid={`button-delete-${post.id}`}
               >
                 <Trash2 className="h-4 w-4" />
@@ -1128,42 +1128,44 @@ function PostCard({
           </div>
         </div>
 
-        {/* Post Content */}
-        <p className="text-black font-medium leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
+        {/* White content box */}
+        <div className="bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-sm p-3 mb-3">
+          <p className="text-black font-medium leading-relaxed whitespace-pre-wrap">{post.content}</p>
 
-        {/* Media Display */}
-        {post.mediaUrls && post.mediaUrls.length > 0 && (
-          <div className={`grid gap-2 mb-4 ${post.mediaUrls.length === 1 ? 'grid-cols-1' : post.mediaUrls.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
-            {post.mediaUrls.map((url, index) => (
-              <div key={index} className="relative rounded-lg overflow-hidden">
-                {post.mediaTypes?.[index] === 'video' ? (
-                  <video 
-                    src={url} 
-                    controls
-                    className="w-full h-48 object-cover rounded-lg"
-                    data-testid={`video-${post.id}-${index}`}
-                  />
-                ) : (
-                  <img 
-                    src={url} 
-                    alt={`Media ${index + 1}`}
-                    className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => window.open(url, '_blank')}
-                    data-testid={`image-${post.id}-${index}`}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+          {/* Media Display */}
+          {post.mediaUrls && post.mediaUrls.length > 0 && (
+            <div className={`grid gap-2 mt-3 ${post.mediaUrls.length === 1 ? 'grid-cols-1' : post.mediaUrls.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
+              {post.mediaUrls.map((url, index) => (
+                <div key={index} className="relative rounded-sm overflow-hidden">
+                  {post.mediaTypes?.[index] === 'video' ? (
+                    <video 
+                      src={url} 
+                      controls
+                      className="w-full h-48 object-cover"
+                      data-testid={`video-${post.id}-${index}`}
+                    />
+                  ) : (
+                    <img 
+                      src={url} 
+                      alt={`Media ${index + 1}`}
+                      className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => window.open(url, '_blank')}
+                      data-testid={`image-${post.id}-${index}`}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-        {/* Post Actions */}
-        <div className="flex items-center gap-4 pt-4 border-t border-black/10">
+        {/* Post Actions — dark area */}
+        <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={onLike}
-            className="text-black/60 hover:text-ministry-gold-exact hover:bg-black/5 font-semibold uppercase tracking-wide text-xs"
+            className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10 font-semibold uppercase tracking-wide text-xs"
             data-testid={`button-like-${post.id}`}
           >
             <ChristianCross className="h-4 w-4 mr-1" />
@@ -1173,7 +1175,7 @@ function PostCard({
             variant="ghost"
             size="sm"
             onClick={onToggleReplies}
-            className="text-black/60 hover:text-ministry-gold-exact hover:bg-black/5 font-semibold uppercase tracking-wide text-xs"
+            className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10 font-semibold uppercase tracking-wide text-xs"
             data-testid={`button-replies-${post.id}`}
           >
             <MessageCircle className="h-4 w-4 mr-1" />
@@ -1183,9 +1185,9 @@ function PostCard({
 
         {/* Replies Section */}
         {isExpanded && (
-          <div className="mt-4 pt-4 border-t border-black/10">
+          <div className="mt-3 pt-3 border-t border-white/10">
             {/* Reply Input */}
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-2 mb-3">
               <Textarea
                 placeholder="WRITE A REPLY..."
                 value={replyContent}
@@ -1197,7 +1199,7 @@ function PostCard({
               <Button
                 onClick={onSubmitReply}
                 disabled={!replyContent.trim() || isSubmittingReply}
-                className="bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90 self-end font-bold"
+                className="bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90 self-end font-bold border-2 border-black"
                 data-testid={`button-submit-reply-${post.id}`}
               >
                 <Send className="h-4 w-4" />
@@ -1206,14 +1208,14 @@ function PostCard({
 
             {/* Replies List */}
             {replies.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {replies.map((reply) => (
                   <div key={reply.id} className="flex gap-3 bg-white border-2 border-black rounded-sm p-3 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]" data-testid={`reply-${reply.id}`}>
                     {reply.user?.profileImageUrl ? (
                       <img 
                         src={reply.user.profileImageUrl} 
                         alt={reply.user.firstName || "User"}
-                        className="h-8 w-8 rounded-full object-cover"
+                        className="h-8 w-8 rounded-full object-cover flex-shrink-0"
                       />
                     ) : (
                       <div className="h-8 w-8 rounded-full bg-ministry-gold-exact flex items-center justify-center flex-shrink-0">
@@ -1225,7 +1227,7 @@ function PostCard({
                         <span className="text-black font-bold uppercase tracking-wide text-xs">
                           {reply.user?.firstName} {reply.user?.lastName}
                         </span>
-                        <span className="text-black/50 text-xs font-medium tracking-wide">
+                        <span className="text-black/50 text-xs font-medium">
                           {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
                         </span>
                       </div>
