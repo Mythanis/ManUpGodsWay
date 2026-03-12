@@ -675,7 +675,14 @@ export default function StudyDetail() {
                     <MessageCircle className="w-5 h-5 text-black" />
                   </div>
                   <div>
-                    <h3 className="font-bold uppercase tracking-wide text-white">Join Study Discussion</h3>
+                    <h3 className="font-bold uppercase tracking-wide text-white">
+                      Join Study Discussion
+                      {(studyDiscussion.replyCount ?? 0) > 0 && (
+                        <span className="ml-2 text-xs bg-ministry-gold-exact text-black font-black px-2 py-0.5 rounded-sm">
+                          {studyDiscussion.replyCount} {studyDiscussion.replyCount === 1 ? 'comment' : 'comments'}
+                        </span>
+                      )}
+                    </h3>
                     <p className="text-sm text-gray-400">
                       Connect with other members studying "{study.title}"
                     </p>
