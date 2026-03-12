@@ -966,7 +966,7 @@ export default function Home() {
               onClick={() => setShowProgressDialog(false)}
               className="w-full bg-black text-white hover:bg-gray-900 rounded-sm font-black uppercase tracking-wide border-2 border-black"
             >
-              Continue Growing
+              Close
             </Button>
           </div>
         </DialogContent>
