@@ -627,10 +627,10 @@ export default function DiscussionCard({
         
         {/* Show replies if expanded */}
         {showReplies && discussion.replyCount > 0 && (
-          <div className="mt-4 pt-4 -mx-4 px-4 border-t-2 border-black/20 relative z-10">
-            <div className="space-y-3">
+          <div className="mt-4 pt-3 -mx-4 border-t-2 border-black/20 relative z-10">
+            <div className="space-y-0">
               {(replies as any[])?.map((reply: any) => (
-                <div key={reply.id} className="flex items-start space-x-3 p-3 bg-black rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <div key={reply.id} className="flex items-start space-x-3 px-4 py-3 bg-black border-b border-black/30">
                   <img 
                     src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=FCD000&color=000&size=32`}
                     alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
