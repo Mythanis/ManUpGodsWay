@@ -63,7 +63,8 @@ export default function HomeCarousel() {
 
   const renderCarouselItem = (item: CarouselItem, isLarge: boolean) => {
     const link = getLink(item);
-    const isExternal = item.linkType === "external";
+    // Only open in new tab for true external URLs (http/https), not internal paths like /library
+    const isExternal = item.linkType === "external" && !!item.externalUrl && item.externalUrl.startsWith("http");
 
     const content = (
       <Card 
