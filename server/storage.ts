@@ -2020,9 +2020,13 @@ export class DatabaseStorage implements IStorage {
         // Special filter for study discussions
         conditions.push(sql`${discussions.studyId} IS NOT NULL`);
       } else {
-        // Regular category filter
+        // Regular category filter — always exclude study discussions
+        conditions.push(sql`${discussions.studyId} IS NULL`);
         conditions.push(eq(discussions.category, category));
       }
+    } else {
+      // Default: exclude study discussions — they live on study pages only
+      conditions.push(sql`${discussions.studyId} IS NULL`);
     }
     
     if (searchTerm) {

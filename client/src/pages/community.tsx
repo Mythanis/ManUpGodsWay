@@ -32,7 +32,6 @@ const allCategories = [
   { id: 'parenting', label: 'Parenting', icon: Users },
   { id: 'faith', label: 'Faith', icon: Lightbulb },
   { id: 'prayer', label: 'Prayer', icon: HandHeart },
-  { id: 'studies', label: 'Study Discussions', icon: MessageCircle },
   { id: 'miscellaneous', label: 'Miscellaneous', icon: Hash },
 ];
 
