@@ -228,7 +228,7 @@ function AppContent() {
   const { splashCompleted } = useSplash();
 
   return (
-    <div className="max-w-md mx-auto bg-background text-foreground shadow-2xl min-h-screen relative">
+    <div className="max-w-2xl mx-auto bg-background text-foreground shadow-2xl min-h-screen relative">
       {/* Add top padding to create space for the fixed header logo, but only when authenticated */}
       <div className={isAuthenticated ? "pt-24" : ""}>
         <Router />
