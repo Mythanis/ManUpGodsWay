@@ -710,7 +710,7 @@ export default function DiscussionCard({
                       <FormControl>
                         <Textarea
                           placeholder="Write your reply..."
-                          className="min-h-[80px] resize-none bg-black text-white border-2 border-ministry-gold-exact/30 focus:border-ministry-gold-exact rounded-sm"
+                          className="min-h-[80px] resize-none bg-white text-black border-2 border-black placeholder:text-black/50 focus:border-ministry-gold-exact rounded-sm"
                           {...field}
                           data-testid="textarea-reply-content"
                         />
