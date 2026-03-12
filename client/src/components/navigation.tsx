@@ -205,7 +205,7 @@ export default function Navigation() {
                   }`}
                   data-testid={`dropdown-nav-${item.id}`}
                 >
-                  <Icon className="w-4 h-4 mr-2" />
+                  <Icon className={`w-4 h-4 mr-2 ${active ? 'text-black' : 'text-ministry-gold-exact'}`} />
                   {item.label}
                 </DropdownMenuItem>
               );
