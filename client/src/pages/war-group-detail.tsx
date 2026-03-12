@@ -907,7 +907,7 @@ export default function WarGroupDetail() {
                     placeholder="SHARE SOMETHING WITH YOUR GROUP..."
                     value={newPostContent}
                     onChange={(e) => setNewPostContent(e.target.value)}
-                    className="bg-white/10 border-white/20 text-white font-medium placeholder:text-white/40 placeholder:text-xs placeholder:tracking-widest placeholder:uppercase resize-none"
+                    className="bg-white text-black border-2 border-black font-medium placeholder:text-black/50 placeholder:text-xs placeholder:tracking-widest placeholder:uppercase resize-none"
                     rows={3}
                     data-testid="input-new-post"
                   />
