@@ -1071,7 +1071,7 @@ function PostCard({
   });
 
   return (
-    <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]" data-testid={`post-${post.id}`}>
+    <Card className="bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" data-testid={`post-${post.id}`}>
       <CardContent className="p-6">
         {/* Post Header */}
         <div className="flex items-start justify-between mb-4">
@@ -1080,7 +1080,7 @@ function PostCard({
               <img 
                 src={post.user.profileImageUrl} 
                 alt={post.user.firstName || "User"}
-                className="h-10 w-10 rounded-full object-cover ring-2 ring-ministry-gold-exact/30"
+                className="h-10 w-10 rounded-full object-cover ring-2 ring-black/20"
               />
             ) : (
               <div className="h-10 w-10 rounded-full bg-ministry-gold-exact flex items-center justify-center">
@@ -1088,10 +1088,10 @@ function PostCard({
               </div>
             )}
             <div>
-              <p className="text-ministry-gold-exact font-bold uppercase tracking-wide text-sm">
+              <p className="text-black font-bold uppercase tracking-wide text-sm">
                 {post.user?.firstName} {post.user?.lastName}
               </p>
-              <p className="text-white/50 text-xs font-medium tracking-wide">
+              <p className="text-black/50 text-xs font-medium tracking-wide">
                 {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
               </p>
             </div>
@@ -1108,7 +1108,7 @@ function PostCard({
                 variant="ghost"
                 size="icon"
                 onClick={onPin}
-                className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10"
+                className="text-black/60 hover:text-ministry-gold-exact hover:bg-black/5"
                 data-testid={`button-pin-${post.id}`}
               >
                 <Pin className="h-4 w-4" />
@@ -1119,7 +1119,7 @@ function PostCard({
                 variant="ghost"
                 size="icon"
                 onClick={onDelete}
-                className="text-white/60 hover:text-red-500 hover:bg-white/10"
+                className="text-black/60 hover:text-red-500 hover:bg-red-50"
                 data-testid={`button-delete-${post.id}`}
               >
                 <Trash2 className="h-4 w-4" />
@@ -1129,7 +1129,7 @@ function PostCard({
         </div>
 
         {/* Post Content */}
-        <p className="text-white/90 font-medium leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
+        <p className="text-black font-medium leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
 
         {/* Media Display */}
         {post.mediaUrls && post.mediaUrls.length > 0 && (
@@ -1158,12 +1158,12 @@ function PostCard({
         )}
 
         {/* Post Actions */}
-        <div className="flex items-center gap-4 pt-4 border-t border-white/10">
+        <div className="flex items-center gap-4 pt-4 border-t border-black/10">
           <Button
             variant="ghost"
             size="sm"
             onClick={onLike}
-            className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10 font-semibold uppercase tracking-wide text-xs"
+            className="text-black/60 hover:text-ministry-gold-exact hover:bg-black/5 font-semibold uppercase tracking-wide text-xs"
             data-testid={`button-like-${post.id}`}
           >
             <ChristianCross className="h-4 w-4 mr-1" />
@@ -1173,7 +1173,7 @@ function PostCard({
             variant="ghost"
             size="sm"
             onClick={onToggleReplies}
-            className="text-white/60 hover:text-ministry-gold-exact hover:bg-white/10 font-semibold uppercase tracking-wide text-xs"
+            className="text-black/60 hover:text-ministry-gold-exact hover:bg-black/5 font-semibold uppercase tracking-wide text-xs"
             data-testid={`button-replies-${post.id}`}
           >
             <MessageCircle className="h-4 w-4 mr-1" />
@@ -1183,14 +1183,14 @@ function PostCard({
 
         {/* Replies Section */}
         {isExpanded && (
-          <div className="mt-4 pt-4 border-t border-white/10">
+          <div className="mt-4 pt-4 border-t border-black/10">
             {/* Reply Input */}
             <div className="flex gap-2 mb-4">
               <Textarea
                 placeholder="WRITE A REPLY..."
                 value={replyContent}
                 onChange={(e) => onReplyContentChange(e.target.value)}
-                className="bg-white/10 border-white/20 text-white font-medium placeholder:text-white/40 placeholder:text-xs placeholder:tracking-widest placeholder:uppercase resize-none flex-1"
+                className="bg-white text-black border-2 border-black font-medium placeholder:text-black/50 placeholder:text-xs placeholder:tracking-widest placeholder:uppercase resize-none flex-1"
                 rows={2}
                 data-testid={`input-reply-${post.id}`}
               />
@@ -1208,7 +1208,7 @@ function PostCard({
             {replies.length > 0 && (
               <div className="space-y-3">
                 {replies.map((reply) => (
-                  <div key={reply.id} className="flex gap-3 bg-white/5 rounded-lg p-3" data-testid={`reply-${reply.id}`}>
+                  <div key={reply.id} className="flex gap-3 bg-white border-2 border-black rounded-sm p-3 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]" data-testid={`reply-${reply.id}`}>
                     {reply.user?.profileImageUrl ? (
                       <img 
                         src={reply.user.profileImageUrl} 
@@ -1222,14 +1222,14 @@ function PostCard({
                     )}
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-ministry-gold-exact font-bold uppercase tracking-wide text-xs">
+                        <span className="text-black font-bold uppercase tracking-wide text-xs">
                           {reply.user?.firstName} {reply.user?.lastName}
                         </span>
-                        <span className="text-white/50 text-xs font-medium tracking-wide">
+                        <span className="text-black/50 text-xs font-medium tracking-wide">
                           {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
                         </span>
                       </div>
-                      <p className="text-white/80 text-sm font-medium leading-relaxed mt-1">{reply.content}</p>
+                      <p className="text-black text-sm font-medium leading-relaxed mt-1">{reply.content}</p>
                     </div>
                   </div>
                 ))}
