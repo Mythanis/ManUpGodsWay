@@ -29,6 +29,7 @@ export default function HomeCarousel() {
         await apiRequest('POST', `/api/carousel/${item.id}/dismiss`);
         queryClient.invalidateQueries({ queryKey: ['/api/carousel'] });
       } catch (err) {
+        console.error("Failed to dismiss carousel item:", err);
       }
     }
   };
