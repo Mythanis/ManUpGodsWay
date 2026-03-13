@@ -49,6 +49,7 @@ import {
   studyEditableSections,
   userStudyResponses,
   carouselItems,
+  carouselDismissals,
   liveStreams,
   type User,
   type UpsertUser,
@@ -1685,6 +1686,35 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(carouselItems)
       .where(eq(carouselItems.id, id));
+  }
+
+  async getActiveCarouselItemsForUser(userId: string): Promise<CarouselItem[]> {
+    const allActive = await db
+      .select()
+      .from(carouselItems)
+      .where(eq(carouselItems.isActive, true))
+      .orderBy(asc(carouselItems.displayOrder), asc(carouselItems.position));
+
+    const dismissals = await db
+      .select({ carouselItemId: carouselDismissals.carouselItemId })
+      .from(carouselDismissals)
+      .where(eq(carouselDismissals.userId, userId));
+
+    const dismissedIds = new Set(dismissals.map(d => d.carouselItemId));
+
+    return allActive.filter(item => {
+      if (item.isOneTime && dismissedIds.has(item.id)) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  async dismissCarouselItem(userId: string, carouselItemId: string): Promise<void> {
+    await db
+      .insert(carouselDismissals)
+      .values({ userId, carouselItemId })
+      .onConflictDoNothing();
   }
 
   // Progress operations

@@ -21,6 +21,7 @@ interface CarouselItem {
   externalUrl: string | null;
   position: number;
   isActive: boolean;
+  isOneTime: boolean;
   displayOrder: number;
   createdAt: string;
   updatedAt: string;
@@ -66,6 +67,7 @@ export default function CarouselManagement() {
     externalUrl: "",
     position: 1,
     displayOrder: 0,
+    isOneTime: false,
   });
 
   const { data: carouselItems = [] } = useQuery<CarouselItem[]>({
@@ -219,6 +221,7 @@ export default function CarouselManagement() {
       externalUrl: "",
       position: 1,
       displayOrder: 0,
+      isOneTime: false,
     });
     setImageFile(null);
     setEditingItem(null);
@@ -267,6 +270,7 @@ export default function CarouselManagement() {
       externalUrl: item.externalUrl || "",
       position: item.position,
       displayOrder: item.displayOrder,
+      isOneTime: item.isOneTime ?? false,
     });
     setShowDialog(true);
   };
@@ -327,6 +331,7 @@ export default function CarouselManagement() {
     
     data.append('position', String(formData.position));
     data.append('displayOrder', String(formData.displayOrder));
+    data.append('isOneTime', String(formData.isOneTime));
     
     if (imageFile) {
       data.append('image', imageFile);
@@ -372,8 +377,15 @@ export default function CarouselManagement() {
                   <span className="text-white font-bold">INACTIVE</span>
                 </div>
               )}
-              <div className="absolute top-2 left-2 bg-ministry-gold text-black px-2 py-1 rounded text-xs font-bold">
-                Position {item.position}
+              <div className="absolute top-2 left-2 flex gap-1">
+                <span className="bg-ministry-gold text-black px-2 py-1 rounded text-xs font-bold">
+                  Position {item.position}
+                </span>
+                {item.isOneTime && (
+                  <span className="bg-orange-500 text-white px-2 py-1 rounded text-xs font-bold">
+                    One-Time
+                  </span>
+                )}
               </div>
             </div>
             <CardContent className="p-4">
@@ -703,6 +715,19 @@ export default function CarouselManagement() {
                 data-testid="input-carousel-display-order"
               />
               <p className="text-xs text-ministry-slate mt-1">Lower numbers appear first</p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="carousel-one-time"
+                checked={formData.isOneTime}
+                onChange={(e) => setFormData({ ...formData, isOneTime: e.target.checked })}
+                className="w-4 h-4 accent-yellow-500"
+                data-testid="checkbox-carousel-one-time"
+              />
+              <Label htmlFor="carousel-one-time" className="cursor-pointer">One-Time Display</Label>
+              <p className="text-xs text-ministry-slate ml-1">Item disappears for a user after they click it</p>
             </div>
           </div>
           <DialogFooter>

@@ -1652,10 +1652,20 @@ export const carouselItems = pgTable("carousel_items", {
   externalUrl: varchar("external_url"), // For external links
   position: integer("position").notNull(), // 1 = large top, 2-3 = small bottom
   isActive: boolean("is_active").default(true),
+  isOneTime: boolean("is_one_time").default(false),
   displayOrder: integer("display_order").notNull().default(0), // For sorting
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const carouselDismissals = pgTable("carousel_dismissals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  carouselItemId: varchar("carousel_item_id").notNull().references(() => carouselItems.id, { onDelete: 'cascade' }),
+  dismissedAt: timestamp("dismissed_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.carouselItemId),
+]);
 
 export const insertCarouselItemSchema = createInsertSchema(carouselItems).omit({
   id: true,

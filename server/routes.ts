@@ -11039,11 +11039,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Carousel routes
   app.get('/api/carousel', async (req: any, res) => {
     try {
-      const items = await storage.getActiveCarouselItems();
-      res.json(items);
+      const userId = req.user?.claims?.sub;
+      if (userId) {
+        const items = await storage.getActiveCarouselItemsForUser(userId);
+        res.json(items);
+      } else {
+        const items = await storage.getActiveCarouselItems();
+        res.json(items);
+      }
     } catch (error: any) {
       console.error("Error fetching carousel items:", error);
       res.status(500).json({ message: "Failed to fetch carousel items" });
+    }
+  });
+
+  app.post('/api/carousel/:id/dismiss', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      await storage.dismissCarouselItem(userId, id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error dismissing carousel item:", error);
+      res.status(500).json({ message: "Failed to dismiss carousel item" });
     }
   });
 
@@ -11069,7 +11087,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const { title, description, linkType, linkId, externalUrl, position, displayOrder } = req.body;
+      const { title, description, linkType, linkId, externalUrl, position, displayOrder, isOneTime } = req.body;
       
       if (!title || !linkType || !position) {
         return res.status(400).json({ message: "Title, linkType, and position are required" });
@@ -11090,6 +11108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         position: parseInt(position),
         displayOrder: displayOrder ? parseInt(displayOrder) : 0,
         isActive: true,
+        isOneTime: isOneTime === 'true' || isOneTime === true,
       });
 
       res.json(item);
@@ -11107,7 +11126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { id } = req.params;
-      const { title, description, linkType, linkId, externalUrl, position, displayOrder, isActive } = req.body;
+      const { title, description, linkType, linkId, externalUrl, position, displayOrder, isActive, isOneTime } = req.body;
 
       const existingItem = await storage.getCarouselItem(id);
       if (!existingItem) {
@@ -11129,6 +11148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         position: position ? parseInt(position) : existingItem.position,
         displayOrder: displayOrder !== undefined ? parseInt(displayOrder) : existingItem.displayOrder,
         isActive: isActive !== undefined ? isActive === 'true' || isActive === true : existingItem.isActive,
+        isOneTime: isOneTime !== undefined ? isOneTime === 'true' || isOneTime === true : existingItem.isOneTime,
       });
 
       res.json(updated);

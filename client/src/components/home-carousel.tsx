@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
+import { apiRequest } from "@/lib/queryClient";
 
 interface CarouselItem {
   id: string;
@@ -12,13 +13,25 @@ interface CarouselItem {
   externalUrl: string | null;
   position: number;
   isActive: boolean;
+  isOneTime: boolean;
   displayOrder: number;
 }
 
 export default function HomeCarousel() {
+  const queryClient = useQueryClient();
   const { data: carouselItems = [] } = useQuery<CarouselItem[]>({
     queryKey: ['/api/carousel'],
   });
+
+  const handleCarouselClick = async (item: CarouselItem) => {
+    if (item.isOneTime) {
+      try {
+        await apiRequest('POST', `/api/carousel/${item.id}/dismiss`);
+        queryClient.invalidateQueries({ queryKey: ['/api/carousel'] });
+      } catch (err) {
+      }
+    }
+  };
 
   if (!carouselItems || carouselItems.length === 0) {
     return null;
@@ -104,6 +117,7 @@ export default function HomeCarousel() {
           target="_blank" 
           rel="noopener noreferrer"
           className="block"
+          onClick={() => handleCarouselClick(item)}
         >
           {content}
         </a>
@@ -112,7 +126,7 @@ export default function HomeCarousel() {
 
     return (
       <Link href={link}>
-        <span className="block">
+        <span className="block" onClick={() => handleCarouselClick(item)}>
           {content}
         </span>
       </Link>
