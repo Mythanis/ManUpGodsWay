@@ -62,6 +62,7 @@ export default function ManUpLinksManagement() {
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
 
   const { data: links = [], isLoading } = useQuery<ManUpLink[]>({
     queryKey: ["/api/admin/man-up-links"],
@@ -135,6 +136,7 @@ export default function ManUpLinksManagement() {
     });
     setImageFile(null);
     setImagePreview(null);
+    setRemoveImage(false);
     setShowDialog(true);
   }
 
@@ -150,6 +152,7 @@ export default function ManUpLinksManagement() {
     });
     setImageFile(null);
     setImagePreview(link.imageUrl || null);
+    setRemoveImage(false);
     setShowDialog(true);
   }
 
@@ -158,6 +161,7 @@ export default function ManUpLinksManagement() {
     setEditingLink(null);
     setImageFile(null);
     setImagePreview(null);
+    setRemoveImage(false);
   }
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -185,6 +189,9 @@ export default function ManUpLinksManagement() {
     fd.append("isActive", String(formData.isActive));
     if (imageFile) {
       fd.append("image", imageFile);
+    }
+    if (removeImage) {
+      fd.append("removeImage", "true");
     }
 
     if (editingLink) {
@@ -228,7 +235,7 @@ export default function ManUpLinksManagement() {
                       {link.imageUrl ? (
                         <img src={link.imageUrl} alt={link.name} className="w-6 h-6 rounded object-cover" />
                       ) : (
-                        <LinkIcon className="w-4 h-4 text-black" />
+                        <LinkIcon className={`w-4 h-4 ${link.iconColor || 'text-black'}`} />
                       )}
                     </div>
                     <div>
@@ -350,6 +357,7 @@ export default function ManUpLinksManagement() {
                     onClick={() => {
                       setImageFile(null);
                       setImagePreview(null);
+                      setRemoveImage(true);
                     }}
                   >
                     Remove

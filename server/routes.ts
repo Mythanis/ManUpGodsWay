@@ -11231,7 +11231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         iconColor: iconColor || 'text-black',
         imageUrl,
         displayOrder: displayOrder ? parseInt(displayOrder) : 0,
-        isActive: true,
+        isActive: req.body.isActive !== undefined ? req.body.isActive === 'true' || req.body.isActive === true : true,
       });
 
       res.json(link);
@@ -11259,6 +11259,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let imageUrl = existingLink.imageUrl;
       if (req.file) {
         imageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      } else if (req.body.removeImage === 'true') {
+        imageUrl = null;
       }
 
       const updated = await storage.updateManUpLink(id, {

@@ -63,7 +63,7 @@ export default function MoreManUp() {
                       {link.imageUrl ? (
                         <img src={link.imageUrl} alt={link.name} className="w-8 h-8 rounded-sm object-cover" />
                       ) : (
-                        <IconComponent className="w-5 h-5 text-black" />
+                        <IconComponent className={`w-5 h-5 ${link.iconColor || 'text-black'}`} />
                       )}
                     </div>
                     <span className="font-black text-white uppercase tracking-tighter">
