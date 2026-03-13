@@ -1,8 +1,13 @@
 import { db } from "../db";
 import { studySeries, studies } from "@shared/schema";
-import { eq, sql, isNull } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 const YEAR_SERIES_TITLE = "Man Up God's Way - Year 1";
+
+const STUDY_ORDER: { title: string; order: number }[] = [
+  { title: "Who is God?", order: 1 },
+  { title: "Why Theology Matters", order: 2 },
+];
 
 async function setupYearSeries() {
   console.log("Setting up year-long study series...");
@@ -16,7 +21,7 @@ async function setupYearSeries() {
 
   if (existing.length > 0) {
     seriesId = existing[0].id;
-    console.log(`Series "${YEAR_SERIES_TITLE}" already exists (${seriesId}). Ensuring config is correct...`);
+    console.log(`Series "${YEAR_SERIES_TITLE}" already exists (${seriesId}). Ensuring config...`);
     await db
       .update(studySeries)
       .set({ requiresConsecutiveCompletion: true, isPublished: true })
@@ -38,45 +43,26 @@ async function setupYearSeries() {
     console.log(`Created series "${YEAR_SERIES_TITLE}" (${seriesId})`);
   }
 
-  const studyOrder: { title: string; order: number }[] = [
-    { title: "Who is God?", order: 1 },
-    { title: "Why Theology Matters", order: 2 },
-  ];
-
-  for (const entry of studyOrder) {
+  for (const entry of STUDY_ORDER) {
     const [study] = await db
       .select()
       .from(studies)
-      .where(eq(studies.title, entry.title));
+      .where(sql`TRIM(${studies.title}) = ${entry.title}`);
 
     if (!study) {
-      console.log(`  Study "${entry.title}" not found — skipping`);
-      continue;
+      throw new Error(
+        `Required study "${entry.title}" not found in database. Cannot proceed with setup.`
+      );
     }
 
     await db
       .update(studies)
       .set({ seriesId, seriesOrder: entry.order })
       .where(eq(studies.id, study.id));
-    console.log(`  Assigned "${entry.title}" → order ${entry.order}`);
+    console.log(`  Assigned "${entry.title}" (${study.id}) → order ${entry.order}`);
   }
 
-  const emptySeries = await db.execute(sql`
-    SELECT ss.id, ss.title
-    FROM study_series ss
-    LEFT JOIN studies s ON s.series_id = ss.id
-    WHERE ss.id != ${seriesId}
-    GROUP BY ss.id, ss.title
-    HAVING COUNT(s.id) = 0
-  `);
-
-  for (const row of emptySeries.rows) {
-    await db.delete(studySeries).where(eq(studySeries.id, row.id as string));
-    console.log(`  Removed empty series "${row.title}"`);
-  }
-
-  console.log("Year series setup complete.");
-
+  console.log("\nVerification:");
   const result = await db
     .select({
       studyTitle: studies.title,
@@ -88,17 +74,25 @@ async function setupYearSeries() {
     .innerJoin(studySeries, eq(studies.seriesId, studySeries.id))
     .where(eq(studySeries.id, seriesId));
 
-  console.log("\nVerification:");
-  for (const r of result) {
-    console.log(
-      `  [${r.seriesOrder}] ${r.studyTitle} — consecutive: ${r.consecutiveCompletion}`
+  if (result.length !== STUDY_ORDER.length) {
+    throw new Error(
+      `Expected ${STUDY_ORDER.length} studies in series but found ${result.length}`
     );
   }
+
+  for (const r of result) {
+    console.log(
+      `  [${r.seriesOrder}] ${r.studyTitle} — consecutiveCompletion: ${r.consecutiveCompletion}`
+    );
+  }
+
+  console.log(`\nSeries ID: ${seriesId}`);
+  console.log("Year series setup complete.");
 }
 
 setupYearSeries()
   .then(() => process.exit(0))
   .catch((err) => {
-    console.error("Failed:", err);
+    console.error("Setup failed:", err);
     process.exit(1);
   });
