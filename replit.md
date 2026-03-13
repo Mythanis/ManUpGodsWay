@@ -76,9 +76,6 @@ The system supports a single subscription model with configurable free trial. Ad
 - Install prompt component (`client/src/components/pwa-install-prompt.tsx`) with Android native prompt and iOS Safari instructions
 - Push notification support via Web Push API and VAPID keys
 
-## Seed Scripts
-- `server/seeds/setup-year-series.ts` — Creates the "Man Up God's Way - Year 1" study series with consecutive completion enabled and assigns existing studies in order. Idempotent and safe to re-run. Execute with: `npx tsx server/seeds/setup-year-series.ts`
-
 ## Bible Verse Tagging
 - Logos RefTagger integration (api.reftagger.com) for automatic Bible verse reference detection
 - NASB translation with tooltips enabled
