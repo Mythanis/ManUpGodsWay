@@ -606,6 +606,13 @@ export interface IStorage {
   markAccountabilityRequestAssisted(requestId: string, assisterId: string): Promise<any>;
   unassistAccountabilityRequest(requestId: string): Promise<any>;
   deleteAccountabilityRequest(id: string): Promise<void>;
+
+  getActiveManUpLinks(): Promise<ManUpLink[]>;
+  getAllManUpLinks(): Promise<ManUpLink[]>;
+  getManUpLink(id: string): Promise<ManUpLink | undefined>;
+  createManUpLink(link: InsertManUpLink): Promise<ManUpLink>;
+  updateManUpLink(id: string, link: Partial<InsertManUpLink>): Promise<ManUpLink>;
+  deleteManUpLink(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {

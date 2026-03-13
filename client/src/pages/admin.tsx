@@ -73,7 +73,7 @@ const adminTabs = [
   { id: "war-groups", label: "War Groups", icon: Shield },
   { id: "rations", label: "Rations", icon: Coins },
   { id: "store", label: "Store", icon: ShoppingBag },
-  { id: "man-up-links", label: "Man Up Links", icon: ExternalLink },
+  { id: "man-up-links", label: "Man Up", icon: ExternalLink },
   { id: "logo", label: "Logo", icon: Image },
   { id: "tiers", label: "Subscription", icon: DollarSign },
   { id: "notifications", label: "Push Notifications", icon: Bell },
