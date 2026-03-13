@@ -33,8 +33,9 @@ import WarGroupRegistrationsManagement from "@/components/admin/war-group-regist
 import LiveStreamManagement from "@/components/admin/live-stream-management";
 import RationsManagement from "@/components/admin/rations-management";
 import StoreManagement from "@/components/admin/store-management";
+import ManUpLinksManagement from "@/components/admin/man-up-links-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio, FileText, Coins, ShoppingBag } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio, FileText, Coins, ShoppingBag, ExternalLink } from "lucide-react";
 
 interface Study {
   id: string;
@@ -72,6 +73,7 @@ const adminTabs = [
   { id: "war-groups", label: "War Groups", icon: Shield },
   { id: "rations", label: "Rations", icon: Coins },
   { id: "store", label: "Store", icon: ShoppingBag },
+  { id: "man-up-links", label: "Man Up Links", icon: ExternalLink },
   { id: "logo", label: "Logo", icon: Image },
   { id: "tiers", label: "Subscription", icon: DollarSign },
   { id: "notifications", label: "Push Notifications", icon: Bell },
@@ -726,6 +728,13 @@ export default function Admin() {
             <div>
               <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Homepage Carousel Management</h2>
               <CarouselManagement />
+            </div>
+          )}
+
+          {activeTab === "man-up-links" && (
+            <div>
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Man Up Links Management</h2>
+              <ManUpLinksManagement />
             </div>
           )}
 

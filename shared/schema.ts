@@ -2447,3 +2447,25 @@ export const insertFitnessPostSchema = createInsertSchema(fitnessPosts).omit({
 
 export type FitnessPost = typeof fitnessPosts.$inferSelect;
 export type InsertFitnessPost = z.infer<typeof insertFitnessPostSchema>;
+
+export const manUpLinks = pgTable("man_up_links", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  url: varchar("url").notNull(),
+  icon: varchar("icon").notNull().default("globe"),
+  iconColor: varchar("icon_color").notNull().default("text-black"),
+  imageUrl: text("image_url"),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertManUpLinkSchema = createInsertSchema(manUpLinks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ManUpLink = typeof manUpLinks.$inferSelect;
+export type InsertManUpLink = z.infer<typeof insertManUpLinkSchema>;

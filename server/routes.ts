@@ -11181,6 +11181,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Man Up Links routes
+  app.get('/api/man-up-links', async (req: any, res) => {
+    try {
+      const links = await storage.getActiveManUpLinks();
+      res.json(links);
+    } catch (error: any) {
+      console.error("Error fetching man up links:", error);
+      res.status(500).json({ message: "Failed to fetch man up links" });
+    }
+  });
+
+  app.get('/api/admin/man-up-links', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const links = await storage.getAllManUpLinks();
+      res.json(links);
+    } catch (error: any) {
+      console.error("Error fetching admin man up links:", error);
+      res.status(500).json({ message: "Failed to fetch man up links" });
+    }
+  });
+
+  app.post('/api/admin/man-up-links', isAuthenticated, imageUpload.single('image'), async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { name, url, icon, iconColor, displayOrder } = req.body;
+
+      if (!name || !url) {
+        return res.status(400).json({ message: "Name and URL are required" });
+      }
+
+      let imageUrl: string | null = null;
+      if (req.file) {
+        imageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      }
+
+      const link = await storage.createManUpLink({
+        name,
+        url,
+        icon: icon || 'globe',
+        iconColor: iconColor || 'text-black',
+        imageUrl,
+        displayOrder: displayOrder ? parseInt(displayOrder) : 0,
+        isActive: true,
+      });
+
+      res.json(link);
+    } catch (error: any) {
+      console.error("Error creating man up link:", error);
+      res.status(500).json({ message: "Failed to create man up link" });
+    }
+  });
+
+  app.put('/api/admin/man-up-links/:id', isAuthenticated, imageUpload.single('image'), async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { id } = req.params;
+      const { name, url, icon, iconColor, displayOrder, isActive } = req.body;
+
+      const existingLink = await storage.getManUpLink(id);
+      if (!existingLink) {
+        return res.status(404).json({ message: "Man up link not found" });
+      }
+
+      let imageUrl = existingLink.imageUrl;
+      if (req.file) {
+        imageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      }
+
+      const updated = await storage.updateManUpLink(id, {
+        name: name || existingLink.name,
+        url: url || existingLink.url,
+        icon: icon || existingLink.icon,
+        iconColor: iconColor || existingLink.iconColor,
+        imageUrl,
+        displayOrder: displayOrder !== undefined ? parseInt(displayOrder) : existingLink.displayOrder,
+        isActive: isActive !== undefined ? isActive === 'true' || isActive === true : existingLink.isActive,
+      });
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating man up link:", error);
+      res.status(500).json({ message: "Failed to update man up link" });
+    }
+  });
+
+  app.delete('/api/admin/man-up-links/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { id } = req.params;
+      await storage.deleteManUpLink(id);
+      res.json({ message: "Man up link deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting man up link:", error);
+      res.status(500).json({ message: "Failed to delete man up link" });
+    }
+  });
+
   app.post('/api/stripe/test-connection', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);

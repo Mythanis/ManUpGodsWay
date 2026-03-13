@@ -172,6 +172,9 @@ import {
   type InsertStoreProduct,
   type StoreRedemption,
   type InsertStoreRedemption,
+  manUpLinks,
+  type ManUpLink,
+  type InsertManUpLink,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne } from "drizzle-orm";
@@ -6817,6 +6820,56 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAccountabilityRequest(id: string): Promise<void> {
     await db.delete(accountabilityRequests).where(eq(accountabilityRequests.id, id));
+  }
+
+  async getActiveManUpLinks(): Promise<ManUpLink[]> {
+    return await db
+      .select()
+      .from(manUpLinks)
+      .where(eq(manUpLinks.isActive, true))
+      .orderBy(asc(manUpLinks.displayOrder));
+  }
+
+  async getAllManUpLinks(): Promise<ManUpLink[]> {
+    return await db
+      .select()
+      .from(manUpLinks)
+      .orderBy(asc(manUpLinks.displayOrder));
+  }
+
+  async getManUpLink(id: string): Promise<ManUpLink | undefined> {
+    const [item] = await db
+      .select()
+      .from(manUpLinks)
+      .where(eq(manUpLinks.id, id))
+      .limit(1);
+    return item;
+  }
+
+  async createManUpLink(link: InsertManUpLink): Promise<ManUpLink> {
+    const [created] = await db
+      .insert(manUpLinks)
+      .values(link)
+      .returning();
+    return created;
+  }
+
+  async updateManUpLink(id: string, link: Partial<InsertManUpLink>): Promise<ManUpLink> {
+    const [updated] = await db
+      .update(manUpLinks)
+      .set({
+        ...link,
+        updatedAt: new Date(),
+      })
+      .where(eq(manUpLinks.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteManUpLink(id: string): Promise<void> {
+    await db
+      .delete(manUpLinks)
+      .where(eq(manUpLinks.id, id));
   }
 }
 
