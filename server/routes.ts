@@ -11057,6 +11057,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { id } = req.params;
+      const item = await storage.getCarouselItem(id);
+      if (!item) {
+        return res.status(404).json({ message: "Carousel item not found" });
+      }
+      if (!item.isOneTime) {
+        return res.status(400).json({ message: "Only one-time items can be dismissed" });
+      }
       await storage.dismissCarouselItem(userId, id);
       res.json({ success: true });
     } catch (error: any) {
