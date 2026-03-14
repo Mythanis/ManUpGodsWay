@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; 
 import { Plus, Upload, FileText, Book, Layers, Video, Image, Trash2, Edit, Eye, Check, Loader2, ChevronDown, ChevronUp, X, CalendarClock } from "lucide-react";
 import { format } from "date-fns";
 
@@ -105,7 +105,6 @@ export default function StudyBuilder() {
   
   const [editingStudy, setEditingStudy] = useState<Study | null>(null);
   const [editingSeries, setEditingSeries] = useState<StudySeries | null>(null);
-  const [showEditDialog, setShowEditDialog] = useState(false);
   const [expandedStudy, setExpandedStudy] = useState<string | null>(null);
 
   const { data: studies = [], isLoading: studiesLoading } = useQuery<Study[]>({
@@ -293,11 +292,14 @@ export default function StudyBuilder() {
         if (thumbnailFile) {
           const formDataUpload = new FormData();
           formDataUpload.append('thumbnail', thumbnailFile);
-          await fetch(`/api/admin/study-series/${series.id}/upload-thumbnail`, {
+          const thumbRes = await fetch(`/api/study-series/${series.id}/upload-thumbnail`, {
             method: 'POST',
             body: formDataUpload,
             credentials: 'include',
           });
+          if (!thumbRes.ok) {
+            toast({ title: 'Thumbnail upload failed', description: 'Series was created but the thumbnail could not be saved. Upload it via Edit.', variant: 'destructive' });
+          }
         }
         
         // If lessons were parsed from Word document, create a study with those lessons
@@ -426,8 +428,62 @@ export default function StudyBuilder() {
 
   const isLoading = createStudyMutation.isPending || createSeriesMutation.isPending || uploading;
 
+  const cancelEdit = () => {
+    setEditingStudy(null);
+    setEditingSeries(null);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Inline edit panel — shown instead of list when editing */}
+      {(editingStudy || editingSeries) && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm" onClick={cancelEdit} className="flex items-center gap-1 px-2">
+                <X className="w-4 h-4" /> Back to list
+              </Button>
+              <CardTitle className="text-base flex items-center gap-2">
+                {editingStudy ? <Book className="w-4 h-4" /> : <Layers className="w-4 h-4" />}
+                Editing: {editingStudy?.title ?? editingSeries?.title}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {editingStudy && (
+              <EditStudyForm
+                study={editingStudy}
+                seriesList={seriesList}
+                onSave={async (data) => {
+                  await apiRequest('PATCH', `/api/studies/${editingStudy.id}`, data);
+                  queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
+                  toast({ title: "Study updated" });
+                  setEditingStudy(null);
+                }}
+                onCancel={cancelEdit}
+              />
+            )}
+            {editingSeries && (
+              <EditSeriesForm
+                series={editingSeries}
+                onSave={async (data) => {
+                  await apiRequest('PATCH', `/api/admin/study-series/${editingSeries.id}`, data);
+                  queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+                  toast({ title: "Series updated" });
+                  setEditingSeries(null);
+                }}
+                onCancel={cancelEdit}
+              />
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Create / list view — hidden while editing */}
+      {!editingStudy && !editingSeries && (
+        <>
       <Button
         onClick={() => { setShowCreateForm(!showCreateForm); if (showCreateForm) resetForm(); }}
         variant={showCreateForm ? "outline" : "default"}
@@ -886,7 +942,8 @@ export default function StudyBuilder() {
                             size="icon"
                             onClick={() => {
                               setEditingStudy(study);
-                              setShowEditDialog(true);
+                              setShowCreateForm(false);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
                             }}
                             data-testid={`btn-edit-study-${study.id}`}
                           >
@@ -947,7 +1004,8 @@ export default function StudyBuilder() {
                             size="icon"
                             onClick={() => {
                               setEditingSeries(series);
-                              setShowEditDialog(true);
+                              setShowCreateForm(false);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
                             }}
                             data-testid={`btn-edit-series-${series.id}`}
                           >
@@ -974,69 +1032,8 @@ export default function StudyBuilder() {
               )}
             </TabsContent>
       </Tabs>
-
-      {/* Edit Study Dialog */}
-      <Dialog open={showEditDialog && editingStudy !== null} onOpenChange={(open) => {
-        if (!open) {
-          setShowEditDialog(false);
-          setEditingStudy(null);
-        }
-      }}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Study</DialogTitle>
-          </DialogHeader>
-          {editingStudy && (
-            <EditStudyForm 
-              study={editingStudy} 
-              seriesList={seriesList}
-              onSave={async (data) => {
-                await apiRequest('PATCH', `/api/studies/${editingStudy.id}`, data);
-                queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
-                queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
-                toast({ title: "Study updated" });
-                setShowEditDialog(false);
-                setEditingStudy(null);
-              }}
-              onCancel={() => {
-                setShowEditDialog(false);
-                setEditingStudy(null);
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Series Dialog */}
-      <Dialog open={showEditDialog && editingSeries !== null} onOpenChange={(open) => {
-        if (!open) {
-          setShowEditDialog(false);
-          setEditingSeries(null);
-        }
-      }}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Series</DialogTitle>
-          </DialogHeader>
-          {editingSeries && (
-            <EditSeriesForm 
-              series={editingSeries}
-              onSave={async (data) => {
-                await apiRequest('PATCH', `/api/admin/study-series/${editingSeries.id}`, data);
-                queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
-                queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
-                toast({ title: "Series updated" });
-                setShowEditDialog(false);
-                setEditingSeries(null);
-              }}
-              onCancel={() => {
-                setShowEditDialog(false);
-                setEditingSeries(null);
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+        </>
+      )}
     </div>
   );
 }
@@ -1407,12 +1404,12 @@ function EditStudyForm({ study, seriesList, onSave, onCancel }: {
           </div>
         )}
       </div>
-      <DialogFooter>
+      <div className="flex justify-end gap-2 pt-2">
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
         <Button onClick={handleSubmit} disabled={saving}>
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
         </Button>
-      </DialogFooter>
+      </div>
     </div>
   );
 }
@@ -1571,12 +1568,12 @@ function EditSeriesForm({ series, onSave, onCancel }: {
           onCheckedChange={(v) => setFormData({ ...formData, requiresConsecutiveCompletion: v })}
         />
       </div>
-      <DialogFooter>
+      <div className="flex justify-end gap-2 pt-2">
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
         <Button onClick={handleSubmit} disabled={saving}>
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
         </Button>
-      </DialogFooter>
+      </div>
     </div>
   );
 }
