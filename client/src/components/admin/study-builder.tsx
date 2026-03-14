@@ -29,6 +29,8 @@ interface Study {
   isPublished?: boolean;
   requiresPurchase?: boolean;
   price?: string;
+  difficulty?: string;
+  duration?: number;
 }
 
 interface StudySeries {
@@ -39,6 +41,9 @@ interface StudySeries {
   thumbnailUrl?: string;
   displayOrder?: number;
   studyCount?: number;
+  requiredTier?: string;
+  isPublished?: boolean;
+  requiresConsecutiveCompletion?: boolean;
 }
 
 interface ParsedLesson {
@@ -68,7 +73,7 @@ export default function StudyBuilder() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const [activeTab, setActiveTab] = useState<"create" | "manage">("create");
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [contentType, setContentType] = useState<"study" | "series">("study");
   
   const [formData, setFormData] = useState({
@@ -207,21 +212,35 @@ export default function StudyBuilder() {
         if (thumbnailFile) {
           const formDataUpload = new FormData();
           formDataUpload.append('thumbnail', thumbnailFile);
-          await fetch(`/api/studies/${study.id}/upload-thumbnail`, {
+          const thumbRes = await fetch(`/api/studies/${study.id}/upload-thumbnail`, {
             method: 'POST',
             body: formDataUpload,
             credentials: 'include',
           });
+          if (!thumbRes.ok) {
+            toast({
+              title: "Thumbnail Upload Failed",
+              description: "Study was created but the thumbnail could not be saved. You can add it later via Edit.",
+              variant: "destructive",
+            });
+          }
         }
         
         if (videoFile) {
           const formDataUpload = new FormData();
           formDataUpload.append('video', videoFile);
-          await fetch(`/api/studies/${study.id}/upload-video`, {
+          const vidRes = await fetch(`/api/studies/${study.id}/upload-video`, {
             method: 'POST',
             body: formDataUpload,
             credentials: 'include',
           });
+          if (!vidRes.ok) {
+            toast({
+              title: "Video Upload Failed",
+              description: "Study was created but the video could not be saved. You can add it later via Edit.",
+              variant: "destructive",
+            });
+          }
         }
         
         if (parsedLessons.length > 0) {
@@ -251,7 +270,7 @@ export default function StudyBuilder() {
       queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
       resetForm();
-      setActiveTab("manage");
+      setShowCreateForm(false);
     },
     onError: (error: any) => {
       toast({
@@ -286,10 +305,10 @@ export default function StudyBuilder() {
             title: formData.title,
             description: formData.description,
             category: formData.category,
-            requiredTier: 'free',
+            requiredTier: formData.requiredTier,
             seriesId: series.id,
             seriesOrder: 1,
-            isPublished: true,
+            isPublished: formData.isPublished,
           });
           
           // Add lessons to the study
@@ -322,7 +341,7 @@ export default function StudyBuilder() {
       queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
       queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
       resetForm();
-      setActiveTab("manage");
+      setShowCreateForm(false);
     },
     onError: (error: any) => {
       toast({
@@ -407,27 +426,28 @@ export default function StudyBuilder() {
 
   return (
     <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="create" data-testid="tab-create">
-            <Plus className="w-4 h-4 mr-2" />
-            Create New
-          </TabsTrigger>
-          <TabsTrigger value="manage" data-testid="tab-manage">
-            <Book className="w-4 h-4 mr-2" />
-            Manage
-          </TabsTrigger>
-        </TabsList>
+      <Button
+        onClick={() => { setShowCreateForm(!showCreateForm); if (showCreateForm) resetForm(); }}
+        variant={showCreateForm ? "outline" : "default"}
+        className="w-full"
+        data-testid="btn-toggle-create"
+      >
+        {showCreateForm ? (
+          <><X className="w-4 h-4 mr-2" />Cancel</>
+        ) : (
+          <><Plus className="w-4 h-4 mr-2" />New Study / Series</>
+        )}
+      </Button>
 
-        <TabsContent value="create" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                {contentType === "study" ? <Book className="w-5 h-5" /> : <Layers className="w-5 h-5" />}
-                Create {contentType === "study" ? "Study" : "Series"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+      {showCreateForm && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {contentType === "study" ? <Book className="w-5 h-5" /> : <Layers className="w-5 h-5" />}
+              Create {contentType === "study" ? "Study" : "Series"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
               <div className="flex gap-2 mb-4">
                 <Button
                   type="button"
@@ -488,24 +508,22 @@ export default function StudyBuilder() {
                   </Select>
                 </div>
 
-                {contentType === "study" && (
-                  <div className="space-y-2">
-                    <Label>Access Tier</Label>
-                    <Select
-                      value={formData.requiredTier}
-                      onValueChange={(v) => setFormData({ ...formData, requiredTier: v })}
-                    >
-                      <SelectTrigger data-testid="select-tier">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {tiers.map((tier) => (
-                          <SelectItem key={tier.id} value={tier.id}>{tier.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label>Access Tier</Label>
+                  <Select
+                    value={formData.requiredTier}
+                    onValueChange={(v) => setFormData({ ...formData, requiredTier: v })}
+                  >
+                    <SelectTrigger data-testid="select-tier">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tiers.map((tier) => (
+                        <SelectItem key={tier.id} value={tier.id}>{tier.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {contentType === "study" && seriesList.length > 0 && (
@@ -791,10 +809,9 @@ export default function StudyBuilder() {
               </Button>
             </CardContent>
           </Card>
-        </TabsContent>
+      )}
 
-        <TabsContent value="manage" className="space-y-4">
-          <Tabs defaultValue="studies">
+      <Tabs defaultValue="studies">
             <TabsList className="w-full">
               <TabsTrigger value="studies" className="flex-1">
                 <Book className="w-4 h-4 mr-2" />
@@ -954,8 +971,6 @@ export default function StudyBuilder() {
                 ))
               )}
             </TabsContent>
-          </Tabs>
-        </TabsContent>
       </Tabs>
 
       {/* Edit Study Dialog */}
