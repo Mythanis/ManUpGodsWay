@@ -55,20 +55,20 @@ export default function StudyCard({ study, isCompleted = false, completedAt, has
             data-testid="img-study-thumbnail"
           />
           <div className="flex-1 p-4">
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex-1">
-                <div className="flex items-start space-x-2 mb-1">
-                  <h3 className={`font-semibold text-sm leading-tight min-w-0 ${
+            <div className="flex items-start justify-between mb-2 min-w-0">
+              <div className="flex-1 min-w-0">
+                <div className="mb-1">
+                  <h3 className={`font-semibold text-sm leading-snug break-words ${
                     isCompleted ? 'text-ministry-gold' : 'text-black'
                   }`} data-testid="text-study-title">
                     {study.title}
+                    {isCompleted && (
+                      <CheckCircle className="inline w-4 h-4 text-ministry-gold ml-1 align-middle" />
+                    )}
+                    {study.videoUrl && (
+                      <Video className="inline w-3 h-3 text-ministry-steel ml-1 align-middle" />
+                    )}
                   </h3>
-                  {isCompleted && (
-                    <CheckCircle className="w-4 h-4 text-ministry-gold flex-shrink-0" />
-                  )}
-                  {study.videoUrl && (
-                    <Video className="w-3 h-3 text-ministry-steel flex-shrink-0" />
-                  )}
                 </div>
                 <div className="text-xs text-black" data-testid="text-study-info">
                   {isCompleted && completedAt ? (
