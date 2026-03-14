@@ -106,7 +106,6 @@ export default function StudyBuilder() {
   
   const [editingStudy, setEditingStudy] = useState<Study | null>(null);
   const [editingSeries, setEditingSeries] = useState<StudySeries | null>(null);
-  const [expandedSeriesId, setExpandedSeriesId] = useState<string | null>(null);
 
   const { data: studies = [], isLoading: studiesLoading } = useQuery<Study[]>({
     queryKey: ["/api/studies"],
@@ -400,6 +399,26 @@ export default function StudyBuilder() {
       queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
     },
   });
+
+  const reorderSeriesMutation = useMutation({
+    mutationFn: async (updates: Array<{ id: string; displayOrder: number }>) => {
+      await Promise.all(updates.map(({ id, ...data }) => apiRequest('PUT', `/api/admin/study-series/${id}`, data)));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/study-series"] });
+    },
+  });
+
+  const handleReorderSeriesList = (seriesId: string, direction: 'up' | 'down') => {
+    const list = [...seriesList].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || (a.title > b.title ? 1 : -1));
+    const idx = list.findIndex(s => s.id === seriesId);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= list.length) return;
+    reorderSeriesMutation.mutate([
+      { id: list[idx].id, displayOrder: swapIdx + 1 },
+      { id: list[swapIdx].id, displayOrder: idx + 1 },
+    ]);
+  };
 
   const handleReorderIndividual = (studyId: string, direction: 'up' | 'down') => {
     const list = [...studies]
@@ -1031,16 +1050,29 @@ export default function StudyBuilder() {
                 <div className="text-center py-8 text-muted-foreground">Loading...</div>
               ) : seriesList.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">No series yet</div>
-              ) : (
-                seriesList.map((series) => {
+              ) : (() => {
+                const sortedSeries = [...seriesList].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || (a.title > b.title ? 1 : -1));
+                return sortedSeries.map((series, seriesIdx) => {
                   const seriesStudies = [...studies]
                     .filter(s => s.seriesId === series.id)
                     .sort((a, b) => (a.seriesOrder ?? 0) - (b.seriesOrder ?? 0) || (a.title > b.title ? 1 : -1));
-                  const isExpanded = expandedSeriesId === series.id;
                   return (
                   <Card key={series.id}>
-                    <CardContent className="p-4 space-y-2">
-                      <div className="flex items-center justify-between">
+                    <CardContent className="p-4 space-y-3">
+                      {/* Series row with reorder arrows */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex flex-col gap-0.5 flex-shrink-0">
+                          <Button
+                            variant="ghost" size="icon" className="h-6 w-6"
+                            disabled={seriesIdx === 0 || reorderSeriesMutation.isPending}
+                            onClick={() => handleReorderSeriesList(series.id, 'up')}
+                          ><ChevronUp className="w-4 h-4" /></Button>
+                          <Button
+                            variant="ghost" size="icon" className="h-6 w-6"
+                            disabled={seriesIdx === sortedSeries.length - 1 || reorderSeriesMutation.isPending}
+                            onClick={() => handleReorderSeriesList(series.id, 'down')}
+                          ><ChevronDown className="w-4 h-4" /></Button>
+                        </div>
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           {series.thumbnailUrl ? (
                             <img src={series.thumbnailUrl} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />
@@ -1060,16 +1092,6 @@ export default function StudyBuilder() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          {seriesStudies.length > 0 && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setExpandedSeriesId(isExpanded ? null : series.id)}
-                              title={isExpanded ? "Collapse studies" : "Reorder studies"}
-                            >
-                              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                            </Button>
-                          )}
                           <Button
                             variant="outline"
                             size="icon"
@@ -1097,24 +1119,25 @@ export default function StudyBuilder() {
                           </Button>
                         </div>
                       </div>
-                      {isExpanded && seriesStudies.length > 0 && (
-                        <div className="border-t pt-2 space-y-1">
-                          <p className="text-xs text-muted-foreground mb-2">Drag order — use arrows to reorder studies in this series:</p>
+                      {/* Studies within this series, always visible */}
+                      {seriesStudies.length > 0 && (
+                        <div className="border-t pt-2 space-y-1 pl-8">
+                          <p className="text-xs text-muted-foreground font-medium mb-1">Studies in this series:</p>
                           {seriesStudies.map((study, idx) => (
                             <div key={study.id} className="flex items-center gap-2 p-2 rounded bg-muted/40">
                               <div className="flex flex-col gap-0.5 flex-shrink-0">
                                 <Button
-                                  variant="ghost" size="icon" className="h-5 w-5"
+                                  variant="ghost" size="icon" className="h-6 w-6"
                                   disabled={idx === 0 || reorderMutation.isPending}
                                   onClick={() => handleReorderSeries(study.id, series.id, 'up')}
-                                ><ChevronUp className="w-3 h-3" /></Button>
+                                ><ChevronUp className="w-4 h-4" /></Button>
                                 <Button
-                                  variant="ghost" size="icon" className="h-5 w-5"
+                                  variant="ghost" size="icon" className="h-6 w-6"
                                   disabled={idx === seriesStudies.length - 1 || reorderMutation.isPending}
                                   onClick={() => handleReorderSeries(study.id, series.id, 'down')}
-                                ><ChevronDown className="w-3 h-3" /></Button>
+                                ><ChevronDown className="w-4 h-4" /></Button>
                               </div>
-                              <span className="text-sm font-medium w-5 text-muted-foreground">{idx + 1}.</span>
+                              <span className="text-xs font-medium w-5 text-muted-foreground flex-shrink-0">{idx + 1}.</span>
                               {study.thumbnailUrl ? (
                                 <img src={study.thumbnailUrl} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
                               ) : (
@@ -1133,8 +1156,8 @@ export default function StudyBuilder() {
                     </CardContent>
                   </Card>
                   );
-                })
-              )}
+                });
+              })()}
             </TabsContent>
       </Tabs>
         </>
