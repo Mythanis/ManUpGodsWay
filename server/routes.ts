@@ -2969,6 +2969,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete ALL lessons for a study (used by admin re-import flow)
+  app.delete('/api/studies/:studyId/lessons', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      await storage.deleteAllStudyLessons(req.params.studyId);
+      await storage.updateStudy(req.params.studyId, { totalDays: 0 });
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting all lessons:", error);
+      res.status(500).json({ message: "Failed to delete lessons" });
+    }
+  });
+
   // Track "Start a Study" activity - awards rations on first study view
   app.post('/api/studies/:studyId/track-start', isAuthenticated, async (req: any, res) => {
     try {

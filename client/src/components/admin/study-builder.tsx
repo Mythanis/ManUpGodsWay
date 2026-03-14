@@ -31,6 +31,8 @@ interface Study {
   price?: string;
   difficulty?: string;
   duration?: number;
+  wordOriginalName?: string | null;
+  wordFilename?: string | null;
 }
 
 interface StudySeries {
@@ -1065,6 +1067,82 @@ function EditStudyForm({ study, seriesList, onSave, onCancel }: {
   const [saving, setSaving] = useState(false);
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [uploadingThumb, setUploadingThumb] = useState(false);
+  const [wordReimportFile, setWordReimportFile] = useState<File | null>(null);
+  const [parsedLessons, setParsedLessons] = useState<Array<{ dayNumber: number; title: string; content: string; scripture?: string; keyTakeaway?: string }>>([]);
+  const [parsing, setParsing] = useState(false);
+  const [reimporting, setReimporting] = useState(false);
+
+  const parseWordDocForReimport = async () => {
+    if (!wordReimportFile) return;
+    setParsing(true);
+    setParsedLessons([]);
+    try {
+      const fd = new FormData();
+      fd.append('word', wordReimportFile);
+      const res = await fetch('/api/parse-word-lessons', { method: 'POST', body: fd, credentials: 'include' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Parse failed');
+      }
+      const data = await res.json();
+      const lessons = data.lessons || [];
+      if (lessons.length === 0) {
+        toast({ title: 'No lessons found', description: 'The document did not contain any recognizable Day/Lesson markers. Check that each lesson starts with "Day N:", "Lesson N:", "Week N:", or "Session N:".', variant: 'destructive' });
+      } else {
+        setParsedLessons(lessons);
+        toast({ title: `Found ${lessons.length} lesson${lessons.length === 1 ? '' : 's'}`, description: 'Review the list below, then click "Replace All Lessons" to apply.' });
+      }
+    } catch (e: any) {
+      toast({ title: 'Parse error', description: e.message, variant: 'destructive' });
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  const reimportLessons = async () => {
+    if (!wordReimportFile || parsedLessons.length === 0) return;
+    if (!confirm(`This will DELETE all existing lessons for this study and replace them with ${parsedLessons.length} lessons from the new document. This cannot be undone. Continue?`)) return;
+    setReimporting(true);
+    try {
+      const clearRes = await fetch(`/api/studies/${study.id}/lessons`, { method: 'DELETE', credentials: 'include' });
+      if (!clearRes.ok) throw new Error('Failed to clear existing lessons');
+
+      const wordFd = new FormData();
+      wordFd.append('word', wordReimportFile);
+      const wordRes = await fetch(`/api/studies/${study.id}/upload-word`, { method: 'POST', body: wordFd, credentials: 'include' });
+      if (!wordRes.ok) throw new Error('Failed to save document reference');
+
+      for (let i = 0; i < parsedLessons.length; i++) {
+        const lesson = parsedLessons[i];
+        const lessonRes = await fetch(`/api/studies/${study.id}/lessons`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            dayNumber: lesson.dayNumber,
+            title: lesson.title,
+            content: lesson.content,
+            scripture: lesson.scripture || '',
+            keyTakeaway: lesson.keyTakeaway || '',
+            displayOrder: i + 1,
+            estimatedMinutes: 15,
+            rationReward: 25,
+          }),
+        });
+        if (!lessonRes.ok) throw new Error(`Failed to create lesson ${lesson.dayNumber}`);
+      }
+
+      qc.invalidateQueries({ queryKey: ['/api/studies'] });
+      qc.invalidateQueries({ queryKey: ['/api/admin/studies'] });
+      setWordReimportFile(null);
+      setParsedLessons([]);
+      toast({ title: `${parsedLessons.length} lessons imported`, description: 'All lessons have been replaced successfully.' });
+    } catch (e: any) {
+      toast({ title: 'Import failed', description: e.message, variant: 'destructive' });
+    } finally {
+      setReimporting(false);
+    }
+  };
 
   const uploadStudyThumbnail = async (file: File) => {
     setUploadingThumb(true);
@@ -1272,6 +1350,63 @@ function EditStudyForm({ study, seriesList, onSave, onCancel }: {
           />
         </div>
       )}
+      <div className="space-y-3 border-t pt-4">
+        <Label className="flex items-center gap-2 text-sm font-semibold">
+          <FileText className="w-4 h-4" /> Lesson Import (Word Document)
+        </Label>
+        {study.wordOriginalName && (
+          <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-200 truncate">{study.wordOriginalName}</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400">{study.totalDays || 0} lesson{(study.totalDays || 0) !== 1 ? 's' : ''} currently imported</p>
+            </div>
+          </div>
+        )}
+        {!study.wordOriginalName && (
+          <p className="text-xs text-gray-500 dark:text-gray-400">No Word document attached. Upload a .docx file below to import or re-import lessons.</p>
+        )}
+        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-3">
+          <input
+            type="file"
+            accept=".docx"
+            className="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-yellow-400 file:text-black hover:file:bg-yellow-500 cursor-pointer"
+            onChange={(e) => { setWordReimportFile(e.target.files?.[0] || null); setParsedLessons([]); }}
+          />
+          <p className="text-xs text-gray-500 mt-1">Only .docx files — lessons must start with "Day N:", "Lesson N:", "Week N:", or "Session N:"</p>
+        </div>
+        {wordReimportFile && (
+          <div className="flex items-center gap-2 p-2 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <span className="text-xs text-yellow-800 dark:text-yellow-200 truncate flex-1">{wordReimportFile.name}</span>
+            <Button size="sm" type="button" disabled={parsing} onClick={parseWordDocForReimport} className="bg-yellow-400 text-black hover:bg-yellow-500 flex-shrink-0">
+              {parsing ? <><Loader2 className="w-3 h-3 animate-spin mr-1" />Parsing…</> : 'Preview Lessons'}
+            </Button>
+          </div>
+        )}
+        {parsedLessons.length > 0 && (
+          <div className="space-y-2 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+            <p className="text-sm font-medium text-green-800 dark:text-green-200">{parsedLessons.length} lesson{parsedLessons.length !== 1 ? 's' : ''} found in document:</p>
+            <ul className="space-y-1 max-h-36 overflow-y-auto">
+              {parsedLessons.map((l) => (
+                <li key={l.dayNumber} className="text-xs text-green-700 dark:text-green-300 flex items-start gap-1">
+                  <span className="font-medium flex-shrink-0">Day {l.dayNumber}:</span>
+                  <span className="truncate">{l.title}</span>
+                </li>
+              ))}
+            </ul>
+            <Button
+              size="sm"
+              type="button"
+              variant="destructive"
+              disabled={reimporting}
+              onClick={reimportLessons}
+              className="w-full mt-2"
+            >
+              {reimporting ? <><Loader2 className="w-3 h-3 animate-spin mr-1" />Importing…</> : `Replace All Lessons (${parsedLessons.length} new)`}
+            </Button>
+          </div>
+        )}
+      </div>
       <DialogFooter>
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
         <Button onClick={handleSubmit} disabled={saving}>

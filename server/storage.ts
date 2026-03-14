@@ -212,6 +212,7 @@ export interface IStorage {
   createStudyLesson(lesson: InsertStudyLesson): Promise<StudyLesson>;
   updateStudyLesson(id: string, lesson: Partial<InsertStudyLesson>): Promise<StudyLesson>;
   deleteStudyLesson(id: string): Promise<void>;
+  deleteAllStudyLessons(studyId: string): Promise<void>;
   
   // Lesson progress operations
   getUserLessonProgress(userId: string, studyId?: string): Promise<UserLessonProgress[]>;
@@ -1255,6 +1256,10 @@ export class DatabaseStorage implements IStorage {
 
   async deleteStudyLesson(id: string): Promise<void> {
     await db.delete(studyLessons).where(eq(studyLessons.id, id));
+  }
+
+  async deleteAllStudyLessons(studyId: string): Promise<void> {
+    await db.delete(studyLessons).where(eq(studyLessons.studyId, studyId));
   }
 
   // Lesson progress operations
