@@ -57,8 +57,8 @@ export default function StudyCard({ study, isCompleted = false, completedAt, has
           <div className="flex-1 p-4">
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-1">
-                  <h3 className={`font-semibold text-sm ${
+                <div className="flex items-start space-x-2 mb-1">
+                  <h3 className={`font-semibold text-sm leading-tight min-w-0 ${
                     isCompleted ? 'text-ministry-gold' : 'text-black'
                   }`} data-testid="text-study-title">
                     {study.title}
