@@ -26,6 +26,7 @@ interface Study {
   totalDays?: number;
   seriesId?: string | null;
   seriesOrder?: number | null;
+  displayOrder?: number | null;
   isPublished?: boolean;
   requiresPurchase?: boolean;
   price?: string;
@@ -105,7 +106,7 @@ export default function StudyBuilder() {
   
   const [editingStudy, setEditingStudy] = useState<Study | null>(null);
   const [editingSeries, setEditingSeries] = useState<StudySeries | null>(null);
-  const [expandedStudy, setExpandedStudy] = useState<string | null>(null);
+  const [expandedSeriesId, setExpandedSeriesId] = useState<string | null>(null);
 
   const { data: studies = [], isLoading: studiesLoading } = useQuery<Study[]>({
     queryKey: ["/api/studies"],
@@ -390,6 +391,45 @@ export default function StudyBuilder() {
       toast({ title: isPublished ? "Study published" : "Study unpublished" });
     },
   });
+
+  const reorderMutation = useMutation({
+    mutationFn: async (updates: Array<{ id: string; displayOrder?: number; seriesOrder?: number }>) => {
+      await Promise.all(updates.map(({ id, ...data }) => apiRequest('PATCH', `/api/studies/${id}`, data)));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/studies"] });
+    },
+  });
+
+  const handleReorderIndividual = (studyId: string, direction: 'up' | 'down') => {
+    const list = [...studies]
+      .filter(s => !s.seriesId)
+      .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || (a.title > b.title ? 1 : -1));
+    const idx = list.findIndex(s => s.id === studyId);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= list.length) return;
+    const aOrder = idx + 1;
+    const bOrder = swapIdx + 1;
+    reorderMutation.mutate([
+      { id: list[idx].id, displayOrder: bOrder },
+      { id: list[swapIdx].id, displayOrder: aOrder },
+    ]);
+  };
+
+  const handleReorderSeries = (studyId: string, seriesId: string, direction: 'up' | 'down') => {
+    const list = [...studies]
+      .filter(s => s.seriesId === seriesId)
+      .sort((a, b) => (a.seriesOrder ?? 0) - (b.seriesOrder ?? 0) || (a.title > b.title ? 1 : -1));
+    const idx = list.findIndex(s => s.id === studyId);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= list.length) return;
+    const aOrder = idx + 1;
+    const bOrder = swapIdx + 1;
+    reorderMutation.mutate([
+      { id: list[idx].id, seriesOrder: bOrder },
+      { id: list[swapIdx].id, seriesOrder: aOrder },
+    ]);
+  };
 
   const handleSubmit = () => {
     if (!formData.title || !formData.description || !formData.category) {
@@ -886,27 +926,43 @@ export default function StudyBuilder() {
                 <div className="text-center py-8 text-muted-foreground">Loading...</div>
               ) : studies.filter(s => !s.seriesId).length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">No individual studies yet. Studies in a series are shown under the Series tab.</div>
-              ) : (
-                studies.filter(s => !s.seriesId).map((study) => (
+              ) : (() => {
+                const individualStudies = [...studies]
+                  .filter(s => !s.seriesId)
+                  .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || (a.title > b.title ? 1 : -1));
+                return individualStudies.map((study, idx) => (
                   <Card key={study.id} className={!study.isPublished ? "opacity-60" : ""}>
                     <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        {/* Order arrows */}
+                        <div className="flex flex-col gap-0.5 flex-shrink-0">
+                          <Button
+                            variant="ghost" size="icon" className="h-6 w-6"
+                            disabled={idx === 0 || reorderMutation.isPending}
+                            onClick={() => handleReorderIndividual(study.id, 'up')}
+                          ><ChevronUp className="w-4 h-4" /></Button>
+                          <Button
+                            variant="ghost" size="icon" className="h-6 w-6"
+                            disabled={idx === individualStudies.length - 1 || reorderMutation.isPending}
+                            onClick={() => handleReorderIndividual(study.id, 'down')}
+                          ><ChevronDown className="w-4 h-4" /></Button>
+                        </div>
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
                           {study.thumbnailUrl ? (
-                            <img src={study.thumbnailUrl} alt="" className="w-12 h-12 rounded object-cover" />
+                            <img src={study.thumbnailUrl} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />
                           ) : (
-                            <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
+                            <div className="w-12 h-12 rounded bg-muted flex items-center justify-center flex-shrink-0">
                               <Book className="w-6 h-6 text-muted-foreground" />
                             </div>
                           )}
-                          <div>
-                            <h4 className="font-medium flex items-center gap-2">
+                          <div className="min-w-0">
+                            <h4 className="font-medium flex items-center gap-2 flex-wrap">
                               {study.title}
                               {!study.isPublished && (
                                 <Badge variant="outline" className="text-orange-600 border-orange-300">Draft</Badge>
                               )}
                             </h4>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                               <Badge variant="outline">{study.category}</Badge>
                               <Badge variant={study.requiredTier === 'free' ? 'secondary' : 'default'}>
                                 {study.requiredTier}
@@ -917,7 +973,7 @@ export default function StudyBuilder() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <Button
                             variant={study.isPublished ? "outline" : "default"}
                             size="sm"
@@ -966,8 +1022,8 @@ export default function StudyBuilder() {
                       </div>
                     </CardContent>
                   </Card>
-                ))
-              )}
+                ));
+              })()}
             </TabsContent>
 
             <TabsContent value="series" className="space-y-2">
@@ -976,21 +1032,26 @@ export default function StudyBuilder() {
               ) : seriesList.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">No series yet</div>
               ) : (
-                seriesList.map((series) => (
+                seriesList.map((series) => {
+                  const seriesStudies = [...studies]
+                    .filter(s => s.seriesId === series.id)
+                    .sort((a, b) => (a.seriesOrder ?? 0) - (b.seriesOrder ?? 0) || (a.title > b.title ? 1 : -1));
+                  const isExpanded = expandedSeriesId === series.id;
+                  return (
                   <Card key={series.id}>
-                    <CardContent className="p-4">
+                    <CardContent className="p-4 space-y-2">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
                           {series.thumbnailUrl ? (
-                            <img src={series.thumbnailUrl} alt="" className="w-12 h-12 rounded object-cover" />
+                            <img src={series.thumbnailUrl} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />
                           ) : (
-                            <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
+                            <div className="w-12 h-12 rounded bg-muted flex items-center justify-center flex-shrink-0">
                               <Layers className="w-6 h-6 text-muted-foreground" />
                             </div>
                           )}
-                          <div>
+                          <div className="min-w-0">
                             <h4 className="font-medium">{series.title}</h4>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                               <Badge variant="outline">{series.category}</Badge>
                               {series.studyCount !== undefined && (
                                 <span>{series.studyCount} studies</span>
@@ -998,7 +1059,17 @@ export default function StudyBuilder() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {seriesStudies.length > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setExpandedSeriesId(isExpanded ? null : series.id)}
+                              title={isExpanded ? "Collapse studies" : "Reorder studies"}
+                            >
+                              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="icon"
@@ -1026,9 +1097,43 @@ export default function StudyBuilder() {
                           </Button>
                         </div>
                       </div>
+                      {isExpanded && seriesStudies.length > 0 && (
+                        <div className="border-t pt-2 space-y-1">
+                          <p className="text-xs text-muted-foreground mb-2">Drag order — use arrows to reorder studies in this series:</p>
+                          {seriesStudies.map((study, idx) => (
+                            <div key={study.id} className="flex items-center gap-2 p-2 rounded bg-muted/40">
+                              <div className="flex flex-col gap-0.5 flex-shrink-0">
+                                <Button
+                                  variant="ghost" size="icon" className="h-5 w-5"
+                                  disabled={idx === 0 || reorderMutation.isPending}
+                                  onClick={() => handleReorderSeries(study.id, series.id, 'up')}
+                                ><ChevronUp className="w-3 h-3" /></Button>
+                                <Button
+                                  variant="ghost" size="icon" className="h-5 w-5"
+                                  disabled={idx === seriesStudies.length - 1 || reorderMutation.isPending}
+                                  onClick={() => handleReorderSeries(study.id, series.id, 'down')}
+                                ><ChevronDown className="w-3 h-3" /></Button>
+                              </div>
+                              <span className="text-sm font-medium w-5 text-muted-foreground">{idx + 1}.</span>
+                              {study.thumbnailUrl ? (
+                                <img src={study.thumbnailUrl} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                              ) : (
+                                <div className="w-8 h-8 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                                  <Book className="w-4 h-4 text-muted-foreground" />
+                                </div>
+                              )}
+                              <span className="text-sm flex-1 min-w-0 truncate">{study.title}</span>
+                              {!study.isPublished && (
+                                <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs flex-shrink-0">Draft</Badge>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
-                ))
+                  );
+                })
               )}
             </TabsContent>
       </Tabs>

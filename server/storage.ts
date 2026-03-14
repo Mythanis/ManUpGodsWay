@@ -983,7 +983,7 @@ export class DatabaseStorage implements IStorage {
       query.where(and(...conditions));
     }
     
-    return await query.orderBy(desc(studies.createdAt));
+    return await query.orderBy(asc(studies.displayOrder), desc(studies.createdAt));
   }
 
   async getIndividualStudies(category?: string): Promise<Study[]> {
@@ -1000,7 +1000,7 @@ export class DatabaseStorage implements IStorage {
     
     return await db.select().from(studies)
       .where(and(...conditions))
-      .orderBy(desc(studies.createdAt));
+      .orderBy(asc(studies.displayOrder), desc(studies.createdAt));
   }
 
   async getStudy(id: string): Promise<Study | undefined> {
