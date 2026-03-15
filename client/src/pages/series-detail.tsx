@@ -268,34 +268,32 @@ export default function SeriesDetail() {
               <div key={study.id} data-testid={`study-section-${study.id}`}>
                 {/* ── Week header ── */}
                 <div className={`relative flex items-center gap-3 px-4 py-3 border-2 border-black rounded-sm mb-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
-                  isConsecutiveLocked
-                    ? 'bg-zinc-800'
-                    : study.progress?.isCompleted
-                      ? 'bg-green-900/60 border-green-700'
-                      : 'bg-[#FCD000]'
+                  study.progress?.isCompleted
+                    ? 'bg-green-900/60 border-green-700'
+                    : 'bg-[#FCD000]'
                 }`}>
                   {/* Week number badge */}
                   <div className={`flex-shrink-0 w-12 h-12 rounded-sm border-2 border-black flex flex-col items-center justify-center ${
-                    isConsecutiveLocked ? 'bg-zinc-700' : study.progress?.isCompleted ? 'bg-green-800' : 'bg-black'
+                    study.progress?.isCompleted ? 'bg-green-800' : 'bg-black'
                   }`}>
                     {study.progress?.isCompleted ? (
                       <CheckCircle className="w-6 h-6 text-green-400" />
                     ) : isConsecutiveLocked ? (
-                      <Lock className="w-5 h-5 text-zinc-400" />
+                      <Lock className="w-5 h-5 text-[#FCD000]" />
                     ) : (
                       <>
-                        <span className={`text-[9px] font-black uppercase tracking-widest leading-none ${isConsecutiveLocked ? 'text-zinc-500' : 'text-[#FCD000]'}`}>WK</span>
-                        <span className={`text-lg font-black leading-none ${isConsecutiveLocked ? 'text-zinc-400' : 'text-[#FCD000]'}`}>{study.seriesOrder ?? studyIndex + 1}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest leading-none text-[#FCD000]">WK</span>
+                        <span className="text-lg font-black leading-none text-[#FCD000]">{study.seriesOrder ?? studyIndex + 1}</span>
                       </>
                     )}
                   </div>
 
                   {/* Title + meta */}
                   <div className="flex-1 min-w-0">
-                    <p className={`text-[10px] font-black uppercase tracking-[0.15em] mb-0.5 ${isConsecutiveLocked ? 'text-zinc-500' : study.progress?.isCompleted ? 'text-green-400' : 'text-black/60'}`}>
+                    <p className={`text-[10px] font-black uppercase tracking-[0.15em] mb-0.5 ${study.progress?.isCompleted ? 'text-green-400' : 'text-black/60'}`}>
                       {weekLabel} · {study.totalLessons} days
                     </p>
-                    <h3 className={`font-black uppercase tracking-wide text-sm leading-tight ${isConsecutiveLocked ? 'text-zinc-400' : study.progress?.isCompleted ? 'text-green-300' : 'text-black'}`} data-testid={`text-study-title-${study.id}`}>
+                    <h3 className={`font-black uppercase tracking-wide text-sm leading-tight ${study.progress?.isCompleted ? 'text-green-300' : 'text-black'}`} data-testid={`text-study-title-${study.id}`}>
                       {study.title.replace(/^Week\s+\d+[-–—:]\s*/i, '')}
                     </h3>
 
@@ -313,7 +311,7 @@ export default function SeriesDetail() {
                   {/* Action / lock indicator */}
                   <div className="flex-shrink-0">
                     {isConsecutiveLocked ? (
-                      <Button size="sm" variant="outline" disabled className="border-2 border-zinc-600 text-zinc-500 bg-zinc-700 rounded-sm font-bold uppercase text-xs px-2 h-8">
+                      <Button size="sm" variant="outline" disabled className="border-2 border-black text-black bg-[#FCD000]/60 rounded-sm font-bold uppercase text-xs px-2 h-8 opacity-70">
                         <Lock className="w-3 h-3 mr-1" />Locked
                       </Button>
                     ) : hasAccess ? (
