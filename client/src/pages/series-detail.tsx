@@ -241,230 +241,174 @@ export default function SeriesDetail() {
 
       {/* Studies / Lessons List */}
       <div className="px-6">
-        {(() => {
-          // Build flat list: if study has multiple lessons, show one card per lesson
-          const items: Array<{ type: 'study'; study: typeof studies[0]; studyIndex: number } | { type: 'lesson'; lesson: LessonInSeries; lessonIndex: number; study: typeof studies[0]; studyIndex: number }> = [];
-          studies.forEach((study, studyIndex) => {
-            if (study.lessons && study.lessons.length > 1) {
-              study.lessons.forEach((lesson, lessonIndex) => {
-                items.push({ type: 'lesson', lesson, lessonIndex, study, studyIndex });
-              });
-            } else {
-              items.push({ type: 'study', study, studyIndex });
-            }
-          });
-          const totalItems = items.length;
-          return (
-            <>
-              <h2 className="text-white font-black text-lg mb-4 uppercase tracking-tight">
-                Studies in this Series ({totalItems})
-              </h2>
-              <div className="space-y-4">
-                {items.map((item, itemIndex) => {
-                  const study = item.study;
-                  const hasAccess = canAccessStudy(study);
-                  const isConsecutiveLocked = isLockedByConsecutive(study);
-                  const previousTitle = getPreviousStudyTitle(item.studyIndex);
+        <h2 className="text-white font-black text-lg mb-4 uppercase tracking-tight">
+          Studies in this Series ({studies.length})
+        </h2>
 
-                  if (item.type === 'lesson') {
-                    const { lesson, lessonIndex } = item;
-                    const isCompleted = lesson.isCompleted;
-                    const isDripLocked = lesson.isLocked;
-                    const effectiveLocked = isConsecutiveLocked || isDripLocked;
-                    return (
-                      <Card
-                        key={`${study.id}-lesson-${lesson.id}`}
-                        className={`border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden ${
-                          effectiveLocked
-                            ? 'bg-zinc-800 opacity-80'
-                            : 'bg-[#111111] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all'
-                        }`}
-                        data-testid={`lesson-card-${lesson.id}`}
-                      >
-                        <CardContent className="p-0 relative z-10">
-                          <div className="flex items-stretch gap-0">
-                            {/* Left accent strip */}
-                            <div className={`w-1 flex-shrink-0 ${effectiveLocked ? 'bg-zinc-600' : isCompleted ? 'bg-green-500' : 'bg-[#FCD000]'}`} />
-                            {/* Day number badge */}
-                            <div className={`w-14 flex-shrink-0 flex items-center justify-center font-black text-lg border-r-2 border-black/40 ${
-                              effectiveLocked ? 'bg-zinc-700 text-zinc-500' : isCompleted ? 'bg-green-900/40 text-green-400' : 'bg-[#FCD000]/10 text-[#FCD000]'
-                            }`}>
-                              {isCompleted ? <CheckCircle className="w-5 h-5" /> : effectiveLocked ? <Lock className="w-4 h-4" /> : <span className="text-sm">{itemIndex + 1}</span>}
-                            </div>
-                            {/* Title + metadata */}
-                            <div className="flex-1 min-w-0 py-3 px-3">
-                              <p className={`text-[10px] font-black uppercase tracking-widest mb-0.5 ${effectiveLocked ? 'text-zinc-600' : 'text-[#FCD000]'}`}>
-                                Day {lesson.dayNumber}
-                              </p>
-                              <h3 className={`font-black uppercase tracking-wide text-sm leading-tight line-clamp-2 ${effectiveLocked ? 'text-zinc-500' : 'text-white'}`}>
-                                {lesson.title}
-                              </h3>
-                              {isDripLocked && lesson.unlocksAt && (
-                                <p className="text-xs text-zinc-500 font-medium flex items-center gap-1 mt-1">
-                                  <Clock className="w-3 h-3" />
-                                  Unlocks {formatUnlockDate(lesson.unlocksAt)}
-                                </p>
-                              )}
-                              {isDripLocked && !lesson.unlocksAt && (
-                                <p className="text-xs text-zinc-600 font-medium mt-1">Complete previous lesson first</p>
-                              )}
-                            </div>
-                            {/* Action button */}
-                            <div className="flex items-center pr-3">
-                              {effectiveLocked ? (
-                                <div className="w-8 h-8 flex items-center justify-center rounded-sm bg-zinc-700 border border-zinc-600">
-                                  <Lock className="w-3.5 h-3.5 text-zinc-500" />
-                                </div>
-                              ) : hasAccess ? (
-                                <Link href={`/studies/${study.id}`}>
-                                  <Button
-                                    size="sm"
-                                    className={`font-black uppercase tracking-wide rounded-sm border-2 flex-shrink-0 text-xs px-3 py-1 h-auto ${
-                                      isCompleted
-                                        ? 'bg-transparent border-green-600 text-green-400 hover:bg-green-900/30'
-                                        : 'bg-[#FCD000] border-[#FCD000] text-black hover:bg-yellow-300'
-                                    }`}
-                                    onClick={() => handleStudyClick(study, item.studyIndex)}
-                                    data-testid={`button-lesson-${lesson.id}`}
-                                  >
-                                    {isCompleted ? 'Review' : lessonIndex === 0 && !study.progress ? 'Start' : 'Go'}
-                                    <ChevronRight className="w-3 h-3 ml-0.5" />
-                                  </Button>
-                                </Link>
-                              ) : (
-                                <div className="w-8 h-8 flex items-center justify-center rounded-sm bg-zinc-800 border border-zinc-700">
-                                  <Lock className="w-3.5 h-3.5 text-zinc-500" />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  }
+        {studies.length === 0 && (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-[#FCD000] rounded-sm flex items-center justify-center mx-auto mb-4 border-2 border-black">
+              <BookOpen className="w-8 h-8 text-black" />
+            </div>
+            <p className="text-gray-400 font-bold uppercase">No studies in this series yet.</p>
+          </div>
+        )}
 
-                  // Original study card rendering
-                  const studyProgress = study.totalLessons > 0
-                    ? Math.round((study.completedLessons / study.totalLessons) * 100)
-                    : 0;
-                  return (
-                    <Card
-                      key={study.id}
-                      className={`border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
-                        isConsecutiveLocked
-                          ? 'bg-zinc-800 opacity-80'
-                          : hasAccess
-                            ? 'bg-[#FCD000] text-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all'
-                            : 'bg-[#FCD000] text-black opacity-75'
-                      }`}
-                      data-testid={`study-card-${study.id}`}
-                    >
-                      <CardContent className="p-4 relative z-10">
-                        <div className="flex items-start gap-4">
-                          {/* Order Number */}
-                          <div className="relative flex-shrink-0">
-                            <div className={`w-12 h-12 rounded-sm flex items-center justify-center font-black text-lg border-2 border-black ${
-                              isConsecutiveLocked
-                                ? 'bg-zinc-700 text-zinc-400'
-                                : study.progress?.isCompleted
-                                  ? 'bg-black text-[#FCD000]'
-                                  : 'bg-white text-black'
-                            }`}>
-                              {study.progress?.isCompleted ? (
-                                <CheckCircle className="w-6 h-6" />
-                              ) : (
-                                itemIndex + 1
-                              )}
-                            </div>
-                            {isConsecutiveLocked && (
-                              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-zinc-900 border border-zinc-600 rounded-full flex items-center justify-center">
-                                <Lock className="w-2.5 h-2.5 text-zinc-400" />
-                              </div>
-                            )}
-                          </div>
+        <div className="space-y-6">
+          {studies.map((study, studyIndex) => {
+            const hasAccess = canAccessStudy(study);
+            const isConsecutiveLocked = isLockedByConsecutive(study);
+            const previousTitle = getPreviousStudyTitle(studyIndex);
+            const studyProgress = study.totalLessons > 0
+              ? Math.round((study.completedLessons / study.totalLessons) * 100)
+              : 0;
+            const weekLabel = `Week ${study.seriesOrder ?? studyIndex + 1}`;
 
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className={`font-black uppercase tracking-wide line-clamp-1 ${isConsecutiveLocked ? 'text-zinc-400' : 'text-black'}`} data-testid={`text-study-title-${study.id}`}>
-                                {study.title}
-                              </h3>
-                              {study.requiredTier !== 'free' && (
-                                <span className="text-xs px-2 py-0.5 rounded-sm text-white bg-black font-bold uppercase border border-black">
-                                  Subscribers Only
-                                </span>
-                              )}
-                            </div>
-                            <p className={`text-sm mb-3 line-clamp-2 font-medium ${isConsecutiveLocked ? 'text-zinc-500' : 'text-black/70'}`}>
-                              {study.description}
-                            </p>
-
-                            {isConsecutiveLocked && (
-                              <div className="mb-3 p-2 bg-zinc-900 border border-zinc-700 rounded-sm">
-                                {study.isScheduledFuture && study.unlocksAt ? (
-                                  <p className="text-xs text-zinc-400 font-medium"><Clock className="w-3 h-3 inline mr-1" />Coming {formatUnlockDate(study.unlocksAt)}</p>
-                                ) : study.isLockedByDrip && study.unlocksAt ? (
-                                  <p className="text-xs text-zinc-400 font-medium"><Clock className="w-3 h-3 inline mr-1" />Unlocks {formatUnlockDate(study.unlocksAt)}</p>
-                                ) : previousTitle ? (
-                                  <p className="text-xs text-zinc-400 font-medium"><Lock className="w-3 h-3 inline mr-1" />Complete "{previousTitle}" first to unlock</p>
-                                ) : (
-                                  <p className="text-xs text-zinc-400 font-medium"><Lock className="w-3 h-3 inline mr-1" />Start the series to begin</p>
-                                )}
-                              </div>
-                            )}
-
-                            {isAuthenticated && study.totalLessons > 0 && !isConsecutiveLocked && (
-                              <div className="mb-3">
-                                <div className="flex items-center justify-between text-xs text-black/70 mb-1 font-bold uppercase">
-                                  <span>{study.completedLessons} of {study.totalLessons} lessons</span>
-                                  <span>{studyProgress}%</span>
-                                </div>
-                                <div className="h-2 bg-white border-2 border-black rounded-sm overflow-hidden">
-                                  <div className="h-full bg-black transition-all duration-300" style={{ width: `${studyProgress}%` }} />
-                                </div>
-                              </div>
-                            )}
-
-                            <div className="flex items-center justify-between">
-                              <span className={`text-xs flex items-center gap-1 font-bold uppercase ${isConsecutiveLocked ? 'text-zinc-500' : 'text-black/70'}`}>
-                                <BookOpen className="w-3.5 h-3.5" />
-                                {study.totalLessons} {study.totalLessons === 1 ? 'Lesson' : 'Lessons'}
-                              </span>
-                              {isConsecutiveLocked ? (
-                                <Button size="sm" variant="outline" disabled className="border-2 border-zinc-600 text-zinc-500 bg-zinc-700 rounded-sm font-bold uppercase">
-                                  <Lock className="w-3 h-3 mr-1" />Locked
-                                </Button>
-                              ) : hasAccess ? (
-                                <Link href={`/studies/${study.id}`}>
-                                  <Button size="sm" className="bg-black text-white hover:bg-gray-800 font-black uppercase tracking-wide rounded-sm border-2 border-black" data-testid={`button-study-${study.id}`} onClick={() => handleStudyClick(study, item.studyIndex)}>
-                                    {getButtonLabel(study)}<ChevronRight className="w-4 h-4 ml-1" />
-                                  </Button>
-                                </Link>
-                              ) : (
-                                <Button size="sm" variant="outline" disabled className="border-2 border-black text-black/50 rounded-sm font-bold uppercase">
-                                  <Lock className="w-3 h-3 mr-1" />Subscribers Only
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-
-              {studies.length === 0 && (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-[#FCD000] rounded-sm flex items-center justify-center mx-auto mb-4 border-2 border-black">
-                    <BookOpen className="w-8 h-8 text-black" />
+            return (
+              <div key={study.id} data-testid={`study-section-${study.id}`}>
+                {/* ── Week header ── */}
+                <div className={`relative flex items-center gap-3 px-4 py-3 border-2 border-black rounded-sm mb-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
+                  isConsecutiveLocked
+                    ? 'bg-zinc-800'
+                    : study.progress?.isCompleted
+                      ? 'bg-green-900/60 border-green-700'
+                      : 'bg-[#FCD000]'
+                }`}>
+                  {/* Week number badge */}
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-sm border-2 border-black flex flex-col items-center justify-center ${
+                    isConsecutiveLocked ? 'bg-zinc-700' : study.progress?.isCompleted ? 'bg-green-800' : 'bg-black'
+                  }`}>
+                    {study.progress?.isCompleted ? (
+                      <CheckCircle className="w-6 h-6 text-green-400" />
+                    ) : isConsecutiveLocked ? (
+                      <Lock className="w-5 h-5 text-zinc-400" />
+                    ) : (
+                      <>
+                        <span className={`text-[9px] font-black uppercase tracking-widest leading-none ${isConsecutiveLocked ? 'text-zinc-500' : 'text-[#FCD000]'}`}>WK</span>
+                        <span className={`text-lg font-black leading-none ${isConsecutiveLocked ? 'text-zinc-400' : 'text-[#FCD000]'}`}>{study.seriesOrder ?? studyIndex + 1}</span>
+                      </>
+                    )}
                   </div>
-                  <p className="text-gray-400 font-bold uppercase">No studies in this series yet.</p>
+
+                  {/* Title + meta */}
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-[10px] font-black uppercase tracking-[0.15em] mb-0.5 ${isConsecutiveLocked ? 'text-zinc-500' : study.progress?.isCompleted ? 'text-green-400' : 'text-black/60'}`}>
+                      {weekLabel} · {study.totalLessons} days
+                    </p>
+                    <h3 className={`font-black uppercase tracking-wide text-sm leading-tight ${isConsecutiveLocked ? 'text-zinc-400' : study.progress?.isCompleted ? 'text-green-300' : 'text-black'}`} data-testid={`text-study-title-${study.id}`}>
+                      {study.title.replace(/^Week\s+\d+[-–—:]\s*/i, '')}
+                    </h3>
+
+                    {/* Progress bar (only when unlocked + in progress) */}
+                    {isAuthenticated && study.totalLessons > 0 && !isConsecutiveLocked && !study.progress?.isCompleted && study.completedLessons > 0 && (
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <div className="flex-1 h-1.5 bg-black/20 border border-black/30 rounded-full overflow-hidden">
+                          <div className="h-full bg-black transition-all duration-300" style={{ width: `${studyProgress}%` }} />
+                        </div>
+                        <span className="text-[10px] font-black text-black/60">{studyProgress}%</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action / lock indicator */}
+                  <div className="flex-shrink-0">
+                    {isConsecutiveLocked ? (
+                      <Button size="sm" variant="outline" disabled className="border-2 border-zinc-600 text-zinc-500 bg-zinc-700 rounded-sm font-bold uppercase text-xs px-2 h-8">
+                        <Lock className="w-3 h-3 mr-1" />Locked
+                      </Button>
+                    ) : hasAccess ? (
+                      <Link href={`/studies/${study.id}`}>
+                        <Button
+                          size="sm"
+                          className={`font-black uppercase tracking-wide rounded-sm border-2 border-black text-xs px-3 h-8 ${
+                            study.progress?.isCompleted
+                              ? 'bg-transparent border-green-600 text-green-400 hover:bg-green-900/30'
+                              : 'bg-black text-white hover:bg-gray-800'
+                          }`}
+                          onClick={() => handleStudyClick(study, studyIndex)}
+                          data-testid={`button-study-${study.id}`}
+                        >
+                          {getButtonLabel(study)}<ChevronRight className="w-3 h-3 ml-0.5" />
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Button size="sm" variant="outline" disabled className="border-2 border-black text-black/50 rounded-sm font-bold uppercase text-xs px-2 h-8">
+                        <Lock className="w-3 h-3 mr-1" />Sub Only
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              )}
-            </>
-          );
-        })()}
+
+                {/* Lock reason pill */}
+                {isConsecutiveLocked && (
+                  <div className="mb-2 ml-1 flex items-center gap-1.5 text-[11px] text-zinc-500 font-medium">
+                    <Lock className="w-3 h-3" />
+                    {study.isScheduledFuture && study.unlocksAt
+                      ? `Coming ${formatUnlockDate(study.unlocksAt)}`
+                      : study.isLockedByDrip && study.unlocksAt
+                        ? `Unlocks ${formatUnlockDate(study.unlocksAt)}`
+                        : previousTitle
+                          ? `Complete "${previousTitle.replace(/^Week\s+\d+[-–—:]\s*/i, '')}" first`
+                          : 'Start the series to begin'}
+                  </div>
+                )}
+
+                {/* ── Lesson rows (only shown when unlocked) ── */}
+                {!isConsecutiveLocked && study.lessons && study.lessons.length > 0 && (
+                  <div className="ml-3 border-l-2 border-[#FCD000]/30 pl-3 space-y-1.5">
+                    {study.lessons.map((lesson, lessonIndex) => {
+                      const isCompleted = lesson.isCompleted;
+                      const isDripLocked = lesson.isLocked;
+                      return (
+                        <div
+                          key={lesson.id}
+                          className={`flex items-center gap-2 px-3 py-2 border border-black/40 rounded-sm ${
+                            isDripLocked
+                              ? 'bg-zinc-800/60 opacity-70'
+                              : isCompleted
+                                ? 'bg-green-900/30 border-green-700/40'
+                                : 'bg-[#111111] hover:bg-[#1a1a1a] transition-colors'
+                          }`}
+                          data-testid={`lesson-row-${lesson.id}`}
+                        >
+                          {/* Day status dot */}
+                          <div className={`flex-shrink-0 w-6 h-6 rounded-sm border border-black flex items-center justify-center text-[10px] font-black ${
+                            isCompleted ? 'bg-green-700 text-white' : isDripLocked ? 'bg-zinc-700 text-zinc-500' : 'bg-[#FCD000]/20 text-[#FCD000]'
+                          }`}>
+                            {isCompleted ? <CheckCircle className="w-3.5 h-3.5" /> : isDripLocked ? <Lock className="w-3 h-3" /> : lesson.dayNumber}
+                          </div>
+
+                          {/* Title */}
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-[10px] font-black uppercase tracking-widest leading-none mb-0.5 ${isDripLocked ? 'text-zinc-600' : isCompleted ? 'text-green-400' : 'text-[#FCD000]'}`}>
+                              Day {lesson.dayNumber}
+                            </p>
+                            <p className={`text-xs font-semibold leading-tight line-clamp-1 ${isDripLocked ? 'text-zinc-500' : isCompleted ? 'text-green-300/80' : 'text-white'}`}>
+                              {lesson.title}
+                            </p>
+                          </div>
+
+                          {/* Go button or lock */}
+                          {!isDripLocked && hasAccess && (
+                            <Link href={`/studies/${study.id}`}>
+                              <button
+                                className="flex-shrink-0 text-[#FCD000] hover:text-yellow-300 transition-colors"
+                                onClick={() => handleStudyClick(study, studyIndex)}
+                                data-testid={`button-lesson-${lesson.id}`}
+                              >
+                                <ChevronRight className="w-4 h-4" />
+                              </button>
+                            </Link>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

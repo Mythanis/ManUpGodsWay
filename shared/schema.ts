@@ -144,6 +144,7 @@ export const studies = pgTable("studies", {
   isFeatured: boolean("is_featured").default(false),
   scheduledPublishDate: timestamp("scheduled_publish_date"), // Optional: publish study at this date/time
   rationReward: integer("ration_reward").default(100), // Rations earned for completing this study
+  displayOrder: integer("display_order").default(0), // Manual sort order for library display
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

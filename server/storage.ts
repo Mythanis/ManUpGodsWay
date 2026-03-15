@@ -977,13 +977,9 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(studies.requiredTier, requiredTier));
     }
     
-    const query = db.select().from(studies);
-    
-    if (conditions.length > 0) {
-      query.where(and(...conditions));
-    }
-    
-    return await query.orderBy(asc(studies.displayOrder), desc(studies.createdAt));
+    return await db.select().from(studies)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(asc(studies.displayOrder), desc(studies.createdAt));
   }
 
   async getIndividualStudies(category?: string): Promise<Study[]> {
