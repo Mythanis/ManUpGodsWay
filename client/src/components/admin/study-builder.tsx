@@ -648,7 +648,17 @@ export default function StudyBuilder() {
                   <Label>Add to Series (optional)</Label>
                   <Select
                     value={formData.seriesId || "_none"}
-                    onValueChange={(v) => setFormData({ ...formData, seriesId: v === "_none" ? "" : v })}
+                    onValueChange={(v) => {
+                      if (v === "_none") {
+                        setFormData({ ...formData, seriesId: "", seriesOrder: 1 });
+                      } else {
+                        const studiesInSeries = studies.filter(s => s.seriesId === v);
+                        const nextOrder = studiesInSeries.length > 0
+                          ? Math.max(...studiesInSeries.map(s => s.seriesOrder ?? 0)) + 1
+                          : 1;
+                        setFormData({ ...formData, seriesId: v, seriesOrder: nextOrder });
+                      }
+                    }}
                   >
                     <SelectTrigger data-testid="select-series">
                       <SelectValue placeholder="None (standalone study)" />
@@ -666,13 +676,13 @@ export default function StudyBuilder() {
               {contentType === "study" && formData.seriesId && (
                 <div className="space-y-2">
                   <Label>Study Number in Series</Label>
-                  <p className="text-xs text-gray-500">The position of this study in the series (1 = first, 2 = second, etc.)</p>
+                  <p className="text-xs text-gray-500">Auto-filled to the next available position — adjust if needed.</p>
                   <Input
                     type="number"
                     min={1}
                     value={formData.seriesOrder}
                     onChange={(e) => setFormData({ ...formData, seriesOrder: parseInt(e.target.value) || 1 })}
-                    placeholder="e.g. 1"
+                    placeholder="e.g. 4"
                     data-testid="input-series-order"
                   />
                 </div>
