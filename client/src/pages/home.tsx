@@ -690,22 +690,22 @@ export default function Home() {
                           <div className="w-14 liquid-black flex items-center justify-center flex-shrink-0">
                             <Book className="w-6 h-6 text-white relative z-10" />
                           </div>
-                          <div className="flex-1 p-3 flex items-center justify-between">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-black text-black text-sm uppercase tracking-wide truncate">{study.title}</h4>
-                              <p className="text-xs text-black/70 line-clamp-1 font-medium">{study.description}</p>
-                              <div className="flex items-center gap-2 mt-1">
+                          <div className="flex-1 p-3 min-w-0 flex flex-col gap-1">
+                            <h4 className="font-black text-black text-sm uppercase tracking-wide truncate">{study.title}</h4>
+                            <p className="text-xs text-black/70 line-clamp-1 font-medium">{study.description}</p>
+                            <div className="flex items-center justify-between mt-0.5">
+                              <div className="flex items-center gap-2">
                                 <span className="text-xs text-black font-bold uppercase">{study.totalDays || study.estimatedHours || 0} {study.totalDays ? 'Days' : 'Hours'}</span>
                                 <span className="text-xs text-black/60 capitalize font-medium">{study.difficulty || 'All Levels'}</span>
                               </div>
+                              <Button 
+                                size="sm"
+                                className="bg-black text-white hover:bg-gray-900 rounded-sm font-black uppercase tracking-wide text-xs border-2 border-black flex-shrink-0"
+                                onClick={() => navigate(`/studies/${study.id}`)}
+                              >
+                                Start
+                              </Button>
                             </div>
-                            <Button 
-                              size="sm"
-                              className="bg-black text-white hover:bg-gray-900 rounded-sm font-black uppercase tracking-wide text-xs border-2 border-black ml-3 flex-shrink-0"
-                              onClick={() => navigate(`/studies/${study.id}`)}
-                            >
-                              Start
-                            </Button>
                           </div>
                         </div>
                       </CardContent>
