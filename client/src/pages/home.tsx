@@ -1062,24 +1062,29 @@ export default function Home() {
 
       {/* Full Devotional Modal */}
       <Dialog open={showFullDevotional} onOpenChange={setShowFullDevotional}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85vh] overflow-y-auto liquid-header border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] p-0">
-          <div className="p-4 border-b-2 border-black">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85svh] overflow-y-auto liquid-header border-2 border-[#FCD000] rounded-sm shadow-[6px_6px_0px_0px_rgba(252,208,0,0.4)] p-0">
+          {/* Header */}
+          <div className="relative p-5 pb-4">
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#FCD000] to-transparent" />
             <DialogHeader>
-              <DialogTitle className="text-white text-lg font-black uppercase tracking-tight relative z-10">
+              <p className="text-[#FCD000] text-[10px] font-black uppercase tracking-[0.2em] mb-1.5 relative z-10">
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              </p>
+              <DialogTitle className="text-white text-xl font-black tracking-tight leading-tight relative z-10">
                 {devotional?.title}
               </DialogTitle>
             </DialogHeader>
           </div>
           
           {devotional && (
-            <div className="p-4 space-y-4">
+            <div className="p-4 pt-3 space-y-3">
               {/* Full Image */}
               {devotional.imageUrl && (
-                <div className="overflow-hidden border-2 border-black rounded-sm">
+                <div className="overflow-hidden border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                   <img 
                     src={devotional.imageUrl} 
                     alt={devotional.title}
-                    className="w-full h-48 object-cover"
+                    className="w-full h-44 object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
@@ -1087,27 +1092,35 @@ export default function Home() {
                 </div>
               )}
               
-              {/* Verse */}
-              <div className="bg-ministry-gold-exact p-4 border-2 border-black rounded-sm">
-                <p className="text-black font-bold text-sm">
-                  "{devotional.verse}"
-                </p>
-                <p className="text-black font-black text-xs mt-1 uppercase tracking-wide">
-                  — {devotional.verseReference}
-                </p>
+              {/* Verse block */}
+              <div className="relative bg-[#FCD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                {/* Decorative quote mark */}
+                <span className="absolute -top-4 left-2 text-black/10 font-serif select-none pointer-events-none" style={{ fontSize: '7rem', lineHeight: 1 }}>"</span>
+                <div className="relative z-10 p-4 pb-3">
+                  <p className="text-black text-base font-semibold leading-relaxed italic">
+                    "{devotional.verse}"
+                  </p>
+                  <div className="flex items-center gap-2 mt-3">
+                    <div className="h-px flex-1 bg-black/25" />
+                    <p className="text-black font-black text-[11px] uppercase tracking-[0.15em]">
+                      {devotional.verseReference}
+                    </p>
+                    <div className="h-px flex-1 bg-black/25" />
+                  </div>
+                </div>
               </div>
               
-              {/* Full Content */}
-              <div className="bg-black p-4 border-2 border-ministry-gold-exact rounded-sm space-y-4">
+              {/* Content — white background for easy reading */}
+              <div className="bg-white border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-5 space-y-4">
                 {devotional.content.split(/\n\n+/).map((para: string, i: number) => (
-                  <p key={i} className="text-gray-100 text-sm leading-relaxed">
+                  <p key={i} className="text-gray-800 text-[15px] leading-[1.8]">
                     {para.trim()}
                   </p>
                 ))}
               </div>
               
               {/* Actions */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2 border-t-2 border-black">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2 border-t border-white/20">
                 <Button 
                   variant="outline" 
                   size="sm"
