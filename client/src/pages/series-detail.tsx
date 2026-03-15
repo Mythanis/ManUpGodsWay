@@ -277,27 +277,38 @@ export default function SeriesDetail() {
                   <div className={`relative flex-shrink-0 w-16 h-16 rounded-sm border-2 border-black overflow-hidden flex flex-col items-center justify-center ${
                     study.progress?.isCompleted ? 'bg-green-800' : 'bg-black'
                   }`}>
-                    {study.thumbnailUrl && (
-                      <img
-                        src={study.thumbnailUrl}
-                        alt={study.title}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
+                    {study.thumbnailUrl ? (
+                      <>
+                        <img
+                          src={study.thumbnailUrl}
+                          alt={study.title}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        {/* Only show icon overlays on thumbnail (completed / locked), no WK text */}
+                        {(study.progress?.isCompleted || isConsecutiveLocked) && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            {study.progress?.isCompleted
+                              ? <CheckCircle className="w-6 h-6 text-green-400" />
+                              : <Lock className="w-5 h-5 text-[#FCD000]" />
+                            }
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        {study.progress?.isCompleted ? (
+                          <CheckCircle className="w-6 h-6 text-green-400" />
+                        ) : isConsecutiveLocked ? (
+                          <Lock className="w-5 h-5 text-[#FCD000]" />
+                        ) : (
+                          <>
+                            <span className="text-[9px] font-black uppercase tracking-widest leading-none text-[#FCD000]">WK</span>
+                            <span className="text-xl font-black leading-none text-[#FCD000]">{study.seriesOrder ?? studyIndex + 1}</span>
+                          </>
+                        )}
+                      </div>
                     )}
-                    {/* Overlay */}
-                    <div className={`absolute inset-0 ${study.thumbnailUrl ? 'bg-black/50' : ''} flex flex-col items-center justify-center`}>
-                      {study.progress?.isCompleted ? (
-                        <CheckCircle className="w-6 h-6 text-green-400" />
-                      ) : isConsecutiveLocked ? (
-                        <Lock className="w-5 h-5 text-[#FCD000]" />
-                      ) : (
-                        <>
-                          <span className="text-[9px] font-black uppercase tracking-widest leading-none text-[#FCD000]">WK</span>
-                          <span className="text-xl font-black leading-none text-[#FCD000]">{study.seriesOrder ?? studyIndex + 1}</span>
-                        </>
-                      )}
-                    </div>
                   </div>
 
                   {/* Title + meta */}
