@@ -1159,6 +1159,31 @@ export default function StudyBuilder() {
                               {!study.isPublished && (
                                 <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs flex-shrink-0">Draft</Badge>
                               )}
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7 flex-shrink-0"
+                                onClick={() => {
+                                  setEditingStudy(study);
+                                  setEditingSeries(null);
+                                  setShowCreateForm(false);
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7 flex-shrink-0 text-destructive"
+                                onClick={() => {
+                                  if (confirm("Delete this study?")) {
+                                    deleteStudyMutation.mutate(study.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
                             </div>
                           ))}
                         </div>
