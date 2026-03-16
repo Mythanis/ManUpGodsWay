@@ -3058,6 +3058,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Award rations for lesson completion (only if first time completing)
       let rationResult = null;
+      let studyCompleted = false;
+      let nextStudyData: any = null;
+
       if (!wasAlreadyComplete) {
         const { rationsService } = await import('./rations-service');
         
@@ -3077,9 +3080,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const completedLessons = updatedProgress.filter(
           p => studyLessonIds.includes(p.lessonId) && p.isCompleted
         );
-        
-        let studyCompleted = false;
-        let nextStudyData: any = null;
 
         if (completedLessons.length === lessons.length && lessons.length > 0) {
           studyCompleted = true;
