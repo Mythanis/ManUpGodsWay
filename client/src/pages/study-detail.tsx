@@ -127,6 +127,10 @@ export default function StudyDetail() {
 
   // Detect virtual keyboard visibility on mobile
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
+  useEffect(() => {
     if (typeof window === 'undefined' || !discussionDialogOpen) return;
     
     let initialViewportHeight = window.visualViewport?.height || window.innerHeight;
