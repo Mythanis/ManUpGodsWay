@@ -174,37 +174,42 @@ export default function Library() {
             {/* Series Section */}
             {filteredSeries.length > 0 && (
               <div>
-                <h2 className="text-white font-black text-lg mb-4 flex items-center gap-2 tracking-tight uppercase">
-                  <Layers className="w-5 h-5 text-ministry-gold-exact" />
-                  Study Series
-                </h2>
-                <div className="space-y-2">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+                  <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Study Series</h2>
+                  <div className="flex-1 h-px bg-white/10" />
+                </div>
+                <div className="space-y-3">
                   {filteredSeries.map((s) => (
                     <Link key={s.id} href={`/series/${s.id}`}>
-                      <Button 
-                        variant="outline"
-                        className="min-h-16 h-auto w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
+                      <div
+                        className="flex items-stretch rounded-sm border-2 border-white/10 overflow-hidden shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] hover:border-[#FCD000]/40 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
+                        style={{ background: '#0f0f0f' }}
                         data-testid={`series-card-${s.id}`}
                       >
-                        <div className="self-stretch min-h-16 w-16 liquid-black flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {/* Thumbnail */}
+                        <div className="w-20 flex-shrink-0 bg-black flex items-center justify-center overflow-hidden self-stretch">
                           {s.thumbnailUrl ? (
                             <img src={s.thumbnailUrl} alt={s.title} className="h-full w-full object-cover" />
                           ) : (
-                            <Layers className="w-6 h-6 text-white relative z-10" />
+                            <Layers className="w-7 h-7 text-[#FCD000]" />
                           )}
                         </div>
-                        <div className="flex-1 text-left px-4 py-3">
-                          <span className="font-black text-xs text-black uppercase leading-tight relative z-10 line-clamp-2 block" data-testid={`text-series-title-${s.id}`}>{s.title}</span>
-                          <div className="flex items-center gap-2 text-xs text-black/70 font-medium mt-0.5">
-                            <span>{s.studyCount} {s.studyCount === 1 ? 'Study' : 'Studies'}</span>
-                            <span>•</span>
-                            <span>{s.totalLessons} Lessons</span>
+                        {/* Content */}
+                        <div className="flex-1 px-4 py-3 min-w-0">
+                          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FCD000]">Series</span>
+                          <p className="font-black text-white text-sm leading-tight mt-0.5 uppercase tracking-tight line-clamp-2" data-testid={`text-series-title-${s.id}`}>{s.title}</p>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span className="text-[10px] font-bold text-white/40 uppercase tracking-wide">{s.studyCount} {s.studyCount === 1 ? 'Study' : 'Studies'}</span>
+                            <span className="text-white/20 text-[10px]">•</span>
+                            <span className="text-[10px] font-bold text-white/40 uppercase tracking-wide">{s.totalLessons} Lessons</span>
                           </div>
                         </div>
-                        <div className="pr-4">
-                          <ChevronRight className="w-6 h-6 text-black" />
+                        {/* Arrow */}
+                        <div className="flex items-center pr-4">
+                          <ChevronRight className="w-5 h-5 text-[#FCD000]" />
                         </div>
-                      </Button>
+                      </div>
                     </Link>
                   ))}
                 </div>
@@ -214,49 +219,58 @@ export default function Library() {
             {/* Individual Studies Section */}
             {filteredStudies.length > 0 && (
               <div>
-                <h2 className="text-white font-black text-lg mb-4 flex items-center gap-2 tracking-tight uppercase">
-                  <BookOpen className="w-5 h-5 text-ministry-gold-exact" />
-                  Individual Studies
-                </h2>
-                <div className="space-y-2">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+                  <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Individual Studies</h2>
+                  <div className="flex-1 h-px bg-white/10" />
+                </div>
+                <div className="space-y-3">
                   {filteredStudies.map((study: Study) => {
                     const progress = (userProgress as any[]).find((p: any) => p.studyId === study.id);
                     const isCompleted = progress?.isCompleted || false;
                     const hasStarted = !!progress && !isCompleted;
-                    
-                    const getTierLabel = (tier: string) => {
-                      if (tier !== 'free') return 'Subscribers Only';
-                      return 'Free';
-                    };
-                    
+                    const isFree = study.requiredTier === 'free';
+
                     return (
                       <Link key={study.id} href={`/studies/${study.id}`}>
-                        <Button 
-                          variant="outline"
-                          className="min-h-16 h-auto w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
+                        <div
+                          className="flex items-stretch rounded-sm border-2 overflow-hidden shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
+                          style={{ background: '#0f0f0f', borderColor: isCompleted ? 'rgba(252,208,0,0.5)' : 'rgba(255,255,255,0.1)' }}
                           data-testid={`study-card-${study.id}`}
                         >
-                          <div className="self-stretch min-h-16 w-16 liquid-black flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {/* Thumbnail */}
+                          <div className="w-20 flex-shrink-0 bg-black flex items-center justify-center overflow-hidden self-stretch">
                             {study.thumbnailUrl ? (
                               <img src={study.thumbnailUrl} alt={study.title} className="h-full w-full object-cover" />
                             ) : (
-                              <BookOpen className="w-6 h-6 text-white relative z-10" />
+                              <BookOpen className="w-7 h-7 text-[#FCD000]" />
                             )}
                           </div>
-                          <div className="flex-1 text-left px-4 py-3">
-                            <span className="font-black text-xs text-black uppercase leading-tight relative z-10 line-clamp-2 block" data-testid={`text-study-title-${study.id}`}>{study.title}</span>
-                            <div className="flex items-center gap-2 text-xs text-black/70 font-medium mt-0.5">
-                              <span>{study.totalDays} {study.totalDays === 1 ? 'Day' : 'Days'}</span>
-                              <span>•</span>
-                              <span>{getTierLabel(study.requiredTier)}</span>
-                              {isCompleted && <span className="text-green-700 font-bold">✓</span>}
-                              {hasStarted && !isCompleted && <span className="text-black/50">In Progress</span>}
+                          {/* Content */}
+                          <div className="flex-1 px-4 py-3 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              {isCompleted && (
+                                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FCD000]">✓ Complete</span>
+                              )}
+                              {hasStarted && (
+                                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/50">In Progress</span>
+                              )}
+                              {!isCompleted && !hasStarted && (
+                                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FCD000]">{isFree ? 'Free' : 'Members'}</span>
+                              )}
+                            </div>
+                            <p className="font-black text-white text-sm leading-tight uppercase tracking-tight line-clamp-2" data-testid={`text-study-title-${study.id}`}>{study.title}</p>
+                            <div className="flex items-center gap-2 mt-1.5">
+                              {study.totalDays > 0 && (
+                                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wide">{study.totalDays} {study.totalDays === 1 ? 'Day' : 'Days'}</span>
+                              )}
                             </div>
                           </div>
-                          <div className="pr-4">
-                            <ChevronRight className="w-6 h-6 text-black" />
+                          {/* Arrow */}
+                          <div className="flex items-center pr-4">
+                            <ChevronRight className="w-5 h-5 text-[#FCD000]" />
                           </div>
-                        </Button>
+                        </div>
                       </Link>
                     );
                   })}
