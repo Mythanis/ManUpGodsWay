@@ -1155,59 +1155,71 @@ export default function StudyBuilder() {
                       </div>
                       {/* Studies within this series, always visible */}
                       {seriesStudies.length > 0 && (
-                        <div className="border-t pt-2 space-y-1 pl-8">
+                        <div className="border-t pt-2 space-y-2">
                           <p className="text-xs text-muted-foreground font-medium mb-1">Studies in this series:</p>
                           {seriesStudies.map((study, idx) => (
-                            <div key={study.id} className="flex items-center gap-2 p-2 rounded bg-muted/40">
-                              <div className="flex flex-col gap-0.5 flex-shrink-0">
-                                <Button
-                                  variant="ghost" size="icon" className="h-6 w-6"
-                                  disabled={idx === 0 || reorderMutation.isPending}
-                                  onClick={() => handleReorderSeries(study.id, series.id, 'up')}
-                                ><ChevronUp className="w-4 h-4" /></Button>
-                                <Button
-                                  variant="ghost" size="icon" className="h-6 w-6"
-                                  disabled={idx === seriesStudies.length - 1 || reorderMutation.isPending}
-                                  onClick={() => handleReorderSeries(study.id, series.id, 'down')}
-                                ><ChevronDown className="w-4 h-4" /></Button>
-                              </div>
-                              <span className="text-xs font-medium w-5 text-muted-foreground flex-shrink-0">{idx + 1}.</span>
-                              {study.thumbnailUrl ? (
-                                <img src={study.thumbnailUrl} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
-                              ) : (
-                                <div className="w-8 h-8 rounded bg-muted flex items-center justify-center flex-shrink-0">
-                                  <Book className="w-4 h-4 text-muted-foreground" />
+                            <div key={study.id} className="rounded-md border border-border bg-background p-3 space-y-2">
+                              {/* Top row: thumbnail + title + badges */}
+                              <div className="flex items-start gap-3">
+                                {/* Reorder arrows */}
+                                <div className="flex flex-col gap-0.5 flex-shrink-0 pt-1">
+                                  <Button
+                                    variant="ghost" size="icon" className="h-7 w-7"
+                                    disabled={idx === 0 || reorderMutation.isPending}
+                                    onClick={() => handleReorderSeries(study.id, series.id, 'up')}
+                                  ><ChevronUp className="w-4 h-4" /></Button>
+                                  <Button
+                                    variant="ghost" size="icon" className="h-7 w-7"
+                                    disabled={idx === seriesStudies.length - 1 || reorderMutation.isPending}
+                                    onClick={() => handleReorderSeries(study.id, series.id, 'down')}
+                                  ><ChevronDown className="w-4 h-4" /></Button>
                                 </div>
-                              )}
-                              <span className="text-sm flex-1 min-w-0 truncate">{study.title}</span>
-                              {!study.isPublished && (
-                                <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs flex-shrink-0">Draft</Badge>
-                              )}
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-7 w-7 flex-shrink-0"
-                                onClick={() => {
-                                  setEditingStudy(study);
-                                  setEditingSeries(null);
-                                  setShowCreateForm(false);
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                              >
-                                <Edit className="w-3 h-3" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-7 w-7 flex-shrink-0 text-destructive"
-                                onClick={() => {
-                                  if (confirm("Delete this study?")) {
-                                    deleteStudyMutation.mutate(study.id);
-                                  }
-                                }}
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
+                                {/* Thumbnail */}
+                                {study.thumbnailUrl ? (
+                                  <img src={study.thumbnailUrl} alt="" className="w-16 h-16 rounded object-cover flex-shrink-0 border border-border" />
+                                ) : (
+                                  <div className="w-16 h-16 rounded bg-muted flex items-center justify-center flex-shrink-0 border border-border">
+                                    <Book className="w-6 h-6 text-muted-foreground" />
+                                  </div>
+                                )}
+                                {/* Title + badges */}
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-xs font-bold text-muted-foreground uppercase">Week {idx + 1}</span>
+                                  <p className="font-semibold text-sm leading-snug mt-0.5">{study.title}</p>
+                                  {!study.isPublished && (
+                                    <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs mt-1">Draft</Badge>
+                                  )}
+                                </div>
+                              </div>
+                              {/* Bottom row: action buttons */}
+                              <div className="flex gap-2 pl-[3.75rem]">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex-1 h-9 font-semibold"
+                                  onClick={() => {
+                                    setEditingStudy(study);
+                                    setEditingSeries(null);
+                                    setShowCreateForm(false);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                >
+                                  <Edit className="w-4 h-4 mr-1.5" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-9 text-destructive border-destructive/30 hover:bg-destructive/10"
+                                  onClick={() => {
+                                    if (confirm("Delete this study?")) {
+                                      deleteStudyMutation.mutate(study.id);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </div>
                           ))}
                         </div>
