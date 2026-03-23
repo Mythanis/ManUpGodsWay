@@ -1103,6 +1103,30 @@ export default function StudyBuilder() {
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <Button
+                            variant="default"
+                            size="sm"
+                            className="bg-[#FCD000] text-black border-2 border-black font-bold rounded-sm hover:bg-yellow-400"
+                            onClick={() => {
+                              const nextOrder = seriesStudies.length + 1;
+                              setContentType("study");
+                              setEditingStudy(null);
+                              setEditingSeries(null);
+                              setFormData(prev => ({
+                                ...prev,
+                                title: "",
+                                description: "",
+                                seriesId: series.id,
+                                seriesOrder: nextOrder,
+                                category: series.category || "",
+                              }));
+                              setShowCreateForm(true);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Add Week
+                          </Button>
+                          <Button
                             variant="outline"
                             size="icon"
                             onClick={() => {
