@@ -568,69 +568,75 @@ export default function Profile() {
 
       {/* Progress Summary */}
       <div className="px-6">
-        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>Your Journey</h2>
-        
-        <Card className="bg-[#FCD000] text-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden" data-testid="card-progress">
-          <CardContent className="p-6 relative z-10">
-            {currentStudies.length === 0 && completedStudies.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-black mb-4 font-medium">You haven't started any studies yet</p>
-                <Button 
-                  className="liquid-black text-ministry-gold-exact hover:opacity-90 rounded-sm font-black uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] h-12 px-6"
-                  data-testid="button-start-journey"
-                >
-                  <span className="relative z-10">Start Your Journey</span>
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {currentStudies.map((item: any) => {
-                  const progressPercent = (item.completedLessons / (item.study?.lessonCount || 1)) * 100;
-                  return (
-                    <div key={item.id} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-black">
+        {/* Section heading */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+          <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Your Journey</h2>
+          <div className="flex-1 h-px bg-white/10" />
+        </div>
+
+        <Card className="overflow-hidden rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" style={{ background: '#0a0a0a' }} data-testid="card-progress">
+          {currentStudies.length === 0 && completedStudies.length === 0 ? (
+            <CardContent className="p-6 text-center">
+              <p className="text-white/60 mb-5 font-medium text-sm">You haven't started any studies yet</p>
+              <Button
+                className="bg-[#FCD000] text-black hover:bg-yellow-300 rounded-sm font-black uppercase tracking-widest border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] h-11 px-6 text-sm"
+                data-testid="button-start-journey"
+              >
+                Start Your Journey
+              </Button>
+            </CardContent>
+          ) : (
+            <CardContent className="p-0">
+              {/* In-progress studies */}
+              {currentStudies.map((item: any, i: number) => {
+                const total = item.study?.lessonCount || item.totalLessons || 1;
+                const done = item.completedLessons || 0;
+                const pct = Math.round((done / total) * 100);
+                return (
+                  <div key={item.id} className={`p-4 space-y-2.5 ${i > 0 ? 'border-t border-white/10' : ''}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FCD000]">In Progress</span>
+                        <p className="font-black text-white text-sm leading-tight mt-0.5 uppercase tracking-tight">
                           {item.study?.title || 'Study'}
-                        </span>
-                        <span className="text-sm text-black font-bold">
-                          {item.completedLessons}/{item.study?.lessonCount || 0}
-                        </span>
+                        </p>
                       </div>
-                      <Progress value={progressPercent} className="h-2" />
+                      <span className="text-xs font-black text-white/60 tabular-nums flex-shrink-0 mt-1">{done}/{total}</span>
                     </div>
-                  );
-                })}
-                
-                {completedStudies.map((item: any) => (
-                  <div key={item.id} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <span className="text-sm font-medium text-black">
-                          {item.study?.title || 'Study'}
-                        </span>
-                        {item.completedAt && (
-                          <p className="text-xs text-black">
-                            Completed {new Date(item.completedAt).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric'
-                            })}
-                          </p>
-                        )}
+                    <div className="space-y-1">
+                      <div className="h-2.5 bg-white/10 rounded-sm overflow-hidden border border-white/10">
+                        <div className="h-full bg-[#FCD000] rounded-sm transition-all" style={{ width: `${pct}%` }} />
                       </div>
-                      <span className="text-sm text-ministry-success font-bold flex items-center">
-                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                        </svg>
-                        Complete
-                      </span>
+                      <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider text-right">{pct}% complete</p>
                     </div>
-                    <Progress value={100} className="h-2" />
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
+                );
+              })}
+
+              {/* Completed studies */}
+              {completedStudies.map((item: any, i: number) => (
+                <div key={item.id} className={`p-4 flex items-center gap-3 ${(i > 0 || currentStudies.length > 0) ? 'border-t border-white/10' : ''}`}>
+                  <div className="w-7 h-7 rounded-sm bg-[#FCD000] flex items-center justify-center flex-shrink-0 border border-black">
+                    <svg className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-white text-sm leading-tight uppercase tracking-tight truncate">
+                      {item.study?.title || 'Study'}
+                    </p>
+                    {item.completedAt && (
+                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-wide mt-0.5">
+                        Completed {new Date(item.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    )}
+                  </div>
+                  <span className="text-xs font-black text-[#FCD000] uppercase tracking-wide flex-shrink-0">Done</span>
+                </div>
+              ))}
+            </CardContent>
+          )}
         </Card>
       </div>
 
