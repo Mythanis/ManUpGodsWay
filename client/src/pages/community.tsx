@@ -647,6 +647,35 @@ export default function Community() {
         </Card>
       </div>
 
+      {/* Stories-style Category Tabs */}
+      <div className="px-4 mb-4">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none" style={{ scrollbarWidth: 'none' }}>
+          {/* All */}
+          {[{ id: '', label: 'All', icon: Hash }, ...allCategories].map((cat) => {
+            const Icon = cat.icon;
+            const isActive = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id || 'all'}
+                onClick={() => setSelectedCategory(cat.id)}
+                className="flex flex-col items-center gap-1.5 flex-shrink-0 min-w-[56px]"
+              >
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center border-3 transition-all ${
+                  isActive
+                    ? 'bg-[#FCD000] border-[#FCD000] shadow-[0_0_0_3px_rgba(252,208,0,0.3)]'
+                    : 'bg-white/5 border-white/15 hover:border-[#FCD000]/50'
+                }`} style={{ border: isActive ? '3px solid #FCD000' : '3px solid rgba(255,255,255,0.15)' }}>
+                  <Icon className={`w-6 h-6 ${isActive ? 'text-black' : 'text-white/60'}`} />
+                </div>
+                <span className={`text-[10px] font-black uppercase tracking-wide ${isActive ? 'text-[#FCD000]' : 'text-white/50'}`}>
+                  {cat.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Post Dialog */}
       <div className="px-6">
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -832,87 +861,45 @@ export default function Community() {
         </Dialog>
       </div>
 
-      {/* Discussion Categories Dropdown */}
-      <div className="px-6 mb-4">
-        <Select 
-          value={selectedCategory} 
-          onValueChange={(value) => setSelectedCategory(value === 'all' ? '' : value)}
-        >
-          <SelectTrigger 
-            className="w-full bg-black border-2 border-ministry-gold-exact text-white font-bold h-9 rounded-sm shadow-[2px_2px_0px_0px_rgba(252,208,0,1)]"
-            data-testid="select-popular-topics"
-          >
-            <div className="flex items-center">
-              <span className="text-ministry-gold-exact text-xs font-bold uppercase tracking-wide mr-2">Topic:</span>
-              <SelectValue placeholder="All Topics" />
-            </div>
+      {/* Search + Sort bar */}
+      <div className="px-4 mb-4 flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4" />
+          <Input
+            placeholder="Search discussions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-8 h-9 bg-white/8 border border-white/15 text-white placeholder:text-white/35 text-sm rounded-full focus:border-[#FCD000]/50"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
+              <X className="w-3.5 h-3.5 text-white/40" />
+            </button>
+          )}
+        </div>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-28 h-9 bg-white/8 border border-white/15 text-white text-xs font-bold rounded-full" data-testid="select-sort-by">
+            <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-black border-2 border-ministry-gold-exact">
-            <SelectItem value="all" className="text-white hover:bg-white/10">
-              All Topics
-            </SelectItem>
-            {allCategories.map((category) => {
-              const Icon = category.icon;
-              return (
-                <SelectItem 
-                  key={category.id} 
-                  value={category.id}
-                  className="text-white hover:bg-white/10"
-                >
-                  <div className="flex items-center">
-                    <Icon className="w-4 h-4 mr-2 text-ministry-gold-exact" />
-                    {category.label}
-                  </div>
-                </SelectItem>
-              );
-            })}
+          <SelectContent>
+            <SelectItem value="recent">Recent</SelectItem>
+            <SelectItem value="likes">Top Liked</SelectItem>
+            <SelectItem value="replies">Most Replies</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* Search Bar */}
-      <div className="px-6 mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-ministry-gold-exact w-4 h-4 z-10" />
-          <Input
-            placeholder="SEARCH DISCUSSIONS..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10 border-2 border-ministry-gold-exact bg-black text-white placeholder:text-white/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide rounded-sm font-medium shadow-[2px_2px_0px_0px_rgba(252,208,0,1)]"
-          />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
+      {/* Feed heading */}
+      <div className="px-4 mb-3 flex items-center gap-3">
+        <div className="w-1 h-5 bg-[#FCD000] rounded-full flex-shrink-0" />
+        <span className="text-sm font-black text-white uppercase tracking-[0.15em]">
+          {searchQuery ? `"${searchQuery}"` : selectedCategory ? allCategories.find(c => c.id === selectedCategory)?.label : 'All Posts'}
+        </span>
+        <div className="flex-1 h-px bg-white/10" />
       </div>
 
       {/* Recent Discussions */}
-      <div className="px-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-black text-white tracking-tight uppercase">
-            {searchQuery ? `Results: "${searchQuery}"` : 'Recent Discussions'}
-          </h2>
-          <div className="flex items-center space-x-2">
-            <ArrowUpDown className="w-4 h-4 text-ministry-gold" />
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-32 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-sm" data-testid="select-sort-by">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">Recent</SelectItem>
-                <SelectItem value="likes">Most Liked</SelectItem>
-                <SelectItem value="replies">Most Replies</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+      <div className="px-4">
         
         {isLoading ? (
           <div className="text-center py-8">
