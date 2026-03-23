@@ -28,6 +28,8 @@ const CATEGORIES = [
   { value: "devotional", label: "Devotional" },
 ];
 
+type SortOrder = "newest" | "oldest" | "az" | "za" | "manual";
+
 export default function BlogManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -35,6 +37,7 @@ export default function BlogManagement() {
   const [showRssDialog, setShowRssDialog] = useState(false);
   const [showWpDialog, setShowWpDialog] = useState(false);
   const [editingBlog, setEditingBlog] = useState<BlogPost | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
   const [rssUrl, setRssUrl] = useState("");
   const [wpSiteUrl, setWpSiteUrl] = useState(MANUP_SITE_URL);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -368,6 +371,22 @@ export default function BlogManagement() {
         </div>
       </div>
 
+      <div className="flex items-center gap-2">
+        <label className="text-sm font-bold uppercase text-white/70 whitespace-nowrap">Sort by:</label>
+        <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as SortOrder)}>
+          <SelectTrigger className="w-44 bg-black text-white border-2 border-black rounded-sm font-bold">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest First</SelectItem>
+            <SelectItem value="oldest">Oldest First</SelectItem>
+            <SelectItem value="az">A → Z</SelectItem>
+            <SelectItem value="za">Z → A</SelectItem>
+            <SelectItem value="manual">Manual Order</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       {isLoading ? (
         <div className="flex flex-col gap-3">
           {[...Array(4)].map((_, i) => (
@@ -397,27 +416,38 @@ export default function BlogManagement() {
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
-          {blogs.map((blog) => (
+          {(() => {
+            const sorted = [...blogs].sort((a, b) => {
+              if (sortOrder === "az") return a.title.localeCompare(b.title);
+              if (sortOrder === "za") return b.title.localeCompare(a.title);
+              if (sortOrder === "newest") return new Date(b.publishedAt ?? b.createdAt ?? 0).getTime() - new Date(a.publishedAt ?? a.createdAt ?? 0).getTime();
+              if (sortOrder === "oldest") return new Date(a.publishedAt ?? a.createdAt ?? 0).getTime() - new Date(b.publishedAt ?? b.createdAt ?? 0).getTime();
+              return 0; // manual — keep server order
+            });
+            return sorted;
+          })().map((blog) => (
             <Card 
               key={blog.id} 
-              draggable
-              onDragStart={(e) => handleDragStart(e, blog.id)}
-              onDragOver={(e) => handleDragOver(e, blog.id)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, blog.id)}
-              onDragEnd={handleDragEnd}
-              className={`border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-grab active:cursor-grabbing transition-all duration-200 ${
+              draggable={sortOrder === "manual"}
+              onDragStart={sortOrder === "manual" ? (e) => handleDragStart(e, blog.id) : undefined}
+              onDragOver={sortOrder === "manual" ? (e) => handleDragOver(e, blog.id) : undefined}
+              onDragLeave={sortOrder === "manual" ? handleDragLeave : undefined}
+              onDrop={sortOrder === "manual" ? (e) => handleDrop(e, blog.id) : undefined}
+              onDragEnd={sortOrder === "manual" ? handleDragEnd : undefined}
+              className={`border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${sortOrder === "manual" ? "cursor-grab active:cursor-grabbing" : ""} transition-all duration-200 ${
                 blog.isPublished ? 'bg-ministry-gold-exact' : 'bg-black text-white'
               } ${draggedBlogId === blog.id ? 'opacity-50 scale-[0.98]' : ''} ${
                 dragOverBlogId === blog.id ? 'ring-4 ring-blue-500 ring-offset-2' : ''
               }`}
             >
               <CardContent className="p-3 flex items-center gap-4">
-                <div className={`flex-shrink-0 cursor-grab ${
-                  blog.isPublished ? 'text-black/40' : 'text-white/40'
-                }`}>
-                  <GripVertical className="w-5 h-5" />
-                </div>
+                {sortOrder === "manual" && (
+                  <div className={`flex-shrink-0 cursor-grab ${
+                    blog.isPublished ? 'text-black/40' : 'text-white/40'
+                  }`}>
+                    <GripVertical className="w-5 h-5" />
+                  </div>
+                )}
                 <div className={`relative w-16 h-16 flex-shrink-0 overflow-hidden border-2 border-black ${
                   !blog.coverImageUrl ? (blog.isPublished ? 'bg-black' : 'bg-ministry-gold-exact') : ''
                 }`}>
