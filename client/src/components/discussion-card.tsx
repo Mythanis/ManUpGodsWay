@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus, Edit, Share2, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus, Edit, Share2, Trash2, ThumbsDown } from "lucide-react";
 
 // Custom Christian Cross icon component
 const ChristianCross = ({ className }: { className?: string }) => (
@@ -62,6 +62,8 @@ export default function DiscussionCard({
   const [showReplies, setShowReplies] = useState(false);
   const [userHasLiked, setUserHasLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(discussion.likes || 0);
+  const [userHasDisliked, setUserHasDisliked] = useState(false);
+  const [dislikeCount, setDislikeCount] = useState(0);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -211,6 +213,20 @@ export default function DiscussionCard({
       });
     },
   });
+
+  const handleToggleDislike = () => {
+    if (userHasDisliked) {
+      setUserHasDisliked(false);
+      setDislikeCount((prev: number) => Math.max(0, prev - 1));
+    } else {
+      setUserHasDisliked(true);
+      setDislikeCount((prev: number) => prev + 1);
+      if (userHasLiked) {
+        setUserHasLiked(false);
+        setLikeCount((prev: number) => Math.max(0, prev - 1));
+      }
+    }
+  };
 
   const updateDiscussion = useMutation({
     mutationFn: async (data: z.infer<typeof editSchema>) => {
@@ -465,16 +481,28 @@ export default function DiscussionCard({
 
         {/* ── Facebook-style action bar ───────────── */}
         <div className="flex items-center border-t border-white/8 mx-0">
-          {/* Like */}
+          {/* Amen + Disagree pair */}
           <button
             onClick={() => toggleLike.mutate()}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold transition-colors border-r border-white/8 ${
               userHasLiked ? 'text-[#FCD000]' : 'text-white/50 hover:text-white'
             }`}
             data-testid="button-like-discussion"
           >
             <ChristianCross className="w-4 h-4" />
             <span>Amen</span>
+            {likeCount > 0 && <span className="text-xs opacity-70">{likeCount}</span>}
+          </button>
+          <button
+            onClick={handleToggleDislike}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold transition-colors ${
+              userHasDisliked ? 'text-red-400' : 'text-white/50 hover:text-white'
+            }`}
+            data-testid="button-dislike-discussion"
+          >
+            <ThumbsDown className="w-4 h-4" />
+            <span>Disagree</span>
+            {dislikeCount > 0 && <span className="text-xs opacity-70">{dislikeCount}</span>}
           </button>
 
           {/* Comment */}
