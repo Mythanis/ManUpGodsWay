@@ -501,7 +501,7 @@ export default function DiscussionCard({
             data-testid="button-dislike-discussion"
           >
             <ThumbsDown className="w-4 h-4" />
-            <span>Disagree</span>
+            <span>Oh Me!</span>
             {dislikeCount > 0 && <span className="text-xs opacity-70">{dislikeCount}</span>}
           </button>
 
