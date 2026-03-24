@@ -216,12 +216,12 @@ export default function Library() {
               </div>
             )}
 
-            {/* Individual Studies Section */}
+            {/* Topical Studies Section */}
             {filteredStudies.length > 0 && (
               <div>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
-                  <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Individual Studies</h2>
+                  <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Topical</h2>
                   <div className="flex-1 h-px bg-white/10" />
                 </div>
                 <div className="space-y-3">

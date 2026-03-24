@@ -1174,7 +1174,7 @@ export default function StudyManagement() {
               Series ({allSeries.length})
             </TabsTrigger>
             <TabsTrigger value="individual" data-testid="tab-individual" className="text-xs sm:text-sm">
-              Individual ({individualStudies.length})
+              Topical ({individualStudies.length})
             </TabsTrigger>
           </TabsList>
           {activeView === "series" && (
@@ -1329,7 +1329,7 @@ export default function StudyManagement() {
             <Card className="border-gray-200">
               <CardContent className="py-8 text-center">
                 <Book className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No individual studies.</p>
+                <p className="text-muted-foreground">No topical studies.</p>
                 <p className="text-sm text-muted-foreground">All studies are currently part of a series.</p>
               </CardContent>
             </Card>
@@ -1689,7 +1689,7 @@ export default function StudyManagement() {
             </div>
 
             <div>
-              <h4 className="font-medium mb-3 text-gray-700">Available Individual Studies</h4>
+              <h4 className="font-medium mb-3 text-gray-700">Available Topical Studies</h4>
               {unassignedStudies.length === 0 ? (
                 <p className="text-gray-500 text-sm py-4 text-center bg-gray-50 rounded-lg">
                   All studies are already assigned to series.

@@ -346,7 +346,7 @@ export default function SubscriptionSettingsManagement() {
             Trial Study Access
           </CardTitle>
           <CardDescription className="text-white/50">
-            Choose which individual studies are available to trial users. Changes save automatically.
+            Choose which topical studies are available to trial users. Changes save automatically.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -942,7 +942,7 @@ export default function StudyBuilder() {
             <TabsList className="w-full">
               <TabsTrigger value="studies" className="flex-1">
                 <Book className="w-4 h-4 mr-2" />
-                Individual Studies ({studies.filter(s => !s.seriesId).length})
+                Topical ({studies.filter(s => !s.seriesId).length})
               </TabsTrigger>
               <TabsTrigger value="series" className="flex-1">
                 <Layers className="w-4 h-4 mr-2" />
@@ -954,7 +954,7 @@ export default function StudyBuilder() {
               {studiesLoading ? (
                 <div className="text-center py-8 text-muted-foreground">Loading...</div>
               ) : studies.filter(s => !s.seriesId).length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">No individual studies yet. Studies in a series are shown under the Series tab.</div>
+                <div className="text-center py-8 text-muted-foreground">No topical studies yet. Studies in a series are shown under the Series tab.</div>
               ) : (() => {
                 const individualStudies = [...studies]
                   .filter(s => !s.seriesId)
