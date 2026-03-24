@@ -29,6 +29,18 @@ export const TOUR_STEPS: TourStep[] = [
       "Connect and grow with other men. Post discussions, reply to others, honor great contributions, and build real fellowship with your brothers in the faith.",
   },
   {
+    route: "/messages",
+    title: "Messages",
+    description:
+      "Send and receive direct messages with other members, and participate in group conversations. Tap the compose button to start a new conversation with any brother in the app.",
+  },
+  {
+    route: "/brothers",
+    title: "Brothers",
+    description:
+      "Find and connect with other men in the app. Use the search bar to look up any member by name. Tap a user's profile picture to view their profile and send a brother request — building your personal circle of accountability.",
+  },
+  {
     route: "/war-groups",
     title: "War Groups",
     description:
@@ -69,6 +81,18 @@ export const TOUR_STEPS: TourStep[] = [
     title: "Events",
     description:
       "Find upcoming ministry events and purchase tickets directly inside the app. Single-tier and multi-tier pricing is supported — no external checkout required.",
+  },
+  {
+    route: "/blog",
+    title: "Blog",
+    description:
+      "Read articles, devotional posts, and teaching content from the Man Up God's Way ministry. A great place to go deeper between studies and find new perspectives on faith and leadership.",
+  },
+  {
+    route: "/more-man-up",
+    title: "Man Up Resources",
+    description:
+      "Quick links to the full Man Up God's Way ecosystem — the website, social media, merch, and more. Everything you need to stay connected to the mission beyond the app.",
   },
   {
     route: "/profile",
