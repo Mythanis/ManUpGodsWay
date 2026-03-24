@@ -49,8 +49,8 @@
           }
         }
 
-        // v2: force-reset anyone who had the old "light" default from before dark was made the default
-        var THEME_VERSION = '2';
+        // v3: force-reset anyone who still has 'light' in localStorage from before dark became the default
+        var THEME_VERSION = '3';
         if (localStorage.getItem('themeVersion') !== THEME_VERSION) {
           localStorage.removeItem('theme');
           localStorage.setItem('themeVersion', THEME_VERSION);

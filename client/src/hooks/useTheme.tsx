@@ -80,11 +80,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [theme]);
 
-  // Sync with user preference changes
+  // Sync with user preference changes (DB is source of truth)
   useEffect(() => {
     const userTheme = (user as any)?.themePreference;
     if (userTheme && userTheme !== theme) {
       setThemeState(userTheme as Theme);
+      // Also persist to localStorage so next load initializes correctly
+      localStorage.setItem("theme", userTheme);
     }
   }, [(user as any)?.themePreference]);
 
