@@ -299,7 +299,7 @@ export default function UserManagement() {
               <div key={user.id} className="p-4 flex items-center justify-between" data-testid={`user-row-${user.id}`}>
                 <div className="flex items-center space-x-3 flex-1">
                   <img 
-                    src={user.profileImageUrl || `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=4A90B8&color=fff`}
+                    src={user.profileImageUrl || `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=FCD000&color=000`}
                     alt={`${user.firstName} ${user.lastName}`}
                     className="w-10 h-10 rounded-full object-cover"
                     data-testid="img-user-avatar"
@@ -346,7 +346,7 @@ export default function UserManagement() {
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-3">
               <img 
-                src={selectedUser?.profileImageUrl || `https://ui-avatars.com/api/?name=${selectedUser?.firstName}+${selectedUser?.lastName}&background=4A90B8&color=fff`}
+                src={selectedUser?.profileImageUrl || `https://ui-avatars.com/api/?name=${selectedUser?.firstName}+${selectedUser?.lastName}&background=FCD000&color=000`}
                 alt={`${selectedUser?.firstName} ${selectedUser?.lastName}`}
                 className="w-12 h-12 rounded-full object-cover"
               />
@@ -665,7 +665,7 @@ export default function UserManagement() {
             <div className="space-y-4">
               <div className="flex items-center space-x-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <img 
-                  src={selectedUser.profileImageUrl || `https://ui-avatars.com/api/?name=${selectedUser.firstName}+${selectedUser.lastName}&background=4A90B8&color=fff`}
+                  src={selectedUser.profileImageUrl || `https://ui-avatars.com/api/?name=${selectedUser.firstName}+${selectedUser.lastName}&background=FCD000&color=000`}
                   alt={`${selectedUser.firstName} ${selectedUser.lastName}`}
                   className="w-16 h-16 rounded-full object-cover border-2 border-red-300"
                 />
