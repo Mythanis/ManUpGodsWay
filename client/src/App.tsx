@@ -138,7 +138,7 @@ function Router() {
       isAuthenticated &&
       user &&
       user.isProfileComplete &&
-      (user as any).hasCompletedTour === false &&
+      user.hasCompletedTour === false &&
       !isTourActive &&
       !hasLaunchedTourRef.current
     ) {
