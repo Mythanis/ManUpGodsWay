@@ -252,6 +252,7 @@ function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
   const { splashCompleted } = useSplash();
   const { effectiveTheme } = useTheme();
+  const { isTourActive } = useTour();
 
   const bgColor = effectiveTheme === 'light' ? '#ffffff' : '#131923';
 
@@ -260,12 +261,16 @@ function AppContent() {
       className="max-w-md mx-auto text-foreground shadow-2xl min-h-screen relative"
       style={{ backgroundColor: bgColor }}
     >
-      {/* Add top padding to create space for the fixed header logo, but only when authenticated */}
-      <div className={isAuthenticated ? "pt-24" : ""}>
-        <Router />
+      {/* During the tour all page content is read-only — interactions are blocked.
+          The AppTour panel sits outside this wrapper so it stays clickable. */}
+      <div className={isTourActive ? "pointer-events-none select-none" : ""}>
+        {/* Add top padding to create space for the fixed header logo, but only when authenticated */}
+        <div className={isAuthenticated ? "pt-24" : ""}>
+          <Router />
+        </div>
+        {isAuthenticated && !isLoading && splashCompleted && <Navigation />}
+        <PWAInstallPrompt />
       </div>
-      {isAuthenticated && !isLoading && splashCompleted && <Navigation />}
-      <PWAInstallPrompt />
       {/* Tour overlay — renders on top of all content during onboarding */}
       {isAuthenticated && <AppTour />}
     </div>
