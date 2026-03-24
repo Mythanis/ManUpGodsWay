@@ -2266,6 +2266,11 @@ export const MISSION_REWARDS = {
   profile_apparel: { amount: 50, category: 'profile', description: 'Man Up apparel in event photo' },
   profile_licensed_leader: { amount: 250, category: 'profile', description: 'Licensed leader brand compliance' },
   
+  // Bible Reading Plans
+  bible_reading_day: { amount: 10, category: 'bible_reading', description: 'Completed daily Bible reading' },
+  bible_reading_streak_7: { amount: 50, category: 'bible_reading', description: '7-day consecutive Bible reading' },
+  bible_reading_streak_30: { amount: 200, category: 'bible_reading', description: '30-day consecutive Bible reading' },
+
   // Special
   grace_bonus: { amount: 100, category: 'special', description: 'Welcome back! Grace bonus for returning' },
 } as const;
@@ -2449,6 +2454,40 @@ export const insertFitnessPostSchema = createInsertSchema(fitnessPosts).omit({
 
 export type FitnessPost = typeof fitnessPosts.$inferSelect;
 export type InsertFitnessPost = z.infer<typeof insertFitnessPostSchema>;
+
+// ─── Bible Reading Plans ──────────────────────────────────────────────────────
+
+export const bibleReadingPlans = pgTable("bible_reading_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  planType: varchar("plan_type").notNull().default("sequential"), // 'sequential' | 'chronological'
+  totalDays: integer("total_days").notNull().default(365),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const bibleReadingPlanDays = pgTable("bible_reading_plan_days", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  planId: varchar("plan_id").notNull().references(() => bibleReadingPlans.id, { onDelete: "cascade" }),
+  dayNumber: integer("day_number").notNull(),
+  title: text("title").notNull(),
+  passages: text("passages").notNull(),
+});
+
+export const bibleReadingProgress = pgTable("bible_reading_progress", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  planId: varchar("plan_id").notNull().references(() => bibleReadingPlans.id, { onDelete: "cascade" }),
+  dayNumber: integer("day_number").notNull(),
+  completedAt: timestamp("completed_at").notNull().defaultNow(),
+});
+
+export type BibleReadingPlan = typeof bibleReadingPlans.$inferSelect;
+export type BibleReadingPlanDay = typeof bibleReadingPlanDays.$inferSelect;
+export type BibleReadingProgress = typeof bibleReadingProgress.$inferSelect;
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const manUpLinks = pgTable("man_up_links", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

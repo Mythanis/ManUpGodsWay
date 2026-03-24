@@ -13053,5 +13053,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── Bible Reading Plans ─────────────────────────────────────────────────────
+
+  app.get("/api/bible-plans", async (req, res) => {
+    try {
+      const plans = await storage.getBibleReadingPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching bible plans:", error);
+      res.status(500).json({ error: "Failed to fetch plans" });
+    }
+  });
+
+  app.get("/api/bible-plans/:id/days", async (req, res) => {
+    try {
+      const days = await storage.getBibleReadingPlanDays(req.params.id);
+      res.json(days);
+    } catch (error) {
+      console.error("Error fetching plan days:", error);
+      res.status(500).json({ error: "Failed to fetch plan days" });
+    }
+  });
+
+  app.get("/api/bible-plans/:id/progress", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+    try {
+      const userId = req.user.claims.sub;
+      const progress = await storage.getBibleReadingProgress(userId, req.params.id);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching bible reading progress:", error);
+      res.status(500).json({ error: "Failed to fetch progress" });
+    }
+  });
+
+  app.post("/api/bible-plans/:id/days/:dayNum/complete", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+    try {
+      const userId = req.user.claims.sub;
+      const planId = req.params.id;
+      const dayNumber = parseInt(req.params.dayNum, 10);
+      if (isNaN(dayNumber)) return res.status(400).json({ error: "Invalid day number" });
+
+      const progress = await storage.markBibleReadingDayComplete(userId, planId, dayNumber);
+
+      let rationMessage = "";
+      try {
+        const { rationsService } = await import('./rations-service');
+        const rationResult = await rationsService.awardRations(userId, 'bible_reading_day', `${planId}-${dayNumber}`, 'bible_reading');
+        if (rationResult?.awarded) rationMessage = `+${rationResult.amount} rations`;
+
+        const streak = await storage.getBibleReadingConsecutiveDays(userId, planId);
+        if (streak === 7) {
+          await rationsService.awardRations(userId, 'bible_reading_streak_7', `${planId}-streak7`, 'bible_reading');
+        } else if (streak === 30) {
+          await rationsService.awardRations(userId, 'bible_reading_streak_30', `${planId}-streak30`, 'bible_reading');
+        }
+      } catch (_e) {}
+
+      res.json({ progress, rationMessage });
+    } catch (error) {
+      console.error("Error marking bible reading day complete:", error);
+      res.status(500).json({ error: "Failed to mark day complete" });
+    }
+  });
+
+  app.post("/api/admin/seed-bible-plans", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+    const role = (req.user as any)?.role;
+    if (!['admin', 'owner'].includes(role)) return res.status(403).json({ error: "Forbidden" });
+    try {
+      const { generateSequential365, generateChronological365 } = await import('./bible-plan-data');
+
+      const existingPlans = await storage.getBibleReadingPlans();
+      if (existingPlans.length >= 2) {
+        return res.json({ message: "Plans already seeded", plans: existingPlans });
+      }
+
+      const seqPlan = await storage.seedBiblePlan(
+        {
+          name: "Read Through the Bible in 365 Days",
+          description: "A complete journey through all 66 books of the Bible in canonical order — from Genesis through Revelation — at a steady pace of about 3 chapters per day.",
+          planType: "sequential",
+        },
+        generateSequential365()
+      );
+
+      const chronoPlan = await storage.seedBiblePlan(
+        {
+          name: "Chronological Bible Reading Plan",
+          description: "Experience Scripture in the order events actually occurred — beginning with creation and the patriarchs, through the rise and fall of Israel, and into the New Testament church.",
+          planType: "chronological",
+        },
+        generateChronological365()
+      );
+
+      res.json({ message: "Bible reading plans seeded successfully", plans: [seqPlan, chronoPlan] });
+    } catch (error) {
+      console.error("Error seeding bible plans:", error);
+      res.status(500).json({ error: "Failed to seed plans" });
+    }
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
+
   return httpServer;
 }

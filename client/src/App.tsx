@@ -43,6 +43,7 @@ import WarGroupDetail from "@/pages/war-group-detail";
 import WarGroupRegister from "@/pages/war-group-register";
 import Banned from "@/pages/banned";
 import SeriesDetail from "@/pages/series-detail";
+import BibleReadingPlan from "@/pages/bible-reading-plan";
 import Purchase from "@/pages/purchase";
 import Subscribe from "@/pages/subscribe";
 import Bible from "@/pages/bible";
@@ -194,6 +195,7 @@ function Router() {
               <Route path="/" component={Home} />
               <Route path="/library" component={LibraryGuarded} />
               <Route path="/series/:id" component={SeriesDetail} />
+              <Route path="/bible-plans/:id" component={BibleReadingPlan} />
               <Route path="/videos" component={VideosGuarded} />
               <Route path="/podcasts" component={PodcastsGuarded} />
               <Route path="/challenges" component={Challenges} />

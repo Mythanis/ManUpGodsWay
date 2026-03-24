@@ -175,6 +175,12 @@ import {
   manUpLinks,
   type ManUpLink,
   type InsertManUpLink,
+  bibleReadingPlans,
+  bibleReadingPlanDays,
+  bibleReadingProgress,
+  type BibleReadingPlan,
+  type BibleReadingPlanDay,
+  type BibleReadingProgress,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne } from "drizzle-orm";
@@ -610,6 +616,12 @@ export interface IStorage {
 
   getActiveManUpLinks(): Promise<ManUpLink[]>;
   getAllManUpLinks(): Promise<ManUpLink[]>;
+  getBibleReadingPlans(): Promise<BibleReadingPlan[]>;
+  getBibleReadingPlanDays(planId: string): Promise<BibleReadingPlanDay[]>;
+  getBibleReadingProgress(userId: string, planId: string): Promise<BibleReadingProgress[]>;
+  markBibleReadingDayComplete(userId: string, planId: string, dayNumber: number): Promise<BibleReadingProgress>;
+  getBibleReadingConsecutiveDays(userId: string, planId: string): Promise<number>;
+  seedBiblePlan(planData: { name: string; description: string; planType: string }, days: Array<{ dayNumber: number; title: string; passages: string }>): Promise<BibleReadingPlan>;
   getManUpLink(id: string): Promise<ManUpLink | undefined>;
   createManUpLink(link: InsertManUpLink): Promise<ManUpLink>;
   updateManUpLink(id: string, link: Partial<InsertManUpLink>): Promise<ManUpLink>;
@@ -6882,6 +6894,95 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(manUpLinks)
       .where(eq(manUpLinks.id, id));
+  }
+
+  async getBibleReadingPlans(): Promise<BibleReadingPlan[]> {
+    return db
+      .select()
+      .from(bibleReadingPlans)
+      .where(eq(bibleReadingPlans.isActive, true))
+      .orderBy(asc(bibleReadingPlans.createdAt));
+  }
+
+  async getBibleReadingPlanDays(planId: string): Promise<BibleReadingPlanDay[]> {
+    return db
+      .select()
+      .from(bibleReadingPlanDays)
+      .where(eq(bibleReadingPlanDays.planId, planId))
+      .orderBy(asc(bibleReadingPlanDays.dayNumber));
+  }
+
+  async getBibleReadingProgress(userId: string, planId: string): Promise<BibleReadingProgress[]> {
+    return db
+      .select()
+      .from(bibleReadingProgress)
+      .where(and(
+        eq(bibleReadingProgress.userId, userId),
+        eq(bibleReadingProgress.planId, planId)
+      ))
+      .orderBy(asc(bibleReadingProgress.dayNumber));
+  }
+
+  async markBibleReadingDayComplete(userId: string, planId: string, dayNumber: number): Promise<BibleReadingProgress> {
+    const existing = await db
+      .select()
+      .from(bibleReadingProgress)
+      .where(and(
+        eq(bibleReadingProgress.userId, userId),
+        eq(bibleReadingProgress.planId, planId),
+        eq(bibleReadingProgress.dayNumber, dayNumber)
+      ))
+      .limit(1);
+    if (existing.length > 0) return existing[0];
+    const [created] = await db
+      .insert(bibleReadingProgress)
+      .values({ userId, planId, dayNumber })
+      .returning();
+    return created;
+  }
+
+  async getBibleReadingConsecutiveDays(userId: string, planId: string): Promise<number> {
+    const rows = await db
+      .select({ dayNumber: bibleReadingProgress.dayNumber, completedAt: bibleReadingProgress.completedAt })
+      .from(bibleReadingProgress)
+      .where(and(
+        eq(bibleReadingProgress.userId, userId),
+        eq(bibleReadingProgress.planId, planId)
+      ))
+      .orderBy(desc(bibleReadingProgress.completedAt));
+
+    if (rows.length === 0) return 0;
+
+    const completedDays = new Set(rows.map(r => r.dayNumber));
+    let streak = 0;
+    let check = rows[0].dayNumber;
+    while (completedDays.has(check)) {
+      streak++;
+      check--;
+    }
+    return streak;
+  }
+
+  async seedBiblePlan(
+    planData: { name: string; description: string; planType: string },
+    days: Array<{ dayNumber: number; title: string; passages: string }>
+  ): Promise<BibleReadingPlan> {
+    const [plan] = await db
+      .insert(bibleReadingPlans)
+      .values({ name: planData.name, description: planData.description, planType: planData.planType, totalDays: days.length })
+      .returning();
+
+    const BATCH = 100;
+    for (let i = 0; i < days.length; i += BATCH) {
+      const batch = days.slice(i, i + BATCH).map(d => ({
+        planId: plan.id,
+        dayNumber: d.dayNumber,
+        title: d.title,
+        passages: d.passages,
+      }));
+      await db.insert(bibleReadingPlanDays).values(batch);
+    }
+    return plan;
   }
 }
 

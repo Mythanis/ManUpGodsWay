@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 // Card is used for search bar only
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, BookOpen, ChevronRight, Layers } from "lucide-react";
+import { Search, BookOpen, ChevronRight, Layers, CalendarDays } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
@@ -19,6 +19,14 @@ const categories = [
   { id: 'character', label: 'Character' },
   { id: 'faith', label: 'Faith' },
 ];
+
+interface BiblePlan {
+  id: string;
+  name: string;
+  description: string;
+  planType: string;
+  totalDays: number;
+}
 
 interface StudySeries {
   id: string;
@@ -46,6 +54,11 @@ export default function Library() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const { user, isAuthenticated } = useAuth();
+
+  const { data: bibleReadingPlans = [] } = useQuery<BiblePlan[]>({
+    queryKey: ["/api/bible-plans"],
+    retry: false,
+  });
 
   const { data: series = [], isLoading: seriesLoading } = useQuery<StudySeries[]>({
     queryKey: ["/api/study-series", selectedCategory],
@@ -171,6 +184,45 @@ export default function Library() {
           </div>
         ) : (
           <>
+            {/* Bible Reading Plans Section */}
+            {bibleReadingPlans.length > 0 && !searchQuery && selectedCategory === 'all' && (
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+                  <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Bible Reading Plans</h2>
+                  <div className="flex-1 h-px bg-white/10" />
+                </div>
+                <div className="space-y-3">
+                  {bibleReadingPlans.map(plan => (
+                    <Link key={plan.id} href={`/bible-plans/${plan.id}`}>
+                      <div
+                        className="flex items-stretch rounded-sm border-2 border-white/10 overflow-hidden shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] hover:border-[#FCD000]/40 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
+                        style={{ background: '#0f0f0f' }}
+                      >
+                        <div className="w-20 flex-shrink-0 bg-black flex items-center justify-center self-stretch">
+                          <CalendarDays className="w-7 h-7 text-[#FCD000]" />
+                        </div>
+                        <div className="flex-1 px-4 py-3 min-w-0">
+                          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FCD000]">
+                            {plan.planType === 'chronological' ? 'Chronological' : '365-Day Plan'}
+                          </span>
+                          <p className="font-black text-white text-sm leading-tight mt-0.5 uppercase tracking-tight line-clamp-2">{plan.name}</p>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span className="text-[10px] font-bold text-white/40 uppercase tracking-wide">{plan.totalDays} Days</span>
+                            <span className="text-white/20 text-[10px]">•</span>
+                            <span className="text-[10px] font-bold text-white/40 uppercase tracking-wide">All 66 Books</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center pr-4">
+                          <ChevronRight className="w-5 h-5 text-[#FCD000]" />
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Series Section */}
             {filteredSeries.length > 0 && (
               <div>
