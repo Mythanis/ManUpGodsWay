@@ -43,7 +43,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   });
 
   // Calculate effective theme (resolving "system" to actual theme)
-  const [effectiveTheme, setEffectiveTheme] = useState<"light" | "dark">("light");
+  // Default to dark immediately — do not start as "light" which causes a white flash
+  const [effectiveTheme, setEffectiveTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === 'undefined') return 'dark';
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') return 'light';
+    if (saved === 'system') return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    return 'dark';
+  });
 
   useEffect(() => {
     const getEffectiveTheme = () => {

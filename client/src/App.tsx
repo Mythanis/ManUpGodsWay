@@ -5,7 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
-import { ThemeProvider } from "@/hooks/useTheme";
+import { ThemeProvider, useTheme } from "@/hooks/useTheme";
 import SplashScreen from "@/components/splash-screen";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
@@ -226,9 +226,15 @@ function Router() {
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
   const { splashCompleted } = useSplash();
+  const { effectiveTheme } = useTheme();
+
+  const bgColor = effectiveTheme === 'light' ? '#ffffff' : '#131923';
 
   return (
-    <div className="max-w-md mx-auto bg-background text-foreground shadow-2xl min-h-screen relative">
+    <div
+      className="max-w-md mx-auto text-foreground shadow-2xl min-h-screen relative"
+      style={{ backgroundColor: bgColor }}
+    >
       {/* Add top padding to create space for the fixed header logo, but only when authenticated */}
       <div className={isAuthenticated ? "pt-24" : ""}>
         <Router />
