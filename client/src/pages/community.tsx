@@ -877,7 +877,8 @@ export default function Community() {
             placeholder="Search discussions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-8 h-9 bg-white/8 border border-white/15 text-white placeholder:text-white/35 text-sm rounded-full focus:border-[#FCD000]/50"
+            className="pl-9 pr-8 h-9 bg-white/10 border border-white/15 text-white placeholder:text-white/35 text-sm rounded-full focus:border-[#FCD000]/50 [&]:bg-white/10"
+            style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -886,13 +887,17 @@ export default function Community() {
           )}
         </div>
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-28 h-9 bg-white/8 border border-white/15 text-white text-xs font-bold rounded-full" data-testid="select-sort-by">
+          <SelectTrigger
+            className="w-28 h-9 border border-white/15 text-white text-xs font-bold rounded-full"
+            style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
+            data-testid="select-sort-by"
+          >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="recent">Recent</SelectItem>
-            <SelectItem value="likes">Top Liked</SelectItem>
-            <SelectItem value="replies">Most Replies</SelectItem>
+          <SelectContent className="bg-[#1a1a1a] border border-white/15 text-white">
+            <SelectItem value="recent" className="text-white focus:bg-white/10 focus:text-white">Recent</SelectItem>
+            <SelectItem value="likes" className="text-white focus:bg-white/10 focus:text-white">Top Liked</SelectItem>
+            <SelectItem value="replies" className="text-white focus:bg-white/10 focus:text-white">Most Replies</SelectItem>
           </SelectContent>
         </Select>
       </div>
