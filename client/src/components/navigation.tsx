@@ -168,11 +168,12 @@ export default function Navigation() {
           );
         })}
 
+        <div className="flex-1 flex">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className={`flex-1 flex flex-col items-center justify-center h-full py-1 rounded-none gap-0 ${
+              className={`flex flex-col items-center justify-center w-full h-full py-1 rounded-none gap-0 ${
                 isDropdownActive
                   ? 'text-ministry-gold font-semibold bg-ministry-gold/10'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
@@ -213,6 +214,7 @@ export default function Navigation() {
             })}
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </div>
     </nav>
   );
