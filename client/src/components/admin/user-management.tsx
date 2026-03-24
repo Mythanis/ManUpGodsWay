@@ -232,18 +232,22 @@ export default function UserManagement() {
 
   const getTierBadge = (tier: string) => {
     if (tier !== 'free') {
-      return <Badge className="bg-ministry-gold-exact text-black text-xs">Subscriber</Badge>;
+      return <Badge className="bg-[#FCD000] text-black text-[10px] font-black uppercase border-2 border-black rounded-sm px-1.5 py-0">Sub</Badge>;
     }
-    return <Badge variant="outline" className="text-xs">Free</Badge>;
+    return null;
   };
 
   const getRoleBadge = (role: string) => {
     if (role === 'owner') {
-      return <Badge className="bg-purple-100 text-purple-800 text-xs">Owner</Badge>;
+      return <Badge className="bg-black text-[#FCD000] text-[10px] font-black uppercase border-2 border-[#FCD000] rounded-sm px-1.5 py-0">Owner</Badge>;
     }
-    return role === 'admin' 
-      ? <Badge className="bg-red-100 text-red-800 text-xs">Admin</Badge>
-      : <Badge variant="secondary" className="text-xs">User</Badge>;
+    if (role === 'admin') {
+      return <Badge className="bg-black text-white text-[10px] font-black uppercase border-2 border-black rounded-sm px-1.5 py-0">Admin</Badge>;
+    }
+    if (role === 'moderator') {
+      return <Badge className="bg-black text-white text-[10px] font-black uppercase border border-white/30 rounded-sm px-1.5 py-0">Mod</Badge>;
+    }
+    return null;
   };
 
   const getLastActive = (date: string) => {
@@ -301,22 +305,21 @@ export default function UserManagement() {
                     data-testid="img-user-avatar"
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <p className="font-medium text-sm text-foreground truncate" data-testid="text-user-name">
+                    <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                      <p className="font-black text-sm uppercase tracking-[0.12em] text-black truncate" data-testid="text-user-name">
                         {user.firstName} {user.lastName}
                       </p>
                       {getRoleBadge(user.role)}
                       {getTierBadge(user.subscriptionTier)}
                     </div>
-                    <p className="text-xs text-ministry-slate truncate" data-testid="text-user-email">
+                    <p className="text-xs text-gray-500 truncate" data-testid="text-user-email">
                       {user.email} • {getLastActive(user.updatedAt)}
                     </p>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-2 ml-4">
+                <div className="flex items-center ml-3">
                   <Button
-                    variant="outline"
                     size="sm"
                     onClick={() => {
                       setSelectedUser(user);
@@ -324,10 +327,10 @@ export default function UserManagement() {
                       setHasUnsavedChanges(false);
                       setShowUserDialog(true);
                     }}
-                    className="border-ministry-steel text-ministry-charcoal hover:bg-ministry-steel/10"
+                    className="bg-[#FCD000] text-black border-2 border-black font-black uppercase text-xs rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
                     data-testid={`view-user-${user.id}`}
                   >
-                    <Eye className="w-4 h-4 mr-1" />
+                    <Eye className="w-3 h-3 mr-1" />
                     View
                   </Button>
                 </div>
