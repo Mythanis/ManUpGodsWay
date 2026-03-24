@@ -154,10 +154,10 @@ function PassageSheet({ open, onOpenChange, passagesStr, dayLabel, versionId }: 
                 <h3 className="text-[#FCD000] font-black text-xs uppercase tracking-[0.2em] mb-4 pb-2 border-b border-[#FCD000]/20">
                   {chapter.reference}
                 </h3>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {verses.map(({ verse, text }) => (
-                    <p key={verse} className="text-white/90 text-sm leading-relaxed">
-                      <sup className="text-[#FCD000] font-bold text-[9px] mr-1 align-super">{verse}</sup>
+                    <p key={verse} className="text-white/90 text-[17px] leading-relaxed">
+                      <sup className="text-[#FCD000] font-bold text-[11px] mr-1 align-super">{verse}</sup>
                       {text}
                     </p>
                   ))}
