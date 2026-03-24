@@ -1,4 +1,4 @@
-const CACHE_NAME = 'man-up-gods-way-v2';
+const CACHE_NAME = 'man-up-gods-way-v3';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
