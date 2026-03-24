@@ -42,9 +42,10 @@
         var saved = localStorage.getItem('theme');
         // Only honor an explicit saved preference; default is always dark
         var theme = (saved === 'light') ? 'light' : 'dark';
-        document.documentElement.classList.add(theme);
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
         document.documentElement.style.backgroundColor = theme === 'dark' ? '#0d1117' : '#ffffff';
-        document.body && (document.body.style.backgroundColor = theme === 'dark' ? '#0d1117' : '#ffffff');
       })();
     </script>
   </head>
