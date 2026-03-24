@@ -144,7 +144,8 @@ function Router() {
     ) {
       hasLaunchedTourRef.current = true;
       // Small delay to let the page render first
-      setTimeout(() => startTour(), 600);
+      const timer = setTimeout(() => startTour(), 600);
+      return () => clearTimeout(timer);
     }
   }, [isAuthenticated, user, isTourActive, startTour]);
 
