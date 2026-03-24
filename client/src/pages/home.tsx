@@ -594,7 +594,11 @@ export default function Home() {
           <HomeCarousel />
         </div>
         
-        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Today's Devotional</h2>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+          <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Today's Devotional</h2>
+          <div className="flex-1 h-px bg-white/10" />
+        </div>
         <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] border-2 border-ministry-gold-exact liquid-black-white mb-6 rounded-sm overflow-hidden" data-testid="card-devotional">
           <CardContent className="p-6 relative z-10">
             {devotional ? (
@@ -684,7 +688,11 @@ export default function Home() {
             {/* Recommended Studies */}
             {recommendedStudies.length > 0 && (
               <>
-                <h3 className="text-lg font-black text-white mb-2 uppercase tracking-tight">Recommended for You</h3>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+                  <h3 className="text-base font-black text-white uppercase tracking-[0.18em]">Recommended for You</h3>
+                  <div className="flex-1 h-px bg-white/10" />
+                </div>
                 <p className="text-sm text-[#FCD000] mb-4 font-black uppercase tracking-wide">{completedCount > 0 ? "Continue Your Faith Journey" : "Start Your Growth Today"}</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
@@ -719,7 +727,11 @@ export default function Home() {
 
       {/* Quick Access */}
       <div className="px-6 mb-6">
-        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Popular</h2>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+          <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Popular</h2>
+          <div className="flex-1 h-px bg-white/10" />
+        </div>
         
         <div className="space-y-2">
           <Button 
@@ -831,7 +843,11 @@ export default function Home() {
 
       {/* Recent Activity */}
       <div className="px-6 mb-8">
-        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase">Recent Activity</h2>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+          <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Recent Activity</h2>
+          <div className="flex-1 h-px bg-white/10" />
+        </div>
         
         <div className="space-y-3">
           {completedCount > 0 && (
