@@ -20,7 +20,7 @@ export const TOUR_STEPS: TourStep[] = [
     route: "/library",
     title: "Studies",
     description:
-      "Explore day-by-day Bible studies and multi-week series with full progress tracking. Each study contains daily lessons, scripture, reflection questions, and key takeaways.",
+      "Explore day-by-day Bible studies and multi-week series with full progress tracking. Each study contains daily lessons, scripture, reflection questions, and key takeaways. You'll also find two 365-day Bible Reading Plans here — read through the whole Bible in canonical or chronological order, track your streak, and earn rations for every day you complete.",
   },
   {
     route: "/community",
