@@ -160,137 +160,91 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
   });
 
   const handleNotificationClick = (notification: Notification) => {
-    console.log('Notification clicked:', {
-      type: notification.type,
-      relatedId: notification.relatedId,
-      title: notification.title,
-      message: notification.message
-    });
-    
     if (!notification.isRead) {
       markAsReadMutation.mutate(notification.id);
     }
-    
-    // Close the notification panel
-    setShowPanel(false);
-    
+
+    // Helper: navigate and close panel
+    const goTo = (path: string) => {
+      setShowPanel(false);
+      setLocation(path);
+    };
+
     // Navigate based on notification type and relatedId
     switch (notification.type) {
       case 'message':
       case 'new_message':
       case 'group_message':
-        if (notification.relatedId) {
-          // Navigate to specific conversation
-          setLocation(`/messages?conversation=${notification.relatedId}`);
-        } else {
-          // Navigate to messages page
-          setLocation('/messages');
-        }
+        goTo(notification.relatedId ? `/messages?conversation=${notification.relatedId}` : '/messages');
         break;
-        
+
       case 'study':
       case 'new_study':
-        if (notification.relatedId) {
-          // Navigate to specific study detail page
-          setLocation(`/study/${notification.relatedId}`);
-        } else {
-          // Navigate to library
-          setLocation('/library');
-        }
+        goTo(notification.relatedId ? `/study/${notification.relatedId}` : '/library');
         break;
-        
+
       case 'video':
       case 'new_video':
-        if (notification.relatedId) {
-          // Navigate to specific video - for now redirect to videos page as we don't have individual video pages
-          setLocation('/videos');
-        } else {
-          // Navigate to videos page
-          setLocation('/videos');
-        }
+        goTo('/videos');
         break;
-        
+
       case 'new_devotional':
       case 'devotional':
-        // Navigate to home and dispatch event to open devotional
-        console.log('Navigating to home for devotional with auto-open');
+        setShowPanel(false);
         setLocation('/');
-        // Use custom event since wouter doesn't track query params
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('openDevotional'));
         }, 100);
         break;
-        
+
       case 'discussion':
       case 'new_discussion':
       case 'discussion_reply':
-        if (notification.relatedId) {
-          // Navigate to community page with specific discussion highlighted
-          const discussionUrl = `/community?discussion=${notification.relatedId}`;
-          console.log('Navigating to discussion URL:', discussionUrl);
-          setLocation(discussionUrl);
-        } else {
-          // Navigate to community page where discussions are shown
-          console.log('Navigating to community page (no discussion ID)');
-          setLocation('/community');
-        }
+        goTo(notification.relatedId ? `/community?discussion=${notification.relatedId}` : '/community');
         break;
-        
+
       case 'admin':
-        // For admin notifications with report conversation links
         if (notification.relatedId) {
-          setLocation(`/messages?conversation=${notification.relatedId}`);
+          goTo(`/messages?conversation=${notification.relatedId}`);
         } else if (isAdmin) {
-          setLocation('/admin');
+          goTo('/admin');
         }
-        // Non-admins just see the notification in the panel — no redirect
+        // Non-admins with no relatedId: panel stays open so they can read the message
         break;
-        
+
       case 'event':
       case 'new_event':
-        setLocation('/events');
+        goTo('/events');
         break;
-        
+
       case 'challenge':
       case 'challenge_ended':
       case 'new_challenge':
-        setLocation('/challenges');
+        goTo('/challenges');
         break;
-        
-      case 'brotherhood':
-        // For brotherhood requests, navigate to the requester's profile
+
+      case 'brotherhood': {
         if (notification.relatedId) {
-          // The relatedId is the requestId, we need to get the requester's userId
-          // We'll extract it from the current brotherhood requests
           const brotherhoodRequests = queryClient.getQueryData(['/api/brotherhood-requests']) as any[];
-          const request = brotherhoodRequests?.find(r => r.id === notification.relatedId);
-          if (request && request.requester) {
-            setLocation(`/users/${request.requester.id}`);
-          } else if (request && request.requesterId) {
-            setLocation(`/users/${request.requesterId}`);
+          const request = brotherhoodRequests?.find((r: any) => r.id === notification.relatedId);
+          if (request?.requester) {
+            goTo(`/users/${request.requester.id}`);
+          } else if (request?.requesterId) {
+            goTo(`/users/${request.requesterId}`);
           } else {
-            // Fallback to home if we can't find the request
-            setLocation('/');
+            goTo('/');
           }
         } else {
-          setLocation('/');
+          goTo('/');
         }
         break;
-        
+      }
+
       default:
-        // For unknown notification types, try to navigate to related content if available
-        console.log('Unknown notification type:', notification.type, 'with relatedId:', notification.relatedId);
-        console.log('Full notification object:', notification);
-        
-        // If it's likely a conversation/message type, go to messages
         if (notification.relatedId && (notification.type.includes('message') || notification.type === 'message_request')) {
-          const messageUrl = `/messages?conversation=${notification.relatedId}`;
-          console.log('Navigating to message URL:', messageUrl);
-          setLocation(messageUrl);
+          goTo(`/messages?conversation=${notification.relatedId}`);
         } else {
-          // Default fallback for truly unknown types (home is at root path)
-          console.log('Navigating to home as fallback');
-          setLocation('/');
+          goTo('/');
         }
         break;
     }
