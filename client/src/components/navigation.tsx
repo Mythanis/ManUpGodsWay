@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Home, BookOpen, Video, Users, MessageCircle, Settings, Headphones, Trophy, ExternalLink, FileText, UserPlus, Dumbbell, Shield, Crown, Book, Calendar, MoreHorizontal, MapPin, Flame } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useCallback } from "react";
 import {
   DropdownMenu,
@@ -67,6 +67,7 @@ function NavBadge({ count }: { count: number }) {
 export default function Navigation() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const studiesSince = getSeenTs(LS_KEY_STUDIES);
   const communitySince = getSeenTs(LS_KEY_COMMUNITY);
@@ -103,6 +104,21 @@ export default function Navigation() {
       }
     }
   }, [unreadData?.count]);
+
+  // Clear badge immediately when app becomes visible (e.g. tapping icon from home screen)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        if ('clearAppBadge' in navigator) {
+          (navigator as any).clearAppBadge().catch(() => {});
+        }
+        // Refetch so the badge re-sets accurately if there are still unread notifications
+        queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [queryClient]);
 
   const handleNavClick = useCallback((itemId: string) => {
     if (itemId === 'library') {
