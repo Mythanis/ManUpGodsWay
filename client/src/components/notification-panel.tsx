@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,6 +73,8 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
   const [showPanel, setShowPanel] = useState(false);
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const isAdmin = ['admin', 'owner'].includes((user as any)?.role);
 
   // Get notifications
   const { data: notifications = [] } = useQuery<Notification[]>({
@@ -236,12 +239,11 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       case 'admin':
         // For admin notifications with report conversation links
         if (notification.relatedId) {
-          // Navigate to the conversation related to the admin notification (likely a report)
           setLocation(`/messages?conversation=${notification.relatedId}`);
-        } else {
-          // Navigate to admin page for general admin notifications
+        } else if (isAdmin) {
           setLocation('/admin');
         }
+        // Non-admins just see the notification in the panel — no redirect
         break;
         
       case 'event':
