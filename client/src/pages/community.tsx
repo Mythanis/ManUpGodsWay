@@ -20,30 +20,11 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { getTierDisplayName } from "@/lib/utils";
-import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X, Send, Hash, HandHeart, Image, Video, Radio, Trash2, Bold, Italic, Underline, Strikethrough } from "lucide-react";
+import { Plus, Users, Heart, MessageCircle, ArrowUpDown, Search, X, Send, Image, Video, Radio, Trash2, Bold, Italic, Underline, Strikethrough } from "lucide-react";
 import { HonorButton } from "@/components/honor-button";
 import { z } from "zod";
 import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
 
-// Categories for display/filtering (includes all categories)
-const allCategories = [
-  { id: 'leadership', label: 'Leadership', icon: BookOpen },
-  { id: 'marriage', label: 'Marriage', icon: Heart },
-  { id: 'parenting', label: 'Parenting', icon: Users },
-  { id: 'faith', label: 'Faith', icon: Lightbulb },
-  { id: 'prayer', label: 'Prayer', icon: HandHeart },
-  { id: 'miscellaneous', label: 'Miscellaneous', icon: Hash },
-];
-
-// Categories for discussion creation (excludes study discussions)
-const creationCategories = [
-  { id: 'leadership', label: 'Leadership', icon: BookOpen },
-  { id: 'marriage', label: 'Marriage', icon: Heart },
-  { id: 'parenting', label: 'Parenting', icon: Users },
-  { id: 'faith', label: 'Faith', icon: Lightbulb },
-  { id: 'prayer', label: 'Prayer', icon: HandHeart },
-  { id: 'miscellaneous', label: 'Miscellaneous', icon: Hash },
-];
 
 const createDiscussionSchema = z.object({
   title: z.string().optional(),
@@ -255,7 +236,6 @@ function getTimeAgo(date: string) {
 }
 
 export default function Community() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('recent');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [showNewGroupDialog, setShowNewGroupDialog] = useState(false);
@@ -307,10 +287,9 @@ export default function Community() {
   });
 
   const { data: discussions = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/discussions", selectedCategory || undefined, sortBy, searchQuery || undefined],
+    queryKey: ["/api/discussions", sortBy, searchQuery || undefined],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (selectedCategory) params.append('category', selectedCategory);
       if (sortBy) params.append('sortBy', sortBy);
       if (searchQuery) params.append('search', searchQuery);
       
@@ -661,34 +640,6 @@ export default function Community() {
         </Card>
       </div>
 
-      {/* Stories-style Category Tabs */}
-      <div className="px-4 mb-4">
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none" style={{ scrollbarWidth: 'none' }}>
-          {/* All */}
-          {[{ id: '', label: 'All', icon: Hash }, ...allCategories].map((cat) => {
-            const Icon = cat.icon;
-            const isActive = selectedCategory === cat.id;
-            return (
-              <button
-                key={cat.id || 'all'}
-                onClick={() => setSelectedCategory(cat.id)}
-                className="flex flex-col items-center gap-1.5 flex-shrink-0 min-w-[56px]"
-              >
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center border-3 transition-all ${
-                  isActive
-                    ? 'bg-[#FCD000] border-[#FCD000] shadow-[0_0_0_3px_rgba(252,208,0,0.3)]'
-                    : 'bg-white/5 border-white/15 hover:border-[#FCD000]/50'
-                }`} style={{ border: isActive ? '3px solid #FCD000' : '3px solid rgba(255,255,255,0.15)' }}>
-                  <Icon className={`w-6 h-6 ${isActive ? 'text-black' : 'text-white/60'}`} />
-                </div>
-                <span className={`text-[10px] font-black uppercase tracking-wide ${isActive ? 'text-[#FCD000]' : 'text-white/50'}`}>
-                  {cat.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Post Dialog */}
       <div className="px-6">
@@ -906,7 +857,7 @@ export default function Community() {
       <div className="px-4 mb-3 flex items-center gap-3">
         <div className="w-1 h-5 bg-[#FCD000] rounded-full flex-shrink-0" />
         <span className="text-sm font-black text-white uppercase tracking-[0.15em]">
-          {searchQuery ? `"${searchQuery}"` : selectedCategory ? allCategories.find(c => c.id === selectedCategory)?.label : 'All Posts'}
+          {searchQuery ? `"${searchQuery}"` : 'All Posts'}
         </span>
         <div className="flex-1 h-px bg-white/10" />
       </div>
