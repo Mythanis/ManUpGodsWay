@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
+import { useTour } from "@/contexts/TourContext";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,7 +39,8 @@ import {
   Calendar,
   RefreshCw,
   AlertTriangle,
-  X
+  X,
+  Map
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -50,6 +52,7 @@ export default function Profile() {
   const [showFitnessManageModal, setShowFitnessManageModal] = useState(false);
   const [showFitnessCancelConfirm, setShowFitnessCancelConfirm] = useState(false);
   const { user } = useAuth();
+  const { startTour } = useTour();
   const { theme, setTheme, effectiveTheme } = useTheme();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -495,7 +498,24 @@ export default function Profile() {
 
             {/* Silenced Users */}
             <SilencedUsersButton />
-            
+
+            {/* App Tour */}
+            <Button
+              variant="ghost"
+              className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-sm"
+              onClick={startTour}
+              data-testid="button-take-tour"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-sm bg-ministry-gold-exact flex items-center justify-center">
+                  <Map className="w-4 h-4 text-black" />
+                </div>
+                <span className="font-bold text-white uppercase tracking-wide">Take the App Tour</span>
+              </div>
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </Button>
             
             <Button 
               variant="ghost"

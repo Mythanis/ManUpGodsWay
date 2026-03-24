@@ -435,6 +435,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mark app tour as completed for authenticated user
+  app.post('/api/user/complete-tour', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const currentUser = await storage.getUser(userId);
+      if (!currentUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      const updatedUser = await storage.upsertUser({
+        ...currentUser,
+        hasCompletedTour: true,
+      });
+      res.json({ success: true, hasCompletedTour: updatedUser.hasCompletedTour });
+    } catch (error) {
+      console.error("Error completing tour:", error);
+      res.status(500).json({ message: "Failed to update tour status" });
+    }
+  });
+
   // Push Notification routes
   app.post('/api/push/subscribe', isAuthenticated, async (req: any, res) => {
     try {

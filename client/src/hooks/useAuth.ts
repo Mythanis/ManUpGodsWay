@@ -11,6 +11,7 @@ export type User = {
   allowDirectMessages?: boolean;
   allowGroupInvites?: boolean;
   isProfileComplete?: boolean;
+  hasCompletedTour?: boolean;
 };
 
 export function useAuth() {

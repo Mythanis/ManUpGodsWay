@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeProvider, useTheme } from "@/hooks/useTheme";
+import { TourProvider, useTour } from "@/contexts/TourContext";
+import { AppTour } from "@/components/app-tour";
 import SplashScreen from "@/components/splash-screen";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
@@ -64,8 +66,12 @@ import TrialPaywallModal from "@/components/trial-paywall-modal";
 const PrevLocationCtx = createContext<string>("/");
 
 function TrialPageGuard({ area, children }: { area: string; children: React.ReactNode }) {
+  const { isTourActive } = useTour();
   const { blocked, reason, isLoading } = useTrialAccess(area);
   const backTo = useContext(PrevLocationCtx);
+
+  // During the tour, unlock all pages so the user can see everything
+  if (isTourActive) return <>{children}</>;
 
   // While auth/settings are loading, show a spinner to avoid a flash
   if (isLoading) {
@@ -112,6 +118,7 @@ const useSplash = () => useContext(SplashContext);
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const { splashCompleted, setSplashCompleted } = useSplash();
+  const { startTour, isTourActive } = useTour();
 
   // Track previous location so the paywall can send the user back somewhere sensible
   const [location] = useLocation();
@@ -123,6 +130,23 @@ function Router() {
       locationRef.current = location;
     }
   }, [location]);
+
+  // Auto-launch tour on first login (profile complete, tour not completed yet)
+  const hasLaunchedTourRef = useRef(false);
+  useEffect(() => {
+    if (
+      isAuthenticated &&
+      user &&
+      user.isProfileComplete &&
+      (user as any).hasCompletedTour === false &&
+      !isTourActive &&
+      !hasLaunchedTourRef.current
+    ) {
+      hasLaunchedTourRef.current = true;
+      // Small delay to let the page render first
+      setTimeout(() => startTour(), 600);
+    }
+  }, [isAuthenticated, user, isTourActive, startTour]);
 
   // Skip splash screen for purchase pages
   const isPurchasePage = window.location.pathname.includes('/purchase');
@@ -241,6 +265,8 @@ function AppContent() {
       </div>
       {isAuthenticated && !isLoading && splashCompleted && <Navigation />}
       <PWAInstallPrompt />
+      {/* Tour overlay — renders on top of all content during onboarding */}
+      {isAuthenticated && <AppTour />}
     </div>
   );
 }
@@ -253,7 +279,9 @@ function App() {
       <ThemeProvider>
         <TooltipProvider>
           <SplashContext.Provider value={{ splashCompleted, setSplashCompleted }}>
-            <AppContent />
+            <TourProvider>
+              <AppContent />
+            </TourProvider>
           </SplashContext.Provider>
           <Toaster />
         </TooltipProvider>
