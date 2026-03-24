@@ -17,7 +17,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
-  // Initialize theme from user preference or localStorage, fallback to light
+  // Initialize theme from user preference or localStorage, fallback to dark
   const [theme, setThemeState] = useState<Theme>(() => {
     const userTheme = (user as any)?.themePreference;
     if (userTheme && ["light", "dark", "system"].includes(userTheme)) {
@@ -29,7 +29,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       return savedTheme as Theme;
     }
     
-    return "light";
+    return "dark";
   });
 
   // Update theme preference on server
