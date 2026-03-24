@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Coins, Medal, TrendingUp, Trophy, ArrowLeft, Clock, Plus, Minus, Crown, Target, Flame, Users, ShoppingBag } from "lucide-react";
+import { Coins, Medal, TrendingUp, Trophy, ArrowLeft, Clock, Plus, Minus, Crown, Target, Flame, Users, ShoppingBag, BookOpen, MessageSquare, Mic, Play, Star, CalendarCheck, Radio, Zap, CheckCircle2, UserPlus, Info } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { BackButton } from "@/components/BackButton";
 
@@ -153,27 +153,35 @@ export default function RationsPage() {
           <TabsList className="w-full bg-zinc-900 border-2 border-black rounded-sm h-12 p-1 mb-4">
             <TabsTrigger 
               value="history" 
-              className="flex-1 rounded-sm data-[state=active]:bg-ministry-gold data-[state=active]:text-black font-bold uppercase text-xs"
+              className="flex-1 rounded-sm data-[state=active]:bg-ministry-gold data-[state=active]:text-black font-bold uppercase text-[10px]"
               data-testid="tab-history"
             >
-              <Clock className="w-4 h-4 mr-1" />
+              <Clock className="w-3.5 h-3.5 mr-0.5" />
               History
             </TabsTrigger>
             <TabsTrigger 
               value="leaderboard" 
-              className="flex-1 rounded-sm data-[state=active]:bg-ministry-gold data-[state=active]:text-black font-bold uppercase text-xs"
+              className="flex-1 rounded-sm data-[state=active]:bg-ministry-gold data-[state=active]:text-black font-bold uppercase text-[10px]"
               data-testid="tab-leaderboard"
             >
-              <Trophy className="w-4 h-4 mr-1" />
-              Leaderboard
+              <Trophy className="w-3.5 h-3.5 mr-0.5" />
+              Board
             </TabsTrigger>
             <TabsTrigger 
               value="ranks" 
-              className="flex-1 rounded-sm data-[state=active]:bg-ministry-gold data-[state=active]:text-black font-bold uppercase text-xs"
+              className="flex-1 rounded-sm data-[state=active]:bg-ministry-gold data-[state=active]:text-black font-bold uppercase text-[10px]"
               data-testid="tab-ranks"
             >
-              <Medal className="w-4 h-4 mr-1" />
+              <Medal className="w-3.5 h-3.5 mr-0.5" />
               Ranks
+            </TabsTrigger>
+            <TabsTrigger 
+              value="earn" 
+              className="flex-1 rounded-sm data-[state=active]:bg-ministry-gold data-[state=active]:text-black font-bold uppercase text-[10px]"
+              data-testid="tab-earn"
+            >
+              <Zap className="w-3.5 h-3.5 mr-0.5" />
+              Earn
             </TabsTrigger>
           </TabsList>
 
@@ -354,6 +362,190 @@ export default function RationsPage() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="earn" className="mt-0 space-y-4">
+            {/* What are Rations */}
+            <Card className="bg-zinc-900 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <CardHeader className="border-b border-zinc-800 py-3 px-4">
+                <CardTitle className="text-sm font-black uppercase tracking-wide text-white flex items-center gap-2">
+                  <Info className="w-4 h-4 text-ministry-gold" />
+                  What Are Rations?
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  In the military, rations are what keeps a soldier strong and ready for battle. Here, <span className="text-ministry-gold font-bold">Rations</span> are your reward for showing up — in Scripture, in prayer, in brotherhood, and in service.
+                </p>
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  Every time you engage with the platform, you complete a <span className="text-white font-bold">Mission</span> and earn rations. These rations build toward higher <span className="text-ministry-gold font-bold">Ranks</span> — from Recruit all the way to Elder — and can be spent in the <span className="text-ministry-gold font-bold">Rations Store</span> on rewards and gear.
+                </p>
+                <div className="flex items-start gap-2 p-3 bg-ministry-gold/10 border border-ministry-gold/30 rounded-sm">
+                  <Star className="w-4 h-4 text-ministry-gold flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    <span className="font-bold text-ministry-gold">Pro tip:</span> Build streaks in Studies and Devotionals for massive bonus rations. Consistent men are rewarded men.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Mission Categories */}
+            {[
+              {
+                label: "Studies",
+                icon: BookOpen,
+                color: "text-blue-400",
+                bg: "bg-blue-950",
+                border: "border-blue-700",
+                missions: [
+                  { name: "Complete a lesson", rations: 25 },
+                  { name: "Write a reflection", rations: 10 },
+                  { name: "Complete a full study", rations: 100 },
+                  { name: "7-day study streak", rations: 50, bonus: true },
+                  { name: "30-day study streak", rations: 250, bonus: true },
+                ],
+              },
+              {
+                label: "Devotionals",
+                icon: Target,
+                color: "text-amber-400",
+                bg: "bg-amber-950",
+                border: "border-amber-700",
+                missions: [
+                  { name: "Complete daily devotional", rations: 10 },
+                  { name: "Submit a reflection", rations: 5 },
+                  { name: "7-day streak", rations: 75, bonus: true },
+                  { name: "30-day streak", rations: 300, bonus: true },
+                ],
+              },
+              {
+                label: "Challenges",
+                icon: CheckCircle2,
+                color: "text-green-400",
+                bg: "bg-green-950",
+                border: "border-green-700",
+                missions: [
+                  { name: "Join a challenge", rations: 20 },
+                  { name: "Daily challenge completion", rations: 30 },
+                  { name: "Complete a challenge", rations: 200, bonus: true },
+                  { name: "Perfect challenge completion", rations: 150, bonus: true },
+                ],
+              },
+              {
+                label: "Events",
+                icon: CalendarCheck,
+                color: "text-purple-400",
+                bg: "bg-purple-950",
+                border: "border-purple-700",
+                missions: [
+                  { name: "Register for an event", rations: 25 },
+                  { name: "Attend an event", rations: 100 },
+                  { name: "Bring another man", rations: 150, bonus: true },
+                  { name: "Volunteer at an event", rations: 200, bonus: true },
+                ],
+              },
+              {
+                label: "Videos",
+                icon: Play,
+                color: "text-red-400",
+                bg: "bg-red-950",
+                border: "border-red-700",
+                missions: [
+                  { name: "Watch 50% of a video", rations: 5 },
+                  { name: "Watch full video", rations: 15 },
+                  { name: "Post a comment", rations: 10 },
+                  { name: "Share a video", rations: 5 },
+                ],
+              },
+              {
+                label: "Podcasts",
+                icon: Mic,
+                color: "text-cyan-400",
+                bg: "bg-cyan-950",
+                border: "border-cyan-700",
+                missions: [
+                  { name: "Listen to 50%", rations: 20 },
+                  { name: "Listen to full episode", rations: 40 },
+                  { name: "Post a comment", rations: 10 },
+                  { name: "Save an episode", rations: 5 },
+                ],
+              },
+              {
+                label: "Live Sessions",
+                icon: Radio,
+                color: "text-orange-400",
+                bg: "bg-orange-950",
+                border: "border-orange-700",
+                missions: [
+                  { name: "Attend a live session", rations: 40 },
+                  { name: "Stay for full session", rations: 25 },
+                  { name: "Participate in session", rations: 15 },
+                  { name: "Watch replay (within 48hr)", rations: 15 },
+                ],
+              },
+              {
+                label: "Profile & Referrals",
+                icon: UserPlus,
+                color: "text-pink-400",
+                bg: "bg-pink-950",
+                border: "border-pink-700",
+                missions: [
+                  { name: "Upload profile photo", rations: 5 },
+                  { name: "Complete full profile", rations: 75, bonus: true },
+                  { name: "Refer a brother", rations: 50, bonus: true },
+                ],
+              },
+            ].map(({ label, icon: Icon, color, bg, border, missions }) => (
+              <Card key={label} className="bg-zinc-900 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <CardHeader className="border-b border-zinc-800 py-2.5 px-4">
+                  <CardTitle className="text-xs font-black uppercase tracking-wide text-white flex items-center gap-2">
+                    <div className={`w-6 h-6 rounded-sm flex items-center justify-center ${bg} border ${border}`}>
+                      <Icon className={`w-3.5 h-3.5 ${color}`} />
+                    </div>
+                    {label}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-zinc-800">
+                    {missions.map((m) => (
+                      <div key={m.name} className="flex items-center justify-between px-4 py-2.5">
+                        <div className="flex items-center gap-2">
+                          {m.bonus && <Flame className="w-3 h-3 text-orange-400 flex-shrink-0" />}
+                          <span className={`text-sm ${m.bonus ? 'text-white font-semibold' : 'text-zinc-300'}`}>{m.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                          <Coins className="w-3.5 h-3.5 text-ministry-gold" />
+                          <span className="font-black text-ministry-gold text-sm">+{m.rations}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Grace Bonus */}
+            <Card className="bg-zinc-900 border-2 border-ministry-gold/40 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
+              <CardContent className="p-4 flex items-start gap-3">
+                <div className="w-10 h-10 bg-ministry-gold/10 border border-ministry-gold/40 rounded-sm flex items-center justify-center flex-shrink-0">
+                  <Star className="w-5 h-5 text-ministry-gold" />
+                </div>
+                <div>
+                  <p className="font-black text-ministry-gold uppercase tracking-wide text-sm">Grace Bonus</p>
+                  <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
+                    Been away for a while? When you return after an absence, God's grace meets you right where you are. You'll receive a <span className="text-ministry-gold font-bold">+100 ration grace bonus</span> to help you get back in the fight. Welcome back, soldier.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Daily cap note */}
+            <div className="flex items-start gap-2 px-1 pb-4">
+              <Info className="w-4 h-4 text-zinc-500 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                Some missions have daily or weekly earning caps to keep things fair. Once you hit the cap, that mission resets the next day or week — so keep showing up consistently.
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
