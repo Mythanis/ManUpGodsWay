@@ -3144,6 +3144,23 @@ export class DatabaseStorage implements IStorage {
     const [newNotification] = await db.insert(notifications)
       .values(notification)
       .returning();
+
+    // Fire push notification for every in-app notification created
+    try {
+      const { sendPushNotification, getPushUrl } = await import('./pushNotificationService');
+      const url = getPushUrl(notification.type, notification.relatedId);
+      await sendPushNotification(notification.userId, {
+        title: notification.title,
+        body: notification.message,
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: notification.type,
+        url,
+      });
+    } catch (error) {
+      // Never let push failure break the notification creation
+    }
+
     return newNotification;
   }
 
@@ -3263,20 +3280,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     const newNotification = await this.createNotification(notification);
-    
-    // Also send push notification if available
-    try {
-      const { sendPushNotification } = await import('./pushNotificationService');
-      await sendPushNotification(notification.userId, {
-        title: notification.title,
-        body: notification.message,
-        url: pushPayload?.url || '/',
-        tag: notification.type,
-      });
-    } catch (error) {
-      console.error('Failed to send push notification:', error);
-    }
-    
+    // Push notification is fired automatically inside createNotification
     return newNotification;
   }
 

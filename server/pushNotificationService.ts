@@ -28,6 +28,55 @@ export interface PushPayload {
   requireInteraction?: boolean;
 }
 
+// Map notification types to deep-link URLs so tapping opens the right screen
+export function getPushUrl(type: string, relatedId?: string | null): string {
+  switch (type) {
+    case 'message':
+    case 'new_message':
+    case 'group_message':
+      return relatedId ? `/messages?conversation=${relatedId}` : '/messages';
+    case 'discussion':
+    case 'new_discussion':
+    case 'discussion_reply':
+      return relatedId ? `/community?discussion=${relatedId}` : '/community';
+    case 'study':
+    case 'new_study':
+      return relatedId ? `/study/${relatedId}` : '/library';
+    case 'video':
+    case 'new_video':
+      return '/videos';
+    case 'devotional':
+    case 'new_devotional':
+      return '/';
+    case 'event':
+    case 'new_event':
+      return '/events';
+    case 'challenge':
+    case 'new_challenge':
+    case 'challenge_ended':
+      return '/challenges';
+    case 'brotherhood':
+      return '/';
+    case 'war_room':
+    case 'war_room_comment':
+      return '/war-room';
+    case 'under_fire':
+    case 'under_fire_comment':
+      return '/under-fire';
+    case 'war_group':
+    case 'war_group_post':
+    case 'war_group_comment':
+      return relatedId ? `/war-groups/${relatedId}` : '/war-groups';
+    case 'podcast':
+    case 'new_podcast':
+      return '/podcasts';
+    case 'admin':
+      return relatedId ? `/messages?conversation=${relatedId}` : '/';
+    default:
+      return '/';
+  }
+}
+
 export async function sendPushNotification(userId: string, payload: PushPayload): Promise<{ success: number; failed: number }> {
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
     console.log('[Push] Skipping - VAPID keys not configured');
