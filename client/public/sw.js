@@ -1,4 +1,4 @@
-const CACHE_NAME = 'man-up-gods-way-v4';
+const CACHE_NAME = 'man-up-gods-way-v5';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -71,24 +71,35 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|ico|woff2?|webp|gif)$/)) {
+  // Images and fonts: stale-while-revalidate (they don't change often)
+  if (url.pathname.match(/\.(png|jpg|jpeg|svg|ico|woff2?|webp|gif)$/)) {
     event.respondWith(
       caches.match(request).then((cached) => {
-        if (cached) {
-          fetch(request).then((response) => {
-            if (response.ok) {
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, response));
-            }
-          }).catch(() => {});
-          return cached;
-        }
-        return fetch(request).then((response) => {
+        const fetchPromise = fetch(request).then((response) => {
           if (response.ok) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
           }
           return response;
-        });
+        }).catch(() => cached);
+        return cached || fetchPromise;
+      })
+    );
+    return;
+  }
+
+  // JS and CSS: network-first — always fetch fresh so code updates apply immediately.
+  // Only fall back to cache when completely offline.
+  if (url.pathname.match(/\.(js|css)$/) || url.pathname.startsWith('/src/') || url.pathname.startsWith('/assets/') || url.pathname.startsWith('/@')) {
+    event.respondWith(
+      fetch(request).then((response) => {
+        if (response.ok) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+        }
+        return response;
+      }).catch(() => {
+        return caches.match(request);
       })
     );
     return;
