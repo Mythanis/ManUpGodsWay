@@ -620,6 +620,7 @@ export interface IStorage {
   getBibleReadingPlanDays(planId: string): Promise<BibleReadingPlanDay[]>;
   getBibleReadingProgress(userId: string, planId: string): Promise<BibleReadingProgress[]>;
   markBibleReadingDayComplete(userId: string, planId: string, dayNumber: number): Promise<BibleReadingProgress>;
+  unmarkBibleReadingDayComplete(userId: string, planId: string, dayNumber: number): Promise<void>;
   getBibleReadingConsecutiveDays(userId: string, planId: string): Promise<number>;
   seedBiblePlan(planData: { name: string; description: string; planType: string }, days: Array<{ dayNumber: number; title: string; passages: string }>): Promise<BibleReadingPlan>;
   getManUpLink(id: string): Promise<ManUpLink | undefined>;
@@ -6939,6 +6940,16 @@ export class DatabaseStorage implements IStorage {
       .values({ userId, planId, dayNumber })
       .returning();
     return created;
+  }
+
+  async unmarkBibleReadingDayComplete(userId: string, planId: string, dayNumber: number): Promise<void> {
+    await db
+      .delete(bibleReadingProgress)
+      .where(and(
+        eq(bibleReadingProgress.userId, userId),
+        eq(bibleReadingProgress.planId, planId),
+        eq(bibleReadingProgress.dayNumber, dayNumber)
+      ));
   }
 
   async getBibleReadingConsecutiveDays(userId: string, planId: string): Promise<number> {

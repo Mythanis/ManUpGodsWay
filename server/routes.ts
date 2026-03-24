@@ -13118,6 +13118,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/bible-plans/:id/days/:dayNum/complete", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+    try {
+      const userId = req.user.claims.sub;
+      const planId = req.params.id;
+      const dayNumber = parseInt(req.params.dayNum, 10);
+      if (isNaN(dayNumber)) return res.status(400).json({ error: "Invalid day number" });
+      await storage.unmarkBibleReadingDayComplete(userId, planId, dayNumber);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error unmarking bible reading day:", error);
+      res.status(500).json({ error: "Failed to unmark day" });
+    }
+  });
+
   app.post("/api/admin/seed-bible-plans", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
     const role = (req.user as any)?.role;

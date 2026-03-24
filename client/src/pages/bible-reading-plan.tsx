@@ -287,6 +287,18 @@ export default function BibleReadingPlanPage() {
     },
   });
 
+  const uncompleteMutation = useMutation({
+    mutationFn: (dayNumber: number) =>
+      apiRequest("DELETE", `/api/bible-plans/${id}/days/${dayNumber}/complete`),
+    onSuccess: (_data: any, dayNumber) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bible-plans", id, "progress"] });
+      toast({ title: `Day ${dayNumber} unchecked`, description: "Tap the circle again to re-complete it." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Could not unmark day.", variant: "destructive" });
+    },
+  });
+
   const filteredDays = useMemo(() => {
     if (filter === "remaining") return days.filter(d => !completedSet.has(d.dayNumber));
     if (filter === "completed") return days.filter(d => completedSet.has(d.dayNumber));
@@ -429,12 +441,20 @@ export default function BibleReadingPlanPage() {
                     : "border-white/8 bg-[#0a0a0a]"
                 }`}
               >
-                {/* Complete circle */}
+                {/* Complete / uncomplete circle */}
                 <button
-                  onClick={() => !done && isAuthenticated && completeMutation.mutate(day.dayNumber)}
-                  disabled={done || !isAuthenticated || completeMutation.isPending}
+                  onClick={() => {
+                    if (!isAuthenticated) return;
+                    if (done) {
+                      uncompleteMutation.mutate(day.dayNumber);
+                    } else {
+                      completeMutation.mutate(day.dayNumber);
+                    }
+                  }}
+                  disabled={!isAuthenticated || completeMutation.isPending || uncompleteMutation.isPending}
                   className="flex-shrink-0 transition-transform active:scale-90"
-                  aria-label={done ? "Completed" : "Mark complete"}
+                  aria-label={done ? "Tap to uncheck" : "Mark complete"}
+                  title={done ? "Tap to uncheck" : "Mark complete"}
                 >
                   {done ? (
                     <CheckCircle2 className="w-6 h-6 text-[#FCD000]" />
