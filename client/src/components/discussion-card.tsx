@@ -69,7 +69,8 @@ export default function DiscussionCard({
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Check if content is long enough to need expansion
-  const isLongContent = discussion.content && discussion.content.length > 280;
+  const plainContentLength = (discussion.content || '').replace(/<[^>]+>/g, '').length;
+  const isLongContent = plainContentLength > 280;
   const { user } = useAuth();
   
   // Check if current user owns this discussion or is moderator/admin
@@ -419,21 +420,34 @@ export default function DiscussionCard({
         </div>
 
         {/* ── Body text ──────────────────────────── */}
-        <div
-          className="px-4 pb-3 cursor-pointer"
-          onClick={() => isLongContent && setIsExpanded(!isExpanded)}
-          data-testid="content-container"
-        >
-          <p className={`text-sm text-white/80 leading-relaxed ${!isExpanded && isLongContent ? 'line-clamp-5' : ''}`}
-            data-testid="text-discussion-content">
-            {discussion.content}
-          </p>
-          {isLongContent && (
-            <span className="text-xs font-bold text-[#FCD000] mt-1 block">
-              {isExpanded ? 'Show less' : 'See more'}
-            </span>
-          )}
-        </div>
+        {(() => {
+          const hasHtml = /<[a-z][\s\S]*?>/i.test(discussion.content || '');
+          return (
+            <div
+              className="px-4 pb-3 cursor-pointer"
+              onClick={() => isLongContent && setIsExpanded(!isExpanded)}
+              data-testid="content-container"
+            >
+              {hasHtml ? (
+                <div
+                  className={`text-sm text-white/80 leading-relaxed prose-invert [&_strong]:font-bold [&_em]:italic [&_u]:underline [&_s]:line-through ${!isExpanded && isLongContent ? 'line-clamp-5' : ''}`}
+                  dangerouslySetInnerHTML={{ __html: discussion.content }}
+                  data-testid="text-discussion-content"
+                />
+              ) : (
+                <p className={`text-sm text-white/80 leading-relaxed ${!isExpanded && isLongContent ? 'line-clamp-5' : ''}`}
+                  data-testid="text-discussion-content">
+                  {discussion.content}
+                </p>
+              )}
+              {isLongContent && (
+                <span className="text-xs font-bold text-[#FCD000] mt-1 block">
+                  {isExpanded ? 'Show less' : 'See more'}
+                </span>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ── Media ──────────────────────────────── */}
         {discussion.mediaUrls && discussion.mediaUrls.length > 0 && (

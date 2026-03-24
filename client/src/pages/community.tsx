@@ -20,7 +20,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { getTierDisplayName } from "@/lib/utils";
-import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X, Send, Hash, HandHeart, Image, Video, Radio, Trash2 } from "lucide-react";
+import { Plus, Users, BookOpen, Heart, MessageCircle, Lightbulb, ArrowUpDown, Search, X, Send, Hash, HandHeart, Image, Video, Radio, Trash2, Bold, Italic, Underline, Strikethrough } from "lucide-react";
 import { HonorButton } from "@/components/honor-button";
 import { z } from "zod";
 import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
@@ -46,9 +46,9 @@ const creationCategories = [
 ];
 
 const createDiscussionSchema = z.object({
-  title: z.string().min(1, "Title is required"),
+  title: z.string().optional(),
   content: z.string().min(1, "Content is required"),
-  category: z.string().min(1, "Category is required"),
+  category: z.string().optional(),
   mediaUrls: z.array(z.string()).optional(),
   mediaTypes: z.array(z.string()).optional(),
   postType: z.string().optional(),
@@ -334,12 +334,22 @@ export default function Community() {
     }
   }, [discussions]);
 
+  const isAdmin = (user as any)?.role === 'admin' || (user as any)?.role === 'owner';
+  const contentEditableRef = useRef<HTMLDivElement>(null);
+
+  const applyFormat = (command: string) => {
+    contentEditableRef.current?.focus();
+    document.execCommand(command, false);
+    const html = contentEditableRef.current?.innerHTML || '';
+    form.setValue('content', html, { shouldValidate: true });
+  };
+
   const form = useForm({
     resolver: zodResolver(createDiscussionSchema),
     defaultValues: {
       title: '',
       content: '',
-      category: 'leadership',
+      category: 'miscellaneous',
     },
   });
 
@@ -428,7 +438,7 @@ export default function Community() {
     });
   };
 
-  const onSubmit = async (data: { title: string; content: string; category: string }) => {
+  const onSubmit = async (data: { title?: string; content: string; category?: string }) => {
     if (!(user as any)?.id) {
       toast({
         title: "Error",
@@ -437,11 +447,14 @@ export default function Community() {
       });
       return;
     }
+
+    const plainContent = data.content.replace(/<[^>]+>/g, '').trim();
+    const autoTitle = plainContent.slice(0, 60) + (plainContent.length > 60 ? '...' : '') || 'Post';
     
     const discussionData = {
-      title: data.title.trim(),
-      content: data.content.trim(),
-      category: data.category,
+      title: autoTitle,
+      content: data.content,
+      category: 'miscellaneous',
       userId: (user as any).id,
       mediaUrls: uploadedMedia.urls.length > 0 ? uploadedMedia.urls : undefined,
       mediaTypes: uploadedMedia.types.length > 0 ? uploadedMedia.types : undefined,
@@ -450,6 +463,7 @@ export default function Community() {
     
     await createDiscussion.mutateAsync(discussionData);
     setUploadedMedia({ urls: [], types: [] });
+    if (contentEditableRef.current) contentEditableRef.current.innerHTML = '';
   };
 
   // Create direct conversation mutation for profile interactions
@@ -690,61 +704,55 @@ export default function Community() {
               >
                 <FormField
                   control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-black font-bold uppercase tracking-wide">Title</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="What would you like to discuss?"
-                          className="bg-white border-2 border-black text-black placeholder:text-gray-500 rounded-sm"
-                          {...field}
-                          data-testid="input-discussion-title"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-black font-bold uppercase tracking-wide">Category</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="bg-white border-2 border-black text-black rounded-sm" data-testid="select-discussion-category">
-                            <SelectValue placeholder="Select a category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-white border-2 border-black rounded-sm">
-                          {creationCategories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
                   name="content"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-black font-bold uppercase tracking-wide">Content</FormLabel>
                       <FormControl>
-                        <Textarea
-                          placeholder="Share your thoughts, photos, videos, or memes..."
-                          className="min-h-[100px] bg-white border-2 border-black text-black placeholder:text-gray-500 rounded-sm"
-                          {...field}
-                          data-testid="textarea-discussion-content"
-                        />
+                        <div>
+                          {isAdmin && (
+                            <div className="flex items-center gap-1 mb-1.5 p-1 bg-black/10 rounded-sm border border-black/20">
+                              {[
+                                { cmd: 'bold', Icon: Bold, title: 'Bold' },
+                                { cmd: 'italic', Icon: Italic, title: 'Italic' },
+                                { cmd: 'underline', Icon: Underline, title: 'Underline' },
+                                { cmd: 'strikeThrough', Icon: Strikethrough, title: 'Strikethrough' },
+                              ].map(({ cmd, Icon, title }) => (
+                                <button
+                                  key={cmd}
+                                  type="button"
+                                  title={title}
+                                  onMouseDown={(e) => { e.preventDefault(); applyFormat(cmd); }}
+                                  className="p-1.5 rounded hover:bg-black/15 text-black/70 hover:text-black transition-colors"
+                                  data-testid={`button-format-${cmd}`}
+                                >
+                                  <Icon className="w-3.5 h-3.5" />
+                                </button>
+                              ))}
+                              <span className="ml-auto text-[10px] text-black/40 font-bold uppercase tracking-wide pr-1">Admin Styling</span>
+                            </div>
+                          )}
+                          {isAdmin ? (
+                            <div
+                              ref={contentEditableRef}
+                              contentEditable
+                              suppressContentEditableWarning
+                              onInput={() => {
+                                const html = contentEditableRef.current?.innerHTML || '';
+                                form.setValue('content', html, { shouldValidate: true });
+                              }}
+                              data-placeholder="Share your thoughts, photos, videos, or memes..."
+                              className="min-h-[100px] bg-white border-2 border-black text-black rounded-sm p-2.5 text-sm leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400"
+                              data-testid="div-discussion-content"
+                            />
+                          ) : (
+                            <Textarea
+                              placeholder="Share your thoughts, photos, videos, or memes..."
+                              className="min-h-[100px] bg-white border-2 border-black text-black placeholder:text-gray-500 rounded-sm"
+                              {...field}
+                              data-testid="textarea-discussion-content"
+                            />
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
