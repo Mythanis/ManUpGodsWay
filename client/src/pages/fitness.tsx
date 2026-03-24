@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useTour } from "@/contexts/TourContext";
 import { apiRequest } from "@/lib/queryClient";
 import { BackButton } from "@/components/BackButton";
 import { 
@@ -220,6 +221,7 @@ export default function Fitness() {
   const [, setLocation] = useLocation();
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
   const { user: authUser } = useAuth();
+  const { isTourActive } = useTour();
 
   // Community tab state
   const [communityPostText, setCommunityPostText] = useState('');
@@ -1528,8 +1530,8 @@ export default function Fitness() {
       {/* Main Content */}
       <div className="px-4 pt-6 space-y-6 pb-20">
 
-      {/* Fitness Membership Paywall */}
-      {!membershipLoading && !hasMembership && (
+      {/* Fitness Membership Paywall — hidden during the app tour so users can preview */}
+      {!membershipLoading && !hasMembership && !isTourActive && (
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="w-full max-w-md">
             <div className="bg-[#FCD000] border-4 border-black rounded-sm shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 text-center mb-4">
@@ -1719,8 +1721,8 @@ export default function Fitness() {
           </DialogContent>
         </Dialog>
 
-      {/* Fitness content — only shown to members */}
-      {hasMembership && (<>
+      {/* Fitness content — shown to members or during the app tour */}
+      {(hasMembership || isTourActive) && (<>
 
         {/* Membership Status Banner */}
         {membershipData?.membership && (

@@ -83,6 +83,12 @@ export const TOUR_STEPS: TourStep[] = [
       "Find upcoming ministry events and purchase tickets directly inside the app. Single-tier and multi-tier pricing is supported — no external checkout required.",
   },
   {
+    route: "/fitness",
+    title: "Fitness Add-On",
+    description:
+      "Take your physical discipline to the next level. The Fitness section is a paid add-on ($4.99/mo) that gives you a full exercise library, custom workout plan builder, pre-built plans from our coach, progress tracking, and a members-only fitness community.",
+  },
+  {
     route: "/blog",
     title: "Blog",
     description:
