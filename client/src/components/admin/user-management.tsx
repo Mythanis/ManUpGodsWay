@@ -306,7 +306,7 @@ export default function UserManagement() {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                      <p className="font-black text-sm uppercase tracking-[0.12em] text-black truncate" data-testid="text-user-name">
+                      <p className="font-black text-sm uppercase tracking-[0.12em] text-white truncate" data-testid="text-user-name">
                         {user.firstName} {user.lastName}
                       </p>
                       {getRoleBadge(user.role)}
