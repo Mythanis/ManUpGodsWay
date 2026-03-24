@@ -688,27 +688,22 @@ export default function Home() {
                 <p className="text-sm text-[#FCD000] mb-4 font-black uppercase tracking-wide">{completedCount > 0 ? "Continue Your Faith Journey" : "Start Your Growth Today"}</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
-                    <Card key={study.id} className="border-2 border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
+                    <Card key={study.id} className="border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-sm overflow-hidden bg-[#FCD000]" onClick={() => navigate(`/studies/${study.id}`)} style={{ cursor: 'pointer' }}>
                       <CardContent className="p-0">
-                        <div className="flex items-stretch">
-                          <div className="w-14 liquid-black flex items-center justify-center flex-shrink-0">
-                            <Book className="w-6 h-6 text-white relative z-10" />
-                          </div>
-                          <div className="flex-1 p-3 min-w-0 flex flex-col gap-1" style={{ backgroundColor: '#ffffff' }}>
-                            <h4 className="font-black text-sm uppercase tracking-wide truncate" style={{ color: '#000000' }}>{study.title}</h4>
-                            <p className="text-xs line-clamp-1 font-medium" style={{ color: 'rgba(0,0,0,0.7)' }}>{study.description}</p>
-                            <div className="flex items-center justify-between mt-0.5">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold uppercase" style={{ color: '#000000' }}>{study.totalDays || study.estimatedHours || 0} {study.totalDays ? 'Days' : 'Hours'}</span>
-                                <span className="text-xs capitalize font-medium" style={{ color: 'rgba(0,0,0,0.6)' }}>{study.difficulty || 'All Levels'}</span>
-                              </div>
-                              <Button 
-                                size="sm"
-                                className="bg-black text-white hover:bg-gray-900 rounded-sm font-black uppercase tracking-wide text-xs border-2 border-black flex-shrink-0"
-                                onClick={() => navigate(`/studies/${study.id}`)}
-                              >
-                                Start
-                              </Button>
+                        <div className="flex">
+                          <img
+                            src={getDefaultThumbnail(study.thumbnailUrl)}
+                            alt={study.title}
+                            className="w-24 h-20 object-cover flex-shrink-0"
+                          />
+                          <div className="flex-1 p-3 min-w-0 flex flex-col justify-between">
+                            <div>
+                              <h4 className="font-semibold text-black text-sm leading-snug mb-1 line-clamp-2">{study.title}</h4>
+                              <p className="text-xs text-black/70 line-clamp-1">{study.description}</p>
+                            </div>
+                            <div className="flex items-center justify-between mt-1">
+                              <span className="text-xs text-black font-medium">{study.totalDays ? `${study.totalDays} Days` : study.estimatedHours ? `${study.estimatedHours}h` : ''} · {study.difficulty || 'All Levels'}</span>
+                              <span className="text-xs font-bold text-black underline">Start →</span>
                             </div>
                           </div>
                         </div>
