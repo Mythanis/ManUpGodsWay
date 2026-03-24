@@ -105,7 +105,7 @@ function PodcastCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between mb-1">
               <div className="flex-1 min-w-0 pr-2">
-                <h3 className="font-black text-sm sm:text-base text-white mb-1 uppercase tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
+                <h3 className="text-base font-black text-white uppercase tracking-[0.18em] mb-1 line-clamp-2">
                   {podcast.title}
                 </h3>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-white/70 mb-1">
