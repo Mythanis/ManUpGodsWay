@@ -321,7 +321,7 @@ export default function Videos() {
                 <CardContent className="p-4 liquid-black-white relative">
                   <div className="relative z-10">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-black text-white line-clamp-2 flex-1 tracking-tight text-lg uppercase">
+                      <h3 className="text-base font-black text-white uppercase tracking-[0.18em] line-clamp-2 flex-1">
                         {video.title}
                       </h3>
                       {video.isFeatured && (
