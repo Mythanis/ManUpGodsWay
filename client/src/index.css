@@ -322,6 +322,12 @@
   html {
     text-rendering: optimizeLegibility;
     -webkit-text-size-adjust: 100%;
+    /* Dark by default — overridden to white only when .light class is applied */
+    background-color: hsl(220 15% 10%);
+  }
+
+  html.light {
+    background-color: hsl(0 0% 100%);
   }
 
   body {
