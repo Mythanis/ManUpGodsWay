@@ -86,6 +86,24 @@ export default function Navigation() {
     retry: false,
   });
 
+  const { data: unreadData } = useQuery<{ count: number }>({
+    queryKey: ['/api/notifications/unread-count'],
+    refetchInterval: 60 * 1000,
+    staleTime: 30 * 1000,
+    retry: false,
+  });
+
+  useEffect(() => {
+    const count = unreadData?.count ?? 0;
+    if ('setAppBadge' in navigator) {
+      if (count > 0) {
+        (navigator as any).setAppBadge(count).catch(() => {});
+      } else {
+        (navigator as any).clearAppBadge().catch(() => {});
+      }
+    }
+  }, [unreadData?.count]);
+
   const handleNavClick = useCallback((itemId: string) => {
     if (itemId === 'library') {
       markSeen(LS_KEY_STUDIES);
