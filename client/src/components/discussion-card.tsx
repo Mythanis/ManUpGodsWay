@@ -574,7 +574,7 @@ export default function DiscussionCard({
                     rows={2}
                     disabled={createReply.isPending}
                     {...form.register('content')}
-                    className="w-full bg-white/8 border border-white/15 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/35 resize-none focus:outline-none focus:border-[#FCD000]/50"
+                    className="w-full bg-white border border-white/15 rounded-xl px-3 py-2 text-sm text-black placeholder:text-black/40 resize-none focus:outline-none focus:border-[#FCD000]"
                   />
                 </div>
                 <Button type="submit" disabled={createReply.isPending}
