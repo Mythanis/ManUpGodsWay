@@ -1,4 +1,4 @@
-const CACHE_NAME = 'man-up-gods-way-v3';
+const CACHE_NAME = 'man-up-gods-way-v4';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -28,7 +28,15 @@ self.addEventListener('activate', (event) => {
           .filter((name) => name !== CACHE_NAME)
           .map((name) => caches.delete(name))
       );
-    }).then(() => clients.claim())
+    }).then(() => clients.claim()).then(() => {
+      // After clearing old caches, tell all open pages to reload so they
+      // pick up the new CSS instead of running with stale cached assets.
+      return clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        clientList.forEach((client) => {
+          client.postMessage({ type: 'SW_UPDATED' });
+        });
+      });
+    })
   );
 });
 
