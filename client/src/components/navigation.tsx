@@ -187,9 +187,10 @@ export default function Navigation() {
           <DropdownMenuContent
             align="end"
             side="top"
-            className="w-52 mb-2 bg-zinc-900 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-1"
+            className="w-80 mb-2 bg-zinc-900 border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-2"
             data-testid="dropdown-more-menu"
           >
+            <div className="grid grid-cols-2 gap-1">
             {dropdownItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
@@ -198,18 +199,19 @@ export default function Navigation() {
                 <DropdownMenuItem
                   key={item.id}
                   onClick={() => setLocation(item.path)}
-                  className={`cursor-pointer rounded-sm font-bold uppercase text-xs tracking-wide ${
+                  className={`cursor-pointer rounded-sm font-bold uppercase text-sm tracking-wide px-3 py-3 ${
                     active
                       ? 'text-black bg-ministry-gold-exact'
                       : 'text-white hover:bg-ministry-gold-exact hover:text-black'
                   }`}
                   data-testid={`dropdown-nav-${item.id}`}
                 >
-                  <Icon className={`w-4 h-4 mr-2 ${active ? 'text-black' : 'text-ministry-gold-exact'}`} />
+                  <Icon className={`w-5 h-5 mr-2 flex-shrink-0 ${active ? 'text-black' : 'text-ministry-gold-exact'}`} />
                   {item.label}
                 </DropdownMenuItem>
               );
             })}
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
