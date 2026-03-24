@@ -38,7 +38,7 @@ const navItems = [
   { id: 'community', path: '/community', label: 'Community', icon: Users },
   { id: 'brothers', path: '/brothers', label: 'Brothers', icon: UserPlus },
   { id: 'messages', path: '/messages', label: 'Messages', icon: MessageCircle },
-  { id: 'war-groups', path: '/war-groups', label: 'War Groups', icon: MapPin },
+  { id: 'war-groups', path: '/war-groups', label: 'War Grps', icon: MapPin },
   { id: 'war-room', path: '/hurdle-wall', label: 'War Room', icon: Shield },
   { id: 'under-fire', path: '/under-fire', label: 'Under Fire', icon: Flame },
   { id: 'blog', path: '/blog', label: 'Blog', icon: FileText },
@@ -137,20 +137,21 @@ export default function Navigation() {
 
   return (
     <nav
-      className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-card border-t border-ministry-charcoal z-50 h-16"
+      className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-card border-t border-ministry-charcoal z-50"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       data-testid="navigation-bottom"
     >
-      <div className="flex items-center justify-around h-full px-2">
+      <div className="flex items-stretch h-16">
         {primaryItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
           const count = getBadgeCount(item.id);
 
           return (
-            <Link key={item.id} href={item.path} onClick={() => handleNavClick(item.id)}>
+            <Link key={item.id} href={item.path} onClick={() => handleNavClick(item.id)} className="flex-1">
               <Button
                 variant="ghost"
-                className={`relative flex flex-col items-center justify-center h-full px-3 py-1 min-w-[60px] max-w-[80px] flex-shrink-0 rounded-sm ${
+                className={`relative flex flex-col items-center justify-center w-full h-full py-1 rounded-none gap-0 ${
                   active
                     ? 'text-ministry-gold font-semibold bg-ministry-gold/10'
                     : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
@@ -159,7 +160,7 @@ export default function Navigation() {
               >
                 {count > 0 && <NavBadge count={count} />}
                 <Icon className="w-5 h-5 mb-0.5 flex-shrink-0" />
-                <span className="font-medium text-[10px] leading-tight truncate w-full text-center">
+                <span className="font-medium text-[10px] leading-tight text-center w-full px-0.5">
                   {item.label}
                 </span>
               </Button>
@@ -171,7 +172,7 @@ export default function Navigation() {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className={`flex flex-col items-center justify-center h-full px-3 py-1 min-w-[60px] max-w-[80px] flex-shrink-0 rounded-sm ${
+              className={`flex-1 flex flex-col items-center justify-center h-full py-1 rounded-none gap-0 ${
                 isDropdownActive
                   ? 'text-ministry-gold font-semibold bg-ministry-gold/10'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
@@ -179,7 +180,7 @@ export default function Navigation() {
               data-testid="nav-more"
             >
               <MoreHorizontal className="w-5 h-5 mb-0.5 flex-shrink-0" />
-              <span className="font-medium text-[10px] leading-tight truncate w-full text-center">
+              <span className="font-medium text-[10px] leading-tight text-center w-full px-0.5">
                 More
               </span>
             </Button>
