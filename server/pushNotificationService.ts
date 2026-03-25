@@ -109,7 +109,10 @@ export async function sendPushNotification(userId: string, payload: PushPayload)
           }
         };
 
-        await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
+        await webpush.sendNotification(pushSubscription, JSON.stringify(payload), {
+          TTL: 3600,        // keep queued for up to 1 hour if device is offline
+          urgency: 'high',  // request immediate delivery — bypasses APNs low-power deferral
+        });
         success++;
         console.log(`[Push] Sent to user ${userId}`);
       } catch (error: any) {
@@ -171,7 +174,10 @@ export async function sendPushToAllUsers(payload: PushPayload): Promise<{ succes
           }
         };
 
-        await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
+        await webpush.sendNotification(pushSubscription, JSON.stringify(payload), {
+          TTL: 3600,
+          urgency: 'high',
+        });
         success++;
       } catch (error: any) {
         if (error.statusCode === 410 || error.statusCode === 404) {
