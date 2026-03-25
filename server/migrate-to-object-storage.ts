@@ -221,6 +221,31 @@ async function migrateCommunityMedia() {
       logResult('fitnessPosts', String(p.id), 'mediaUrls updated', 'GCS URLs');
     }
   }
+
+  // War group posts
+  const warGroupPosts = await db.select({ id: schema.warGroupPosts.id, mediaUrls: schema.warGroupPosts.mediaUrls })
+    .from(schema.warGroupPosts)
+    .where(sql`${schema.warGroupPosts.mediaUrls}::text LIKE '%/uploads/community/%'`);
+
+  for (const p of warGroupPosts) {
+    if (!p.mediaUrls?.length) continue;
+    const newUrls: string[] = [];
+    let changed = false;
+    for (const url of p.mediaUrls) {
+      if (url.startsWith('/uploads/community/')) {
+        const filename = url.replace('/uploads/community/', '');
+        const newUrl = await migrateFile(`uploads/community/${filename}`, `community/${filename}`, false);
+        newUrls.push(newUrl || url);
+        if (newUrl) changed = true;
+      } else {
+        newUrls.push(url);
+      }
+    }
+    if (changed) {
+      await db.update(schema.warGroupPosts).set({ mediaUrls: newUrls }).where(eq(schema.warGroupPosts.id, p.id));
+      logResult('warGroupPosts', String(p.id), 'mediaUrls updated', 'GCS URLs');
+    }
+  }
 }
 
 // ─── Videos ───────────────────────────────────────────────────────────────────

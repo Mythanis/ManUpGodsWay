@@ -777,7 +777,7 @@ export default function VideoManagement() {
               {/* Video Preview */}
               <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden relative">
                 {isWatchingVideo ? (
-                  selectedVideo.videoUrl ? (
+                  selectedVideo.videoUrl && !selectedVideo.videoUrl.startsWith('gcs:') ? (
                     (() => {
                       const ytMatch = selectedVideo.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
                       const vimeoMatch = selectedVideo.videoUrl.match(/vimeo\.com\/(\d+)/);

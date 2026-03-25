@@ -1,5 +1,4 @@
 import express, { type Request, Response, NextFunction } from "express";
-import path from "path";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -28,9 +27,6 @@ app.use(express.urlencoded({ extended: false }));
 // General rate limit: 200 requests/min per IP across all /api/* routes
 // The Stripe webhook above is exempt because it is registered before this middleware
 app.use("/api", generalLimiter);
-
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.use((req, res, next) => {
   const start = Date.now();

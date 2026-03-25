@@ -381,7 +381,7 @@ export default function Videos() {
             <div className="space-y-6">
               {/* Video Player */}
               <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden">
-                {selectedVideo.videoUrl ? (
+                {selectedVideo.videoUrl && !selectedVideo.videoUrl.startsWith('gcs:') ? (
                   (() => {
                     const embed = getVideoEmbed(selectedVideo.videoUrl);
                     if (embed.type === 'youtube' || embed.type === 'vimeo') {
