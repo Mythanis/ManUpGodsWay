@@ -1308,7 +1308,7 @@ export default function Home() {
             {/* Tip box */}
             <div className="bg-[#FCD000]/10 border border-[#FCD000]/20 rounded-sm p-3">
               <p className="text-xs text-white/60 leading-relaxed">
-                <span className="text-[#FCD000] font-black">TIP —</span> Turn on Do Not Disturb mode on your phone before you begin to minimize distractions.
+                <span className="text-[#FCD000] font-black">TIP —</span> Turn on Do Not Disturb mode on your phone before you begin to minimize distractions. Add <span className="text-white/80 font-semibold">Man Up God's Way</span> to your allowed apps list so you'll still receive prayer reminders while DND is active.
               </p>
             </div>
 
