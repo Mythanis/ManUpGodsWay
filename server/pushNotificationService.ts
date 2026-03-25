@@ -114,7 +114,8 @@ export async function sendPushNotification(userId: string, payload: PushPayload)
           urgency: 'high',  // request immediate delivery — bypasses APNs low-power deferral
         });
         success++;
-        console.log(`[Push] Sent to user ${userId}`);
+        const host = new URL(subscription.endpoint).hostname;
+        console.log(`[Push] Sent to user ${userId} via ${host} (sub ${subscription.id.slice(0,8)})`);
       } catch (error: any) {
         console.error(`[Push] Failed for subscription ${subscription.id}:`, error.message);
         

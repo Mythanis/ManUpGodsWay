@@ -741,11 +741,15 @@ export default function Home() {
     }
   };
 
-  const sendTestPrayerNotification = async () => {
+  const sendTestPrayerNotification = async (delaySeconds = 0) => {
     setRemindersTestSending(true);
     try {
-      await apiRequest('POST', '/api/prayer/test-notification', {});
-      toast({ title: "Test Sent", description: "Check your device for a prayer reminder notification." });
+      const data = await apiRequest('POST', '/api/prayer/test-notification', { delaySeconds });
+      if (delaySeconds > 0) {
+        toast({ title: "Close the app now!", description: data?.message || `Notification arriving in ${delaySeconds}s — close and lock your phone.` });
+      } else {
+        toast({ title: "Test Sent", description: "Check your device for a prayer reminder notification." });
+      }
     } catch {
       toast({ title: "Test Failed", description: "Make sure notifications are enabled for this app in your browser and device settings.", variant: "destructive" });
     } finally {
@@ -1464,13 +1468,22 @@ export default function Home() {
               </Button>
 
               {pushSubscribed && (
-                <Button
-                  className="w-full h-9 bg-transparent border border-white/20 text-white/60 hover:text-white hover:border-white/40 rounded-sm font-black uppercase tracking-wide text-[10px]"
-                  onClick={sendTestPrayerNotification}
-                  disabled={remindersTestSending}
-                >
-                  {remindersTestSending ? "Sending..." : "Send Test Notification"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1 h-9 bg-transparent border border-white/20 text-white/60 hover:text-white hover:border-white/40 rounded-sm font-black uppercase tracking-wide text-[10px]"
+                    onClick={() => sendTestPrayerNotification(0)}
+                    disabled={remindersTestSending}
+                  >
+                    {remindersTestSending ? "..." : "Test Now"}
+                  </Button>
+                  <Button
+                    className="flex-1 h-9 bg-transparent border border-amber-500/40 text-amber-400/80 hover:text-amber-300 hover:border-amber-400 rounded-sm font-black uppercase tracking-wide text-[10px]"
+                    onClick={() => sendTestPrayerNotification(30)}
+                    disabled={remindersTestSending}
+                  >
+                    {remindersTestSending ? "..." : "Test in 30s"}
+                  </Button>
+                </div>
               )}
             </div>
 

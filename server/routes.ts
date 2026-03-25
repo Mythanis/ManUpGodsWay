@@ -653,18 +653,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Prayer reminder test — sends an immediate test notification to the current user
+  // Prayer reminder test — sends a test notification, optionally after a delay (seconds)
   app.post('/api/prayer/test-notification', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const result = await sendPushNotification(userId, {
-        title: 'Time to Pray',
-        body: 'Take a moment to connect with God. This is a test of your prayer reminder.',
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
-        tag: 'prayer-reminder-test',
-        url: '/?openPrayerDialog=true',
-      });
+      const delaySeconds = typeof req.body.delaySeconds === 'number' ? Math.min(req.body.delaySeconds, 120) : 0;
+
+      const sendIt = async () => {
+        const result = await sendPushNotification(userId, {
+          title: 'Time to Pray',
+          body: delaySeconds > 0
+            ? 'Background delivery test — if you see this with the app closed, push is working!'
+            : 'Take a moment to connect with God. This is a test of your prayer reminder.',
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: 'prayer-reminder-test',
+          url: '/?openPrayerDialog=true',
+        });
+        console.log(`[Push] Test notification result for ${userId}: ${JSON.stringify(result)}`);
+        return result;
+      };
+
+      if (delaySeconds > 0) {
+        // Respond immediately and send after delay so user can close the app
+        res.json({ success: true, message: `Notification will arrive in ${delaySeconds} seconds — close the app now!` });
+        setTimeout(async () => {
+          try { await sendIt(); } catch (e) { console.error('[Push] Delayed test failed:', e); }
+        }, delaySeconds * 1000);
+        return;
+      }
+
+      const result = await sendIt();
       if (result.success > 0) {
         res.json({ success: true, message: 'Test notification sent' });
       } else {
