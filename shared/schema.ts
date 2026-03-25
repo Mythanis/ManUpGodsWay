@@ -2521,6 +2521,7 @@ export const prayerReminders = pgTable("prayer_reminders", {
   hourlyEndTime: varchar("hourly_end_time").default("21:00"),     // "HH:MM" 24h
   middayEnabled: boolean("midday_enabled").default(false),
   customTimes: text("custom_times").array().default(sql`'{}'::text[]`), // ["HH:MM", ...]
+  timezone: varchar("timezone").default("UTC"),                   // IANA timezone e.g. "America/New_York"
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 

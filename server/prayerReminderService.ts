@@ -21,24 +21,41 @@ class PrayerReminderService {
 
   private async check() {
     const now = new Date();
-    const hh = now.getHours().toString().padStart(2, '0');
-    const mm = now.getMinutes().toString().padStart(2, '0');
-    const currentTime = `${hh}:${mm}`;
-
     const allReminders = await storage.getAllPrayerReminders();
     for (const reminder of allReminders) {
       try {
-        await this.processReminder(reminder, currentTime);
+        await this.processReminder(reminder, now);
       } catch (e) {
         console.error(`[PrayerReminder] Error processing user ${reminder.userId}:`, e);
       }
     }
   }
 
+  private getUserLocalTime(now: Date, timezone: string): string {
+    try {
+      const formatted = new Intl.DateTimeFormat('en-GB', {
+        timeZone: timezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).format(now);
+      // en-GB returns "HH:MM" — ensure padding
+      const [hh, mm] = formatted.split(':');
+      return `${hh.padStart(2, '0')}:${mm.padStart(2, '0')}`;
+    } catch {
+      // Fall back to UTC if timezone string is invalid
+      const hh = now.getUTCHours().toString().padStart(2, '0');
+      const mm = now.getUTCMinutes().toString().padStart(2, '0');
+      return `${hh}:${mm}`;
+    }
+  }
+
   private async processReminder(
     reminder: Awaited<ReturnType<typeof storage.getAllPrayerReminders>>[number],
-    currentTime: string
+    now: Date
   ) {
+    const userTimezone = reminder.timezone || 'UTC';
+    const currentTime = this.getUserLocalTime(now, userTimezone);
     const shouldSend = this.shouldFireNow(reminder, currentTime);
     if (!shouldSend) return;
 
@@ -51,7 +68,7 @@ class PrayerReminderService {
       url: '/?openPrayerDialog=true',
     });
 
-    console.log(`[PrayerReminder] Sent reminder to user ${reminder.userId} at ${currentTime}`);
+    console.log(`[PrayerReminder] Sent reminder to user ${reminder.userId} at ${currentTime} (${userTimezone})`);
   }
 
   private shouldFireNow(

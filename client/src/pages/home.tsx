@@ -717,6 +717,7 @@ export default function Home() {
         hourlyEndTime: remindersHourlyEnd,
         middayEnabled: remindersMiddayEnabled,
         customTimes: remindersCustomTimes,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/prayer/reminders"] });
       toast({ title: "Reminders Saved", description: "Your prayer reminders have been updated." });

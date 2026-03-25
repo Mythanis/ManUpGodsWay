@@ -612,7 +612,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/prayer/reminders', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { hourlyEnabled, hourlyStartTime, hourlyEndTime, middayEnabled, customTimes } = req.body;
+      const { hourlyEnabled, hourlyStartTime, hourlyEndTime, middayEnabled, customTimes, timezone } = req.body;
       if (Array.isArray(customTimes) && customTimes.length > 15) {
         return res.status(400).json({ message: 'Maximum 15 custom reminder times allowed' });
       }
@@ -622,6 +622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hourlyEndTime: hourlyEndTime || '21:00',
         middayEnabled: !!middayEnabled,
         customTimes: Array.isArray(customTimes) ? customTimes : [],
+        timezone: typeof timezone === 'string' && timezone.length > 0 ? timezone : 'UTC',
       });
       res.json(result);
     } catch (error) {
