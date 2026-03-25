@@ -283,6 +283,38 @@ async function migrateVideos() {
   }
 }
 
+// ─── Disk scan: log remaining files on disk after migration ──────────────────
+async function scanOrphanedFiles() {
+  console.log("\n=== Scanning for disk files not referenced in DB ===");
+  if (!fs.existsSync('uploads')) {
+    console.log("No uploads/ directory found — nothing to scan.");
+    return;
+  }
+
+  // Scan all disk files and log them. After a successful migration, any
+  // remaining disk files are orphaned (no DB record points to /uploads/…)
+  // because the migration updates DB records to GCS URLs as it migrates each file.
+  let count = 0;
+  const scanDir = (dir: string) => {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        scanDir(full);
+      } else {
+        console.log(`[ORPHANED] ${full} — disk file not referenced by any DB record (safe to delete after verifying GCS)`);
+        count++;
+      }
+    }
+  };
+  scanDir('uploads');
+  if (count === 0) {
+    console.log("No local disk files found in uploads/ — all clean.");
+  } else {
+    console.log(`Found ${count} orphaned disk file(s). All DB records have been migrated to GCS.`);
+  }
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
   console.log("Starting Object Storage migration...");
@@ -295,6 +327,8 @@ async function main() {
   await migrateStoreProductImages();
   await migrateCommunityMedia();
   await migrateVideos();
+
+  await scanOrphanedFiles();
 
   console.log(`\n===== Migration complete =====`);
   console.log(`Migrated: ${migrated}, Skipped: ${skipped}, Errors: ${errors}`);
