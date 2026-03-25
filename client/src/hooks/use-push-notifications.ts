@@ -25,6 +25,59 @@ export function usePushNotifications() {
     }
   }, []);
 
+  // Auto-heal: when the service worker is ready and the user has already granted
+  // notification permission, check whether the current device's push subscription
+  // endpoint is still recognised and active on the server.  If the push service
+  // invalidated it (410/404) and the server deactivated it, silently create a
+  // fresh subscription so the user doesn't have to toggle settings manually.
+  useEffect(() => {
+    if (!registration || !vapidKeyData?.vapidPublicKey) return;
+    if (Notification.permission !== 'granted') return;
+
+    (async () => {
+      try {
+        const existing = await registration.pushManager.getSubscription();
+        if (!existing) return; // No browser subscription — nothing to heal
+
+        const res = await fetch('/api/push/check-endpoint', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: existing.endpoint }),
+          credentials: 'include',
+        });
+        if (!res.ok) return;
+        const { active, found } = await res.json();
+
+        if (!active) {
+          // Subscription is missing or deactivated — discard the stale browser
+          // subscription and register a fresh one.
+          await existing.unsubscribe();
+          const fresh = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: (() => {
+              const key = vapidKeyData.vapidPublicKey;
+              const padding = '='.repeat((4 - (key.length % 4)) % 4);
+              const base64 = (key + padding).replace(/-/g, '+').replace(/_/g, '/');
+              const raw = window.atob(base64);
+              const out = new Uint8Array(raw.length);
+              for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+              return out;
+            })(),
+          });
+          await fetch('/api/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subscription: fresh.toJSON() }),
+            credentials: 'include',
+          });
+          console.log('[Push] Auto-healed stale subscription');
+        }
+      } catch (err) {
+        console.warn('[Push] Auto-heal check failed (non-critical):', err);
+      }
+    })();
+  }, [registration, vapidKeyData]);
+
   const { data: pushStatus, refetch: refetchStatus } = useQuery({
     queryKey: ['/api/push/status'],
     enabled: isSupported,
@@ -90,10 +143,14 @@ export function usePushNotifications() {
         return false;
       }
 
+      // Always discard the old browser subscription and create a fresh one.
+      // This prevents the case where the existing subscription endpoint has been
+      // invalidated by the push service (410/404) but is still cached in the browser.
+      // Re-sending a stale endpoint would appear to succeed (server marks it active)
+      // but the first notification would deactivate it again immediately.
       const existingSubscription = await registration.pushManager.getSubscription();
       if (existingSubscription) {
-        await subscribeMutation.mutateAsync(existingSubscription);
-        return true;
+        await existingSubscription.unsubscribe();
       }
 
       const subscription = await registration.pushManager.subscribe({

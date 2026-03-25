@@ -522,6 +522,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if the current device's push subscription endpoint is active in the DB.
+  // Used by the client to detect stale/deactivated subscriptions and auto-renew.
+  app.post('/api/push/check-endpoint', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { endpoint } = req.body;
+      if (!endpoint) return res.status(400).json({ active: false });
+
+      const rows = await db
+        .select({ isActive: schema.pushSubscriptions.isActive })
+        .from(schema.pushSubscriptions)
+        .where(and(eq(schema.pushSubscriptions.userId, userId), eq(schema.pushSubscriptions.endpoint, endpoint)))
+        .limit(1);
+
+      const active = rows.length > 0 && rows[0].isActive;
+      res.json({ active, found: rows.length > 0 });
+    } catch (error) {
+      console.error('Error checking push endpoint:', error);
+      res.status(500).json({ active: false });
+    }
+  });
+
   app.get('/api/push/vapid-public-key', (req, res) => {
     const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || process.env.VITE_VAPID_PUBLIC_KEY;
     if (vapidPublicKey) {
