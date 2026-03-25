@@ -55,18 +55,16 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
         isProfileComplete: true,
       }),
     onSuccess: async () => {
-      // Save daily reminder preference if enabled
-      if (dailyReminderEnabled) {
-        try {
-          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-          await apiRequest('PUT', '/api/daily-reminder', {
-            enabled: dailyReminderEnabled,
-            reminderTime: dailyReminderTime,
-            timezone: tz,
-          });
-        } catch {
-          // Non-fatal — they can set it in notification preferences
-        }
+      // Save daily reminder preference (always persist so the chosen time is not lost)
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+        await apiRequest('PUT', '/api/daily-reminder', {
+          enabled: dailyReminderEnabled,
+          reminderTime: dailyReminderTime,
+          timezone: tz,
+        });
+      } catch {
+        // Non-fatal — they can set it in notification preferences
       }
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       toast({
