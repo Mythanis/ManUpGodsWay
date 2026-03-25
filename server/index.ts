@@ -11,7 +11,11 @@ import { prayerReminderService } from "./prayerReminderService";
 import { dailyReminderService } from "./dailyReminderService";
 
 const app = express();
-app.use(express.json());
+app.use(express.json({
+  verify: (req: any, _res, buf) => {
+    req.rawBody = buf;
+  },
+}));
 app.use(express.urlencoded({ extended: false }));
 
 // Serve uploaded files statically

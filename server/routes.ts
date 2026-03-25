@@ -5403,7 +5403,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         apiVersion: '2023-10-16',
       });
 
-      const event = req.body;
+      let event: any;
+      const sig = req.headers['stripe-signature'];
+
+      if (process.env.STRIPE_WEBHOOK_SECRET) {
+        if (!sig) {
+          return res.status(400).json({ message: "Missing stripe-signature header" });
+        }
+        try {
+          event = stripe.webhooks.constructEvent(
+            (req as any).rawBody as Buffer,
+            sig as string,
+            process.env.STRIPE_WEBHOOK_SECRET
+          );
+        } catch (err: any) {
+          console.error(`[Webhook] Signature verification failed: ${err.message}`);
+          return res.status(400).json({ message: `Webhook signature verification failed: ${err.message}` });
+        }
+      } else {
+        console.warn('[Webhook] STRIPE_WEBHOOK_SECRET is not set — signature verification skipped. Add it to Replit Secrets to secure this endpoint.');
+        event = req.body;
+      }
 
       // Handle the subscription checkout completion event
       if (event.type === 'checkout.session.completed') {
