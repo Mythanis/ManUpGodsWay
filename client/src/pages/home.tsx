@@ -34,8 +34,13 @@ declare let TimestampTrigger: {
 interface NotificationWithTrigger extends NotificationOptions {
   showTrigger?: TimestampTrigger;
 }
+interface GetNotificationsFilter {
+  tag?: string;
+  includeTriggered?: boolean;
+}
 interface ServiceWorkerRegistrationWithTriggers extends ServiceWorkerRegistration {
   showNotification(title: string, options?: NotificationWithTrigger): Promise<void>;
+  getNotifications(filter?: GetNotificationsFilter): Promise<Notification[]>;
 }
 
 export default function Home() {
@@ -567,8 +572,20 @@ export default function Home() {
     // Clear persisted end timestamp
     localStorage.removeItem('prayerEndTime');
 
-    // Cancel server-side scheduled push notification
-    apiRequest('DELETE', '/api/prayer/cancel').catch(() => {});
+    // Only cancel server-side timer on manual end — if the timer already
+    // expired naturally the server notification should still fire (or has
+    // already fired). We never cancel on auto-expiry so push always lands.
+    if (!timerExpired) {
+      apiRequest('DELETE', '/api/prayer/cancel').catch(() => {});
+
+      // Also cancel any pending local trigger notification (Android fallback)
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then((reg) => {
+          const regWithTriggers = reg as ServiceWorkerRegistrationWithTriggers;
+          return regWithTriggers.getNotifications({ tag: 'prayer-complete', includeTriggered: true });
+        }).then((notifications) => notifications.forEach((n) => n.close())).catch(() => {});
+      }
+    }
 
     // Exit fullscreen
     if (document.fullscreenElement) {
