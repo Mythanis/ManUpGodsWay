@@ -358,6 +358,9 @@ export interface IStorage {
     totalStudies: number;
     activeToday: number;
     newPosts: number;
+    activeSubscribers: number;
+    cancelledAfter7Days: number;
+    nonSubscribersAfter7Days: number;
   }>;
 
   // Messaging operations
@@ -2804,6 +2807,9 @@ export class DatabaseStorage implements IStorage {
     totalStudies: number;
     activeToday: number;
     newPosts: number;
+    activeSubscribers: number;
+    cancelledAfter7Days: number;
+    nonSubscribersAfter7Days: number;
   }> {
     const [{ totalUsers }] = await db.select({ totalUsers: count(users.id) }).from(users);
     const [{ totalStudies }] = await db.select({ totalStudies: count(studies.id) }).from(studies);
@@ -2832,11 +2838,38 @@ export class DatabaseStorage implements IStorage {
     // Total new posts = new discussions + new replies (same as community stats)
     const newPosts = newDiscussions + newReplies;
 
+    // Subscription insight counts
+    const [{ activeSubscribers }] = await db
+      .select({ activeSubscribers: count(users.id) })
+      .from(users)
+      .where(eq(users.subscriptionStatus, 'active'));
+
+    // Cancelled users whose accounts are older than 7 days
+    const [{ cancelledAfter7Days }] = await db
+      .select({ cancelledAfter7Days: count(users.id) })
+      .from(users)
+      .where(
+        sql`${users.subscriptionStatus} = 'cancelled'
+            AND ${users.createdAt} <= NOW() - INTERVAL '7 days'`
+      );
+
+    // Users still on trial or expired whose accounts are older than 7 days
+    const [{ nonSubscribersAfter7Days }] = await db
+      .select({ nonSubscribersAfter7Days: count(users.id) })
+      .from(users)
+      .where(
+        sql`${users.subscriptionStatus} IN ('trial', 'expired')
+            AND ${users.createdAt} <= NOW() - INTERVAL '7 days'`
+      );
+
     return {
       totalUsers,
       totalStudies,
       activeToday,
       newPosts,
+      activeSubscribers,
+      cancelledAfter7Days,
+      nonSubscribersAfter7Days,
     };
   }
 

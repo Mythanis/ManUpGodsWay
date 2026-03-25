@@ -102,6 +102,7 @@ export default function Admin() {
     selectedUserIds: [] as string[]
   });
   const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [subscriptionFilter, setSubscriptionFilter] = useState<string | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [wordFile, setWordFile] = useState<File | null>(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
@@ -200,6 +201,9 @@ export default function Admin() {
     totalStudies: number;
     activeToday: number;
     newPosts: number;
+    activeSubscribers: number;
+    cancelledAfter7Days: number;
+    nonSubscribersAfter7Days: number;
   }>({
     queryKey: ["/api/admin/stats"],
     retry: false,
@@ -598,6 +602,61 @@ export default function Admin() {
         </div>
       </div>
 
+      {/* Subscription Insights */}
+      <div className="px-6 pb-6">
+        <div
+          className="rounded-sm border-2 border-[#FCD000] overflow-hidden"
+          style={{ background: "#0d0d0d", boxShadow: "4px 4px 0px 0px rgba(252,208,0,0.3)" }}
+        >
+          <div className="px-4 py-2.5" style={{ background: "#FCD000" }}>
+            <p className="text-black font-black text-xs uppercase tracking-[0.18em]">After Trial — Subscription Insights</p>
+          </div>
+          <div className="grid grid-cols-2 divide-x divide-y divide-white/10">
+            {/* Active Subscribers */}
+            <button
+              className="p-4 text-center hover:bg-white/5 transition-colors active:bg-white/10"
+              onClick={() => { setSubscriptionFilter('active'); setActiveTab('users'); }}
+            >
+              <p className="text-2xl font-black text-[#FCD000]">{stats?.activeSubscribers ?? '—'}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-white/60 mt-0.5">Active Subs</p>
+            </button>
+
+            {/* Conversion Rate */}
+            <div className="p-4 text-center">
+              {(() => {
+                const total = (stats?.activeSubscribers ?? 0) + (stats?.cancelledAfter7Days ?? 0) + (stats?.nonSubscribersAfter7Days ?? 0);
+                const rate = total > 0 ? Math.round(((stats?.activeSubscribers ?? 0) / total) * 100) : 0;
+                return (
+                  <>
+                    <p className="text-2xl font-black text-white">{stats ? `${rate}%` : '—'}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-white/60 mt-0.5">Conversion</p>
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Cancelled after 7 days */}
+            <button
+              className="p-4 text-center hover:bg-white/5 transition-colors active:bg-white/10"
+              onClick={() => { setSubscriptionFilter('cancelled'); setActiveTab('users'); }}
+            >
+              <p className="text-2xl font-black text-red-400">{stats?.cancelledAfter7Days ?? '—'}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-white/60 mt-0.5">Cancelled</p>
+            </button>
+
+            {/* Never subscribed after 7 days */}
+            <button
+              className="p-4 text-center hover:bg-white/5 transition-colors active:bg-white/10"
+              onClick={() => { setSubscriptionFilter('non-subscriber'); setActiveTab('users'); }}
+            >
+              <p className="text-2xl font-black text-white/70">{stats?.nonSubscribersAfter7Days ?? '—'}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-white/60 mt-0.5">Never Subscribed</p>
+            </button>
+          </div>
+          <p className="text-[10px] text-white/30 text-center pb-2.5">Tap a number to view those users · Cancelled & Never Subscribed counts are 7+ day accounts</p>
+        </div>
+      </div>
+
       {/* Admin Management Buttons */}
       <div className="px-6 mb-6">
         <div className="space-y-2">
@@ -803,7 +862,10 @@ export default function Admin() {
           {activeTab === "users" && (
             <div>
               <h2 className="text-lg font-bold text-ministry-charcoal mb-4">User Management</h2>
-              <UserManagement />
+              <UserManagement
+                subscriptionFilter={subscriptionFilter}
+                onClearSubscriptionFilter={() => setSubscriptionFilter(null)}
+              />
             </div>
           )}
           </div>

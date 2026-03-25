@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell } from "lucide-react";
+import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X } from "lucide-react";
 
 interface User {
   id: string;
@@ -34,7 +34,12 @@ interface User {
   updatedAt: string;
 }
 
-export default function UserManagement() {
+interface UserManagementProps {
+  subscriptionFilter?: string | null;
+  onClearSubscriptionFilter?: () => void;
+}
+
+export default function UserManagement({ subscriptionFilter, onClearSubscriptionFilter }: UserManagementProps = {}) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
@@ -182,10 +187,19 @@ export default function UserManagement() {
     },
   });
 
-  const filteredUsers = users.filter((user: any) =>
-    `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter((user: any) => {
+    const matchesSearch =
+      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (!matchesSearch) return false;
+
+    if (subscriptionFilter === 'active') return user.subscriptionStatus === 'active';
+    if (subscriptionFilter === 'cancelled') return user.subscriptionStatus === 'cancelled';
+    if (subscriptionFilter === 'non-subscriber') return user.subscriptionStatus === 'trial' || user.subscriptionStatus === 'expired';
+
+    return true;
+  });
 
   const handleSaveChanges = async () => {
     if (!selectedUser || !hasUnsavedChanges) return;
@@ -274,7 +288,7 @@ export default function UserManagement() {
     <Card className="border-gray-100 overflow-hidden" data-testid="card-user-management">
       <CardContent className="p-0">
         {/* Search Users */}
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-gray-100 space-y-2">
           <div className="relative">
             <Input
               type="text"
@@ -286,6 +300,21 @@ export default function UserManagement() {
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-ministry-slate" />
           </div>
+          {subscriptionFilter && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">Filtered by:</span>
+              <button
+                onClick={onClearSubscriptionFilter}
+                className="flex items-center gap-1 bg-[#FCD000] text-black text-xs font-bold px-2 py-0.5 rounded-full hover:bg-yellow-400 transition-colors"
+              >
+                {subscriptionFilter === 'active' && 'Active Subscribers'}
+                {subscriptionFilter === 'cancelled' && 'Cancelled'}
+                {subscriptionFilter === 'non-subscriber' && 'Never Subscribed'}
+                <X className="w-3 h-3 ml-0.5" />
+              </button>
+              <span className="text-xs text-gray-400">{filteredUsers.length} users</span>
+            </div>
+          )}
         </div>
         
         {/* User List */}
