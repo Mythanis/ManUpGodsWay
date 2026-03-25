@@ -220,6 +220,16 @@ export async function savePushSubscription(
         .where(eq(pushSubscriptions.endpoint, endpoint));
       console.log(`[Push] Updated subscription for user ${userId}`);
     } else {
+      // Before inserting, delete any old inactive subscriptions for this user so
+      // the table doesn't accumulate stale rows over time.
+      const deleted = await db
+        .delete(pushSubscriptions)
+        .where(and(eq(pushSubscriptions.userId, userId), eq(pushSubscriptions.isActive, false)))
+        .returning({ id: pushSubscriptions.id });
+      if (deleted.length > 0) {
+        console.log(`[Push] Cleaned up ${deleted.length} old inactive subscription(s) for user ${userId}`);
+      }
+
       await db
         .insert(pushSubscriptions)
         .values({ userId, endpoint, p256dh, auth, userAgent });
