@@ -45,8 +45,8 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
     prayerPermissionsGranted: false,
   });
 
-  const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
-  const [dailyReminderTime, setDailyReminderTime] = useState('08:00');
+  const [dailyReminderEnabled, setDailyReminderEnabled] = useState(true);
+  const [dailyReminderTime, setDailyReminderTime] = useState('07:30');
 
   const updateProfileMutation = useMutation({
     mutationFn: (data: SetupData) =>
