@@ -24,6 +24,20 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { apiRequest } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 
+// Experimental Notification Triggers API (Chrome 80+ / Android)
+interface TimestampTrigger {
+  readonly timestamp: number;
+}
+declare let TimestampTrigger: {
+  new (timestamp: number): TimestampTrigger;
+};
+interface NotificationWithTrigger extends NotificationOptions {
+  showTrigger?: TimestampTrigger;
+}
+interface ServiceWorkerRegistrationWithTriggers extends ServiceWorkerRegistration {
+  showNotification(title: string, options?: NotificationWithTrigger): Promise<void>;
+}
+
 export default function Home() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -507,15 +521,15 @@ export default function Home() {
     }
 
     // Android local notification fallback via showTrigger API
-    if ('Notification' in window && Notification.permission === 'granted' && 'showTrigger' in Notification) {
+    if ('Notification' in window && Notification.permission === 'granted' && 'TimestampTrigger' in window) {
       try {
-        const reg = await navigator.serviceWorker.ready;
-        (reg as any).showNotification('Prayer Time Complete', {
+        const reg = (await navigator.serviceWorker.ready) as ServiceWorkerRegistrationWithTriggers;
+        await reg.showNotification('Prayer Time Complete', {
           body: 'Your prayer time has ended. May you feel refreshed and blessed.',
           icon: '/icon-192.png',
           badge: '/icon-192.png',
           tag: 'prayer-complete',
-          showTrigger: new (window as any).TimestampTrigger(endTime),
+          showTrigger: new TimestampTrigger(endTime),
         });
       } catch (err) {
         console.log('showTrigger not available:', err);
