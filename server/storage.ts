@@ -181,6 +181,8 @@ import {
   type BibleReadingPlan,
   type BibleReadingPlanDay,
   type BibleReadingProgress,
+  prayerReminders,
+  type PrayerReminder,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne } from "drizzle-orm";
@@ -627,6 +629,11 @@ export interface IStorage {
   createManUpLink(link: InsertManUpLink): Promise<ManUpLink>;
   updateManUpLink(id: string, link: Partial<InsertManUpLink>): Promise<ManUpLink>;
   deleteManUpLink(id: string): Promise<void>;
+
+  // Prayer reminder operations
+  getPrayerReminders(userId: string): Promise<PrayerReminder | undefined>;
+  upsertPrayerReminders(userId: string, data: Partial<PrayerReminder>): Promise<PrayerReminder>;
+  getAllPrayerReminders(): Promise<PrayerReminder[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -6994,6 +7001,34 @@ export class DatabaseStorage implements IStorage {
       await db.insert(bibleReadingPlanDays).values(batch);
     }
     return plan;
+  }
+
+  // Prayer reminder operations
+  async getPrayerReminders(userId: string): Promise<PrayerReminder | undefined> {
+    const [row] = await db.select().from(prayerReminders).where(eq(prayerReminders.userId, userId));
+    return row;
+  }
+
+  async upsertPrayerReminders(userId: string, data: Partial<PrayerReminder>): Promise<PrayerReminder> {
+    const existing = await this.getPrayerReminders(userId);
+    if (existing) {
+      const [row] = await db
+        .update(prayerReminders)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(prayerReminders.userId, userId))
+        .returning();
+      return row;
+    } else {
+      const [row] = await db
+        .insert(prayerReminders)
+        .values({ userId, ...data, updatedAt: new Date() })
+        .returning();
+      return row;
+    }
+  }
+
+  async getAllPrayerReminders(): Promise<PrayerReminder[]> {
+    return db.select().from(prayerReminders);
   }
 }
 

@@ -7,6 +7,7 @@ import { subscriptionExpirationService } from "./subscriptionExpirationService";
 import { fitnessReminderService } from "./fitnessReminderService";
 import { warGroupsGeocodingService } from "./warGroupsGeocodingService";
 import { challengeNotificationService } from "./challengeNotificationService";
+import { prayerReminderService } from "./prayerReminderService";
 
 const app = express();
 app.use(express.json());
@@ -91,5 +92,8 @@ app.use((req, res, next) => {
     
     // Start the challenge notification service
     challengeNotificationService.start();
+    
+    // Start the prayer reminder service
+    prayerReminderService.start();
   });
 })();

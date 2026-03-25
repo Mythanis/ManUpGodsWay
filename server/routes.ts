@@ -576,6 +576,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Prayer Reminders routes
+  app.get('/api/prayer/reminders', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const reminders = await storage.getPrayerReminders(userId);
+      res.json(reminders || {
+        hourlyEnabled: false,
+        hourlyStartTime: '06:00',
+        hourlyEndTime: '22:00',
+        middayEnabled: false,
+        customTimes: [],
+      });
+    } catch (error) {
+      console.error('Error fetching prayer reminders:', error);
+      res.status(500).json({ message: 'Failed to fetch prayer reminders' });
+    }
+  });
+
+  app.put('/api/prayer/reminders', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { hourlyEnabled, hourlyStartTime, hourlyEndTime, middayEnabled, customTimes } = req.body;
+      const result = await storage.upsertPrayerReminders(userId, {
+        hourlyEnabled: !!hourlyEnabled,
+        hourlyStartTime: hourlyStartTime || '06:00',
+        hourlyEndTime: hourlyEndTime || '22:00',
+        middayEnabled: !!middayEnabled,
+        customTimes: Array.isArray(customTimes) ? customTimes : [],
+      });
+      res.json(result);
+    } catch (error) {
+      console.error('Error saving prayer reminders:', error);
+      res.status(500).json({ message: 'Failed to save prayer reminders' });
+    }
+  });
+
   // Test push notification (admin only)
   app.post('/api/push/test', isAuthenticated, async (req: any, res) => {
     try {

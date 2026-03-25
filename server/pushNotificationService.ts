@@ -72,6 +72,8 @@ export function getPushUrl(type: string, relatedId?: string | null): string {
       return '/podcasts';
     case 'admin':
       return relatedId ? `/messages?conversation=${relatedId}` : '/';
+    case 'prayer_reminder':
+      return '/?openPrayerDialog=true';
     default:
       return '/';
   }

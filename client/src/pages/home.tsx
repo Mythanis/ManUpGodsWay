@@ -18,11 +18,13 @@ import HomeCarousel from "@/components/home-carousel";
 import { WelcomeIntro } from "@/components/WelcomeIntro";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
-import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper, Book, Coins } from "lucide-react";
+import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper, Book, Coins, BellRing, Plus, Trash2 } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import { apiRequest } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 // Experimental Notification Triggers API (Chrome 80+ / Android)
 interface TimestampTrigger {
@@ -58,6 +60,14 @@ export default function Home() {
   const [prayerDuration, setPrayerDuration] = useState("5");
   const [isPraying, setIsPraying] = useState(false);
   const [prayerTimeLeft, setPrayerTimeLeft] = useState(0);
+  // Prayer reminders state
+  const [remindersHourlyEnabled, setRemindersHourlyEnabled] = useState(false);
+  const [remindersHourlyStart, setRemindersHourlyStart] = useState("06:00");
+  const [remindersHourlyEnd, setRemindersHourlyEnd] = useState("22:00");
+  const [remindersMiddayEnabled, setRemindersMiddayEnabled] = useState(false);
+  const [remindersCustomTimes, setRemindersCustomTimes] = useState<string[]>([]);
+  const [newCustomTime, setNewCustomTime] = useState("09:00");
+  const [remindersSaving, setRemindersSaving] = useState(false);
   const [showProgressDialog, setShowProgressDialog] = useState(false);
   const [showChallengeDialog, setShowChallengeDialog] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -65,6 +75,9 @@ export default function Home() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showWelcomeIntro, setShowWelcomeIntro] = useState(false);
   const [appOpenStreak, setAppOpenStreak] = useState(0);
+
+  // Push notifications hook (for reminder subscription prompting)
+  const { isSupported: pushSupported, isSubscribed: pushSubscribed, subscribe: pushSubscribe } = usePushNotifications();
 
   // Track app opens and calculate streak
   useEffect(() => {
@@ -142,6 +155,42 @@ export default function Home() {
     queryKey: ["/api/rations"],
     retry: false,
   });
+
+  // Prayer reminders data
+  const { data: prayerRemindersData } = useQuery<{
+    hourlyEnabled: boolean;
+    hourlyStartTime: string;
+    hourlyEndTime: string;
+    middayEnabled: boolean;
+    customTimes: string[];
+  }>({
+    queryKey: ["/api/prayer/reminders"],
+    retry: false,
+    enabled: !!user,
+  });
+
+  // Populate reminders state from server data
+  useEffect(() => {
+    if (prayerRemindersData) {
+      setRemindersHourlyEnabled(prayerRemindersData.hourlyEnabled ?? false);
+      setRemindersHourlyStart(prayerRemindersData.hourlyStartTime ?? "06:00");
+      setRemindersHourlyEnd(prayerRemindersData.hourlyEndTime ?? "22:00");
+      setRemindersMiddayEnabled(prayerRemindersData.middayEnabled ?? false);
+      setRemindersCustomTimes(prayerRemindersData.customTimes ?? []);
+    }
+  }, [prayerRemindersData]);
+
+  // Auto-open prayer dialog when URL has ?openPrayerDialog=true
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("openPrayerDialog") === "true") {
+      setShowPrayerDialog(true);
+      // Clean up URL param without navigating
+      const url = new URL(window.location.href);
+      url.searchParams.delete("openPrayerDialog");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, []);
 
   const { data: progress = [], isLoading: progressLoading } = useQuery({
     queryKey: ["/api/progress"],
@@ -607,6 +656,49 @@ export default function Home() {
     });
 
     navigate('/');
+  };
+
+  const saveReminders = async () => {
+    setRemindersSaving(true);
+    // If any reminder enabled and not subscribed to push, prompt first
+    const anyEnabled = remindersHourlyEnabled || remindersMiddayEnabled || remindersCustomTimes.length > 0;
+    if (anyEnabled && pushSupported && !pushSubscribed) {
+      const ok = await pushSubscribe();
+      if (!ok) {
+        toast({
+          title: "Notifications Required",
+          description: "Please allow notifications to enable prayer reminders.",
+          variant: "destructive",
+        });
+        setRemindersSaving(false);
+        return;
+      }
+    }
+    try {
+      await apiRequest('PUT', '/api/prayer/reminders', {
+        hourlyEnabled: remindersHourlyEnabled,
+        hourlyStartTime: remindersHourlyStart,
+        hourlyEndTime: remindersHourlyEnd,
+        middayEnabled: remindersMiddayEnabled,
+        customTimes: remindersCustomTimes,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/prayer/reminders"] });
+      toast({ title: "Reminders Saved", description: "Your prayer reminders have been updated." });
+    } catch {
+      toast({ title: "Error", description: "Failed to save reminders.", variant: "destructive" });
+    } finally {
+      setRemindersSaving(false);
+    }
+  };
+
+  const addCustomTime = () => {
+    if (!remindersCustomTimes.includes(newCustomTime)) {
+      setRemindersCustomTimes([...remindersCustomTimes, newCustomTime].sort());
+    }
+  };
+
+  const removeCustomTime = (t: string) => {
+    setRemindersCustomTimes(remindersCustomTimes.filter((x) => x !== t));
   };
 
   const formatTime = (seconds: number) => {
@@ -1088,43 +1180,40 @@ export default function Home() {
 
       {/* Prayer Time Dialog */}
       <Dialog open={showPrayerDialog} onOpenChange={setShowPrayerDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[85svh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <Clock className="w-5 h-5 text-ministry-steel" />
-              <span>Set Prayer Time</span>
+              <span>Prayer Time</span>
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
-            <div className="text-center">
+            {/* Timer section */}
+            <div>
               <p className="text-ministry-slate text-sm mb-4">
                 Choose how long you'd like to spend in prayer. The app will notify you when your time is complete.
               </p>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-ministry-charcoal">Duration</label>
-              <Select value={prayerDuration} onValueChange={setPrayerDuration}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select duration" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 minute</SelectItem>
-                  <SelectItem value="3">3 minutes</SelectItem>
-                  <SelectItem value="5">5 minutes</SelectItem>
-                  <SelectItem value="10">10 minutes</SelectItem>
-                  <SelectItem value="15">15 minutes</SelectItem>
-                  <SelectItem value="20">20 minutes</SelectItem>
-                  <SelectItem value="30">30 minutes</SelectItem>
-                  <SelectItem value="60">1 hour</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-ministry-charcoal">Duration</label>
+                <Select value={prayerDuration} onValueChange={setPrayerDuration}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 minute</SelectItem>
+                    <SelectItem value="3">3 minutes</SelectItem>
+                    <SelectItem value="5">5 minutes</SelectItem>
+                    <SelectItem value="10">10 minutes</SelectItem>
+                    <SelectItem value="15">15 minutes</SelectItem>
+                    <SelectItem value="20">20 minutes</SelectItem>
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="60">1 hour</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="bg-blue-50 p-3 rounded-lg space-y-2">
-              <p className="text-xs text-ministry-slate">
-                <strong>Notifications:</strong> The app will request permission to send you a notification when your prayer time is complete.
-              </p>
               <p className="text-xs text-ministry-slate">
                 <strong>Tip:</strong> For fewer distractions during prayer, consider turning on Do Not Disturb mode on your phone before you begin.
               </p>
@@ -1143,6 +1232,101 @@ export default function Home() {
                 onClick={startPrayerTime}
               >
                 Start Prayer
+              </Button>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-gray-200 pt-4">
+              <div className="flex items-center gap-2 mb-4">
+                <BellRing className="w-4 h-4 text-ministry-steel" />
+                <h3 className="text-sm font-semibold text-ministry-charcoal">Prayer Reminders</h3>
+              </div>
+              <p className="text-xs text-ministry-slate mb-4">
+                Receive push notifications to remind you to pray throughout the day.
+              </p>
+
+              {/* Midday reminder */}
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-sm font-medium">Midday Reminder</p>
+                  <p className="text-xs text-ministry-slate">Notify at 12:00 PM every day</p>
+                </div>
+                <Switch
+                  checked={remindersMiddayEnabled}
+                  onCheckedChange={setRemindersMiddayEnabled}
+                />
+              </div>
+
+              {/* Hourly reminders */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <p className="text-sm font-medium">Hourly Reminders</p>
+                    <p className="text-xs text-ministry-slate">Notify every hour in a time window</p>
+                  </div>
+                  <Switch
+                    checked={remindersHourlyEnabled}
+                    onCheckedChange={setRemindersHourlyEnabled}
+                  />
+                </div>
+                {remindersHourlyEnabled && (
+                  <div className="mt-2 ml-2 flex items-center gap-2">
+                    <div className="flex-1">
+                      <label className="text-xs text-ministry-slate">From</label>
+                      <input
+                        type="time"
+                        value={remindersHourlyStart}
+                        onChange={(e) => setRemindersHourlyStart(e.target.value)}
+                        className="block w-full border border-gray-200 rounded px-2 py-1 text-sm mt-1"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs text-ministry-slate">To</label>
+                      <input
+                        type="time"
+                        value={remindersHourlyEnd}
+                        onChange={(e) => setRemindersHourlyEnd(e.target.value)}
+                        className="block w-full border border-gray-200 rounded px-2 py-1 text-sm mt-1"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Custom times */}
+              <div className="mb-4">
+                <p className="text-sm font-medium mb-2">Custom Times</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <input
+                    type="time"
+                    value={newCustomTime}
+                    onChange={(e) => setNewCustomTime(e.target.value)}
+                    className="flex-1 border border-gray-200 rounded px-2 py-1 text-sm"
+                  />
+                  <Button size="sm" variant="outline" onClick={addCustomTime}>
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                {remindersCustomTimes.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {remindersCustomTimes.map((t) => (
+                      <div key={t} className="flex items-center gap-1 bg-gray-100 rounded px-2 py-1 text-xs">
+                        <span>{t}</span>
+                        <button onClick={() => removeCustomTime(t)} className="text-gray-400 hover:text-red-500">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Button
+                className="w-full bg-ministry-navy text-white hover:bg-ministry-charcoal"
+                onClick={saveReminders}
+                disabled={remindersSaving}
+              >
+                {remindersSaving ? "Saving..." : "Save Reminders"}
               </Button>
             </div>
           </div>

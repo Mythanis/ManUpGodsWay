@@ -2510,3 +2510,24 @@ export const insertManUpLinkSchema = createInsertSchema(manUpLinks).omit({
 
 export type ManUpLink = typeof manUpLinks.$inferSelect;
 export type InsertManUpLink = z.infer<typeof insertManUpLinkSchema>;
+
+// ─── Prayer Reminders ─────────────────────────────────────────────────────────
+
+export const prayerReminders = pgTable("prayer_reminders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  hourlyEnabled: boolean("hourly_enabled").default(false),
+  hourlyStartTime: varchar("hourly_start_time").default("06:00"), // "HH:MM" 24h
+  hourlyEndTime: varchar("hourly_end_time").default("22:00"),     // "HH:MM" 24h
+  middayEnabled: boolean("midday_enabled").default(false),
+  customTimes: text("custom_times").array().default(sql`'{}'::text[]`), // ["HH:MM", ...]
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPrayerReminderSchema = createInsertSchema(prayerReminders).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type PrayerReminder = typeof prayerReminders.$inferSelect;
+export type InsertPrayerReminder = z.infer<typeof insertPrayerReminderSchema>;
