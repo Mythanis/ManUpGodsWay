@@ -62,8 +62,8 @@ export default function Home() {
   const [prayerTimeLeft, setPrayerTimeLeft] = useState(0);
   // Prayer reminders state
   const [remindersHourlyEnabled, setRemindersHourlyEnabled] = useState(false);
-  const [remindersHourlyStart, setRemindersHourlyStart] = useState("06:00");
-  const [remindersHourlyEnd, setRemindersHourlyEnd] = useState("22:00");
+  const [remindersHourlyStart, setRemindersHourlyStart] = useState("08:00");
+  const [remindersHourlyEnd, setRemindersHourlyEnd] = useState("21:00");
   const [remindersMiddayEnabled, setRemindersMiddayEnabled] = useState(false);
   const [remindersCustomTimes, setRemindersCustomTimes] = useState<string[]>([]);
   const [newCustomTime, setNewCustomTime] = useState("09:00");
@@ -732,11 +732,6 @@ export default function Home() {
       toast({ title: "Limit Reached", description: "Maximum 15 custom reminder times allowed.", variant: "destructive" });
       return;
     }
-    // If push not subscribed, prompt before adding
-    if (pushSupported && !pushSubscribed) {
-      setPendingToggle(null);
-      setShowPushPrompt(true);
-    }
     if (!remindersCustomTimes.includes(newCustomTime)) {
       setRemindersCustomTimes([...remindersCustomTimes, newCustomTime].sort());
     }
@@ -1354,11 +1349,21 @@ export default function Home() {
                     value={newCustomTime}
                     onChange={(e) => setNewCustomTime(e.target.value)}
                     className="flex-1 border border-gray-200 rounded px-2 py-1 text-sm"
+                    disabled={pushSupported && !pushSubscribed}
                   />
-                  <Button size="sm" variant="outline" onClick={addCustomTime}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={addCustomTime}
+                    disabled={pushSupported && !pushSubscribed}
+                    title={pushSupported && !pushSubscribed ? "Enable notifications first" : undefined}
+                  >
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
+                {pushSupported && !pushSubscribed && (
+                  <p className="text-xs text-amber-600 mb-1">Enable notifications above to add custom times.</p>
+                )}
                 {remindersCustomTimes.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {remindersCustomTimes.map((t) => (

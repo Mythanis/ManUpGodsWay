@@ -584,8 +584,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!reminders) {
         reminders = await storage.upsertPrayerReminders(userId, {
           hourlyEnabled: false,
-          hourlyStartTime: '06:00',
-          hourlyEndTime: '22:00',
+          hourlyStartTime: '08:00',
+          hourlyEndTime: '21:00',
           middayEnabled: false,
           customTimes: [],
         });
@@ -606,8 +606,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const result = await storage.upsertPrayerReminders(userId, {
         hourlyEnabled: !!hourlyEnabled,
-        hourlyStartTime: hourlyStartTime || '06:00',
-        hourlyEndTime: hourlyEndTime || '22:00',
+        hourlyStartTime: hourlyStartTime || '08:00',
+        hourlyEndTime: hourlyEndTime || '21:00',
         middayEnabled: !!middayEnabled,
         customTimes: Array.isArray(customTimes) ? customTimes : [],
       });

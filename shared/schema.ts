@@ -2517,8 +2517,8 @@ export const prayerReminders = pgTable("prayer_reminders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
   hourlyEnabled: boolean("hourly_enabled").default(false),
-  hourlyStartTime: varchar("hourly_start_time").default("06:00"), // "HH:MM" 24h
-  hourlyEndTime: varchar("hourly_end_time").default("22:00"),     // "HH:MM" 24h
+  hourlyStartTime: varchar("hourly_start_time").default("08:00"), // "HH:MM" 24h
+  hourlyEndTime: varchar("hourly_end_time").default("21:00"),     // "HH:MM" 24h
   middayEnabled: boolean("midday_enabled").default(false),
   customTimes: text("custom_times").array().default(sql`'{}'::text[]`), // ["HH:MM", ...]
   updatedAt: timestamp("updated_at").defaultNow(),
