@@ -8,6 +8,7 @@ import { fitnessReminderService } from "./fitnessReminderService";
 import { warGroupsGeocodingService } from "./warGroupsGeocodingService";
 import { challengeNotificationService } from "./challengeNotificationService";
 import { prayerReminderService } from "./prayerReminderService";
+import { dailyReminderService } from "./dailyReminderService";
 
 const app = express();
 app.use(express.json());
@@ -95,5 +96,8 @@ app.use((req, res, next) => {
     
     // Start the prayer reminder service
     prayerReminderService.start();
+    
+    // Start the daily app reminder service
+    dailyReminderService.start();
   });
 })();

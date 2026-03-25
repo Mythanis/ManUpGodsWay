@@ -2532,3 +2532,22 @@ export const insertPrayerReminderSchema = createInsertSchema(prayerReminders).om
 
 export type PrayerReminder = typeof prayerReminders.$inferSelect;
 export type InsertPrayerReminder = z.infer<typeof insertPrayerReminderSchema>;
+
+// ─── Daily App Reminders ───────────────────────────────────────────────────────
+
+export const dailyAppReminders = pgTable("daily_app_reminders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  enabled: boolean("enabled").notNull().default(false),
+  reminderTime: varchar("reminder_time").notNull().default("08:00"), // "HH:MM" 24h
+  timezone: varchar("timezone").notNull().default("UTC"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertDailyAppReminderSchema = createInsertSchema(dailyAppReminders).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type DailyAppReminder = typeof dailyAppReminders.$inferSelect;
+export type InsertDailyAppReminder = z.infer<typeof insertDailyAppReminderSchema>;

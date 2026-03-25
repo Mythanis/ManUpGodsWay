@@ -695,6 +695,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Daily App Reminder routes
+  app.get('/api/daily-reminder', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      let reminder = await storage.getDailyReminder(userId);
+      if (!reminder) {
+        reminder = await storage.upsertDailyReminder(userId, {
+          enabled: false,
+          reminderTime: '08:00',
+          timezone: 'UTC',
+        });
+      }
+      res.json(reminder);
+    } catch (error) {
+      console.error('Error fetching daily reminder:', error);
+      res.status(500).json({ message: 'Failed to fetch daily reminder' });
+    }
+  });
+
+  app.put('/api/daily-reminder', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { enabled, reminderTime, timezone } = req.body;
+      if (typeof enabled !== 'boolean') {
+        return res.status(400).json({ message: 'enabled must be a boolean' });
+      }
+      if (typeof reminderTime !== 'string' || !/^\d{2}:\d{2}$/.test(reminderTime)) {
+        return res.status(400).json({ message: 'reminderTime must be HH:MM format' });
+      }
+      const result = await storage.upsertDailyReminder(userId, {
+        enabled,
+        reminderTime,
+        timezone: typeof timezone === 'string' && timezone.length > 0 ? timezone : 'UTC',
+      });
+      res.json(result);
+    } catch (error) {
+      console.error('Error saving daily reminder:', error);
+      res.status(500).json({ message: 'Failed to save daily reminder' });
+    }
+  });
+
   // Test push notification (admin only)
   app.post('/api/push/test', isAuthenticated, async (req: any, res) => {
     try {

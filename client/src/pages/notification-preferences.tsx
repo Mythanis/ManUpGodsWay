@@ -2,11 +2,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Bell, 
   BookOpen, 
@@ -18,7 +19,8 @@ import {
   Shield,
   Radio,
   Smartphone,
-  Loader2
+  Loader2,
+  CalendarClock
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -100,6 +102,54 @@ export default function NotificationPreferences() {
   const { data: preferences, isLoading } = useQuery<NotificationPreferences>({
     queryKey: ['/api/notification-preferences'],
   });
+
+  interface DailyReminder {
+    id: string;
+    userId: string;
+    enabled: boolean;
+    reminderTime: string;
+    timezone: string;
+    updatedAt: string;
+  }
+
+  const { data: dailyReminderData } = useQuery<DailyReminder>({
+    queryKey: ['/api/daily-reminder'],
+  });
+
+  const [dailyEnabled, setDailyEnabled] = useState(false);
+  const [dailyTime, setDailyTime] = useState('08:00');
+
+  useEffect(() => {
+    if (dailyReminderData) {
+      setDailyEnabled(dailyReminderData.enabled);
+      setDailyTime(dailyReminderData.reminderTime || '08:00');
+    }
+  }, [dailyReminderData]);
+
+  const updateDailyReminder = useMutation({
+    mutationFn: async (data: { enabled: boolean; reminderTime: string; timezone: string }) => {
+      return apiRequest('PUT', '/api/daily-reminder', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/daily-reminder'] });
+      toast({
+        title: "Daily Reminder Updated",
+        description: "Your daily app reminder has been saved.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update daily reminder.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const saveDailyReminder = (enabled: boolean, time: string) => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    updateDailyReminder.mutate({ enabled, reminderTime: time, timezone: tz });
+  };
 
   const form = useForm<PreferencesFormValues>({
     resolver: zodResolver(preferencesSchema),
@@ -415,6 +465,69 @@ export default function NotificationPreferences() {
                   </FormItem>
                 )}
               />
+            </div>
+          </div>
+
+          {/* Daily App Reminder Section */}
+          <div>
+            <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>
+              Daily App Reminder
+            </h2>
+            <div className="space-y-2">
+              <div className="w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" style={{ minHeight: '4rem' }}>
+                <div className="h-16 w-16 liquid-black flex items-center justify-center flex-shrink-0 self-stretch">
+                  <CalendarClock className="w-6 h-6 text-white relative z-10" />
+                </div>
+                <div className="flex-1 px-4 py-3 relative z-10">
+                  <span className="font-black text-sm text-black uppercase tracking-wide">Daily Check-In Reminder</span>
+                  <p className="text-xs text-black/70 mt-0.5">Get a daily nudge to open the app</p>
+                  {dailyEnabled && (
+                    <div className="mt-2">
+                      <Select
+                        value={dailyTime}
+                        onValueChange={(val) => {
+                          setDailyTime(val);
+                          saveDailyReminder(true, val);
+                        }}
+                      >
+                        <SelectTrigger className="h-8 text-xs bg-black/10 border-black/30 text-black font-bold w-36">
+                          <SelectValue placeholder="Pick time" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 48 }, (_, i) => {
+                            const hh = Math.floor(i / 2).toString().padStart(2, '0');
+                            const mm = i % 2 === 0 ? '00' : '30';
+                            const value = `${hh}:${mm}`;
+                            const hour = Math.floor(i / 2);
+                            const ampm = hour < 12 ? 'AM' : 'PM';
+                            const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                            const label = `${displayHour}:${mm} ${ampm}`;
+                            return <SelectItem key={value} value={value}>{label}</SelectItem>;
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+                <div className="pr-4 relative z-10 self-start mt-4">
+                  {updateDailyReminder.isPending ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-black" />
+                  ) : (
+                    <Switch
+                      checked={dailyEnabled}
+                      onCheckedChange={(checked) => {
+                        setDailyEnabled(checked);
+                        saveDailyReminder(checked, dailyTime);
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+              {!isPushEnabled && dailyEnabled && (
+                <p className="text-xs text-amber-400 px-1">
+                  Enable push notifications above to receive daily reminders.
+                </p>
+              )}
             </div>
           </div>
 

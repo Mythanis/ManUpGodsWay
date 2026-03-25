@@ -183,6 +183,8 @@ import {
   type BibleReadingProgress,
   prayerReminders,
   type PrayerReminder,
+  dailyAppReminders,
+  type DailyAppReminder,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne } from "drizzle-orm";
@@ -634,6 +636,11 @@ export interface IStorage {
   getPrayerReminders(userId: string): Promise<PrayerReminder | undefined>;
   upsertPrayerReminders(userId: string, data: Partial<PrayerReminder>): Promise<PrayerReminder>;
   getAllPrayerReminders(): Promise<PrayerReminder[]>;
+
+  // Daily app reminder operations
+  getDailyReminder(userId: string): Promise<DailyAppReminder | undefined>;
+  upsertDailyReminder(userId: string, data: Partial<DailyAppReminder>): Promise<DailyAppReminder>;
+  getAllDailyReminders(): Promise<DailyAppReminder[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -7029,6 +7036,34 @@ export class DatabaseStorage implements IStorage {
 
   async getAllPrayerReminders(): Promise<PrayerReminder[]> {
     return db.select().from(prayerReminders);
+  }
+
+  // Daily app reminder operations
+  async getDailyReminder(userId: string): Promise<DailyAppReminder | undefined> {
+    const [row] = await db.select().from(dailyAppReminders).where(eq(dailyAppReminders.userId, userId));
+    return row;
+  }
+
+  async upsertDailyReminder(userId: string, data: Partial<DailyAppReminder>): Promise<DailyAppReminder> {
+    const existing = await this.getDailyReminder(userId);
+    if (existing) {
+      const [row] = await db
+        .update(dailyAppReminders)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(dailyAppReminders.userId, userId))
+        .returning();
+      return row;
+    } else {
+      const [row] = await db
+        .insert(dailyAppReminders)
+        .values({ userId, ...data, updatedAt: new Date() })
+        .returning();
+      return row;
+    }
+  }
+
+  async getAllDailyReminders(): Promise<DailyAppReminder[]> {
+    return db.select().from(dailyAppReminders);
   }
 }
 
