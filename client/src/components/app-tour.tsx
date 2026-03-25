@@ -52,7 +52,7 @@ export function AppTour() {
           </h3>
 
           {/* Step description */}
-          <p className="text-xs text-white/70 leading-relaxed mb-4">
+          <p className="text-sm text-white/85 leading-relaxed mb-4">
             {step.description}
           </p>
 
