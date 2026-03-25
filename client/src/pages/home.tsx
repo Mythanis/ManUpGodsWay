@@ -561,7 +561,7 @@ export default function Home() {
 
     toast({
       title: "Prayer Time Started",
-      description: `${prayerDuration} minutes of focused prayer time`,
+      description: `${prayerDuration} ${parseInt(prayerDuration) === 1 ? 'minute' : 'minutes'} of focused prayer time`,
     });
   };
 
@@ -572,10 +572,19 @@ export default function Home() {
     // Clear persisted end timestamp
     localStorage.removeItem('prayerEndTime');
 
-    // Only cancel server-side timer on manual end — if the timer already
-    // expired naturally the server notification should still fire (or has
-    // already fired). We never cancel on auto-expiry so push always lands.
-    if (!timerExpired) {
+    if (timerExpired) {
+      // Timer expired naturally — show a direct browser notification so the
+      // user sees it even if push subscriptions aren't configured.
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Prayer Time Complete', {
+          body: 'Your prayer time has ended. May you feel refreshed and blessed.',
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: 'prayer-complete',
+        });
+      }
+    } else {
+      // Manual end — cancel the server-side scheduled push so it doesn't fire late.
       apiRequest('DELETE', '/api/prayer/cancel').catch(() => {});
 
       // Also cancel any pending local trigger notification (Android fallback)
