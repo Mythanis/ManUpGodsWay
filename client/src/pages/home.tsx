@@ -1343,26 +1343,30 @@ export default function Home() {
               {/* Custom times */}
               <div className="mb-4">
                 <p className="text-sm font-medium mb-2">Custom Times</p>
-                <div className="flex items-center gap-2 mb-2">
-                  <input
-                    type="time"
-                    value={newCustomTime}
-                    onChange={(e) => setNewCustomTime(e.target.value)}
-                    className="flex-1 border border-gray-200 rounded px-2 py-1 text-sm"
-                    disabled={pushSupported && !pushSubscribed}
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={addCustomTime}
-                    disabled={pushSupported && !pushSubscribed}
-                    title={pushSupported && !pushSubscribed ? "Enable notifications first" : undefined}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-                {pushSupported && !pushSubscribed && (
-                  <p className="text-xs text-amber-600 mb-1">Enable notifications above to add custom times.</p>
+                {pushSupported && !pushSubscribed ? (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-2">
+                    <div className="flex items-start gap-2">
+                      <BellRing className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-xs text-amber-700 mb-2">Enable notifications to add custom reminder times.</p>
+                        <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white text-xs" onClick={handleEnableNotifications}>
+                          Enable Notifications
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="time"
+                      value={newCustomTime}
+                      onChange={(e) => setNewCustomTime(e.target.value)}
+                      className="flex-1 border border-gray-200 rounded px-2 py-1 text-sm"
+                    />
+                    <Button size="sm" variant="outline" onClick={addCustomTime}>
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
                 )}
                 {remindersCustomTimes.length > 0 && (
                   <div className="flex flex-wrap gap-2">
