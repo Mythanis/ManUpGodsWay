@@ -527,6 +527,9 @@ export default function DiscussionCard({
           >
             <MessageCircle className="w-4 h-4" />
             <span>{canReply ? 'Comment' : 'Members'}</span>
+            {(discussion.replyCount || 0) > 0 && (
+              <span className="text-xs opacity-70">{discussion.replyCount}</span>
+            )}
           </button>
 
           {/* Share */}
