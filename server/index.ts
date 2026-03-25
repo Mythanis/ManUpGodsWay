@@ -10,15 +10,20 @@ import { challengeNotificationService } from "./challengeNotificationService";
 import { prayerReminderService } from "./prayerReminderService";
 import { dailyReminderService } from "./dailyReminderService";
 import { stripeWebhookHandler } from "./stripeWebhook";
+import { generalLimiter } from "./rateLimiter";
 
 const app = express();
 
-// Stripe webhook MUST be registered before express.json() so it receives the raw body
-// required for signature verification via stripe.webhooks.constructEvent()
+// Stripe webhook MUST be registered before express.json() and the general rate limiter
+// so it receives the raw body for signature verification and is exempt from IP-based throttling
 app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// General rate limit: 200 requests/min per IP across all /api/* routes
+// The Stripe webhook above is exempt because it is registered before this middleware
+app.use("/api", generalLimiter);
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));

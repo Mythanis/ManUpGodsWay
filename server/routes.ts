@@ -50,6 +50,7 @@ import {
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
+import { strictWriteLimiter } from "./rateLimiter";
 import { 
   savePushSubscription, 
   removePushSubscription, 
@@ -2704,7 +2705,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/discussions', isAuthenticated, async (req: any, res) => {
+  app.post('/api/discussions', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const discussionData = insertDiscussionSchema.parse({
@@ -2789,7 +2790,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/discussions/:id/replies', isAuthenticated, async (req: any, res) => {
+  app.post('/api/discussions/:id/replies', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const discussionId = req.params.id;
@@ -4315,7 +4316,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/conversations/:id/messages', isAuthenticated, async (req: any, res) => {
+  app.post('/api/conversations/:id/messages', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const conversationId = req.params.id;
@@ -9048,7 +9049,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create a fitness community post
-  app.post('/api/fitness/community/posts', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+  app.post('/api/fitness/community/posts', isAuthenticated, requireFitnessAccess, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.fitnessUser.id;
       const { content, mediaUrls, mediaTypes, category } = req.body;
@@ -10137,7 +10138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/hurdle-wall', isAuthenticated, async (req: any, res) => {
+  app.post('/api/hurdle-wall', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { content, isAnonymous, postType } = req.body;
@@ -10190,7 +10191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/hurdle-wall/:postId/replies', isAuthenticated, async (req: any, res) => {
+  app.post('/api/hurdle-wall/:postId/replies', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { postId } = req.params;
@@ -10380,7 +10381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Create a new accountability request
-  app.post('/api/accountability-requests', isAuthenticated, async (req: any, res) => {
+  app.post('/api/accountability-requests', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { content } = req.body;
@@ -11361,7 +11362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/war-groups/:id/posts', isAuthenticated, async (req: any, res) => {
+  app.post('/api/war-groups/:id/posts', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const groupId = req.params.id;
@@ -11493,7 +11494,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/war-groups/:id/posts/:postId/replies', isAuthenticated, async (req: any, res) => {
+  app.post('/api/war-groups/:id/posts/:postId/replies', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { postId } = req.params;
