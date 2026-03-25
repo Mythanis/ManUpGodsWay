@@ -187,6 +187,8 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
     },
   });
 
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
   const filteredUsers = users.filter((user: any) => {
     const matchesSearch =
       `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -194,9 +196,16 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
 
     if (!matchesSearch) return false;
 
-    if (subscriptionFilter === 'active') return user.subscriptionStatus === 'active';
-    if (subscriptionFilter === 'cancelled') return user.subscriptionStatus === 'cancelled';
-    if (subscriptionFilter === 'non-subscriber') return user.subscriptionStatus === 'trial' || user.subscriptionStatus === 'expired';
+    if (subscriptionFilter === 'active') {
+      return user.subscriptionStatus === 'active';
+    }
+    if (subscriptionFilter === 'cancelled') {
+      return user.subscriptionStatus === 'cancelled' && new Date(user.createdAt) <= sevenDaysAgo;
+    }
+    if (subscriptionFilter === 'non-subscriber') {
+      return (user.subscriptionStatus === 'trial' || user.subscriptionStatus === 'expired') &&
+        new Date(user.createdAt) <= sevenDaysAgo;
+    }
 
     return true;
   });
