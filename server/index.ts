@@ -14,6 +14,10 @@ import { generalLimiter } from "./rateLimiter";
 
 const app = express();
 
+// Trust the first proxy hop (Replit's reverse proxy) so req.ip reflects the real client IP
+// This ensures rate limiting buckets per user rather than per proxy
+app.set("trust proxy", 1);
+
 // Stripe webhook MUST be registered before express.json() and the general rate limiter
 // so it receives the raw body for signature verification and is exempt from IP-based throttling
 app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
