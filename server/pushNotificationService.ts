@@ -247,6 +247,20 @@ export async function removePushSubscription(endpoint: string): Promise<boolean>
   }
 }
 
+export async function removeAllPushSubscriptionsForUser(userId: string): Promise<boolean> {
+  try {
+    await db
+      .update(pushSubscriptions)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(and(eq(pushSubscriptions.userId, userId), eq(pushSubscriptions.isActive, true)));
+    console.log(`[Push] Deactivated all subscriptions for user ${userId}`);
+    return true;
+  } catch (error) {
+    console.error('[Push] Error removing all subscriptions:', error);
+    return false;
+  }
+}
+
 export async function getUserSubscriptionCount(userId: string): Promise<number> {
   const subscriptions = await db
     .select()

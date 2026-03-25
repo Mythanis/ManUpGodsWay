@@ -53,6 +53,7 @@ import { devotionalNotificationService } from "./devotionalNotificationService";
 import { 
   savePushSubscription, 
   removePushSubscription, 
+  removeAllPushSubscriptionsForUser,
   getUserSubscriptionCount,
   sendPushNotification,
   sendPushToMultipleUsers,
@@ -496,6 +497,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error removing push subscription:', error);
       res.status(500).json({ message: 'Failed to remove push subscription' });
+    }
+  });
+
+  app.post('/api/push/unsubscribe-all', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const success = await removeAllPushSubscriptionsForUser(userId);
+      res.json({ success });
+    } catch (error) {
+      console.error('Error removing all push subscriptions:', error);
+      res.status(500).json({ message: 'Failed to remove push subscriptions' });
     }
   });
 
