@@ -83,3 +83,8 @@ The system supports a single subscription model with configurable free trial. Ad
 - NASB translation with tooltips enabled
 - Custom useRefTagger hook (`client/src/hooks/useRefTagger.ts`) for triggering re-tagging on React content updates
 - Integrated in: study lessons, blog posts, devotionals, discussions, War Room, and Under Fire pages
+
+## Stripe Webhook Security
+- Webhook handler extracted to `server/stripeWebhook.ts` and registered in `server/index.ts` BEFORE `express.json()` using `express.raw({ type: 'application/json' })` so the raw request body is available for Stripe signature verification.
+- **Required secret**: `STRIPE_WEBHOOK_SECRET` must be added to Replit Secrets. Get it from Stripe Dashboard → Developers → Webhooks → select your endpoint → Signing secret. Without this, all webhook requests return 503 (fail-closed by design).
+- Signature verification uses `stripe.webhooks.constructEvent(rawBody, sig, secret)` — any request with a missing or invalid signature is rejected with 400 before any database writes occur.
