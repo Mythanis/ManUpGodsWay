@@ -999,7 +999,7 @@ export default function Home() {
           <div className="space-y-6 py-4">
             <div className="text-center">
               <p className="text-ministry-slate text-sm mb-4">
-                Choose how long you'd like to spend in prayer. Your device will enter focus mode to minimize distractions.
+                Choose how long you'd like to spend in prayer. The app will notify you when your time is complete.
               </p>
             </div>
             
@@ -1022,9 +1022,12 @@ export default function Home() {
               </Select>
             </div>
 
-            <div className="bg-blue-50 p-3 rounded-lg">
+            <div className="bg-blue-50 p-3 rounded-lg space-y-2">
               <p className="text-xs text-ministry-slate">
-                During prayer time, your screen will enter focus mode and you'll receive a notification when time is complete. The app will request permissions for notifications and focus mode.
+                <strong>Notifications:</strong> The app will request permission to send you a notification when your prayer time is complete.
+              </p>
+              <p className="text-xs text-ministry-slate">
+                <strong>Tip:</strong> For fewer distractions during prayer, consider turning on Do Not Disturb mode on your phone before you begin.
               </p>
             </div>
 
