@@ -132,13 +132,14 @@ function Router() {
     }
   }, [location]);
 
-  // Auto-launch tour on first login (profile complete, tour not completed yet)
+  // Auto-launch tour on first login (profile complete, welcome popup dismissed, tour not completed yet)
   const hasLaunchedTourRef = useRef(false);
   useEffect(() => {
     if (
       isAuthenticated &&
       user &&
       user.isProfileComplete &&
+      user.hasSeenWelcome &&
       user.hasCompletedTour === false &&
       !isTourActive &&
       !hasLaunchedTourRef.current
