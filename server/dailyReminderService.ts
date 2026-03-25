@@ -60,8 +60,8 @@ class DailyReminderService {
     if (currentTime !== targetTime) return;
 
     await sendPushNotification(reminder.userId, {
-      title: "Man Up God's Way",
-      body: "Your daily check-in is ready. Open the app to stay on mission.",
+      title: "Time to Open Man Up",
+      body: "Continue your faith journey — your daily mission awaits.",
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       tag: 'daily-app-reminder',

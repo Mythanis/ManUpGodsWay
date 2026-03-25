@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Users, User, CheckCircle, Clock, Bell, FileText, Scale, Camera, Upload, X, Check } from "lucide-react";
+import { MessageSquare, Users, User, CheckCircle, Clock, Bell, FileText, Scale, Camera, Upload, X, Check, CalendarClock } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface SetupData {
@@ -44,13 +45,29 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
     prayerPermissionsGranted: false,
   });
 
+  const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
+  const [dailyReminderTime, setDailyReminderTime] = useState('08:00');
+
   const updateProfileMutation = useMutation({
     mutationFn: (data: SetupData) =>
       apiRequest('POST', '/api/profile/setup', {
         ...data,
         isProfileComplete: true,
       }),
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Save daily reminder preference if enabled
+      if (dailyReminderEnabled) {
+        try {
+          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+          await apiRequest('PUT', '/api/daily-reminder', {
+            enabled: dailyReminderEnabled,
+            reminderTime: dailyReminderTime,
+            timezone: tz,
+          });
+        } catch {
+          // Non-fatal — they can set it in notification preferences
+        }
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       toast({
         title: "Welcome to Man Up God's Way!",
@@ -393,6 +410,46 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                         setSetupData({ ...setupData, allowGroupInvites: checked })
                       }
                     />
+                  </div>
+
+                  <div className="border border-ministry-steel dark:border-ministry-steel rounded-lg overflow-hidden">
+                    <div className="flex items-center justify-between p-4">
+                      <div className="flex items-start space-x-3">
+                        <CalendarClock className="w-5 h-5 text-ministry-gold mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-white dark:text-white">Daily App Reminder</h4>
+                          <p className="text-sm text-ministry-slate dark:text-ministry-slate">
+                            Get a daily push notification to open the app
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={dailyReminderEnabled}
+                        onCheckedChange={setDailyReminderEnabled}
+                      />
+                    </div>
+                    {dailyReminderEnabled && (
+                      <div className="px-4 pb-4 border-t border-ministry-steel/50">
+                        <p className="text-xs text-ministry-slate mt-3 mb-2">Remind me at:</p>
+                        <Select value={dailyReminderTime} onValueChange={setDailyReminderTime}>
+                          <SelectTrigger className="w-full bg-ministry-charcoal border-ministry-steel text-white">
+                            <SelectValue placeholder="Choose time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 48 }, (_, i) => {
+                              const hh = Math.floor(i / 2).toString().padStart(2, '0');
+                              const mm = i % 2 === 0 ? '00' : '30';
+                              const value = `${hh}:${mm}`;
+                              const hour = Math.floor(i / 2);
+                              const ampm = hour < 12 ? 'AM' : 'PM';
+                              const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                              const label = `${displayHour}:${mm} ${ampm}`;
+                              return <SelectItem key={value} value={value}>{label}</SelectItem>;
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </div>
 
                   <div className="bg-ministry-navy/50 dark:bg-ministry-navy/50 p-4 rounded-lg border border-ministry-steel dark:border-ministry-steel">
