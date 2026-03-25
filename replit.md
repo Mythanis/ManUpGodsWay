@@ -18,9 +18,9 @@ All file uploads are stored in Replit Object Storage (GCS-backed), not local dis
 - **Private files** (subscription-gated videos): uploaded to `.private/uploads/videos/{key}` via `uploadPrivateFile()`. Stored in `videos.videoUrl` as `gcs:.private/uploads/videos/{key}`. Served through `GET /api/videos/:id/stream` which uses `streamVideoFromStorage()` with range-request support.
 - **Documents** (bulk-import PDFs/Word): processed via `documentUpload` (disk storage), then uploaded to Object Storage after processing.
 - **Video thumbnails**: generated via ffmpeg from a temp file, then uploaded to public Object Storage.
-- **Legacy files**: A one-time migration script (`server/migrate-to-object-storage.ts`) ran and moved all pre-existing local disk files to GCS. All DB records now point to GCS URLs.
+- **Legacy files**: A one-time migration script (`server/migrate-to-object-storage.ts`) ran and moved all pre-existing local disk files to GCS. All DB records now point to GCS URLs. The script also scans the local `uploads/` directory and logs any orphaned disk files (54 found post-migration, all safe to delete after verifying GCS).
 - Bucket name is parsed from `PUBLIC_OBJECT_SEARCH_PATHS` env var (format: `/bucket-name/public`).
-- `express.static('/uploads')` is kept for backward-compatibility but new uploads bypass it entirely.
+- `express.static('/uploads')` has been removed — all files are served from GCS only.
 
 ## Database Design
 PostgreSQL, hosted on Neon Database, is used with Drizzle ORM for type-safe queries and migrations. The schema includes tables for study series, individual studies, lessons, user progress (overall and per-lesson), users, discussions, devotionals, podcasts, challenges, testimonies, exercises, challenge participants, events, event_tiers, bible_reading_plans, bible_reading_plan_days, and bible_reading_progress.

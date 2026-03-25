@@ -1979,6 +1979,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user || !isAdmin(user)) {
         return res.status(403).json({ message: "Admin access required" });
       }
+      const existing = await storage.getStudySeries(req.params.id);
+      if (existing?.thumbnailUrl) await deleteStorageFile(existing.thumbnailUrl);
       const series = await storage.updateStudySeries(req.params.id, { thumbnailUrl: null });
       res.json(series);
     } catch (error) {
