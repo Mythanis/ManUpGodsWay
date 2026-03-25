@@ -732,6 +732,11 @@ export default function Home() {
       toast({ title: "Limit Reached", description: "Maximum 15 custom reminder times allowed.", variant: "destructive" });
       return;
     }
+    // If push not subscribed, prompt before adding
+    if (pushSupported && !pushSubscribed) {
+      setPendingToggle(null);
+      setShowPushPrompt(true);
+    }
     if (!remindersCustomTimes.includes(newCustomTime)) {
       setRemindersCustomTimes([...remindersCustomTimes, newCustomTime].sort());
     }
@@ -1259,23 +1264,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={() => setShowPrayerDialog(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                className="flex-1 bg-ministry-navy text-white hover:bg-ministry-charcoal"
-                onClick={startPrayerTime}
-              >
-                Start Prayer
-              </Button>
-            </div>
-
-            {/* Divider */}
+            {/* Prayer Reminders section (before start buttons) */}
             <div className="border-t border-gray-200 pt-4">
               <div className="flex items-center gap-2 mb-4">
                 <BellRing className="w-4 h-4 text-ministry-steel" />
@@ -1390,6 +1379,23 @@ export default function Home() {
                 disabled={remindersSaving}
               >
                 {remindersSaving ? "Saving..." : "Save Reminders"}
+              </Button>
+            </div>
+
+            {/* Start / Cancel buttons */}
+            <div className="border-t border-gray-200 pt-4 flex space-x-2">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setShowPrayerDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="flex-1 bg-ministry-navy text-white hover:bg-ministry-charcoal"
+                onClick={startPrayerTime}
+              >
+                Start Prayer
               </Button>
             </div>
           </div>
