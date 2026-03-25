@@ -70,6 +70,7 @@ export default function Home() {
   const [remindersSaving, setRemindersSaving] = useState(false);
   const [remindersTestSending, setRemindersTestSending] = useState(false);
   const [showProgressDialog, setShowProgressDialog] = useState(false);
+  const [showDndHelpDialog, setShowDndHelpDialog] = useState(false);
   const [showChallengeDialog, setShowChallengeDialog] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [showHurdleWallDialog, setShowHurdleWallDialog] = useState(false);
@@ -1306,10 +1307,17 @@ export default function Home() {
             </div>
 
             {/* Tip box */}
-            <div className="bg-[#FCD000]/10 border border-[#FCD000]/20 rounded-sm p-3">
-              <p className="text-xs text-white/60 leading-relaxed">
-                <span className="text-[#FCD000] font-black">TIP —</span> Turn on Do Not Disturb mode on your phone before you begin to minimize distractions. Add <span className="text-white/80 font-semibold">Man Up God's Way</span> to your allowed apps list so you'll still receive prayer reminders while DND is active.
+            <div className="bg-[#FCD000]/10 border border-[#FCD000]/20 rounded-sm p-3 flex items-start gap-2">
+              <p className="text-xs text-white/60 leading-relaxed flex-1">
+                <span className="text-[#FCD000] font-black">TIP —</span> Turn on Do Not Disturb mode on your phone before you begin to minimize distractions. Add <span className="text-white/80 font-semibold">Man Up God's Way</span> to your allowed apps list so you'll still receive prayer timer notifications while DND is active.
               </p>
+              <button
+                onClick={() => setShowDndHelpDialog(true)}
+                className="flex-shrink-0 w-5 h-5 rounded-full border border-[#FCD000]/50 text-[#FCD000] text-[10px] font-black flex items-center justify-center hover:bg-[#FCD000]/20 transition-colors mt-0.5"
+                aria-label="How to allow notifications in Do Not Disturb"
+              >
+                ?
+              </button>
             </div>
 
             {/* Prayer Reminders section */}
@@ -1920,6 +1928,52 @@ export default function Home() {
         open={showWelcomeIntro}
         onClose={() => setShowWelcomeIntro(false)}
       />
+
+      {/* DND Allow-List Help Dialog */}
+      <Dialog open={showDndHelpDialog} onOpenChange={setShowDndHelpDialog}>
+        <DialogContent className="max-w-sm bg-[#0d0d0d] border-2 border-[#FCD000] rounded-sm p-0 overflow-hidden">
+          <div className="bg-[#FCD000] px-4 py-3 flex items-center gap-2">
+            <span className="text-black font-black text-sm uppercase tracking-wide">Allow Notifications in DND Mode</span>
+          </div>
+          <div className="px-4 py-4 space-y-5 text-white/80 text-sm">
+            {/* iPhone */}
+            <div>
+              <p className="text-[#FCD000] font-black text-xs uppercase tracking-widest mb-2">iPhone (iOS)</p>
+              <ol className="space-y-1.5 text-xs text-white/70 leading-relaxed list-none">
+                <li><span className="text-white font-semibold">1.</span> Open <span className="text-white font-semibold">Settings</span> → <span className="text-white font-semibold">Focus</span> → <span className="text-white font-semibold">Do Not Disturb</span></li>
+                <li><span className="text-white font-semibold">2.</span> Tap <span className="text-white font-semibold">Apps</span> under "Allowed Notifications"</li>
+                <li><span className="text-white font-semibold">3.</span> Tap <span className="text-white font-semibold">Add App</span> and search for <span className="text-white font-semibold">Man Up God's Way</span></li>
+                <li><span className="text-white font-semibold">4.</span> Tap the app to add it to your allowed list</li>
+              </ol>
+            </div>
+
+            <div className="border-t border-white/10" />
+
+            {/* Android */}
+            <div>
+              <p className="text-[#FCD000] font-black text-xs uppercase tracking-widest mb-2">Android</p>
+              <ol className="space-y-1.5 text-xs text-white/70 leading-relaxed list-none">
+                <li><span className="text-white font-semibold">1.</span> Open <span className="text-white font-semibold">Settings</span> → <span className="text-white font-semibold">Notifications</span> → <span className="text-white font-semibold">Do Not Disturb</span></li>
+                <li><span className="text-white font-semibold">2.</span> Tap <span className="text-white font-semibold">Exceptions</span> or <span className="text-white font-semibold">Apps</span> (wording varies by device)</li>
+                <li><span className="text-white font-semibold">3.</span> Tap <span className="text-white font-semibold">Add Apps</span> and find <span className="text-white font-semibold">Man Up God's Way</span></li>
+                <li><span className="text-white font-semibold">4.</span> Enable notifications for the app and tap <span className="text-white font-semibold">Done</span></li>
+              </ol>
+            </div>
+
+            <p className="text-xs text-white/40 italic leading-relaxed">
+              Note: exact menu names may differ slightly depending on your device model and OS version.
+            </p>
+          </div>
+          <div className="px-4 pb-4">
+            <button
+              onClick={() => setShowDndHelpDialog(false)}
+              className="w-full h-10 bg-[#FCD000] text-black font-black text-xs uppercase tracking-wide rounded-sm hover:opacity-90 transition-opacity"
+            >
+              Got It
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
