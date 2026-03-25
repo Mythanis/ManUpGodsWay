@@ -9,13 +9,15 @@ import { warGroupsGeocodingService } from "./warGroupsGeocodingService";
 import { challengeNotificationService } from "./challengeNotificationService";
 import { prayerReminderService } from "./prayerReminderService";
 import { dailyReminderService } from "./dailyReminderService";
+import { stripeWebhookHandler } from "./stripeWebhook";
 
 const app = express();
-app.use(express.json({
-  verify: (req: any, _res, buf) => {
-    req.rawBody = buf;
-  },
-}));
+
+// Stripe webhook MUST be registered before express.json() so it receives the raw body
+// required for signature verification via stripe.webhooks.constructEvent()
+app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
+
+app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Serve uploaded files statically
