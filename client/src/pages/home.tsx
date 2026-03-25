@@ -157,7 +157,7 @@ export default function Home() {
   });
 
   // Prayer reminders data
-  const { data: prayerRemindersData } = useQuery<{
+  const { data: prayerRemindersData, refetch: refetchPrayerReminders } = useQuery<{
     hourlyEnabled: boolean;
     hourlyStartTime: string;
     hourlyEndTime: string;
@@ -167,6 +167,7 @@ export default function Home() {
     queryKey: ["/api/prayer/reminders"],
     retry: false,
     enabled: !!user,
+    staleTime: Infinity,
   });
 
   // Populate reminders state from server data
@@ -179,6 +180,13 @@ export default function Home() {
       setRemindersCustomTimes(prayerRemindersData.customTimes ?? []);
     }
   }, [prayerRemindersData]);
+
+  // Refresh prayer reminders from server each time dialog opens
+  useEffect(() => {
+    if (showPrayerDialog) {
+      refetchPrayerReminders();
+    }
+  }, [showPrayerDialog]);
 
   // Auto-open prayer dialog when URL has ?openPrayerDialog=true
   useEffect(() => {
@@ -728,18 +736,38 @@ export default function Home() {
     }
   };
 
-  const addCustomTime = () => {
+  const persistCustomTimes = async (times: string[]) => {
+    try {
+      await apiRequest('PUT', '/api/prayer/reminders', {
+        hourlyEnabled: remindersHourlyEnabled,
+        hourlyStartTime: remindersHourlyStart,
+        hourlyEndTime: remindersHourlyEnd,
+        middayEnabled: remindersMiddayEnabled,
+        customTimes: times,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/prayer/reminders"] });
+    } catch {
+      toast({ title: "Error", description: "Failed to save reminder time.", variant: "destructive" });
+    }
+  };
+
+  const addCustomTime = async () => {
     if (remindersCustomTimes.length >= 15) {
       toast({ title: "Limit Reached", description: "Maximum 15 custom reminder times allowed.", variant: "destructive" });
       return;
     }
     if (!remindersCustomTimes.includes(newCustomTime)) {
-      setRemindersCustomTimes([...remindersCustomTimes, newCustomTime].sort());
+      const newTimes = [...remindersCustomTimes, newCustomTime].sort();
+      setRemindersCustomTimes(newTimes);
+      await persistCustomTimes(newTimes);
     }
   };
 
-  const removeCustomTime = (t: string) => {
-    setRemindersCustomTimes(remindersCustomTimes.filter((x) => x !== t));
+  const removeCustomTime = async (t: string) => {
+    const newTimes = remindersCustomTimes.filter((x) => x !== t);
+    setRemindersCustomTimes(newTimes);
+    await persistCustomTimes(newTimes);
   };
 
   const formatTime = (seconds: number) => {
