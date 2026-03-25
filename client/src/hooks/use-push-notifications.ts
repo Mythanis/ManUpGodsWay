@@ -25,19 +25,30 @@ export function usePushNotifications() {
     }
   }, []);
 
+  const { data: pushStatus, refetch: refetchStatus } = useQuery({
+    queryKey: ['/api/push/status'],
+    enabled: isSupported,
+    staleTime: 30000,
+  });
+
+  const { data: vapidKeyData } = useQuery<{ vapidPublicKey: string }>({
+    queryKey: ['/api/push/vapid-public-key'],
+    enabled: isSupported,
+    staleTime: Infinity,
+  });
+
   // Auto-heal: when the service worker is ready and the user has already granted
   // notification permission, check whether the current device's push subscription
-  // endpoint is still recognised and active on the server.  If the push service
-  // invalidated it (410/404) and the server deactivated it, silently create a
-  // fresh subscription so the user doesn't have to toggle settings manually.
+  // endpoint is still active on the server. If not, silently create a fresh one.
+  // NOTE: this effect must be declared AFTER vapidKeyData to avoid a TDZ error.
   useEffect(() => {
     if (!registration || !vapidKeyData?.vapidPublicKey) return;
-    if (Notification.permission !== 'granted') return;
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
 
     (async () => {
       try {
         const existing = await registration.pushManager.getSubscription();
-        if (!existing) return; // No browser subscription — nothing to heal
+        if (!existing) return;
 
         const res = await fetch('/api/push/check-endpoint', {
           method: 'POST',
@@ -46,23 +57,20 @@ export function usePushNotifications() {
           credentials: 'include',
         });
         if (!res.ok) return;
-        const { active, found } = await res.json();
+        const { active } = await res.json();
 
         if (!active) {
-          // Subscription is missing or deactivated — discard the stale browser
-          // subscription and register a fresh one.
           await existing.unsubscribe();
+          const key = vapidKeyData.vapidPublicKey;
+          const padding = '='.repeat((4 - (key.length % 4)) % 4);
+          const base64 = (key + padding).replace(/-/g, '+').replace(/_/g, '/');
+          const raw = window.atob(base64);
+          const appServerKey = new Uint8Array(raw.length);
+          for (let i = 0; i < raw.length; i++) appServerKey[i] = raw.charCodeAt(i);
+
           const fresh = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: (() => {
-              const key = vapidKeyData.vapidPublicKey;
-              const padding = '='.repeat((4 - (key.length % 4)) % 4);
-              const base64 = (key + padding).replace(/-/g, '+').replace(/_/g, '/');
-              const raw = window.atob(base64);
-              const out = new Uint8Array(raw.length);
-              for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
-              return out;
-            })(),
+            applicationServerKey: appServerKey,
           });
           await fetch('/api/push/subscribe', {
             method: 'POST',
@@ -77,18 +85,6 @@ export function usePushNotifications() {
       }
     })();
   }, [registration, vapidKeyData]);
-
-  const { data: pushStatus, refetch: refetchStatus } = useQuery({
-    queryKey: ['/api/push/status'],
-    enabled: isSupported,
-    staleTime: 30000,
-  });
-
-  const { data: vapidKeyData } = useQuery<{ vapidPublicKey: string }>({
-    queryKey: ['/api/push/vapid-public-key'],
-    enabled: isSupported,
-    staleTime: Infinity,
-  });
 
   const subscribeMutation = useMutation({
     mutationFn: async (subscription: PushSubscription) => {
