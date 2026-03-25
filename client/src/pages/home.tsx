@@ -658,6 +658,42 @@ export default function Home() {
     navigate('/');
   };
 
+  const [showPushPrompt, setShowPushPrompt] = useState(false);
+  const [pendingToggle, setPendingToggle] = useState<{ field: 'hourly' | 'midday'; value: boolean } | null>(null);
+
+  const handleReminderToggle = async (field: 'hourly' | 'midday', value: boolean) => {
+    // If enabling and push not subscribed, show inline prompt
+    if (value && pushSupported && !pushSubscribed) {
+      setPendingToggle({ field, value });
+      setShowPushPrompt(true);
+      return;
+    }
+    // Otherwise apply immediately
+    if (field === 'hourly') setRemindersHourlyEnabled(value);
+    else setRemindersMiddayEnabled(value);
+  };
+
+  const handleEnableNotifications = async () => {
+    const ok = await pushSubscribe();
+    if (ok && pendingToggle) {
+      if (pendingToggle.field === 'hourly') setRemindersHourlyEnabled(pendingToggle.value);
+      else setRemindersMiddayEnabled(pendingToggle.value);
+    } else if (!ok) {
+      toast({
+        title: "Notifications Blocked",
+        description: "Please allow notifications in your browser settings to enable prayer reminders.",
+        variant: "destructive",
+      });
+    }
+    setShowPushPrompt(false);
+    setPendingToggle(null);
+  };
+
+  const handleDismissPushPrompt = () => {
+    setShowPushPrompt(false);
+    setPendingToggle(null);
+  };
+
   const saveReminders = async () => {
     setRemindersSaving(true);
     // If any reminder enabled and not subscribed to push, prompt first
@@ -692,6 +728,10 @@ export default function Home() {
   };
 
   const addCustomTime = () => {
+    if (remindersCustomTimes.length >= 15) {
+      toast({ title: "Limit Reached", description: "Maximum 15 custom reminder times allowed.", variant: "destructive" });
+      return;
+    }
     if (!remindersCustomTimes.includes(newCustomTime)) {
       setRemindersCustomTimes([...remindersCustomTimes, newCustomTime].sort());
     }
@@ -1179,7 +1219,7 @@ export default function Home() {
       </Dialog>
 
       {/* Prayer Time Dialog */}
-      <Dialog open={showPrayerDialog} onOpenChange={setShowPrayerDialog}>
+      <Dialog open={showPrayerDialog} onOpenChange={(open) => { setShowPrayerDialog(open); if (!open) { setShowPushPrompt(false); setPendingToggle(null); } }}>
         <DialogContent className="max-w-md max-h-[85svh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
@@ -1245,6 +1285,29 @@ export default function Home() {
                 Receive push notifications to remind you to pray throughout the day.
               </p>
 
+              {/* Inline push notification prompt */}
+              {showPushPrompt && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                  <div className="flex items-start gap-2">
+                    <BellRing className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-amber-800 mb-1">Enable Notifications</p>
+                      <p className="text-xs text-amber-700 mb-3">
+                        Prayer reminders require push notifications. Tap below to allow them.
+                      </p>
+                      <div className="flex gap-2">
+                        <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white text-xs" onClick={handleEnableNotifications}>
+                          Enable Notifications
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-xs text-amber-600" onClick={handleDismissPushPrompt}>
+                          Not Now
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Midday reminder */}
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -1253,7 +1316,7 @@ export default function Home() {
                 </div>
                 <Switch
                   checked={remindersMiddayEnabled}
-                  onCheckedChange={setRemindersMiddayEnabled}
+                  onCheckedChange={(v) => handleReminderToggle('midday', v)}
                 />
               </div>
 
@@ -1266,7 +1329,7 @@ export default function Home() {
                   </div>
                   <Switch
                     checked={remindersHourlyEnabled}
-                    onCheckedChange={setRemindersHourlyEnabled}
+                    onCheckedChange={(v) => handleReminderToggle('hourly', v)}
                   />
                 </div>
                 {remindersHourlyEnabled && (

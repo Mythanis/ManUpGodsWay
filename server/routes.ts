@@ -580,14 +580,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/prayer/reminders', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const reminders = await storage.getPrayerReminders(userId);
-      res.json(reminders || {
-        hourlyEnabled: false,
-        hourlyStartTime: '06:00',
-        hourlyEndTime: '22:00',
-        middayEnabled: false,
-        customTimes: [],
-      });
+      let reminders = await storage.getPrayerReminders(userId);
+      if (!reminders) {
+        reminders = await storage.upsertPrayerReminders(userId, {
+          hourlyEnabled: false,
+          hourlyStartTime: '06:00',
+          hourlyEndTime: '22:00',
+          middayEnabled: false,
+          customTimes: [],
+        });
+      }
+      res.json(reminders);
     } catch (error) {
       console.error('Error fetching prayer reminders:', error);
       res.status(500).json({ message: 'Failed to fetch prayer reminders' });
@@ -598,6 +601,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { hourlyEnabled, hourlyStartTime, hourlyEndTime, middayEnabled, customTimes } = req.body;
+      if (Array.isArray(customTimes) && customTimes.length > 15) {
+        return res.status(400).json({ message: 'Maximum 15 custom reminder times allowed' });
+      }
       const result = await storage.upsertPrayerReminders(userId, {
         hourlyEnabled: !!hourlyEnabled,
         hourlyStartTime: hourlyStartTime || '06:00',
