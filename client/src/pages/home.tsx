@@ -407,7 +407,7 @@ export default function Home() {
       interval = setInterval(() => {
         setPrayerTimeLeft((prev) => {
           if (prev <= 1) {
-            endPrayerTime();
+            endPrayerTime(true);
             return 0;
           }
           return prev - 1;
@@ -487,7 +487,7 @@ export default function Home() {
     });
   };
 
-  const endPrayerTime = () => {
+  const endPrayerTime = (timerExpired = false) => {
     setIsPraying(false);
     setPrayerTimeLeft(0);
 
@@ -505,9 +505,11 @@ export default function Home() {
     }
 
     toast({
-      title: "Prayer Time Complete",
+      title: timerExpired ? "Prayer Time Complete" : "Prayer Time Ended",
       description: "Your prayer time has ended. May you feel refreshed and blessed.",
     });
+
+    navigate('/');
   };
 
   const formatTime = (seconds: number) => {
@@ -1050,30 +1052,22 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* Prayer Time Overlay */}
+      {/* Prayer Time Overlay — full black, blocks all interaction */}
       {isPraying && (
-        <div className="fixed inset-0 bg-ministry-navy bg-opacity-95 z-50 flex items-center justify-center">
-          <div className="text-center text-white space-y-6">
-            <div className="space-y-2">
-              <Clock className="w-16 h-16 mx-auto text-ministry-gold" />
-              <h2 className="text-2xl font-bold">Prayer Time</h2>
-              <p className="text-blue-200">Take this time to connect with God</p>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="text-6xl font-mono font-light">
-                {formatTime(prayerTimeLeft)}
-              </div>
-              <p className="text-blue-200 text-sm">minutes remaining</p>
+        <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center select-none">
+          <div className="text-center text-white space-y-10 px-8">
+            <p className="text-white/40 text-xs font-black uppercase tracking-[0.25em]">Prayer Time</p>
+
+            <div className="text-8xl font-mono font-thin tracking-tight">
+              {formatTime(prayerTimeLeft)}
             </div>
 
-            <Button 
-              variant="outline"
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              onClick={endPrayerTime}
+            <button
+              onClick={() => endPrayerTime(false)}
+              className="mt-4 px-8 py-3 border border-white/20 rounded-sm text-white/60 hover:text-white hover:border-white/50 text-xs font-black uppercase tracking-[0.18em] transition-colors"
             >
               End Prayer Time
-            </Button>
+            </button>
           </div>
         </div>
       )}
