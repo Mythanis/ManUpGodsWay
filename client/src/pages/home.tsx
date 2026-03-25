@@ -79,6 +79,10 @@ export default function Home() {
 
   // Push notifications hook (for reminder subscription prompting)
   const { isSupported: pushSupported, isSubscribed: pushSubscribed, subscribe: pushSubscribe } = usePushNotifications();
+  const isIOSNotInstalled = typeof navigator !== 'undefined' &&
+    /iP(hone|od|ad)/.test(navigator.userAgent) &&
+    !window.matchMedia('(display-mode: standalone)').matches &&
+    !(navigator as any).standalone;
 
   // Track app opens and calculate streak
   useEffect(() => {
@@ -1313,6 +1317,24 @@ export default function Home() {
               <p className="text-white/50 text-xs mb-4 leading-relaxed">
                 Receive push notifications to remind you to pray throughout the day.
               </p>
+
+              {/* iOS PWA warning — background notifications require the app to be installed */}
+              {pushSubscribed && isIOSNotInstalled && (
+                <div className="bg-amber-900/30 border border-amber-500/50 rounded-sm p-3 mb-4">
+                  <div className="flex items-start gap-2.5">
+                    <span className="text-amber-400 text-base leading-none mt-0.5 shrink-0">⚠</span>
+                    <div className="flex-1">
+                      <p className="text-amber-300 text-[11px] font-black uppercase tracking-wide mb-1">Install Required for Background Alerts</p>
+                      <p className="text-amber-200/80 text-[11px] leading-relaxed">
+                        On iPhone, notifications only arrive when the app is closed or your phone is locked if you've added it to your <strong className="text-amber-200">Home Screen</strong>.
+                      </p>
+                      <p className="text-amber-200/60 text-[11px] mt-1.5">
+                        Tap the <strong className="text-amber-200">Share</strong> button in Safari, then tap <strong className="text-amber-200">Add to Home Screen</strong>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Inline push notification prompt */}
               {showPushPrompt && (
