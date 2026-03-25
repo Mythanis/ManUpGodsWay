@@ -631,6 +631,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Prayer reminder test — sends an immediate test notification to the current user
+  app.post('/api/prayer/test-notification', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = await sendPushNotification(userId, {
+        title: 'Time to Pray',
+        body: 'Take a moment to connect with God. This is a test of your prayer reminder.',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: 'prayer-reminder-test',
+        url: '/?openPrayerDialog=true',
+      });
+      if (result.success > 0) {
+        res.json({ success: true, message: 'Test notification sent' });
+      } else {
+        res.status(400).json({ success: false, message: 'No active push subscriptions found. Please enable notifications first.' });
+      }
+    } catch (error) {
+      console.error('Error sending prayer test notification:', error);
+      res.status(500).json({ message: 'Failed to send test notification' });
+    }
+  });
+
   // Test push notification (admin only)
   app.post('/api/push/test', isAuthenticated, async (req: any, res) => {
     try {

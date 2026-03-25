@@ -68,6 +68,7 @@ export default function Home() {
   const [remindersCustomTimes, setRemindersCustomTimes] = useState<string[]>([]);
   const [newCustomTime, setNewCustomTime] = useState("09:00");
   const [remindersSaving, setRemindersSaving] = useState(false);
+  const [remindersTestSending, setRemindersTestSending] = useState(false);
   const [showProgressDialog, setShowProgressDialog] = useState(false);
   const [showChallengeDialog, setShowChallengeDialog] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -733,6 +734,18 @@ export default function Home() {
       toast({ title: "Error", description: "Failed to save reminders.", variant: "destructive" });
     } finally {
       setRemindersSaving(false);
+    }
+  };
+
+  const sendTestPrayerNotification = async () => {
+    setRemindersTestSending(true);
+    try {
+      await apiRequest('POST', '/api/prayer/test-notification', {});
+      toast({ title: "Test Sent", description: "Check your device for a prayer reminder notification." });
+    } catch {
+      toast({ title: "Test Failed", description: "Make sure notifications are enabled for this app in your browser and device settings.", variant: "destructive" });
+    } finally {
+      setRemindersTestSending(false);
     }
   };
 
@@ -1427,6 +1440,16 @@ export default function Home() {
               >
                 <span className="relative z-10">{remindersSaving ? "Saving..." : "Save Reminders"}</span>
               </Button>
+
+              {pushSubscribed && (
+                <Button
+                  className="w-full h-9 bg-transparent border border-white/20 text-white/60 hover:text-white hover:border-white/40 rounded-sm font-black uppercase tracking-wide text-[10px]"
+                  onClick={sendTestPrayerNotification}
+                  disabled={remindersTestSending}
+                >
+                  {remindersTestSending ? "Sending..." : "Send Test Notification"}
+                </Button>
+              )}
             </div>
 
             {/* Start / Cancel buttons */}
