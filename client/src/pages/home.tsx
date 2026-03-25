@@ -400,22 +400,54 @@ export default function Home() {
     return `${diffDays}d ago`;
   };
 
-  // Prayer timer functionality
+  // Restore prayer session from localStorage on mount
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isPraying && prayerTimeLeft > 0) {
-      interval = setInterval(() => {
-        setPrayerTimeLeft((prev) => {
-          if (prev <= 1) {
-            endPrayerTime(true);
-            return 0;
-          }
-          return prev - 1;
+    const stored = localStorage.getItem('prayerEndTime');
+    if (stored) {
+      const endTime = parseInt(stored, 10);
+      const remaining = Math.floor((endTime - Date.now()) / 1000);
+      if (remaining > 0) {
+        setPrayerTimeLeft(remaining);
+        setIsPraying(true);
+      } else {
+        localStorage.removeItem('prayerEndTime');
+        toast({
+          title: "Prayer Time Complete",
+          description: "Your prayer time ended while you were away. May you feel refreshed and blessed.",
         });
-      }, 1000);
+      }
     }
-    return () => clearInterval(interval);
-  }, [isPraying, prayerTimeLeft]);
+  }, []);
+
+  // Timestamp-based prayer countdown
+  useEffect(() => {
+    if (!isPraying) return;
+
+    const tick = () => {
+      const stored = localStorage.getItem('prayerEndTime');
+      if (!stored) return;
+      const remaining = Math.floor((parseInt(stored, 10) - Date.now()) / 1000);
+      if (remaining <= 0) {
+        endPrayerTime(true);
+      } else {
+        setPrayerTimeLeft(remaining);
+      }
+    };
+
+    const interval = setInterval(tick, 1000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        tick();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isPraying]);
 
   const requestPrayerPermissions = async () => {
     let permissionsGranted = true;
@@ -452,18 +484,45 @@ export default function Home() {
   };
 
   const startPrayerTime = async () => {
-    // Request permissions first in dev mode
     const hasPermissions = await requestPrayerPermissions();
     if (!hasPermissions) {
       return;
     }
 
-    const duration = parseInt(prayerDuration) * 60; // Convert minutes to seconds
-    setPrayerTimeLeft(duration);
+    const durationSeconds = parseInt(prayerDuration) * 60;
+    const endTime = Date.now() + durationSeconds * 1000;
+
+    // Persist end timestamp so countdown survives page hide / screen lock
+    localStorage.setItem('prayerEndTime', String(endTime));
+
+    setPrayerTimeLeft(durationSeconds);
     setIsPraying(true);
     setShowPrayerDialog(false);
 
-    // Try to enable focus mode (requires user gesture)
+    // Schedule server-side push notification for when prayer ends
+    try {
+      await apiRequest('POST', '/api/prayer/schedule', { endTime });
+    } catch (err) {
+      console.log('Could not schedule prayer push notification:', err);
+    }
+
+    // Android local notification fallback via showTrigger API
+    if ('Notification' in window && Notification.permission === 'granted' && 'showTrigger' in Notification) {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        (reg as any).showNotification('Prayer Time Complete', {
+          body: 'Your prayer time has ended. May you feel refreshed and blessed.',
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: 'prayer-complete',
+          showTrigger: new (window as any).TimestampTrigger(endTime),
+        });
+      } catch (err) {
+        console.log('showTrigger not available:', err);
+      }
+    }
+
+    // Keep screen awake during prayer (best-effort)
     try {
       if ('wakeLock' in navigator) {
         await (navigator as any).wakeLock.request('screen');
@@ -472,7 +531,7 @@ export default function Home() {
       console.log('Wake lock not supported');
     }
 
-    // Show fullscreen prayer mode
+    // Fullscreen prayer mode
     if (document.documentElement.requestFullscreen) {
       try {
         await document.documentElement.requestFullscreen();
@@ -491,17 +550,15 @@ export default function Home() {
     setIsPraying(false);
     setPrayerTimeLeft(0);
 
+    // Clear persisted end timestamp
+    localStorage.removeItem('prayerEndTime');
+
+    // Cancel server-side scheduled push notification
+    apiRequest('DELETE', '/api/prayer/cancel').catch(() => {});
+
     // Exit fullscreen
     if (document.fullscreenElement) {
       document.exitFullscreen();
-    }
-
-    // Show completion notification
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Prayer Time Complete', {
-        body: 'Your prayer time has ended. May you feel refreshed and blessed.',
-        icon: '/favicon.ico'
-      });
     }
 
     toast({

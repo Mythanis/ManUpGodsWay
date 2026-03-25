@@ -519,6 +519,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Prayer timer scheduling
+  const prayerTimers = new Map<string, NodeJS.Timeout>();
+
+  app.post('/api/prayer/schedule', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { endTime } = req.body;
+
+      if (!endTime || typeof endTime !== 'number') {
+        return res.status(400).json({ message: 'endTime (Unix ms) is required' });
+      }
+
+      const delay = endTime - Date.now();
+      if (delay <= 0) {
+        return res.status(400).json({ message: 'endTime must be in the future' });
+      }
+
+      // Cancel any existing timer for this user
+      if (prayerTimers.has(userId)) {
+        clearTimeout(prayerTimers.get(userId)!);
+        prayerTimers.delete(userId);
+      }
+
+      const timer = setTimeout(async () => {
+        prayerTimers.delete(userId);
+        await sendPushNotification(userId, {
+          title: 'Prayer Time Complete',
+          body: 'Your prayer time has ended. May you feel refreshed and blessed.',
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: 'prayer-complete',
+          url: '/',
+        });
+      }, delay);
+
+      prayerTimers.set(userId, timer);
+      res.json({ success: true, scheduledIn: delay });
+    } catch (error) {
+      console.error('Error scheduling prayer notification:', error);
+      res.status(500).json({ message: 'Failed to schedule prayer notification' });
+    }
+  });
+
+  app.delete('/api/prayer/cancel', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      if (prayerTimers.has(userId)) {
+        clearTimeout(prayerTimers.get(userId)!);
+        prayerTimers.delete(userId);
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error cancelling prayer notification:', error);
+      res.status(500).json({ message: 'Failed to cancel prayer notification' });
+    }
+  });
+
   // Test push notification (admin only)
   app.post('/api/push/test', isAuthenticated, async (req: any, res) => {
     try {
