@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback } from "react";
+import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -128,6 +129,7 @@ const TourContext = createContext<TourContextType>({
 export function TourProvider({ children }: { children: React.ReactNode }) {
   const [isTourActive, setIsTourActive] = useState(false);
   const [tourStep, setTourStep] = useState(0);
+  const [, navigate] = useLocation();
   const queryClient = useQueryClient();
 
   const endTour = useCallback(async () => {
@@ -143,7 +145,8 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
   const startTour = useCallback(() => {
     setTourStep(0);
     setIsTourActive(true);
-  }, []);
+    navigate(TOUR_STEPS[0].route);
+  }, [navigate]);
 
   const nextStep = useCallback(() => {
     const next = tourStep + 1;
@@ -151,14 +154,17 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
       endTour();
     } else {
       setTourStep(next);
+      navigate(TOUR_STEPS[next].route);
     }
-  }, [tourStep, endTour]);
+  }, [tourStep, navigate, endTour]);
 
   const prevStep = useCallback(() => {
     if (tourStep > 0) {
-      setTourStep(tourStep - 1);
+      const prev = tourStep - 1;
+      setTourStep(prev);
+      navigate(TOUR_STEPS[prev].route);
     }
-  }, [tourStep]);
+  }, [tourStep, navigate]);
 
   const closeTour = useCallback(() => {
     endTour();
