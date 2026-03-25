@@ -51,6 +51,7 @@ import {
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
 import { strictWriteLimiter } from "./rateLimiter";
+import { uploadPublicFile, uploadPrivateFile, deleteStorageFile, streamVideoFromStorage, isStorageUrl } from "./objectStorage";
 import { 
   savePushSubscription, 
   removePushSubscription, 
@@ -143,23 +144,9 @@ const feedbackSchema = z.object({
   category: z.enum(["improvement", "feature-request", "bug-report", "compliment", "complaint", "general"])
 });
 
-// Configure multer for video uploads with disk storage
-const videoStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(process.cwd(), 'uploads', 'videos');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const filename = `video_${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    cb(null, filename);
-  }
-});
-
+// Configure multer for video uploads with memory storage (uploads to Object Storage)
 const upload = multer({ 
-  storage: videoStorage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 100 * 1024 * 1024 // 100MB limit
   },
@@ -187,24 +174,9 @@ const imageUpload = multer({
   }
 });
 
-// Configure multer for thumbnail uploads with disk storage
-const thumbnailStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(process.cwd(), 'uploads', 'thumbnails');
-    // Ensure directory exists
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const filename = `study_thumbnail_${Date.now()}_${file.originalname}`;
-    cb(null, filename);
-  }
-});
-
+// Configure multer for thumbnail uploads with memory storage (uploads to Object Storage)
 const thumbnailUpload = multer({
-  storage: thumbnailStorage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit for images
   },
@@ -217,23 +189,9 @@ const thumbnailUpload = multer({
   }
 });
 
-// Configure multer for blog thumbnail uploads with disk storage
-const blogThumbnailStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(process.cwd(), 'uploads', 'blog-thumbnails');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const filename = `blog_${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    cb(null, filename);
-  }
-});
-
+// Configure multer for blog thumbnail uploads with memory storage (uploads to Object Storage)
 const blogThumbnailUpload = multer({
-  storage: blogThumbnailStorage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit for images
   },
@@ -247,23 +205,9 @@ const blogThumbnailUpload = multer({
   }
 });
 
-// Configure multer for store product images with disk storage
-const storeProductImageStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(process.cwd(), 'uploads', 'store-products');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const filename = `store_product_${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    cb(null, filename);
-  }
-});
-
+// Configure multer for store product images with memory storage (uploads to Object Storage)
 const storeProductImageUpload = multer({
-  storage: storeProductImageStorage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit for images
   },
@@ -326,27 +270,9 @@ const documentUpload = multer({
   }
 });
 
-// Configure multer for community media uploads (images, videos, gifs)
-const communityMediaStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(process.cwd(), 'uploads', 'community');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    if (file.originalname.includes('\0')) {
-      return cb(new Error('Invalid filename: contains null byte'));
-    }
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `community-${uniqueSuffix}${ext}`);
-  }
-});
-
+// Configure multer for community media uploads (images, videos, gifs) — memory storage → Object Storage
 const communityMediaUpload = multer({
-  storage: communityMediaStorage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 100 * 1024 * 1024 // 100MB limit for videos, smaller files for images
   },
@@ -1972,11 +1898,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Thumbnail image is required" });
       }
 
-      // File is already saved to disk by multer
-      const thumbnailUrl = `/uploads/thumbnails/${file.filename}`;
+      const key = `thumbnails/study_thumbnail_${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const thumbnailUrl = await uploadPublicFile(file.buffer, key, file.mimetype);
       const updateData = {
-        thumbnailFilename: file.filename,
-        thumbnailUrl: thumbnailUrl,
+        thumbnailFilename: key,
+        thumbnailUrl,
         thumbnailMimeType: file.mimetype,
         thumbnailFileSize: file.size,
       };
@@ -2002,14 +1928,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Study not found" });
       }
 
-      // Delete file from disk if it exists
-      if (study.thumbnailFilename) {
-        const uploadsDir = path.resolve(process.cwd(), 'uploads', 'thumbnails');
-        const filePath = path.resolve(uploadsDir, study.thumbnailFilename);
-        
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
+      // Delete from Object Storage if applicable
+      if (study.thumbnailUrl) await deleteStorageFile(study.thumbnailUrl);
+      // Also try legacy disk path
+      if (study.thumbnailFilename && !study.thumbnailFilename.startsWith('thumbnails/')) {
+        const filePath = path.resolve(process.cwd(), 'uploads', 'thumbnails', study.thumbnailFilename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       }
 
       // Clear thumbnail data in database
@@ -2038,7 +1962,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!file) {
         return res.status(400).json({ message: "Thumbnail image is required" });
       }
-      const thumbnailUrl = `/uploads/thumbnails/${file.filename}`;
+      const key = `thumbnails/series_thumbnail_${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const thumbnailUrl = await uploadPublicFile(file.buffer, key, file.mimetype);
       const series = await storage.updateStudySeries(req.params.id, { thumbnailUrl });
       res.json(series);
     } catch (error) {
@@ -2683,7 +2608,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const mediaTypes: string[] = [];
 
       for (const file of files) {
-        const url = `/uploads/community/${file.filename}`;
+        const ext = file.originalname.split('.').pop() || 'bin';
+        const key = `community/community-${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
+        const url = await uploadPublicFile(file.buffer, key, file.mimetype);
         mediaUrls.push(url);
         
         // Determine media type
@@ -4036,8 +3963,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      // File is already saved to disk by multer
-      const thumbnailUrl = `/uploads/thumbnails/${file.filename}`;
+      const key = `thumbnails/devotional_thumbnail_${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const thumbnailUrl = await uploadPublicFile(file.buffer, key, file.mimetype);
       const devotional = await storage.updateDevotional(req.params.id, {
         imageUrl: thumbnailUrl,
       });
@@ -4062,15 +3989,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Devotional not found" });
       }
 
-      // Extract filename from URL if it's a local upload
-      if (devotional.imageUrl && devotional.imageUrl.startsWith('/uploads/thumbnails/')) {
-        const filename = devotional.imageUrl.split('/').pop();
-        if (filename) {
-          const uploadsDir = path.resolve(process.cwd(), 'uploads', 'thumbnails');
-          const filePath = path.resolve(uploadsDir, filename);
-          
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
+      // Delete from Object Storage if applicable, or remove legacy disk file
+      if (devotional.imageUrl) {
+        if (isStorageUrl(devotional.imageUrl)) {
+          await deleteStorageFile(devotional.imageUrl);
+        } else if (devotional.imageUrl.startsWith('/uploads/thumbnails/')) {
+          const filename = devotional.imageUrl.split('/').pop();
+          if (filename) {
+            const filePath = path.resolve(process.cwd(), 'uploads', 'thumbnails', filename);
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
           }
         }
       }
@@ -5456,8 +5383,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Serve the actual uploaded video file from disk
+      // GCS-stored video (new uploads)
+      if (video.videoUrl && video.videoUrl.startsWith('gcs:')) {
+        await streamVideoFromStorage(video.videoUrl, req.headers.range, res, video.mimeType || 'video/mp4');
+        return;
+      }
+
+      // Serve the actual uploaded video file from disk (legacy)
       if (video.filename) {
+        // Check for legacy disk path (old uploads before Object Storage migration)
         const videoPath = path.join(process.cwd(), 'uploads', 'videos', video.filename);
         
         if (fs.existsSync(videoPath)) {
@@ -5577,29 +5511,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Video file is required" });
       }
 
-      // File is now saved to disk by multer - use the filename from disk storage
-      const videoPath = path.join(process.cwd(), 'uploads', 'videos', file.filename);
-      
+      // Write buffer to temp file so ffmpeg can process it
+      const tmpDir = path.join(process.cwd(), 'uploads', 'tmp');
+      if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+      const safeOriginalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const tmpVideoFilename = `tmp_${Date.now()}_${safeOriginalName}`;
+      const videoPath = path.join(tmpDir, tmpVideoFilename);
+      fs.writeFileSync(videoPath, file.buffer);
+
       // Generate thumbnail from video using ffmpeg
       let thumbnailUrl = `https://via.placeholder.com/640x360/4A90B8/ffffff?text=${encodeURIComponent(title)}`;
       let videoDuration = Math.floor(Math.random() * 1800) + 300;
-      
+      const tmpThumbPath = path.join(tmpDir, `thumb_${Date.now()}_${safeOriginalName.replace(/\.[^.]+$/, '.jpg')}`);
+
       try {
-        // Ensure thumbnail directory exists
-        const thumbnailDir = path.join(process.cwd(), 'uploads', 'video-thumbnails');
-        if (!fs.existsSync(thumbnailDir)) {
-          fs.mkdirSync(thumbnailDir, { recursive: true });
-        }
+        // Extract thumbnail at 1 second mark
+        await execAsync(`ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2" -y "${tmpThumbPath}"`);
         
-        const thumbnailFilename = `thumb_${Date.now()}_${file.filename.replace(/\.[^.]+$/, '.jpg')}`;
-        const thumbnailPath = path.join(thumbnailDir, thumbnailFilename);
-        
-        // Extract thumbnail at 1 second mark (or beginning if video is shorter)
-        await execAsync(`ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2" -y "${thumbnailPath}"`);
-        
-        if (fs.existsSync(thumbnailPath)) {
-          thumbnailUrl = `/uploads/video-thumbnails/${thumbnailFilename}`;
-          console.log('Generated thumbnail:', thumbnailUrl);
+        if (fs.existsSync(tmpThumbPath)) {
+          const thumbBuffer = fs.readFileSync(tmpThumbPath);
+          const thumbKey = `video-thumbnails/thumb_${Date.now()}_${safeOriginalName.replace(/\.[^.]+$/, '.jpg')}`;
+          thumbnailUrl = await uploadPublicFile(thumbBuffer, thumbKey, 'image/jpeg');
+          console.log('Generated and uploaded thumbnail:', thumbnailUrl);
         }
         
         // Try to get actual video duration using ffprobe
@@ -5616,16 +5549,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Failed to generate thumbnail:', ffmpegError);
         // Continue with placeholder thumbnail
       }
+
+      // Upload video to Object Storage (private) and clean up temp files
+      const videoKey = `videos/${tmpVideoFilename}`;
+      const gcsVideoKey = await uploadPrivateFile(file.buffer, videoKey, file.mimetype);
+      try {
+        fs.unlinkSync(videoPath);
+        if (fs.existsSync(tmpThumbPath)) fs.unlinkSync(tmpThumbPath);
+      } catch {}
       
       const videoData = {
         title: title.trim(),
         description: description || '',
-        filename: file.filename,
+        filename: videoKey,
         originalName: file.originalname,
         mimeType: file.mimetype,
         fileSize: file.size,
         duration: videoDuration,
         thumbnailUrl: thumbnailUrl,
+        videoUrl: gcsVideoKey,
         uploadedBy: user.id,
         requiredTier: requiredTier,
         category: category,
@@ -5780,29 +5722,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(422).json({ message: "Auto-thumbnail is only supported for YouTube and Vimeo links. Paste a thumbnail URL manually for other video types." });
       }
 
-      // Local uploaded file — run ffmpeg to extract a frame
-      if (!video.filename) {
+      // Uploaded file — run ffmpeg to extract a frame (supports both GCS and legacy disk)
+      if (!video.filename && !video.videoUrl?.startsWith('gcs:')) {
         return res.status(422).json({ message: "No video file or supported URL found to generate a thumbnail from." });
       }
 
-      const videoPath = path.join(process.cwd(), 'uploads', 'videos', video.filename);
-      if (!fs.existsSync(videoPath)) {
-        return res.status(422).json({ message: "Video file not found on disk." });
+      let videoPath: string;
+      let usedTempFile = false;
+
+      if (video.videoUrl && video.videoUrl.startsWith('gcs:')) {
+        // Download from GCS to temp file for ffmpeg
+        const { objectStorageClient } = await import('./replit_integrations/object_storage/objectStorage');
+        const paths = (process.env.PUBLIC_OBJECT_SEARCH_PATHS || '').split(',').map((p: string) => p.trim()).filter(Boolean);
+        const bucketName = paths[0]?.split('/').filter(Boolean)[0] || '';
+        const objectName = video.videoUrl.slice(4);
+        const tmpDir = path.join(process.cwd(), 'uploads', 'tmp');
+        if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+        videoPath = path.join(tmpDir, `dl_${Date.now()}_${path.basename(objectName)}`);
+        await objectStorageClient.bucket(bucketName).file(objectName).download({ destination: videoPath });
+        usedTempFile = true;
+      } else {
+        videoPath = path.join(process.cwd(), 'uploads', 'videos', video.filename!);
+        if (!fs.existsSync(videoPath)) {
+          return res.status(422).json({ message: "Video file not found on disk." });
+        }
       }
 
-      const thumbnailDir = path.join(process.cwd(), 'uploads', 'video-thumbnails');
-      if (!fs.existsSync(thumbnailDir)) fs.mkdirSync(thumbnailDir, { recursive: true });
+      const tmpDir = path.join(process.cwd(), 'uploads', 'tmp');
+      if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+      const safeBase = path.basename(videoPath).replace(/\.[^.]+$/, '.jpg');
+      const tmpThumbPath = path.join(tmpDir, `thumb_${Date.now()}_${safeBase}`);
 
-      const thumbnailFilename = `thumb_${Date.now()}_${video.filename.replace(/\.[^.]+$/, '.jpg')}`;
-      const thumbnailPath = path.join(thumbnailDir, thumbnailFilename);
+      await execAsync(`ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2" -y "${tmpThumbPath}"`);
 
-      await execAsync(`ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2" -y "${thumbnailPath}"`);
-
-      if (!fs.existsSync(thumbnailPath)) {
+      if (!fs.existsSync(tmpThumbPath)) {
+        if (usedTempFile) try { fs.unlinkSync(videoPath); } catch {}
         return res.status(500).json({ message: "ffmpeg ran but no thumbnail was produced." });
       }
 
-      thumbnailUrl = `/uploads/video-thumbnails/${thumbnailFilename}`;
+      const thumbBuffer = fs.readFileSync(tmpThumbPath);
+      const thumbKey = `video-thumbnails/thumb_${Date.now()}_${safeBase}`;
+      thumbnailUrl = await uploadPublicFile(thumbBuffer, thumbKey, 'image/jpeg');
+
+      // Clean up temp files
+      try { fs.unlinkSync(tmpThumbPath); } catch {}
+      if (usedTempFile) try { fs.unlinkSync(videoPath); } catch {}
+
       await storage.updateVideo(video.id, { thumbnailUrl });
       console.log(`[Video] Regenerated thumbnail for ${video.id}: ${thumbnailUrl}`);
       res.json({ thumbnailUrl });
@@ -5892,6 +5857,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(req.user.claims.sub);
       if (!user || !isAdmin(user)) {
         return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Clean up Object Storage files before deleting DB record
+      const video = await storage.getVideo(req.params.id);
+      if (video) {
+        if (video.videoUrl) await deleteStorageFile(video.videoUrl);
+        if (video.thumbnailUrl) await deleteStorageFile(video.thumbnailUrl);
+        // Also try legacy disk files
+        if (video.filename && !video.videoUrl?.startsWith('gcs:')) {
+          const diskPath = path.join(process.cwd(), 'uploads', 'videos', video.filename);
+          if (fs.existsSync(diskPath)) try { fs.unlinkSync(diskPath); } catch {}
+        }
       }
 
       await storage.deleteVideo(req.params.id);
@@ -8048,7 +8025,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Upload fitness plan document
-  app.post('/api/pre-built-fitness-plans/:id/upload', isAuthenticated, upload.single('document'), async (req: any, res) => {
+  app.post('/api/pre-built-fitness-plans/:id/upload', isAuthenticated, documentUpload.single('document'), async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
       if (!user || !isAdmin(user)) {
@@ -8059,7 +8036,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'No file uploaded' });
       }
       
-      const downloadUrl = `/uploads/fitness-plans/${req.file.filename}`;
+      // Documents are served through the download endpoint — use Object Storage for durability
+      const safeOriginal = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const docKey = `fitness-plans/plan_${Date.now()}_${safeOriginal}`;
+      const docBuffer = fs.readFileSync(req.file.path);
+      const downloadUrl = await uploadPublicFile(docBuffer, docKey, req.file.mimetype);
+      // Clean up temp file
+      try { fs.unlinkSync(req.file.path); } catch {}
       
       const [plan] = await db.update(schema.preBuiltFitnessPlans)
         .set({
@@ -8993,12 +8976,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.files || req.files.length === 0) {
         return res.status(400).json({ message: 'No files uploaded' });
       }
-      const results = (req.files as Express.Multer.File[]).map(file => {
+      const results = await Promise.all((req.files as Express.Multer.File[]).map(async file => {
         let mediaType = 'image';
         if (file.mimetype.startsWith('video/')) mediaType = 'video';
         else if (file.mimetype === 'image/gif') mediaType = 'gif';
-        return { url: `/uploads/community/${file.filename}`, type: mediaType };
-      });
+        const ext = file.originalname.split('.').pop() || 'bin';
+        const key = `community/community-${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
+        const url = await uploadPublicFile(file.buffer, key, file.mimetype);
+        return { url, type: mediaType };
+      }));
       res.json({ files: results });
     } catch (error) {
       console.error('Error uploading fitness community media:', error);
@@ -9569,7 +9555,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle thumbnail upload or URL
       let finalCoverImageUrl = coverImageUrl || null;
       if (req.file) {
-        finalCoverImageUrl = `/uploads/blog-thumbnails/${req.file.filename}`;
+        const key = `blog-thumbnails/blog_${Date.now()}_${req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        finalCoverImageUrl = await uploadPublicFile(req.file.buffer, key, req.file.mimetype);
       }
 
       const newBlog = await db.insert(schema.blogPosts).values({
@@ -9612,7 +9599,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle thumbnail upload or URL
       let finalCoverImageUrl = existingBlog[0].coverImageUrl;
       if (req.file) {
-        finalCoverImageUrl = `/uploads/blog-thumbnails/${req.file.filename}`;
+        const key = `blog-thumbnails/blog_${Date.now()}_${req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        finalCoverImageUrl = await uploadPublicFile(req.file.buffer, key, req.file.mimetype);
         console.log('Blog thumbnail uploaded:', finalCoverImageUrl);
       } else if (coverImageUrl !== undefined) {
         finalCoverImageUrl = coverImageUrl || null;
@@ -11420,7 +11408,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const mediaTypes: string[] = [];
 
       for (const file of files) {
-        const url = `/uploads/community/${file.filename}`;
+        const ext = file.originalname.split('.').pop() || 'bin';
+        const key = `community/community-${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
+        const url = await uploadPublicFile(file.buffer, key, file.mimetype);
         mediaUrls.push(url);
         
         if (file.mimetype.startsWith('image/')) {
@@ -12457,7 +12447,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No image file uploaded" });
       }
 
-      const imageUrl = `/uploads/store-products/${file.filename}`;
+      const key = `store-products/store_product_${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const imageUrl = await uploadPublicFile(file.buffer, key, file.mimetype);
       const product = await storage.updateStoreProduct(req.params.id, { imageUrl });
       res.json(product);
     } catch (error) {
@@ -12481,11 +12472,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const product = products[0];
-      if (product.imageUrl && product.imageUrl.startsWith('/uploads/store-products/')) {
-        const filename = product.imageUrl.replace('/uploads/store-products/', '');
-        const filePath = path.join(process.cwd(), 'uploads', 'store-products', filename);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
+      if (product.imageUrl) {
+        if (isStorageUrl(product.imageUrl)) {
+          await deleteStorageFile(product.imageUrl);
+        } else if (product.imageUrl.startsWith('/uploads/store-products/')) {
+          const filename = product.imageUrl.replace('/uploads/store-products/', '');
+          const filePath = path.join(process.cwd(), 'uploads', 'store-products', filename);
+          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
         }
       }
 

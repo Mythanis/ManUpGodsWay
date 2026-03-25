@@ -12,6 +12,16 @@ The frontend is built with React 18 and TypeScript, using Vite. It employs Woute
 ## Backend Architecture
 The backend is an Express.js server in TypeScript, following a RESTful API design. It utilizes session-based authentication integrated with Replit's OIDC, storing sessions in PostgreSQL. Middleware is used for logging, error handling, and role-based access control (user, moderator, admin, owner) with a single subscription model (trial/active/expired/cancelled). Moderators have all user permissions plus the ability to delete content in: community discussions/replies, War Room posts/comments, Under Fire requests, and video/podcast/study ratings. Moderator role is assignable by admins via the Admin panel user management.
 
+## File Storage (Object Storage)
+All file uploads are stored in Replit Object Storage (GCS-backed), not local disk. The integration is in `server/replit_integrations/object_storage/objectStorage.ts` and the helper wrapper is `server/objectStorage.ts`.
+- **Public files** (thumbnails, community media, blog images, store product images, fitness plan documents): uploaded to `public/uploads/{type}/{key}` in the bucket via `uploadPublicFile()`. URLs stored in DB as `https://storage.googleapis.com/{bucket}/public/uploads/...`.
+- **Private files** (subscription-gated videos): uploaded to `.private/uploads/videos/{key}` via `uploadPrivateFile()`. Stored in `videos.videoUrl` as `gcs:.private/uploads/videos/{key}`. Served through `GET /api/videos/:id/stream` which uses `streamVideoFromStorage()` with range-request support.
+- **Documents** (bulk-import PDFs/Word): processed via `documentUpload` (disk storage), then uploaded to Object Storage after processing.
+- **Video thumbnails**: generated via ffmpeg from a temp file, then uploaded to public Object Storage.
+- **Legacy files**: A one-time migration script (`server/migrate-to-object-storage.ts`) ran and moved all pre-existing local disk files to GCS. All DB records now point to GCS URLs.
+- Bucket name is parsed from `PUBLIC_OBJECT_SEARCH_PATHS` env var (format: `/bucket-name/public`).
+- `express.static('/uploads')` is kept for backward-compatibility but new uploads bypass it entirely.
+
 ## Database Design
 PostgreSQL, hosted on Neon Database, is used with Drizzle ORM for type-safe queries and migrations. The schema includes tables for study series, individual studies, lessons, user progress (overall and per-lesson), users, discussions, devotionals, podcasts, challenges, testimonies, exercises, challenge participants, events, event_tiers, bible_reading_plans, bible_reading_plan_days, and bible_reading_progress.
 
