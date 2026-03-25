@@ -18,7 +18,7 @@ import HomeCarousel from "@/components/home-carousel";
 import { WelcomeIntro } from "@/components/WelcomeIntro";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
-import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper, Book, Coins, BellRing, Plus, Trash2 } from "lucide-react";
+import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper, Book, Coins, BellRing, Plus, Trash2, Sun, RefreshCw } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
@@ -1220,70 +1220,73 @@ export default function Home() {
 
       {/* Prayer Time Dialog */}
       <Dialog open={showPrayerDialog} onOpenChange={(open) => { setShowPrayerDialog(open); if (!open) { setShowPushPrompt(false); setPendingToggle(null); } }}>
-        <DialogContent className="max-w-md max-h-[85svh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <Clock className="w-5 h-5 text-ministry-steel" />
-              <span>Prayer Time</span>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85svh] overflow-y-auto bg-black border-2 border-[#FCD000] rounded-sm shadow-[6px_6px_0px_0px_rgba(252,208,0,0.35)] p-0">
+
+          {/* Header */}
+          <div className="relative px-5 pt-5 pb-4 border-b border-[#FCD000]/20">
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="w-3.5 h-3.5 text-[#FCD000]" />
+              <p className="text-[#FCD000] text-[9px] font-black uppercase tracking-[0.25em]">Prayer Time</p>
+            </div>
+            <DialogTitle className="text-white text-xl font-black tracking-tight uppercase leading-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
+              Start Your Prayer
             </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            {/* Timer section */}
+          </div>
+
+          <div className="px-5 py-5 space-y-5">
+
+            {/* Duration */}
             <div>
-              <p className="text-ministry-slate text-sm mb-4">
-                Choose how long you'd like to spend in prayer. The app will notify you when your time is complete.
-              </p>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-ministry-charcoal">Duration</label>
-                <Select value={prayerDuration} onValueChange={setPrayerDuration}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select duration" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 minute</SelectItem>
-                    <SelectItem value="3">3 minutes</SelectItem>
-                    <SelectItem value="5">5 minutes</SelectItem>
-                    <SelectItem value="10">10 minutes</SelectItem>
-                    <SelectItem value="15">15 minutes</SelectItem>
-                    <SelectItem value="20">20 minutes</SelectItem>
-                    <SelectItem value="30">30 minutes</SelectItem>
-                    <SelectItem value="60">1 hour</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <label className="text-[#FCD000] text-[9px] font-black uppercase tracking-[0.2em] mb-2 block">Duration</label>
+              <Select value={prayerDuration} onValueChange={setPrayerDuration}>
+                <SelectTrigger className="bg-[#111111] border border-[#FCD000]/30 text-white rounded-sm h-11 focus:ring-0 focus:ring-offset-0 focus:border-[#FCD000]">
+                  <SelectValue placeholder="Select duration" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#111111] border border-[#FCD000]/40 rounded-sm text-white">
+                  <SelectItem value="1" className="focus:bg-[#FCD000]/10 focus:text-white">1 minute</SelectItem>
+                  <SelectItem value="3" className="focus:bg-[#FCD000]/10 focus:text-white">3 minutes</SelectItem>
+                  <SelectItem value="5" className="focus:bg-[#FCD000]/10 focus:text-white">5 minutes</SelectItem>
+                  <SelectItem value="10" className="focus:bg-[#FCD000]/10 focus:text-white">10 minutes</SelectItem>
+                  <SelectItem value="15" className="focus:bg-[#FCD000]/10 focus:text-white">15 minutes</SelectItem>
+                  <SelectItem value="20" className="focus:bg-[#FCD000]/10 focus:text-white">20 minutes</SelectItem>
+                  <SelectItem value="30" className="focus:bg-[#FCD000]/10 focus:text-white">30 minutes</SelectItem>
+                  <SelectItem value="60" className="focus:bg-[#FCD000]/10 focus:text-white">1 hour</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="bg-blue-50 p-3 rounded-lg space-y-2">
-              <p className="text-xs text-ministry-slate">
-                <strong>Tip:</strong> For fewer distractions during prayer, consider turning on Do Not Disturb mode on your phone before you begin.
+            {/* Tip box */}
+            <div className="bg-[#FCD000]/10 border border-[#FCD000]/20 rounded-sm p-3">
+              <p className="text-xs text-white/60 leading-relaxed">
+                <span className="text-[#FCD000] font-black">TIP —</span> Turn on Do Not Disturb mode on your phone before you begin to minimize distractions.
               </p>
             </div>
 
-            {/* Prayer Reminders section (before start buttons) */}
-            <div className="border-t border-gray-200 pt-4">
-              <div className="flex items-center gap-2 mb-4">
-                <BellRing className="w-4 h-4 text-ministry-steel" />
-                <h3 className="text-sm font-semibold text-ministry-charcoal">Prayer Reminders</h3>
+            {/* Prayer Reminders section */}
+            <div className="border-t border-[#FCD000]/20 pt-5">
+              <div className="flex items-center gap-2 mb-1">
+                <BellRing className="w-3.5 h-3.5 text-[#FCD000]" />
+                <p className="text-[#FCD000] text-[9px] font-black uppercase tracking-[0.25em]">Prayer Reminders</p>
               </div>
-              <p className="text-xs text-ministry-slate mb-4">
+              <p className="text-white/50 text-xs mb-4 leading-relaxed">
                 Receive push notifications to remind you to pray throughout the day.
               </p>
 
               {/* Inline push notification prompt */}
               {showPushPrompt && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
-                  <div className="flex items-start gap-2">
-                    <BellRing className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                <div className="bg-[#FCD000]/10 border border-[#FCD000]/30 rounded-sm p-3 mb-4">
+                  <div className="flex items-start gap-2.5">
+                    <BellRing className="w-4 h-4 text-[#FCD000] mt-0.5 shrink-0" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-amber-800 mb-1">Enable Notifications</p>
-                      <p className="text-xs text-amber-700 mb-3">
+                      <p className="text-xs font-black text-white uppercase tracking-wide mb-1">Enable Notifications</p>
+                      <p className="text-xs text-white/50 mb-3">
                         Prayer reminders require push notifications. Tap below to allow them.
                       </p>
                       <div className="flex gap-2">
-                        <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white text-xs" onClick={handleEnableNotifications}>
-                          Enable Notifications
+                        <Button size="sm" className="bg-[#FCD000] text-black font-black text-xs uppercase tracking-wide rounded-sm hover:bg-[#FCD000]/90 h-8" onClick={handleEnableNotifications}>
+                          Enable Now
                         </Button>
-                        <Button size="sm" variant="ghost" className="text-xs text-amber-600" onClick={handleDismissPushPrompt}>
+                        <Button size="sm" variant="ghost" className="text-xs text-white/50 hover:text-white hover:bg-white/10 h-8" onClick={handleDismissPushPrompt}>
                           Not Now
                         </Button>
                       </div>
@@ -1292,48 +1295,52 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Midday reminder */}
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-sm font-medium">Midday Reminder</p>
-                  <p className="text-xs text-ministry-slate">Notify at 12:00 PM every day</p>
+              {/* Midday reminder row */}
+              <div className="h-14 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mb-2">
+                <div className="h-full w-12 liquid-black flex items-center justify-center shrink-0">
+                  <Sun className="w-5 h-5 text-white relative z-10" />
                 </div>
-                <Switch
-                  checked={remindersMiddayEnabled}
-                  onCheckedChange={(v) => handleReminderToggle('midday', v)}
-                />
+                <div className="flex-1 px-3">
+                  <span className="font-black text-xs uppercase tracking-wide">Midday Reminder</span>
+                  <p className="text-[10px] text-black/60 mt-0.5">12:00 PM every day</p>
+                </div>
+                <div className="pr-3">
+                  <Switch checked={remindersMiddayEnabled} onCheckedChange={(v) => handleReminderToggle('midday', v)} />
+                </div>
               </div>
 
-              {/* Hourly reminders */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <p className="text-sm font-medium">Hourly Reminders</p>
-                    <p className="text-xs text-ministry-slate">Notify every hour in a time window</p>
+              {/* Hourly reminders row */}
+              <div className="mb-2">
+                <div className="h-14 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                  <div className="h-full w-12 liquid-black flex items-center justify-center shrink-0">
+                    <RefreshCw className="w-5 h-5 text-white relative z-10" />
                   </div>
-                  <Switch
-                    checked={remindersHourlyEnabled}
-                    onCheckedChange={(v) => handleReminderToggle('hourly', v)}
-                  />
+                  <div className="flex-1 px-3">
+                    <span className="font-black text-xs uppercase tracking-wide">Hourly Reminders</span>
+                    <p className="text-[10px] text-black/60 mt-0.5">Every hour in a set window</p>
+                  </div>
+                  <div className="pr-3">
+                    <Switch checked={remindersHourlyEnabled} onCheckedChange={(v) => handleReminderToggle('hourly', v)} />
+                  </div>
                 </div>
                 {remindersHourlyEnabled && (
-                  <div className="mt-2 ml-2 flex items-center gap-2">
+                  <div className="mt-2 flex items-center gap-2 px-1">
                     <div className="flex-1">
-                      <label className="text-xs text-ministry-slate">From</label>
+                      <label className="text-[#FCD000] text-[9px] font-black uppercase tracking-[0.15em] mb-1 block">From</label>
                       <input
                         type="time"
                         value={remindersHourlyStart}
                         onChange={(e) => setRemindersHourlyStart(e.target.value)}
-                        className="block w-full border border-gray-200 rounded px-2 py-1 text-sm mt-1"
+                        className="block w-full bg-[#111111] border border-[#FCD000]/30 rounded-sm px-2 py-1.5 text-sm text-white focus:outline-none focus:border-[#FCD000]"
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="text-xs text-ministry-slate">To</label>
+                      <label className="text-[#FCD000] text-[9px] font-black uppercase tracking-[0.15em] mb-1 block">To</label>
                       <input
                         type="time"
                         value={remindersHourlyEnd}
                         onChange={(e) => setRemindersHourlyEnd(e.target.value)}
-                        className="block w-full border border-gray-200 rounded px-2 py-1 text-sm mt-1"
+                        className="block w-full bg-[#111111] border border-[#FCD000]/30 rounded-sm px-2 py-1.5 text-sm text-white focus:outline-none focus:border-[#FCD000]"
                       />
                     </div>
                   </div>
@@ -1342,39 +1349,41 @@ export default function Home() {
 
               {/* Custom times */}
               <div className="mb-4">
-                <p className="text-sm font-medium mb-2">Custom Times</p>
+                <div className="h-10 w-full flex items-center mb-2">
+                  <p className="text-[#FCD000] text-[9px] font-black uppercase tracking-[0.2em]">Custom Times</p>
+                </div>
                 {pushSupported && !pushSubscribed ? (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-2">
-                    <div className="flex items-start gap-2">
-                      <BellRing className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                  <div className="bg-[#FCD000]/10 border border-[#FCD000]/30 rounded-sm p-3">
+                    <div className="flex items-start gap-2.5">
+                      <BellRing className="w-4 h-4 text-[#FCD000] mt-0.5 shrink-0" />
                       <div className="flex-1">
-                        <p className="text-xs text-amber-700 mb-2">Enable notifications to add custom reminder times.</p>
-                        <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white text-xs" onClick={handleEnableNotifications}>
-                          Enable Notifications
+                        <p className="text-xs text-white/60 mb-2">Enable notifications to add custom reminder times.</p>
+                        <Button size="sm" className="bg-[#FCD000] text-black font-black text-xs uppercase tracking-wide rounded-sm hover:bg-[#FCD000]/90 h-8" onClick={handleEnableNotifications}>
+                          Enable Now
                         </Button>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2">
                     <input
                       type="time"
                       value={newCustomTime}
                       onChange={(e) => setNewCustomTime(e.target.value)}
-                      className="flex-1 border border-gray-200 rounded px-2 py-1 text-sm"
+                      className="flex-1 bg-[#111111] border border-[#FCD000]/30 rounded-sm px-2 py-1.5 text-sm text-white focus:outline-none focus:border-[#FCD000]"
                     />
-                    <Button size="sm" variant="outline" onClick={addCustomTime}>
+                    <Button size="sm" className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 rounded-sm h-9 px-3 font-black" onClick={addCustomTime}>
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
                 )}
                 {remindersCustomTimes.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mt-3">
                     {remindersCustomTimes.map((t) => (
-                      <div key={t} className="flex items-center gap-1 bg-gray-100 rounded px-2 py-1 text-xs">
+                      <div key={t} className="flex items-center gap-1.5 bg-[#FCD000] text-black border border-black rounded-sm px-2 py-1 text-xs font-black uppercase">
                         <span>{t}</span>
-                        <button onClick={() => removeCustomTime(t)} className="text-gray-400 hover:text-red-500">
-                          <Trash2 className="w-3 h-3" />
+                        <button onClick={() => removeCustomTime(t)} className="text-black/50 hover:text-black">
+                          <X className="w-3 h-3" />
                         </button>
                       </div>
                     ))}
@@ -1383,30 +1392,30 @@ export default function Home() {
               </div>
 
               <Button
-                className="w-full bg-ministry-navy text-white hover:bg-ministry-charcoal"
+                className="w-full h-11 liquid-black text-[#FCD000] border-2 border-[#FCD000] rounded-sm font-black uppercase tracking-wide text-xs shadow-[2px_2px_0px_0px_rgba(252,208,0,0.4)] hover:opacity-90"
                 onClick={saveReminders}
                 disabled={remindersSaving}
               >
-                {remindersSaving ? "Saving..." : "Save Reminders"}
+                <span className="relative z-10">{remindersSaving ? "Saving..." : "Save Reminders"}</span>
               </Button>
             </div>
 
             {/* Start / Cancel buttons */}
-            <div className="border-t border-gray-200 pt-4 flex space-x-2">
-              <Button 
-                variant="outline" 
-                className="flex-1"
+            <div className="border-t border-[#FCD000]/20 pt-5 flex gap-3">
+              <Button
+                className="flex-1 h-12 bg-transparent border border-white/20 text-white/70 hover:text-white hover:bg-white/5 rounded-sm font-black uppercase tracking-wide text-xs"
                 onClick={() => setShowPrayerDialog(false)}
               >
                 Cancel
               </Button>
-              <Button 
-                className="flex-1 bg-ministry-navy text-white hover:bg-ministry-charcoal"
+              <Button
+                className="flex-1 h-12 bg-[#FCD000] text-black hover:bg-[#FCD000]/90 rounded-sm font-black uppercase tracking-wide text-xs shadow-[2px_2px_0px_0px_rgba(252,208,0,0.4)]"
                 onClick={startPrayerTime}
               >
                 Start Prayer
               </Button>
             </div>
+
           </div>
         </DialogContent>
       </Dialog>
