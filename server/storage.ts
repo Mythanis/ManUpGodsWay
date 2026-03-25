@@ -2287,6 +2287,7 @@ export class DatabaseStorage implements IStorage {
         id: discussionReplies.id,
         discussionId: discussionReplies.discussionId,
         userId: discussionReplies.userId,
+        parentReplyId: discussionReplies.parentReplyId,
         content: discussionReplies.content,
         likes: discussionReplies.likes,
         createdAt: discussionReplies.createdAt,

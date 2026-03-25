@@ -295,6 +295,7 @@ export const discussionReplies = pgTable("discussion_replies", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   discussionId: varchar("discussion_id").notNull().references(() => discussions.id, { onDelete: 'cascade' }),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  parentReplyId: varchar("parent_reply_id"),
   content: text("content").notNull(),
   likes: integer("likes").default(0),
   createdAt: timestamp("created_at").defaultNow(),

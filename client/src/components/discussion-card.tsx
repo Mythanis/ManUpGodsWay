@@ -60,6 +60,8 @@ export default function DiscussionCard({
 }: DiscussionCardProps) {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
+  const [replyingToReplyId, setReplyingToReplyId] = useState<string | null>(null);
+  const [replyingToName, setReplyingToName] = useState('');
   const [userHasLiked, setUserHasLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(discussion.likes || 0);
   const [userHasDisliked, setUserHasDisliked] = useState(false);
@@ -105,8 +107,13 @@ export default function DiscussionCard({
     },
   });
 
+  const nestedReplyForm = useForm({
+    resolver: zodResolver(replySchema),
+    defaultValues: { content: '' },
+  });
+
   const createReply = useMutation({
-    mutationFn: async (data: z.infer<typeof replySchema>) => {
+    mutationFn: async (data: z.infer<typeof replySchema> & { parentReplyId?: string }) => {
       const response = await apiRequest('POST', `/api/discussions/${discussion.id}/replies`, data);
       return response;
     },
@@ -335,6 +342,18 @@ export default function DiscussionCard({
     
     await createReply.mutateAsync(data);
   };
+
+  const onSubmitNestedReply = async (data: z.infer<typeof replySchema>) => {
+    if (!(user as any)?.id) {
+      toast({ title: "Error", description: "You must be logged in to reply", variant: "destructive" });
+      return;
+    }
+    await createReply.mutateAsync({ ...data, parentReplyId: replyingToReplyId! });
+    nestedReplyForm.reset();
+    setReplyingToReplyId(null);
+    setReplyingToName('');
+  };
+
   const getTierBadge = (subscriptionTier: string) => {
     const status = discussion.user?.subscriptionStatus;
     if (status === 'active') {
@@ -592,14 +611,22 @@ export default function DiscussionCard({
         {/* ── Comments ───────────────────────────── */}
         {showReplies && discussion.replyCount > 0 && (
           <div className="border-t border-white/8">
-            <div className="space-y-0">
-              {(replies as any[])?.map((reply: any) => (
-                <div key={reply.id} className="px-4 py-3 border-b border-white/5">
-                  <div className="flex items-start gap-3">
+            {(() => {
+              const allReplies = (replies as any[]) || [];
+              const topLevel = allReplies.filter((r: any) => !r.parentReplyId);
+              const nested: Record<string, any[]> = {};
+              allReplies.filter((r: any) => r.parentReplyId).forEach((r: any) => {
+                if (!nested[r.parentReplyId]) nested[r.parentReplyId] = [];
+                nested[r.parentReplyId].push(r);
+              });
+
+              const renderReply = (reply: any, isNested = false) => (
+                <div key={reply.id} className={isNested ? "ml-9 mt-1" : ""}>
+                  <div className={`flex items-start gap-3 ${isNested ? "py-2" : "px-4 py-3 border-b border-white/5"}`}>
                     <img
                       src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent((reply.user?.firstName || '') + '+' + (reply.user?.lastName || ''))}&background=FCD000&color=000&size=32`}
                       alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
-                      className="w-8 h-8 rounded-full object-cover cursor-pointer flex-shrink-0 border border-[#FCD000]/30"
+                      className="w-7 h-7 rounded-full object-cover cursor-pointer flex-shrink-0 border border-[#FCD000]/30"
                       onClick={(e) => { e.stopPropagation(); setLocation(`/users/${reply.userId}`); }}
                     />
                     <div className="flex-1 min-w-0">
@@ -607,6 +634,11 @@ export default function DiscussionCard({
                         <span className="font-bold text-white text-xs block">
                           {reply.user?.firstName} {reply.user?.lastName?.charAt(0)}.
                         </span>
+                        {isNested && reply.parentReplyId && (
+                          <span className="text-[10px] text-[#FCD000]/60 block -mt-0.5 mb-0.5">
+                            ↩ reply
+                          </span>
+                        )}
                         <p className="text-sm text-white/80 leading-relaxed mt-0.5">{reply.content}</p>
                       </div>
                       <div className="flex items-center gap-3 mt-1 px-1">
@@ -615,6 +647,23 @@ export default function DiscussionCard({
                           data-testid={`button-like-reply-${reply.id}`}>
                           <ChristianCross className="w-3 h-3" /> {reply.likes || 0}
                         </button>
+                        {!isNested && canReply && (
+                          <button
+                            className="text-xs font-bold text-white/40 hover:text-[#FCD000] transition-colors"
+                            onClick={() => {
+                              if (replyingToReplyId === reply.id) {
+                                setReplyingToReplyId(null);
+                                setReplyingToName('');
+                              } else {
+                                setReplyingToReplyId(reply.id);
+                                setReplyingToName(`${reply.user?.firstName || ''} ${reply.user?.lastName?.charAt(0) || ''}.`);
+                                nestedReplyForm.reset({ content: '' });
+                              }
+                            }}
+                          >
+                            Reply
+                          </button>
+                        )}
                         <div className="flex items-center gap-1 ml-auto">
                           <FlagContentDialog contentType="reply" contentId={reply.id}
                             triggerElement={
@@ -634,9 +683,63 @@ export default function DiscussionCard({
                       </div>
                     </div>
                   </div>
+
+                  {/* Inline nested reply form */}
+                  {!isNested && replyingToReplyId === reply.id && (
+                    <div className="ml-9 mb-2 px-4">
+                      <Form {...nestedReplyForm}>
+                        <form onSubmit={nestedReplyForm.handleSubmit(onSubmitNestedReply)} className="flex items-end gap-2">
+                          <FormField
+                            control={nestedReplyForm.control}
+                            name="content"
+                            render={({ field }) => (
+                              <FormItem className="flex-1">
+                                <FormControl>
+                                  <textarea
+                                    placeholder={`Reply to ${replyingToName}…`}
+                                    className="w-full bg-white/8 border border-white/15 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-[#FCD000]/50 resize-none"
+                                    rows={2}
+                                    autoFocus
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              type="submit"
+                              size="sm"
+                              disabled={createReply.isPending}
+                              className="bg-[#FCD000] text-black font-bold text-xs h-8 px-3 rounded-lg hover:bg-[#FCD000]/90"
+                            >
+                              {createReply.isPending ? '...' : 'Post'}
+                            </Button>
+                            <button
+                              type="button"
+                              onClick={() => { setReplyingToReplyId(null); setReplyingToName(''); nestedReplyForm.reset(); }}
+                              className="text-[10px] text-white/40 hover:text-white/70 text-center"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      </Form>
+                    </div>
+                  )}
+
+                  {/* Nested replies */}
+                  {!isNested && nested[reply.id]?.length > 0 && (
+                    <div className="border-l-2 border-white/10 ml-10 mr-4 mb-1">
+                      {nested[reply.id].map((nr: any) => renderReply(nr, true))}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              );
+
+              return <div className="space-y-0">{topLevel.map((r: any) => renderReply(r, false))}</div>;
+            })()}
           </div>
         )}
       </CardContent>
