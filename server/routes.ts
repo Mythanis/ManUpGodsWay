@@ -51,7 +51,7 @@ import {
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
 import { strictWriteLimiter } from "./rateLimiter";
-import { uploadPublicFile, uploadPrivateFile, deleteStorageFile, streamVideoFromStorage, isStorageUrl } from "./objectStorage";
+import { uploadPublicFile, uploadPrivateFile, deleteStorageFile, streamVideoFromStorage, streamPublicFileFromStorage, isStorageUrl } from "./objectStorage";
 import { 
   savePushSubscription, 
   removePushSubscription, 
@@ -292,6 +292,24 @@ const communityMediaUpload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // ── Public media proxy ────────────────────────────────────────────────────
+  // Serves public files stored in GCS (thumbnails, images, community media).
+  // GCS direct URLs are not publicly accessible (uniform bucket-level ACL),
+  // so all public uploads are routed through this endpoint.
+  // Route: GET /api/media/public/uploads/*  (no authentication required)
+  app.get('/api/media/public/uploads/*', async (req: any, res) => {
+    try {
+      // req.params[0] is everything after /api/media/public/uploads/
+      const filePath = req.params[0] as string;
+      if (!filePath) return res.status(400).json({ message: "No file path specified" });
+      const objectName = `public/uploads/${filePath}`;
+      await streamPublicFileFromStorage(objectName, res);
+    } catch (error) {
+      console.error("[MediaProxy] Error serving public file:", error);
+      if (!res.headersSent) res.status(500).json({ message: "Failed to serve file" });
+    }
+  });
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {

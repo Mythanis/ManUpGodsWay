@@ -14,7 +14,7 @@ The backend is an Express.js server in TypeScript, following a RESTful API desig
 
 ## File Storage (Object Storage)
 All file uploads are stored in Replit Object Storage (GCS-backed), not local disk. The integration is in `server/replit_integrations/object_storage/objectStorage.ts` and the helper wrapper is `server/objectStorage.ts`.
-- **Public files** (thumbnails, community media, blog images, store product images, fitness plan documents): uploaded to `public/uploads/{type}/{key}` in the bucket via `uploadPublicFile()`. URLs stored in DB as `https://storage.googleapis.com/{bucket}/public/uploads/...`.
+- **Public files** (thumbnails, community media, blog images, store product images, fitness plan documents): uploaded to `public/uploads/{type}/{key}` in the bucket via `uploadPublicFile()`. URLs stored in DB as `/api/media/public/uploads/...` (backend proxy) — direct GCS URLs are NOT publicly accessible (uniform bucket-level ACL). The proxy route `GET /api/media/public/uploads/*` streams files from GCS with `Cache-Control: public, max-age=31536000` headers.
 - **Private files** (subscription-gated videos): uploaded to `.private/uploads/videos/{key}` via `uploadPrivateFile()`. Stored in `videos.videoUrl` as `gcs:.private/uploads/videos/{key}`. Served through `GET /api/videos/:id/stream` which uses `streamVideoFromStorage()` with range-request support.
 - **Documents** (bulk-import PDFs/Word): processed via `documentUpload` (disk storage), then uploaded to Object Storage after processing.
 - **Video thumbnails**: generated via ffmpeg from a temp file, then uploaded to public Object Storage.

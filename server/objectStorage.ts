@@ -11,7 +11,9 @@ function getBucketName(): string {
 
 /**
  * Upload a buffer to the PUBLIC part of Object Storage.
- * Returns a permanent public HTTPS URL.
+ * Returns a backend proxy URL (/api/media/public/uploads/{key}) — GCS direct URLs
+ * are NOT publicly accessible (uniform bucket ACL), so all public files are
+ * served through the /api/media/* proxy route.
  * Used for thumbnails, images, community media, store products, blog images.
  */
 export async function uploadPublicFile(buffer: Buffer, key: string, mimeType: string): Promise<string> {
@@ -26,14 +28,8 @@ export async function uploadPublicFile(buffer: Buffer, key: string, mimeType: st
     metadata: { cacheControl: "public, max-age=31536000" },
   });
 
-  // Attempt to make file publicly accessible
-  try {
-    await file.makePublic();
-  } catch (e) {
-    console.warn("[ObjectStorage] makePublic() failed for", objectName, "— file may not be publicly accessible:", (e as Error).message);
-  }
-
-  return `https://storage.googleapis.com/${bucketName}/${objectName}`;
+  // Return a backend proxy URL — GCS direct URLs require auth (uniform bucket-level ACL).
+  return `/api/media/public/uploads/${key}`;
 }
 
 /**
@@ -70,6 +66,9 @@ export async function deleteStorageFile(urlOrKey: string): Promise<void> {
     } else if (urlOrKey.startsWith("https://storage.googleapis.com/")) {
       const url = new URL(urlOrKey);
       objectName = url.pathname.slice(1 + bucketName.length + 1);
+    } else if (urlOrKey.startsWith("/api/media/")) {
+      // Backend proxy URL: /api/media/public/uploads/{key} → public/uploads/{key}
+      objectName = urlOrKey.slice("/api/media/".length);
     } else {
       return;
     }
@@ -135,5 +134,36 @@ export async function streamVideoFromStorage(
  */
 export function isStorageUrl(url: string | null | undefined): boolean {
   if (!url) return false;
-  return url.startsWith("gcs:") || url.startsWith("https://storage.googleapis.com/");
+  return url.startsWith("gcs:") || url.startsWith("https://storage.googleapis.com/") || url.startsWith("/api/media/");
+}
+
+/**
+ * Stream a public file from Object Storage to the Express response.
+ * Used by GET /api/media/* proxy route for serving thumbnails and public media.
+ */
+export async function streamPublicFileFromStorage(
+  objectName: string,
+  res: Response
+): Promise<void> {
+  const bucketName = getBucketName();
+  const bucket = objectStorageClient.bucket(bucketName);
+  const file = bucket.file(objectName);
+
+  const [exists] = await file.exists();
+  if (!exists) {
+    res.status(404).json({ message: "File not found" });
+    return;
+  }
+
+  const [metadata] = await file.getMetadata();
+  const contentType = (metadata.contentType as string) || "application/octet-stream";
+  const fileSize = metadata.size as string;
+
+  res.set({
+    "Content-Type": contentType,
+    "Content-Length": fileSize,
+    "Cache-Control": "public, max-age=31536000, immutable",
+  });
+
+  file.createReadStream().pipe(res);
 }
