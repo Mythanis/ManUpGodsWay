@@ -49,6 +49,7 @@ import Subscribe from "@/pages/subscribe";
 import Bible from "@/pages/bible";
 import Rations from "@/pages/rations";
 import RationsStore from "@/pages/rations-store";
+import LiveStreamPage from "@/pages/live-stream";
 import MyOrders from "@/pages/my-orders";
 import PrivacySecurity from "@/pages/privacy-security";
 import PrivacyPolicy from "@/pages/privacy-policy";
@@ -209,6 +210,7 @@ function Router() {
               <Route path="/brothers" component={Brothers} />
               <Route path="/messages" component={Messages} />
               <Route path="/profile" component={Profile} />
+              <Route path="/live" component={LiveStreamPage} />
               <Route path="/admin" component={Admin} />
               <Route path="/admin/events/:id/registrants" component={AdminEventRegistrants} />
               <Route path="/admin/studies/:id/edit-word" component={AdminWordEditor} />

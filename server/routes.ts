@@ -3003,13 +3003,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required for live streaming" });
       }
 
+      const { title, description, simulcastYoutubeKey, simulcastFacebookKey } = req.body;
+
+      // Create stream in Mux
+      const { createMuxLiveStream } = await import('./mux.js');
+      const muxData = await createMuxLiveStream({ simulcastYoutubeKey, simulcastFacebookKey });
+
       const streamData = {
-        ...req.body,
+        title,
+        description,
         createdBy: user.id,
         status: 'scheduled',
+        streamType: 'mux',
+        muxStreamId: muxData.muxStreamId,
+        muxStreamKey: muxData.muxStreamKey,
+        muxRtmpUrl: muxData.muxRtmpUrl,
+        muxPlaybackId: muxData.muxPlaybackId,
+        simulcastYoutubeKey: simulcastYoutubeKey || null,
+        simulcastFacebookKey: simulcastFacebookKey || null,
       };
-      
-      const stream = await storage.createLiveStream(streamData);
+
+      const stream = await storage.createLiveStream(streamData as any);
       res.status(201).json(stream);
     } catch (error) {
       console.error("Error creating live stream:", error);
@@ -3039,6 +3053,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
+      const existing = await storage.getLiveStream(req.params.id);
+      if (existing?.muxStreamId) {
+        try {
+          const { disableMuxLiveStream } = await import('./mux.js');
+          await disableMuxLiveStream(existing.muxStreamId);
+        } catch (muxErr) {
+          console.error("Mux disable error (non-fatal):", muxErr);
+        }
+      }
+
       const stream = await storage.endLiveStream(req.params.id);
       res.json(stream);
     } catch (error) {
@@ -3054,11 +3078,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
+      const existing = await storage.getLiveStream(req.params.id);
+      if (existing?.muxStreamId) {
+        try {
+          const { deleteMuxLiveStream } = await import('./mux.js');
+          await deleteMuxLiveStream(existing.muxStreamId);
+        } catch (muxErr) {
+          console.error("Mux delete error (non-fatal):", muxErr);
+        }
+      }
+
       await storage.deleteLiveStream(req.params.id);
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting live stream:", error);
       res.status(500).json({ message: "Failed to delete live stream" });
+    }
+  });
+
+  // Mux webhook - updates stream status automatically
+  app.post('/api/mux/webhook', async (req: any, res) => {
+    try {
+      const { type, data } = req.body;
+      if (!type || !data) return res.status(400).send('Invalid webhook');
+
+      const muxStreamId = data.id;
+
+      if (type === 'video.live_stream.active') {
+        // Stream went live - find by muxStreamId and mark as live
+        const streams = await storage.getLiveStreams();
+        const match = streams.find((s: any) => s.muxStreamId === muxStreamId);
+        if (match) await storage.startLiveStream(match.id);
+      } else if (type === 'video.live_stream.idle') {
+        // Stream went idle (broadcaster stopped) - mark as ended
+        const streams = await storage.getLiveStreams();
+        const match = streams.find((s: any) => s.muxStreamId === muxStreamId && s.status === 'live');
+        if (match) await storage.endLiveStream(match.id);
+      }
+
+      res.status(200).send('ok');
+    } catch (error) {
+      console.error("Mux webhook error:", error);
+      res.status(500).send('error');
     }
   });
 

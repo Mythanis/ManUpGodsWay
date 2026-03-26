@@ -278,7 +278,7 @@ export const liveStreams = pgTable("live_streams", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: varchar("title").notNull(),
   description: text("description"),
-  streamUrl: varchar("stream_url"), // Embed URL (YouTube Live, Facebook Live, etc.)
+  streamUrl: varchar("stream_url"), // External embed URL (YouTube Live, Facebook Live, etc.)
   thumbnailUrl: varchar("thumbnail_url"),
   status: varchar("status").default("scheduled"), // scheduled, live, ended
   scheduledAt: timestamp("scheduled_at"),
@@ -288,6 +288,15 @@ export const liveStreams = pgTable("live_streams", {
   viewCount: integer("view_count").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  // Mux live streaming fields
+  streamType: varchar("stream_type").default("mux"), // 'mux' | 'external'
+  muxStreamId: varchar("mux_stream_id"),
+  muxStreamKey: varchar("mux_stream_key"),
+  muxRtmpUrl: varchar("mux_rtmp_url"),
+  muxPlaybackId: varchar("mux_playback_id"),
+  muxAssetId: varchar("mux_asset_id"),
+  simulcastYoutubeKey: varchar("simulcast_youtube_key"),
+  simulcastFacebookKey: varchar("simulcast_facebook_key"),
 });
 
 // Discussion replies/comments
