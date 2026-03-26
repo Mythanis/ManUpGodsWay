@@ -22,7 +22,6 @@ interface MessageUser {
   id: string;
   firstName?: string;
   lastName?: string;
-  email: string;
   profileImageUrl?: string;
   allowDirectMessages?: boolean;
   allowGroupInvites?: boolean;
@@ -118,8 +117,7 @@ export default function Messages() {
     targetUser.allowDirectMessages !== false && // Only show users who allow direct messages
     !silencedUserIds.includes(targetUser.id) && // Hide silenced users
     (targetUser.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     targetUser.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     targetUser.email.toLowerCase().includes(searchQuery.toLowerCase()))
+     targetUser.lastName?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   // Filter users for group creation (must allow group invites)
@@ -128,8 +126,7 @@ export default function Messages() {
     targetUser.allowGroupInvites !== false && // Only show users who allow group invites
     !silencedUserIds.includes(targetUser.id) && // Hide silenced users
     (targetUser.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     targetUser.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     targetUser.email.toLowerCase().includes(searchQuery.toLowerCase()))
+     targetUser.lastName?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   // Fetch messages for selected conversation with real-time polling
@@ -343,7 +340,7 @@ export default function Messages() {
       const otherParticipant = conversation.participants.find(p => p.userId !== (user as any)?.id);
       if (otherParticipant?.user) {
         return `${otherParticipant.user.firstName || ""} ${otherParticipant.user.lastName || ""}`.trim() || 
-               otherParticipant.user.email;
+               "Unknown User";
       }
     }
     
@@ -463,7 +460,6 @@ export default function Messages() {
                                   <p className="font-medium">
                                     {targetUser.firstName} {targetUser.lastName}
                                   </p>
-                                  <p className="text-sm text-muted-foreground">{targetUser.email}</p>
                                 </div>
                               </div>
                               <Button
@@ -595,7 +591,6 @@ export default function Messages() {
                                 >
                                   <div>
                                     <p>{targetUser.firstName} {targetUser.lastName}</p>
-                                    <p className="text-xs text-muted-foreground">{targetUser.email}</p>
                                   </div>
                                 </label>
                               </div>

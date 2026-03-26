@@ -11,7 +11,6 @@ interface SilencedUser {
   id: string;
   firstName: string | null;
   lastName: string | null;
-  email: string;
   avatar: string | null;
 }
 
@@ -133,15 +132,12 @@ export function SilencedUsersButton() {
                   <Avatar className="w-10 h-10">
                     <AvatarImage src={user.avatar || ''} alt={user.firstName || ''} />
                     <AvatarFallback className="bg-ministry-gold-exact/20 text-black">
-                      {user.firstName?.[0] || user.email[0].toUpperCase()}
+                      {user.firstName?.[0] || '?'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-ministry-charcoal dark:text-white truncate">
-                      {user.firstName ? `${user.firstName} ${user.lastName || ''}` : user.email}
-                    </p>
-                    <p className="text-xs text-ministry-slate truncate">
-                      {user.email}
+                      {user.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Unknown User'}
                     </p>
                   </div>
                   {silencedToRemove.has(user.id) && (

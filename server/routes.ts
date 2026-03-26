@@ -4772,12 +4772,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit ? parseInt(limit as string) : undefined
       );
       
-      // Return only necessary fields for messaging (excluding sensitive info)
+      // Return only necessary fields for messaging (no email — prevents mass email harvest)
       const publicUsers = users.map(user => ({
         id: user.id,
         firstName: user.firstName,
         lastName: user.lastName,
-        email: user.email,
         profileImageUrl: user.profileImageUrl,
         subscriptionTier: user.subscriptionTier,
         subscriptionStatus: user.subscriptionStatus,
