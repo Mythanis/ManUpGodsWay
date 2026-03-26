@@ -37,9 +37,10 @@ interface User {
 interface UserManagementProps {
   subscriptionFilter?: string | null;
   onClearSubscriptionFilter?: () => void;
+  currentUserRole?: string;
 }
 
-export default function UserManagement({ subscriptionFilter, onClearSubscriptionFilter }: UserManagementProps = {}) {
+export default function UserManagement({ subscriptionFilter, onClearSubscriptionFilter, currentUserRole }: UserManagementProps = {}) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
@@ -429,23 +430,29 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                       <Shield className="w-5 h-5 text-ministry-steel" />
                       <div>
                         <p className="text-sm font-medium text-foreground">Role</p>
-                        <Select
-                          value={editedUser.role || selectedUser.role}
-                          onValueChange={(role) => {
-                            setEditedUser(prev => ({ ...prev, role }));
-                            setHasUnsavedChanges(true);
-                          }}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="user">User</SelectItem>
-                            <SelectItem value="moderator">Moderator</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="owner">Owner</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        {selectedUser.role === 'owner' && currentUserRole !== 'owner' ? (
+                          <p className="text-sm font-semibold text-foreground capitalize mt-1">Owner</p>
+                        ) : (
+                          <Select
+                            value={editedUser.role || selectedUser.role}
+                            onValueChange={(role) => {
+                              setEditedUser(prev => ({ ...prev, role }));
+                              setHasUnsavedChanges(true);
+                            }}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="moderator">Moderator</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                              {currentUserRole === 'owner' && (
+                                <SelectItem value="owner">Owner</SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                     </div>
                   </CardContent>

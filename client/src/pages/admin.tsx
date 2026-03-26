@@ -865,6 +865,7 @@ export default function Admin() {
               <UserManagement
                 subscriptionFilter={subscriptionFilter}
                 onClearSubscriptionFilter={() => setSubscriptionFilter(null)}
+                currentUserRole={(user as any)?.role}
               />
             </div>
           )}
