@@ -13,10 +13,12 @@ interface LiveStream {
   viewCount: number;
 }
 
+type PlayerStatus = "loading" | "playing" | "error";
+
 function MuxPlayer({ playbackId }: { playbackId: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const [error, setError] = useState(false);
+  const [status, setStatus] = useState<PlayerStatus>("loading");
 
   useEffect(() => {
     const video = videoRef.current;
@@ -28,14 +30,20 @@ function MuxPlayer({ playbackId }: { playbackId: string }) {
       hlsRef.current = hls;
       hls.loadSource(src);
       hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        setStatus("playing");
+        video.play().catch(() => {});
+      });
       hls.on(Hls.Events.ERROR, (_e, data) => {
-        if (data.fatal) setError(true);
+        if (data.fatal) setStatus("error");
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      // Safari native HLS
       video.src = src;
-      video.addEventListener("error", () => setError(true));
+      video.addEventListener("loadedmetadata", () => setStatus("playing"));
+      video.addEventListener("error", () => setStatus("error"));
     } else {
-      setError(true);
+      setStatus("error");
     }
 
     return () => {
@@ -43,7 +51,7 @@ function MuxPlayer({ playbackId }: { playbackId: string }) {
     };
   }, [playbackId]);
 
-  if (error) {
+  if (status === "error") {
     return (
       <div className="w-full aspect-video bg-black flex items-center justify-center rounded-lg">
         <div className="text-center px-6">
@@ -56,14 +64,22 @@ function MuxPlayer({ playbackId }: { playbackId: string }) {
   }
 
   return (
-    <video
-      ref={videoRef}
-      className="w-full aspect-video rounded-lg bg-black"
-      controls
-      autoPlay
-      playsInline
-      poster={`https://image.mux.com/${playbackId}/thumbnail.jpg`}
-    />
+    <div className="w-full aspect-video rounded-lg bg-black relative overflow-hidden">
+      {status === "loading" && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FCD000] mb-3" />
+          <p className="text-gray-400 text-sm">Connecting to stream…</p>
+        </div>
+      )}
+      <video
+        ref={videoRef}
+        className="w-full h-full object-contain"
+        style={{ display: status === "playing" ? "block" : "none" }}
+        controls={status === "playing"}
+        playsInline
+        poster={status === "playing" ? `https://image.mux.com/${playbackId}/thumbnail.jpg` : undefined}
+      />
+    </div>
   );
 }
 
