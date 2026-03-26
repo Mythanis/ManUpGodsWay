@@ -12,6 +12,7 @@ import {
   pgEnum,
   unique,
   real,
+  serial,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -2599,3 +2600,11 @@ export const insertDailyAppReminderSchema = createInsertSchema(dailyAppReminders
 
 export type DailyAppReminder = typeof dailyAppReminders.$inferSelect;
 export type InsertDailyAppReminder = z.infer<typeof insertDailyAppReminderSchema>;
+
+// ─── Bible API Call Tracking ───────────────────────────────────────────────────
+
+export const bibleApiCalls = pgTable("bible_api_calls", {
+  id: serial("id").primaryKey(),
+  endpoint: varchar("endpoint", { length: 500 }),
+  calledAt: timestamp("called_at").defaultNow().notNull(),
+});

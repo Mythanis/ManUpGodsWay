@@ -17,7 +17,7 @@ import { warGroupsService } from "./warGroupsService";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
 import * as schema from "@shared/schema";
-import { eq, and, sql, desc, asc, gt, ne } from "drizzle-orm";
+import { eq, and, sql, desc, asc, gt, ne, count } from "drizzle-orm";
 import { 
   insertStudySchema, 
   insertStudySeriesSchema,
@@ -12773,11 +12773,203 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================
+  // Owner Panel — Content Stats
+  // ============================================
+
+  app.get('/api/owner/content-stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isOwner(user)) return res.status(403).json({ message: "Owner access required" });
+
+      // Billing period starts on the 24th of each month
+      const now = new Date();
+      const periodStart = now.getDate() >= 24
+        ? new Date(now.getFullYear(), now.getMonth(), 24, 0, 0, 0, 0)
+        : new Date(now.getFullYear(), now.getMonth() - 1, 24, 0, 0, 0, 0);
+
+      const [
+        publishedStudiesResult,
+        videosResult,
+        blogPostsResult,
+        challengesResult,
+        eventsResult,
+        warRoomResult,
+        podcastsResult,
+        bibleCallsResult,
+      ] = await Promise.all([
+        db.select({ c: count(schema.studies.id) }).from(schema.studies).where(eq(schema.studies.isPublished, true)),
+        db.select({ c: count(schema.videos.id) }).from(schema.videos),
+        db.select({ c: count(schema.blogPosts.id) }).from(schema.blogPosts).where(eq(schema.blogPosts.isPublished, true)),
+        db.select({ c: count(schema.challenges.id) }).from(schema.challenges),
+        db.select({ c: count(schema.events.id) }).from(schema.events),
+        db.select({ c: count(schema.hurdleWallPosts.id) }).from(schema.hurdleWallPosts),
+        db.select({ c: count(schema.podcasts.id) }).from(schema.podcasts),
+        db.select({ c: count(schema.bibleApiCalls.id) }).from(schema.bibleApiCalls)
+          .where(sql`${schema.bibleApiCalls.calledAt} >= ${periodStart}`),
+      ]);
+
+      res.json({
+        publishedStudies: publishedStudiesResult[0]?.c ?? 0,
+        videos: videosResult[0]?.c ?? 0,
+        blogPosts: blogPostsResult[0]?.c ?? 0,
+        challenges: challengesResult[0]?.c ?? 0,
+        events: eventsResult[0]?.c ?? 0,
+        warRoomPosts: warRoomResult[0]?.c ?? 0,
+        podcasts: podcastsResult[0]?.c ?? 0,
+        bibleApiCallsThisPeriod: bibleCallsResult[0]?.c ?? 0,
+        periodStart: periodStart.toISOString(),
+      });
+    } catch (error) {
+      console.error("Error fetching owner content stats:", error);
+      res.status(500).json({ message: "Failed to fetch content stats" });
+    }
+  });
+
+  // ============================================
+  // Owner Panel — System Health
+  // ============================================
+
+  app.get('/api/owner/system-health', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isOwner(user)) return res.status(403).json({ message: "Owner access required" });
+
+      const services: Record<string, { name: string; status: 'ok' | 'degraded' | 'error'; detail?: string }> = {};
+
+      // ── 1. Database ───────────────────────────────────────────────────────────
+      try {
+        await db.execute(sql`SELECT 1`);
+        services.database = { name: "PostgreSQL (Neon)", status: "ok", detail: "Connected" };
+      } catch (e: any) {
+        services.database = { name: "PostgreSQL (Neon)", status: "error", detail: e.message };
+      }
+
+      // ── 2. Object Storage ─────────────────────────────────────────────────────
+      const hasObjStorage = !!(process.env.PUBLIC_OBJECT_SEARCH_PATHS && process.env.PRIVATE_OBJECT_DIR);
+      services.objectStorage = {
+        name: "Object Storage (GCS)",
+        status: hasObjStorage ? "ok" : "error",
+        detail: hasObjStorage ? "Configured" : "PUBLIC_OBJECT_SEARCH_PATHS not set",
+      };
+
+      // ── 3. Stripe ────────────────────────────────────────────────────────────
+      const stripeKey = process.env.STRIPE_SECRET_KEY;
+      if (stripeKey) {
+        try {
+          const stripeRes = await fetch('https://api.stripe.com/v1/balance', {
+            headers: { 'Authorization': `Bearer ${stripeKey}` },
+          });
+          services.stripe = {
+            name: "Stripe Payments",
+            status: stripeRes.ok ? "ok" : "degraded",
+            detail: stripeRes.ok ? "Connected" : `HTTP ${stripeRes.status}`,
+          };
+        } catch (e: any) {
+          services.stripe = { name: "Stripe Payments", status: "error", detail: e.message };
+        }
+      } else {
+        services.stripe = { name: "Stripe Payments", status: "error", detail: "No API key configured" };
+      }
+
+      // ── 4. Mux Live Streaming ────────────────────────────────────────────────
+      const muxId = process.env.MUX_TOKEN_ID;
+      const muxSecret = process.env.MUX_TOKEN_SECRET;
+      if (muxId && muxSecret) {
+        try {
+          const muxRes = await fetch('https://api.mux.com/video/v1/live-streams?limit=1', {
+            headers: {
+              'Authorization': 'Basic ' + Buffer.from(`${muxId}:${muxSecret}`).toString('base64'),
+              'Content-Type': 'application/json',
+            },
+          });
+          services.mux = {
+            name: "Mux Live Streaming",
+            status: muxRes.ok ? "ok" : "degraded",
+            detail: muxRes.ok ? "Connected" : `HTTP ${muxRes.status}`,
+          };
+        } catch (e: any) {
+          services.mux = { name: "Mux Live Streaming", status: "error", detail: e.message };
+        }
+      } else {
+        services.mux = { name: "Mux Live Streaming", status: "error", detail: "Tokens not configured" };
+      }
+
+      // ── 5. Bible API ─────────────────────────────────────────────────────────
+      const bibleKey = process.env.BIBLE_API_KEY;
+      if (bibleKey) {
+        try {
+          const bibleRes = await fetch('https://rest.api.bible/v1/bibles?language=eng&limit=1', {
+            headers: { 'api-key': bibleKey },
+          });
+          services.bibleApi = {
+            name: "API.Bible",
+            status: bibleRes.ok ? "ok" : "degraded",
+            detail: bibleRes.ok ? "Connected" : `HTTP ${bibleRes.status}`,
+          };
+        } catch (e: any) {
+          services.bibleApi = { name: "API.Bible", status: "error", detail: e.message };
+        }
+      } else {
+        services.bibleApi = { name: "API.Bible", status: "error", detail: "API key not configured" };
+      }
+
+      // ── 6. Push Notifications (VAPID) ────────────────────────────────────────
+      const vapid = process.env.VAPID_PRIVATE_KEY;
+      services.pushNotifications = {
+        name: "Push Notifications",
+        status: vapid ? "ok" : "error",
+        detail: vapid ? "VAPID keys configured" : "VAPID_PRIVATE_KEY not set",
+      };
+
+      // ── 7. Email (Resend via Replit integration) ──────────────────────────────
+      const replitConnectors = process.env.REPLIT_CONNECTORS_HOSTNAME;
+      services.email = {
+        name: "Email (Resend)",
+        status: replitConnectors ? "ok" : "degraded",
+        detail: replitConnectors ? "Integration configured" : "REPLIT_CONNECTORS_HOSTNAME not set",
+      };
+
+      // ── 8. Mailchimp ─────────────────────────────────────────────────────────
+      const mailchimpKey = process.env.MAILCHIMP_API_KEY;
+      if (mailchimpKey) {
+        try {
+          const dc = mailchimpKey.split('-')[1];
+          const mcRes = await fetch(`https://${dc}.api.mailchimp.com/3.0/ping`, {
+            headers: { 'Authorization': `apikey ${mailchimpKey}` },
+          });
+          services.mailchimp = {
+            name: "Mailchimp",
+            status: mcRes.ok ? "ok" : "degraded",
+            detail: mcRes.ok ? "Connected" : `HTTP ${mcRes.status}`,
+          };
+        } catch (e: any) {
+          services.mailchimp = { name: "Mailchimp", status: "error", detail: e.message };
+        }
+      } else {
+        services.mailchimp = { name: "Mailchimp", status: "degraded", detail: "Not configured" };
+      }
+
+      res.json({ services, checkedAt: new Date().toISOString() });
+    } catch (error) {
+      console.error("Error checking system health:", error);
+      res.status(500).json({ message: "Failed to check system health" });
+    }
+  });
+
+  // ============================================
   // Bible API Routes (using API.Bible)
   // ============================================
   
   const BIBLE_API_KEY = process.env.BIBLE_API_KEY;
   const BIBLE_API_BASE = 'https://rest.api.bible/v1';
+
+  // Track every call to API.Bible for the owner dashboard
+  app.use('/api/bible', async (req, _res, next) => {
+    try {
+      await db.insert(schema.bibleApiCalls).values({ endpoint: req.path });
+    } catch (_) { /* non-blocking — never break the request */ }
+    next();
+  });
 
   // Get available Bible versions
   app.get('/api/bible/versions', async (req, res) => {
