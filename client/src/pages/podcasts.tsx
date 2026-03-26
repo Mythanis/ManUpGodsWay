@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { LiveStreamBanner } from "@/components/live-stream-banner";
 import { LiveStreamSetupDialog } from "@/components/live-stream-setup-dialog";
 import { useLocation } from "wouter";
 import { BackButton } from "@/components/BackButton";
@@ -610,9 +609,6 @@ export default function Podcasts() {
 
       {/* Content */}
       <div className="p-6">
-        {/* Live Stream Banner */}
-        <LiveStreamBanner />
-        
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold"></div>

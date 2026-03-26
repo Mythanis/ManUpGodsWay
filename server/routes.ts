@@ -3046,6 +3046,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const stream = await storage.startLiveStream(req.params.id);
       res.json(stream);
+
+      // Send push notification to all users
+      try {
+        const { sendPushToAllUsers } = await import('./pushNotificationService.js');
+        await sendPushToAllUsers({
+          title: "🔴 We're Live!",
+          body: `${stream.title} — Tap to watch now.`,
+          url: "/live",
+        });
+      } catch (notifErr) {
+        console.error("Live stream notification error:", notifErr);
+      }
     } catch (error) {
       console.error("Error starting live stream:", error);
       res.status(500).json({ message: "Failed to start live stream" });
@@ -3198,7 +3210,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Stream went live - find by muxStreamId and mark as live
         const streams = await storage.getLiveStreams();
         const match = streams.find((s: any) => s.muxStreamId === muxStreamId);
-        if (match) await storage.startLiveStream(match.id);
+        if (match) {
+          const liveStream = await storage.startLiveStream(match.id);
+          // Notify all users
+          try {
+            const { sendPushToAllUsers } = await import('./pushNotificationService.js');
+            await sendPushToAllUsers({
+              title: "🔴 We're Live!",
+              body: `${liveStream.title} — Tap to watch now.`,
+              url: "/live",
+            });
+          } catch (notifErr) {
+            console.error("Live stream notification error:", notifErr);
+          }
+        }
       } else if (type === 'video.live_stream.idle') {
         // Stream went idle (broadcaster stopped) - mark as ended
         const streams = await storage.getLiveStreams();

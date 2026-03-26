@@ -20,7 +20,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { getTierDisplayName } from "@/lib/utils";
-import { Plus, Users, Heart, MessageCircle, ArrowUpDown, Search, X, Send, Image, Video, Radio, Trash2, Bold, Italic, Underline, Strikethrough } from "lucide-react";
+import { Plus, Users, Heart, MessageCircle, ArrowUpDown, Search, X, Send, Image, Video, Trash2, Bold, Italic, Underline, Strikethrough } from "lucide-react";
 import { HonorButton } from "@/components/honor-button";
 import { z } from "zod";
 import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
@@ -251,12 +251,6 @@ export default function Community() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Query for active live stream
-  const { data: activeLiveStream } = useQuery<any>({
-    queryKey: ["/api/live-streams/active"],
-    refetchInterval: 10000,
-  });
-
   // Handle discussion query parameter from URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -535,41 +529,8 @@ export default function Community() {
         </p>
       </div>
 
-      {/* Live Stream Banner */}
-      {activeLiveStream && (
-        <div className="px-6 -mt-3 relative z-20 mb-3">
-          <Card className="shadow-lg bg-red-600 border-2 border-red-400" data-testid="card-live-stream">
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <span className="relative flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-                    </span>
-                    <Radio className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-white font-bold text-sm">{activeLiveStream.title}</p>
-                    <p className="text-red-100 text-xs">LIVE NOW</p>
-                  </div>
-                </div>
-                <Button 
-                  size="sm" 
-                  className="bg-white text-red-600 hover:bg-red-50"
-                  onClick={() => window.open(activeLiveStream.streamUrl, '_blank')}
-                  data-testid="button-watch-live"
-                >
-                  Watch
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {/* Community Stats */}
-      <div className={`px-6 ${activeLiveStream ? '' : '-mt-3'} relative z-10 mb-4`}>
+      <div className="px-6 -mt-3 relative z-10 mb-4">
         <Card className="shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] liquid-black-white border-2 border-ministry-gold-exact rounded-sm" data-testid="card-stats">
           <CardContent className="p-3 relative z-10">
             <div className="grid grid-cols-3 gap-3 text-center">
