@@ -3103,7 +3103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // WHIP proxy — forwards the WebRTC SDP offer from the browser to Mux's WHIP endpoint.
-  // This avoids CORS errors: the browser calls our server, our server calls Mux.
+  // Uses Node.js https module (HTTP/1.1) because undici/fetch tries HTTP/2 which Mux WHIP rejects.
   app.post('/api/live-streams/:id/whip', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
@@ -3112,21 +3112,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stream = await storage.getLiveStream(req.params.id);
       if (!stream || !stream.muxStreamKey) return res.status(404).send('Stream not found');
 
-      const sdpBody = req.body; // raw text/plain SDP
-      const whipUrl = `https://global-live.mux.com:443/app/${stream.muxStreamKey}/whip`;
+      // Read SDP body from the raw request stream (express.text middleware may or may not have run)
+      let sdpBody: string;
+      if (typeof req.body === 'string' && req.body.length > 0) {
+        sdpBody = req.body;
+      } else {
+        // Fallback: read directly from the stream
+        sdpBody = await new Promise<string>((resolve, reject) => {
+          let data = '';
+          req.on('data', (chunk: Buffer) => { data += chunk.toString(); });
+          req.on('end', () => resolve(data));
+          req.on('error', reject);
+        });
+      }
 
-      const muxResp = await fetch(whipUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/sdp' },
-        body: typeof sdpBody === 'string' ? sdpBody : JSON.stringify(sdpBody),
+      if (!sdpBody || sdpBody.trim().length === 0) {
+        return res.status(400).send('Empty SDP body');
+      }
+
+      const streamKey = stream.muxStreamKey;
+      const bodyBuf = Buffer.from(sdpBody, 'utf-8');
+
+      // Use Node.js https module (forces HTTP/1.1, avoids undici HTTP/2 negotiation that Mux rejects)
+      const https = await import('https');
+      const result = await new Promise<{ status: number; contentType: string; body: string }>((resolve, reject) => {
+        const options = {
+          hostname: 'global-live.mux.com',
+          port: 443,
+          path: `/app/${streamKey}/whip`,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/sdp',
+            'Content-Length': bodyBuf.length,
+          },
+        };
+
+        const httpReq = https.request(options, (httpRes) => {
+          let body = '';
+          httpRes.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+          httpRes.on('end', () => {
+            resolve({
+              status: httpRes.statusCode || 500,
+              contentType: (httpRes.headers['content-type'] as string) || 'application/sdp',
+              body,
+            });
+          });
+        });
+
+        httpReq.on('error', reject);
+        httpReq.setTimeout(15000, () => {
+          httpReq.destroy(new Error('WHIP request timed out'));
+        });
+        httpReq.write(bodyBuf);
+        httpReq.end();
       });
 
-      const responseText = await muxResp.text();
-      res.status(muxResp.status)
-        .set('Content-Type', muxResp.headers.get('Content-Type') || 'application/sdp')
-        .send(responseText);
+      console.log(`WHIP proxy response: ${result.status} (${result.body.slice(0, 200)})`);
+      res.status(result.status)
+        .set('Content-Type', result.contentType)
+        .send(result.body);
     } catch (error: any) {
-      console.error('WHIP proxy error:', error);
+      console.error('WHIP proxy error:', error?.message, error?.cause?.message);
       res.status(502).send('Bad Gateway: ' + error.message);
     }
   });
