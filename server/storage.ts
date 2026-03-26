@@ -679,41 +679,47 @@ export class DatabaseStorage implements IStorage {
       .where(and(...conditions))
       .orderBy(asc(studySeries.displayOrder), desc(studySeries.createdAt));
     
-    // Get study count and total lessons for each series
-    const enrichedSeries = await Promise.all(seriesList.map(async (s) => {
-      const seriesStudies = await db.select().from(studies)
-        .where(and(
-          eq(studies.seriesId, s.id),
-          eq(studies.isPublished, true)
-        ));
-      
+    if (seriesList.length === 0) return [];
+
+    // Batch-fetch all published studies for all series in one query
+    const allStudies = await db.select().from(studies)
+      .where(and(
+        inArray(studies.seriesId, seriesList.map(s => s.id)),
+        eq(studies.isPublished, true)
+      ));
+
+    // Group by seriesId in memory
+    const studiesBySeriesId = new Map<string, typeof allStudies>();
+    for (const study of allStudies) {
+      if (!studiesBySeriesId.has(study.seriesId!)) studiesBySeriesId.set(study.seriesId!, []);
+      studiesBySeriesId.get(study.seriesId!)!.push(study);
+    }
+
+    return seriesList.map(s => {
+      const seriesStudies = studiesBySeriesId.get(s.id) ?? [];
       const totalLessons = seriesStudies.reduce((sum, study) => sum + (study.totalDays || 0), 0);
-      
-      return {
-        ...s,
-        studyCount: seriesStudies.length,
-        totalLessons,
-      };
-    }));
-    
-    return enrichedSeries;
+      return { ...s, studyCount: seriesStudies.length, totalLessons };
+    });
   }
 
   async getAllStudySeries(): Promise<any[]> {
     const seriesList = await db.select().from(studySeries)
       .orderBy(asc(studySeries.displayOrder), desc(studySeries.createdAt));
-    
-    const enrichedSeries = await Promise.all(seriesList.map(async (s) => {
-      const seriesStudies = await db.select().from(studies)
-        .where(eq(studies.seriesId, s.id));
-      
-      return {
-        ...s,
-        studyCount: seriesStudies.length,
-      };
-    }));
-    
-    return enrichedSeries;
+
+    if (seriesList.length === 0) return [];
+
+    // Batch-fetch all studies for all series in one query
+    const allStudies = await db.select({ seriesId: studies.seriesId })
+      .from(studies)
+      .where(inArray(studies.seriesId, seriesList.map(s => s.id)));
+
+    // Count studies per seriesId in memory
+    const countBySeriesId = new Map<string, number>();
+    for (const s of allStudies) {
+      countBySeriesId.set(s.seriesId!, (countBySeriesId.get(s.seriesId!) ?? 0) + 1);
+    }
+
+    return seriesList.map(s => ({ ...s, studyCount: countBySeriesId.get(s.id) ?? 0 }));
   }
 
   async getStudySeriesById(id: string): Promise<any | undefined> {
@@ -737,37 +743,67 @@ export class DatabaseStorage implements IStorage {
       ))
       .orderBy(asc(studies.seriesOrder), asc(studies.createdAt));
     
+    const allStudyIds = seriesStudies.map(s => s.id);
+
+    // Batch-fetch all lessons for all studies in one query
+    const allLessons = allStudyIds.length > 0
+      ? await db.select().from(studyLessons)
+        .where(inArray(studyLessons.studyId, allStudyIds))
+      : [];
+
+    // Group lessons by studyId in memory
+    const lessonsByStudyId = new Map<string, typeof allLessons>();
+    for (const l of allLessons) {
+      if (!lessonsByStudyId.has(l.studyId)) lessonsByStudyId.set(l.studyId, []);
+      lessonsByStudyId.get(l.studyId)!.push(l);
+    }
+
     // Get progress for each study if user is logged in
     if (userId) {
-      // First, get all lesson and progress data for determining lock status
+      const allLessonIds = allLessons.map(l => l.id);
+
+      // Batch-fetch all lesson progress for all lessons in one query
+      const allLessonProgress = allLessonIds.length > 0
+        ? await db.select().from(userLessonProgress)
+          .where(and(
+            eq(userLessonProgress.userId, userId),
+            inArray(userLessonProgress.lessonId, allLessonIds)
+          ))
+        : [];
+
+      // Map lesson progress by lessonId for O(1) lookup
+      const lessonProgressByLessonId = new Map(allLessonProgress.map(lp => [lp.lessonId, lp]));
+
+      // Batch-fetch all study-level progress for all studies in one query
+      const allUserProgress = allStudyIds.length > 0
+        ? await db.select().from(userProgress)
+          .where(and(
+            eq(userProgress.userId, userId),
+            inArray(userProgress.studyId, allStudyIds)
+          ))
+        : [];
+
+      const userProgressByStudyId = new Map(allUserProgress.map(p => [p.studyId, p]));
+
+      // Pre-calculate completion status for consecutive-locking logic (pure in-memory)
       const studyCompletionStatus: Map<string, boolean> = new Map();
       const studyCompletionTime: Map<string, Date | null> = new Map();
-      
-      // Pre-calculate completion status and completion time for each study
+
       for (const study of seriesStudies) {
-        const lessons = await db.select().from(studyLessons)
-          .where(eq(studyLessons.studyId, study.id));
-        
+        const lessons = lessonsByStudyId.get(study.id) ?? [];
         if (lessons.length === 0) {
-          const [progress] = await db.select().from(userProgress)
-            .where(and(
-              eq(userProgress.userId, userId),
-              eq(userProgress.studyId, study.id)
-            ));
+          const progress = userProgressByStudyId.get(study.id);
           studyCompletionStatus.set(study.id, progress?.completed ?? false);
           studyCompletionTime.set(study.id, progress?.completedAt ? new Date(progress.completedAt) : null);
         } else {
-          const completedLessons = await db.select().from(userLessonProgress)
-            .where(and(
-              eq(userLessonProgress.userId, userId),
-              inArray(userLessonProgress.lessonId, lessons.map(l => l.id)),
-              sql`${userLessonProgress.completedAt} IS NOT NULL`
-            ));
+          const completedLessons = lessons.filter(l => !!lessonProgressByLessonId.get(l.id)?.completedAt);
           const isComplete = completedLessons.length >= lessons.length;
           studyCompletionStatus.set(study.id, isComplete);
           if (isComplete && completedLessons.length > 0) {
-            const latestCompletion = completedLessons.reduce((latest, lp) => {
-              const t = lp.completedAt ? new Date(lp.completedAt) : new Date(0);
+            const latestCompletion = completedLessons.reduce((latest, l) => {
+              const t = lessonProgressByLessonId.get(l.id)?.completedAt
+                ? new Date(lessonProgressByLessonId.get(l.id)!.completedAt!)
+                : new Date(0);
               return t > latest ? t : latest;
             }, new Date(0));
             studyCompletionTime.set(study.id, latestCompletion);
@@ -776,33 +812,21 @@ export class DatabaseStorage implements IStorage {
           }
         }
       }
-      
-      const enrichedStudies = await Promise.all(seriesStudies.map(async (study, index) => {
-        const [progress] = await db.select().from(userProgress)
-          .where(and(
-            eq(userProgress.userId, userId),
-            eq(userProgress.studyId, study.id)
-          ));
-        
-        const lessons = await db.select().from(studyLessons)
-          .where(eq(studyLessons.studyId, study.id));
-        
-        let completedLessonsCount = 0;
-        if (lessons.length > 0) {
-          const completedLessons = await db.select().from(userLessonProgress)
-            .where(and(
-              eq(userLessonProgress.userId, userId),
-              inArray(userLessonProgress.lessonId, lessons.map(l => l.id)),
-              sql`${userLessonProgress.completedAt} IS NOT NULL`
-            ));
-          completedLessonsCount = completedLessons.length;
-        }
-        
+
+      // Build enriched study list purely in memory — no further DB queries
+      const enrichedStudies = seriesStudies.map((study, index) => {
+        const progress = userProgressByStudyId.get(study.id) ?? null;
+        const lessons = lessonsByStudyId.get(study.id) ?? [];
+
+        const completedLessonsCount = lessons.filter(
+          l => !!lessonProgressByLessonId.get(l.id)?.completedAt
+        ).length;
+
         let isLockedByPrevious = false;
         let isLockedByDrip = false;
         let isScheduledFuture = false;
         let unlocksAt: Date | null = null;
-        
+
         // Check if this study has a future scheduled publish date
         if (study.scheduledPublishDate) {
           const now = new Date();
@@ -812,12 +836,12 @@ export class DatabaseStorage implements IStorage {
             unlocksAt = scheduleDate;
           }
         }
-        
+
         if (requiresConsecutive && index > 0) {
           const previousStudyId = seriesStudies[index - 1].id;
           const previousComplete = studyCompletionStatus.get(previousStudyId) ?? false;
           isLockedByPrevious = !previousComplete;
-          
+
           // 24-hour drip: study unlocks 24 hours after previous study was completed
           if (previousComplete) {
             const prevCompletionTime = studyCompletionTime.get(previousStudyId);
@@ -831,30 +855,21 @@ export class DatabaseStorage implements IStorage {
             }
           }
         }
-        
+
         const isLocked = isLockedByDrip || isLockedByPrevious || isScheduledFuture;
 
         const sortedLessons = [...lessons].sort((a, b) =>
           (a.displayOrder ?? a.dayNumber ?? 0) - (b.displayOrder ?? b.dayNumber ?? 0)
         );
 
-        const lessonProgressRows = sortedLessons.length > 0
-          ? await db.select().from(userLessonProgress)
-            .where(and(
-              eq(userLessonProgress.userId, userId),
-              inArray(userLessonProgress.lessonId, sortedLessons.map(l => l.id))
-            ))
-          : [];
-        const lessonProgressMap = new Map(lessonProgressRows.map(lp => [lp.lessonId, lp]));
-
         const lessonList = sortedLessons.map((l, li) => {
-          const prog = lessonProgressMap.get(l.id);
+          const prog = lessonProgressByLessonId.get(l.id);
           const isCompleted = !!prog?.completedAt;
           let lessonIsLocked = false;
           let lessonUnlocksAt: string | null = null;
           if (li > 0) {
             const prevLesson = sortedLessons[li - 1];
-            const prevProg = lessonProgressMap.get(prevLesson.id);
+            const prevProg = lessonProgressByLessonId.get(prevLesson.id);
             if (!prevProg?.completedAt) {
               lessonIsLocked = true;
             } else {
@@ -889,19 +904,17 @@ export class DatabaseStorage implements IStorage {
           studyNumber: index + 1,
           totalStudiesInSeries: seriesStudies.length,
         };
-      }));
+      });
+
       return enrichedStudies;
     }
-    
-    // For non-authenticated users, still get totalLessons count
-    // All studies after first are locked for unauthenticated users if consecutive completion required
-    const enrichedStudies = await Promise.all(seriesStudies.map(async (study, index) => {
-      const lessons = await db.select().from(studyLessons)
-        .where(eq(studyLessons.studyId, study.id));
-      
+
+    // For non-authenticated users — all data already in memory, no more queries
+    return seriesStudies.map((study, index) => {
+      const lessons = lessonsByStudyId.get(study.id) ?? [];
       const isScheduledFuture = !!(study.scheduledPublishDate && new Date(study.scheduledPublishDate) > new Date());
       const isLocked = (requiresConsecutive && index > 0) || isScheduledFuture;
-      
+
       return {
         ...study,
         progress: null,
@@ -914,9 +927,7 @@ export class DatabaseStorage implements IStorage {
         studyNumber: index + 1,
         totalStudiesInSeries: seriesStudies.length,
       };
-    }));
-    
-    return enrichedStudies;
+    });
   }
 
   async startUserSeries(userId: string, seriesId: string): Promise<any> {
@@ -6065,34 +6076,37 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(hurdleWallPosts.userId, users.id))
       .orderBy(desc(hurdleWallPosts.createdAt));
     
-    // Fetch replies for each post
-    const postsWithReplies = await Promise.all(
-      posts.map(async (post) => {
-        const replies = await db
-          .select({
-            id: hurdleWallReplies.id,
-            postId: hurdleWallReplies.postId,
-            userId: hurdleWallReplies.userId,
-            content: hurdleWallReplies.content,
-            isAnonymous: hurdleWallReplies.isAnonymous,
-            createdAt: hurdleWallReplies.createdAt,
-            updatedAt: hurdleWallReplies.updatedAt,
-            user: {
-              id: users.id,
-              firstName: users.firstName,
-              lastName: users.lastName,
-            }
-          })
-          .from(hurdleWallReplies)
-          .innerJoin(users, eq(hurdleWallReplies.userId, users.id))
-          .where(eq(hurdleWallReplies.postId, post.id))
-          .orderBy(asc(hurdleWallReplies.createdAt));
-        
-        return { ...post, replies };
+    if (posts.length === 0) return [];
+
+    // Batch-fetch all replies for all posts in one query
+    const allReplies = await db
+      .select({
+        id: hurdleWallReplies.id,
+        postId: hurdleWallReplies.postId,
+        userId: hurdleWallReplies.userId,
+        content: hurdleWallReplies.content,
+        isAnonymous: hurdleWallReplies.isAnonymous,
+        createdAt: hurdleWallReplies.createdAt,
+        updatedAt: hurdleWallReplies.updatedAt,
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        }
       })
-    );
-    
-    return postsWithReplies;
+      .from(hurdleWallReplies)
+      .innerJoin(users, eq(hurdleWallReplies.userId, users.id))
+      .where(inArray(hurdleWallReplies.postId, posts.map(p => p.id)))
+      .orderBy(asc(hurdleWallReplies.createdAt));
+
+    // Group replies by postId in memory
+    const repliesByPostId = new Map<string, typeof allReplies>();
+    for (const reply of allReplies) {
+      if (!repliesByPostId.has(reply.postId)) repliesByPostId.set(reply.postId, []);
+      repliesByPostId.get(reply.postId)!.push(reply);
+    }
+
+    return posts.map(post => ({ ...post, replies: repliesByPostId.get(post.id) ?? [] }));
   }
 
   async getHurdleWallPost(postId: string): Promise<(HurdleWallPost & { 
@@ -6374,34 +6388,37 @@ export class DatabaseStorage implements IStorage {
       .where(eq(hurdleWallPosts.userId, userId))
       .orderBy(desc(hurdleWallPosts.createdAt));
     
-    // Fetch replies for each post
-    const postsWithReplies = await Promise.all(
-      posts.map(async (post) => {
-        const replies = await db
-          .select({
-            id: hurdleWallReplies.id,
-            postId: hurdleWallReplies.postId,
-            userId: hurdleWallReplies.userId,
-            content: hurdleWallReplies.content,
-            isAnonymous: hurdleWallReplies.isAnonymous,
-            createdAt: hurdleWallReplies.createdAt,
-            updatedAt: hurdleWallReplies.updatedAt,
-            user: {
-              id: users.id,
-              firstName: users.firstName,
-              lastName: users.lastName,
-            }
-          })
-          .from(hurdleWallReplies)
-          .innerJoin(users, eq(hurdleWallReplies.userId, users.id))
-          .where(eq(hurdleWallReplies.postId, post.id))
-          .orderBy(asc(hurdleWallReplies.createdAt));
-        
-        return { ...post, replies };
+    if (posts.length === 0) return [];
+
+    // Batch-fetch all replies for all posts in one query
+    const allReplies = await db
+      .select({
+        id: hurdleWallReplies.id,
+        postId: hurdleWallReplies.postId,
+        userId: hurdleWallReplies.userId,
+        content: hurdleWallReplies.content,
+        isAnonymous: hurdleWallReplies.isAnonymous,
+        createdAt: hurdleWallReplies.createdAt,
+        updatedAt: hurdleWallReplies.updatedAt,
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        }
       })
-    );
-    
-    return postsWithReplies;
+      .from(hurdleWallReplies)
+      .innerJoin(users, eq(hurdleWallReplies.userId, users.id))
+      .where(inArray(hurdleWallReplies.postId, posts.map(p => p.id)))
+      .orderBy(asc(hurdleWallReplies.createdAt));
+
+    // Group replies by postId in memory
+    const repliesByPostId = new Map<string, typeof allReplies>();
+    for (const reply of allReplies) {
+      if (!repliesByPostId.has(reply.postId)) repliesByPostId.set(reply.postId, []);
+      repliesByPostId.get(reply.postId)!.push(reply);
+    }
+
+    return posts.map(post => ({ ...post, replies: repliesByPostId.get(post.id) ?? [] }));
   }
 
   // Events implementation methods
