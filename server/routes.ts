@@ -3102,6 +3102,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // WHIP proxy — forwards the WebRTC SDP offer from the browser to Mux's WHIP endpoint.
+  // This avoids CORS errors: the browser calls our server, our server calls Mux.
+  app.post('/api/live-streams/:id/whip', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) return res.status(403).send('Forbidden');
+
+      const stream = await storage.getLiveStream(req.params.id);
+      if (!stream || !stream.muxStreamKey) return res.status(404).send('Stream not found');
+
+      const sdpBody = req.body; // raw text/plain SDP
+      const whipUrl = `https://global-live.mux.com:443/app/${stream.muxStreamKey}/whip`;
+
+      const muxResp = await fetch(whipUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/sdp' },
+        body: typeof sdpBody === 'string' ? sdpBody : JSON.stringify(sdpBody),
+      });
+
+      const responseText = await muxResp.text();
+      res.status(muxResp.status)
+        .set('Content-Type', muxResp.headers.get('Content-Type') || 'application/sdp')
+        .send(responseText);
+    } catch (error: any) {
+      console.error('WHIP proxy error:', error);
+      res.status(502).send('Bad Gateway: ' + error.message);
+    }
+  });
+
   // Mux webhook - updates stream status automatically
   app.post('/api/mux/webhook', async (req: any, res) => {
     try {

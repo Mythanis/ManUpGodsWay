@@ -5,13 +5,14 @@ import { Radio, VideoOff, Video, Mic, MicOff, Square, AlertTriangle } from "luci
 
 interface LiveBroadcasterProps {
   streamKey: string;
+  streamId: string;
   onBroadcastStart?: () => void;
   onBroadcastEnd?: () => void;
 }
 
 type BroadcastState = "idle" | "requesting" | "connecting" | "live" | "error";
 
-export function LiveBroadcaster({ streamKey, onBroadcastStart, onBroadcastEnd }: LiveBroadcasterProps) {
+export function LiveBroadcaster({ streamKey, streamId, onBroadcastStart, onBroadcastEnd }: LiveBroadcasterProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -99,7 +100,8 @@ export function LiveBroadcaster({ streamKey, onBroadcastStart, onBroadcastEnd }:
         setTimeout(resolve, 4000);
       });
 
-      const whipUrl = `https://global-live.mux.com:443/app/${streamKey}/whip`;
+      // Use our server-side proxy to avoid CORS issues with Mux's WHIP endpoint
+      const whipUrl = `/api/live-streams/${streamId}/whip`;
       const resp = await fetch(whipUrl, {
         method: "POST",
         headers: { "Content-Type": "application/sdp" },

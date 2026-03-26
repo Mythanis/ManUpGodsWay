@@ -105,6 +105,7 @@ function SetupGuide({ stream, onGoLive, onEndStream, goLivePending, endPending }
               <>
                 <LiveBroadcaster
                   streamKey={streamKey}
+                  streamId={stream.id}
                   onBroadcastEnd={onEndStream}
                 />
               </>
