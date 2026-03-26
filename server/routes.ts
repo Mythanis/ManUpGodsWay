@@ -7791,19 +7791,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         relatedId: request.id,
       });
       
-      // Send real-time WebSocket notification if user is connected  
-      const client = connectedClients.get(recipientId);
-      if (client && client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify({
-          type: 'brotherhood_request',
-          requestId: request.id,
-          requester: {
-            id: requesterId,
-            firstName: requester?.firstName,
-            lastName: requester?.lastName,
-          },
-          message: `${requester?.firstName} ${requester?.lastName} wants to be your brother in faith`
-        }));
+      // Send real-time WebSocket notification if user is connected (all tabs)
+      const brotherhoodPayload = JSON.stringify({
+        type: 'brotherhood_request',
+        requestId: request.id,
+        requester: {
+          id: requesterId,
+          firstName: requester?.firstName,
+          lastName: requester?.lastName,
+        },
+        message: `${requester?.firstName} ${requester?.lastName} wants to be your brother in faith`
+      });
+      const recipientSockets = connectedClients.get(recipientId);
+      if (recipientSockets && recipientSockets.size > 0) {
+        recipientSockets.forEach(client => {
+          if (client.readyState === WebSocket.OPEN) client.send(brotherhoodPayload);
+        });
         console.log(`Sent real-time brotherhood request notification to user ${recipientId}`);
       } else {
         console.log(`User ${recipientId} not connected to WebSocket - notification not sent`);
@@ -7867,25 +7870,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Send real-time WebSocket notification for brotherhood establishment
         const requester = await storage.getUser(request.requesterId);
         
-        // Send to the requester (Josh who sent the request)
-        const requesterWs = connectedClients.get(request.requesterId);
-        if (requesterWs && requesterWs.readyState === WebSocket.OPEN) {
-          requesterWs.send(JSON.stringify({
-            type: 'brotherhood_established',
-            message: 'Brotherhood established',
-            partnerName: recipient?.firstName + ' ' + recipient?.lastName
-          }));
-        }
+        // Send to the requester (all their tabs)
+        const requesterPayload = JSON.stringify({
+          type: 'brotherhood_established',
+          message: 'Brotherhood established',
+          partnerName: recipient?.firstName + ' ' + recipient?.lastName
+        });
+        connectedClients.get(request.requesterId)?.forEach(client => {
+          if (client.readyState === WebSocket.OPEN) client.send(requesterPayload);
+        });
         
-        // Send to the responder (Jody who accepted the request)  
-        const responderWs = connectedClients.get(request.recipientId);
-        if (responderWs && responderWs.readyState === WebSocket.OPEN) {
-          responderWs.send(JSON.stringify({
-            type: 'brotherhood_established', 
-            message: 'Brotherhood established',
-            partnerName: requester?.firstName + ' ' + requester?.lastName
-          }));
-        }
+        // Send to the responder (all their tabs)
+        const responderPayload = JSON.stringify({
+          type: 'brotherhood_established',
+          message: 'Brotherhood established',
+          partnerName: requester?.firstName + ' ' + requester?.lastName
+        });
+        connectedClients.get(request.recipientId)?.forEach(client => {
+          if (client.readyState === WebSocket.OPEN) client.send(responderPayload);
+        });
       } else if (response === 'denied') {
         // Track the denial for cooldown management
         await storage.upsertBrotherhoodDenial({
@@ -7903,11 +7906,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           partnerName: recipient?.firstName + ' ' + recipient?.lastName
         };
         
-        // Send to the requester so their UI updates immediately
-        const targetWs = connectedClients.get(request.requesterId);
-        if (targetWs && targetWs.readyState === WebSocket.OPEN) {
-          targetWs.send(JSON.stringify(wsMessage));
-        }
+        // Send to the requester so their UI updates immediately (all tabs)
+        const deniedPayload = JSON.stringify(wsMessage);
+        connectedClients.get(request.requesterId)?.forEach(client => {
+          if (client.readyState === WebSocket.OPEN) client.send(deniedPayload);
+        });
       }
 
       res.json({ message: `Brotherhood request ${response} successfully` });
@@ -7967,26 +7970,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         removedBy: currentUser?.firstName + ' ' + currentUser?.lastName
       };
 
-      // Send to the other user
-      const targetWs = connectedClients.get(otherId);
-      if (targetWs && targetWs.readyState === WebSocket.OPEN) {
-        targetWs.send(JSON.stringify(wsMessage));
-      }
+      // Send to the other user (all tabs)
+      const removedPayload = JSON.stringify(wsMessage);
+      connectedClients.get(otherId)?.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) client.send(removedPayload);
+      });
 
       // Get the other user's info for the initiator message
       const otherUser = await storage.getUser(otherId);
       
-      // Send update to the initiating user as well for real-time UI update
+      // Send update to the initiating user as well for real-time UI update (all tabs)
       const initiatorMessage = {
         type: 'brotherhood_removed',
         message: `You removed your brotherhood with ${otherUser?.firstName} ${otherUser?.lastName}`,
         removedBy: currentUser?.firstName + ' ' + currentUser?.lastName
       };
-
-      const initiatorWs = connectedClients.get(userId);
-      if (initiatorWs && initiatorWs.readyState === WebSocket.OPEN) {
-        initiatorWs.send(JSON.stringify(initiatorMessage));
-      }
+      const initiatorPayload = JSON.stringify(initiatorMessage);
+      connectedClients.get(userId)?.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) client.send(initiatorPayload);
+      });
 
       res.json({
         success: true,
@@ -12922,8 +12924,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WebSocket server for real-time notifications
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
-  // Store connected clients with their user IDs
-  const connectedClients = new Map<string, WebSocket>();
+  // Store connected clients: userId → Set of sockets (one per tab/window)
+  const connectedClients = new Map<string, Set<WebSocket>>();
   
   const PING_INTERVAL = 30000;
 
@@ -12959,8 +12961,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         if (data.type === 'auth' && data.userId) {
           ws.userId = data.userId; // Attach for O(1) close cleanup
-          connectedClients.set(data.userId, ws);
-          console.log(`User ${data.userId} connected to WebSocket`);
+          // Add this socket to the user's Set (supports multiple tabs)
+          if (!connectedClients.has(data.userId)) {
+            connectedClients.set(data.userId, new Set());
+          }
+          connectedClients.get(data.userId)!.add(ws);
+          console.log(`User ${data.userId} connected to WebSocket (${connectedClients.get(data.userId)!.size} tab(s))`);
           
           ws.send(JSON.stringify({
             type: 'auth_success',
@@ -12973,33 +12979,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
     
     ws.on('close', () => {
-      if (ws.userId && connectedClients.get(ws.userId) === ws) {
-        // Guard: only remove if this socket is still the active one.
-        // Prevents a stale close event from evicting a newer reconnect.
-        connectedClients.delete(ws.userId); // O(1) — no scan needed
-        console.log(`User ${ws.userId} disconnected from WebSocket`);
+      if (ws.userId) {
+        const sockets = connectedClients.get(ws.userId);
+        if (sockets) {
+          sockets.delete(ws); // Remove only this tab's socket
+          if (sockets.size === 0) {
+            connectedClients.delete(ws.userId); // Last tab closed
+            console.log(`User ${ws.userId} fully disconnected from WebSocket`);
+          } else {
+            console.log(`User ${ws.userId} closed a tab (${sockets.size} tab(s) remaining)`);
+          }
+        }
       }
     });
   });
   
   // Add function to send real-time notifications (wrapped format)
+  // Delivers to ALL open tabs for that user
   (app as any).sendRealtimeNotification = (userId: string, notification: any) => {
-    const client = connectedClients.get(userId);
-    if (client && client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify({
-        type: 'notification',
-        data: notification
-      }));
-    }
-  };
-  
-  // Add function to broadcast to all connected clients
-  (app as any).broadcastToAll = (message: { type: string; data?: any }) => {
-    const payload = JSON.stringify(message); // Serialize once, not once per client
-    connectedClients.forEach((client) => {
+    const sockets = connectedClients.get(userId);
+    if (!sockets) return;
+    const payload = JSON.stringify({ type: 'notification', data: notification });
+    sockets.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(payload);
       }
+    });
+  };
+  
+  // Add function to broadcast to all connected clients (all users, all tabs)
+  (app as any).broadcastToAll = (message: { type: string; data?: any }) => {
+    const payload = JSON.stringify(message); // Serialize once, not once per client/tab
+    connectedClients.forEach((sockets) => {
+      sockets.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(payload);
+        }
+      });
     });
   };
   
