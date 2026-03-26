@@ -81,3 +81,16 @@ export function getMuxPlaybackUrl(playbackId: string): string {
 export function getMuxThumbnailUrl(playbackId: string): string {
   return `https://image.mux.com/${playbackId}/thumbnail.jpg`;
 }
+
+/**
+ * Returns the Mux live stream status: "active" means broadcaster is connected,
+ * "idle" means no broadcaster. Returns null on any error.
+ */
+export async function getMuxLiveStreamStatus(muxStreamId: string): Promise<"active" | "idle" | null> {
+  try {
+    const stream = await mux.video.liveStreams.retrieve(muxStreamId);
+    return (stream.status as "active" | "idle") ?? "idle";
+  } catch {
+    return null;
+  }
+}

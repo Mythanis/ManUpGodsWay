@@ -2989,6 +2989,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/live-streams/active', async (req, res) => {
     try {
       const stream = await storage.getActiveLiveStream();
+      if (!stream) return res.json(null);
+
+      // Verify with Mux that a broadcaster is actually connected
+      if (stream.muxStreamId) {
+        const { getMuxLiveStreamStatus } = await import('./mux.js');
+        const muxStatus = await getMuxLiveStreamStatus(stream.muxStreamId);
+        if (muxStatus === "idle") {
+          // No broadcaster — silently mark ended in DB and return null
+          await storage.endLiveStream(stream.id);
+          return res.json(null);
+        }
+      }
+
       res.json(stream);
     } catch (error) {
       console.error("Error fetching active live stream:", error);
