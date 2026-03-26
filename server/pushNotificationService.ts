@@ -41,10 +41,10 @@ export function getPushUrl(type: string, relatedId?: string | null): string {
       return relatedId ? `/community?discussion=${relatedId}` : '/community';
     case 'study':
     case 'new_study':
-      return relatedId ? `/study/${relatedId}` : '/library';
+      return relatedId ? `/studies/${relatedId}` : '/library';
     case 'video':
     case 'new_video':
-      return '/videos';
+      return relatedId ? `/videos?id=${relatedId}` : '/videos';
     case 'devotional':
     case 'new_devotional':
       return '/';
@@ -59,17 +59,17 @@ export function getPushUrl(type: string, relatedId?: string | null): string {
       return '/';
     case 'war_room':
     case 'war_room_comment':
-      return '/war-room';
+      return relatedId ? `/war-room?post=${relatedId}` : '/war-room';
     case 'under_fire':
     case 'under_fire_comment':
-      return '/under-fire';
+      return relatedId ? `/under-fire?request=${relatedId}` : '/under-fire';
     case 'war_group':
     case 'war_group_post':
     case 'war_group_comment':
       return relatedId ? `/war-groups/${relatedId}` : '/war-groups';
     case 'podcast':
     case 'new_podcast':
-      return '/podcasts';
+      return relatedId ? `/podcasts?id=${relatedId}` : '/podcasts';
     case 'admin':
       return relatedId ? `/messages?conversation=${relatedId}` : '/';
     case 'prayer_reminder':
