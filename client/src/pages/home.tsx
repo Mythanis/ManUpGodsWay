@@ -336,6 +336,10 @@ export default function Home() {
   // Native share function with image
   const handleNativeShare = async (devotional: any) => {
     setIsSharing(true);
+
+    // Safety timeout — navigator.share can hang on iOS after user saves a file
+    const sharingTimeout = setTimeout(() => setIsSharing(false), 15000);
+
     try {
       // Fetch the share image
       const response = await fetch(`/api/devotionals/${devotional.id}/share-image`);
@@ -383,6 +387,7 @@ export default function Home() {
         });
       }
     } finally {
+      clearTimeout(sharingTimeout);
       setIsSharing(false);
     }
   };
