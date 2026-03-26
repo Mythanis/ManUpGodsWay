@@ -18,62 +18,84 @@ type PlayerStatus = "loading" | "playing" | "error";
 function MuxPlayer({ playbackId }: { playbackId: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [status, setStatus] = useState<PlayerStatus>("loading");
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     const src = `https://stream.mux.com/${playbackId}.m3u8`;
 
-    // Pre-check: verify the stream is actually broadcasting before touching the video element
-    fetch(src, { method: "HEAD" })
-      .then((res) => {
-        if (cancelled) return;
-        if (!res.ok) {
-          setStatus("error");
-          return;
-        }
-        // Stream is live — now initialise the player
-        const video = videoRef.current;
-        if (!video) return;
+    function tryLoad() {
+      if (cancelled) return;
+      hlsRef.current?.destroy();
+      hlsRef.current = null;
 
-        if (Hls.isSupported()) {
-          const hls = new Hls({ lowLatencyMode: true });
-          hlsRef.current = hls;
-          hls.loadSource(src);
-          hls.attachMedia(video);
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            if (cancelled) return;
-            setStatus("playing");
-            video.play().catch(() => {});
-          });
-          hls.on(Hls.Events.ERROR, (_e, data) => {
-            if (data.fatal && !cancelled) setStatus("error");
-          });
-        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-          video.src = src;
-          video.addEventListener("loadedmetadata", () => { if (!cancelled) setStatus("playing"); });
-          video.addEventListener("error", () => { if (!cancelled) setStatus("error"); });
-        } else {
+      const video = videoRef.current;
+      if (!video) return;
+
+      if (Hls.isSupported()) {
+        const hls = new Hls({ lowLatencyMode: true, manifestLoadingTimeOut: 10000 });
+        hlsRef.current = hls;
+        hls.loadSource(src);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (cancelled) return;
+          setStatus("playing");
+          video.play().catch(() => {});
+        });
+        hls.on(Hls.Events.ERROR, (_e, data) => {
+          if (cancelled) return;
+          if (data.fatal) {
+            hls.destroy();
+            // Retry in 10s — broadcaster may not be connected yet
+            setStatus("error");
+            retryRef.current = setTimeout(() => {
+              if (!cancelled) {
+                setStatus("loading");
+                setRetryCount(c => c + 1);
+              }
+            }, 10000);
+          }
+        });
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        // Safari native HLS
+        video.src = src;
+        const onLoaded = () => { if (!cancelled) setStatus("playing"); };
+        const onError = () => {
+          if (cancelled) return;
           setStatus("error");
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setStatus("error");
-      });
+          retryRef.current = setTimeout(() => {
+            if (!cancelled) {
+              setStatus("loading");
+              setRetryCount(c => c + 1);
+            }
+          }, 10000);
+        };
+        video.addEventListener("loadedmetadata", onLoaded, { once: true });
+        video.addEventListener("error", onError, { once: true });
+        video.load();
+      } else {
+        setStatus("error");
+      }
+    }
+
+    tryLoad();
 
     return () => {
       cancelled = true;
+      if (retryRef.current) clearTimeout(retryRef.current);
       hlsRef.current?.destroy();
     };
-  }, [playbackId]);
+  }, [playbackId, retryCount]);
 
   if (status === "error") {
     return (
       <div className="w-full aspect-video bg-black flex items-center justify-center rounded-lg">
         <div className="text-center px-6">
-          <Radio className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-          <p className="text-white font-bold mb-1">Broadcast Not Started</p>
-          <p className="text-gray-400 text-sm">The host hasn't started broadcasting yet. Check back in a moment.</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FCD000] mx-auto mb-3" />
+          <p className="text-white font-bold mb-1">Waiting for Broadcast…</p>
+          <p className="text-gray-400 text-sm">The host is setting up. Retrying automatically.</p>
         </div>
       </div>
     );
