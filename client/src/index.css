@@ -14,23 +14,23 @@
 
 /* Dark theme is the default — variables match the dark palette with no class needed */
 :root {
-  --background: hsl(220 15% 10%);
+  --background: hsl(0 0% 4%);
   --foreground: hsl(0 0% 95%);
 
-  --card: hsl(220 14% 14%);
+  --card: hsl(0 0% 6%);
   --card-foreground: hsl(0 0% 95%);
 
-  --popover: hsl(220 14% 14%);
+  --popover: hsl(0 0% 6%);
   --popover-foreground: hsl(0 0% 95%);
 
   --primary: hsl(49 100% 49%);
-  --primary-foreground: hsl(220 15% 10%);
+  --primary-foreground: hsl(0 0% 4%);
 
-  --secondary: hsl(220 12% 18%);
+  --secondary: hsl(0 0% 12%);
   --secondary-foreground: hsl(0 0% 95%);
 
-  --muted: hsl(220 12% 18%);
-  --muted-foreground: hsl(220 10% 60%);
+  --muted: hsl(0 0% 12%);
+  --muted-foreground: hsl(0 0% 55%);
 
   --accent: hsl(49 100% 20%);
   --accent-foreground: hsl(49 100% 49%);
@@ -38,8 +38,8 @@
   --destructive: hsl(0 84% 60%);
   --destructive-foreground: hsl(0 0% 100%);
 
-  --border: hsl(220 13% 20%);
-  --input: hsl(220 13% 20%);
+  --border: hsl(0 0% 15%);
+  --input: hsl(0 0% 15%);
   --ring: hsl(49 100% 49%);
 
   --chart-1: hsl(49 100% 49%);
@@ -48,13 +48,13 @@
   --chart-4: hsl(280 65% 65%);
   --chart-5: hsl(340 75% 65%);
 
-  --sidebar: hsl(220 15% 12%);
+  --sidebar: hsl(0 0% 7%);
   --sidebar-foreground: hsl(0 0% 90%);
   --sidebar-primary: hsl(49 100% 49%);
-  --sidebar-primary-foreground: hsl(220 15% 10%);
+  --sidebar-primary-foreground: hsl(0 0% 4%);
   --sidebar-accent: hsl(49 100% 20%);
   --sidebar-accent-foreground: hsl(49 100% 49%);
-  --sidebar-border: hsl(220 13% 20%);
+  --sidebar-border: hsl(0 0% 15%);
   --sidebar-ring: hsl(49 100% 49%);
 
   --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -283,29 +283,29 @@ html.light {
 }
 
 .dark {
-  /* Clean dark mode background */
-  --background: hsl(220 15% 10%);
+  /* Clean dark mode background - pure near-black */
+  --background: hsl(0 0% 4%);
   --foreground: hsl(0 0% 95%);
   
-  /* Card styling - elevated dark surface */
-  --card: hsl(220 14% 14%);
+  /* Card styling - slightly elevated dark surface */
+  --card: hsl(0 0% 6%);
   --card-foreground: hsl(0 0% 95%);
   
   /* Popover */
-  --popover: hsl(220 14% 14%);
+  --popover: hsl(0 0% 6%);
   --popover-foreground: hsl(0 0% 95%);
   
   /* Primary - bright gold stands out in dark mode */
   --primary: hsl(49 100% 49%);
-  --primary-foreground: hsl(220 15% 10%);
+  --primary-foreground: hsl(0 0% 4%);
   
   /* Secondary - subtle dark surface */
-  --secondary: hsl(220 12% 18%);
+  --secondary: hsl(0 0% 12%);
   --secondary-foreground: hsl(0 0% 95%);
   
   /* Muted */
-  --muted: hsl(220 12% 18%);
-  --muted-foreground: hsl(220 10% 60%);
+  --muted: hsl(0 0% 12%);
+  --muted-foreground: hsl(0 0% 55%);
   
   /* Accent */
   --accent: hsl(49 100% 20%);
@@ -316,8 +316,8 @@ html.light {
   --destructive-foreground: hsl(0 0% 100%);
   
   /* Borders */
-  --border: hsl(220 13% 20%);
-  --input: hsl(220 13% 20%);
+  --border: hsl(0 0% 15%);
+  --input: hsl(0 0% 15%);
   --ring: hsl(49 100% 49%);
   
   /* Chart colors */
@@ -328,13 +328,13 @@ html.light {
   --chart-5: hsl(340 75% 65%);
   
   /* Sidebar */
-  --sidebar: hsl(220 15% 12%);
+  --sidebar: hsl(0 0% 7%);
   --sidebar-foreground: hsl(0 0% 90%);
   --sidebar-primary: hsl(49 100% 49%);
-  --sidebar-primary-foreground: hsl(220 15% 10%);
+  --sidebar-primary-foreground: hsl(0 0% 4%);
   --sidebar-accent: hsl(49 100% 20%);
   --sidebar-accent-foreground: hsl(49 100% 49%);
-  --sidebar-border: hsl(220 13% 20%);
+  --sidebar-border: hsl(0 0% 15%);
   --sidebar-ring: hsl(49 100% 49%);
   
   /* Typography */
@@ -373,7 +373,7 @@ html.light {
     text-rendering: optimizeLegibility;
     -webkit-text-size-adjust: 100%;
     /* Dark by default — no JS class needed */
-    background-color: hsl(220 15% 10%);
+    background-color: hsl(0 0% 4%);
   }
 
   html.light {
@@ -386,7 +386,7 @@ html.light {
 
   body {
     /* Hardcode dark background directly so it applies before any JS runs */
-    background-color: hsl(220 15% 10%);
+    background-color: hsl(0 0% 4%);
     @apply font-sans antialiased text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     letter-spacing: -0.011em;

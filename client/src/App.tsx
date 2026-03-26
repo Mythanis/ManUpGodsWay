@@ -257,7 +257,7 @@ function AppContent() {
   const { effectiveTheme } = useTheme();
   const { isTourActive } = useTour();
 
-  const bgColor = effectiveTheme === 'light' ? '#ffffff' : '#131923';
+  const bgColor = effectiveTheme === 'light' ? '#ffffff' : '#0a0a0a';
 
   return (
     <div
