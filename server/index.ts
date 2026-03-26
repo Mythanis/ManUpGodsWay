@@ -24,8 +24,8 @@ app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), strip
 // WHIP proxy route needs raw text/plain body (SDP) before express.json() parses it
 app.post(/^\/api\/live-streams\/[^/]+\/whip$/, express.text({ type: "application/sdp", limit: "64kb" }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: false, limit: '2mb' }));
 
 // General rate limit: 200 requests/min per IP across all /api/* routes
 // The Stripe webhook above is exempt because it is registered before this middleware

@@ -38,7 +38,7 @@ export async function subscribeToMailchimp(data: MailchimpSubscribeData): Promis
     });
 
     if (response.ok) {
-      console.log(`Successfully subscribed ${data.email} to Mailchimp`);
+      console.log(`Successfully subscribed user to Mailchimp`);
       return true;
     }
 
@@ -46,7 +46,7 @@ export async function subscribeToMailchimp(data: MailchimpSubscribeData): Promis
     if (response.status === 400) {
       const errorData = await response.json();
       if (errorData.title === "Member Exists") {
-        console.log(`${data.email} is already subscribed to Mailchimp`);
+        console.log(`User is already subscribed to Mailchimp`);
         return true;
       }
       console.error("Mailchimp subscription error:", errorData);
