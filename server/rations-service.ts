@@ -54,7 +54,7 @@ export class RationsService {
           ))
           .limit(1);
         if (existing) {
-          return { success: false, amount: 0, newBalance: 0, message: 'Already awarded for this action' };
+          return { success: false, amount: 0, newBalance: 0, message: 'Already awarded' };
         }
       } else {
         // For one-time missions without a reference, only award once per mission per user
