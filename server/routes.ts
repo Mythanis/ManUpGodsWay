@@ -4821,6 +4821,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid role" });
       }
 
+      const targetUser = await storage.getUser(req.params.id);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Prevent downgrading the last owner — another owner must exist first
+      if (targetUser.role === 'owner' && role !== 'owner') {
+        const allUsers = await storage.getAllUsers();
+        const ownerCount = allUsers.filter((u: any) => u.role === 'owner').length;
+        if (ownerCount <= 1) {
+          return res.status(400).json({
+            message: "Cannot change role: this is the last owner. Appoint another owner first."
+          });
+        }
+      }
+
       const updatedUser = await storage.updateUserRole(req.params.id, role);
       res.json(updatedUser);
     } catch (error) {

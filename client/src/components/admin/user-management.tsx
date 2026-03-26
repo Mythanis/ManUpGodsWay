@@ -58,7 +58,17 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
 
   const updateUserRole = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      await apiRequest('PUT', `/api/admin/users/${userId}/role`, { role });
+      const res = await fetch(`/api/admin/users/${userId}/role`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ role }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || 'Failed to update user role');
+      }
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -67,10 +77,10 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
         description: "User role updated successfully!",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
-        title: "Error",
-        description: "Failed to update user role. Please try again.",
+        title: "Cannot Change Role",
+        description: error.message || "Failed to update user role. Please try again.",
         variant: "destructive",
       });
     },
@@ -218,6 +228,18 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
       
       // Save role change if it was modified
       if (editedUser.role && editedUser.role !== selectedUser.role) {
+        // Block downgrading the last owner on the client side before hitting the server
+        if (selectedUser.role === 'owner' && editedUser.role !== 'owner') {
+          const ownerCount = (users as any[]).filter((u: any) => u.role === 'owner').length;
+          if (ownerCount <= 1) {
+            toast({
+              title: "Cannot Change Role",
+              description: "This is the last owner. Appoint another owner first before changing their role.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
         promises.push(updateUserRole.mutateAsync({ userId: selectedUser.id, role: editedUser.role }));
       }
       
@@ -421,6 +443,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                             <SelectItem value="user">User</SelectItem>
                             <SelectItem value="moderator">Moderator</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="owner">Owner</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -587,33 +610,42 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
               <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                 {/* Ban/Unban and Delete Buttons - Bottom Left */}
                 <div className="flex space-x-2">
-                  {selectedUser.isBanned ? (
-                    <Button
-                      onClick={() => unbanUser.mutate(selectedUser.id)}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                      disabled={unbanUser.isPending}
-                    >
-                      <UserCheck className="w-4 h-4 mr-2" />
-                      Unban User
-                    </Button>
+                  {selectedUser.role === 'owner' ? (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-300 rounded-md">
+                      <Shield className="w-4 h-4 text-yellow-600 flex-shrink-0" />
+                      <p className="text-xs text-yellow-800 font-medium">Owner accounts cannot be banned or deleted</p>
+                    </div>
                   ) : (
-                    <Button
-                      variant="destructive"
-                      onClick={() => setShowBanDialog(true)}
-                      className="bg-red-600 hover:bg-red-700"
-                    >
-                      <Ban className="w-4 h-4 mr-2" />
-                      Ban User
-                    </Button>
+                    <>
+                      {selectedUser.isBanned ? (
+                        <Button
+                          onClick={() => unbanUser.mutate(selectedUser.id)}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                          disabled={unbanUser.isPending}
+                        >
+                          <UserCheck className="w-4 h-4 mr-2" />
+                          Unban User
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="destructive"
+                          onClick={() => setShowBanDialog(true)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          <Ban className="w-4 h-4 mr-2" />
+                          Ban User
+                        </Button>
+                      )}
+                      <Button
+                        variant="destructive"
+                        onClick={() => setShowDeleteDialog(true)}
+                        className="bg-red-800 hover:bg-red-900"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete User
+                      </Button>
+                    </>
                   )}
-                  <Button
-                    variant="destructive"
-                    onClick={() => setShowDeleteDialog(true)}
-                    className="bg-red-800 hover:bg-red-900"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete User
-                  </Button>
                 </div>
 
                 {/* Save Button - Bottom Right */}
