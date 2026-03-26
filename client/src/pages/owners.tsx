@@ -1,17 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
-  AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  Crown, Users, Database, Shield, Activity, Trash2, CreditCard,
+  Crown, Users, Database, Activity, Trash2, CreditCard,
   CheckCircle2, XCircle, AlertCircle, RefreshCw, BookOpen, Video,
   Newspaper, Swords, Calendar, Mic, Book, ArrowLeft,
 } from "lucide-react";
@@ -19,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type View = 'landing' | 'overview' | 'users' | 'security' | 'stripe' | 'system';
+type View = 'landing' | 'overview' | 'stripe' | 'system';
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -238,22 +233,22 @@ function OverviewPage({ onBack, users, stats, contentStats }: { onBack: () => vo
       <SubHeader title="Platform Overview" onBack={onBack} />
       <div className="px-6 py-6 space-y-4">
         <SectionCard title="Platform">
-          <StatRow label="Total Members" value={stats?.totalUsers} />
-          <StatRow label="Active Today" value={stats?.activeToday} />
-          <StatRow label="New Posts Today" value={stats?.newPosts} />
-          <StatRow label="Active Subscribers" value={stats?.activeSubscribers} />
+          <StatRow label="Total Members"      value={stats?.totalUsers} />
+          <StatRow label="Active Today"        value={stats?.activeToday} />
+          <StatRow label="New Posts Today"     value={stats?.newPosts} />
+          <StatRow label="Active Subscribers"  value={stats?.activeSubscribers} />
         </SectionCard>
 
         <SectionCard title="Content">
           <div className="divide-y divide-white/10">
             {[
-              { icon: BookOpen, label: "Studies (Published)", value: contentStats?.publishedStudies },
-              { icon: Video,    label: "Videos",               value: contentStats?.videos },
-              { icon: Newspaper,label: "Blog Posts",           value: contentStats?.blogPosts },
-              { icon: Swords,   label: "Challenges",           value: contentStats?.challenges },
-              { icon: Calendar, label: "Events",               value: contentStats?.events },
-              { icon: Users,    label: "War Room Posts",       value: contentStats?.warRoomPosts },
-              { icon: Mic,      label: "Podcasts",             value: contentStats?.podcasts },
+              { icon: BookOpen,  label: "Studies (Published)", value: contentStats?.publishedStudies },
+              { icon: Video,     label: "Videos",               value: contentStats?.videos },
+              { icon: Newspaper, label: "Blog Posts",           value: contentStats?.blogPosts },
+              { icon: Swords,    label: "Challenges",           value: contentStats?.challenges },
+              { icon: Calendar,  label: "Events",               value: contentStats?.events },
+              { icon: Users,     label: "War Room Posts",       value: contentStats?.warRoomPosts },
+              { icon: Mic,       label: "Podcasts",             value: contentStats?.podcasts },
             ].map(row => (
               <div key={row.label} className="flex items-center justify-between px-4 py-3.5">
                 <div className="flex items-center gap-2.5">
@@ -281,134 +276,6 @@ function OverviewPage({ onBack, users, stats, contentStats }: { onBack: () => vo
           <StatRow label="Admins"     value={users.filter(u => u.role === 'admin').length} />
           <StatRow label="Moderators" value={users.filter(u => u.role === 'moderator').length} />
           <StatRow label="Members"    value={users.filter(u => u.role === 'user').length} />
-        </SectionCard>
-      </div>
-    </div>
-  );
-}
-
-// ─── Users sub-page ───────────────────────────────────────────────────────────
-
-function UsersPage({ onBack, users }: { onBack: () => void; users: any[] }) {
-  const { toast } = useToast();
-  const [userSearch, setUserSearch] = useState('');
-
-  const updateRoleMutation = useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      const res = await fetch(`/api/admin/users/${userId}/role`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ role }),
-      });
-      if (!res.ok) throw new Error('Failed');
-      return res.json();
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] }); toast({ title: "Role updated" }); },
-    onError: () => toast({ title: "Error", description: "Failed to update role", variant: "destructive" }),
-  });
-
-  const deleteUserMutation = useMutation({
-    mutationFn: async (userId: string) => { await apiRequest('DELETE', `/api/admin/users/${userId}`); },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      toast({ title: "User deleted" });
-    },
-    onError: () => toast({ title: "Error", description: "Failed to delete user", variant: "destructive" }),
-  });
-
-  const filtered = users.filter((u: any) => {
-    if (!userSearch) return true;
-    const q = userSearch.toLowerCase();
-    return `${u.firstName} ${u.lastName}`.toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q);
-  });
-
-  return (
-    <div className="pb-24 bg-ministry-light-gray min-h-screen">
-      <SubHeader title="User Management" onBack={onBack} />
-      <div className="px-6 py-6 space-y-4">
-        <Input placeholder="Search by name or email..."
-          value={userSearch} onChange={(e) => setUserSearch(e.target.value)}
-          className="bg-black border-2 border-white/20 text-white rounded-sm" />
-
-        <SectionCard title={`All Users (${filtered.length})`}>
-          <div className="divide-y divide-white/10 max-h-[60vh] overflow-y-auto">
-            {filtered.length === 0 && <p className="text-white/40 text-sm text-center py-8">No users found</p>}
-            {filtered.map((u: any) => (
-              <div key={u.id} className="flex items-center justify-between px-4 py-3 gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-white text-sm font-semibold truncate">{u.firstName} {u.lastName}</p>
-                  <p className="text-white/40 text-xs truncate">{u.email}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Badge className={
-                    u.role === 'owner'     ? 'bg-purple-700 text-white text-[10px] font-black uppercase' :
-                    u.role === 'admin'     ? 'bg-blue-700 text-white text-[10px] font-black uppercase' :
-                    u.role === 'moderator' ? 'bg-green-700 text-white text-[10px] font-black uppercase' :
-                    'bg-white/10 text-white/60 text-[10px] font-black uppercase'
-                  }>{u.role}</Badge>
-                  {u.isBanned && <Badge className="bg-red-700 text-white text-[10px] font-black uppercase">Banned</Badge>}
-                  {u.role !== 'owner' && (
-                    <select value={u.role}
-                      onChange={(e) => updateRoleMutation.mutate({ userId: u.id, role: e.target.value })}
-                      className="bg-black border border-white/20 text-white text-xs rounded-sm px-1.5 py-1">
-                      <option value="user">User</option>
-                      <option value="moderator">Mod</option>
-                      <option value="admin">Admin</option>
-                      <option value="owner">Owner</option>
-                    </select>
-                  )}
-                  {u.role !== 'owner' && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm"
-                          className="border-red-700 text-red-400 hover:bg-red-700 hover:text-white rounded-sm h-7 w-7 p-0">
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent className="bg-[#111] border-2 border-black">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="text-white">Delete User</AlertDialogTitle>
-                          <AlertDialogDescription className="text-white/50">
-                            Permanently delete {u.firstName} {u.lastName}? This cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel className="bg-white/10 text-white border-0">Cancel</AlertDialogCancel>
-                          <AlertDialogAction className="bg-red-700 text-white hover:bg-red-800"
-                            onClick={() => deleteUserMutation.mutate(u.id)}>Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </SectionCard>
-      </div>
-    </div>
-  );
-}
-
-// ─── Security sub-page ────────────────────────────────────────────────────────
-
-function SecurityPage({ onBack, users }: { onBack: () => void; users: any[] }) {
-  return (
-    <div className="pb-24 bg-ministry-light-gray min-h-screen">
-      <SubHeader title="Security Overview" onBack={onBack} />
-      <div className="px-6 py-6 space-y-4">
-        <SectionCard title="Role Distribution">
-          <StatRow label="Owners"     value={users.filter(u => u.role === 'owner').length} />
-          <StatRow label="Admins"     value={users.filter(u => u.role === 'admin').length} />
-          <StatRow label="Moderators" value={users.filter(u => u.role === 'moderator').length} />
-          <StatRow label="Members"    value={users.filter(u => u.role === 'user').length} />
-        </SectionCard>
-        <SectionCard title="Account Flags">
-          <StatRow label="Banned Accounts" value={users.filter(u => u.isBanned).length} />
-          <div className="flex items-center justify-between px-4 py-3.5">
-            <p className="text-white text-sm font-semibold">Authentication</p>
-            <Badge className="bg-green-600 text-white text-[10px] font-black uppercase">Active</Badge>
-          </div>
         </SectionCard>
       </div>
     </div>
@@ -498,8 +365,6 @@ function SystemPage({ onBack }: { onBack: () => void }) {
 
 const navCards = [
   { id: 'overview' as View, label: 'Overview',      icon: Activity,   sub: 'Platform stats & content' },
-  { id: 'users'    as View, label: 'Users',          icon: Users,      sub: 'Manage members & roles' },
-  { id: 'security' as View, label: 'Security',       icon: Shield,     sub: 'Roles & account flags' },
   { id: 'stripe'   as View, label: 'Stripe',         icon: CreditCard, sub: 'Payment configuration' },
   { id: 'system'   as View, label: 'System Status',  icon: Database,   sub: 'Connections & actions' },
 ];
@@ -538,8 +403,6 @@ export default function Owners() {
 
   // ── Sub-page routing ────────────────────────────────────────────────────────
   if (view === 'overview') return <OverviewPage onBack={() => setView('landing')} users={users as any[]} stats={stats} contentStats={contentStats} />;
-  if (view === 'users')    return <UsersPage    onBack={() => setView('landing')} users={users as any[]} />;
-  if (view === 'security') return <SecurityPage onBack={() => setView('landing')} users={users as any[]} />;
   if (view === 'stripe')   return <StripePage   onBack={() => setView('landing')} />;
   if (view === 'system')   return <SystemPage   onBack={() => setView('landing')} />;
 
@@ -595,7 +458,7 @@ export default function Owners() {
         </div>
       </div>
 
-      {/* Nav cards — exactly like admin */}
+      {/* Nav cards */}
       <div className="px-6 mb-6">
         <div className="space-y-2">
           {navCards.map((card) => {
