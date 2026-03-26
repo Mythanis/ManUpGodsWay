@@ -196,7 +196,7 @@ export default function Library() {
                   {bibleReadingPlans.map(plan => (
                     <Link key={plan.id} href={`/bible-plans/${plan.id}`}>
                       <div
-                        className="flex items-stretch rounded-sm border-2 border-white/10 overflow-hidden shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] hover:border-[#FCD000]/40 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
+                        className="flex items-stretch rounded-sm border-2 border-white/10 overflow-hidden glow-gold hover:border-[#FCD000]/40 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
                         style={{ background: '#0f0f0f' }}
                       >
                         <div className="w-20 flex-shrink-0 bg-black flex items-center justify-center self-stretch">
