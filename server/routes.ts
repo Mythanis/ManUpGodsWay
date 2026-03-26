@@ -12974,7 +12974,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
     
     ws.on('close', () => {
-      if (ws.userId) {
+      if (ws.userId && connectedClients.get(ws.userId) === ws) {
+        // Guard: only remove if this socket is still the active one.
+        // Prevents a stale close event from evicting a newer reconnect.
         connectedClients.delete(ws.userId); // O(1) — no scan needed
         console.log(`User ${ws.userId} disconnected from WebSocket`);
       }
