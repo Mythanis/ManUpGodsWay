@@ -235,7 +235,7 @@ export default function Library() {
                   {filteredSeries.map((s) => (
                     <Link key={s.id} href={`/series/${s.id}`}>
                       <div
-                        className="flex items-stretch rounded-sm border-2 border-white/10 overflow-hidden shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] hover:border-[#FCD000]/40 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
+                        className="flex items-stretch rounded-sm border-2 border-white/10 overflow-hidden glow-gold hover:border-[#FCD000]/40 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
                         style={{ background: '#0f0f0f' }}
                         data-testid={`series-card-${s.id}`}
                       >
@@ -286,7 +286,7 @@ export default function Library() {
                     return (
                       <Link key={study.id} href={`/studies/${study.id}`}>
                         <div
-                          className="flex items-stretch rounded-sm border-2 overflow-hidden shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
+                          className="flex items-stretch rounded-sm border-2 overflow-hidden glow-gold hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
                           style={{ background: '#0f0f0f', borderColor: isCompleted ? 'rgba(252,208,0,0.5)' : 'rgba(255,255,255,0.1)' }}
                           data-testid={`study-card-${study.id}`}
                         >
