@@ -369,7 +369,26 @@ export default function LiveStreamManagement() {
                     {getStatusBadge(stream.status)}
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                    {stream.status !== "ended" && (
+                    {stream.status === "live" && (
+                      <>
+                        <button
+                          onClick={() => setExpandedId(expandedId === stream.id ? null : stream.id)}
+                          className="text-gray-400 text-xs flex items-center gap-1"
+                        >
+                          RTMP
+                          {expandedId === stream.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </button>
+                        <Button
+                          size="sm"
+                          onClick={() => endStream.mutate(stream.id)}
+                          disabled={endStream.isPending}
+                          className="bg-red-700 hover:bg-red-600 text-white text-xs font-bold h-7 px-2"
+                        >
+                          {endStream.isPending ? "Ending…" : "End Stream"}
+                        </Button>
+                      </>
+                    )}
+                    {stream.status === "scheduled" && (
                       <button
                         onClick={() => setExpandedId(expandedId === stream.id ? null : stream.id)}
                         className="text-[#FCD000] text-xs font-bold flex items-center gap-1"
