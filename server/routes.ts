@@ -2992,13 +2992,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!stream) return res.json(null);
 
       // Verify with Mux that a broadcaster is actually connected
+      // If Mux says idle, hide the banner (return null) but DON'T change the DB status —
+      // the Mux webhook handles auto-ending when a broadcaster actually disconnects.
       if (stream.muxStreamId) {
-        const { getMuxLiveStreamStatus } = await import('./mux.js');
-        const muxStatus = await getMuxLiveStreamStatus(stream.muxStreamId);
-        if (muxStatus === "idle") {
-          // No broadcaster — silently mark ended in DB and return null
-          await storage.endLiveStream(stream.id);
-          return res.json(null);
+        try {
+          const { getMuxLiveStreamStatus } = await import('./mux.js');
+          const muxStatus = await getMuxLiveStreamStatus(stream.muxStreamId);
+          if (muxStatus === "idle") {
+            // Broadcaster not yet connected — return null so no banner shows,
+            // but the DB stays "live" so admin's Go Live intent is preserved.
+            return res.json(null);
+          }
+        } catch {
+          // If Mux API is unreachable, fall through and show the stream anyway
         }
       }
 
