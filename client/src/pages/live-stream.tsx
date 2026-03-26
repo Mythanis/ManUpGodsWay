@@ -21,32 +21,48 @@ function MuxPlayer({ playbackId }: { playbackId: string }) {
   const [status, setStatus] = useState<PlayerStatus>("loading");
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    let cancelled = false;
     const src = `https://stream.mux.com/${playbackId}.m3u8`;
 
-    if (Hls.isSupported()) {
-      const hls = new Hls({ lowLatencyMode: true });
-      hlsRef.current = hls;
-      hls.loadSource(src);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        setStatus("playing");
-        video.play().catch(() => {});
+    // Pre-check: verify the stream is actually broadcasting before touching the video element
+    fetch(src, { method: "HEAD" })
+      .then((res) => {
+        if (cancelled) return;
+        if (!res.ok) {
+          setStatus("error");
+          return;
+        }
+        // Stream is live — now initialise the player
+        const video = videoRef.current;
+        if (!video) return;
+
+        if (Hls.isSupported()) {
+          const hls = new Hls({ lowLatencyMode: true });
+          hlsRef.current = hls;
+          hls.loadSource(src);
+          hls.attachMedia(video);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            if (cancelled) return;
+            setStatus("playing");
+            video.play().catch(() => {});
+          });
+          hls.on(Hls.Events.ERROR, (_e, data) => {
+            if (data.fatal && !cancelled) setStatus("error");
+          });
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = src;
+          video.addEventListener("loadedmetadata", () => { if (!cancelled) setStatus("playing"); });
+          video.addEventListener("error", () => { if (!cancelled) setStatus("error"); });
+        } else {
+          setStatus("error");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("error");
       });
-      hls.on(Hls.Events.ERROR, (_e, data) => {
-        if (data.fatal) setStatus("error");
-      });
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      // Safari native HLS
-      video.src = src;
-      video.addEventListener("loadedmetadata", () => setStatus("playing"));
-      video.addEventListener("error", () => setStatus("error"));
-    } else {
-      setStatus("error");
-    }
 
     return () => {
+      cancelled = true;
       hlsRef.current?.destroy();
     };
   }, [playbackId]);
