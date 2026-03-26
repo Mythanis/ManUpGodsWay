@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Radio, Users, ArrowLeft } from "lucide-react";
-import { useLocation } from "wouter";
 import Hls from "hls.js";
 
 interface LiveStream {
@@ -33,8 +32,8 @@ function MuxPlayer({ playbackId }: { playbackId: string }) {
         if (data.fatal) setError(true);
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      // Safari native HLS
       video.src = src;
+      video.addEventListener("error", () => setError(true));
     } else {
       setError(true);
     }
@@ -47,10 +46,10 @@ function MuxPlayer({ playbackId }: { playbackId: string }) {
   if (error) {
     return (
       <div className="w-full aspect-video bg-black flex items-center justify-center rounded-lg">
-        <div className="text-center">
-          <Radio className="w-10 h-10 text-gray-600 mx-auto mb-2" />
-          <p className="text-gray-400 text-sm">Stream not available yet.</p>
-          <p className="text-gray-500 text-xs mt-1">The broadcaster may not have started yet.</p>
+        <div className="text-center px-6">
+          <Radio className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+          <p className="text-white font-bold mb-1">Broadcast Not Started</p>
+          <p className="text-gray-400 text-sm">The host hasn't started broadcasting yet. Check back in a moment.</p>
         </div>
       </div>
     );
@@ -69,18 +68,16 @@ function MuxPlayer({ playbackId }: { playbackId: string }) {
 }
 
 export default function LiveStreamPage() {
-  const [, navigate] = useLocation();
-
-  const { data: stream, isLoading } = useQuery<LiveStream | null>({
+  const { data: stream, isLoading, isError } = useQuery<LiveStream | null>({
     queryKey: ["/api/live-streams/active"],
-    refetchInterval: 15000,
+    refetchInterval: 10000,
   });
 
   if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-[#0a0a0a]">
         <div className="flex items-center gap-3 p-4">
-          <button onClick={() => navigate(-1)} className="text-white">
+          <button onClick={() => window.history.back()} className="text-white">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-white font-black uppercase tracking-wide">Live Stream</h1>
@@ -92,11 +89,11 @@ export default function LiveStreamPage() {
     );
   }
 
-  if (!stream || stream.status !== "live") {
+  if (isError || !stream || stream.status !== "live") {
     return (
       <div className="flex flex-col min-h-screen bg-[#0a0a0a]">
         <div className="flex items-center gap-3 p-4">
-          <button onClick={() => navigate(-1)} className="text-white">
+          <button onClick={() => window.history.back()} className="text-white">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-white font-black uppercase tracking-wide">Live Stream</h1>
@@ -114,9 +111,8 @@ export default function LiveStreamPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0a0a0a]">
-      {/* Header */}
       <div className="flex items-center gap-3 p-4">
-        <button onClick={() => navigate(-1)} className="text-white">
+        <button onClick={() => window.history.back()} className="text-white">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1 min-w-0">
@@ -128,18 +124,19 @@ export default function LiveStreamPage() {
         </Badge>
       </div>
 
-      {/* Player */}
       <div className="px-4">
         {stream.muxPlaybackId ? (
           <MuxPlayer playbackId={stream.muxPlaybackId} />
         ) : (
           <div className="w-full aspect-video bg-black rounded-lg flex items-center justify-center">
-            <p className="text-gray-500 text-sm">Stream starting…</p>
+            <div className="text-center">
+              <Radio className="w-10 h-10 text-gray-600 mx-auto mb-2" />
+              <p className="text-gray-400 text-sm">Stream starting…</p>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Info */}
       <div className="px-4 pt-4 pb-safe">
         <div className="flex items-center gap-2 mb-2">
           <Badge className="bg-red-600 text-white text-xs">🔴 LIVE NOW</Badge>
