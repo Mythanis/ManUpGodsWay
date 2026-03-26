@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { Link, useParams, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -250,7 +251,7 @@ export default function BlogDetail() {
             <div 
               ref={contentRef}
               className="prose prose-lg max-w-none text-black prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-a:text-black prose-a:underline prose-strong:text-black"
-              dangerouslySetInnerHTML={{ __html: blog.content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(blog.content) }}
             />
           </CardContent>
         </Card>

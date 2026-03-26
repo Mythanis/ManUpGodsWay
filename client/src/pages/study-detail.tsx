@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { triggerRefTagger } from "@/hooks/useRefTagger";
@@ -881,7 +882,7 @@ export default function StudyDetail() {
                 <h2 className="text-lg font-black uppercase tracking-tight text-white mb-4">Study Content</h2>
                 <div className="prose prose-sm max-w-none text-gray-300 prose-invert" data-testid="text-study-content">
                   {study.content ? (
-                    <div dangerouslySetInnerHTML={{ __html: study.content.replace(/\n/g, '<br>') }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(study.content.replace(/\n/g, '<br>')) }} />
                   ) : (
                     <p className="text-gray-400">Study materials are available as downloadable documents above.</p>
                   )}

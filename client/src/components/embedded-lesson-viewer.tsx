@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -509,7 +510,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           {/* Main Content */}
           <div
             className="prose prose-sm max-w-none prose-invert prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-p:text-gray-200 prose-strong:text-[#FCD000] prose-strong:font-bold prose-em:italic prose-em:text-gray-300 prose-ul:list-disc prose-ul:pl-4 prose-ol:list-decimal prose-ol:pl-4 prose-li:text-gray-200 prose-blockquote:border-l-4 prose-blockquote:border-[#FCD000] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-300 prose-a:text-[#FCD000] prose-a:underline"
-            dangerouslySetInnerHTML={{ __html: currentLesson.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentLesson.content) }}
             data-testid="content-lesson-body"
           />
 

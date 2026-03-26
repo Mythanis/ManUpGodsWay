@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { ArrowLeft, Download, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -312,7 +313,7 @@ export default function UserInteractiveWordViewer({
       <div className="flex-1 overflow-auto bg-white dark:bg-gray-900 p-8">
         <div
           className="max-w-3xl mx-auto prose dark:prose-invert"
-          dangerouslySetInnerHTML={{ __html: htmlContent }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(htmlContent) }}
           data-testid="interactive-word-content"
         />
       </div>

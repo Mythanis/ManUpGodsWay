@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -450,7 +451,7 @@ export default function DiscussionCard({
               {hasHtml ? (
                 <div
                   className={`text-sm text-white/80 leading-relaxed prose-invert [&_strong]:font-bold [&_em]:italic [&_u]:underline [&_s]:line-through ${!isExpanded && isLongContent ? 'line-clamp-5' : ''}`}
-                  dangerouslySetInnerHTML={{ __html: discussion.content }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(discussion.content) }}
                   data-testid="text-discussion-content"
                 />
               ) : (
