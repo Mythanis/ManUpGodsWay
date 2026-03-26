@@ -1542,9 +1542,9 @@ export default function Home() {
 
       {/* Full Devotional Modal */}
       <Dialog open={showFullDevotional} onOpenChange={setShowFullDevotional}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85svh] overflow-y-auto liquid-header border-2 border-[#FCD000] rounded-sm shadow-[6px_6px_0px_0px_rgba(252,208,0,0.4)] p-0">
-          {/* Header */}
-          <div className="relative p-5 pb-4">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[88svh] flex flex-col liquid-header border-2 border-[#FCD000] rounded-sm shadow-[6px_6px_0px_0px_rgba(252,208,0,0.4)] p-0 overflow-hidden">
+          {/* Sticky Header */}
+          <div className="relative flex-shrink-0 p-5 pb-4">
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#FCD000] to-transparent" />
             <DialogHeader>
               <p className="text-[#FCD000] text-[10px] font-black uppercase tracking-[0.2em] mb-1.5 relative z-10">
@@ -1556,8 +1556,9 @@ export default function Home() {
             </DialogHeader>
           </div>
           
+          {/* Scrollable content */}
           {devotional && (
-            <div className="p-4 pt-3 space-y-3">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4 pt-3 space-y-3" style={{ WebkitOverflowScrolling: 'touch' }}>
               {/* Full Image */}
               {devotional.imageUrl && (
                 <div className="overflow-hidden border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
@@ -1574,7 +1575,6 @@ export default function Home() {
               
               {/* Verse block */}
               <div className="relative bg-[#FCD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
-                {/* Decorative quote mark */}
                 <span className="absolute -top-4 left-2 text-black/10 font-serif select-none pointer-events-none" style={{ fontSize: '7rem', lineHeight: 1 }}>"</span>
                 <div className="relative z-10 p-4 pb-3">
                   <p className="text-black text-base font-semibold leading-relaxed italic">
@@ -1590,7 +1590,7 @@ export default function Home() {
                 </div>
               </div>
               
-              {/* Content — white background for easy reading */}
+              {/* Content */}
               <div className="bg-white border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-5 space-y-4">
                 {devotional.content.split(/\n\n+/).map((para: string, i: number) => (
                   <p key={i} className="text-gray-800 text-[15px] leading-[1.8]">
@@ -1598,13 +1598,17 @@ export default function Home() {
                   </p>
                 ))}
               </div>
-              
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2 border-t border-white/20">
+            </div>
+          )}
+
+          {/* Sticky Footer — always visible */}
+          {devotional && (
+            <div className="flex-shrink-0 border-t border-[#FCD000]/30 p-3 bg-black">
+              <div className="flex items-center gap-2">
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className={`flex items-center justify-center space-x-2 rounded-sm border-2 border-black font-bold uppercase text-xs ${
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-sm border-2 border-black font-bold uppercase text-xs ${
                     isLiked 
                       ? 'bg-red-500 text-white hover:bg-red-600' 
                       : 'bg-gray-800 text-white hover:bg-gray-700'
@@ -1618,7 +1622,7 @@ export default function Home() {
                   }}
                 >
                   <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                  <span>{isLiked ? 'Favorited' : 'Favorite'}</span>
+                  <span>{isLiked ? 'Saved' : 'Save'}</span>
                 </Button>
                 
                 <Popover>
@@ -1626,13 +1630,13 @@ export default function Home() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      className="flex items-center justify-center space-x-2 bg-gray-800 text-white hover:bg-gray-700 rounded-sm border-2 border-black font-bold uppercase text-xs"
+                      className="flex-1 flex items-center justify-center gap-1.5 bg-gray-800 text-white hover:bg-gray-700 rounded-sm border-2 border-black font-bold uppercase text-xs"
                     >
                       <Share2 className="w-4 h-4" />
                       <span>Share</span>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-3 bg-black border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <PopoverContent side="top" className="w-72 p-3 bg-black border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                     <div className="space-y-3">
                       <div className="space-y-2">
                         <button
@@ -1651,7 +1655,7 @@ export default function Home() {
                         >
                           📥 Download Image
                         </a>
-                        <p className="text-xs text-gray-400 text-center">⬆️ For Facebook: Download image first, then attach it to your Facebook post</p>
+                        <p className="text-xs text-gray-400 text-center">⬆️ For Facebook: Download image first, then attach it to your post</p>
                       </div>
                       <div className="border-t border-gray-700 pt-2">
                         <p className="text-xs text-gray-400 mb-2 text-center">Share text only:</p>
@@ -1709,7 +1713,7 @@ export default function Home() {
                 <Button 
                   size="sm"
                   onClick={() => setShowFullDevotional(false)}
-                  className="bg-ministry-gold-exact text-black hover:bg-yellow-400 rounded-sm border-2 border-black font-black uppercase text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                  className="flex-1 bg-ministry-gold-exact text-black hover:bg-yellow-400 rounded-sm border-2 border-black font-black uppercase text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                 >
                   Close
                 </Button>
