@@ -3025,8 +3025,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const stream = await storage.createLiveStream(streamData as any);
       res.status(201).json(stream);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating live stream:", error);
+      const msg = error?.message || "";
+      if (msg.includes("free plan") || msg.includes("unavailable on the free")) {
+        return res.status(402).json({ message: "Live streaming requires a paid Mux plan. Go to dashboard.mux.com → Settings → Billing to add a payment method." });
+      }
       res.status(500).json({ message: "Failed to create live stream" });
     }
   });
