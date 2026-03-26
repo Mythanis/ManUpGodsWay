@@ -100,17 +100,27 @@ export function LiveBroadcaster({ streamKey, streamId, onBroadcastStart, onBroad
         setTimeout(resolve, 4000);
       });
 
-      // Use our server-side proxy to avoid CORS issues with Mux's WHIP endpoint
-      const whipUrl = `/api/live-streams/${streamId}/whip`;
-      const resp = await fetch(whipUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/sdp" },
-        body: pc.localDescription?.sdp,
-      });
+      // Call Mux WHIP endpoint directly from the browser
+      const whipUrl = `https://global-live.mux.com:443/app/${streamKey}/whip`;
+      let resp: Response;
+      try {
+        resp = await fetch(whipUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/sdp" },
+          body: pc.localDescription?.sdp,
+        });
+      } catch (fetchErr: any) {
+        // Distinguish CORS from network errors
+        const msg = fetchErr?.message || "";
+        if (msg.includes("CORS") || msg.includes("cross-origin") || msg.includes("fetch")) {
+          throw new Error("Mux blocked the connection (CORS). Make sure your Mux account has WHIP/WebRTC enabled under Settings → Environments.");
+        }
+        throw new Error(`Network error reaching Mux: ${msg}. Check your internet connection.`);
+      }
 
       if (!resp.ok) {
-        const text = await resp.text();
-        throw new Error(`WHIP error ${resp.status}: ${text}`);
+        const text = await resp.text().catch(() => "");
+        throw new Error(`Mux rejected the stream (${resp.status}): ${text || "check your stream key and Mux plan"}`);
       }
 
       const answerSdp = await resp.text();

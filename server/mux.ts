@@ -42,7 +42,7 @@ export async function createMuxLiveStream(options: CreateMuxStreamOptions = {}):
     playback_policy: ["public"],
     new_asset_settings: { playback_policy: ["public"] },
     reconnect_window: 60,
-    reduced_latency: true,
+    latency_mode: "low",
   };
 
   if (simulcastTargets.length > 0) {
