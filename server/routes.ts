@@ -10413,14 +10413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Broadcast to all connected clients about new post
-      Array.from(connectedClients.entries()).forEach(([connectedUserId, ws]) => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({
-            type: 'hurdle_wall_post_created',
-            data: post
-          }));
-        }
-      });
+      (app as any).broadcastToAll({ type: 'hurdle_wall_post_created', data: post });
 
       res.json(post);
     } catch (error) {
@@ -10469,14 +10462,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Broadcast to all connected clients about new reply
-      Array.from(connectedClients.entries()).forEach(([connectedUserId, ws]) => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({
-            type: 'hurdle_wall_reply_created',
-            data: { reply, postId }
-          }));
-        }
-      });
+      (app as any).broadcastToAll({ type: 'hurdle_wall_reply_created', data: { reply, postId } });
 
       res.json(reply);
     } catch (error) {
@@ -10562,14 +10548,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Broadcast to all connected clients about deleted post
-      Array.from(connectedClients.entries()).forEach(([connectedUserId, ws]) => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({
-            type: 'hurdle_wall_post_deleted',
-            data: { postId }
-          }));
-        }
-      });
+      (app as any).broadcastToAll({ type: 'hurdle_wall_post_deleted', data: { postId } });
 
       res.json({ message: "Post deleted successfully" });
     } catch (error) {
@@ -10592,14 +10571,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Broadcast to all connected clients about deleted reply
-      Array.from(connectedClients.entries()).forEach(([connectedUserId, ws]) => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({
-            type: 'hurdle_wall_reply_deleted',
-            data: { replyId }
-          }));
-        }
-      });
+      (app as any).broadcastToAll({ type: 'hurdle_wall_reply_deleted', data: { replyId } });
 
       res.json({ message: "Reply deleted successfully" });
     } catch (error) {
@@ -12987,6 +12959,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return;
         }
         if (data.type === 'auth' && data.userId) {
+          ws.userId = data.userId; // Attach for O(1) close cleanup
           connectedClients.set(data.userId, ws);
           console.log(`User ${data.userId} connected to WebSocket`);
           
@@ -13001,12 +12974,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
     
     ws.on('close', () => {
-      Array.from(connectedClients.entries()).forEach(([userId, client]) => {
-        if (client === ws) {
-          connectedClients.delete(userId);
-          console.log(`User ${userId} disconnected from WebSocket`);
-        }
-      });
+      if (ws.userId) {
+        connectedClients.delete(ws.userId); // O(1) — no scan needed
+        console.log(`User ${ws.userId} disconnected from WebSocket`);
+      }
     });
   });
   
@@ -13023,9 +12994,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Add function to broadcast to all connected clients
   (app as any).broadcastToAll = (message: { type: string; data?: any }) => {
+    const payload = JSON.stringify(message); // Serialize once, not once per client
     connectedClients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(message));
+        client.send(payload);
       }
     });
   };
