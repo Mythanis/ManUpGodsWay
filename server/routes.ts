@@ -3133,7 +3133,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const streamKey = stream.muxStreamKey;
       const bodyBuf = Buffer.from(sdpBody, 'utf-8');
 
-      // Use Node.js https module (forces HTTP/1.1, avoids undici HTTP/2 negotiation that Mux rejects)
+      console.log(`WHIP proxy: sending ${bodyBuf.length} bytes to Mux, stream key prefix: ${streamKey?.slice(0, 8)}...`);
+
+      // Mux Basic auth credentials (tokenId:tokenSecret) — required for WHIP endpoint
+      const muxTokenId = process.env.MUX_TOKEN_ID || '';
+      const muxTokenSecret = process.env.MUX_TOKEN_SECRET || '';
+      const basicAuth = Buffer.from(`${muxTokenId}:${muxTokenSecret}`).toString('base64');
+
+      // Use Node.js https module (forces HTTP/1.1, avoids undici HTTP/2 negotiation)
       const https = await import('https');
       const result = await new Promise<{ status: number; contentType: string; body: string }>((resolve, reject) => {
         const options = {
@@ -3144,6 +3151,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           headers: {
             'Content-Type': 'application/sdp',
             'Content-Length': bodyBuf.length,
+            'Authorization': `Basic ${basicAuth}`,
+            'User-Agent': 'ManUpGodsWay/1.0',
           },
         };
 
@@ -3167,7 +3176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         httpReq.end();
       });
 
-      console.log(`WHIP proxy response: ${result.status} (${result.body.slice(0, 200)})`);
+      console.log(`WHIP proxy response: ${result.status} (${result.body.slice(0, 300)})`);
       res.status(result.status)
         .set('Content-Type', result.contentType)
         .send(result.body);
