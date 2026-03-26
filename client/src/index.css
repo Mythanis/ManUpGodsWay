@@ -605,7 +605,7 @@ html.light {
     #FCD000 75%,
     #ffe14d 100%
   ) !important;
-  background-size: 200% 200%;
+  background-size: 200% 200% !important;
   animation: liquidGold 4s ease infinite;
   position: relative;
   overflow: hidden;
@@ -664,7 +664,7 @@ html.light {
     #0a0a0a 75%,
     #111111 100%
   ) !important;
-  background-size: 200% 200%;
+  background-size: 200% 200% !important;
   animation: liquidBlack 5s ease infinite;
   position: relative;
   overflow: hidden;
@@ -704,7 +704,7 @@ html.light {
     #0d0d0d 75%,
     #1a1a1a 100%
   ) !important;
-  background-size: 200% 200%;
+  background-size: 200% 200% !important;
   animation: liquidBlackWhite 6s ease infinite;
   position: relative;
   overflow: hidden;
