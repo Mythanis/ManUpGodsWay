@@ -11,7 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Radio, Plus, Square, Trash2, Copy, Check, ChevronDown, ChevronUp, Tv, Smartphone, Monitor } from "lucide-react";
+import { Radio, Plus, Square, Trash2, Copy, Check, ChevronDown, ChevronUp, Tv, Smartphone, Monitor, Film } from "lucide-react";
 import { z } from "zod";
 import { LiveBroadcaster } from "./live-broadcaster";
 
@@ -252,6 +252,19 @@ export default function LiveStreamManagement() {
     onError: (error: any) => toast({ title: "Error", description: error.message || "Failed", variant: "destructive" }),
   });
 
+  const saveRecording = useMutation({
+    mutationFn: async (id: string) => apiRequest("POST", `/api/live-streams/${id}/save-recording`, {}),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/videos"] });
+      if (data?.message?.includes("processing")) {
+        toast({ title: "Still Processing", description: "Mux is still encoding the recording. Try again in a few minutes.", variant: "destructive" });
+      } else {
+        toast({ title: "Recording Saved!", description: "The live stream recording has been added to Videos." });
+      }
+    },
+    onError: (error: any) => toast({ title: "Error", description: error.message || "Failed to save recording", variant: "destructive" }),
+  });
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "live": return <Badge className="bg-red-600 text-white animate-pulse">🔴 LIVE</Badge>;
@@ -356,13 +369,27 @@ export default function LiveStreamManagement() {
                     {getStatusBadge(stream.status)}
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                    <button
-                      onClick={() => setExpandedId(expandedId === stream.id ? null : stream.id)}
-                      className="text-[#FCD000] text-xs font-bold flex items-center gap-1"
-                    >
-                      How to Go Live
-                      {expandedId === stream.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                    </button>
+                    {stream.status !== "ended" && (
+                      <button
+                        onClick={() => setExpandedId(expandedId === stream.id ? null : stream.id)}
+                        className="text-[#FCD000] text-xs font-bold flex items-center gap-1"
+                      >
+                        How to Go Live
+                        {expandedId === stream.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      </button>
+                    )}
+                    {stream.status === "ended" && stream.muxStreamId && (
+                      <Button
+                        size="sm"
+                        onClick={() => saveRecording.mutate(stream.id)}
+                        disabled={saveRecording.isPending}
+                        className="bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold h-7 px-2"
+                        title="Save recording to Videos"
+                      >
+                        <Film className="w-3 h-3 mr-1" />
+                        {saveRecording.isPending ? "Saving…" : "Save Recording"}
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"

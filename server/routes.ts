@@ -3118,12 +3118,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const streams = await storage.getLiveStreams();
         const match = streams.find((s: any) => s.muxStreamId === muxStreamId && s.status === 'live');
         if (match) await storage.endLiveStream(match.id);
+      } else if (type === 'video.asset.ready') {
+        // A VOD asset was created - check if it came from a live stream
+        const liveStreamId = data.live_stream_id;
+        if (liveStreamId && data.playback_ids?.length > 0) {
+          const playbackId = data.playback_ids[0].id;
+          const streams = await storage.getLiveStreams();
+          const match = streams.find((s: any) => s.muxStreamId === liveStreamId);
+          if (match) {
+            // Create a video record for the recording
+            const videoUrl = `https://stream.mux.com/${playbackId}.m3u8`;
+            const thumbnailUrl = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
+            const durationSecs = data.duration ? Math.round(data.duration) : null;
+            await storage.createVideo({
+              title: `${match.title} (Recording)`,
+              description: match.description || null,
+              videoUrl,
+              thumbnailUrl,
+              uploadedBy: match.createdBy,
+              category: 'general',
+              isProcessed: true,
+              processingStatus: 'completed',
+              ...(durationSecs ? { duration: durationSecs } : {}),
+            } as any);
+            console.log(`[Mux] Auto-saved recording for live stream "${match.title}" (playback: ${playbackId})`);
+          }
+        }
       }
 
       res.status(200).send('ok');
     } catch (error) {
       console.error("Mux webhook error:", error);
       res.status(500).send('error');
+    }
+  });
+
+  // Manual save-recording endpoint (fallback if webhook didn't fire)
+  app.post('/api/live-streams/:id/save-recording', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) return res.status(403).json({ message: "Admin access required" });
+
+      const stream = await storage.getLiveStream(req.params.id);
+      if (!stream) return res.status(404).json({ message: "Stream not found" });
+      if (!stream.muxStreamId) return res.status(400).json({ message: "No Mux stream ID on this record" });
+
+      // Fetch assets linked to this live stream from Mux
+      const Mux = (await import('@mux/mux-node')).default;
+      const mux = new Mux({ tokenId: process.env.MUX_TOKEN_ID!, tokenSecret: process.env.MUX_TOKEN_SECRET! });
+      const assets = await mux.video.assets.list({ live_stream_id: stream.muxStreamId });
+      const readyAsset = (assets.data || []).find((a: any) => a.status === 'ready' && a.playback_ids?.length > 0);
+
+      if (!readyAsset) {
+        return res.status(202).json({ message: "Recording is still processing. Try again in a few minutes." });
+      }
+
+      const playbackId = readyAsset.playback_ids[0].id;
+      const videoUrl = `https://stream.mux.com/${playbackId}.m3u8`;
+      const thumbnailUrl = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
+      const durationSecs = readyAsset.duration ? Math.round(readyAsset.duration) : null;
+
+      const video = await storage.createVideo({
+        title: `${stream.title} (Recording)`,
+        description: stream.description || null,
+        videoUrl,
+        thumbnailUrl,
+        uploadedBy: stream.createdBy,
+        category: 'general',
+        isProcessed: true,
+        processingStatus: 'completed',
+        ...(durationSecs ? { duration: durationSecs } : {}),
+      } as any);
+
+      res.json({ message: "Recording saved to Videos", video });
+    } catch (error) {
+      console.error("Error saving recording:", error);
+      res.status(500).json({ message: "Failed to save recording" });
     }
   });
 
