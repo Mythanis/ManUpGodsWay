@@ -4821,9 +4821,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid role" });
       }
 
+      // Block self-modification
+      if (req.params.id === req.user.claims.sub) {
+        return res.status(400).json({ message: "You cannot change your own role" });
+      }
+
+      // Only owners can assign or revoke the owner role
+      if (role === 'owner' && user.role !== 'owner') {
+        return res.status(403).json({ message: "Only owners can assign the owner role" });
+      }
+
       const targetUser = await storage.getUser(req.params.id);
       if (!targetUser) {
         return res.status(404).json({ message: "User not found" });
+      }
+
+      // Only owners can modify existing owner accounts
+      if (targetUser.role === 'owner' && user.role !== 'owner') {
+        return res.status(403).json({ message: "Only owners can modify owner accounts" });
       }
 
       // Prevent downgrading the last owner — another owner must exist first
