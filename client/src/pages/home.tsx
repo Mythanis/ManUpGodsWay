@@ -978,7 +978,7 @@ export default function Home() {
                 <p className="text-sm text-[#FCD000] mb-4 font-black uppercase tracking-wide">{completedCount > 0 ? "Continue Your Faith Journey" : "Start Your Growth Today"}</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
-                    <Card key={study.id} className="border-2 border-black shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-sm overflow-hidden bg-[#FCD000] glow-gold" onClick={() => navigate(`/studies/${study.id}`)} style={{ cursor: 'pointer' }}>
+                    <Card key={study.id} className="border-2 border-black glow-gold hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-sm overflow-hidden bg-[#FCD000]" onClick={() => navigate(`/studies/${study.id}`)} style={{ cursor: 'pointer' }}>
                       <CardContent className="p-0">
                         <div className="flex">
                           <img
