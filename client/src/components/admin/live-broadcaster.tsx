@@ -100,8 +100,8 @@ export function LiveBroadcaster({ streamKey, streamId, onBroadcastStart, onBroad
         setTimeout(resolve, 4000);
       });
 
-      // Call Mux WHIP endpoint directly from the browser
-      const whipUrl = `https://global-live.mux.com:443/app/${streamKey}/whip`;
+      // Route through our server proxy (avoids CORS — direct browser→Mux is blocked)
+      const whipUrl = `/api/live-streams/${streamId}/whip`;
       let resp: Response;
       try {
         resp = await fetch(whipUrl, {
@@ -110,17 +110,15 @@ export function LiveBroadcaster({ streamKey, streamId, onBroadcastStart, onBroad
           body: pc.localDescription?.sdp,
         });
       } catch (fetchErr: any) {
-        // Distinguish CORS from network errors
-        const msg = fetchErr?.message || "";
-        if (msg.includes("CORS") || msg.includes("cross-origin") || msg.includes("fetch")) {
-          throw new Error("Mux blocked the connection (CORS). Make sure your Mux account has WHIP/WebRTC enabled under Settings → Environments.");
-        }
-        throw new Error(`Network error reaching Mux: ${msg}. Check your internet connection.`);
+        throw new Error(`Network error: ${(fetchErr as any)?.message}`);
       }
 
       if (!resp.ok) {
         const text = await resp.text().catch(() => "");
-        throw new Error(`Mux rejected the stream (${resp.status}): ${text || "check your stream key and Mux plan"}`);
+        if (resp.status === 502) {
+          throw new Error("In-app broadcasting requires the app to be deployed (published). Use OBS or Riverside with the RTMP credentials shown below to go live now.");
+        }
+        throw new Error(`Connection failed (${resp.status}): ${text || "check your Mux credentials"}`);
       }
 
       const answerSdp = await resp.text();
@@ -257,9 +255,23 @@ export function LiveBroadcaster({ streamKey, streamId, onBroadcastStart, onBroad
       {/* Controls */}
       <div className="p-3">
         {state === "error" && errorMsg && (
-          <div className="flex items-start gap-2 bg-red-950 border border-red-700 rounded p-2 mb-3">
-            <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-            <p className="text-red-300 text-xs">{errorMsg}</p>
+          <div className="mb-3 space-y-2">
+            <div className="flex items-start gap-2 bg-red-950 border border-red-700 rounded p-2">
+              <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-red-300 text-xs">{errorMsg}</p>
+            </div>
+            {errorMsg.includes("deployed") && (
+              <div className="bg-gray-900 border border-gray-700 rounded p-2">
+                <p className="text-[#FCD000] text-xs font-bold mb-1">👉 Go live right now with OBS (free):</p>
+                <ol className="text-gray-400 text-xs space-y-0.5 list-decimal list-inside">
+                  <li>Open OBS → Settings → Stream</li>
+                  <li>Service: Custom, then click "Show RTMP credentials" below</li>
+                  <li>Paste the Server URL and Stream Key into OBS</li>
+                  <li>Hit "Start Streaming" in OBS</li>
+                </ol>
+                <p className="text-gray-500 text-xs mt-1">In-app broadcasting will work after publishing the app.</p>
+              </div>
+            )}
           </div>
         )}
 
