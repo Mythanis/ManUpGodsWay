@@ -12052,7 +12052,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Award rations for completing a mission
-  app.post('/api/rations/award', isAuthenticated, async (req: any, res) => {
+  app.post('/api/rations/award', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { missionType, referenceId, referenceType } = req.body;
@@ -12113,7 +12113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Check and award grace bonus for returning user
-  app.post('/api/rations/grace-bonus', isAuthenticated, async (req: any, res) => {
+  app.post('/api/rations/grace-bonus', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { rationsService } = await import('./rations-service');

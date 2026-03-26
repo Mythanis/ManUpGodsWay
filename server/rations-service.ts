@@ -41,7 +41,33 @@ export class RationsService {
         };
       }
     } else {
-      // No cap - just update progress tracking
+      // No cap — deduplicate before awarding
+      if (referenceId) {
+        // For repeatable missions (post, comment, etc.) deduplicate per unique action
+        const [existing] = await db.select({ id: rationTransactions.id })
+          .from(rationTransactions)
+          .where(and(
+            eq(rationTransactions.userId, userId),
+            eq(rationTransactions.missionType, missionKey),
+            eq(rationTransactions.referenceId, referenceId),
+            eq(rationTransactions.type, 'earn')
+          ))
+          .limit(1);
+        if (existing) {
+          return { success: false, amount: 0, newBalance: 0, message: 'Already awarded for this action' };
+        }
+      } else {
+        // For one-time missions without a reference, only award once per mission per user
+        const [existingProgress] = await db.select({ id: userMissionProgress.id })
+          .from(userMissionProgress)
+          .where(and(
+            eq(userMissionProgress.userId, userId),
+            eq(userMissionProgress.missionId, mission.id)
+          ));
+        if (existingProgress) {
+          return { success: false, amount: 0, newBalance: 0, message: 'Already awarded' };
+        }
+      }
       await this.updateMissionProgressNoCap(userId, mission.id, rationsToAward);
     }
 
