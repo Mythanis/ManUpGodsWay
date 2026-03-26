@@ -148,7 +148,10 @@ export const studies = pgTable("studies", {
   displayOrder: integer("display_order").default(0), // Manual sort order for library display
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_studies_series_id").on(table.seriesId), // Fast series detail page queries
+  index("idx_studies_published_order").on(table.isPublished, table.displayOrder), // Library listing
+]);
 
 // Study lessons/days - individual daily content for embedded studies
 export const studyLessons = pgTable("study_lessons", {
@@ -271,7 +274,10 @@ export const discussions = pgTable("discussions", {
   isPinned: boolean("is_pinned").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_discussions_user_id").on(table.userId), // User profile discussions
+  index("idx_discussions_created_at").on(table.createdAt), // Feed ordering
+]);
 
 // Live streams table for admin-only streaming
 export const liveStreams = pgTable("live_streams", {
@@ -309,7 +315,9 @@ export const discussionReplies = pgTable("discussion_replies", {
   likes: integer("likes").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_discussion_replies_discussion_id").on(table.discussionId), // Load replies per discussion
+]);
 
 // Content flags table for reporting inappropriate content
 export const contentFlags = pgTable("content_flags", {
@@ -668,7 +676,9 @@ export const studyRatings = pgTable("study_ratings", {
   rating: integer("rating").notNull(), // 1-5 stars
   review: text("review"), // Optional text review
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  unique().on(table.userId, table.studyId), // One rating per user per study
+]);
 
 // User ratings for videos
 export const videoRatings = pgTable("video_ratings", {
@@ -678,7 +688,9 @@ export const videoRatings = pgTable("video_ratings", {
   rating: integer("rating").notNull(), // 1-5 stars
   review: text("review"), // Optional text review
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  unique().on(table.userId, table.videoId), // One rating per user per video
+]);
 
 // Chat conversations (direct messages and group chats)
 export const conversations = pgTable("conversations", {
@@ -702,7 +714,10 @@ export const conversationParticipants = pgTable("conversation_participants", {
   role: varchar("role").default("member"), // 'admin', 'member'
   joinedAt: timestamp("joined_at").defaultNow(),
   lastReadAt: timestamp("last_read_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_conversation_participants_user_id").on(table.userId), // Find user's conversations
+  index("idx_conversation_participants_conversation_id").on(table.conversationId), // Find participants per conversation
+]);
 
 // Messages within conversations
 export const messages = pgTable("messages", {
@@ -716,7 +731,9 @@ export const messages = pgTable("messages", {
   deletedBy: text("deleted_by").array().default([]), // Array of user IDs who deleted this message
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_messages_conversation_id").on(table.conversationId), // Load messages per conversation
+]);
 
 // Direct message requests that need approval
 export const messageRequests = pgTable("message_requests", {
@@ -727,7 +744,10 @@ export const messageRequests = pgTable("message_requests", {
   status: varchar("status").default("pending"), // 'pending', 'accepted', 'declined'
   createdAt: timestamp("created_at").defaultNow(),
   respondedAt: timestamp("responded_at"),
-});
+}, (table) => [
+  index("idx_message_requests_to_user_id").on(table.toUserId), // Find incoming requests
+  index("idx_message_requests_from_user_id").on(table.fromUserId), // Find sent requests
+]);
 
 // Notifications for various events
 export const notifications = pgTable("notifications", {
@@ -739,7 +759,9 @@ export const notifications = pgTable("notifications", {
   relatedId: varchar("related_id"), // ID of related entity (conversation, study, etc.)
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_notifications_user_id_created_at").on(table.userId, table.createdAt), // Notification bell queries
+]);
 
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -1362,7 +1384,10 @@ export const challengeParticipants = pgTable("challenge_participants", {
   acceptedAt: timestamp("accepted_at").defaultNow(),
   completedAt: timestamp("completed_at"), // When the user marked the challenge as complete (honor system)
   regroupedAt: timestamp("regrouped_at"), // When user acknowledged they didn't complete but will try harder next time
-});
+}, (table) => [
+  index("idx_challenge_participants_user_id").on(table.userId), // User's challenges
+  index("idx_challenge_participants_challenge_id").on(table.challengeId), // Challenge participants count
+]);
 
 export const insertChallengeParticipantSchema = createInsertSchema(challengeParticipants).omit({
   id: true,
@@ -1575,7 +1600,9 @@ export const hurdleWallReplies = pgTable("hurdle_wall_replies", {
   isAnonymous: boolean("is_anonymous").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_hurdle_wall_replies_post_id").on(table.postId), // Batch-load replies per post
+]);
 
 // Hurdle Wall Prayers table (tracks who prayed for what)
 export const hurdleWallPrayers = pgTable("hurdle_wall_prayers", {
@@ -1841,7 +1868,9 @@ export const warGroupPostReplies = pgTable("war_group_post_replies", {
   likes: integer("likes").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_war_group_post_replies_post_id").on(table.postId), // Load replies per post
+]);
 
 // War Group Registrations - Pending registration requests
 export const warGroupRegistrations = pgTable("war_group_registrations", {
@@ -1893,7 +1922,9 @@ export const warGroupWarRoomReplies = pgTable("war_group_war_room_replies", {
   isAnonymous: boolean("is_anonymous").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_war_group_war_room_replies_post_id").on(table.postId), // Load replies per war room post
+]);
 
 // War Group War Room Prayers
 export const warGroupWarRoomPrayers = pgTable("war_group_war_room_prayers", {
@@ -2454,7 +2485,9 @@ export const fitnessPostLikes = pgTable("fitness_post_likes", {
   postId: varchar("post_id").notNull().references(() => fitnessPosts.id, { onDelete: 'cascade' }),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  unique().on(table.postId, table.userId), // One like per user per post
+]);
 
 export const insertFitnessPostSchema = createInsertSchema(fitnessPosts).omit({
   id: true,
@@ -2483,7 +2516,9 @@ export const bibleReadingPlanDays = pgTable("bible_reading_plan_days", {
   dayNumber: integer("day_number").notNull(),
   title: text("title").notNull(),
   passages: text("passages").notNull(),
-});
+}, (table) => [
+  index("idx_bible_reading_plan_days_plan_id").on(table.planId), // Fast day listing per plan
+]);
 
 export const bibleReadingProgress = pgTable("bible_reading_progress", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -2491,7 +2526,10 @@ export const bibleReadingProgress = pgTable("bible_reading_progress", {
   planId: varchar("plan_id").notNull().references(() => bibleReadingPlans.id, { onDelete: "cascade" }),
   dayNumber: integer("day_number").notNull(),
   completedAt: timestamp("completed_at").notNull().defaultNow(),
-});
+}, (table) => [
+  unique().on(table.userId, table.planId, table.dayNumber), // One completion record per user per day
+  index("idx_bible_reading_progress_user_plan").on(table.userId, table.planId), // Fast progress lookup
+]);
 
 export type BibleReadingPlan = typeof bibleReadingPlans.$inferSelect;
 export type BibleReadingPlanDay = typeof bibleReadingPlanDays.$inferSelect;
