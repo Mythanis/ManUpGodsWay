@@ -12932,6 +12932,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const bibleRes = await fetch('https://rest.api.bible/v1/bibles?language=eng', {
             headers: { 'api-key': bibleKey },
           });
+          // Count this health-check call toward the billing tracker
+          try {
+            await db.insert(schema.bibleApiCalls).values({ endpoint: '/health-check/bibles' });
+          } catch (_) { /* non-blocking */ }
           services.bibleApi = {
             name: "API.Bible",
             status: bibleRes.ok ? "ok" : "degraded",
