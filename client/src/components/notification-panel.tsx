@@ -293,13 +293,13 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         <Button
           variant="ghost"
           onClick={() => setShowPanel(!showPanel)}
-          className="w-full justify-between p-4 h-auto hover:bg-gray-50 border-b border-gray-100"
+          className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-sm"
         >
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-ministry-navy/20 flex items-center justify-center">
-              <Bell className="w-4 h-4 text-ministry-navy" />
+            <div className="w-8 h-8 rounded-sm bg-ministry-gold-exact flex items-center justify-center">
+              <Bell className="w-4 h-4 text-black" />
             </div>
-            <span className="font-medium text-ministry-charcoal">Notifications</span>
+            <span className="font-bold text-white uppercase tracking-wide">Notifications</span>
           </div>
           <div className="flex items-center space-x-2">
             {(unreadCount > 0 || pendingRequests.length > 0) && (
@@ -310,7 +310,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                 {unreadCount + pendingRequests.length}
               </Badge>
             )}
-            <svg className="w-5 h-5 text-ministry-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-ministry-gold-exact" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
             </svg>
           </div>

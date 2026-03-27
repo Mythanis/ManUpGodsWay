@@ -3521,10 +3521,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
             seriesOrder: schema.studies.seriesOrder
           }).from(schema.studies).where(eq(schema.studies.id, studyId));
           const studyReward = study?.rationReward || 100;
-          
-          await rationsService.awardCustomRations(
-            userId, studyReward, 'study', `Completed study: ${study?.title || 'Unknown'}`, 'complete_study', studyId, 'study'
-          );
+
+          // Dedup: only award study completion once
+          const [studyTx] = await db.select({ id: schema.rationTransactions.id })
+            .from(schema.rationTransactions)
+            .where(and(
+              eq(schema.rationTransactions.userId, userId),
+              eq(schema.rationTransactions.missionType, 'complete_study'),
+              eq(schema.rationTransactions.referenceId, studyId)
+            ))
+            .limit(1);
+          if (!studyTx) {
+            await rationsService.awardCustomRations(
+              userId, studyReward, 'study', `Completed study: ${study?.title || 'Unknown'}`, 'complete_study', studyId, 'study'
+            );
+          }
           
           // Find next study in the same series (any series, consecutive or not)
           if (study?.seriesId) {
