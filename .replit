@@ -8,7 +8,7 @@ packages = ["unzip", "libuuid", "cairo", "pango", "libjpeg", "giflib", "librsvg"
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["bash", "-c", "npm install && npm run build"]
+build = ["bash", "build.sh"]
 run = ["npm", "run", "start"]
 
 [[ports]]
