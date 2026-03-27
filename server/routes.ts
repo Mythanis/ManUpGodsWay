@@ -11656,8 +11656,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const testKey = process.env.TESTING_STRIPE_SECRET_KEY;
       if (!testKey) return res.status(400).json({ message: "TESTING_STRIPE_SECRET_KEY not configured. Add it to your Replit Secrets." });
-      if (testKey.startsWith('pk_')) return res.status(400).json({ message: "TESTING_STRIPE_SECRET_KEY contains a publishable key (pk_...). It must be a secret key (sk_test_...). Go to Stripe Dashboard → API Keys and copy your test Secret key." });
-      if (!testKey.startsWith('sk_')) return res.status(400).json({ message: "TESTING_STRIPE_SECRET_KEY looks invalid. It must start with sk_test_..." });
+      const keyPrefix = testKey.substring(0, 12);
+      if (testKey.startsWith('pk_')) return res.status(400).json({ message: `TESTING_STRIPE_SECRET_KEY contains a publishable key. It must be a secret key (sk_test_...). Currently reads: ${keyPrefix}...` });
+      if (!testKey.startsWith('sk_')) return res.status(400).json({ message: `TESTING_STRIPE_SECRET_KEY looks invalid — it must start with sk_test_. Currently reads: ${keyPrefix}...` });
 
       const { amount, interval, intervalCount } = req.body;
       if (!amount || amount < 50) return res.status(400).json({ message: "Amount must be at least $0.50" });
