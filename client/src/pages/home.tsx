@@ -1683,13 +1683,12 @@ export default function Home() {
                         >
                           📥 Download Image
                         </a>
-                        <p className="text-xs text-gray-400 text-center">⬆️ For Facebook: Download image first, then attach it to your post</p>
                       </div>
                       <div className="border-t border-gray-700 pt-2">
-                        <p className="text-xs text-gray-400 mb-2 text-center">Share text only:</p>
+                        <p className="text-xs text-gray-400 mb-2 text-center">Share on social:</p>
                         <div className="flex gap-2 justify-center">
                           <a
-                            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.manupgodsway.org')}&quote=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\nDownload the app: www.manupgodsway.org`)}`}
+                            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://www.manupgodsway.org/share/devotional/${devotional.id}`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 bg-[#1877F2] text-white rounded-sm hover:opacity-80 transition-opacity"
