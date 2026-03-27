@@ -12,6 +12,7 @@ import {
   replyHonors,
   userProgress,
   devotionals,
+  savedDevotionals,
   studyRatings,
   videoRatings,
   conversations,
@@ -69,6 +70,7 @@ import {
   type InsertUserProgress,
   type Devotional,
   type InsertDevotional,
+  type SavedDevotional,
   type StudyRating,
   type InsertStudyRating,
   type VideoRating,
@@ -311,6 +313,9 @@ export interface IStorage {
   getDevotionals(limit?: number): Promise<Devotional[]>;
   createDevotional(devotional: InsertDevotional): Promise<Devotional>;
   updateDevotional(id: string, devotional: Partial<InsertDevotional>): Promise<Devotional | undefined>;
+  getSavedDevotionals(userId: string): Promise<(SavedDevotional & { devotional: Devotional })[]>;
+  isDevotionalSaved(userId: string, devotionalId: string): Promise<boolean>;
+  toggleSaveDevotional(userId: string, devotionalId: string): Promise<boolean>;
   deleteDevotional(id: string): Promise<void>;
   
   // Rating operations
@@ -2427,6 +2432,37 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDevotional(id: string): Promise<void> {
     await db.delete(devotionals).where(eq(devotionals.id, id));
+  }
+
+  async getSavedDevotionals(userId: string): Promise<(SavedDevotional & { devotional: Devotional })[]> {
+    const rows = await db
+      .select()
+      .from(savedDevotionals)
+      .innerJoin(devotionals, eq(savedDevotionals.devotionalId, devotionals.id))
+      .where(eq(savedDevotionals.userId, userId))
+      .orderBy(desc(savedDevotionals.savedAt));
+    return rows.map(r => ({ ...r.saved_devotionals, devotional: r.devotionals }));
+  }
+
+  async isDevotionalSaved(userId: string, devotionalId: string): Promise<boolean> {
+    const [row] = await db
+      .select()
+      .from(savedDevotionals)
+      .where(and(eq(savedDevotionals.userId, userId), eq(savedDevotionals.devotionalId, devotionalId)))
+      .limit(1);
+    return !!row;
+  }
+
+  async toggleSaveDevotional(userId: string, devotionalId: string): Promise<boolean> {
+    const existing = await this.isDevotionalSaved(userId, devotionalId);
+    if (existing) {
+      await db.delete(savedDevotionals)
+        .where(and(eq(savedDevotionals.userId, userId), eq(savedDevotionals.devotionalId, devotionalId)));
+      return false;
+    } else {
+      await db.insert(savedDevotionals).values({ userId, devotionalId });
+      return true;
+    }
   }
 
   async getAvailableDevotionalsWithoutNotifications(): Promise<Devotional[]> {

@@ -3882,6 +3882,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get saved devotionals for current user
+  app.get('/api/devotionals/saved', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const saved = await storage.getSavedDevotionals(userId);
+      res.json(saved);
+    } catch (error) {
+      console.error("Error fetching saved devotionals:", error);
+      res.status(500).json({ message: "Failed to fetch saved devotionals" });
+    }
+  });
+
+  // Check if a devotional is saved
+  app.get('/api/devotionals/:id/saved', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const isSaved = await storage.isDevotionalSaved(userId, req.params.id);
+      res.json({ isSaved });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to check saved status" });
+    }
+  });
+
+  // Toggle save/unsave a devotional
+  app.post('/api/devotionals/:id/save', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const isSaved = await storage.toggleSaveDevotional(userId, req.params.id);
+      res.json({ isSaved });
+    } catch (error) {
+      console.error("Error toggling devotional save:", error);
+      res.status(500).json({ message: "Failed to save devotional" });
+    }
+  });
+
   // Generate shareable devotional image
   app.get('/api/devotionals/:id/share-image', async (req, res) => {
     try {

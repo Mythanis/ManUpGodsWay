@@ -669,6 +669,20 @@ export const devotionals = pgTable("devotionals", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Saved devotionals
+export const savedDevotionals = pgTable("saved_devotionals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  devotionalId: varchar("devotional_id").notNull().references(() => devotionals.id, { onDelete: 'cascade' }),
+  savedAt: timestamp("saved_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.devotionalId),
+]);
+
+export const insertSavedDevotionalSchema = createInsertSchema(savedDevotionals).omit({ id: true, savedAt: true });
+export type InsertSavedDevotional = z.infer<typeof insertSavedDevotionalSchema>;
+export type SavedDevotional = typeof savedDevotionals.$inferSelect;
+
 // User ratings for studies
 export const studyRatings = pgTable("study_ratings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

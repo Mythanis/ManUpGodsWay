@@ -40,7 +40,10 @@ import {
   RefreshCw,
   AlertTriangle,
   X,
-  Map
+  Map,
+  Heart,
+  BookOpen,
+  Trash2
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -141,6 +144,17 @@ export default function Profile() {
   }>({
     queryKey: ['/api/fitness/membership'],
     retry: false,
+  });
+
+  // Saved devotionals
+  const { data: savedDevotionals = [] } = useQuery<any[]>({
+    queryKey: ['/api/devotionals/saved'],
+    enabled: !!user,
+  });
+
+  const unsaveDevotionalMutation = useMutation({
+    mutationFn: (devotionalId: string) => apiRequest('POST', `/api/devotionals/${devotionalId}/save`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['/api/devotionals/saved'] }),
   });
 
   // Cancel main subscription
@@ -457,6 +471,62 @@ export default function Profile() {
                 </Button>
               </Link>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Saved Devotionals */}
+      <div className="px-6 mb-6">
+        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>
+          Saved Devotionals
+        </h2>
+        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+          <CardContent className="p-0">
+            {savedDevotionals.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                <Heart className="w-8 h-8 text-white/20 mb-3" />
+                <p className="text-sm text-white/40 font-bold uppercase tracking-wide">No saved devotionals yet</p>
+                <p className="text-xs text-white/30 mt-1">Tap the Save button on today's devotional to bookmark it here.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-ministry-gold-exact/20">
+                {savedDevotionals.map((item: any) => {
+                  const dev = item.devotional;
+                  const savedDate = new Date(item.savedAt);
+                  const devDate = new Date(dev.date);
+                  return (
+                    <div key={item.id} className="flex items-start gap-3 p-4">
+                      {dev.imageUrl ? (
+                        <img
+                          src={dev.imageUrl}
+                          alt={dev.title}
+                          className="w-14 h-14 object-cover rounded-sm flex-shrink-0 border border-ministry-gold-exact/30"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-sm flex-shrink-0 bg-ministry-gold-exact/10 border border-ministry-gold-exact/30 flex items-center justify-center">
+                          <BookOpen className="w-6 h-6 text-ministry-gold-exact/60" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-white text-sm uppercase tracking-wide leading-tight line-clamp-2">{dev.title}</p>
+                        <p className="text-xs text-ministry-gold-exact/70 mt-0.5 font-bold">{dev.verseReference}</p>
+                        <p className="text-xs text-white/40 mt-1">
+                          {devDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
+                          {' · '}Saved {savedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => unsaveDevotionalMutation.mutate(dev.id)}
+                        className="p-1.5 rounded-sm text-white/30 hover:text-red-400 hover:bg-white/5 transition-colors flex-shrink-0"
+                        title="Remove from saved"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

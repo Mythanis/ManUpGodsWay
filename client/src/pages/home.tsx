@@ -55,7 +55,7 @@ export default function Home() {
   useWebSocket(user?.id);
   const [showFullDevotional, setShowFullDevotional] = useState(false);
   const [pendingDevotionalOpen, setPendingDevotionalOpen] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(false); // optimistic local state
   const [showPrayerDialog, setShowPrayerDialog] = useState(false);
   const [prayerDuration, setPrayerDuration] = useState("5");
   const [isPraying, setIsPraying] = useState(false);
@@ -146,9 +146,32 @@ export default function Home() {
     }
   }, [user]);
 
-  const { data: devotional } = useQuery({
+  const { data: devotional } = useQuery<any>({
     queryKey: ["/api/devotionals/today"],
     retry: false,
+  });
+
+  // Fetch whether today's devotional is saved
+  const { data: savedStatus } = useQuery<{ isSaved: boolean }>({
+    queryKey: ["/api/devotionals", (devotional as any)?.id, "saved"],
+    enabled: !!(devotional as any)?.id && !!user,
+    queryFn: () => fetch(`/api/devotionals/${(devotional as any).id}/saved`).then(r => r.json()),
+  });
+
+  // Sync local optimistic state with server
+  useEffect(() => {
+    if (savedStatus !== undefined) setIsLiked(savedStatus.isSaved);
+  }, [savedStatus]);
+
+  const toggleSaveMutation = useMutation({
+    mutationFn: () => apiRequest("POST", `/api/devotionals/${(devotional as any).id}/save`),
+    onMutate: () => setIsLiked(prev => !prev),
+    onSuccess: (data: any) => {
+      setIsLiked(data.isSaved);
+      queryClient.invalidateQueries({ queryKey: ["/api/devotionals/saved"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/devotionals", (devotional as any)?.id, "saved"] });
+    },
+    onError: () => setIsLiked(prev => !prev),
   });
   
   useEffect(() => {
@@ -1614,10 +1637,14 @@ export default function Home() {
                       : 'bg-gray-800 text-white hover:bg-gray-700'
                   }`}
                   onClick={() => {
-                    setIsLiked(!isLiked);
-                    toast({
-                      title: isLiked ? "Removed from favorites" : "Added to favorites",
-                      description: isLiked ? "Devotional removed from your favorites" : "Devotional saved to your favorites",
+                    if (!user) return;
+                    toggleSaveMutation.mutate(undefined, {
+                      onSuccess: (data: any) => {
+                        toast({
+                          title: data.isSaved ? "Devotional Saved" : "Removed from Saved",
+                          description: data.isSaved ? "You can find it in your Profile under Saved Devotionals." : "Removed from your saved devotionals.",
+                        });
+                      },
                     });
                   }}
                 >
