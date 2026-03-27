@@ -12110,7 +12110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               icon: '/icon-192.png',
               badge: '/icon-192.png',
               tag: `war-group-post-${post.id}`,
-              url: `/war-groups/${groupId}`,
+              url: `/war-groups/${groupId}?postId=${post.id}`,
             })
           ));
         } catch (e) {
@@ -12270,7 +12270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             icon: '/icon-192.png',
             badge: '/icon-192.png',
             tag: `war-group-reply-${reply.id}`,
-            url: `/war-groups/${post.groupId}`,
+            url: `/war-groups/${post.groupId}?postId=${postId}&openReplies=true`,
           });
         } catch (e) {
           console.error('War group reply push notification error:', e);

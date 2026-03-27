@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -123,6 +123,11 @@ export default function WarGroupDetail() {
   const { id } = useParams();
   const { toast } = useToast();
   const [, navigate] = useLocation();
+
+  // Parse deep-link params from notification URL (e.g. ?postId=xxx&openReplies=true)
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetPostId = urlParams.get('postId') || null;
+  const shouldOpenReplies = urlParams.get('openReplies') === 'true';
 
   const { data: group, isLoading } = useQuery<WarGroup>({
     queryKey: [`/api/war-groups/${id}`],
@@ -297,7 +302,9 @@ export default function WarGroupDetail() {
 
   // Discussion Board State
   const [newPostContent, setNewPostContent] = useState("");
-  const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
+  const [expandedPosts, setExpandedPosts] = useState<Set<string>>(
+    () => new Set(targetPostId && shouldOpenReplies ? [targetPostId] : [])
+  );
   const [replyContent, setReplyContent] = useState<{ [postId: string]: string }>({});
   
   // Media upload state
@@ -315,6 +322,23 @@ export default function WarGroupDetail() {
     queryKey: [`/api/war-groups/${id}/posts`],
     enabled: !!id && isMember,
   });
+
+  // Scroll to the target post once posts have loaded (deep-link from notification)
+  useEffect(() => {
+    if (!targetPostId || postsLoading || posts.length === 0) return;
+    // Small timeout to allow the DOM to finish rendering the post list
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`post-${targetPostId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Briefly highlight the post so the user knows which one was linked
+        el.style.transition = 'box-shadow 0.3s ease';
+        el.style.boxShadow = '0 0 0 3px #FCD000';
+        setTimeout(() => { el.style.boxShadow = ''; }, 2500);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [targetPostId, postsLoading, posts.length]);
 
   // Handle media file upload
   const handleMediaUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1086,7 +1110,7 @@ function PostCard({
   });
 
   return (
-    <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]" data-testid={`post-${post.id}`}>
+    <Card id={`post-${post.id}`} className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]" data-testid={`post-${post.id}`}>
       <CardContent className="p-4">
         {/* Post Header — dark area */}
         <div className="flex items-start justify-between mb-3">
