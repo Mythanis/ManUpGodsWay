@@ -7499,6 +7499,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk import challenges (admin only)
+  app.post('/api/admin/challenges/bulk', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { challenges: challengeList } = req.body;
+      if (!Array.isArray(challengeList) || challengeList.length === 0) {
+        return res.status(400).json({ message: "No challenges provided" });
+      }
+      if (challengeList.length > 52) {
+        return res.status(400).json({ message: "Maximum 52 challenges per bulk import" });
+      }
+
+      const validTopics = ['leadership', 'marriage', 'fatherhood', 'character', 'faith', 'discipline', 'service', 'growth'];
+      const created = [];
+      for (const ch of challengeList) {
+        if (!ch.title?.trim()) continue;
+        const challenge = await storage.createChallenge({
+          title: ch.title.trim(),
+          description: ch.description?.trim() || null,
+          topic: validTopics.includes(ch.topic) ? ch.topic : 'faith',
+          releaseDate: new Date(ch.releaseDate),
+          durationDays: ch.durationDays || 7,
+          rationReward: ch.rationReward || 25,
+          completionReward: ch.completionReward || 75,
+        });
+        created.push(challenge);
+      }
+
+      res.json({ created: created.length, challenges: created });
+    } catch (error) {
+      console.error('Error bulk importing challenges:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   app.post('/api/challenges', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
