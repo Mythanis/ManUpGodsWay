@@ -1,4 +1,4 @@
-const CACHE_NAME = 'man-up-gods-way-v6';
+const CACHE_NAME = 'man-up-gods-way-v7';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -105,6 +105,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Navigation requests (HTML pages): stale-while-revalidate so the app shell
+  // appears instantly from cache while the fresh copy downloads in the background.
+  // This eliminates the white flash caused by waiting on the network.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      caches.open(CACHE_NAME).then((cache) => {
+        return cache.match('/').then((cached) => {
+          const fetchPromise = fetch(request).then((response) => {
+            if (response.ok && response.type === 'basic') {
+              cache.put('/', response.clone());
+            }
+            return response;
+          }).catch(() => cached || new Response('', { status: 408 }));
+          return cached || fetchPromise;
+        });
+      })
+    );
+    return;
+  }
+
   event.respondWith(
     fetch(request)
       .then((response) => {
@@ -117,9 +137,6 @@ self.addEventListener('fetch', (event) => {
       .catch(() => {
         return caches.match(request).then((cached) => {
           if (cached) return cached;
-          if (request.mode === 'navigate') {
-            return caches.match('/');
-          }
           return new Response('', { status: 408 });
         });
       })

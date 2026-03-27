@@ -2,6 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <style>
+      html, body, #root { background-color: #0a0a0a !important; color: #f2f2f2; margin: 0; padding: 0; }
+    </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <title>Man Up God's Way</title>
     <meta name="description" content="A faith-based platform for biblical masculinity, leadership development, and spiritual growth" />
@@ -36,7 +39,7 @@
         // One-time cache wipe: clears ALL service-worker caches so stale
         // JS/CSS (e.g. old white-background code) is evicted immediately.
         // Bump APP_CACHE_VERSION any time a critical asset change must propagate.
-        var APP_CACHE_VERSION = 'dark-fix-v2';
+        var APP_CACHE_VERSION = 'dark-fix-v3';
         if (localStorage.getItem('appCacheVersion') !== APP_CACHE_VERSION) {
           localStorage.setItem('appCacheVersion', APP_CACHE_VERSION);
           if ('caches' in window) {
@@ -61,7 +64,7 @@
         if (theme === 'dark') {
           document.documentElement.classList.add('dark');
         }
-        document.documentElement.style.backgroundColor = theme === 'dark' ? '#0d1117' : '#ffffff';
+        document.documentElement.style.backgroundColor = theme === 'dark' ? '#0a0a0a' : '#ffffff';
       })();
     </script>
   </head>
