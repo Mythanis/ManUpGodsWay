@@ -460,9 +460,9 @@ export default function RationsPage() {
                   <Star className="w-5 h-5 text-ministry-gold" />
                 </div>
                 <div>
-                  <p className="font-black text-ministry-gold uppercase tracking-wide text-sm">Grace Bonus</p>
+                  <p className="font-black text-ministry-gold uppercase tracking-wide text-sm">Grace Bonus — +100 Rations</p>
                   <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
-                    Been away for a while? When you return after an absence, God's grace meets you right where you are. You'll receive a <span className="text-ministry-gold font-bold">+100 ration grace bonus</span> to help you get back in the fight. Welcome back, soldier.
+                    Been away for <span className="text-white font-bold">14 or more days</span>? When you return, God's grace meets you right where you are. Log back in and you'll automatically receive a <span className="text-ministry-gold font-bold">+100 ration grace bonus</span> to help you get back in the fight. Welcome back, soldier.
                   </p>
                 </div>
               </CardContent>
