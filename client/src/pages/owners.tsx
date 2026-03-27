@@ -6,13 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Crown, Users, Database, Activity, Trash2, CreditCard,
   CheckCircle2, XCircle, AlertCircle, RefreshCw, BookOpen, Video,
   Newspaper, Swords, Calendar, Mic, Book, ArrowLeft, FlaskConical,
-  Ban, Loader2, DollarSign, Repeat,
+  Ban, Loader2, DollarSign, Repeat, Lock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -77,6 +80,81 @@ function ServiceBadge({ status }: { status: 'ok' | 'degraded' | 'error' }) {
   );
 }
 
+// ─── Stripe checkout form (embedded inside Elements provider) ─────────────────
+
+interface PendingSubInfo {
+  subscriptionId: string;
+  customerId: string;
+  amount: number;
+  interval: string;
+  intervalCount: number;
+}
+
+function TestSubCheckoutForm({ pendingInfo, onSuccess, onCancel }: {
+  pendingInfo: PendingSubInfo;
+  onSuccess: () => void;
+  onCancel: () => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { toast } = useToast();
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  const handleConfirm = async () => {
+    if (!stripe || !elements) return;
+    setIsConfirming(true);
+    try {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: { return_url: window.location.href },
+        redirect: 'if_required',
+      });
+      if (error) {
+        toast({ title: "Payment Failed", description: error.message, variant: "destructive" });
+        return;
+      }
+      if (paymentIntent?.status === 'succeeded') {
+        // Save the subscription to DB
+        await apiRequest('POST', '/api/owner/stripe/test-subscription/save', pendingInfo);
+        toast({ title: "Test Subscription Active!", description: "Stripe is charging on the configured schedule." });
+        queryClient.invalidateQueries({ queryKey: ['/api/owner/stripe/test-subscription'] });
+        onSuccess();
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message || "Payment confirmation failed", variant: "destructive" });
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
+  const intervalLabel = (interval: string, count: number) => {
+    const labels: Record<string, string> = { day: 'day', week: 'week', month: 'month', year: 'year' };
+    return count > 1 ? `${count} ${labels[interval] || interval}s` : labels[interval] || interval;
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="p-3 bg-white/5 border border-white/10 rounded-sm text-center">
+        <p className="text-white/50 text-xs uppercase tracking-wide font-bold">Charging</p>
+        <p className="text-[#FCD000] text-2xl font-black mt-1">${(pendingInfo.amount / 100).toFixed(2)}</p>
+        <p className="text-white/50 text-xs mt-0.5">every {intervalLabel(pendingInfo.interval, pendingInfo.intervalCount)}</p>
+        <p className="text-green-400 text-xs mt-2 font-semibold">⚡ Test mode — no real money charged</p>
+        <p className="text-white/30 text-xs mt-1">Use test card: 4242 4242 4242 4242</p>
+      </div>
+      <PaymentElement options={{ layout: 'tabs' }} />
+      <div className="flex gap-2">
+        <Button onClick={onCancel} variant="outline" className="flex-1 border-white/20 text-white/60 rounded-sm text-xs font-bold" disabled={isConfirming}>
+          Cancel
+        </Button>
+        <Button onClick={handleConfirm} disabled={isConfirming || !stripe || !elements}
+          className="flex-1 bg-[#FCD000] text-black font-black text-xs uppercase rounded-sm border-2 border-black">
+          {isConfirming ? <><Loader2 className="w-3 h-3 animate-spin mr-1" /> Processing...</> : <><Lock className="w-3 h-3 mr-1" /> Confirm Payment</>}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Stripe sub-page ──────────────────────────────────────────────────────────
 
 function StripePage({ onBack }: { onBack: () => void }) {
@@ -89,9 +167,15 @@ function StripePage({ onBack }: { onBack: () => void }) {
   const [isRetrying, setIsRetrying] = useState(false);
 
   // Test subscription form state
-  const [testAmount, setTestAmount] = useState('1.00');
-  const [testInterval, setTestInterval] = useState('day');
+  const [testAmount, setTestAmount] = useState('4.99');
+  const [testInterval, setTestInterval] = useState('month');
   const [testIntervalCount, setTestIntervalCount] = useState('1');
+
+  // Checkout state
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [clientSecret, setClientSecret] = useState('');
+  const [pendingSubInfo, setPendingSubInfo] = useState<PendingSubInfo | null>(null);
+  const [stripeTestPromise, setStripeTestPromise] = useState<ReturnType<typeof loadStripe> | null>(null);
 
   const { data: stripeInfo, isLoading, refetch } = useQuery({
     queryKey: ['/api/stripe/status'],
@@ -112,21 +196,30 @@ function StripePage({ onBack }: { onBack: () => void }) {
     refetchInterval: (data: any) => (data && data?.status === 'active') ? 30000 : false,
   });
 
-  const createTestSubMutation = useMutation({
+  const createIntentMutation = useMutation({
     mutationFn: async () => {
       const amountCents = Math.round(parseFloat(testAmount) * 100);
-      return await apiRequest('POST', '/api/owner/stripe/test-subscription', {
+      return await apiRequest('POST', '/api/owner/stripe/test-subscription/create-intent', {
         amount: amountCents,
         interval: testInterval,
         intervalCount: parseInt(testIntervalCount) || 1,
       });
     },
-    onSuccess: () => {
-      toast({ title: "Test Subscription Created", description: "Stripe is charging on the configured schedule." });
-      queryClient.invalidateQueries({ queryKey: ['/api/owner/stripe/test-subscription'] });
+    onSuccess: (data: any) => {
+      setClientSecret(data.clientSecret);
+      setPendingSubInfo({
+        subscriptionId: data.subscriptionId,
+        customerId: data.customerId,
+        amount: data.amount,
+        interval: data.interval,
+        intervalCount: data.intervalCount,
+      });
+      const pubKey = data.testPublicKey || import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+      if (pubKey) setStripeTestPromise(loadStripe(pubKey));
+      setShowCheckout(true);
     },
     onError: (e: any) => {
-      toast({ title: "Failed", description: e.message || "Could not create test subscription", variant: "destructive" });
+      toast({ title: "Failed", description: e.message || "Could not create payment intent", variant: "destructive" });
     },
   });
 
@@ -419,13 +512,13 @@ function StripePage({ onBack }: { onBack: () => void }) {
                       </p>
                     </div>
                     <Button
-                      onClick={() => createTestSubMutation.mutate()}
-                      disabled={createTestSubMutation.isPending || !testAmount || parseFloat(testAmount) < 0.50}
+                      onClick={() => createIntentMutation.mutate()}
+                      disabled={createIntentMutation.isPending || !testAmount || parseFloat(testAmount) < 0.50}
                       className="w-full bg-[#FCD000] text-black font-black text-xs uppercase tracking-widest rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                     >
-                      {createTestSubMutation.isPending
-                        ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Creating...</>
-                        : <><FlaskConical className="w-4 h-4 mr-2" /> Start Test Subscription</>}
+                      {createIntentMutation.isPending
+                        ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Preparing...</>
+                        : <><CreditCard className="w-4 h-4 mr-2" /> Enter Card Details</>}
                     </Button>
                   </div>
                 )}
@@ -434,6 +527,33 @@ function StripePage({ onBack }: { onBack: () => void }) {
           </>
         )}
       </div>
+
+      {/* Stripe Elements checkout dialog */}
+      <Dialog open={showCheckout} onOpenChange={(open) => { if (!open) { setShowCheckout(false); setClientSecret(''); setPendingSubInfo(null); } }}>
+        <DialogContent className="max-w-sm" style={{ background: '#111', border: '2px solid #FCD000' }}>
+          <DialogHeader>
+            <DialogTitle className="text-white font-black text-base uppercase tracking-wide flex items-center gap-2">
+              <FlaskConical className="w-4 h-4 text-[#FCD000]" /> Test Subscription Payment
+            </DialogTitle>
+          </DialogHeader>
+          {clientSecret && pendingSubInfo && stripeTestPromise ? (
+            <Elements
+              stripe={stripeTestPromise}
+              options={{ clientSecret, appearance: { theme: 'night', variables: { colorPrimary: '#FCD000', colorBackground: '#111', borderRadius: '2px' } } }}
+            >
+              <TestSubCheckoutForm
+                pendingInfo={pendingSubInfo}
+                onSuccess={() => { setShowCheckout(false); setClientSecret(''); setPendingSubInfo(null); refetchTestSub(); }}
+                onCancel={() => { setShowCheckout(false); setClientSecret(''); setPendingSubInfo(null); }}
+              />
+            </Elements>
+          ) : (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-[#FCD000]" />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

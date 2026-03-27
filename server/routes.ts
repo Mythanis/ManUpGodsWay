@@ -11616,24 +11616,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const row = rows[0];
 
-      // Refresh status from Stripe if there's an active subscription
+      // Refresh status from Stripe (use test key since this is the test subscription)
       if (row.stripeSubscriptionId && row.status !== 'canceled' && row.status !== 'inactive') {
-        try {
-          const { default: Stripe } = await import('stripe');
-          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-10-16" });
-          const sub = await stripe.subscriptions.retrieve(row.stripeSubscriptionId, { expand: ['latest_invoice.payment_intent'] });
+        const testKey = process.env.TESTING_STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+        if (testKey) {
+          try {
+            const { default: Stripe } = await import('stripe');
+            const stripe = new Stripe(testKey, { apiVersion: "2023-10-16" });
+            const sub = await stripe.subscriptions.retrieve(row.stripeSubscriptionId, { expand: ['latest_invoice.payment_intent'] });
 
-          const invoice = sub.latest_invoice as any;
-          const paymentStatus = invoice?.payment_intent?.status ?? invoice?.status ?? null;
-          const paidAt = invoice?.status_transitions?.paid_at ? new Date(invoice.status_transitions.paid_at * 1000) : row.lastPaymentAt;
+            const invoice = sub.latest_invoice as any;
+            const paymentStatus = invoice?.payment_intent?.status ?? invoice?.status ?? null;
+            const paidAt = invoice?.status_transitions?.paid_at ? new Date(invoice.status_transitions.paid_at * 1000) : row.lastPaymentAt;
 
-          await db.update(schema.stripeTestSubscriptions)
-            .set({ status: sub.status, lastPaymentStatus: paymentStatus, lastPaymentAt: paidAt, updatedAt: new Date() })
-            .where(eq(schema.stripeTestSubscriptions.id, row.id));
+            await db.update(schema.stripeTestSubscriptions)
+              .set({ status: sub.status, lastPaymentStatus: paymentStatus, lastPaymentAt: paidAt, updatedAt: new Date() })
+              .where(eq(schema.stripeTestSubscriptions.id, row.id));
 
-          return res.json({ ...row, status: sub.status, lastPaymentStatus: paymentStatus, lastPaymentAt: paidAt });
-        } catch (stripeErr: any) {
-          console.error("Error refreshing Stripe sub status:", stripeErr.message);
+            return res.json({ ...row, status: sub.status, lastPaymentStatus: paymentStatus, lastPaymentAt: paidAt });
+          } catch (stripeErr: any) {
+            console.error("Error refreshing Stripe test sub status:", stripeErr.message);
+          }
         }
       }
 
@@ -11644,83 +11647,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/owner/stripe/test-subscription', isAuthenticated, async (req: any, res) => {
+  // Create a payment intent for the test subscription (uses test-mode Stripe key)
+  // Returns clientSecret so the frontend can show a real card form via Stripe Elements
+  app.post('/api/owner/stripe/test-subscription/create-intent', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
       if (!user || !isOwner(user)) return res.status(403).json({ message: "Owner access required" });
 
-      if (!process.env.STRIPE_SECRET_KEY) return res.status(400).json({ message: "Stripe not configured" });
+      const testKey = process.env.TESTING_STRIPE_SECRET_KEY;
+      if (!testKey) return res.status(400).json({ message: "TESTING_STRIPE_SECRET_KEY not configured. Add it to your Replit Secrets." });
 
       const { amount, interval, intervalCount } = req.body;
       if (!amount || amount < 50) return res.status(400).json({ message: "Amount must be at least $0.50" });
       if (!['day', 'week', 'month', 'year'].includes(interval)) return res.status(400).json({ message: "Invalid interval" });
 
       const { default: Stripe } = await import('stripe');
-      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" });
+      const stripe = new Stripe(testKey, { apiVersion: "2023-10-16" });
 
-      // Cancel any existing active test subscription first
+      // Cancel any existing test subscription
       const existing = await db.select().from(schema.stripeTestSubscriptions).orderBy(desc(schema.stripeTestSubscriptions.createdAt)).limit(1);
-      if (existing.length && existing[0].stripeSubscriptionId && existing[0].status === 'active') {
+      if (existing.length && existing[0].stripeSubscriptionId && !['canceled', 'inactive'].includes(existing[0].status)) {
         try { await stripe.subscriptions.cancel(existing[0].stripeSubscriptionId); } catch {}
       }
 
-      // Create test customer with a test payment method
-      const customer = await stripe.customers.create({ description: "Owner test subscription customer" });
-      await stripe.paymentMethods.attach('pm_card_visa', { customer: customer.id });
-      await stripe.customers.update(customer.id, { invoice_settings: { default_payment_method: 'pm_card_visa' } });
+      // Create a customer
+      const customer = await stripe.customers.create({ description: "Owner test subscription" });
 
-      // Create price on-the-fly
+      // Create a price
       const price = await stripe.prices.create({
         unit_amount: amount,
         currency: 'usd',
         recurring: { interval, interval_count: intervalCount || 1 },
-        product_data: { name: 'Owner Test Subscription' },
+        product_data: { name: 'Man Up Test Subscription' },
       });
 
-      // Create subscription
+      // Create subscription in default_incomplete mode so we get a PaymentIntent client_secret
       const sub = await stripe.subscriptions.create({
         customer: customer.id,
         items: [{ price: price.id }],
+        payment_behavior: 'default_incomplete',
+        payment_settings: { save_default_payment_method: 'on_subscription' },
         expand: ['latest_invoice.payment_intent'],
       });
 
       const invoice = sub.latest_invoice as any;
-      const paymentStatus = invoice?.payment_intent?.status ?? invoice?.status ?? 'pending';
-      const paidAt = invoice?.status_transitions?.paid_at ? new Date(invoice.status_transitions.paid_at * 1000) : null;
+      const clientSecret = invoice?.payment_intent?.client_secret;
+      if (!clientSecret) return res.status(500).json({ message: "Could not get payment intent client secret from Stripe" });
 
-      // Save to DB (upsert — always just one row)
+      res.json({
+        clientSecret,
+        subscriptionId: sub.id,
+        customerId: customer.id,
+        amount,
+        interval,
+        intervalCount: intervalCount || 1,
+        testPublicKey: process.env.TESTING_VITE_STRIPE_PUBLIC_KEY || '',
+      });
+    } catch (error: any) {
+      console.error("Error creating test subscription intent:", error);
+      res.status(500).json({ message: error.message || "Failed to create test subscription intent" });
+    }
+  });
+
+  // Save the confirmed test subscription to DB (called after Stripe Elements confirms payment)
+  app.post('/api/owner/stripe/test-subscription/save', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isOwner(user)) return res.status(403).json({ message: "Owner access required" });
+
+      const { subscriptionId, customerId, amount, interval, intervalCount } = req.body;
+      if (!subscriptionId) return res.status(400).json({ message: "subscriptionId required" });
+
+      // Verify subscription status from Stripe
+      const testKey = process.env.TESTING_STRIPE_SECRET_KEY;
+      let subStatus = 'active';
+      let paymentStatus = 'succeeded';
+      let paidAt: Date | null = new Date();
+
+      if (testKey) {
+        try {
+          const { default: Stripe } = await import('stripe');
+          const stripe = new Stripe(testKey, { apiVersion: "2023-10-16" });
+          const sub = await stripe.subscriptions.retrieve(subscriptionId, { expand: ['latest_invoice.payment_intent'] });
+          subStatus = sub.status;
+          const invoice = sub.latest_invoice as any;
+          paymentStatus = invoice?.payment_intent?.status ?? invoice?.status ?? 'succeeded';
+          paidAt = invoice?.status_transitions?.paid_at ? new Date(invoice.status_transitions.paid_at * 1000) : new Date();
+        } catch (e: any) {
+          console.error("Error verifying subscription after confirm:", e.message);
+        }
+      }
+
+      const existing = await db.select().from(schema.stripeTestSubscriptions).orderBy(desc(schema.stripeTestSubscriptions.createdAt)).limit(1);
       if (existing.length) {
         await db.update(schema.stripeTestSubscriptions)
-          .set({
-            stripeCustomerId: customer.id,
-            stripeSubscriptionId: sub.id,
-            amount,
-            interval,
-            intervalCount: intervalCount || 1,
-            status: sub.status,
-            lastPaymentStatus: paymentStatus,
-            lastPaymentAt: paidAt,
-            updatedAt: new Date(),
-          })
+          .set({ stripeCustomerId: customerId, stripeSubscriptionId: subscriptionId, amount, interval, intervalCount: intervalCount || 1, status: subStatus, lastPaymentStatus: paymentStatus, lastPaymentAt: paidAt, updatedAt: new Date() })
           .where(eq(schema.stripeTestSubscriptions.id, existing[0].id));
       } else {
-        await db.insert(schema.stripeTestSubscriptions).values({
-          stripeCustomerId: customer.id,
-          stripeSubscriptionId: sub.id,
-          amount,
-          interval,
-          intervalCount: intervalCount || 1,
-          status: sub.status,
-          lastPaymentStatus: paymentStatus,
-          lastPaymentAt: paidAt,
-        });
+        await db.insert(schema.stripeTestSubscriptions).values({ stripeCustomerId: customerId, stripeSubscriptionId: subscriptionId, amount, interval, intervalCount: intervalCount || 1, status: subStatus, lastPaymentStatus: paymentStatus, lastPaymentAt: paidAt });
       }
 
       const [saved] = await db.select().from(schema.stripeTestSubscriptions).orderBy(desc(schema.stripeTestSubscriptions.createdAt)).limit(1);
       res.json(saved);
     } catch (error: any) {
-      console.error("Error creating test subscription:", error);
-      res.status(500).json({ message: error.message || "Failed to create test subscription" });
+      console.error("Error saving test subscription:", error);
+      res.status(500).json({ message: error.message || "Failed to save test subscription" });
     }
   });
 
@@ -11735,9 +11766,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const row = rows[0];
 
       if (row.stripeSubscriptionId && row.status !== 'canceled') {
-        const { default: Stripe } = await import('stripe');
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-10-16" });
-        await stripe.subscriptions.cancel(row.stripeSubscriptionId);
+        const testKey = process.env.TESTING_STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+        if (testKey) {
+          try {
+            const { default: Stripe } = await import('stripe');
+            const stripe = new Stripe(testKey, { apiVersion: "2023-10-16" });
+            await stripe.subscriptions.cancel(row.stripeSubscriptionId);
+          } catch (e: any) {
+            console.error("Error canceling Stripe test subscription:", e.message);
+          }
+        }
       }
 
       await db.update(schema.stripeTestSubscriptions)
