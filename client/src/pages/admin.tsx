@@ -533,13 +533,10 @@ export default function Admin() {
     if (subscriptionStatus === 'active') {
       return <Badge className="text-xs bg-yellow-100 text-yellow-800">Subscriber</Badge>;
     }
-    if (subscriptionStatus === 'trial') {
-      return <Badge className="text-xs bg-blue-100 text-blue-800">Trial</Badge>;
-    }
     if (subscriptionStatus === 'expired' || subscriptionStatus === 'cancelled' || subscriptionStatus === 'past_due') {
       return <Badge className="text-xs bg-gray-100 text-gray-600">Expired</Badge>;
     }
-    return <Badge className="text-xs bg-green-100 text-green-800">Free</Badge>;
+    return <Badge className="text-xs bg-blue-100 text-blue-800">Trial</Badge>;
   };
 
   if (authLoading || !['admin', 'owner'].includes((user as any)?.role)) {
