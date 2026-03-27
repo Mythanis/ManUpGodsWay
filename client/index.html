@@ -36,7 +36,7 @@
         // One-time cache wipe: clears ALL service-worker caches so stale
         // JS/CSS (e.g. old white-background code) is evicted immediately.
         // Bump APP_CACHE_VERSION any time a critical asset change must propagate.
-        var APP_CACHE_VERSION = 'dark-fix-v1';
+        var APP_CACHE_VERSION = 'dark-fix-v2';
         if (localStorage.getItem('appCacheVersion') !== APP_CACHE_VERSION) {
           localStorage.setItem('appCacheVersion', APP_CACHE_VERSION);
           if ('caches' in window) {
@@ -65,8 +65,8 @@
       })();
     </script>
   </head>
-  <body>
-    <div id="root"></div>
+  <body style="background-color:#0a0a0a;color:#f2f2f2;">
+    <div id="root" style="background-color:#0a0a0a;"></div>
     <script type="module" src="/src/main.tsx"></script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
