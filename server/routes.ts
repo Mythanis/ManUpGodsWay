@@ -12827,6 +12827,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         warRoomResult,
         podcastsResult,
         bibleCallsResult,
+        fitnessSubscribersResult,
       ] = await Promise.all([
         db.select({ c: count(schema.studies.id) }).from(schema.studies).where(eq(schema.studies.isPublished, true)),
         db.select({ c: count(schema.videos.id) }).from(schema.videos),
@@ -12837,6 +12838,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         db.select({ c: count(schema.podcasts.id) }).from(schema.podcasts),
         db.select({ c: count(schema.bibleApiCalls.id) }).from(schema.bibleApiCalls)
           .where(sql`${schema.bibleApiCalls.calledAt} >= ${periodStart}`),
+        db.select({ c: count(schema.users.id) }).from(schema.users).where(eq(schema.users.hasFitnessAccess, true)),
       ]);
 
       res.json({
@@ -12848,6 +12850,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         warRoomPosts: warRoomResult[0]?.c ?? 0,
         podcasts: podcastsResult[0]?.c ?? 0,
         bibleApiCallsThisPeriod: bibleCallsResult[0]?.c ?? 0,
+        fitnessSubscribers: fitnessSubscribersResult[0]?.c ?? 0,
         periodStart: periodStart.toISOString(),
       });
     } catch (error) {

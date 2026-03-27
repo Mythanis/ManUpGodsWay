@@ -233,10 +233,11 @@ function OverviewPage({ onBack, users, stats, contentStats }: { onBack: () => vo
       <SubHeader title="Platform Overview" onBack={onBack} />
       <div className="px-6 py-6 space-y-4">
         <SectionCard title="Platform">
-          <StatRow label="Total Members"      value={stats?.totalUsers} />
-          <StatRow label="Active Today"        value={stats?.activeToday} />
-          <StatRow label="New Posts Today"     value={stats?.newPosts} />
-          <StatRow label="Active Subscribers"  value={stats?.activeSubscribers} />
+          <StatRow label="Total Members"           value={stats?.totalUsers} />
+          <StatRow label="Active Today"             value={stats?.activeToday} />
+          <StatRow label="New Posts Today"          value={stats?.newPosts} />
+          <StatRow label="Active Subscribers"       value={stats?.activeSubscribers} />
+          <StatRow label="Fitness Subscribers"      value={contentStats?.fitnessSubscribers} />
         </SectionCard>
 
         <SectionCard title="Content">
