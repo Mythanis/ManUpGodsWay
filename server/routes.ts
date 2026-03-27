@@ -3626,6 +3626,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get journal entries - all saved notes across all studies for the current user
+  app.get('/api/journal', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = await db.execute(
+        sql`
+          SELECT
+            ulp.id,
+            ulp.notes,
+            ulp.updated_at AS "updatedAt",
+            sl.day_number AS "dayNumber",
+            sl.title AS "lessonTitle",
+            s.id AS "studyId",
+            s.title AS "studyTitle"
+          FROM user_lesson_progress ulp
+          JOIN study_lessons sl ON ulp.lesson_id = sl.id
+          JOIN studies s ON sl.study_id = s.id
+          WHERE ulp.user_id = ${userId}
+            AND ulp.notes IS NOT NULL
+            AND ulp.notes != ''
+          ORDER BY ulp.updated_at DESC NULLS LAST
+        `
+      );
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching journal:", error);
+      res.status(500).json({ message: "Failed to fetch journal" });
+    }
+  });
+
   // Get user's lesson progress
   app.get('/api/users/:userId/lesson-progress', isAuthenticated, async (req: any, res) => {
     try {

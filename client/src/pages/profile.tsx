@@ -43,7 +43,9 @@ import {
   Map,
   Heart,
   BookOpen,
-  Trash2
+  Trash2,
+  PenLine,
+  ChevronRight
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -473,6 +475,24 @@ export default function Profile() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* My Journal */}
+      <div className="px-6 mb-6">
+        <Link href="/journal">
+          <Card className="liquid-black border-2 border-[#FCD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(252,208,0,1)] transition-shadow">
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className="bg-[#FCD000] rounded-sm border-2 border-black p-3 shrink-0">
+                <PenLine className="w-5 h-5 text-black" />
+              </div>
+              <div className="flex-1">
+                <p className="font-black text-white uppercase tracking-tight">My Journal</p>
+                <p className="text-xs text-gray-400 font-bold mt-0.5">Review all your study notes in one place</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[#FCD000] shrink-0" />
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Saved Devotionals */}
