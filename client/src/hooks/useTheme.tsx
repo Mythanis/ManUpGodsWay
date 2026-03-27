@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect } from "react";
 
 interface ThemeContextType {
   theme: "dark";
-  setTheme: (theme: string) => void;
+  setTheme: (theme: "dark") => void;
   effectiveTheme: "dark";
 }
 
@@ -16,7 +16,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme: "dark", setTheme: () => {}, effectiveTheme: "dark" }}>
+    <ThemeContext.Provider value={{ theme: "dark", setTheme: (_: "dark") => {}, effectiveTheme: "dark" }}>
       {children}
     </ThemeContext.Provider>
   );
