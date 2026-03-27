@@ -4503,12 +4503,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Mark devotional as complete (awards rations)
+  // Mark devotional as complete (awards rations — once per devotional per user)
   app.post('/api/devotionals/:id/complete', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { id: devotionalId } = req.params;
       
+      // Deduplication: only award if this user hasn't already completed this devotional
+      const [existing] = await db
+        .select({ id: schema.rationTransactions.id })
+        .from(schema.rationTransactions)
+        .where(and(
+          eq(schema.rationTransactions.userId, userId),
+          eq(schema.rationTransactions.missionType, 'devotional_complete'),
+          eq(schema.rationTransactions.referenceId, devotionalId)
+        ))
+        .limit(1);
+
+      if (existing) {
+        // Already awarded — return success but no new rations
+        return res.json({ success: true, alreadyAwarded: true, rations: { success: false, amount: 0 } });
+      }
+
       const { rationsService } = await import('./rations-service');
       
       // Get the devotional's configured reward from DB
