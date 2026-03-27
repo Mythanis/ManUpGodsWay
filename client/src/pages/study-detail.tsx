@@ -999,7 +999,7 @@ export default function StudyDetail() {
                 <div className="discussion-reply-form px-4 py-3 bg-ministry-navy/90">
                   <StudyDiscussionReplyForm 
                     discussionId={studyDiscussion.id}
-                    currentUserTier={(user as any)?.subscriptionTier || 'free'}
+                    currentUserSubscriptionStatus={(user as any)?.subscriptionStatus || 'trial'}
                     study={study}
                   />
                 </div>
@@ -1085,9 +1085,9 @@ function StudyDiscussionReplies({ discussionId }: { discussionId: string }) {
 }
 
 // Component for adding new replies
-function StudyDiscussionReplyForm({ discussionId, currentUserTier, study }: { 
+function StudyDiscussionReplyForm({ discussionId, currentUserSubscriptionStatus, study }: { 
   discussionId: string; 
-  currentUserTier: string; 
+  currentUserSubscriptionStatus: string; 
   study: any;
 }) {
   const { user } = useAuth();
@@ -1134,14 +1134,12 @@ function StudyDiscussionReplyForm({ discussionId, currentUserTier, study }: {
       return;
     }
     
-    // Check tier access for study discussions
+    // Check subscription access for study discussions
     if (study?.requiredTier && study.requiredTier !== 'free') {
-      const hasAccess = currentUserTier !== 'free';
-      
-      if (!hasAccess) {
+      if (currentUserSubscriptionStatus !== 'active') {
         toast({
           title: "Access Restricted",
-          description: `This study discussion requires an active subscription to participate.`,
+          description: "This study discussion requires an active subscription to participate.",
           variant: "destructive",
         });
         return;
@@ -1153,7 +1151,7 @@ function StudyDiscussionReplyForm({ discussionId, currentUserTier, study }: {
 
   // Check if user has access to reply
   const hasReplyAccess = study?.requiredTier && study.requiredTier !== 'free' ?
-    currentUserTier !== 'free' : true;
+    currentUserSubscriptionStatus === 'active' : true;
 
   return (
     <Form {...form}>

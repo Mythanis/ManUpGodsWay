@@ -104,9 +104,9 @@ function DiscussionReplies({ discussionId }: { discussionId: string }) {
 }
 
 // Component for adding new replies
-function DiscussionReplyForm({ discussionId, currentUserTier, discussion }: { 
+function DiscussionReplyForm({ discussionId, currentUserSubscriptionStatus, discussion }: { 
   discussionId: string; 
-  currentUserTier: string; 
+  currentUserSubscriptionStatus: string; 
   discussion: any;
 }) {
   const { user } = useAuth();
@@ -154,12 +154,10 @@ function DiscussionReplyForm({ discussionId, currentUserTier, discussion }: {
     }
     
     if (discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free') {
-      const hasAccess = currentUserTier !== 'free';
-      
-      if (!hasAccess) {
+      if (currentUserSubscriptionStatus !== 'active') {
         toast({
           title: "Access Restricted",
-          description: `This study discussion requires an active subscription to participate.`,
+          description: "This study discussion requires an active subscription to participate.",
           variant: "destructive",
         });
         return;
@@ -171,7 +169,7 @@ function DiscussionReplyForm({ discussionId, currentUserTier, discussion }: {
 
   // Check if user has access to reply
   const hasReplyAccess = discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' ?
-    currentUserTier !== 'free' : true;
+    currentUserSubscriptionStatus === 'active' : true;
 
   return (
     <Form {...form}>
@@ -850,6 +848,7 @@ export default function Community() {
                   onStartDirectMessage={handleStartDirectMessage}
                   onAddToGroup={handleAddToGroup}
                   currentUserTier={(user as any)?.subscriptionTier || 'free'}
+                  currentUserSubscriptionStatus={(user as any)?.subscriptionStatus || 'trial'}
                   data-testid={`discussion-${discussion.id}`}
                 />
               </div>

@@ -46,7 +46,8 @@ interface DiscussionCardProps {
   discussion: any;
   onStartDirectMessage?: (userId: string) => void;
   onAddToGroup?: (userId: string) => void;
-  currentUserTier?: string;
+  currentUserTier?: string; // legacy — kept for callsite compat
+  currentUserSubscriptionStatus?: string;
 }
 
 const replySchema = z.object({
@@ -57,7 +58,8 @@ export default function DiscussionCard({
   discussion, 
   onStartDirectMessage,
   onAddToGroup,
-  currentUserTier = 'free'
+  currentUserTier = 'free',
+  currentUserSubscriptionStatus = 'trial'
 }: DiscussionCardProps) {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
@@ -326,9 +328,9 @@ export default function DiscussionCard({
       return;
     }
     
-    // Check tier access for study discussions
+    // Check subscription access for study discussions
     if (discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free') {
-      if (currentUserTier !== 'subscriber') {
+      if (currentUserSubscriptionStatus !== 'active') {
         toast({
           title: "Access Restricted",
           description: "This study discussion requires an active subscription to participate.",
@@ -375,7 +377,7 @@ export default function DiscussionCard({
   };
 
   const canReply = !(discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' &&
-    currentUserTier !== 'subscriber');
+    currentUserSubscriptionStatus !== 'active');
 
   return (
     <Card className="overflow-hidden w-full border-0 border-b border-white/8 rounded-none shadow-none bg-[#111]" data-testid="discussion-card">

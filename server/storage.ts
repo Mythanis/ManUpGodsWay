@@ -2705,6 +2705,7 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ 
         subscriptionStatus: 'cancelled',
+        subscriptionTier: 'expired',
         updatedAt: new Date()
       })
       .where(eq(users.id, userId))
