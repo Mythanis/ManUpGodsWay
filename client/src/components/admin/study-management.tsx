@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { Edit, Trash2, Plus, Book, Users, Crown, Gem, List, ChevronUp, ChevronDown, Layers, X, Check, BookOpen, CalendarClock } from "lucide-react";
 import { format } from "date-fns";
 
@@ -2365,7 +2366,7 @@ export default function StudyManagement() {
                             const offset = range?.startOffset || 0;
                             const startContainer = range?.startContainer;
                             
-                            el.innerHTML = lessonFormData.content;
+                            el.innerHTML = sanitizeHtml(lessonFormData.content);
                             
                             // Restore cursor position
                             if (startContainer && el.contains(startContainer)) {
