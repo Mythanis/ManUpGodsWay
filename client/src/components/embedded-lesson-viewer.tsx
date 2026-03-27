@@ -509,7 +509,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
 
           {/* Main Content */}
           <div
-            className="prose prose-sm max-w-none prose-invert prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-p:text-gray-200 prose-strong:text-[#FCD000] prose-strong:font-bold prose-em:italic prose-em:text-gray-300 prose-ul:list-disc prose-ul:pl-4 prose-ol:list-decimal prose-ol:pl-4 prose-li:text-gray-200 prose-blockquote:border-l-4 prose-blockquote:border-[#FCD000] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-300 prose-a:text-[#FCD000] prose-a:underline"
+            className="prose prose-base max-w-none prose-invert prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-p:text-gray-200 prose-p:text-base prose-strong:text-[#FCD000] prose-strong:font-bold prose-em:italic prose-em:text-gray-300 prose-ul:list-disc prose-ul:pl-4 prose-ol:list-decimal prose-ol:pl-4 prose-li:text-gray-200 prose-li:text-base prose-blockquote:border-l-4 prose-blockquote:border-[#FCD000] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-300 prose-a:text-[#FCD000] prose-a:underline"
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentLesson.content) }}
             data-testid="content-lesson-body"
           />
@@ -520,7 +520,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
               <p className="text-xs font-black text-black mb-2 uppercase tracking-wide">
                 💡 Key Takeaway
               </p>
-              <p className="text-sm text-black font-medium" data-testid="text-key-takeaway">
+              <p className="text-base text-black font-medium" data-testid="text-key-takeaway">
                 {currentLesson.keyTakeaway}
               </p>
             </div>
