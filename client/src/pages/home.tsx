@@ -1687,15 +1687,32 @@ export default function Home() {
                       <div className="border-t border-gray-700 pt-2">
                         <p className="text-xs text-gray-400 mb-2 text-center">Share on social:</p>
                         <div className="flex gap-2 justify-center">
-                          <a
-                            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://www.manupgodsway.org/share/devotional/${devotional.id}`)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            onClick={async () => {
+                              // Download the meme image
+                              try {
+                                const a = document.createElement('a');
+                                a.href = `/api/devotionals/${devotional.id}/share-image`;
+                                a.download = `manupgodsway-devotional.png`;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                              } catch {}
+                              // Open Facebook after short delay so download triggers first
+                              setTimeout(() => {
+                                window.open('https://www.facebook.com', '_blank');
+                              }, 400);
+                              toast({
+                                title: "Image downloaded!",
+                                description: "Your meme image is saving — go to Facebook and create a post, then attach the image from your downloads.",
+                                duration: 7000,
+                              });
+                            }}
                             className="p-2 bg-[#1877F2] text-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="share-facebook"
                           >
                             <SiFacebook className="w-5 h-5" />
-                          </a>
+                          </button>
                           <a
                             href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n📲 Download the app: www.manupgodsway.org`)}`}
                             target="_blank"
