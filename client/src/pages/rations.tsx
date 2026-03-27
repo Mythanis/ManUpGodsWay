@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Coins, Medal, TrendingUp, Trophy, ArrowLeft, Clock, Plus, Minus, Crown, Target, Flame, Users, ShoppingBag, BookOpen, MessageSquare, Mic, Play, Star, CalendarCheck, Radio, Zap, CheckCircle2, UserPlus, Info } from "lucide-react";
+import { Coins, Medal, TrendingUp, Trophy, ArrowLeft, Clock, Plus, Minus, Crown, Target, Flame, Users, ShoppingBag, BookOpen, Star, Zap, CheckCircle2, Info } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { BackButton } from "@/components/BackButton";
 
@@ -383,13 +383,13 @@ export default function RationsPage() {
                 <div className="flex items-start gap-2 p-3 bg-ministry-gold/10 border border-ministry-gold/30 rounded-sm">
                   <Star className="w-4 h-4 text-ministry-gold flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-zinc-300 leading-relaxed">
-                    <span className="font-bold text-ministry-gold">Pro tip:</span> Build streaks in Studies and Devotionals for massive bonus rations. Consistent men are rewarded men.
+                    <span className="font-bold text-ministry-gold">Pro tip:</span> Stay consistent in Studies, Devotionals, and Challenges. Every completion counts — rations add up fast when you show up daily.
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Mission Categories */}
+            {/* Mission Categories — only what is actually wired up and working */}
             {[
               {
                 label: "Studies",
@@ -399,10 +399,7 @@ export default function RationsPage() {
                 border: "border-blue-700",
                 missions: [
                   { name: "Complete a lesson", rations: 25 },
-                  { name: "Write a reflection", rations: 10 },
-                  { name: "Complete a full study", rations: 100 },
-                  { name: "7-day study streak", rations: 50, bonus: true },
-                  { name: "30-day study streak", rations: 250, bonus: true },
+                  { name: "Complete a full study", rations: 100, bonus: true },
                 ],
               },
               {
@@ -412,10 +409,8 @@ export default function RationsPage() {
                 bg: "bg-amber-950",
                 border: "border-amber-700",
                 missions: [
-                  { name: "Complete daily devotional", rations: 10 },
+                  { name: "Complete daily devotional", rations: 20 },
                   { name: "Submit a reflection", rations: 5 },
-                  { name: "7-day streak", rations: 75, bonus: true },
-                  { name: "30-day streak", rations: 300, bonus: true },
                 ],
               },
               {
@@ -425,74 +420,8 @@ export default function RationsPage() {
                 bg: "bg-green-950",
                 border: "border-green-700",
                 missions: [
-                  { name: "Join a challenge", rations: 20 },
-                  { name: "Daily challenge completion", rations: 30 },
-                  { name: "Complete a challenge", rations: 200, bonus: true },
-                  { name: "Perfect challenge completion", rations: 150, bonus: true },
-                ],
-              },
-              {
-                label: "Events",
-                icon: CalendarCheck,
-                color: "text-purple-400",
-                bg: "bg-purple-950",
-                border: "border-purple-700",
-                missions: [
-                  { name: "Register for an event", rations: 25 },
-                  { name: "Attend an event", rations: 100 },
-                  { name: "Bring another man", rations: 150, bonus: true },
-                  { name: "Volunteer at an event", rations: 200, bonus: true },
-                ],
-              },
-              {
-                label: "Videos",
-                icon: Play,
-                color: "text-red-400",
-                bg: "bg-red-950",
-                border: "border-red-700",
-                missions: [
-                  { name: "Watch 50% of a video", rations: 5 },
-                  { name: "Watch full video", rations: 15 },
-                  { name: "Post a comment", rations: 10 },
-                  { name: "Share a video", rations: 5 },
-                ],
-              },
-              {
-                label: "Podcasts",
-                icon: Mic,
-                color: "text-cyan-400",
-                bg: "bg-cyan-950",
-                border: "border-cyan-700",
-                missions: [
-                  { name: "Listen to 50%", rations: 20 },
-                  { name: "Listen to full episode", rations: 40 },
-                  { name: "Post a comment", rations: 10 },
-                  { name: "Save an episode", rations: 5 },
-                ],
-              },
-              {
-                label: "Live Sessions",
-                icon: Radio,
-                color: "text-orange-400",
-                bg: "bg-orange-950",
-                border: "border-orange-700",
-                missions: [
-                  { name: "Attend a live session", rations: 40 },
-                  { name: "Stay for full session", rations: 25 },
-                  { name: "Participate in session", rations: 15 },
-                  { name: "Watch replay (within 48hr)", rations: 15 },
-                ],
-              },
-              {
-                label: "Profile & Referrals",
-                icon: UserPlus,
-                color: "text-pink-400",
-                bg: "bg-pink-950",
-                border: "border-pink-700",
-                missions: [
-                  { name: "Upload profile photo", rations: 5 },
-                  { name: "Complete full profile", rations: 75, bonus: true },
-                  { name: "Refer a brother", rations: 50, bonus: true },
+                  { name: "Join a challenge", rations: 25 },
+                  { name: "Complete a challenge", rations: 75, bonus: true },
                 ],
               },
             ].map(({ label, icon: Icon, color, bg, border, missions }) => (
@@ -539,13 +468,7 @@ export default function RationsPage() {
               </CardContent>
             </Card>
 
-            {/* Daily cap note */}
-            <div className="flex items-start gap-2 px-1 pb-4">
-              <Info className="w-4 h-4 text-zinc-500 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                Some missions have daily or weekly earning caps to keep things fair. Once you hit the cap, that mission resets the next day or week — so keep showing up consistently.
-              </p>
-            </div>
+            <div className="pb-4" />
           </TabsContent>
         </Tabs>
       </div>
