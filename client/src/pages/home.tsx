@@ -382,6 +382,39 @@ export default function Home() {
     },
   });
 
+  const shareAppMutation = useMutation({
+    mutationFn: () => apiRequest('POST', '/api/share/app'),
+    onSuccess: (data: any) => {
+      if (data?.alreadyAwarded) {
+        toast({ title: "Already shared today", description: data.message || "Come back tomorrow for more rations!" });
+      } else {
+        toast({ title: "+10 Rations Earned!", description: "Thanks for spreading the word, brother!" });
+      }
+    },
+    onError: () => {
+      toast({ title: "Share failed", description: "Could not award rations. Try again.", variant: "destructive" });
+    },
+  });
+
+  const handleShareApp = async () => {
+    const shareUrl = window.location.origin;
+    const shareText = "Join me on Man Up God's Way — faith-based tools for biblical masculinity, Bible studies, discipleship, and brotherhood.";
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Man Up God's Way", text: shareText, url: shareUrl });
+        shareAppMutation.mutate();
+      } catch (err: any) {
+        if (err?.name !== 'AbortError') {
+          toast({ title: "Share failed", description: "Could not open share dialog.", variant: "destructive" });
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+      toast({ title: "Link copied!", description: "Share link copied to clipboard." });
+      shareAppMutation.mutate();
+    }
+  };
+
   const { data: recommendedStudies = [] } = useQuery({
     queryKey: ["/api/studies/recommendations", { limit: 3 }],
     queryFn: async () => {
@@ -1261,6 +1294,31 @@ export default function Home() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Share the App */}
+      <div className="px-6 mb-8">
+        <button
+          onClick={handleShareApp}
+          disabled={shareAppMutation.isPending}
+          className="w-full flex items-center justify-between p-4 bg-black border-2 border-[#FCD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-sm bg-[#FCD000] flex items-center justify-center flex-shrink-0">
+              <Share2 className="w-5 h-5 text-black" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-black text-white uppercase tracking-wide leading-tight">Share the App</p>
+              <p className="text-xs text-white/60 font-medium mt-0.5">Invite a brother — earn +10 rations daily</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black text-[#FCD000] bg-[#FCD000]/10 border border-[#FCD000]/30 px-2 py-0.5 rounded-sm">+10</span>
+            <svg className="w-4 h-4 text-[#FCD000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </button>
       </div>
 
       {/* Progress Tracking Dialog */}

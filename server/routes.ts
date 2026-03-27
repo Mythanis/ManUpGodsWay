@@ -17,7 +17,7 @@ import { warGroupsService } from "./warGroupsService";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
 import * as schema from "@shared/schema";
-import { eq, and, sql, desc, asc, gt, ne, count } from "drizzle-orm";
+import { eq, and, sql, desc, asc, gt, gte, ne, count } from "drizzle-orm";
 import { 
   insertStudySchema, 
   insertStudySeriesSchema,
@@ -12669,6 +12669,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching mission definitions:", error);
       res.status(500).json({ message: "Failed to fetch mission definitions" });
+    }
+  });
+
+  // Share app and earn rations (10 per share, once per day)
+  app.post('/api/share/app', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+
+      // Check if already shared in the last 24 hours
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const [recentShare] = await db
+        .select({ id: schema.rationTransactions.id })
+        .from(schema.rationTransactions)
+        .where(and(
+          eq(schema.rationTransactions.userId, userId),
+          eq(schema.rationTransactions.missionType, 'app_share'),
+          gte(schema.rationTransactions.createdAt, yesterday)
+        ))
+        .limit(1);
+
+      if (recentShare) {
+        return res.json({ success: true, alreadyAwarded: true, message: 'You already earned rations for sharing today. Come back tomorrow!', rations: { success: false, amount: 0 } });
+      }
+
+      const { rationsService } = await import('./rations-service');
+      const rationResult = await rationsService.awardCustomRations(
+        userId, 10, 'profile', 'Shared the app with others', 'app_share', undefined, undefined
+      );
+
+      res.json({ success: true, rations: rationResult });
+    } catch (error) {
+      console.error('Error awarding share rations:', error);
+      res.status(500).json({ message: 'Failed to award rations' });
     }
   });
 
