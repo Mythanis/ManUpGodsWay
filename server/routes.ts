@@ -12929,7 +12929,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bibleKey = process.env.BIBLE_API_KEY;
       if (bibleKey) {
         try {
-          const bibleRes = await fetch('https://rest.api.bible/v1/bibles?language=eng&limit=1', {
+          const bibleRes = await fetch('https://rest.api.bible/v1/bibles?language=eng', {
             headers: { 'api-key': bibleKey },
           });
           services.bibleApi = {
