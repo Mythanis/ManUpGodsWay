@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Devotional } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,6 +56,10 @@ export default function Home() {
   useWebSocket(user?.id);
   const [showFullDevotional, setShowFullDevotional] = useState(false);
   const [pendingDevotionalOpen, setPendingDevotionalOpen] = useState(false);
+  const devotionalOpenedAt = useRef<number | null>(null);
+  const devotionalCompleted = useRef(false);
+  const [reflectionText, setReflectionText] = useState("");
+  const [reflectionSubmitted, setReflectionSubmitted] = useState(false);
   const [isLiked, setIsLiked] = useState(false); // optimistic local state
   const [showPrayerDialog, setShowPrayerDialog] = useState(false);
   const [prayerDuration, setPrayerDuration] = useState("5");
@@ -174,7 +178,65 @@ export default function Home() {
     },
     onError: () => setIsLiked(prev => !prev),
   });
-  
+
+  const completeDevotionalMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("POST", `/api/devotionals/${id}/complete`),
+    onSuccess: (data: any) => {
+      if (data?.rations?.success && data.rations.amount > 0) {
+        toast({
+          title: "Devotional Complete!",
+          description: `+${data.rations.amount} rations earned. Keep showing up, soldier.`,
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/rations"] });
+      }
+    },
+  });
+
+  const submitReflectionMutation = useMutation({
+    mutationFn: (text: string) =>
+      apiRequest("POST", `/api/devotionals/${devotional!.id}/reflection`, { reflection: text }),
+    onSuccess: (data: any) => {
+      setReflectionSubmitted(true);
+      if (data?.rations?.success && data.rations.amount > 0) {
+        toast({
+          title: "Reflection Submitted!",
+          description: `+${data.rations.amount} rations earned for your reflection.`,
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/rations"] });
+      } else {
+        toast({ title: "Reflection Submitted!", description: "Your reflection has been recorded." });
+      }
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Reflection too short",
+        description: "Write at least 50 characters to submit your reflection.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Track when the devotional modal opens so we can award completion rations on close
+  useEffect(() => {
+    if (showFullDevotional) {
+      devotionalOpenedAt.current = Date.now();
+      devotionalCompleted.current = false;
+      setReflectionText("");
+      setReflectionSubmitted(false);
+    }
+  }, [showFullDevotional]);
+
+  const handleDevotionalClose = () => {
+    if (devotional && devotionalOpenedAt.current && !devotionalCompleted.current) {
+      const elapsed = Date.now() - devotionalOpenedAt.current;
+      if (elapsed >= 10000) {
+        devotionalCompleted.current = true;
+        completeDevotionalMutation.mutate(devotional.id);
+      }
+    }
+    setShowFullDevotional(false);
+  };
+
   useEffect(() => {
     if (devotional) {
       triggerRefTagger();
@@ -1565,7 +1627,7 @@ export default function Home() {
       )}
 
       {/* Full Devotional Modal */}
-      <Dialog open={showFullDevotional} onOpenChange={setShowFullDevotional}>
+      <Dialog open={showFullDevotional} onOpenChange={(open) => { if (!open) handleDevotionalClose(); }}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[88svh] flex flex-col liquid-header border-2 border-[#FCD000] rounded-sm shadow-[6px_6px_0px_0px_rgba(252,208,0,0.4)] p-0 overflow-hidden">
           {/* Sticky Header */}
           <div className="relative flex-shrink-0 p-5 pb-4">
@@ -1621,6 +1683,48 @@ export default function Home() {
                     {para.trim()}
                   </p>
                 ))}
+              </div>
+
+              {/* Reflection Section */}
+              <div className="bg-zinc-900 border-2 border-zinc-700 rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-ministry-gold-exact flex-shrink-0" />
+                  <p className="text-white font-black text-xs uppercase tracking-wide">Your Reflection</p>
+                  {!reflectionSubmitted && (
+                    <span className="text-xs text-zinc-500 ml-auto">+5 rations</span>
+                  )}
+                </div>
+                {reflectionSubmitted ? (
+                  <div className="flex items-center gap-2 py-2">
+                    <div className="w-6 h-6 bg-green-700 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Star className="w-3 h-3 text-white" />
+                    </div>
+                    <p className="text-green-400 text-sm font-semibold">Reflection submitted. Well done, soldier.</p>
+                  </div>
+                ) : (
+                  <>
+                    <textarea
+                      value={reflectionText}
+                      onChange={(e) => setReflectionText(e.target.value)}
+                      placeholder="What stood out to you today? How will you apply this to your life? (min. 50 characters)"
+                      className="w-full bg-zinc-800 border border-zinc-600 rounded-sm text-white text-sm p-3 resize-none placeholder:text-zinc-500 focus:outline-none focus:border-ministry-gold-exact"
+                      rows={4}
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs ${reflectionText.length >= 50 ? 'text-green-400' : 'text-zinc-500'}`}>
+                        {reflectionText.length}/50 min
+                      </span>
+                      <Button
+                        size="sm"
+                        disabled={reflectionText.trim().length < 50 || submitReflectionMutation.isPending}
+                        onClick={() => submitReflectionMutation.mutate(reflectionText.trim())}
+                        className="bg-ministry-gold-exact text-black hover:bg-yellow-400 rounded-sm border border-black font-black uppercase text-xs disabled:opacity-40"
+                      >
+                        {submitReflectionMutation.isPending ? "Submitting..." : "Submit Reflection"}
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -1756,7 +1860,7 @@ export default function Home() {
                 
                 <Button 
                   size="sm"
-                  onClick={() => setShowFullDevotional(false)}
+                  onClick={handleDevotionalClose}
                   className="flex-1 bg-ministry-gold-exact text-black hover:bg-yellow-400 rounded-sm border-2 border-black font-black uppercase text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                 >
                   Close
