@@ -80,7 +80,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
     "All devotionals and blog content",
     "Video and podcast library",
     "Community discussions and War Room",
-    "Weekly challenges and fitness plans",
+    "Weekly challenges",
   ];
 
   const isTrialEligible = trialEligibility?.eligible ?? false;
