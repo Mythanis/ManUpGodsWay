@@ -245,7 +245,9 @@ function Router() {
               <Route path="/more-man-up" component={MoreManUp} />
             </>
           )}
-          <Route component={NotFound} />
+          <Route>
+            {isAuthenticated ? <Redirect to="/" /> : <NotFound />}
+          </Route>
         </Switch>
 
         {/* Persistent Account Settings Button for authenticated users */}

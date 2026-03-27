@@ -20,7 +20,7 @@ export function AccountSettingsButton() {
             onClick={handleClick}
             className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm border-ministry-charcoal/40 hover:bg-accent/80 shadow-sm"
           >
-            <Settings className="h-4 w-4" />
+            <Settings className="h-4 w-4 text-ministry-gold-exact" />
             <span className="sr-only">Account Settings</span>
           </Button>
         </TooltipTrigger>
