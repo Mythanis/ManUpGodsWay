@@ -276,8 +276,8 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
     }
   };
 
-  const getTierBadge = (tier: string) => {
-    if (tier !== 'free') {
+  const getTierBadge = (_tier: string, subscriptionStatus: string) => {
+    if (subscriptionStatus === 'active') {
       return <Badge className="bg-[#FCD000] text-black text-[10px] font-black uppercase border-2 border-black rounded-sm px-1.5 py-0">Sub</Badge>;
     }
     return null;
@@ -371,7 +371,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                         {user.firstName} {user.lastName}
                       </p>
                       {getRoleBadge(user.role)}
-                      {getTierBadge(user.subscriptionTier)}
+                      {getTierBadge(user.subscriptionTier, user.subscriptionStatus)}
                     </div>
                     <p className="text-xs text-gray-500 truncate" data-testid="text-user-email">
                       {user.email} • {getLastActive(user.updatedAt)}
