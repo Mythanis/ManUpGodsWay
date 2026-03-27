@@ -683,6 +683,18 @@ export const insertSavedDevotionalSchema = createInsertSchema(savedDevotionals).
 export type InsertSavedDevotional = z.infer<typeof insertSavedDevotionalSchema>;
 export type SavedDevotional = typeof savedDevotionals.$inferSelect;
 
+// Devotional reflections (one per user per devotional)
+export const devotionalReflections = pgTable("devotional_reflections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  devotionalId: varchar("devotional_id").notNull().references(() => devotionals.id, { onDelete: 'cascade' }),
+  text: text("text").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.devotionalId),
+]);
+export type DevotionalReflection = typeof devotionalReflections.$inferSelect;
+
 // Free-form journal entries (not tied to a specific lesson)
 export const journalEntries = pgTable("journal_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

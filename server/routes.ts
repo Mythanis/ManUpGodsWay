@@ -4534,7 +4534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Submit devotional reflection (awards rations)
+  // Submit devotional reflection (saves text + awards rations)
   app.post('/api/devotionals/:id/reflection', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -4545,6 +4545,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Reflection must be at least 50 characters" });
       }
       
+      // Persist the reflection text
+      await storage.saveDevotionalReflection(userId, devotionalId, reflection.trim());
+
       const { rationsService } = await import('./rations-service');
       const rationResult = await rationsService.awardRations(userId, 'devotional_reflection', devotionalId, 'devotional');
       
@@ -4555,6 +4558,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error submitting devotional reflection:", error);
       res.status(500).json({ message: "Failed to submit reflection" });
+    }
+  });
+
+  // Get all devotional reflections for current user
+  app.get('/api/devotionals/reflections', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const reflections = await storage.getDevotionalReflections(userId);
+      res.json(reflections);
+    } catch (error) {
+      console.error("Error fetching reflections:", error);
+      res.status(500).json({ message: "Failed to fetch reflections" });
+    }
+  });
+
+  // Get reflection for a specific devotional
+  app.get('/api/devotionals/:id/reflection', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const reflection = await storage.getDevotionalReflection(userId, req.params.id);
+      res.json(reflection || null);
+    } catch (error) {
+      console.error("Error fetching reflection:", error);
+      res.status(500).json({ message: "Failed to fetch reflection" });
     }
   });
 

@@ -159,6 +159,13 @@ export default function Profile() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['/api/devotionals/saved'] }),
   });
 
+  // Devotional reflections
+  const { data: devotionalReflections = [] } = useQuery<any[]>({
+    queryKey: ['/api/devotionals/reflections'],
+    enabled: !!user,
+  });
+  const reflectionMap = Object.fromEntries(devotionalReflections.map((r: any) => [r.devotionalId, r.text]));
+
   // Cancel main subscription
   const cancelSubscriptionMutation = useMutation({
     mutationFn: async () => {
@@ -534,6 +541,11 @@ export default function Profile() {
                           {devDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
                           {' · '}Saved {savedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
                         </p>
+                        {reflectionMap[dev.id] && (
+                          <div className="mt-2 bg-white/5 rounded-sm p-2 border-l-2 border-ministry-gold-exact/50">
+                            <p className="text-xs text-white/60 italic leading-relaxed line-clamp-3">"{reflectionMap[dev.id]}"</p>
+                          </div>
+                        )}
                       </div>
                       <button
                         onClick={() => unsaveDevotionalMutation.mutate(dev.id)}
@@ -550,6 +562,39 @@ export default function Profile() {
           </CardContent>
         </Card>
       </div>
+
+      {/* My Devotional Reflections */}
+      {devotionalReflections.length > 0 && (
+        <div className="px-6 mb-6">
+          <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>
+            My Reflections
+          </h2>
+          <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+            <CardContent className="p-0">
+              <div className="divide-y divide-ministry-gold-exact/20">
+                {devotionalReflections.map((item: any) => {
+                  const dev = item.devotional;
+                  const reflectionDate = new Date(item.createdAt);
+                  return (
+                    <div key={item.id} className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <PenLine className="w-3.5 h-3.5 text-ministry-gold-exact flex-shrink-0" />
+                        <p className="font-black text-white text-xs uppercase tracking-wide leading-tight line-clamp-1">{dev.title}</p>
+                        <span className="text-xs text-white/30 ml-auto shrink-0">
+                          {reflectionDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
+                        </span>
+                      </div>
+                      <div className="bg-white/5 rounded-sm p-3 border-l-2 border-ministry-gold-exact/50">
+                        <p className="text-sm text-white/70 italic leading-relaxed">"{item.text}"</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Settings Menu */}
       <div className="px-6 mb-6">

@@ -187,6 +187,8 @@ import {
   type PrayerReminder,
   dailyAppReminders,
   type DailyAppReminder,
+  devotionalReflections,
+  type DevotionalReflection,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne } from "drizzle-orm";
@@ -317,6 +319,9 @@ export interface IStorage {
   isDevotionalSaved(userId: string, devotionalId: string): Promise<boolean>;
   toggleSaveDevotional(userId: string, devotionalId: string): Promise<boolean>;
   deleteDevotional(id: string): Promise<void>;
+  saveDevotionalReflection(userId: string, devotionalId: string, text: string): Promise<void>;
+  getDevotionalReflections(userId: string): Promise<(DevotionalReflection & { devotional: Devotional })[]>;
+  getDevotionalReflection(userId: string, devotionalId: string): Promise<DevotionalReflection | undefined>;
   
   // Rating operations
   rateStudy(rating: InsertStudyRating): Promise<StudyRating>;
@@ -2463,6 +2468,34 @@ export class DatabaseStorage implements IStorage {
       await db.insert(savedDevotionals).values({ userId, devotionalId });
       return true;
     }
+  }
+
+  async saveDevotionalReflection(userId: string, devotionalId: string, text: string): Promise<void> {
+    await db.insert(devotionalReflections)
+      .values({ userId, devotionalId, text })
+      .onConflictDoUpdate({
+        target: [devotionalReflections.userId, devotionalReflections.devotionalId],
+        set: { text, createdAt: new Date() },
+      });
+  }
+
+  async getDevotionalReflections(userId: string): Promise<(DevotionalReflection & { devotional: Devotional })[]> {
+    const rows = await db
+      .select()
+      .from(devotionalReflections)
+      .innerJoin(devotionals, eq(devotionalReflections.devotionalId, devotionals.id))
+      .where(eq(devotionalReflections.userId, userId))
+      .orderBy(desc(devotionalReflections.createdAt));
+    return rows.map(r => ({ ...r.devotional_reflections, devotional: r.devotionals }));
+  }
+
+  async getDevotionalReflection(userId: string, devotionalId: string): Promise<DevotionalReflection | undefined> {
+    const [row] = await db
+      .select()
+      .from(devotionalReflections)
+      .where(and(eq(devotionalReflections.userId, userId), eq(devotionalReflections.devotionalId, devotionalId)))
+      .limit(1);
+    return row;
   }
 
   async getAvailableDevotionalsWithoutNotifications(): Promise<Devotional[]> {
