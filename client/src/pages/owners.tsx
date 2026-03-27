@@ -225,7 +225,7 @@ function StripePage({ onBack }: { onBack: () => void }) {
 
 function OverviewPage({ onBack, users, stats, contentStats }: { onBack: () => void; users: any[]; stats: any; contentStats: any }) {
   const periodLabel = contentStats?.periodStart
-    ? `Since ${new Date(contentStats.periodStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+    ? `Since ${new Date(contentStats.periodStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}`
     : 'This billing period';
 
   return (
