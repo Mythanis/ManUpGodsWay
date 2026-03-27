@@ -7,12 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Search, MapPin, Users, User, Map, List, Mail, Plus, Shield, BookOpen, Award, Headphones, CheckCircle, ShoppingBag, Play } from "lucide-react";
+import { Search, MapPin, Users, User, Map, List, Mail, Plus, Shield, BookOpen, Award, Headphones, CheckCircle, ShoppingBag } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 
 interface SystemSettings {
   warGroupsVideoUrl: string | null;
   warGroupsVideoTitle: string | null;
+  warGroupsCalendlyUrl: string | null;
 }
 
 const WarGroupsMap = lazy(() => import("@/components/WarGroupsMap"));
@@ -97,22 +98,6 @@ export default function WarGroups() {
   const { data: systemSettings } = useQuery<SystemSettings>({
     queryKey: ['/api/system-settings'],
   });
-
-  // Helper to extract YouTube/Vimeo embed URL
-  const getEmbedUrl = (url: string): string | null => {
-    if (!url) return null;
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-    const match = url.match(youtubeRegex);
-    if (match && match[1]) {
-      return `https://www.youtube.com/embed/${match[1]}`;
-    }
-    const vimeoRegex = /vimeo\.com\/(?:.*\/)?(\d+)/;
-    const vimeoMatch = url.match(vimeoRegex);
-    if (vimeoMatch && vimeoMatch[1]) {
-      return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-    }
-    return url;
-  };
 
   const initialLoading = isLoading && myGroupsLoading && groups.length === 0;
 
@@ -213,30 +198,28 @@ export default function WarGroups() {
         {/* About War Groups Content */}
         {activeTab === 'about' && (
           <div className="space-y-6">
-            {/* Explainer Video Section */}
-            {systemSettings?.warGroupsVideoUrl && getEmbedUrl(systemSettings.warGroupsVideoUrl) && (
+            {/* Schedule a Call Section (Calendly) */}
+            {systemSettings?.warGroupsCalendlyUrl && (
               <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
                 <CardHeader className="pb-3 relative z-10">
                   <div className="flex items-center gap-3">
                     <div className="bg-ministry-gold-exact w-12 h-12 flex items-center justify-center border-2 border-black">
-                      <Play className="h-6 w-6 text-black" />
+                      <Mail className="h-6 w-6 text-black" />
                     </div>
-                    <CardTitle className="text-xl text-white font-black tracking-tight uppercase">
-                      {systemSettings.warGroupsVideoTitle || "Watch This First"}
-                    </CardTitle>
+                    <div>
+                      <CardTitle className="text-xl text-white font-black tracking-tight uppercase">Schedule a Call</CardTitle>
+                      <p className="text-gray-400 text-sm mt-0.5">Talk with us about joining or starting a War Group</p>
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0 relative z-10">
-                  <div className="aspect-video bg-black border-2 border-ministry-gold-exact overflow-hidden">
-                    <iframe
-                      src={getEmbedUrl(systemSettings.warGroupsVideoUrl) || ""}
-                      className="w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      title={systemSettings.warGroupsVideoTitle || "War Groups Explainer Video"}
-                      data-testid="video-war-groups-explainer"
-                    />
-                  </div>
+                <CardContent className="pt-0 relative z-10 px-0 pb-0">
+                  <iframe
+                    src={`${systemSettings.warGroupsCalendlyUrl}?background_color=0a0a0a&text_color=ffffff&primary_color=FCD000&hide_event_type_details=0&hide_gdpr_banner=1`}
+                    className="w-full border-0"
+                    style={{ minHeight: 700 }}
+                    title="Schedule a War Groups Call"
+                    data-testid="calendly-war-groups"
+                  />
                 </CardContent>
               </Card>
             )}

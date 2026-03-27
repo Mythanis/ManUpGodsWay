@@ -6,13 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Video, Home, Shield } from "lucide-react";
+import { Loader2, Home, Shield, Calendar } from "lucide-react";
 
 interface SystemSettings {
   id: string;
   homepageTagline: string;
-  warGroupsVideoUrl: string | null;
-  warGroupsVideoTitle: string | null;
+  warGroupsCalendlyUrl: string | null;
   updatedBy: string;
   createdAt: string;
   updatedAt: string;
@@ -22,80 +21,52 @@ export default function SystemSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [tagline, setTagline] = useState("");
-  const [videoUrl, setVideoUrl] = useState("");
-  const [videoTitle, setVideoTitle] = useState("");
+  const [calendlyUrl, setCalendlyUrl] = useState("");
 
-  // Fetch system settings
   const { data: settings, isLoading } = useQuery({
     queryKey: ['api', 'system-settings'],
     queryFn: () => fetch('/api/system-settings').then(res => res.json()) as Promise<SystemSettings>
   });
 
-  // Update homepage tagline mutation
   const updateTaglineMutation = useMutation({
     mutationFn: (data: { homepageTagline: string }) =>
       fetch('/api/system-settings', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['api', 'system-settings'] });
-      toast({
-        title: "Success",
-        description: "Homepage tagline updated successfully"
-      });
+      toast({ title: "Success", description: "Homepage tagline updated successfully" });
     },
     onError: (error: any) => {
-      console.error("Error updating system settings:", error);
-      toast({
-        title: "Error", 
-        description: error.message || "Failed to update settings",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: error.message || "Failed to update settings", variant: "destructive" });
     }
   });
 
-  // Update war groups video mutation
-  const updateVideoMutation = useMutation({
-    mutationFn: (data: { warGroupsVideoUrl: string; warGroupsVideoTitle: string }) =>
+  const updateCalendlyMutation = useMutation({
+    mutationFn: (data: { warGroupsCalendlyUrl: string }) =>
       fetch('/api/system-settings', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['api', 'system-settings'] });
-      toast({
-        title: "Success",
-        description: "War Groups video updated successfully"
-      });
+      toast({ title: "Success", description: "Calendly link updated successfully" });
     },
     onError: (error: any) => {
-      console.error("Error updating video settings:", error);
-      toast({
-        title: "Error", 
-        description: error.message || "Failed to update video settings",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: error.message || "Failed to update Calendly link", variant: "destructive" });
     }
   });
 
-  // Initialize values when settings load
   React.useEffect(() => {
     if (settings) {
       if (settings.homepageTagline && tagline !== settings.homepageTagline) {
         setTagline(settings.homepageTagline);
       }
-      if (settings.warGroupsVideoUrl !== undefined && videoUrl !== (settings.warGroupsVideoUrl || "")) {
-        setVideoUrl(settings.warGroupsVideoUrl || "");
-      }
-      if (settings.warGroupsVideoTitle !== undefined && videoTitle !== (settings.warGroupsVideoTitle || "")) {
-        setVideoTitle(settings.warGroupsVideoTitle || "Welcome to War Groups");
+      if (settings.warGroupsCalendlyUrl !== undefined && calendlyUrl !== (settings.warGroupsCalendlyUrl || "")) {
+        setCalendlyUrl(settings.warGroupsCalendlyUrl || "");
       }
     }
   }, [settings]);
@@ -103,41 +74,20 @@ export default function SystemSettings() {
   const handleTaglineSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!tagline.trim()) {
-      toast({
-        title: "Error",
-        description: "Homepage tagline cannot be empty",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Homepage tagline cannot be empty", variant: "destructive" });
       return;
     }
     updateTaglineMutation.mutate({ homepageTagline: tagline });
   };
 
-  const handleVideoSubmit = (e: React.FormEvent) => {
+  const handleCalendlySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateVideoMutation.mutate({ 
-      warGroupsVideoUrl: videoUrl.trim(),
-      warGroupsVideoTitle: videoTitle.trim() || "Welcome to War Groups"
-    });
-  };
-
-  // Helper to extract YouTube embed URL
-  const getEmbedUrl = (url: string): string | null => {
-    if (!url) return null;
-    // Handle various YouTube URL formats
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-    const match = url.match(youtubeRegex);
-    if (match && match[1]) {
-      return `https://www.youtube.com/embed/${match[1]}`;
+    const url = calendlyUrl.trim();
+    if (url && !url.includes('calendly.com')) {
+      toast({ title: "Error", description: "Please enter a valid Calendly URL (e.g. https://calendly.com/your-name/meeting)", variant: "destructive" });
+      return;
     }
-    // Handle Vimeo
-    const vimeoRegex = /vimeo\.com\/(?:.*\/)?(\d+)/;
-    const vimeoMatch = url.match(vimeoRegex);
-    if (vimeoMatch && vimeoMatch[1]) {
-      return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-    }
-    // Return as-is if already an embed URL or other format
-    return url;
+    updateCalendlyMutation.mutate({ warGroupsCalendlyUrl: url });
   };
 
   if (isLoading) {
@@ -151,7 +101,7 @@ export default function SystemSettings() {
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-bold text-ministry-charcoal mb-4">System Settings</h2>
-      
+
       {/* Homepage Settings */}
       <Card>
         <CardHeader>
@@ -177,98 +127,73 @@ export default function SystemSettings() {
                 This message will appear on the homepage for all users.
               </p>
             </div>
-
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={updateTaglineMutation.isPending || tagline === settings?.homepageTagline}
               className="bg-ministry-charcoal hover:bg-ministry-charcoal/90 text-white"
               data-testid="button-update-tagline"
             >
               {updateTaglineMutation.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Updating...
-                </>
-              ) : (
-                "Update Tagline"
-              )}
+                <><Loader2 className="h-4 w-4 animate-spin mr-2" />Updating...</>
+              ) : "Update Tagline"}
             </Button>
           </form>
         </CardContent>
       </Card>
 
-      {/* War Groups Video Settings */}
+      {/* War Groups Calendly Settings */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-ministry-gold" />
             <div>
-              <CardTitle>War Groups Explainer Video</CardTitle>
+              <CardTitle>War Groups — Schedule a Call</CardTitle>
               <CardDescription>
-                Add a video to the War Groups welcome page to explain what War Groups are about
+                Add your Calendly link so men can book a call to learn about or join a War Group
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleVideoSubmit} className="space-y-4">
+          <form onSubmit={handleCalendlySubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="videoTitle">Video Title</Label>
+              <Label htmlFor="calendlyUrl">Calendly URL</Label>
               <Input
-                id="videoTitle"
-                value={videoTitle}
-                onChange={(e) => setVideoTitle(e.target.value)}
-                placeholder="Welcome to War Groups"
-                data-testid="input-video-title"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="videoUrl">Video URL</Label>
-              <Input
-                id="videoUrl"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=... or Vimeo URL"
-                data-testid="input-video-url"
+                id="calendlyUrl"
+                value={calendlyUrl}
+                onChange={(e) => setCalendlyUrl(e.target.value)}
+                placeholder="https://calendly.com/your-name/war-groups-call"
+                data-testid="input-calendly-url"
               />
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Supports YouTube and Vimeo URLs. Leave empty to hide the video section.
+                Paste your Calendly scheduling link. Leave empty to hide the section on the War Groups page.
               </p>
             </div>
 
-            {/* Video Preview */}
-            {videoUrl && getEmbedUrl(videoUrl) && (
+            {/* Live preview */}
+            {calendlyUrl && calendlyUrl.includes('calendly.com') && (
               <div className="space-y-2">
                 <Label>Preview</Label>
-                <div className="aspect-video bg-black rounded-lg overflow-hidden border">
+                <div className="border rounded-lg overflow-hidden bg-black" style={{ height: 500 }}>
                   <iframe
-                    src={getEmbedUrl(videoUrl) || ""}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    title="Video Preview"
+                    src={`${calendlyUrl}?background_color=0a0a0a&text_color=ffffff&primary_color=FCD000&hide_gdpr_banner=1`}
+                    className="w-full h-full border-0"
+                    title="Calendly Preview"
                   />
                 </div>
               </div>
             )}
 
-            <Button 
-              type="submit" 
-              disabled={updateVideoMutation.isPending}
+            <Button
+              type="submit"
+              disabled={updateCalendlyMutation.isPending}
               className="bg-ministry-charcoal hover:bg-ministry-charcoal/90 text-white"
-              data-testid="button-update-video"
+              data-testid="button-update-calendly"
             >
-              {updateVideoMutation.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Updating...
-                </>
+              {updateCalendlyMutation.isPending ? (
+                <><Loader2 className="h-4 w-4 animate-spin mr-2" />Updating...</>
               ) : (
-                <>
-                  <Video className="h-4 w-4 mr-2" />
-                  Update Video
-                </>
+                <><Calendar className="h-4 w-4 mr-2" />Save Calendly Link</>
               )}
             </Button>
           </form>
