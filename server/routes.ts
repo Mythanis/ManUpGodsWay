@@ -12090,6 +12090,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const rationResult = await rationsService.awardRations(userId, 'war_group_post', post.id, 'war_group_post');
       
       res.status(201).json({ ...post, rations: rationResult });
+
+      // Fire-and-forget: notify all approved members of the new post (except the poster)
+      (async () => {
+        try {
+          const [group, poster, members] = await Promise.all([
+            warGroupsService.getGroupById(groupId),
+            storage.getUser(userId),
+            warGroupsService.getGroupMembers(groupId, 'approved'),
+          ]);
+          const posterName = poster?.firstName ? `${poster.firstName}${poster.lastName ? ' ' + poster.lastName : ''}` : 'A member';
+          const groupName = group?.name || 'your War Group';
+          const preview = (content || '').trim().slice(0, 80) + ((content || '').length > 80 ? '…' : '');
+          const targets = members.filter(m => m.userId !== userId).map(m => m.userId);
+          await Promise.allSettled(targets.map(memberId =>
+            sendPushNotification(memberId, {
+              title: `New post in ${groupName}`,
+              body: preview ? `${posterName}: ${preview}` : `${posterName} posted something new`,
+              icon: '/icon-192.png',
+              badge: '/icon-192.png',
+              tag: `war-group-post-${post.id}`,
+              url: `/war-groups/${groupId}`,
+            })
+          ));
+        } catch (e) {
+          console.error('War group post push notification error:', e);
+        }
+      })();
     } catch (error: any) {
       console.error('Error creating group post:', error);
       res.status(403).json({ message: error.message || 'Failed to create group post' });
@@ -12209,6 +12236,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const rationResult = await rationsService.awardRations(userId, 'war_group_comment', reply.id, 'war_group_reply');
       
       res.status(201).json({ ...reply, rations: rationResult });
+
+      // Fire-and-forget: notify the original post author (if they're not the replier)
+      (async () => {
+        try {
+          const [post, replier] = await Promise.all([
+            (async () => {
+              const [p] = await db.select().from(schema.warGroupPosts).where(eq(schema.warGroupPosts.id, postId)).limit(1);
+              return p;
+            })(),
+            storage.getUser(userId),
+          ]);
+          if (!post || post.userId === userId) return; // Don't notify yourself
+          const [group] = await Promise.all([warGroupsService.getGroupById(post.groupId)]);
+          const replierName = replier?.firstName ? `${replier.firstName}${replier.lastName ? ' ' + replier.lastName : ''}` : 'Someone';
+          const groupName = group?.name || 'your War Group';
+          const preview = content.trim().slice(0, 80) + (content.length > 80 ? '…' : '');
+          await sendPushNotification(post.userId, {
+            title: `${replierName} replied to your post`,
+            body: preview ? `${preview} — in ${groupName}` : `New reply in ${groupName}`,
+            icon: '/icon-192.png',
+            badge: '/icon-192.png',
+            tag: `war-group-reply-${reply.id}`,
+            url: `/war-groups/${post.groupId}`,
+          });
+        } catch (e) {
+          console.error('War group reply push notification error:', e);
+        }
+      })();
     } catch (error: any) {
       console.error('Error creating post reply:', error);
       res.status(403).json({ message: error.message || 'Failed to create reply' });
