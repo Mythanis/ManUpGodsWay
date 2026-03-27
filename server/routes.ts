@@ -12192,6 +12192,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete('/api/war-groups/:id/posts/:postId/replies/:replyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId, replyId } = req.params;
+      await warGroupsService.deleteGroupPostReply(replyId, userId);
+      res.status(204).send();
+    } catch (error: any) {
+      console.error('Error deleting group post reply:', error);
+      res.status(403).json({ message: error.message || 'Failed to delete reply' });
+    }
+  });
+
   app.post('/api/war-groups/:id/posts/:postId/pin', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

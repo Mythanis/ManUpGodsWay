@@ -1062,12 +1062,27 @@ function PostCard({
   onSubmitReply,
   isSubmittingReply,
 }: PostCardProps) {
+  const { toast } = useToast();
   const canDelete = post.userId === currentUserId || isLeader;
 
   // Fetch replies when expanded
   const { data: replies = [] } = useQuery<GroupReply[]>({
     queryKey: [`/api/war-groups/${groupId}/posts/${post.id}/replies`],
     enabled: isExpanded,
+  });
+
+  // Delete reply mutation
+  const deleteReplyMutation = useMutation({
+    mutationFn: (replyId: string) =>
+      apiRequest('DELETE', `/api/war-groups/${groupId}/posts/${post.id}/replies/${replyId}`),
+    onSuccess: () => {
+      toast({ title: "Deleted", description: "Reply has been removed" });
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${groupId}/posts/${post.id}/replies`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${groupId}/posts`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to delete reply", variant: "destructive" });
+    },
   });
 
   return (
@@ -1230,6 +1245,16 @@ function PostCard({
                         <span className="text-black/50 text-xs font-medium">
                           {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
                         </span>
+                        {(reply.userId === currentUserId || isLeader) && (
+                          <button
+                            onClick={() => deleteReplyMutation.mutate(reply.id)}
+                            disabled={deleteReplyMutation.isPending}
+                            className="ml-auto text-black/30 hover:text-red-500 transition-colors p-0.5"
+                            title="Delete reply"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </div>
                       <p className="text-black text-sm font-medium leading-relaxed mt-1">{reply.content}</p>
                     </div>

@@ -1008,6 +1008,32 @@ export class WarGroupsService {
     return newReply;
   }
 
+  async deleteGroupPostReply(replyId: string, userId: string) {
+    const [reply] = await db.select()
+      .from(schema.warGroupPostReplies)
+      .where(eq(schema.warGroupPostReplies.id, replyId))
+      .limit(1);
+
+    if (!reply) throw new Error('Reply not found');
+
+    // Allow reply author or group leader to delete
+    const [post] = await db.select().from(schema.warGroupPosts).where(eq(schema.warGroupPosts.id, reply.postId)).limit(1);
+    const group = post ? await this.getGroupById(post.groupId) : null;
+    if (reply.userId !== userId && group?.leaderId !== userId) {
+      throw new Error('Only the reply author or group leader can delete this reply');
+    }
+
+    await db.delete(schema.warGroupPostReplies).where(eq(schema.warGroupPostReplies.id, replyId));
+
+    // Decrement reply count on the post
+    if (post) {
+      await db.update(schema.warGroupPosts)
+        .set({ replyCount: sql`GREATEST(${schema.warGroupPosts.replyCount} - 1, 0)` })
+        .where(eq(schema.warGroupPosts.id, post.id));
+    }
+    return { success: true };
+  }
+
   async togglePinPost(postId: string, userId: string) {
     const [post] = await db.select()
       .from(schema.warGroupPosts)
