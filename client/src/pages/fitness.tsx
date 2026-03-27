@@ -259,8 +259,7 @@ export default function Fitness() {
 
   const createPostMutation = useMutation({
     mutationFn: async (data: { content: string; category: string; mediaUrls?: string[]; mediaTypes?: string[] }) => {
-      const res = await apiRequest('POST', '/api/fitness/community/posts', data);
-      return res.json();
+      return await apiRequest('POST', '/api/fitness/community/posts', data);
     },
     onSuccess: () => {
       setCommunityPostText('');
@@ -275,8 +274,7 @@ export default function Fitness() {
 
   const likePostMutation = useMutation({
     mutationFn: async (postId: string) => {
-      const res = await apiRequest('POST', `/api/fitness/community/posts/${postId}/like`);
-      return res.json();
+      return await apiRequest('POST', `/api/fitness/community/posts/${postId}/like`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/fitness/community/posts'] });
@@ -285,8 +283,7 @@ export default function Fitness() {
 
   const deletePostMutation = useMutation({
     mutationFn: async (postId: string) => {
-      const res = await apiRequest('DELETE', `/api/fitness/community/posts/${postId}`);
-      return res.json();
+      return await apiRequest('DELETE', `/api/fitness/community/posts/${postId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/fitness/community/posts'] });
