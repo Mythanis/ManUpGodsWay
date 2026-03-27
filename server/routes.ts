@@ -9463,7 +9463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId: schema.fitnessPosts.userId,
           authorName: schema.users.firstName,
           authorLastName: schema.users.lastName,
-          authorProfilePicture: schema.users.profilePicture,
+          authorProfilePicture: schema.users.profileImageUrl,
         })
         .from(schema.fitnessPosts)
         .leftJoin(schema.users, eq(schema.fitnessPosts.userId, schema.users.id))
