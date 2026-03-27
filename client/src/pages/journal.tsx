@@ -8,12 +8,13 @@ import { BackButton } from "@/components/BackButton";
 
 interface JournalEntry {
   id: string;
-  notes: string;
-  updatedAt: string;
-  dayNumber: number;
-  lessonTitle: string;
-  studyId: string;
-  studyTitle: string;
+  content: string;
+  createdAt: string;
+  dayNumber?: number;
+  lessonTitle?: string;
+  studyId?: string;
+  studyTitle?: string;
+  type: "lesson_note" | "journal_entry";
 }
 
 export default function Journal() {
@@ -45,7 +46,7 @@ export default function Journal() {
               My Journal
             </h1>
             <p className="text-xs text-gray-400 uppercase tracking-wide font-bold">
-              Study Notes Collection
+              All Study Notes &amp; Entries
             </p>
           </div>
           <div className="bg-[#FCD000] rounded-sm border-2 border-black p-2">
@@ -71,7 +72,7 @@ export default function Journal() {
               </div>
               <p className="text-white font-black uppercase tracking-wide">No Journal Entries Yet</p>
               <p className="text-gray-400 text-sm">
-                Start a study and save notes on any lesson — they'll appear here as journal entries.
+                Save notes on any lesson or add entries from within a study — they'll all appear here.
               </p>
             </CardContent>
           </Card>
@@ -86,26 +87,45 @@ export default function Journal() {
               style={{ background: "#111" }}
             >
               {/* Entry header */}
-              <div className="bg-[#FCD000] px-4 py-3 border-b-2 border-black">
+              <div className={`px-4 py-3 border-b-2 border-black ${entry.type === "lesson_note" ? "bg-[#FCD000]" : "bg-white/10"}`}>
                 <div
                   className="flex items-start gap-2 cursor-pointer"
-                  onClick={() => setLocation(`/studies/${entry.studyId}`)}
+                  onClick={() => entry.studyId && setLocation(`/studies/${entry.studyId}`)}
                 >
-                  <BookOpen className="w-4 h-4 text-black shrink-0 mt-0.5" />
+                  {entry.type === "lesson_note" ? (
+                    <BookOpen className="w-4 h-4 text-black shrink-0 mt-0.5" />
+                  ) : (
+                    <PenLine className="w-4 h-4 text-[#FCD000] shrink-0 mt-0.5" />
+                  )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-black text-black uppercase tracking-tight text-sm leading-tight truncate">
-                      {entry.studyTitle}
+                    <p className={`font-black uppercase tracking-tight text-sm leading-tight truncate ${entry.type === "lesson_note" ? "text-black" : "text-white"}`}>
+                      {entry.studyTitle || "Study"}
                     </p>
-                    <p className="text-xs text-black/70 font-bold mt-0.5">
-                      Day {entry.dayNumber}: {entry.lessonTitle}
-                    </p>
+                    {entry.type === "lesson_note" && entry.dayNumber && (
+                      <p className="text-xs text-black/70 font-bold mt-0.5">
+                        Day {entry.dayNumber}{entry.lessonTitle ? `: ${entry.lessonTitle}` : ""}
+                      </p>
+                    )}
+                    {entry.type === "journal_entry" && (
+                      <p className="text-xs text-gray-400 font-bold mt-0.5">Journal Entry</p>
+                    )}
                   </div>
+                  {entry.type === "lesson_note" && (
+                    <Badge className="bg-black text-[#FCD000] font-bold text-xs border border-black rounded-sm shrink-0">
+                      Note
+                    </Badge>
+                  )}
+                  {entry.type === "journal_entry" && (
+                    <Badge className="bg-[#FCD000]/20 text-[#FCD000] font-bold text-xs border border-[#FCD000]/40 rounded-sm shrink-0">
+                      Entry
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 mt-2">
-                  <Calendar className="w-3 h-3 text-black/60" />
-                  <span className="text-xs text-black/60 font-bold">
-                    {entry.updatedAt
-                      ? new Date(entry.updatedAt).toLocaleDateString("en-US", {
+                  <Calendar className={`w-3 h-3 ${entry.type === "lesson_note" ? "text-black/60" : "text-gray-500"}`} />
+                  <span className={`text-xs font-bold ${entry.type === "lesson_note" ? "text-black/60" : "text-gray-500"}`}>
+                    {entry.createdAt
+                      ? new Date(entry.createdAt).toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "long",
                           day: "numeric",
@@ -119,7 +139,7 @@ export default function Journal() {
               {/* Note content */}
               <CardContent className="p-4">
                 <p className="text-gray-200 text-base leading-relaxed whitespace-pre-wrap">
-                  {entry.notes}
+                  {entry.content}
                 </p>
               </CardContent>
             </Card>

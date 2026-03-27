@@ -683,6 +683,17 @@ export const insertSavedDevotionalSchema = createInsertSchema(savedDevotionals).
 export type InsertSavedDevotional = z.infer<typeof insertSavedDevotionalSchema>;
 export type SavedDevotional = typeof savedDevotionals.$inferSelect;
 
+// Free-form journal entries (not tied to a specific lesson)
+export const journalEntries = pgTable("journal_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  studyId: varchar("study_id").references(() => studies.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type JournalEntry = typeof journalEntries.$inferSelect;
+
 // User ratings for studies
 export const studyRatings = pgTable("study_ratings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

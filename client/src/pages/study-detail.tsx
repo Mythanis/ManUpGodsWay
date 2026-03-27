@@ -26,6 +26,7 @@ import { z } from "zod";
 import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
 import { PurchasePopup } from "@/components/purchase-popup";
 import { EmbeddedLessonViewer } from "@/components/embedded-lesson-viewer";
+import { StudyJournal } from "@/components/study-journal";
 import { BackButton } from "@/components/BackButton";
 
 const ratingSchema = insertStudyRatingSchema.pick({ rating: true, review: true });
@@ -875,21 +876,12 @@ export default function StudyDetail() {
             </div>
           )}
 
-          {/* Content Section */}
-          <div className="px-6 mb-6">
-            <div className="liquid-black border-2 border-[#FCD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-content">
-              <div className="p-6 relative z-10">
-                <h2 className="text-lg font-black uppercase tracking-tight text-white mb-4">Study Content</h2>
-                <div className="prose prose-sm max-w-none text-gray-300 prose-invert" data-testid="text-study-content">
-                  {study.content ? (
-                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(study.content.replace(/\n/g, '<br>')) }} />
-                  ) : (
-                    <p className="text-gray-400">Study materials are available as downloadable documents above.</p>
-                  )}
-                </div>
-              </div>
+          {/* Study Journal — replaces the old Study Content box */}
+          {hasAccess && !isStudyLocked && user?.id && (
+            <div className="px-6 mb-6">
+              <StudyJournal studyId={study.id!} studyTitle={study.title} />
             </div>
-          </div>
+          )}
 
           {/* Rating Section — shown on standalone studies or the last study in a series */}
           {showRating && <div className="px-6 mb-6">

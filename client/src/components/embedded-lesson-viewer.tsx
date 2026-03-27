@@ -11,8 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useRefTagger } from "@/hooks/useRefTagger";
-import { ChevronLeft, ChevronRight, CheckCircle, Circle, Printer, StickyNote, Save, Loader2, Trophy, ArrowRight, BookOpen, Lock, Clock, PenLine } from "lucide-react";
-import { Link } from "wouter";
+import { ChevronLeft, ChevronRight, CheckCircle, Circle, Printer, StickyNote, Save, Loader2, Trophy, ArrowRight, BookOpen, Lock, Clock } from "lucide-react";
 
 interface StudyLesson {
   id: string;
@@ -537,7 +536,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
               <div className="flex items-center gap-2">
                 <StickyNote className="w-5 h-5 text-[#FCD000]" />
                 <span className="font-black text-white uppercase tracking-wide text-sm">My Study Notes</span>
-                {notes && <Badge className="text-xs bg-[#FCD000] text-black font-bold rounded-sm">Has notes</Badge>}
+                {notes && <Badge className="text-xs bg-[#FCD000] text-black font-bold rounded-sm">Notes Added</Badge>}
               </div>
               <ChevronRight className={`w-4 h-4 text-[#FCD000] transition-transform ${notesExpanded ? 'rotate-90' : ''}`} />
             </button>
@@ -551,37 +550,25 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                   className="resize-y bg-white text-black border-2 border-black rounded-sm font-medium"
                   data-testid="textarea-study-notes"
                 />
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => saveNotesMutation.mutate()}
-                    disabled={saveNotesMutation.isPending}
-                    className="bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm"
-                    data-testid="button-save-notes"
-                  >
-                    {saveNotesMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-2" />
-                        Save Notes
-                      </>
-                    )}
-                  </Button>
-                  <Link href="/journal">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-[#FCD000] hover:bg-white/10 font-bold text-xs uppercase tracking-wide"
-                    >
-                      <PenLine className="w-3 h-3 mr-1" />
-                      View Journal
-                    </Button>
-                  </Link>
-                </div>
+                <Button
+                  size="sm"
+                  onClick={() => saveNotesMutation.mutate()}
+                  disabled={saveNotesMutation.isPending}
+                  className="bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm"
+                  data-testid="button-save-notes"
+                >
+                  {saveNotesMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Notes
+                    </>
+                  )}
+                </Button>
               </div>
             )}
           </div>

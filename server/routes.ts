@@ -3626,33 +3626,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get journal entries - all saved notes across all studies for the current user
+  // Get journal entries - all saved notes + free-form entries across all studies
   app.get('/api/journal', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const result = await db.execute(
-        sql`
-          SELECT
-            ulp.id,
-            ulp.notes,
-            ulp.updated_at AS "updatedAt",
-            sl.day_number AS "dayNumber",
-            sl.title AS "lessonTitle",
-            s.id AS "studyId",
-            s.title AS "studyTitle"
-          FROM user_lesson_progress ulp
-          JOIN study_lessons sl ON ulp.lesson_id = sl.id
-          JOIN studies s ON sl.study_id = s.id
-          WHERE ulp.user_id = ${userId}
-            AND ulp.notes IS NOT NULL
-            AND ulp.notes != ''
-          ORDER BY ulp.updated_at DESC NULLS LAST
-        `
+      // Lesson notes
+      const notesResult = await db.execute(sql`
+        SELECT
+          ulp.id,
+          ulp.notes AS content,
+          ulp.updated_at AS "createdAt",
+          sl.day_number AS "dayNumber",
+          sl.title AS "lessonTitle",
+          s.id AS "studyId",
+          s.title AS "studyTitle",
+          'lesson_note' AS type
+        FROM user_lesson_progress ulp
+        JOIN study_lessons sl ON ulp.lesson_id = sl.id
+        JOIN studies s ON sl.study_id = s.id
+        WHERE ulp.user_id = ${userId}
+          AND ulp.notes IS NOT NULL
+          AND ulp.notes != ''
+      `);
+      // Free-form journal entries
+      const entriesResult = await db.execute(sql`
+        SELECT
+          je.id,
+          je.content,
+          je.created_at AS "createdAt",
+          NULL AS "dayNumber",
+          NULL AS "lessonTitle",
+          je.study_id AS "studyId",
+          s.title AS "studyTitle",
+          'journal_entry' AS type
+        FROM journal_entries je
+        LEFT JOIN studies s ON je.study_id = s.id
+        WHERE je.user_id = ${userId}
+      `);
+      // Merge and sort by createdAt desc
+      const all = [...notesResult.rows, ...entriesResult.rows].sort((a: any, b: any) =>
+        new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
       );
-      res.json(result.rows);
+      res.json(all);
     } catch (error) {
       console.error("Error fetching journal:", error);
       res.status(500).json({ message: "Failed to fetch journal" });
+    }
+  });
+
+  // Get lesson notes for a specific study
+  app.get('/api/studies/:studyId/journal-notes', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { studyId } = req.params;
+      const result = await db.execute(sql`
+        SELECT
+          ulp.id,
+          ulp.notes AS content,
+          ulp.updated_at AS "createdAt",
+          sl.day_number AS "dayNumber",
+          sl.title AS "lessonTitle",
+          'lesson_note' AS type
+        FROM user_lesson_progress ulp
+        JOIN study_lessons sl ON ulp.lesson_id = sl.id
+        WHERE ulp.user_id = ${userId}
+          AND sl.study_id = ${studyId}
+          AND ulp.notes IS NOT NULL
+          AND ulp.notes != ''
+        ORDER BY sl.day_number ASC
+      `);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching study journal notes:", error);
+      res.status(500).json({ message: "Failed to fetch journal notes" });
+    }
+  });
+
+  // Get free-form journal entries for a specific study
+  app.get('/api/studies/:studyId/journal-entries', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { studyId } = req.params;
+      const result = await db.execute(sql`
+        SELECT id, content, created_at AS "createdAt", 'journal_entry' AS type
+        FROM journal_entries
+        WHERE user_id = ${userId} AND study_id = ${studyId}
+        ORDER BY created_at DESC
+      `);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching journal entries:", error);
+      res.status(500).json({ message: "Failed to fetch journal entries" });
+    }
+  });
+
+  // Add a free-form journal entry for a study
+  app.post('/api/studies/:studyId/journal-entries', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { studyId } = req.params;
+      const { content } = req.body;
+      if (!content || !content.trim()) {
+        return res.status(400).json({ message: "Content is required" });
+      }
+      const result = await db.execute(sql`
+        INSERT INTO journal_entries (user_id, study_id, content)
+        VALUES (${userId}, ${studyId}, ${content.trim()})
+        RETURNING id, content, created_at AS "createdAt"
+      `);
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error("Error adding journal entry:", error);
+      res.status(500).json({ message: "Failed to add journal entry" });
+    }
+  });
+
+  // Delete a free-form journal entry
+  app.delete('/api/journal-entries/:entryId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { entryId } = req.params;
+      await db.execute(sql`
+        DELETE FROM journal_entries WHERE id = ${entryId} AND user_id = ${userId}
+      `);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting journal entry:", error);
+      res.status(500).json({ message: "Failed to delete journal entry" });
     }
   });
 
