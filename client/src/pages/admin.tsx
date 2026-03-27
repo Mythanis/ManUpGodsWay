@@ -35,7 +35,7 @@ import RationsManagement from "@/components/admin/rations-management";
 import StoreManagement from "@/components/admin/store-management";
 import ManUpLinksManagement from "@/components/admin/man-up-links-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Crown, Gem, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio, FileText, Coins, ShoppingBag, ExternalLink } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio, FileText, Coins, ShoppingBag, ExternalLink } from "lucide-react";
 
 interface Study {
   id: string;
@@ -98,7 +98,7 @@ export default function Admin() {
     title: "",
     message: "",
     type: "general" as "general" | "devotional" | "announcement",
-    targetAudience: "everyone" as "everyone" | "vip" | "premium" | "individual",
+    targetAudience: "everyone" as "everyone" | "subscribers" | "trial" | "expired" | "individual",
     selectedUserIds: [] as string[]
   });
   const [userSearchQuery, setUserSearchQuery] = useState("");
@@ -529,26 +529,17 @@ export default function Admin() {
     sendNotification.mutate(notificationData);
   };
 
-  const getTierIcon = (tier: string) => {
-    switch (tier) {
-      case "premium":
-        return <Crown className="w-4 h-4 text-yellow-600" />;
-      case "vip":
-        return <Gem className="w-4 h-4 text-purple-600" />;
-      default:
-        return <Users className="w-4 h-4 text-green-600" />;
+  const getStatusBadge = (subscriptionStatus: string) => {
+    if (subscriptionStatus === 'active') {
+      return <Badge className="text-xs bg-yellow-100 text-yellow-800">Subscriber</Badge>;
     }
-  };
-
-  const getTierBadgeColor = (tier: string) => {
-    switch (tier) {
-      case "premium":
-        return "bg-yellow-100 text-yellow-800";
-      case "vip":
-        return "bg-purple-100 text-purple-800";
-      default:
-        return "bg-green-100 text-green-800";
+    if (subscriptionStatus === 'trial') {
+      return <Badge className="text-xs bg-blue-100 text-blue-800">Trial</Badge>;
     }
+    if (subscriptionStatus === 'expired' || subscriptionStatus === 'cancelled' || subscriptionStatus === 'past_due') {
+      return <Badge className="text-xs bg-gray-100 text-gray-600">Expired</Badge>;
+    }
+    return <Badge className="text-xs bg-green-100 text-green-800">Free</Badge>;
   };
 
   if (authLoading || !['admin', 'owner'].includes((user as any)?.role)) {
@@ -945,9 +936,8 @@ export default function Admin() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
-                    <SelectItem value="vip">VIP</SelectItem>
+                    <SelectItem value="free">Everyone</SelectItem>
+                    <SelectItem value="subscriber">Subscribers Only</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1101,10 +1091,10 @@ export default function Admin() {
                     <input
                       type="checkbox"
                       id="edit-all-tiers"
-                      checked={(formData.purchaseRequiredTiers || []).length === 3}
+                      checked={(formData.purchaseRequiredTiers || []).length === 2}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setFormData({ ...formData, purchaseRequiredTiers: ['free', 'premium', 'vip'] });
+                          setFormData({ ...formData, purchaseRequiredTiers: ['free', 'subscriber'] });
                         } else {
                           setFormData({ ...formData, purchaseRequiredTiers: [] });
                         }
@@ -1118,7 +1108,7 @@ export default function Admin() {
                   </div>
                   
                   {/* Individual tier checkboxes */}
-                  {[{ id: 'free', label: 'Free' }, { id: 'premium', label: 'Subscriber' }].map((tier) => (
+                  {[{ id: 'free', label: 'Free' }, { id: 'subscriber', label: 'Subscriber' }].map((tier) => (
                     <div key={tier.id} className="flex items-center space-x-2">
                       <input
                         type="checkbox"
@@ -1381,7 +1371,7 @@ export default function Admin() {
               </Label>
               <Select
                 value={notificationData.targetAudience}
-                onValueChange={(value: "everyone" | "vip" | "premium" | "individual") => {
+                onValueChange={(value: "everyone" | "subscribers" | "trial" | "expired" | "individual") => {
                   setNotificationData({ ...notificationData, targetAudience: value, selectedUserIds: [] });
                   setUserSearchQuery("");
                 }}
@@ -1391,8 +1381,9 @@ export default function Admin() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="everyone">Everyone</SelectItem>
-                  <SelectItem value="vip">VIP Users Only</SelectItem>
-                  <SelectItem value="premium">Premium Users Only</SelectItem>
+                  <SelectItem value="subscribers">Active Subscribers</SelectItem>
+                  <SelectItem value="trial">Trial Users</SelectItem>
+                  <SelectItem value="expired">Expired / Cancelled</SelectItem>
                   <SelectItem value="individual">Individual Users</SelectItem>
                 </SelectContent>
               </Select>
@@ -1445,12 +1436,7 @@ export default function Admin() {
                               <span>{user.firstName} {user.lastName}</span>
                               <span className="text-xs text-ministry-slate">{user.email}</span>
                             </div>
-                            <Badge className={`text-xs ${getTierBadgeColor(user.subscriptionTier)}`}>
-                              <span className="flex items-center gap-1">
-                                {getTierIcon(user.subscriptionTier)}
-                                {user.subscriptionTier.toUpperCase()}
-                              </span>
-                            </Badge>
+                            {getStatusBadge(user.subscriptionStatus || '')}
                           </label>
                         </div>
                       ))}

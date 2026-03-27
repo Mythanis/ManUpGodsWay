@@ -4872,7 +4872,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Accept subscriptionTier from the frontend and translate to subscriptionStatus
       if (!subscriptionStatus && subscriptionTier) {
         if (subscriptionTier === 'free') subscriptionStatus = 'expired';
-        else if (subscriptionTier === 'premium' || subscriptionTier === 'subscriber') subscriptionStatus = 'active';
+        else if (subscriptionTier === 'subscriber') subscriptionStatus = 'active';
       }
 
       if (!subscriptionStatus || !['trial', 'active', 'expired', 'cancelled', 'past_due'].includes(subscriptionStatus)) {
@@ -4887,8 +4887,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData: any = { subscriptionStatus };
       if (subscriptionStatus === 'active') {
         updateData.subscriptionTier = 'subscriber';
-      } else if (subscriptionStatus === 'expired') {
-        updateData.subscriptionTier = 'free';
+      } else if (subscriptionStatus === 'expired' || subscriptionStatus === 'cancelled' || subscriptionStatus === 'past_due') {
+        updateData.subscriptionTier = 'expired';
       } else if (subscriptionStatus === 'trial') {
         const now = new Date();
         const trialEnd = new Date(now);
@@ -4900,7 +4900,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         trialEnd.setDate(now.getDate() + trialDays);
         updateData.trialStartDate = now;
         updateData.trialEndDate = trialEnd;
-        updateData.subscriptionTier = 'free';
+        updateData.subscriptionTier = 'trial';
       }
 
       const updatedUser = await storage.updateUserSubscriptionDetails(req.params.id, updateData);
@@ -5883,18 +5883,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Everyone can access free videos
             targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
             break;
-          case 'premium':
-            // Premium and VIP users can access premium videos
-            targetUsers = allUsers.filter(targetUser => 
-              targetUser.id !== user.id && 
-              ['premium', 'vip'].includes(targetUser.subscriptionTier || 'free')
-            );
-            break;
-          case 'vip':
-            // Only VIP users can access VIP videos
-            targetUsers = allUsers.filter(targetUser => 
-              targetUser.id !== user.id && 
-              (targetUser.subscriptionTier || 'free') === 'vip'
+          default:
+            // Subscriber-only videos — notify active subscribers
+            targetUsers = allUsers.filter(targetUser =>
+              targetUser.id !== user.id &&
+              targetUser.subscriptionStatus === 'active'
             );
             break;
         }
@@ -6100,18 +6093,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Everyone can access free videos
               targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
               break;
-            case 'premium':
-              // Premium and VIP users can access premium videos
-              targetUsers = allUsers.filter(targetUser => 
-                targetUser.id !== user.id && 
-                ['premium', 'vip'].includes(targetUser.subscriptionTier || 'free')
-              );
-              break;
-            case 'vip':
-              // Only VIP users can access VIP videos
-              targetUsers = allUsers.filter(targetUser => 
-                targetUser.id !== user.id && 
-                (targetUser.subscriptionTier || 'free') === 'vip'
+            default:
+              // Subscriber-only videos — notify active subscribers
+              targetUsers = allUsers.filter(targetUser =>
+                targetUser.id !== user.id &&
+                targetUser.subscriptionStatus === 'active'
               );
               break;
           }
@@ -6199,11 +6185,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 'everyone':
           targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id);
           break;
-        case 'vip':
-          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && targetUser.subscriptionTier === 'vip');
+        case 'subscribers':
+          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && targetUser.subscriptionStatus === 'active');
           break;
-        case 'premium':
-          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && targetUser.subscriptionTier === 'premium');
+        case 'trial':
+          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && targetUser.subscriptionStatus === 'trial');
+          break;
+        case 'expired':
+          targetUsers = allUsers.filter(targetUser => targetUser.id !== user.id && ['expired', 'cancelled', 'past_due'].includes(targetUser.subscriptionStatus || ''));
           break;
         case 'individual':
           if (!selectedUserIds || selectedUserIds.length === 0) {
@@ -6257,11 +6246,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let successMessage = "";
       switch (targetAudience) {
-        case 'vip':
-          successMessage = `Notification sent to ${targetUsers.length} VIP user(s) successfully`;
+        case 'subscribers':
+          successMessage = `Notification sent to ${targetUsers.length} subscriber(s) successfully`;
           break;
-        case 'premium':
-          successMessage = `Notification sent to ${targetUsers.length} Premium user(s) successfully`;
+        case 'trial':
+          successMessage = `Notification sent to ${targetUsers.length} trial user(s) successfully`;
+          break;
+        case 'expired':
+          successMessage = `Notification sent to ${targetUsers.length} expired/cancelled user(s) successfully`;
           break;
         case 'individual':
           successMessage = `Notification sent to ${targetUsers.length} selected user(s) successfully`;

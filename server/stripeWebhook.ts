@@ -270,6 +270,7 @@ export async function stripeWebhookHandler(req: Request, res: Response) {
           if (affectedUser) {
             await storage.updateUserSubscriptionDetails(affectedUser.id, {
               subscriptionStatus: "past_due",
+              subscriptionTier: "expired",
             });
             const notification = await storage.createNotification({
               userId: affectedUser.id,
@@ -336,6 +337,7 @@ export async function stripeWebhookHandler(req: Request, res: Response) {
             const newPeriodEnd = new Date(subscription.current_period_end * 1000);
             await storage.updateUserSubscriptionDetails(affectedUser.id, {
               subscriptionStatus: "active",
+              subscriptionTier: "subscriber",
               subscriptionExpiresAt: newPeriodEnd,
             });
             if (affectedUser.subscriptionStatus === "past_due") {
@@ -404,7 +406,7 @@ export async function stripeWebhookHandler(req: Request, res: Response) {
         if (affectedUser) {
           await storage.updateUserSubscriptionDetails(affectedUser.id, {
             subscriptionStatus: "expired",
-            subscriptionTier: "free",
+            subscriptionTier: "expired",
             stripeSubscriptionId: undefined,
           });
           const notification = await storage.createNotification({

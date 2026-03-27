@@ -1156,7 +1156,7 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!user) return [];
     
-    const userTier = user.subscriptionTier || 'free';
+    const isSubscriber = (user.subscriptionStatus === 'active') || (user.subscriptionTier === 'subscriber');
     
     // Get user's completed studies to understand their interests
     const completedProgress = await db
@@ -1170,62 +1170,23 @@ export class DatabaseStorage implements IStorage {
     
     const studiedCategories = Array.from(new Set(completedProgress.map(p => p.category)));
     
-    // Determine tier progression for recommendations
+    // Get recommendations based on subscription status
     const getTierRecommendations = async () => {
-      const tierOrder = ['free', 'premium', 'vip'];
-      const currentTierIndex = tierOrder.indexOf(userTier);
-      const nextTier = currentTierIndex < tierOrder.length - 1 ? tierOrder[currentTierIndex + 1] : null;
-      
       let recommendations: Study[] = [];
       
-      // Get studies from current tier (2 studies)
-      const currentTierStudies = await db
+      // Get accessible studies for this user
+      const accessibleStudies = await db
         .select()
         .from(studies)
         .where(and(
           eq(studies.isPublished, true),
-          eq(studies.requiredTier, userTier),
+          isSubscriber ? sql`1=1` : eq(studies.requiredTier, 'free'),
           studiedCategories.length > 0 ? inArray(studies.category, studiedCategories) : sql`1=1`
         ))
         .orderBy(desc(studies.rating), desc(studies.createdAt))
-        .limit(2);
+        .limit(limit);
       
-      recommendations.push(...currentTierStudies);
-      
-      // Get 1 study from next tier if available
-      if (nextTier && recommendations.length < limit) {
-        const nextTierStudies = await db
-          .select()
-          .from(studies)
-          .where(and(
-            eq(studies.isPublished, true),
-            eq(studies.requiredTier, nextTier),
-            studiedCategories.length > 0 ? inArray(studies.category, studiedCategories) : sql`1=1`
-          ))
-          .orderBy(desc(studies.rating), desc(studies.createdAt))
-          .limit(1);
-        
-        recommendations.push(...nextTierStudies);
-      }
-      
-      // If we still need more recommendations and no next tier, fill from highest available tier
-      if (recommendations.length < limit) {
-        const highestTier = userTier === 'vip' ? 'vip' : (userTier === 'premium' ? 'premium' : 'free');
-        const additionalStudies = await db
-          .select()
-          .from(studies)
-          .where(and(
-            eq(studies.isPublished, true),
-            eq(studies.requiredTier, highestTier),
-            studiedCategories.length > 0 ? inArray(studies.category, studiedCategories) : sql`1=1`,
-            recommendations.length > 0 ? not(inArray(studies.id, recommendations.map(s => s.id))) : sql`1=1` // Exclude already selected
-          ))
-          .orderBy(desc(studies.rating), desc(studies.createdAt))
-          .limit(limit - recommendations.length);
-        
-        recommendations.push(...additionalStudies);
-      }
-      
+      recommendations.push(...accessibleStudies);
       return recommendations;
     };
     
@@ -3450,15 +3411,12 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(videos.category, category));
     }
     
-    // Filter by user tier access
+    // Filter by user tier access — subscribers see all, others see only free
     if (userTier) {
-      const tierHierarchy: { [key: string]: string[] } = {
-        'free': ['free'],
-        'premium': ['free', 'premium'], 
-        'vip': ['free', 'premium', 'vip']
-      };
-      const allowedTiers = tierHierarchy[userTier] || ['free'];
-      conditions.push(inArray(videos.requiredTier, allowedTiers));
+      const isSubscriber = userTier === 'subscriber';
+      if (!isSubscriber) {
+        conditions.push(eq(videos.requiredTier, 'free'));
+      }
     }
     
     // Build order by clauses - always prioritize featured videos first
@@ -3490,14 +3448,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getVideosByUserTier(userTier: string, limit?: number): Promise<Video[]> {
-    // Define tier hierarchy: free < premium < vip
-    const tierHierarchy: { [key: string]: string[] } = {
-      'free': ['free'],
-      'premium': ['free', 'premium'], 
-      'vip': ['free', 'premium', 'vip']
-    };
-    
-    const allowedTiers = tierHierarchy[userTier] || ['free'];
+    // Subscribers see all tiers; others see only free
+    const isSubscriber = userTier === 'subscriber';
+    const allowedTiers = isSubscriber ? ['free', 'subscriber'] : ['free'];
     
     const query = db
       .select()
@@ -3946,13 +3899,13 @@ export class DatabaseStorage implements IStorage {
       throw new Error("User not found");
     }
 
-    // Get all admin and VIP users
-    const adminsAndVips = await db
+    // Get all admin/owner users
+    const adminUsers = await db
       .select()
       .from(users)
-      .where(or(eq(users.role, 'admin'), eq(users.subscriptionTier, 'vip')));
+      .where(or(eq(users.role, 'admin'), eq(users.role, 'owner')));
 
-    if (adminsAndVips.length === 0) {
+    if (adminUsers.length === 0) {
       throw new Error("No admin users found to send feedback to");
     }
 
@@ -3970,12 +3923,12 @@ export class DatabaseStorage implements IStorage {
         .values({
           name: 'Feedback & Suggestions',
           type: 'group',
-          createdBy: adminsAndVips[0].id, // First admin creates the conversation
+          createdBy: adminUsers[0].id, // First admin creates the conversation
         })
         .returning();
 
-      // Add all admins and VIP users as participants
-      for (const adminUser of adminsAndVips) {
+      // Add all admin/owner users as participants
+      for (const adminUser of adminUsers) {
         await db.insert(conversationParticipants).values({
           conversationId: createdConversation.id,
           userId: adminUser.id,
@@ -4007,7 +3960,7 @@ export class DatabaseStorage implements IStorage {
       messageType: 'text',
     });
 
-    // Send notifications to all admins and VIP users about the new feedback
+    // Send notifications to all admin/owner users about the new feedback
     const categoryLabels: Record<string, string> = {
       'improvement': 'Improvement Suggestion',
       'feature-request': 'Feature Request',
@@ -4021,8 +3974,8 @@ export class DatabaseStorage implements IStorage {
     const notificationTitle = `New ${categoryLabel}`;
     const notificationContent = `${user.firstName} ${user.lastName} submitted: ${categoryLabel.toLowerCase()}`;
 
-    // Create notifications for all admins and VIP users
-    for (const adminUser of adminsAndVips) {
+    // Create notifications for all admin/owner users
+    for (const adminUser of adminUsers) {
       // Don't send notification to the user who sent the feedback
       if (adminUser.id !== userId) {
         await db.insert(notifications).values({
@@ -6718,11 +6671,6 @@ export class DatabaseStorage implements IStorage {
     const userRations = user.rations || 0;
     if (userRations < product.rationCost) {
       throw new Error(`Insufficient rations. You need ${product.rationCost} rations but have ${userRations}`);
-    }
-
-    // Check VIP requirement
-    if (product.isVipOnly && user.subscriptionTier !== 'vip') {
-      throw new Error("This product is only available for VIP members");
     }
 
     // Deduct rations from user

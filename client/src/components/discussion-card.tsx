@@ -328,13 +328,10 @@ export default function DiscussionCard({
     
     // Check tier access for study discussions
     if (discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free') {
-      const hasAccess = (discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
-                       (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip');
-      
-      if (!hasAccess) {
+      if (currentUserTier !== 'subscriber') {
         toast({
           title: "Access Restricted",
-          description: `This study discussion requires ${discussion.study.requiredTier} subscription to participate.`,
+          description: "This study discussion requires an active subscription to participate.",
           variant: "destructive",
         });
         return;
@@ -378,8 +375,7 @@ export default function DiscussionCard({
   };
 
   const canReply = !(discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' &&
-    !((discussion.study.requiredTier === 'premium' && ['premium', 'vip'].includes(currentUserTier)) ||
-      (discussion.study.requiredTier === 'vip' && currentUserTier === 'vip')));
+    currentUserTier !== 'subscriber');
 
   return (
     <Card className="overflow-hidden w-full border-0 border-b border-white/8 rounded-none shadow-none bg-[#111]" data-testid="discussion-card">

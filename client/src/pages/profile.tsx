@@ -220,21 +220,12 @@ export default function Profile() {
   const completedStudies = progress.filter((p: any) => p.isCompleted);
   const currentStudies = progress.filter((p: any) => !p.isCompleted);
 
-  const getTierBadge = (tier: string) => {
+  const getTierBadge = (_tier: string) => {
     const status = (user as any)?.subscriptionStatus;
     if (status === 'active') {
       return <Badge className="bg-ministry-gold-exact text-black rounded-sm font-black uppercase tracking-wide">Subscriber</Badge>;
     }
-    if (status === 'trial') {
-      return <Badge className="bg-blue-500 text-white rounded-sm font-black uppercase tracking-wide">Trial</Badge>;
-    }
-    if (status === 'expired' || status === 'cancelled') {
-      return <Badge className="bg-gray-500 text-white rounded-sm font-black uppercase tracking-wide">Expired</Badge>;
-    }
-    switch (tier) {
-      default:
-        return <Badge variant="outline" className="rounded-sm font-black uppercase tracking-wide">Free Member</Badge>;
-    }
+    return null;
   };
 
   const getStreakBadge = (days: number) => {

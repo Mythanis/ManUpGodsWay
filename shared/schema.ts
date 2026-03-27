@@ -37,7 +37,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   role: varchar("role").default("user"), // user, admin, owner
-  subscriptionTier: varchar("subscription_tier").default("free"), // legacy field kept for compatibility - now: free = trial/expired, subscriber = active paid
+  subscriptionTier: varchar("subscription_tier").default("free"), // valid values: 'subscriber' (active paid), 'trial' (trial), 'expired' (expired/cancelled/past-due), 'free' (legacy default for new accounts)
   subscriptionStatus: varchar("subscription_status").default("trial"), // trial, active, cancelled, expired
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
   trialStartDate: timestamp("trial_start_date"),

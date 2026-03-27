@@ -501,11 +501,11 @@ export default function StudyDetail() {
       }
       
       // If their tier doesn't require purchase, check subscription access
-      return study.requiredTier === 'free' || userTier !== 'free';
+      return study.requiredTier === 'free' || (user as any)?.subscriptionStatus === 'active';
     }
     
     // Subscription-based access for non-purchasable studies
-    return study.requiredTier === 'free' || (user?.subscriptionTier || 'free') !== 'free';
+    return study.requiredTier === 'free' || (user as any)?.subscriptionStatus === 'active';
   };
 
   const hasAccess = canAccess();

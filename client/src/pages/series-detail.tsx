@@ -100,7 +100,7 @@ export default function SeriesDetail() {
   const canAccessStudy = (study: StudyInSeries) => {
     if (study.requiredTier === 'free') return true;
     if (!user) return false;
-    return (user.subscriptionTier || 'free') !== 'free';
+    return (user as any).subscriptionStatus === 'active';
   };
 
   const isLockedByConsecutive = (study: StudyInSeries) => {
