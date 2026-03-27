@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "@/hooks/useTheme";
 import { apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,6 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
   const [feedback, setFeedback] = useState("");
   const [category, setCategory] = useState("");
   const { toast } = useToast();
-  const { effectiveTheme } = useTheme();
 
   const submitFeedback = useMutation({
     mutationFn: async (data: { feedback: string; category: string }) => {
@@ -77,7 +75,7 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
       <DialogContent className="max-w-md mx-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2" style={{ 
-            color: effectiveTheme === 'dark' ? 'hsl(0 0% 95%)' : 'hsl(210 25% 7.8431%)'
+            color: 'hsl(0 0% 95%)'
           }}>
             <MessageCircle className="w-5 h-5" />
             <span>Send Feedback</span>
@@ -87,7 +85,7 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
         <div className="space-y-4">
           <div>
             <Label htmlFor="feedback-category" className="text-sm font-medium" style={{
-              color: effectiveTheme === 'dark' ? 'hsl(0 0% 95%)' : 'hsl(210 25% 7.8431%)'
+              color: 'hsl(0 0% 95%)'
             }}>
               What type of feedback is this?
             </Label>
@@ -108,7 +106,7 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
 
           <div>
             <Label htmlFor="feedback-text" className="text-sm font-medium" style={{
-              color: effectiveTheme === 'dark' ? 'hsl(0 0% 95%)' : 'hsl(210 25% 7.8431%)'
+              color: 'hsl(0 0% 95%)'
             }}>
               Your Feedback
             </Label>
@@ -139,15 +137,9 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
               onClick={handleSubmit}
               disabled={submitFeedback.isPending || !feedback.trim() || !category}
               style={{
-                backgroundColor: effectiveTheme === 'dark' 
-                  ? 'hsl(220 8% 26%)' 
-                  : 'hsl(240 1.9608% 90%)',
-                color: effectiveTheme === 'dark' 
-                  ? 'hsl(0 0% 95%)' 
-                  : 'hsl(210 25% 7.8431%)',
-                borderColor: effectiveTheme === 'dark' 
-                  ? 'hsl(210 5.2632% 14.9020%)' 
-                  : 'hsl(201.4286 30.4348% 90.9804%)',
+                backgroundColor: 'hsl(220 8% 26%)',
+                color: 'hsl(0 0% 95%)',
+                borderColor: 'hsl(210 5.2632% 14.9020%)',
                 opacity: (submitFeedback.isPending || !feedback.trim() || !category) ? 0.5 : 1
               }}
               className="flex-1 px-4 py-2 rounded-md border cursor-pointer transition-colors hover:opacity-90 flex items-center justify-center"

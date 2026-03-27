@@ -39,9 +39,12 @@
         // One-time cache wipe: clears ALL service-worker caches so stale
         // JS/CSS (e.g. old white-background code) is evicted immediately.
         // Bump APP_CACHE_VERSION any time a critical asset change must propagate.
-        var APP_CACHE_VERSION = 'dark-fix-v3';
+        var APP_CACHE_VERSION = 'dark-fix-v4';
         if (localStorage.getItem('appCacheVersion') !== APP_CACHE_VERSION) {
           localStorage.setItem('appCacheVersion', APP_CACHE_VERSION);
+          // Clean up any stale theme keys from before light mode was removed
+          localStorage.removeItem('theme');
+          localStorage.removeItem('themeVersion');
           if ('caches' in window) {
             caches.keys().then(function(names) {
               return Promise.all(names.map(function(n) { return caches.delete(n); }));
@@ -52,19 +55,9 @@
           }
         }
 
-        // v3: force-reset anyone who still has 'light' in localStorage from before dark became the default
-        var THEME_VERSION = '3';
-        if (localStorage.getItem('themeVersion') !== THEME_VERSION) {
-          localStorage.removeItem('theme');
-          localStorage.setItem('themeVersion', THEME_VERSION);
-        }
-        var saved = localStorage.getItem('theme');
-        // Only honor an explicit saved preference; default is always dark
-        var theme = (saved === 'light') ? 'light' : 'dark';
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
-        }
-        document.documentElement.style.backgroundColor = theme === 'dark' ? '#0a0a0a' : '#ffffff';
+        // Always dark — no theme detection needed
+        document.documentElement.classList.add('dark');
+        document.documentElement.style.backgroundColor = '#0a0a0a';
       })();
     </script>
   </head>

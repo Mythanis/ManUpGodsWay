@@ -84,69 +84,6 @@
   --ministry-warm: 25 95% 58%;
 }
 
-/* Light theme overrides — only active when JS applies the .light class to <html> */
-html.light {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(220 14% 20%);
-
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(220 14% 20%);
-
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(220 14% 20%);
-
-  --primary: hsl(49 100% 49%);
-  --primary-foreground: hsl(220 14% 20%);
-
-  --secondary: hsl(220 14% 96%);
-  --secondary-foreground: hsl(220 14% 20%);
-
-  --muted: hsl(220 14% 96%);
-  --muted-foreground: hsl(220 10% 46%);
-
-  --accent: hsl(45 100% 96%);
-  --accent-foreground: hsl(220 14% 20%);
-
-  --destructive: hsl(0 84% 60%);
-  --destructive-foreground: hsl(0 0% 100%);
-
-  --border: hsl(220 13% 91%);
-  --input: hsl(220 13% 91%);
-  --ring: hsl(49 100% 49%);
-
-  --chart-1: hsl(49 100% 49%);
-  --chart-2: hsl(142 71% 45%);
-  --chart-3: hsl(220 90% 60%);
-  --chart-4: hsl(280 65% 60%);
-  --chart-5: hsl(340 75% 60%);
-
-  --sidebar: hsl(220 14% 98%);
-  --sidebar-foreground: hsl(220 14% 20%);
-  --sidebar-primary: hsl(49 100% 49%);
-  --sidebar-primary-foreground: hsl(220 14% 20%);
-  --sidebar-accent: hsl(49 100% 96%);
-  --sidebar-accent-foreground: hsl(220 14% 20%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(49 100% 49%);
-
-  --shadow-2xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-xs: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --shadow-sm: 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 6px 16px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 24px -4px rgba(0, 0, 0, 0.10), 0 8px 16px -8px rgba(0, 0, 0, 0.08);
-  --shadow-xl: 0 20px 32px -8px rgba(0, 0, 0, 0.12), 0 12px 24px -12px rgba(0, 0, 0, 0.10);
-  --shadow-2xl: 0 24px 48px -12px rgba(0, 0, 0, 0.18);
-
-  --ministry-charcoal: 220 14% 20%;
-  --ministry-steel: 220 10% 46%;
-  --ministry-slate: 220 12% 36%;
-  --ministry-gold: 49 100% 49%;
-  --ministry-success: 142 71% 45%;
-  --ministry-warm: 25 95% 53%;
-
-  background-color: hsl(0 0% 100%);
-}
 
 /* Ministry color utilities */
 .text-ministry-gold {
@@ -374,14 +311,6 @@ html.light {
     -webkit-text-size-adjust: 100%;
     /* Dark by default — no JS class needed */
     background-color: hsl(0 0% 4%);
-  }
-
-  html.light {
-    background-color: hsl(0 0% 100%);
-  }
-
-  html.light body {
-    background-color: hsl(0 0% 100%);
   }
 
   body {

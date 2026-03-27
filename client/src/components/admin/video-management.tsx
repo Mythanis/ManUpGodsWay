@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "@/hooks/useTheme";
 import { apiRequest } from "@/lib/queryClient";
 import { formatLocalDateTime } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,7 +60,6 @@ export default function VideoManagement() {
   const [urlThumbnail, setUrlThumbnail] = useState('');
   const [urlSubmitting, setUrlSubmitting] = useState(false);
   const { toast } = useToast();
-  const { effectiveTheme } = useTheme();
   const queryClient = useQueryClient();
 
   const { data: videos = [], isLoading } = useQuery<Video[]>({
@@ -440,9 +438,9 @@ export default function VideoManagement() {
               <button 
                 onClick={() => setShowUploadDialog(true)} 
                 style={{
-                  backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(240 1.9608% 90%)',
-                  color: effectiveTheme === 'dark' ? 'hsl(0 0% 95%)' : 'hsl(210 25% 7.8431%)',
-                  borderColor: effectiveTheme === 'dark' ? 'hsl(210 5.2632% 14.9020%)' : 'hsl(201.4286 30.4348% 90.9804%)'
+                  backgroundColor: 'hsl(220 8% 26%)',
+                  color: 'hsl(0 0% 95%)',
+                  borderColor: 'hsl(210 5.2632% 14.9020%)'
                 }}
                 className="px-4 py-2 border rounded-lg transition-colors cursor-pointer"
               >
@@ -511,7 +509,7 @@ export default function VideoManagement() {
                           setShowVideoDialog(true);
                         }}
                         style={{
-                          backgroundColor: effectiveTheme === 'dark' ? 'hsl(220 8% 26%)' : 'hsl(221.2 83.2% 53.3%)',
+                          backgroundColor: 'hsl(220 8% 26%)',
                           color: 'white',
                           border: 'none'
                         }}

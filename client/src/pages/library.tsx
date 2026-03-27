@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, BookOpen, ChevronRight, Layers, CalendarDays } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "@/hooks/useTheme";
 import { BackButton } from "@/components/BackButton";
 
 const categories = [
@@ -49,7 +48,6 @@ interface Study {
 }
 
 export default function Library() {
-  const { effectiveTheme } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 

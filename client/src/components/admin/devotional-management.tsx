@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { useTheme } from "@/hooks/useTheme";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,7 +43,6 @@ export default function DevotionalManagement() {
   const [startDate, setStartDate] = useState("");
   const [parsedDevotionals, setParsedDevotionals] = useState<any[]>([]);
   const { toast } = useToast();
-  const { effectiveTheme } = useTheme();
   const queryClient = useQueryClient();
 
   const form = useForm<DevotionalFormData>({

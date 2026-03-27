@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "@/hooks/useTheme";
 import { BackButton } from "@/components/BackButton";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -83,7 +82,6 @@ const adminTabs = [
 
 export default function Admin() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  const { effectiveTheme } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const scrollContainerRef = useRef<HTMLDivElement>(null);

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "@/hooks/useTheme";
 import { useTour } from "@/contexts/TourContext";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -29,8 +28,6 @@ import {
   Crown,
   Flame,
   MessageCircle,
-  Moon,
-  Sun,
   Coins,
   Medal,
   TrendingUp,
@@ -58,7 +55,6 @@ export default function Profile() {
   const [showFitnessCancelConfirm, setShowFitnessCancelConfirm] = useState(false);
   const { user } = useAuth();
   const { startTour } = useTour();
-  const { theme, setTheme, effectiveTheme } = useTheme();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();

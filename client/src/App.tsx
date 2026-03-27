@@ -5,7 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
-import { ThemeProvider, useTheme } from "@/hooks/useTheme";
+import { ThemeProvider } from "@/hooks/useTheme";
 import { TourProvider, useTour } from "@/contexts/TourContext";
 import { AppTour } from "@/components/app-tour";
 import SplashScreen from "@/components/splash-screen";
@@ -261,15 +261,12 @@ function Router() {
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
   const { splashCompleted } = useSplash();
-  const { effectiveTheme } = useTheme();
   const { isTourActive } = useTour();
-
-  const bgColor = effectiveTheme === 'light' ? '#ffffff' : '#0a0a0a';
 
   return (
     <div
       className="max-w-md mx-auto text-foreground shadow-2xl min-h-screen relative"
-      style={{ backgroundColor: bgColor }}
+      style={{ backgroundColor: '#0a0a0a' }}
     >
       {/* During the tour all page content is read-only — interactions are blocked.
           The AppTour panel sits outside this wrapper so it stays clickable. */}

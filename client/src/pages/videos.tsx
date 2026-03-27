@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "@/hooks/useTheme";
 import { useToast } from "@/hooks/use-toast";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
 import { apiRequest } from "@/lib/queryClient";
@@ -47,7 +46,6 @@ function getVideoEmbed(url: string): { type: 'youtube' | 'vimeo' | 'direct'; emb
 
 export default function Videos() {
   const { user } = useAuth();
-  const { effectiveTheme } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
