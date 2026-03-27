@@ -198,32 +198,6 @@ export default function WarGroups() {
         {/* About War Groups Content */}
         {activeTab === 'about' && (
           <div className="space-y-6">
-            {/* Schedule a Call Section (Calendly) */}
-            {systemSettings?.warGroupsCalendlyUrl && (
-              <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
-                <CardHeader className="pb-3 relative z-10">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-ministry-gold-exact w-12 h-12 flex items-center justify-center border-2 border-black">
-                      <Mail className="h-6 w-6 text-black" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl text-white font-black tracking-tight uppercase">Schedule a Call</CardTitle>
-                      <p className="text-gray-400 text-sm mt-0.5">Talk with us about joining or starting a War Group</p>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0 relative z-10 px-0 pb-0">
-                  <iframe
-                    src={`${systemSettings.warGroupsCalendlyUrl}?background_color=0a0a0a&text_color=ffffff&primary_color=FCD000&hide_event_type_details=0&hide_gdpr_banner=1`}
-                    className="w-full border-0"
-                    style={{ minHeight: 700 }}
-                    title="Schedule a War Groups Call"
-                    data-testid="calendly-war-groups"
-                  />
-                </CardContent>
-              </Card>
-            )}
-
             <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
               <CardHeader className="relative z-10">
                 <div className="flex items-center gap-3 mb-2">
@@ -323,6 +297,32 @@ export default function WarGroups() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Schedule a Call Section (Calendly) */}
+            {systemSettings?.warGroupsCalendlyUrl && (
+              <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
+                <CardHeader className="pb-3 relative z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-ministry-gold-exact w-12 h-12 flex items-center justify-center border-2 border-black">
+                      <Mail className="h-6 w-6 text-black" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl text-white font-black tracking-tight uppercase">Schedule a Call</CardTitle>
+                      <p className="text-gray-400 text-sm mt-0.5">Talk with us about joining or starting a War Group</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 relative z-10 px-0 pb-0">
+                  <iframe
+                    src={`${systemSettings.warGroupsCalendlyUrl}?background_color=0a0a0a&text_color=ffffff&primary_color=FCD000&hide_event_type_details=0&hide_gdpr_banner=1`}
+                    className="w-full border-0"
+                    style={{ minHeight: 700 }}
+                    title="Schedule a War Groups Call"
+                    data-testid="calendly-war-groups"
+                  />
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 
