@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Crown, Users, Database, Activity, Trash2, CreditCard,
   CheckCircle2, XCircle, AlertCircle, RefreshCw, BookOpen, Video,
-  Newspaper, Swords, Calendar, Mic, Book, ArrowLeft,
+  Newspaper, Swords, Calendar, Mic, Book, ArrowLeft, FlaskConical,
+  Ban, Loader2, DollarSign, Repeat,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -86,12 +88,56 @@ function StripePage({ onBack }: { onBack: () => void }) {
   const [connectionRetries, setConnectionRetries] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
 
+  // Test subscription form state
+  const [testAmount, setTestAmount] = useState('1.00');
+  const [testInterval, setTestInterval] = useState('day');
+  const [testIntervalCount, setTestIntervalCount] = useState('1');
+
   const { data: stripeInfo, isLoading, refetch } = useQuery({
     queryKey: ['/api/stripe/status'],
     queryFn: async () => {
       const res = await fetch('/api/stripe/status', { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch Stripe status');
       return res.json();
+    },
+  });
+
+  const { data: testSub, isLoading: testSubLoading, refetch: refetchTestSub } = useQuery({
+    queryKey: ['/api/owner/stripe/test-subscription'],
+    queryFn: async () => {
+      const res = await fetch('/api/owner/stripe/test-subscription', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch test subscription');
+      return res.json();
+    },
+    refetchInterval: (data: any) => (data && data?.status === 'active') ? 30000 : false,
+  });
+
+  const createTestSubMutation = useMutation({
+    mutationFn: async () => {
+      const amountCents = Math.round(parseFloat(testAmount) * 100);
+      return await apiRequest('POST', '/api/owner/stripe/test-subscription', {
+        amount: amountCents,
+        interval: testInterval,
+        intervalCount: parseInt(testIntervalCount) || 1,
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Test Subscription Created", description: "Stripe is charging on the configured schedule." });
+      queryClient.invalidateQueries({ queryKey: ['/api/owner/stripe/test-subscription'] });
+    },
+    onError: (e: any) => {
+      toast({ title: "Failed", description: e.message || "Could not create test subscription", variant: "destructive" });
+    },
+  });
+
+  const cancelTestSubMutation = useMutation({
+    mutationFn: async () => await apiRequest('DELETE', '/api/owner/stripe/test-subscription'),
+    onSuccess: () => {
+      toast({ title: "Subscription Canceled", description: "The test subscription has been stopped." });
+      queryClient.invalidateQueries({ queryKey: ['/api/owner/stripe/test-subscription'] });
+    },
+    onError: (e: any) => {
+      toast({ title: "Failed", description: e.message || "Could not cancel subscription", variant: "destructive" });
     },
   });
 
@@ -148,6 +194,28 @@ function StripePage({ onBack }: { onBack: () => void }) {
       toast({ title: "Failed", description: e.message, variant: "destructive" });
     } finally { setIsSaving(false); }
   };
+
+  const intervalLabel = (interval: string, count: number) => {
+    const countStr = count > 1 ? `every ${count} ` : '';
+    const labels: Record<string, string> = { day: 'day(s)', week: 'week(s)', month: 'month(s)', year: 'year(s)' };
+    return `${countStr}${labels[interval] || interval}`;
+  };
+
+  const paymentStatusColor = (s: string | null) => {
+    if (s === 'succeeded' || s === 'paid') return 'text-green-400';
+    if (s === 'failed') return 'text-red-400';
+    return 'text-yellow-400';
+  };
+
+  const subStatusBadge = (s: string) => {
+    if (s === 'active') return <Badge className="bg-green-600 text-white text-xs font-black rounded-sm">Active</Badge>;
+    if (s === 'canceled') return <Badge className="bg-gray-600 text-white text-xs font-black rounded-sm">Canceled</Badge>;
+    if (s === 'past_due') return <Badge className="bg-red-700 text-white text-xs font-black rounded-sm">Past Due</Badge>;
+    if (s === 'incomplete') return <Badge className="bg-yellow-600 text-black text-xs font-black rounded-sm">Incomplete</Badge>;
+    return <Badge className="bg-gray-700 text-white text-xs font-black rounded-sm">{s}</Badge>;
+  };
+
+  const isSubActive = testSub?.status === 'active';
 
   return (
     <div className="pb-24 bg-ministry-light-gray min-h-screen">
@@ -214,6 +282,155 @@ function StripePage({ onBack }: { onBack: () => void }) {
                 </div>
               </SectionCard>
             )}
+
+            {/* ── Subscription Tester ── */}
+            <SectionCard title="Subscription Tester">
+              <div className="p-4 space-y-4">
+                <p className="text-white/50 text-xs">
+                  Create a live test subscription to verify that recurring billing, renewals, and webhook status updates all work correctly. Uses a Stripe test card — no real money charged.
+                </p>
+
+                {/* Current subscription status */}
+                {testSubLoading ? (
+                  <div className="flex items-center gap-2 text-white/40 text-sm py-2">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Loading status...
+                  </div>
+                ) : testSub && testSub.status !== 'inactive' ? (
+                  <div className="border-2 border-white/10 rounded-sm overflow-hidden">
+                    <div className="px-3 py-2 bg-white/5 border-b border-white/10 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FlaskConical className="w-4 h-4 text-[#FCD000]" />
+                        <span className="text-white font-black text-xs uppercase tracking-wide">Current Test Subscription</span>
+                      </div>
+                      {subStatusBadge(testSub.status)}
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-white/50 text-xs uppercase tracking-wide font-bold">Amount</span>
+                        <span className="text-[#FCD000] font-black text-sm">${(testSub.amount / 100).toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-white/50 text-xs uppercase tracking-wide font-bold">Billing</span>
+                        <span className="text-white text-xs font-bold capitalize flex items-center gap-1">
+                          <Repeat className="w-3 h-3 text-white/40" />
+                          Every {testSub.intervalCount > 1 ? testSub.intervalCount + ' ' : ''}{testSub.interval}{testSub.intervalCount > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-white/50 text-xs uppercase tracking-wide font-bold">Last Payment</span>
+                        <span className={`text-xs font-black uppercase ${paymentStatusColor(testSub.lastPaymentStatus)}`}>
+                          {testSub.lastPaymentStatus === 'succeeded' || testSub.lastPaymentStatus === 'paid'
+                            ? '✓ Succeeded'
+                            : testSub.lastPaymentStatus === 'failed'
+                            ? '✗ Failed'
+                            : testSub.lastPaymentStatus
+                            ? testSub.lastPaymentStatus
+                            : '—'}
+                        </span>
+                      </div>
+                      {testSub.lastPaymentAt && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/50 text-xs uppercase tracking-wide font-bold">Paid At</span>
+                          <span className="text-white/60 text-xs">
+                            {new Date(testSub.lastPaymentAt).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                      {testSub.stripeSubscriptionId && (
+                        <div className="pt-1 border-t border-white/10">
+                          <span className="text-white/30 text-xs font-mono break-all">{testSub.stripeSubscriptionId}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="px-3 pb-3 flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => refetchTestSub()}
+                        className="flex-1 border-white/20 text-white/60 hover:text-white text-xs font-bold rounded-sm"
+                      >
+                        <RefreshCw className="w-3 h-3 mr-1" /> Refresh Status
+                      </Button>
+                      {isSubActive && (
+                        <Button
+                          size="sm"
+                          onClick={() => cancelTestSubMutation.mutate()}
+                          disabled={cancelTestSubMutation.isPending}
+                          className="flex-1 bg-red-700 hover:bg-red-800 text-white text-xs font-black uppercase rounded-sm border-2 border-black"
+                        >
+                          {cancelTestSubMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Ban className="w-3 h-3 mr-1" />}
+                          Cancel Subscription
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Create new test subscription form */}
+                {(!testSub || testSub.status === 'canceled' || testSub.status === 'inactive') && (
+                  <div className="space-y-3 pt-1">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-white/60 text-xs uppercase tracking-wide font-bold">Price (USD)</Label>
+                        <div className="relative">
+                          <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                          <Input
+                            type="number"
+                            min="0.50"
+                            step="0.01"
+                            value={testAmount}
+                            onChange={(e) => setTestAmount(e.target.value)}
+                            className="bg-black border-2 border-white/20 text-white rounded-sm pl-7"
+                            placeholder="1.00"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-white/60 text-xs uppercase tracking-wide font-bold">Every</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="365"
+                          value={testIntervalCount}
+                          onChange={(e) => setTestIntervalCount(e.target.value)}
+                          className="bg-black border-2 border-white/20 text-white rounded-sm"
+                          placeholder="1"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-white/60 text-xs uppercase tracking-wide font-bold">Frequency</Label>
+                      <Select value={testInterval} onValueChange={setTestInterval}>
+                        <SelectTrigger className="bg-black border-2 border-white/20 text-white rounded-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-black border-2 border-white/20">
+                          <SelectItem value="day" className="text-white">Day</SelectItem>
+                          <SelectItem value="week" className="text-white">Week</SelectItem>
+                          <SelectItem value="month" className="text-white">Month</SelectItem>
+                          <SelectItem value="year" className="text-white">Year</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="p-2.5 bg-white/5 rounded-sm border border-white/10">
+                      <p className="text-white/50 text-xs">
+                        Will charge <span className="text-[#FCD000] font-black">${parseFloat(testAmount || '0').toFixed(2)}</span> every{' '}
+                        <span className="text-[#FCD000] font-black">{intervalLabel(testInterval, parseInt(testIntervalCount) || 1)}</span>
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => createTestSubMutation.mutate()}
+                      disabled={createTestSubMutation.isPending || !testAmount || parseFloat(testAmount) < 0.50}
+                      className="w-full bg-[#FCD000] text-black font-black text-xs uppercase tracking-widest rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                    >
+                      {createTestSubMutation.isPending
+                        ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Creating...</>
+                        : <><FlaskConical className="w-4 h-4 mr-2" /> Start Test Subscription</>}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </SectionCard>
           </>
         )}
       </div>

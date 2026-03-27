@@ -2633,3 +2633,19 @@ export const bibleApiCalls = pgTable("bible_api_calls", {
   endpoint: varchar("endpoint", { length: 500 }),
   calledAt: timestamp("called_at").defaultNow().notNull(),
 });
+
+// ─── Stripe Test Subscription (Owner testing tool) ────────────────────────────
+
+export const stripeTestSubscriptions = pgTable("stripe_test_subscriptions", {
+  id: serial("id").primaryKey(),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  amount: integer("amount").notNull(), // in cents
+  interval: varchar("interval").notNull().default("day"), // day, week, month, year
+  intervalCount: integer("interval_count").notNull().default(1),
+  status: varchar("status").default("inactive"), // active, canceled, past_due, incomplete, inactive
+  lastPaymentStatus: varchar("last_payment_status"), // succeeded, failed, pending
+  lastPaymentAt: timestamp("last_payment_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
