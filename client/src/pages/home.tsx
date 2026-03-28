@@ -1960,65 +1960,22 @@ export default function Home() {
                           >
                             <SiFacebook className="w-5 h-5" />
                           </button>
-                          <button
-                            onClick={async () => {
-                              // Step 1: Copy full devotional content while gesture is active
-                              const tweetText = `${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | www.manupgodsway.org`;
-                              try {
-                                await navigator.clipboard.writeText(tweetText);
-                              } catch {
-                                try {
-                                  const ta = document.createElement('textarea');
-                                  ta.value = tweetText;
-                                  ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
-                                  document.body.appendChild(ta);
-                                  ta.focus();
-                                  ta.select();
-                                  document.execCommand('copy');
-                                  document.body.removeChild(ta);
-                                } catch {}
-                              }
-
-                              // Step 2: Save image via native share sheet
-                              try {
-                                const response = await fetch(`/api/devotionals/${devotional.id}/share-image`);
-                                if (!response.ok) throw new Error('Failed to fetch image');
-                                const blob = await response.blob();
-                                const file = new File([blob], 'manupgodsway-devotional.png', { type: 'image/png' });
-                                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                                  await navigator.share({ files: [file] });
-                                } else {
-                                  const url = URL.createObjectURL(blob);
-                                  const a = document.createElement('a');
-                                  a.href = url;
-                                  a.download = 'manupgodsway-devotional.png';
-                                  document.body.appendChild(a);
-                                  a.click();
-                                  document.body.removeChild(a);
-                                  URL.revokeObjectURL(url);
-                                }
-                              } catch (e: any) {
-                                if (e.name === 'AbortError') return;
-                              }
-
-                              // Step 3: Open Twitter compose with share URL (image appears as card)
+                          <a
+                            href={(() => {
                               const shareUrl = `https://www.manupgodsway.org/share/devotional/${devotional.id}`;
-                              toast({
-                                title: "Ready to post on X!",
-                                description: "Image saved & text copied. Paste the text into your post.",
-                                duration: 7000,
-                              });
-                              window.open(
-                                `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`,
-                                '_blank',
-                                'noopener,noreferrer'
-                              );
-                            }}
+                              // Twitter reserves 23 chars for the URL + 1 space = 256 chars left for text
+                              const maxLen = 256;
+                              const raw = devotional.content;
+                              const text = raw.length > maxLen ? raw.substring(0, maxLen - 1) + '…' : raw;
+                              return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
+                            })()}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="p-2 bg-black text-white border border-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="share-twitter"
                           >
                             <SiX className="w-5 h-5" />
-                          </button>
+                          </a>
                           <a
                             href={`https://wa.me/?text=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n📲 Download the app: www.manupgodsway.org`)}`}
                             target="_blank"
