@@ -40,7 +40,7 @@ export default function Subscribe() {
   const createCheckoutMutation = useMutation({
     mutationFn: async (data: { billingCycle: string; startTrial?: boolean }) => {
       const response = await apiRequest('POST', '/api/create-subscription-checkout', data);
-      return response.json();
+      return response;
     },
     onSuccess: (data) => {
       if (data.checkoutUrl) {
