@@ -1962,7 +1962,17 @@ export default function Home() {
                           </button>
                           <button
                             onClick={async () => {
-                              // Step 1: Save image to photos (native share sheet on iOS, download on desktop)
+                              const maxLen = 233;
+                              const raw = devotional.content;
+                              const tweetText = raw.length > maxLen ? raw.substring(0, maxLen - 1) + '…' : raw;
+                              const twitterIntentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent('https://app.manupgodsway.org')}`;
+
+                              // Open a blank window NOW while still inside the tap gesture —
+                              // browsers block window.open() after any await
+                              const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                              const twitterWin = !isMobile ? window.open('', '_blank') : null;
+
+                              // Step 1: Save image (native share sheet on mobile, download on desktop)
                               try {
                                 const response = await fetch(`/api/devotionals/${devotional.id}/share-image`);
                                 if (!response.ok) throw new Error('Failed to fetch image');
@@ -1971,33 +1981,56 @@ export default function Home() {
                                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                                   await navigator.share({ files: [file] });
                                 } else {
-                                  const url = URL.createObjectURL(blob);
+                                  const dlUrl = URL.createObjectURL(blob);
                                   const a = document.createElement('a');
-                                  a.href = url;
+                                  a.href = dlUrl;
                                   a.download = 'manupgodsway-devotional.png';
                                   document.body.appendChild(a);
                                   a.click();
                                   document.body.removeChild(a);
-                                  URL.revokeObjectURL(url);
+                                  URL.revokeObjectURL(dlUrl);
                                 }
                               } catch (e: any) {
-                                if (e.name === 'AbortError') return;
+                                if (e.name === 'AbortError') {
+                                  twitterWin?.close();
+                                  return;
+                                }
                               }
 
-                              // Step 2: Open Twitter with text pre-filled, prompt user to attach saved photo
-                              const maxLen = 233; // 280 - 23 (URL) - 24 (app URL chars via t.co)
-                              const raw = devotional.content;
-                              const tweetText = raw.length > maxLen ? raw.substring(0, maxLen - 1) + '…' : raw;
+                              // Step 2: Open Twitter — app on mobile, browser tab on desktop
                               toast({
                                 title: "Image saved!",
                                 description: "Attach the saved image in your tweet before posting.",
                                 duration: 8000,
                               });
-                              window.open(
-                                `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent('https://app.manupgodsway.org')}`,
-                                '_blank',
-                                'noopener,noreferrer'
-                              );
+
+                              if (isMobile) {
+                                // Try Twitter app deep link; fall back to browser after 1.5s
+                                const appLink = document.createElement('a');
+                                appLink.href = `twitter://post?message=${encodeURIComponent(tweetText + ' https://app.manupgodsway.org')}`;
+                                appLink.style.display = 'none';
+                                document.body.appendChild(appLink);
+                                appLink.click();
+                                document.body.removeChild(appLink);
+                                const onVis = () => {
+                                  if (document.hidden) {
+                                    clearTimeout(fallback);
+                                    document.removeEventListener('visibilitychange', onVis);
+                                  }
+                                };
+                                const fallback = setTimeout(() => {
+                                  document.removeEventListener('visibilitychange', onVis);
+                                  window.open(twitterIntentUrl, '_blank', 'noopener,noreferrer');
+                                }, 1500);
+                                document.addEventListener('visibilitychange', onVis);
+                              } else {
+                                // Desktop: redirect the pre-opened blank tab
+                                if (twitterWin) {
+                                  twitterWin.location.href = twitterIntentUrl;
+                                } else {
+                                  window.open(twitterIntentUrl, '_blank', 'noopener,noreferrer');
+                                }
+                              }
                             }}
                             className="p-2 bg-black text-white border border-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="share-twitter"
