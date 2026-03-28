@@ -225,14 +225,19 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
 
       case 'brotherhood': {
         if (notification.relatedId) {
-          const brotherhoodRequests = queryClient.getQueryData(['/api/brotherhood-requests']) as any[];
-          const request = brotherhoodRequests?.find((r: any) => r.id === notification.relatedId);
-          if (request?.requester) {
-            goTo(`/users/${request.requester.id}`);
-          } else if (request?.requesterId) {
-            goTo(`/users/${request.requesterId}`);
+          // "Approved" notifications store the approver's userId directly in relatedId
+          if (notification.title?.includes('Approved')) {
+            goTo(`/users/${notification.relatedId}`);
           } else {
-            goTo('/');
+            const brotherhoodRequests = queryClient.getQueryData(['/api/brotherhood-requests']) as any[];
+            const request = brotherhoodRequests?.find((r: any) => r.id === notification.relatedId);
+            if (request?.requester) {
+              goTo(`/users/${request.requester.id}`);
+            } else if (request?.requesterId) {
+              goTo(`/users/${request.requesterId}`);
+            } else {
+              goTo('/');
+            }
           }
         } else {
           goTo('/');
@@ -271,16 +276,21 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
     
     setShowPanel(false);
     
-    // Navigate to the requester's profile
+    // Navigate to the relevant user's profile
     if (notification.relatedId) {
-      const brotherhoodRequests = queryClient.getQueryData(['/api/brotherhood-requests']) as any[];
-      const request = brotherhoodRequests?.find(r => r.id === notification.relatedId);
-      if (request && request.requester) {
-        setLocation(`/users/${request.requester.id}`);
-      } else if (request && request.requesterId) {
-        setLocation(`/users/${request.requesterId}`);
+      // "Approved" notifications store the approver's userId directly in relatedId
+      if (notification.title?.includes('Approved')) {
+        setLocation(`/users/${notification.relatedId}`);
       } else {
-        setLocation('/');
+        const brotherhoodRequests = queryClient.getQueryData(['/api/brotherhood-requests']) as any[];
+        const request = brotherhoodRequests?.find(r => r.id === notification.relatedId);
+        if (request && request.requester) {
+          setLocation(`/users/${request.requester.id}`);
+        } else if (request && request.requesterId) {
+          setLocation(`/users/${request.requesterId}`);
+        } else {
+          setLocation('/');
+        }
       }
     } else {
       setLocation('/');

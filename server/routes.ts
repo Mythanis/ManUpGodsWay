@@ -8225,7 +8225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: 'brotherhood',
           title: '✅ Brotherhood Request Approved',
           message: `${recipient?.firstName} ${recipient?.lastName} accepted your brotherhood request! You are now brothers in faith.`,
-          relatedId: null,
+          relatedId: recipient?.id ?? null,
         });
 
         // Send real-time WebSocket notification for brotherhood establishment
