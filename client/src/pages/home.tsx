@@ -2091,9 +2091,51 @@ export default function Home() {
                             <Mail className="w-5 h-5" />
                           </button>
                           <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(`${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | https://app.manupgodsway.org`);
-                              toast({ title: "Copied!", description: "Devotional text copied to clipboard" });
+                            onClick={async () => {
+                              const copyText = `${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | https://app.manupgodsway.org`;
+
+                              // Copy text to clipboard first (must be synchronous / before any await on iOS)
+                              try {
+                                await navigator.clipboard.writeText(copyText);
+                              } catch {
+                                try {
+                                  const ta = document.createElement('textarea');
+                                  ta.value = copyText;
+                                  ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+                                  document.body.appendChild(ta);
+                                  ta.focus();
+                                  ta.select();
+                                  document.execCommand('copy');
+                                  document.body.removeChild(ta);
+                                } catch {}
+                              }
+
+                              // Save image via native share sheet (mobile) or download (desktop)
+                              try {
+                                const response = await fetch(`/api/devotionals/${devotional.id}/share-image`);
+                                if (!response.ok) throw new Error('Failed to fetch image');
+                                const blob = await response.blob();
+                                const file = new File([blob], 'manupgodsway-devotional.png', { type: 'image/png' });
+                                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                  await navigator.share({ files: [file] });
+                                } else {
+                                  const dlUrl = URL.createObjectURL(blob);
+                                  const a = document.createElement('a');
+                                  a.href = dlUrl;
+                                  a.download = 'manupgodsway-devotional.png';
+                                  document.body.appendChild(a);
+                                  a.click();
+                                  document.body.removeChild(a);
+                                  URL.revokeObjectURL(dlUrl);
+                                }
+                                toast({ title: "Copied & image saved!", description: "Paste the text and attach the image wherever you need." });
+                              } catch (e: any) {
+                                if (e.name === 'AbortError') {
+                                  toast({ title: "Text copied!", description: "Devotional text copied to clipboard." });
+                                  return;
+                                }
+                                toast({ title: "Text copied!", description: "Devotional text copied to clipboard." });
+                              }
                             }}
                             className="p-2 bg-gray-700 text-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="copy-link"
