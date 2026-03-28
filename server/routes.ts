@@ -2866,6 +2866,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/discussions/:id/replies/:replyId/like', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { replyId } = req.params;
+      const result = await storage.honorReply(userId, replyId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error toggling reply like:", error);
+      res.status(500).json({ message: "Failed to update reply like" });
+    }
+  });
+
   // Discussion subscription routes
   app.post('/api/discussions/:id/subscribe', isAuthenticated, async (req: any, res) => {
     try {

@@ -2259,7 +2259,7 @@ export class DatabaseStorage implements IStorage {
     return newReply;
   }
 
-  async getDiscussionReplies(discussionId: string, currentUserId?: string): Promise<(DiscussionReply & { user: User })[]> {
+  async getDiscussionReplies(discussionId: string, currentUserId?: string): Promise<(DiscussionReply & { user: User; likedByMe: boolean })[]> {
     const replyConditions = [eq(discussionReplies.discussionId, discussionId)];
     
     // Filter out silenced users from replies if currentUserId is provided
@@ -2270,7 +2270,7 @@ export class DatabaseStorage implements IStorage {
       }
     }
 
-    return await db
+    const rows = await db
       .select({
         id: discussionReplies.id,
         discussionId: discussionReplies.discussionId,
@@ -2286,6 +2286,19 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(discussionReplies.userId, users.id))
       .where(and(...replyConditions))
       .orderBy(discussionReplies.createdAt);
+
+    if (!currentUserId || rows.length === 0) {
+      return rows.map(r => ({ ...r, likedByMe: false }));
+    }
+
+    const replyIds = rows.map(r => r.id);
+    const honored = await db
+      .select({ replyId: replyHonors.replyId })
+      .from(replyHonors)
+      .where(and(eq(replyHonors.userId, currentUserId), inArray(replyHonors.replyId, replyIds)));
+    const honoredSet = new Set(honored.map(h => h.replyId));
+
+    return rows.map(r => ({ ...r, likedByMe: honoredSet.has(r.id) }));
   }
 
   async toggleDiscussionLike(discussionId: string, userId: string): Promise<{ liked: boolean; totalLikes: number }> {

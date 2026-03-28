@@ -69,6 +69,8 @@ export default function DiscussionCard({
   const [likeCount, setLikeCount] = useState(discussion.likes || 0);
   const [userHasDisliked, setUserHasDisliked] = useState(false);
   const [dislikeCount, setDislikeCount] = useState(0);
+  const [replyLikedByMe, setReplyLikedByMe] = useState<Record<string, boolean>>({});
+  const [replyLikeCounts, setReplyLikeCounts] = useState<Record<string, number>>({});
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -217,6 +219,23 @@ export default function DiscussionCard({
         description: `Failed to update like: ${error.message || 'Please try again.'}`,
         variant: "destructive",
       });
+    },
+  });
+
+  const toggleReplyLike = useMutation({
+    mutationFn: async (replyId: string) => {
+      const response = await apiRequest('POST', `/api/discussions/${discussion.id}/replies/${replyId}/like`, {});
+      return response as { honored: boolean };
+    },
+    onMutate: (replyId: string) => {
+      const wasLiked = replyLikedByMe[replyId] ?? false;
+      setReplyLikedByMe(prev => ({ ...prev, [replyId]: !wasLiked }));
+      setReplyLikeCounts(prev => ({ ...prev, [replyId]: Math.max(0, (prev[replyId] ?? 0) + (wasLiked ? -1 : 1)) }));
+    },
+    onError: (_err, replyId) => {
+      const wasLiked = !(replyLikedByMe[replyId] ?? false);
+      setReplyLikedByMe(prev => ({ ...prev, [replyId]: wasLiked }));
+      setReplyLikeCounts(prev => ({ ...prev, [replyId]: Math.max(0, (prev[replyId] ?? 0) + (wasLiked ? 1 : -1)) }));
     },
   });
 
@@ -638,9 +657,19 @@ export default function DiscussionCard({
                       </div>
                       <div className="flex items-center gap-3 mt-1 px-1">
                         <span className="text-[10px] text-white/35">{getTimeAgo(reply.createdAt)}</span>
-                        <button className="text-xs font-bold text-white/40 hover:text-[#FCD000] transition-colors flex items-center gap-1"
+                        <button
+                          className={`text-xs font-bold transition-colors flex items-center gap-1 ${
+                            (replyLikedByMe[reply.id] ?? (reply as any).likedByMe ?? false)
+                              ? 'text-[#FCD000]'
+                              : 'text-white/40 hover:text-[#FCD000]'
+                          }`}
+                          onClick={() => toggleReplyLike.mutate(reply.id)}
                           data-testid={`button-like-reply-${reply.id}`}>
-                          <ChristianCross className="w-3 h-3" /> {reply.likes || 0}
+                          <ChristianCross className="w-3 h-3" />
+                          <span>Amen</span>
+                          {(replyLikeCounts[reply.id] ?? reply.likes ?? 0) > 0 && (
+                            <span className="opacity-70">{replyLikeCounts[reply.id] ?? reply.likes}</span>
+                          )}
                         </button>
                         {!isNested && canReply && (
                           <button
