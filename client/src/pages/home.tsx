@@ -1882,7 +1882,27 @@ export default function Home() {
                         <div className="flex gap-2 justify-center">
                           <button
                             onClick={async () => {
-                              // Step 1: Save image to photos via native share sheet
+                              // Step 1 (done first — must run while the original tap gesture is active):
+                              // Copy devotional text to clipboard
+                              const postText = `${devotional.title}\n\n"${devotional.verse}"\n— ${devotional.verseReference}\n\n📖 Man Up God's Way | www.manupgodsway.org`;
+                              try {
+                                await navigator.clipboard.writeText(postText);
+                              } catch {
+                                // Fallback for browsers that block Clipboard API
+                                try {
+                                  const ta = document.createElement('textarea');
+                                  ta.value = postText;
+                                  ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+                                  document.body.appendChild(ta);
+                                  ta.focus();
+                                  ta.select();
+                                  document.execCommand('copy');
+                                  document.body.removeChild(ta);
+                                } catch {}
+                              }
+
+                              // Step 2: Save image to photos via native share sheet
+                              // (done after clipboard — iOS loses gesture context once share sheet opens)
                               try {
                                 const response = await fetch(`/api/devotionals/${devotional.id}/share-image`);
                                 if (!response.ok) throw new Error('Failed to fetch image');
@@ -1907,12 +1927,6 @@ export default function Home() {
                                 // If user cancelled the share sheet, stop the flow
                                 if (e.name === 'AbortError') return;
                               }
-
-                              // Step 2: Copy devotional text to clipboard
-                              const postText = `${devotional.title}\n\n"${devotional.verse}"\n— ${devotional.verseReference}\n\n📖 Man Up God's Way | www.manupgodsway.org`;
-                              try {
-                                await navigator.clipboard.writeText(postText);
-                              } catch {}
 
                               // Step 3: Open Facebook app if installed, else fall back to browser
                               toast({
