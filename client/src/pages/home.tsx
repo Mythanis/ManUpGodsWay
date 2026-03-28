@@ -78,6 +78,7 @@ export default function Home() {
   const [showDndHelpDialog, setShowDndHelpDialog] = useState(false);
   const [showChallengeDialog, setShowChallengeDialog] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [imageViewerDevotional, setImageViewerDevotional] = useState<any>(null);
   const [showHurdleWallDialog, setShowHurdleWallDialog] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showWelcomeIntro, setShowWelcomeIntro] = useState(false);
@@ -1838,37 +1839,11 @@ export default function Home() {
                           {isSharing ? '⏳ Sharing...' : '📤 Share with Image'}
                         </button>
                         <button
-                          onClick={async () => {
-                            try {
-                              const response = await fetch(`/api/devotionals/${devotional.id}/share-image`);
-                              if (!response.ok) throw new Error('Failed');
-                              const blob = await response.blob();
-                              const file = new File([blob], `manupgodsway-devotional.png`, { type: 'image/png' });
-                              // On iOS, use Web Share API to save to Photos — blob downloads don't work in PWA mode
-                              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                              if (isIOS && navigator.canShare && navigator.canShare({ files: [file] })) {
-                                await navigator.share({ files: [file], title: 'Man Up God\'s Way Devotional' });
-                              } else {
-                                const url = URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = `manupgodsway-devotional-${devotional.id}.png`;
-                                document.body.appendChild(a);
-                                a.click();
-                                document.body.removeChild(a);
-                                URL.revokeObjectURL(url);
-                                toast({ title: "Image Downloaded!", description: "Share the image from your gallery" });
-                              }
-                            } catch (err: any) {
-                              if (err?.name !== 'AbortError') {
-                                toast({ title: "Download failed", description: "Could not download image. Please try again.", variant: "destructive" });
-                              }
-                            }
-                          }}
+                          onClick={() => setImageViewerDevotional(devotional)}
                           className="block w-full p-2 bg-gray-700 text-white text-center rounded-sm hover:bg-gray-600 transition-colors font-bold text-xs uppercase"
                           data-testid="download-image"
                         >
-                          📥 Download Image
+                          📥 Save Image
                         </button>
                       </div>
                       <div className="border-t border-gray-700 pt-2">
@@ -2214,6 +2189,38 @@ export default function Home() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Fullscreen image viewer for saving devotional share image on iOS */}
+      {imageViewerDevotional && (
+        <div
+          className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center"
+          data-testid="image-viewer-overlay"
+        >
+          <div className="flex items-center justify-between w-full px-4 py-3 bg-black/80">
+            <button
+              onClick={() => setImageViewerDevotional(null)}
+              className="flex items-center gap-2 text-white font-bold text-sm uppercase tracking-wide"
+              data-testid="button-close-image-viewer"
+            >
+              ← Back
+            </button>
+            <span className="text-[#FCD000] text-xs font-black uppercase tracking-widest">Save Image</span>
+            <div className="w-12" />
+          </div>
+          <div className="flex-1 flex flex-col items-center justify-center w-full px-4">
+            <img
+              src={`/api/devotionals/${imageViewerDevotional.id}/share-image`}
+              alt="Devotional share image"
+              className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
+              data-testid="devotional-share-image"
+            />
+            <div className="mt-6 text-center">
+              <p className="text-white font-bold text-base mb-1">📱 Long-press the image to save</p>
+              <p className="text-white/60 text-sm">Tap and hold the image above, then select<br />"Save to Photos" or "Add to Photos"</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
