@@ -1837,14 +1837,30 @@ export default function Home() {
                         >
                           {isSharing ? '⏳ Sharing...' : '📤 Share with Image'}
                         </button>
-                        <a
-                          href={`/api/devotionals/${devotional.id}/share-image`}
-                          download={`manupgodsway-devotional-${devotional.id}.png`}
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(`/api/devotionals/${devotional.id}/share-image`);
+                              if (!response.ok) throw new Error('Failed');
+                              const blob = await response.blob();
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = `manupgodsway-devotional-${devotional.id}.png`;
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                              URL.revokeObjectURL(url);
+                              toast({ title: "Image Downloaded!", description: "Share the image from your gallery" });
+                            } catch {
+                              toast({ title: "Download failed", description: "Could not download image. Please try again.", variant: "destructive" });
+                            }
+                          }}
                           className="block w-full p-2 bg-gray-700 text-white text-center rounded-sm hover:bg-gray-600 transition-colors font-bold text-xs uppercase"
                           data-testid="download-image"
                         >
                           📥 Download Image
-                        </a>
+                        </button>
                       </div>
                       <div className="border-t border-gray-700 pt-2">
                         <p className="text-xs text-gray-400 mb-2 text-center">Share on social:</p>
