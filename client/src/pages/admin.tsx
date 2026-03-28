@@ -215,18 +215,20 @@ export default function Admin() {
     enabled: ['admin', 'owner'].includes((user as any)?.role),
   });
 
+  const isAdminOrOwner = ['admin', 'owner'].includes((user as any)?.role);
+
   // Fetch users for individual targeting
   const { data: allUsers = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/users"],
     retry: false,
-    enabled: (user as any)?.role === 'admin' && notificationData.targetAudience === 'individual',
+    enabled: isAdminOrOwner && notificationData.targetAudience === 'individual',
   });
 
   // Fetch uploaded videos for study assignment
   const { data: uploadedVideos = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/videos"],
     retry: false,
-    enabled: (user as any)?.role === 'admin' && showEditDialog,
+    enabled: isAdminOrOwner && showEditDialog,
   });
 
   // Fetch pending war group registrations count
