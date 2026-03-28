@@ -366,6 +366,18 @@ export const replyHonors = pgTable("reply_honors", {
   unique().on(table.userId, table.replyId), // Prevent duplicate honors from same user
 ]);
 
+// Discussion likes (per-user, toggleable)
+export const discussionLikes = pgTable("discussion_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  discussionId: varchar("discussion_id").notNull().references(() => discussions.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.discussionId),
+  index("idx_discussion_likes_discussion_id").on(table.discussionId),
+  index("idx_discussion_likes_user_id").on(table.userId),
+]);
+
 // User testimonies
 export const testimonies = pgTable("testimonies", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

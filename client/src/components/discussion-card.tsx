@@ -65,7 +65,7 @@ export default function DiscussionCard({
   const [showReplies, setShowReplies] = useState(false);
   const [replyingToReplyId, setReplyingToReplyId] = useState<string | null>(null);
   const [replyingToName, setReplyingToName] = useState('');
-  const [userHasLiked, setUserHasLiked] = useState(false);
+  const [userHasLiked, setUserHasLiked] = useState((discussion as any).likedByMe ?? false);
   const [likeCount, setLikeCount] = useState(discussion.likes || 0);
   const [userHasDisliked, setUserHasDisliked] = useState(false);
   const [dislikeCount, setDislikeCount] = useState(0);
@@ -195,15 +195,10 @@ export default function DiscussionCard({
       const response = await apiRequest('POST', `/api/discussions/${discussion.id}/like`, {});
       return response;
     },
-    onSuccess: () => {
+    onSuccess: (response: { liked: boolean; totalLikes: number }) => {
+      setUserHasLiked(response.liked);
+      setLikeCount(response.totalLikes);
       queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
-      const newLikedState = !userHasLiked;
-      setUserHasLiked(newLikedState);
-      setLikeCount((prev: number) => newLikedState ? prev + 1 : prev - 1);
-      toast({
-        title: "Success",
-        description: newLikedState ? "Discussion liked!" : "Removed like",
-      });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {

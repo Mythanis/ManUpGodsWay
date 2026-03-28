@@ -6,6 +6,7 @@ import {
   userLessonProgress,
   userSeriesProgress,
   discussions,
+  discussionLikes,
   discussionReplies,
   discussionSubscriptions,
   discussionHonors,
@@ -2097,16 +2098,24 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
+    let rows;
     if (conditions.length > 0) {
-      return await query
-        .where(and(...conditions))
-        .orderBy(...orderBy)
-        .limit(limit);
+      rows = await query.where(and(...conditions)).orderBy(...orderBy).limit(limit);
+    } else {
+      rows = await query.orderBy(...orderBy).limit(limit);
     }
 
-    return await query
-      .orderBy(...orderBy)
-      .limit(limit);
+    if (currentUserId && rows.length > 0) {
+      const discussionIds = rows.map((r: any) => r.id);
+      const likedRows = await db
+        .select({ discussionId: discussionLikes.discussionId })
+        .from(discussionLikes)
+        .where(and(eq(discussionLikes.userId, currentUserId), inArray(discussionLikes.discussionId, discussionIds)));
+      const likedSet = new Set(likedRows.map((r) => r.discussionId));
+      return rows.map((r: any) => ({ ...r, likedByMe: likedSet.has(r.id) }));
+    }
+
+    return rows.map((r: any) => ({ ...r, likedByMe: false }));
   }
 
   async getDiscussion(id: string, currentUserId?: string): Promise<(Discussion & { user: User; replies: (DiscussionReply & { user: User })[]; study?: { id: string; title: string; requiredTier: string | null } | null }) | undefined> {
@@ -2280,26 +2289,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async toggleDiscussionLike(discussionId: string, userId: string): Promise<{ liked: boolean; totalLikes: number }> {
-    // For simplicity, we'll just increment/decrement the likes count
-    // In a real app, you'd have a separate likes table to track who liked what
-    const [discussion] = await db
+    const [existing] = await db
       .select()
-      .from(discussions)
-      .where(eq(discussions.id, discussionId));
+      .from(discussionLikes)
+      .where(and(eq(discussionLikes.discussionId, discussionId), eq(discussionLikes.userId, userId)));
 
-    if (!discussion) {
-      throw new Error('Discussion not found');
+    if (existing) {
+      await db.delete(discussionLikes).where(
+        and(eq(discussionLikes.discussionId, discussionId), eq(discussionLikes.userId, userId))
+      );
+      const [updated] = await db
+        .update(discussions)
+        .set({ likes: sql`GREATEST(0, ${discussions.likes} - 1)` })
+        .where(eq(discussions.id, discussionId))
+        .returning({ likes: discussions.likes });
+      return { liked: false, totalLikes: updated?.likes ?? 0 };
+    } else {
+      await db.insert(discussionLikes).values({ discussionId, userId });
+      const [updated] = await db
+        .update(discussions)
+        .set({ likes: sql`COALESCE(${discussions.likes}, 0) + 1` })
+        .where(eq(discussions.id, discussionId))
+        .returning({ likes: discussions.likes });
+      return { liked: true, totalLikes: updated?.likes ?? 0 };
     }
-
-    // For now, just toggle the like count (in real app, track user likes)
-    const newLikes = Math.max(0, (discussion.likes || 0) + 1);
-    
-    await db
-      .update(discussions)
-      .set({ likes: newLikes })
-      .where(eq(discussions.id, discussionId));
-
-    return { liked: true, totalLikes: newLikes };
   }
 
   // Discussion subscription operations
