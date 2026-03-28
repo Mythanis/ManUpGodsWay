@@ -5655,7 +5655,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           billingCycle: billingCycle,
           startTrial: applyTrial ? 'true' : 'false',
         },
-        success_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile?upgrade=success${applyTrial ? '&trial=true' : ''}`,
+        success_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile?upgrade=success${applyTrial ? '&trial=true' : ''}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile?upgrade=cancelled`,
       };
 
@@ -5676,6 +5676,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating checkout session:", error);
       res.status(500).json({ message: "Failed to create checkout session" });
+    }
+  });
+
+  // Verify a completed Stripe checkout session and activate the user's subscription.
+  // Called from the success redirect page as a fallback in case the webhook missed the event.
+  app.get('/api/subscription/verify-session', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) return res.status(401).json({ message: "User not found" });
+
+      const sessionId = req.query.session_id as string;
+      if (!sessionId) return res.status(400).json({ message: "session_id required" });
+
+      // Already active — nothing to do (webhook may have beaten us here)
+      if (user.subscriptionStatus === 'active') {
+        return res.json({ success: true, alreadyActive: true });
+      }
+
+      const { default: Stripe } = await import('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
+
+      const session = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ['subscription'],
+      });
+
+      // Security: make sure this session belongs to the requesting user
+      if (session.metadata?.userId !== user.id) {
+        return res.status(403).json({ message: "Session does not belong to this user" });
+      }
+
+      if (session.payment_status !== 'paid' && session.status !== 'complete') {
+        return res.json({ success: false, status: session.status });
+      }
+
+      const sub = session.subscription as any;
+      const billingCycle = session.metadata?.billingCycle;
+      const isTrialSession = session.metadata?.startTrial === 'true' && sub?.trial_end;
+
+      if (isTrialSession) {
+        const trialEnd = new Date(sub.trial_end * 1000);
+        await storage.updateUserSubscriptionDetails(user.id, {
+          subscriptionTier: 'subscriber',
+          subscriptionStatus: 'active',
+          trialStartDate: new Date(),
+          trialEndDate: trialEnd,
+          subscriptionExpiresAt: trialEnd,
+          stripeCustomerId: session.customer as string,
+          stripeSubscriptionId: sub?.id,
+        });
+      } else {
+        const expirationDate = sub?.current_period_end
+          ? new Date(sub.current_period_end * 1000)
+          : billingCycle === 'yearly'
+            ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+        await storage.updateUserSubscriptionDetails(user.id, {
+          subscriptionTier: 'subscriber',
+          subscriptionStatus: 'active',
+          subscriptionExpiresAt: expirationDate,
+          stripeCustomerId: session.customer as string,
+          stripeSubscriptionId: sub?.id,
+        });
+      }
+
+      console.log(`[VerifySession] Activated subscription for user ${user.id} via session ${sessionId}`);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("[VerifySession] Error:", error.message);
+      res.status(500).json({ message: "Failed to verify session" });
     }
   });
 

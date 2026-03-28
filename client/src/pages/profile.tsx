@@ -59,29 +59,49 @@ export default function Profile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Handle successful subscription upgrade
+  // Handle successful subscription upgrade — verify session with backend to guarantee activation
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const upgradeStatus = urlParams.get('upgrade');
     const isTrial = urlParams.get('trial') === 'true';
+    const sessionId = urlParams.get('session_id');
 
     if (upgradeStatus === 'success') {
       window.history.replaceState({}, document.title, window.location.pathname);
-      
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      
-      toast({
-        title: isTrial ? "Free Trial Started!" : "Subscription Activated!",
-        description: isTrial 
-          ? "Welcome! Your free trial is active. You have full access to all content."
-          : "Welcome! You now have access to all subscriber content.",
-        variant: "default",
-      });
+
+      if (sessionId) {
+        // Verify the Stripe session directly — activates the user even if the webhook missed
+        fetch(`/api/subscription/verify-session?session_id=${sessionId}`, { credentials: 'include' })
+          .then(r => r.json())
+          .then(() => {
+            queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+            toast({
+              title: isTrial ? "Free Trial Started!" : "Subscription Activated!",
+              description: isTrial
+                ? "Welcome! Your free trial is active. You have full access to all content."
+                : "Welcome! You now have access to all subscriber content.",
+              variant: "default",
+            });
+          })
+          .catch(() => {
+            // Fallback: still refresh queries even if verify call fails
+            queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+          });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+        toast({
+          title: isTrial ? "Free Trial Started!" : "Subscription Activated!",
+          description: isTrial
+            ? "Welcome! Your free trial is active. You have full access to all content."
+            : "Welcome! You now have access to all subscriber content.",
+          variant: "default",
+        });
+      }
     } else if (upgradeStatus === 'cancelled') {
-      // Clear URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
-      
       toast({
         title: "Upgrade Cancelled",
         description: "Your subscription upgrade was cancelled. You can try again anytime.",
