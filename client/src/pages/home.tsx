@@ -1929,15 +1929,16 @@ export default function Home() {
                               document.body.removeChild(fbAppLink);
                               // If the app opened, the page goes hidden — cancel the fallback
                               // If still visible after 1.5s, app isn't installed — open the browser
-                              const fallbackTimer = setTimeout(() => {
-                                window.open('https://www.facebook.com', '_blank');
-                              }, 1500);
                               const onVisibilityChange = () => {
                                 if (document.hidden) {
                                   clearTimeout(fallbackTimer);
                                   document.removeEventListener('visibilitychange', onVisibilityChange);
                                 }
                               };
+                              const fallbackTimer = setTimeout(() => {
+                                document.removeEventListener('visibilitychange', onVisibilityChange);
+                                window.open('https://www.facebook.com', '_blank', 'noopener,noreferrer');
+                              }, 1500);
                               document.addEventListener('visibilitychange', onVisibilityChange);
                             }}
                             className="p-2 bg-[#1877F2] text-white rounded-sm hover:opacity-80 transition-opacity"
