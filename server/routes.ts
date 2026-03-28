@@ -6859,9 +6859,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate request body
       const validatedData = feedbackSchema.parse(req.body);
-      
-      // Send feedback to admins
-      await storage.sendFeedbackToAdmins(userId, validatedData.feedback, validatedData.category);
+
+      const user = await storage.getUser(userId);
+      const userName = user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Unknown' : 'Unknown';
+      const userEmail = user?.email ?? 'unknown@unknown.com';
+
+      const { sendFeedbackEmail } = await import('./emailService');
+      await sendFeedbackEmail(validatedData.feedback, validatedData.category, userEmail, userName);
       
       res.json({ message: "Feedback sent successfully" });
     } catch (error) {
@@ -6875,6 +6879,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.status(500).json({ message: "Failed to send feedback" });
+    }
+  });
+
+  app.post('/api/help-request', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { message } = req.body;
+
+      if (!message || typeof message !== 'string' || !message.trim()) {
+        return res.status(400).json({ message: "Message is required" });
+      }
+
+      const user = await storage.getUser(userId);
+      const userName = user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Unknown' : 'Unknown';
+      const userEmail = user?.email ?? 'unknown@unknown.com';
+
+      const { sendHelpRequestEmail } = await import('./emailService');
+      await sendHelpRequestEmail(message.trim(), userEmail, userName);
+
+      res.json({ message: "Help request sent successfully" });
+    } catch (error) {
+      console.error("Error sending help request:", error);
+      res.status(500).json({ message: "Failed to send help request" });
     }
   });
 

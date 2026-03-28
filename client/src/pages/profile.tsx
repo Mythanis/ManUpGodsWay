@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { NotificationPanel } from "@/components/notification-panel";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { FeedbackDialog } from "@/components/feedback-dialog";
+import { HelpRequestDialog } from "@/components/help-request-dialog";
 import { SilencedUsersButton } from "@/components/silenced-users-button";
 import { TestimonyForm } from "@/components/testimony-form";
 import UpgradeModal from "@/components/upgrade-modal";
@@ -48,6 +49,7 @@ import { Link } from "wouter";
 
 export default function Profile() {
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -678,6 +680,7 @@ export default function Profile() {
             
             <Button 
               variant="ghost"
+              onClick={() => setShowHelpDialog(true)}
               className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-sm"
               data-testid="button-help"
             >
@@ -811,6 +814,11 @@ export default function Profile() {
       <FeedbackDialog 
         isOpen={showFeedbackDialog} 
         onClose={() => setShowFeedbackDialog(false)} 
+      />
+
+      <HelpRequestDialog
+        isOpen={showHelpDialog}
+        onClose={() => setShowHelpDialog(false)}
       />
       
       <UpgradeModal

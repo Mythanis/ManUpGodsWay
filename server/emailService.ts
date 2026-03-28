@@ -122,3 +122,63 @@ export async function sendWarGroupRegistrationEmail(
     // Don't throw - we don't want to fail the registration if email fails
   }
 }
+
+const FEEDBACK_CATEGORY_LABELS: Record<string, string> = {
+  'improvement': 'Improvement Suggestion',
+  'feature-request': 'Feature Request',
+  'bug-report': 'Bug Report',
+  'compliment': 'Compliment',
+  'complaint': 'Issue/Complaint',
+  'general': 'General Feedback',
+};
+
+export async function sendFeedbackEmail(
+  feedback: string,
+  category: string,
+  userEmail: string,
+  userName: string
+): Promise<void> {
+  const { client, fromEmail } = await getUncachableResendClient();
+  const categoryLabel = FEEDBACK_CATEGORY_LABELS[category] || category;
+
+  const html = `
+    <h2>Feedback Received</h2>
+    <p><strong>From:</strong> ${escapeHtml(userName)} (${escapeHtml(userEmail)})</p>
+    <p><strong>Category:</strong> ${escapeHtml(categoryLabel)}</p>
+    <h3>Message</h3>
+    <p style="white-space: pre-wrap;">${escapeHtml(feedback)}</p>
+  `;
+
+  await client.emails.send({
+    from: fromEmail,
+    to: 'info@manupgodsway.org',
+    subject: `Feedback - ${categoryLabel}`,
+    html,
+  });
+
+  console.log(`Feedback email sent (category: ${categoryLabel})`);
+}
+
+export async function sendHelpRequestEmail(
+  message: string,
+  userEmail: string,
+  userName: string
+): Promise<void> {
+  const { client, fromEmail } = await getUncachableResendClient();
+
+  const html = `
+    <h2>Help/Support Request</h2>
+    <p><strong>From:</strong> ${escapeHtml(userName)} (${escapeHtml(userEmail)})</p>
+    <h3>Message</h3>
+    <p style="white-space: pre-wrap;">${escapeHtml(message)}</p>
+  `;
+
+  await client.emails.send({
+    from: fromEmail,
+    to: 'info@manupgodsway.org',
+    subject: 'Help/Support',
+    html,
+  });
+
+  console.log(`Help request email sent from ${userEmail}`);
+}
