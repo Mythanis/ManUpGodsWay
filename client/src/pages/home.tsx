@@ -1960,22 +1960,50 @@ export default function Home() {
                           >
                             <SiFacebook className="w-5 h-5" />
                           </button>
-                          <a
-                            href={(() => {
-                              const shareUrl = `https://app.manupgodsway.org`;
-                              // Twitter reserves 23 chars for the URL + 1 space = 256 chars left for text
-                              const maxLen = 256;
+                          <button
+                            onClick={async () => {
+                              // Step 1: Save image to photos (native share sheet on iOS, download on desktop)
+                              try {
+                                const response = await fetch(`/api/devotionals/${devotional.id}/share-image`);
+                                if (!response.ok) throw new Error('Failed to fetch image');
+                                const blob = await response.blob();
+                                const file = new File([blob], 'manupgodsway-devotional.png', { type: 'image/png' });
+                                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                  await navigator.share({ files: [file] });
+                                } else {
+                                  const url = URL.createObjectURL(blob);
+                                  const a = document.createElement('a');
+                                  a.href = url;
+                                  a.download = 'manupgodsway-devotional.png';
+                                  document.body.appendChild(a);
+                                  a.click();
+                                  document.body.removeChild(a);
+                                  URL.revokeObjectURL(url);
+                                }
+                              } catch (e: any) {
+                                if (e.name === 'AbortError') return;
+                              }
+
+                              // Step 2: Open Twitter with text pre-filled, prompt user to attach saved photo
+                              const maxLen = 233; // 280 - 23 (URL) - 24 (app URL chars via t.co)
                               const raw = devotional.content;
-                              const text = raw.length > maxLen ? raw.substring(0, maxLen - 1) + '…' : raw;
-                              return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
-                            })()}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                              const tweetText = raw.length > maxLen ? raw.substring(0, maxLen - 1) + '…' : raw;
+                              toast({
+                                title: "Image saved!",
+                                description: "Attach the saved image in your tweet before posting.",
+                                duration: 8000,
+                              });
+                              window.open(
+                                `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent('https://app.manupgodsway.org')}`,
+                                '_blank',
+                                'noopener,noreferrer'
+                              );
+                            }}
                             className="p-2 bg-black text-white border border-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="share-twitter"
                           >
                             <SiX className="w-5 h-5" />
-                          </a>
+                          </button>
                           <a
                             href={`https://wa.me/?text=${encodeURIComponent(`${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | https://app.manupgodsway.org`)}`}
                             target="_blank"
