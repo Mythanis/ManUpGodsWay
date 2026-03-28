@@ -1881,13 +1881,46 @@ export default function Home() {
                         <p className="text-xs text-gray-400 mb-2 text-center">Share on social:</p>
                         <div className="flex gap-2 justify-center">
                           <button
-                            onClick={() => {
-                              const shareUrl = `https://www.manupgodsway.org/share/devotional/${devotional.id}`;
-                              window.open(
-                                `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
-                                '_blank',
-                                'noopener,noreferrer'
-                              );
+                            onClick={async () => {
+                              // Step 1: Save image to photos via native share sheet
+                              try {
+                                const response = await fetch(`/api/devotionals/${devotional.id}/share-image`);
+                                if (!response.ok) throw new Error('Failed to fetch image');
+                                const blob = await response.blob();
+                                const file = new File([blob], 'manupgodsway-devotional.png', { type: 'image/png' });
+
+                                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                  // iOS/Android: opens native share sheet → tap "Save Image"
+                                  await navigator.share({ files: [file] });
+                                } else {
+                                  // Desktop: trigger download
+                                  const url = URL.createObjectURL(blob);
+                                  const a = document.createElement('a');
+                                  a.href = url;
+                                  a.download = 'manupgodsway-devotional.png';
+                                  document.body.appendChild(a);
+                                  a.click();
+                                  document.body.removeChild(a);
+                                  URL.revokeObjectURL(url);
+                                }
+                              } catch (e: any) {
+                                // If user cancelled the share sheet, stop the flow
+                                if (e.name === 'AbortError') return;
+                              }
+
+                              // Step 2: Copy devotional text to clipboard
+                              const postText = `${devotional.title}\n\n"${devotional.verse}"\n— ${devotional.verseReference}\n\n📖 Man Up God's Way | www.manupgodsway.org`;
+                              try {
+                                await navigator.clipboard.writeText(postText);
+                              } catch {}
+
+                              // Step 3: Open Facebook and prompt user to paste + upload
+                              toast({
+                                title: "Ready to post on Facebook!",
+                                description: "Image saved & text copied. Paste the text and upload the image you just saved.",
+                                duration: 7000,
+                              });
+                              window.open('https://www.facebook.com', '_blank');
                             }}
                             className="p-2 bg-[#1877F2] text-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="share-facebook"
