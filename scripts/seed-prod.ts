@@ -4,6 +4,9 @@
  * Run manually against the production database:
  *   DATABASE_URL=<prod-connection-string> npx tsx scripts/seed-prod.ts
  *
+ * Or set SEED_ON_BUILD=true in your deployment environment so build.sh
+ * runs it automatically during the next deployment.
+ *
  * Idempotency:
  *   - Every table is seeded on every run regardless of existing row count.
  *   - Existing rows are preserved by ON CONFLICT DO NOTHING (PK match).
@@ -16,6 +19,11 @@
  * Minimal placeholder user records are inserted before content so FK
  * constraints on uploaded_by / created_by / leader_id pass. Replit Auth
  * overwrites these with real profile data on first login.
+ *
+ * User FK override rule: any user FK field whose value does not correspond
+ * to a known production user is replaced with Jody's owner ID (46399196).
+ * Only videos, podcasts, events, war_groups, and fitness_plans need this
+ * override — the remaining tables already reference owner IDs exclusively.
  */
 
 import { Pool, neonConfig } from '@neondatabase/serverless';
@@ -34,16 +42,53 @@ interface TableConfig {
   overrides?: Record<string, string>;
 }
 
+// FK-safe insertion order — tables appear after the tables they depend on.
 const TABLE_ORDER: TableConfig[] = [
-  { key: 'exercises',     table: 'exercises' },
-  { key: 'study_series',  table: 'study_series' },
-  { key: 'videos',        table: 'videos',       overrides: { uploaded_by: PRIMARY_OWNER_ID } },
-  { key: 'podcasts',      table: 'podcasts',      overrides: { uploaded_by: PRIMARY_OWNER_ID } },
-  { key: 'events',        table: 'events',        overrides: { created_by: PRIMARY_OWNER_ID } },
-  { key: 'war_groups',    table: 'war_groups',    overrides: { leader_id: PRIMARY_OWNER_ID } },
-  { key: 'studies',       table: 'studies' },
-  { key: 'study_lessons', table: 'study_lessons' },
-  { key: 'fitness_plans', table: 'fitness_plans', overrides: { user_id: PRIMARY_OWNER_ID } },
+  // ── No external FKs ──────────────────────────────────────────────────────
+  { key: 'exercises',            table: 'exercises' },
+  { key: 'study_series',         table: 'study_series' },
+
+  // ── uploaded_by → users (owner IDs already correct in seed data) ─────────
+  { key: 'logo_settings',        table: 'logo_settings' },
+  { key: 'header_logo_settings', table: 'header_logo_settings' },
+
+  // ── No user FKs ──────────────────────────────────────────────────────────
+  { key: 'carousel_items',       table: 'carousel_items' },
+  { key: 'challenges',           table: 'challenges' },
+  { key: 'devotionals',          table: 'devotionals' },
+  { key: 'man_up_links',         table: 'man_up_links' },
+  { key: 'missions',             table: 'missions' },
+  { key: 'store_products',       table: 'store_products' },
+  { key: 'tier_pricing',         table: 'tier_pricing' },
+
+  // ── uploaded_by / created_by → users — override to PRIMARY_OWNER_ID ─────
+  { key: 'videos',               table: 'videos',        overrides: { uploaded_by: PRIMARY_OWNER_ID } },
+  { key: 'podcasts',             table: 'podcasts',      overrides: { uploaded_by: PRIMARY_OWNER_ID } },
+  { key: 'events',               table: 'events',        overrides: { created_by: PRIMARY_OWNER_ID } },
+
+  // ── leader_id → users — override to PRIMARY_OWNER_ID ────────────────────
+  { key: 'war_groups',           table: 'war_groups',    overrides: { leader_id: PRIMARY_OWNER_ID } },
+
+  // ── updated_by → users (already PRIMARY_OWNER_ID in seed data) ──────────
+  { key: 'system_settings',      table: 'system_settings' },
+
+  // ── series_id → study_series ─────────────────────────────────────────────
+  { key: 'studies',              table: 'studies' },
+
+  // ── study_id → studies ───────────────────────────────────────────────────
+  { key: 'study_lessons',        table: 'study_lessons' },
+
+  // ── user_id → users — override to PRIMARY_OWNER_ID ───────────────────────
+  { key: 'fitness_plans',        table: 'fitness_plans', overrides: { user_id: PRIMARY_OWNER_ID } },
+
+  // ── user_id → users, study_id → studies (already PRIMARY_OWNER_ID) ───────
+  { key: 'discussions',          table: 'discussions' },
+
+  // ── event_id → events ────────────────────────────────────────────────────
+  { key: 'event_tiers',          table: 'event_tiers' },
+
+  // ── group_id → war_groups, user_id → users (46399196 + 46399698 both seeded)
+  { key: 'war_group_members',    table: 'war_group_members' },
 ];
 
 async function seed() {
@@ -71,20 +116,20 @@ async function seed() {
     for (const cfg of TABLE_ORDER) {
       const { rows } = await client.query(`SELECT COUNT(*) AS count FROM "${cfg.table}"`);
       const seedCount = (seedData[cfg.key] ?? []).length;
-      console.log(`  ${cfg.table.padEnd(16)}: ${String(rows[0].count).padStart(4)} existing  /  ${String(seedCount).padStart(4)} in seed file`);
+      console.log(`  ${cfg.table.padEnd(22)}: ${String(rows[0].count).padStart(4)} existing  /  ${String(seedCount).padStart(4)} in seed file`);
     }
 
     // ── Insert phase ───────────────────────────────────────────────────────
     await client.query('BEGIN');
 
-    // Ensure owner user records exist so FK constraints pass
+    // Ensure both owner user records exist so all FK constraints pass
     for (const ownerId of OWNER_IDS) {
       await client.query(
         `INSERT INTO users (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`,
         [ownerId]
       );
     }
-    console.log('\n[seed] Owner user records ensured.');
+    console.log('\n[seed] Owner user records ensured (46399196, 46399698).');
 
     for (const cfg of TABLE_ORDER) {
       const rows: any[] = (seedData[cfg.key] ?? []).map((r: any) =>
@@ -130,7 +175,7 @@ async function seed() {
       const expected = (seedData[cfg.key] ?? []).length;
       const ok = actual >= expected;
       const status = ok ? 'OK' : 'MISMATCH';
-      console.log(`  [${status}] ${cfg.table.padEnd(16)}: ${actual} rows (expected >= ${expected})`);
+      console.log(`  [${status}] ${cfg.table.padEnd(22)}: ${actual} rows (expected >= ${expected})`);
       if (!ok) failures++;
     }
 
