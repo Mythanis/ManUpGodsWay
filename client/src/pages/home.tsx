@@ -1884,7 +1884,7 @@ export default function Home() {
                             onClick={async () => {
                               // Step 1 (done first — must run while the original tap gesture is active):
                               // Copy devotional text to clipboard
-                              const postText = `${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | www.manupgodsway.org`;
+                              const postText = `${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | https://app.manupgodsway.org`;
                               try {
                                 await navigator.clipboard.writeText(postText);
                               } catch {
@@ -1962,7 +1962,7 @@ export default function Home() {
                           </button>
                           <a
                             href={(() => {
-                              const shareUrl = `https://www.manupgodsway.org/share/devotional/${devotional.id}`;
+                              const shareUrl = `https://app.manupgodsway.org`;
                               // Twitter reserves 23 chars for the URL + 1 space = 256 chars left for text
                               const maxLen = 256;
                               const raw = devotional.content;
@@ -1977,7 +1977,7 @@ export default function Home() {
                             <SiX className="w-5 h-5" />
                           </a>
                           <a
-                            href={`https://wa.me/?text=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n📲 Download the app: www.manupgodsway.org`)}`}
+                            href={`https://wa.me/?text=${encodeURIComponent(`${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | https://app.manupgodsway.org`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 bg-[#25D366] text-white rounded-sm hover:opacity-80 transition-opacity"
@@ -1986,7 +1986,7 @@ export default function Home() {
                             <SiWhatsapp className="w-5 h-5" />
                           </a>
                           <a
-                            href={`mailto:?subject=${encodeURIComponent(devotional.title)}&body=${encodeURIComponent(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\n${devotional.content}\n\n📲 Download the app: www.manupgodsway.org`)}`}
+                            href={`mailto:?subject=${encodeURIComponent(devotional.title)}&body=${encodeURIComponent(`${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | https://app.manupgodsway.org`)}`}
                             className="p-2 bg-gray-600 text-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="share-email"
                           >
@@ -1994,7 +1994,7 @@ export default function Home() {
                           </a>
                           <button
                             onClick={() => {
-                              navigator.clipboard.writeText(`${devotional.title}\n\n"${devotional.verse}" - ${devotional.verseReference}\n\nwww.manupgodsway.org`);
+                              navigator.clipboard.writeText(`${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | https://app.manupgodsway.org`);
                               toast({ title: "Copied!", description: "Devotional text copied to clipboard" });
                             }}
                             className="p-2 bg-gray-700 text-white rounded-sm hover:opacity-80 transition-opacity"
