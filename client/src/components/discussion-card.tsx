@@ -430,13 +430,6 @@ export default function DiscussionCard({
           </div>
         </div>
 
-        {/* ── Title ──────────────────────────────── */}
-        <div className="px-4 pb-1">
-          <h4 className="font-bold text-white text-base leading-snug" data-testid="text-discussion-title">
-            {discussion.title}
-          </h4>
-        </div>
-
         {/* ── Body text ──────────────────────────── */}
         {(() => {
           const hasHtml = /<[a-z][\s\S]*?>/i.test(discussion.content || '');
