@@ -63,6 +63,8 @@ import { TopRightLogo } from "@/components/top-right-logo";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { useTrialAccess } from "@/hooks/useTrialAccess";
 import TrialPaywallModal from "@/components/trial-paywall-modal";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 // Tracks the last path the user was on before navigating to the current one,
 // so the paywall can send them back somewhere sensible.
@@ -122,6 +124,7 @@ function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const { splashCompleted, setSplashCompleted } = useSplash();
   const { startTour, isTourActive } = useTour();
+  const { toast } = useToast();
 
   // Track previous location so the paywall can send the user back somewhere sensible
   const [location] = useLocation();
@@ -152,6 +155,22 @@ function Router() {
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated, user, isTourActive, startTour]);
+
+  // Check and award grace bonus once per session when a user logs in after 14+ days away
+  const hasCheckedGraceRef = useRef(false);
+  useEffect(() => {
+    if (!isAuthenticated || isLoading || hasCheckedGraceRef.current) return;
+    hasCheckedGraceRef.current = true;
+    apiRequest('POST', '/api/rations/grace-bonus').then((result: any) => {
+      if (result?.success && result?.amount > 0) {
+        toast({
+          title: "Welcome back, soldier!",
+          description: `You've been away a while — here are ${result.amount} rations for returning to the fight.`,
+          duration: 6000,
+        });
+      }
+    }).catch(() => {});
+  }, [isAuthenticated, isLoading]);
 
   // Skip splash screen for purchase pages
   const isPurchasePage = window.location.pathname.includes('/purchase');

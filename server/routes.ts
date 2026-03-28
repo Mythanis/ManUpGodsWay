@@ -12659,6 +12659,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { rationsService } = await import('./rations-service');
       const result = await rationsService.awardGraceBonus(userId);
+      // Update lastActiveDate so the 14-day clock resets from now
+      if (result.success) {
+        await storage.upsertUser({ id: userId, lastActiveDate: new Date() });
+      }
       res.json(result);
     } catch (error) {
       console.error("Error checking grace bonus:", error);
