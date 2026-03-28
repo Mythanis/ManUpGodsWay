@@ -1,3 +1,22 @@
+/**
+ * One-time production data migration script.
+ *
+ * Run manually against the production database (e.g. from a dev machine with
+ * the prod DATABASE_URL exported, or via an ephemeral runner):
+ *
+ *   DATABASE_URL=<prod-connection-string> npx tsx scripts/seed-prod.ts
+ *
+ * The script is fully idempotent:
+ *   - Each table is checked independently before seeding.
+ *   - Existing rows are preserved via ON CONFLICT DO NOTHING.
+ *   - A single transaction wraps all inserts; rolls back on any error.
+ *
+ * Owner user IDs are Replit platform IDs and are identical in dev and prod.
+ * Minimal placeholder user records are inserted before content so that FK
+ * constraints on uploaded_by / created_by / leader_id pass. Replit Auth will
+ * overwrite these records with real profile data on first login.
+ */
+
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import ws from 'ws';
 import { readFileSync, existsSync } from 'fs';
@@ -5,50 +24,91 @@ import { join } from 'path';
 
 neonConfig.webSocketConstructor = ws;
 
-const PRIMARY_OWNER_ID = '46399196';
-const SECONDARY_OWNER_ID = '46399698';
+const OWNER_IDS = ['46399196', '46399698'];
+const PRIMARY_OWNER_ID = OWNER_IDS[0];
+
+interface TableConfig {
+  key: string;
+  table: string;
+  overrides?: Record<string, string>;
+}
+
+const TABLE_ORDER: TableConfig[] = [
+  { key: 'exercises',    table: 'exercises' },
+  { key: 'study_series', table: 'study_series' },
+  { key: 'videos',       table: 'videos',       overrides: { uploaded_by: PRIMARY_OWNER_ID } },
+  { key: 'podcasts',     table: 'podcasts',      overrides: { uploaded_by: PRIMARY_OWNER_ID } },
+  { key: 'events',       table: 'events',        overrides: { created_by: PRIMARY_OWNER_ID } },
+  { key: 'war_groups',   table: 'war_groups',    overrides: { leader_id: PRIMARY_OWNER_ID } },
+  { key: 'studies',      table: 'studies' },
+  { key: 'study_lessons', table: 'study_lessons' },
+  { key: 'fitness_plans', table: 'fitness_plans', overrides: { user_id: PRIMARY_OWNER_ID } },
+];
 
 async function seed() {
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) {
-    console.log('[seed] DATABASE_URL not set — skipping seed.');
-    process.exit(0);
+    console.error('[seed] ERROR: DATABASE_URL environment variable is not set.');
+    process.exit(1);
   }
 
   const seedDataPath = join(process.cwd(), 'scripts', 'seed-data.json');
   if (!existsSync(seedDataPath)) {
-    console.log('[seed] scripts/seed-data.json not found — skipping seed.');
-    process.exit(0);
+    console.error('[seed] ERROR: scripts/seed-data.json not found.');
+    process.exit(1);
   }
+
+  console.log('[seed] Loading seed data...');
+  const seedData: Record<string, any[]> = JSON.parse(readFileSync(seedDataPath, 'utf8'));
 
   const pool = new Pool({ connectionString: dbUrl });
   const client = await pool.connect();
 
   try {
-    const { rows } = await client.query('SELECT COUNT(*) AS count FROM exercises');
-    const count = parseInt(rows[0].count, 10);
-    if (count > 0) {
-      console.log(`[seed] Already seeded (${count} exercises found). Skipping.`);
+    console.log('[seed] Checking current table counts...');
+    const summary: Record<string, { existing: number; toInsert: number }> = {};
+
+    for (const cfg of TABLE_ORDER) {
+      const key = cfg.key as keyof typeof seedData;
+      const { rows } = await client.query(`SELECT COUNT(*) AS count FROM "${cfg.table}"`);
+      const existing = parseInt(rows[0].count, 10);
+      const toInsert = (seedData[key] ?? []).length;
+      summary[cfg.table] = { existing, toInsert };
+      console.log(`  ${cfg.table}: ${existing} rows in DB, ${toInsert} rows in seed file`);
+    }
+
+    const tablesToSeed = TABLE_ORDER.filter(
+      (cfg) => summary[cfg.table].existing === 0 && summary[cfg.table].toInsert > 0
+    );
+
+    if (tablesToSeed.length === 0) {
+      console.log('[seed] All tables already have data. Nothing to seed.');
       return;
     }
 
-    console.log('[seed] No exercises found — seeding production data...');
+    console.log(`\n[seed] Will seed ${tablesToSeed.length} table(s): ${tablesToSeed.map((t) => t.table).join(', ')}`);
 
-    const seedData: Record<string, any[]> = JSON.parse(
-      readFileSync(seedDataPath, 'utf8')
-    );
+    await client.query('BEGIN');
 
-    async function batchInsert(
-      table: string,
-      rows: any[],
-      overrides: Record<string, any> = {},
-      batchSize = 50
-    ) {
-      if (!rows || rows.length === 0) return 0;
+    // Ensure owner user records exist so FK constraints pass
+    for (const ownerId of OWNER_IDS) {
+      await client.query(
+        `INSERT INTO users (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`,
+        [ownerId]
+      );
+    }
+    console.log('[seed] Owner user records ensured.');
+
+    for (const cfg of tablesToSeed) {
+      const rows: any[] = (seedData[cfg.key as keyof typeof seedData] ?? []).map((r: any) =>
+        cfg.overrides ? { ...r, ...cfg.overrides } : r
+      );
 
       let inserted = 0;
-      for (let i = 0; i < rows.length; i += batchSize) {
-        const batch = rows.slice(i, i + batchSize).map((r) => ({ ...r, ...overrides }));
+      const BATCH = 50;
+
+      for (let i = 0; i < rows.length; i += BATCH) {
+        const batch = rows.slice(i, i + BATCH);
         const cols = Object.keys(batch[0]);
         const params: any[] = [];
 
@@ -61,55 +121,24 @@ async function seed() {
         });
 
         const quotedCols = cols.map((c) => `"${c}"`).join(', ');
-        const sql = `INSERT INTO "${table}" (${quotedCols}) VALUES ${valueSets.join(', ')} ON CONFLICT DO NOTHING`;
+        const sql = `INSERT INTO "${cfg.table}" (${quotedCols}) VALUES ${valueSets.join(', ')} ON CONFLICT DO NOTHING`;
         await client.query(sql, params);
         inserted += batch.length;
       }
-      return inserted;
+
+      console.log(`[seed] ${cfg.table}: inserted ${inserted} rows`);
     }
 
-    await client.query('BEGIN');
-
-    await client.query(
-      `INSERT INTO users (id) VALUES ($1), ($2) ON CONFLICT (id) DO NOTHING`,
-      [PRIMARY_OWNER_ID, SECONDARY_OWNER_ID]
-    );
-    console.log('[seed] Ensured owner user records exist.');
-
-    const userOverride = { uploaded_by: PRIMARY_OWNER_ID };
-
-    const exerciseCount = await batchInsert('exercises', seedData.exercises);
-    console.log(`[seed] exercises: ${exerciseCount}`);
-
-    const seriesCount = await batchInsert('study_series', seedData.study_series);
-    console.log(`[seed] study_series: ${seriesCount}`);
-
-    const videoCount = await batchInsert('videos', seedData.videos, userOverride);
-    console.log(`[seed] videos: ${videoCount}`);
-
-    const podcastCount = await batchInsert('podcasts', seedData.podcasts, userOverride);
-    console.log(`[seed] podcasts: ${podcastCount}`);
-
-    const eventCount = await batchInsert('events', seedData.events, { created_by: PRIMARY_OWNER_ID });
-    console.log(`[seed] events: ${eventCount}`);
-
-    const warGroupCount = await batchInsert('war_groups', seedData.war_groups, { leader_id: PRIMARY_OWNER_ID });
-    console.log(`[seed] war_groups: ${warGroupCount}`);
-
-    const studyCount = await batchInsert('studies', seedData.studies);
-    console.log(`[seed] studies: ${studyCount}`);
-
-    const lessonCount = await batchInsert('study_lessons', seedData.study_lessons);
-    console.log(`[seed] study_lessons: ${lessonCount}`);
-
-    const fitnessPlanCount = await batchInsert('fitness_plans', seedData.fitness_plans, { user_id: PRIMARY_OWNER_ID });
-    console.log(`[seed] fitness_plans: ${fitnessPlanCount}`);
-
     await client.query('COMMIT');
-    console.log('[seed] All done!');
+    console.log('\n[seed] Seed complete. Verify row counts:');
+
+    for (const cfg of TABLE_ORDER) {
+      const { rows } = await client.query(`SELECT COUNT(*) AS count FROM "${cfg.table}"`);
+      console.log(`  ${cfg.table}: ${rows[0].count} rows`);
+    }
   } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('[seed] Error — rolled back:', err);
+    await client.query('ROLLBACK').catch(() => {});
+    console.error('[seed] Error — transaction rolled back:', err);
     process.exit(1);
   } finally {
     client.release();
