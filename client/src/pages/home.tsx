@@ -1914,13 +1914,31 @@ export default function Home() {
                                 await navigator.clipboard.writeText(postText);
                               } catch {}
 
-                              // Step 3: Open Facebook and prompt user to paste + upload
+                              // Step 3: Open Facebook app if installed, else fall back to browser
                               toast({
                                 title: "Ready to post on Facebook!",
                                 description: "Image saved & text copied. Paste the text and upload the image you just saved.",
                                 duration: 7000,
                               });
-                              window.open('https://www.facebook.com', '_blank');
+                              // Try the Facebook app deep link first
+                              const fbAppLink = document.createElement('a');
+                              fbAppLink.href = 'fb://composer';
+                              fbAppLink.style.display = 'none';
+                              document.body.appendChild(fbAppLink);
+                              fbAppLink.click();
+                              document.body.removeChild(fbAppLink);
+                              // If the app opened, the page goes hidden — cancel the fallback
+                              // If still visible after 1.5s, app isn't installed — open the browser
+                              const fallbackTimer = setTimeout(() => {
+                                window.open('https://www.facebook.com', '_blank');
+                              }, 1500);
+                              const onVisibilityChange = () => {
+                                if (document.hidden) {
+                                  clearTimeout(fallbackTimer);
+                                  document.removeEventListener('visibilitychange', onVisibilityChange);
+                                }
+                              };
+                              document.addEventListener('visibilitychange', onVisibilityChange);
                             }}
                             className="p-2 bg-[#1877F2] text-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="share-facebook"
