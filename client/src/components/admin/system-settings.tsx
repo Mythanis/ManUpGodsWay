@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Home, Shield, Calendar } from "lucide-react";
+import { Loader2, Home, Shield, Calendar, Database } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
 interface SystemSettings {
   id: string;
@@ -22,6 +23,19 @@ export default function SystemSettings() {
   const queryClient = useQueryClient();
   const [tagline, setTagline] = useState("");
   const [calendlyUrl, setCalendlyUrl] = useState("");
+  const [seedResult, setSeedResult] = useState<any>(null);
+
+  const seedMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/admin/seed-prod"),
+    onSuccess: async (res) => {
+      const data = await res.json();
+      setSeedResult(data);
+      toast({ title: "Seed complete", description: "Production data seeded successfully." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Seed failed", description: error.message || "Failed to seed production data", variant: "destructive" });
+    }
+  });
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ['api', 'system-settings'],
@@ -199,6 +213,46 @@ export default function SystemSettings() {
           </form>
         </CardContent>
       </Card>
+
+      {/* ── TEMPORARY: One-time production data seed ─────────────────────────── */}
+      <Card className="border-amber-500/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-amber-600">
+            <Database className="h-5 w-5" />
+            One-Time Production Data Seed
+          </CardTitle>
+          <CardDescription>
+            Run this once after deploying to production to populate studies, lessons, videos,
+            podcasts, events, war groups, exercises, and fitness plans. Safe to re-run — it skips
+            rows that already exist. Remove this card after seeding is complete.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button
+            onClick={() => seedMutation.mutate()}
+            disabled={seedMutation.isPending}
+            className="bg-amber-600 hover:bg-amber-700 text-white"
+            data-testid="button-seed-prod"
+          >
+            {seedMutation.isPending ? (
+              <><Loader2 className="h-4 w-4 animate-spin mr-2" />Seeding data...</>
+            ) : (
+              <><Database className="h-4 w-4 mr-2" />Seed Production Data</>
+            )}
+          </Button>
+          {seedResult && (
+            <div className="rounded-md bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 p-4 text-sm">
+              <p className="font-semibold text-green-800 dark:text-green-300 mb-2">Seed completed successfully!</p>
+              <ul className="space-y-1 text-green-700 dark:text-green-400">
+                {Object.entries(seedResult.results || {}).map(([table, count]) => (
+                  <li key={table}>{table}: {String(count)} rows attempted</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      {/* ── END TEMPORARY SEED CARD ──────────────────────────────────────────── */}
     </div>
   );
 }

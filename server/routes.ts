@@ -13970,5 +13970,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ─────────────────────────────────────────────────────────────────────────────
 
+  // ── TEMPORARY: One-time production data seed endpoint ─────────────────────
+  // Remove after running against production once.
+  app.post("/api/admin/seed-prod", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const adminUserId = req.user.claims.sub;
+
+      const seedDataPath = path.join(process.cwd(), 'scripts', 'seed-data.json');
+      if (!fs.existsSync(seedDataPath)) {
+        return res.status(404).json({ error: 'Seed data file not found at scripts/seed-data.json' });
+      }
+      const seedData = JSON.parse(fs.readFileSync(seedDataPath, 'utf8'));
+
+      // Convert snake_case DB column names to camelCase for Drizzle
+      function toCamel(obj: Record<string, any>): Record<string, any> {
+        return Object.fromEntries(
+          Object.entries(obj).map(([k, v]) => [
+            k.replace(/_([a-z])/g, (_: string, c: string) => c.toUpperCase()),
+            v
+          ])
+        );
+      }
+
+      async function batchInsert(table: any, rows: any[], batchSize = 50) {
+        for (let i = 0; i < rows.length; i += batchSize) {
+          await db.insert(table).values(rows.slice(i, i + batchSize)).onConflictDoNothing();
+        }
+        return rows.length;
+      }
+
+      const results: Record<string, number> = {};
+
+      // 1. exercises — integer PK, no user FK
+      if (seedData.exercises?.length) {
+        results.exercises = await batchInsert(schema.exercises, seedData.exercises.map(toCamel));
+      }
+
+      // 2. study_series — no user FK
+      if (seedData.study_series?.length) {
+        results.studySeries = await batchInsert(schema.studySeries, seedData.study_series.map(toCamel));
+      }
+
+      // 3. videos — replace uploadedBy with calling admin's ID
+      if (seedData.videos?.length) {
+        results.videos = await batchInsert(schema.videos, seedData.videos.map((r: any) => ({ ...toCamel(r), uploadedBy: adminUserId })));
+      }
+
+      // 4. podcasts — replace uploadedBy with calling admin's ID
+      if (seedData.podcasts?.length) {
+        results.podcasts = await batchInsert(schema.podcasts, seedData.podcasts.map((r: any) => ({ ...toCamel(r), uploadedBy: adminUserId })));
+      }
+
+      // 5. events — replace createdBy with calling admin's ID
+      if (seedData.events?.length) {
+        results.events = await batchInsert(schema.events, seedData.events.map((r: any) => ({ ...toCamel(r), createdBy: adminUserId })));
+      }
+
+      // 6. war_groups — replace leaderId with calling admin's ID
+      if (seedData.war_groups?.length) {
+        results.warGroups = await batchInsert(schema.warGroups, seedData.war_groups.map((r: any) => ({ ...toCamel(r), leaderId: adminUserId })));
+      }
+
+      // 7. studies — nullable seriesId / videoId FKs; IDs match those in seeded study_series/videos
+      if (seedData.studies?.length) {
+        results.studies = await batchInsert(schema.studies, seedData.studies.map(toCamel));
+      }
+
+      // 8. study_lessons — FK to studies (must come after studies)
+      if (seedData.study_lessons?.length) {
+        results.studyLessons = await batchInsert(schema.studyLessons, seedData.study_lessons.map(toCamel));
+      }
+
+      // 9. fitness_plans — replace userId with calling admin's ID
+      if (seedData.fitness_plans?.length) {
+        results.fitnessPlans = await batchInsert(schema.fitnessPlans, seedData.fitness_plans.map((r: any) => ({ ...toCamel(r), userId: adminUserId })));
+      }
+
+      res.json({ success: true, message: 'Production seed completed', results });
+    } catch (error: any) {
+      console.error('Seed error:', error);
+      res.status(500).json({ error: 'Seed failed', details: error.message });
+    }
+  });
+  // ── END TEMPORARY SEED ENDPOINT ───────────────────────────────────────────
+
   return httpServer;
 }
