@@ -2037,15 +2037,30 @@ export default function Home() {
                           >
                             <SiX className="w-5 h-5" />
                           </button>
-                          <a
-                            href={`https://wa.me/?text=${encodeURIComponent(`${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | https://app.manupgodsway.org`)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            onClick={async () => {
+                              const waText = `${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | https://app.manupgodsway.org`;
+                              try {
+                                const response = await fetch(`/api/devotionals/${devotional.id}/share-image`);
+                                if (!response.ok) throw new Error('Failed to fetch image');
+                                const blob = await response.blob();
+                                const file = new File([blob], 'manupgodsway-devotional.png', { type: 'image/png' });
+                                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                  // Native share sheet — user picks WhatsApp and gets both image + text
+                                  await navigator.share({ files: [file], text: waText });
+                                  return;
+                                }
+                              } catch (e: any) {
+                                if (e.name === 'AbortError') return;
+                              }
+                              // Desktop fallback: text-only WhatsApp web
+                              window.open(`https://wa.me/?text=${encodeURIComponent(waText)}`, '_blank', 'noopener,noreferrer');
+                            }}
                             className="p-2 bg-[#25D366] text-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="share-whatsapp"
                           >
                             <SiWhatsapp className="w-5 h-5" />
-                          </a>
+                          </button>
                           <a
                             href={`mailto:?subject=${encodeURIComponent(devotional.title)}&body=${encodeURIComponent(`${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | https://app.manupgodsway.org`)}`}
                             className="p-2 bg-gray-600 text-white rounded-sm hover:opacity-80 transition-opacity"
