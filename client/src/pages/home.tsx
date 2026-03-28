@@ -2065,13 +2065,31 @@ export default function Home() {
                           >
                             <SiWhatsapp className="w-5 h-5" />
                           </button>
-                          <a
-                            href={`mailto:?subject=${encodeURIComponent(devotional.title)}&body=${encodeURIComponent(`${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | https://app.manupgodsway.org`)}`}
+                          <button
+                            onClick={async () => {
+                              const subject = devotional.title;
+                              const body = `${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | https://app.manupgodsway.org`;
+                              try {
+                                const response = await fetch(`/api/devotionals/${devotional.id}/share-image`);
+                                if (!response.ok) throw new Error('Failed to fetch image');
+                                const blob = await response.blob();
+                                const file = new File([blob], 'manupgodsway-devotional.png', { type: 'image/png' });
+                                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                  // Native share sheet: user picks Mail → image attaches automatically
+                                  await navigator.share({ files: [file], text: body, title: subject });
+                                  return;
+                                }
+                              } catch (e: any) {
+                                if (e.name === 'AbortError') return;
+                              }
+                              // Desktop fallback: mailto (text only — browsers cannot attach files via mailto)
+                              window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                            }}
                             className="p-2 bg-gray-600 text-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="share-email"
                           >
                             <Mail className="w-5 h-5" />
-                          </a>
+                          </button>
                           <button
                             onClick={() => {
                               navigator.clipboard.writeText(`${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | https://app.manupgodsway.org`);
