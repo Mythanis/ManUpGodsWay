@@ -5603,17 +5603,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const subSettings = await storage.getSubscriptionSettings();
-      if (!subSettings) {
-        return res.status(404).json({ message: "Subscription pricing not configured" });
-      }
 
-      const trialDays = subSettings.trialDurationDays || 7;
+      // Fall back to sensible defaults when subscription settings haven't been
+      // configured via the admin panel yet (mirrors the behaviour of the public
+      // GET /api/subscription-settings endpoint).
+      const defaults = { monthlyPrice: "9.99", yearlyPrice: "99.99", trialDurationDays: 7 };
+      const effectiveSettings = subSettings ?? defaults;
+
+      const trialDays = effectiveSettings.trialDurationDays || 7;
       const hasUsedTrial = !!(user as any).trialStartDate || (user as any).subscriptionStatus === 'active';
       const applyTrial = startTrial && !hasUsedTrial;
 
-      const price = billingCycle === 'yearly' 
-        ? (subSettings.yearlyPrice || subSettings.monthlyPrice)
-        : subSettings.monthlyPrice;
+      const price = billingCycle === 'yearly'
+        ? (effectiveSettings.yearlyPrice || effectiveSettings.monthlyPrice)
+        : effectiveSettings.monthlyPrice;
 
       const { default: Stripe } = await import('stripe');
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -5630,7 +5633,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               currency: 'usd',
               product_data: {
                 name: "Man Up God's Way Subscription",
-                description: (subSettings.features || []).join(', '),
+                description: ((effectiveSettings as any).features || []).join(', '),
               },
               unit_amount: Math.round(parseFloat(price) * 100),
               recurring: {
