@@ -279,13 +279,14 @@ export default function EditPlan() {
       // Add updated exercises to the plan
       for (let i = 0; i < selectedExercises.length; i++) {
         const selectedExercise = selectedExercises[i];
+        const ex = selectedExercise.exercise as any;
         const exerciseData: any = {
-          exerciseId: selectedExercise.exercise.exerciseId,
-          exerciseName: selectedExercise.exercise.name,
-          bodyPart: selectedExercise.exercise.bodyParts?.[0] || '',
-          targetMuscle: selectedExercise.exercise.targetMuscles?.[0] || '',
-          equipment: selectedExercise.exercise.equipments?.[0] || '',
-          imageUrl: selectedExercise.exercise.gifUrl,
+          exerciseId: String(ex.exerciseId || ex.id || ''),
+          exerciseName: ex.name,
+          bodyPart: ex.bodyParts?.[0] || ex.bodyPart || '',
+          targetMuscle: ex.targetMuscles?.[0] || ex.target || '',
+          equipment: ex.equipments?.[0] || ex.equipment || '',
+          imageUrl: ex.gifUrl || ex.mediaFile || '',
           sets: selectedExercise.sets || 3,
           reps: selectedExercise.reps || '10',
           daysOfWeek: selectedExercise.daysOfWeek,
@@ -375,15 +376,16 @@ export default function EditPlan() {
     updatePlanMutation.mutate();
   };
 
-  // Extract data from exercise response
-  const exercises = exerciseResponse?.data || [];
-  const totalCount = exerciseResponse?.metadata?.totalExercises || 0;
-  const totalPages = exerciseResponse?.metadata?.totalPages || Math.ceil(totalCount / limit);
+  // Extract data from exercise response (API returns flat array)
+  const exercises = Array.isArray(exerciseResponse) ? exerciseResponse : [];
+  // If we got a full page, there may be more; hasMore enables the Next button
+  const hasMoreExercises = exercises.length >= limit;
+  const totalPages = currentPage + (hasMoreExercises ? 1 : 0);
 
-  // Get filter options
-  const uniqueBodyParts = bodyParts.map((bp: any) => bp.name).sort();
-  const uniqueEquipment = equipments.map((eq: any) => eq.name).sort();
-  const uniqueTargets = allMuscles.map((muscle: any) => muscle.name).sort();
+  // Get filter options (body-parts and equipment-types return string arrays)
+  const uniqueBodyParts = (Array.isArray(bodyParts) ? bodyParts : []).map((bp: any) => typeof bp === 'string' ? bp : bp.name).filter(Boolean).sort();
+  const uniqueEquipment = (Array.isArray(equipments) ? equipments : []).map((eq: any) => typeof eq === 'string' ? eq : eq.name).filter(Boolean).sort();
+  const uniqueTargets = (Array.isArray(allMuscles) ? allMuscles : []).map((m: any) => typeof m === 'string' ? m : m.name).filter(Boolean).sort();
 
   // Reset to page 1 when filters change
   const handleFilterChange = (filterType: string, value: string) => {
@@ -658,30 +660,37 @@ export default function EditPlan() {
                 <div className="text-center py-8">Loading exercises...</div>
               ) : (
                 <div className="space-y-4">
-                  {exercises.map((exercise: Exercise) => (
-                    <div key={exercise.exerciseId || exercise.id} className="p-4 border border-black/20 rounded-lg flex items-start justify-between">
+                  {exercises.map((exercise: any) => {
+                    const exId = exercise.exerciseId || String(exercise.id || '');
+                    const bodyParts: string[] = exercise.bodyParts || (exercise.bodyPart ? [exercise.bodyPart] : []);
+                    const equipments: string[] = exercise.equipments || (exercise.equipment ? [exercise.equipment] : []);
+                    const mediaUrl = exercise.gifUrl || exercise.mediaFile || '';
+                    return (
+                    <div key={exId} className="p-4 border border-black/20 rounded-lg flex items-start justify-between">
                       <div className="flex items-start gap-4 flex-1">
-                        <img 
-                          src={exercise.gifUrl} 
-                          alt={exercise.name}
-                          className="w-16 h-16 object-cover rounded"
-                        />
+                        {mediaUrl && (
+                          <img 
+                            src={mediaUrl} 
+                            alt={exercise.name}
+                            className="w-16 h-16 object-cover rounded"
+                          />
+                        )}
                         <div className="flex-1">
                           <h4 className="font-medium capitalize mb-1">
                             {exercise.name.replace(/_/g, ' ')}
                           </h4>
                           <div className="flex flex-wrap gap-1 text-xs">
-                            {exercise.bodyParts?.map((part: string) => (
+                            {bodyParts.map((part: string) => (
                               <Badge key={part} variant="secondary">{part}</Badge>
                             ))}
-                            {exercise.equipments?.map((eq: string) => (
+                            {equipments.map((eq: string) => (
                               <Badge key={eq} variant="outline" className="bg-black text-white border-black">{eq}</Badge>
                             ))}
                           </div>
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        {isFavorite(exercise.exerciseId || exercise.id || '') && (
+                        {isFavorite(exId) && (
                           <Badge className="bg-ministry-gold text-black">
                             <Heart className="w-3 h-3 mr-1 fill-current" />
                             Favorite
@@ -691,14 +700,15 @@ export default function EditPlan() {
                           size="sm"
                           onClick={() => handleAddExercise(exercise)}
                           className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
-                          data-testid={`button-add-exercise-${exercise.exerciseId || exercise.id}`}
+                          data-testid={`button-add-exercise-${exId}`}
                         >
                           <Plus className="w-4 h-4 mr-1" />
                           Add
                         </Button>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
 
                   {/* Pagination */}
                   {totalPages > 1 && (

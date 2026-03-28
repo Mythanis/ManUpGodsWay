@@ -188,6 +188,7 @@ export default function Fitness() {
   // Fitness plan state
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [showCreatePlan, setShowCreatePlan] = useState(false);
+  const [addToPlanResetKey, setAddToPlanResetKey] = useState(0);
   const [newPlanName, setNewPlanName] = useState('');
   const [newPlanDescription, setNewPlanDescription] = useState('');
   
@@ -765,17 +766,18 @@ export default function Fitness() {
   const addToPlanMutation = useMutation({
     mutationFn: async ({ planId, exercise }: { planId: string; exercise: Exercise }) => {
       return apiRequest('POST', `/api/fitness-plans/${planId}/exercises`, {
-        exerciseId: exercise.exerciseId || exercise.id,
+        exerciseId: String(exercise.exerciseId || (exercise as any).id || ''),
         exerciseName: exercise.name,
-        exerciseGifUrl: exercise.gifUrl,
-        exerciseTarget: exercise.targetMuscles?.[0] || exercise.target || '',
-        exerciseBodyPart: exercise.bodyParts?.[0] || exercise.bodyPart || '',
-        exerciseEquipment: exercise.equipments?.[0] || exercise.equipment || '',
-        orderIndex: 0, // Will be set by backend
+        imageUrl: exercise.gifUrl || (exercise as any).mediaFile || '',
+        targetMuscle: exercise.targetMuscles?.[0] || exercise.target || '',
+        bodyPart: exercise.bodyParts?.[0] || exercise.bodyPart || '',
+        equipment: exercise.equipments?.[0] || exercise.equipment || '',
+        orderIndex: 0,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['api', 'fitness-plans'] });
+      setAddToPlanResetKey(k => k + 1);
       toast({ title: "Exercise added to plan!" });
     },
     onError: (error: any) => {
@@ -1001,7 +1003,7 @@ export default function Fitness() {
               </button>
               
               {fitnessPlans.length > 0 && (
-                <Select onValueChange={(planId) => addToPlanMutation.mutate({ planId, exercise })}>
+                <Select key={`${(exercise as any).id || exercise.exerciseId}-${addToPlanResetKey}`} onValueChange={(planId) => addToPlanMutation.mutate({ planId, exercise })}>
                   <SelectTrigger className="w-32 rounded-sm border-2 border-black bg-white text-black font-bold">
                     <SelectValue placeholder="Add to Plan" />
                   </SelectTrigger>
