@@ -109,12 +109,16 @@ export async function sendWarGroupRegistrationEmail(
       <p><a href="${process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'https://manupgodsway.org'}/admin">Review in Admin Panel</a></p>
     `;
 
-    await client.emails.send({
+    const { error } = await client.emails.send({
       from: fromEmail,
       to: 'info@manupgodsway.org',
       subject: `New War Group Registration: ${registrationData.name}`,
       html: emailHtml,
     });
+
+    if (error) {
+      throw new Error(`Resend error: ${JSON.stringify(error)}`);
+    }
 
     console.log('War group registration email sent successfully');
   } catch (error) {
@@ -149,12 +153,16 @@ export async function sendFeedbackEmail(
     <p style="white-space: pre-wrap;">${escapeHtml(feedback)}</p>
   `;
 
-  await client.emails.send({
+  const { error } = await client.emails.send({
     from: fromEmail,
     to: 'info@manupgodsway.org',
     subject: `Feedback - ${categoryLabel}`,
     html,
   });
+
+  if (error) {
+    throw new Error(`Resend error: ${JSON.stringify(error)}`);
+  }
 
   console.log(`Feedback email sent (category: ${categoryLabel})`);
 }
@@ -173,12 +181,16 @@ export async function sendHelpRequestEmail(
     <p style="white-space: pre-wrap;">${escapeHtml(message)}</p>
   `;
 
-  await client.emails.send({
+  const { error } = await client.emails.send({
     from: fromEmail,
     to: 'info@manupgodsway.org',
     subject: 'Help/Support',
     html,
   });
+
+  if (error) {
+    throw new Error(`Resend error: ${JSON.stringify(error)}`);
+  }
 
   console.log(`Help request email sent from ${userEmail}`);
 }
