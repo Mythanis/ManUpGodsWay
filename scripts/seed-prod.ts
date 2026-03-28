@@ -53,13 +53,19 @@ const TABLE_ORDER: TableConfig[] = [
   { key: 'header_logo_settings', table: 'header_logo_settings' },
 
   // ── No user FKs ──────────────────────────────────────────────────────────
-  { key: 'carousel_items',       table: 'carousel_items' },
-  { key: 'challenges',           table: 'challenges' },
-  { key: 'devotionals',          table: 'devotionals' },
-  { key: 'man_up_links',         table: 'man_up_links' },
-  { key: 'missions',             table: 'missions' },
-  { key: 'store_products',       table: 'store_products' },
-  { key: 'tier_pricing',         table: 'tier_pricing' },
+  { key: 'carousel_items',          table: 'carousel_items' },
+  { key: 'challenges',              table: 'challenges' },
+  { key: 'devotionals',             table: 'devotionals' },
+  { key: 'man_up_links',            table: 'man_up_links' },
+  { key: 'missions',                table: 'missions' },
+  { key: 'store_products',          table: 'store_products' },
+  { key: 'tier_pricing',            table: 'tier_pricing' },
+
+  // ── bible_reading_plans (no deps) ────────────────────────────────────────
+  { key: 'bible_reading_plans',     table: 'bible_reading_plans' },
+
+  // ── bible_reading_plan_days (plan_id → bible_reading_plans) ──────────────
+  { key: 'bible_reading_plan_days', table: 'bible_reading_plan_days' },
 
   // ── uploaded_by / created_by → users — override to PRIMARY_OWNER_ID ─────
   { key: 'videos',               table: 'videos',        overrides: { uploaded_by: PRIMARY_OWNER_ID } },
