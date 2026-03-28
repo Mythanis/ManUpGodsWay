@@ -94,3 +94,42 @@ The system supports a single subscription model with configurable trials. Admins
 
 ## Mapping
 - OpenStreetMap Nominatim API
+
+# Production Data Migration
+
+A one-time content migration script is available at `scripts/seed-prod.ts`.
+The exported data snapshot lives at `scripts/seed-data.json` (629 KB, 9 tables).
+
+**Approach**: The endpoint-based approach (temporary admin HTTP route) was replaced
+by a direct script approach to avoid leaving temporary privileged endpoints exposed
+in shipping code. The script is the sole migration path.
+
+## Tables seeded (in FK order)
+| Table | Rows |
+|---|---|
+| exercises | 330 |
+| study_series | 1 |
+| videos | 4 |
+| podcasts | 104 |
+| events | 1 |
+| war_groups | 1 |
+| studies | 15 |
+| study_lessons | 105 |
+| fitness_plans | 6 |
+
+## How to run against production
+
+```bash
+DATABASE_URL=<prod-connection-string> npx tsx scripts/seed-prod.ts
+```
+
+The script:
+- Inserts all tables every run; `ON CONFLICT DO NOTHING` preserves existing rows
+  and backfills any missing ones — safe to re-run
+- Ensures owner user records (Replit user IDs `46399196` and `46399698`) exist
+  before inserting content so FK constraints on `uploaded_by` / `created_by` /
+  `leader_id` / `user_id` are satisfied
+- Verifies post-seed row counts against the seed file; exits non-zero on mismatch
+
+## After confirmed success
+Remove `scripts/seed-prod.ts` and `scripts/seed-data.json` (or keep for audit).
