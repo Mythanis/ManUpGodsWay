@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,6 +12,7 @@ import { Bell, Check, CheckCheck, MessageSquare, BookOpen, Heart, Users, Trash2,
 import { cn, formatLocalDateTime } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { NotificationPreferences } from "./notification-preferences";
+import { useToast } from "@/hooks/use-toast";
 
 interface Notification {
   id: string;
@@ -71,9 +72,11 @@ interface NotificationPanelProps {
 
 export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) {
   const [showPanel, setShowPanel] = useState(false);
+  const [respondedRequestIds, setRespondedRequestIds] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
   const isAdmin = ['admin', 'owner'].includes((user as any)?.role);
 
   // Get notifications
@@ -152,10 +155,19 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
   const respondToBrotherhoodMutation = useMutation({
     mutationFn: ({ requestId, action }: { requestId: string; action: 'approved' | 'denied' }) =>
       apiRequest('POST', `/api/brotherhood-requests/${requestId}/respond`, { response: action }),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      setRespondedRequestIds(prev => new Set(prev).add(variables.requestId));
       queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
       queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+      if (variables.action === 'approved') {
+        toast({ title: "Brotherhood Approved!", description: "You are now brothers in faith." });
+      } else {
+        toast({ title: "Request Declined", description: "The brotherhood request has been declined." });
+      }
+    },
+    onError: () => {
+      toast({ title: "Something went wrong", description: "Could not respond to the brotherhood request. Please try again.", variant: "destructive" });
     },
   });
 
@@ -479,8 +491,10 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                        {/* Approve/Deny buttons for brotherhood requests */}
-                        {notification.relatedId && (
+                        {/* Approve/Deny buttons for pending brotherhood requests only */}
+                        {notification.relatedId
+                          && !notification.title?.includes('Approved')
+                          && !respondedRequestIds.has(notification.relatedId) && (
                           <div className="flex gap-2">
                             <Button
                               size="sm"
@@ -707,8 +721,11 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                     <p className="text-[10px] text-white/30">
                       {formatLocalDateTime(notification.createdAt)}
                     </p>
-                    {/* Approve/Deny buttons for brotherhood requests */}
-                    {notification.type === 'brotherhood' && notification.relatedId && (
+                    {/* Approve/Deny buttons for pending brotherhood requests only */}
+                    {notification.type === 'brotherhood'
+                      && notification.relatedId
+                      && !notification.title?.includes('Approved')
+                      && !respondedRequestIds.has(notification.relatedId) && (
                       <div className="flex gap-1.5 mt-2">
                         <Button
                           size="sm"
