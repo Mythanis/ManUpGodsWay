@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus, Edit, Share2, Trash2, ThumbsDown } from "lucide-react";
+import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus, Edit, Share2, Trash2, ThumbsDown, Mail, Link2 } from "lucide-react";
 
 // Custom Christian Cross icon component
 const ChristianCross = ({ className }: { className?: string }) => (
@@ -31,7 +31,7 @@ const ChristianCross = ({ className }: { className?: string }) => (
     <line x1="5" y1="7" x2="19" y2="7" />
   </svg>
 );
-import { SiFacebook, SiX, SiWhatsapp, SiLinkedin } from "react-icons/si";
+import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { FlagContentDialog } from "@/components/flag-content-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -303,9 +303,11 @@ export default function DiscussionCard({
     setShowShareMenu(false);
   };
 
-  const shareToLinkedIn = () => {
-    const url = encodeURIComponent(getShareUrl());
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank', 'width=600,height=400');
+  const shareByEmail = () => {
+    const url = getShareUrl();
+    const subject = encodeURIComponent(`Check out this post on Man Up God's Way`);
+    const body = encodeURIComponent(`${discussion.title}\n\n${url}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`);
     setShowShareMenu(false);
   };
 
@@ -554,24 +556,30 @@ export default function DiscussionCard({
               <span>Share</span>
             </button>
             {showShareMenu && (
-              <div className="absolute bottom-full right-0 mb-2 bg-[#1a1a1a] border border-white/15 rounded-xl shadow-2xl p-2 z-50 min-w-[180px]">
-                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest px-3 py-1">Share to</p>
-                {[
-                  { label: 'Facebook', icon: SiFacebook, action: shareToFacebook, test: 'button-share-facebook' },
-                  { label: 'X (Twitter)', icon: SiX, action: shareToTwitter, test: 'button-share-twitter' },
-                  { label: 'WhatsApp', icon: SiWhatsapp, action: shareToWhatsApp, test: 'button-share-whatsapp' },
-                  { label: 'LinkedIn', icon: SiLinkedin, action: shareToLinkedIn, test: 'button-share-linkedin' },
-                ].map(({ label, icon: Icon, action, test }) => (
-                  <button key={label} onClick={action} data-testid={test}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-white/10 rounded-lg transition-colors font-medium">
-                    <Icon className="w-4 h-4 text-white/60" /> {label}
+              <div className="absolute bottom-full right-0 mb-2 bg-[#1a1a1a] border border-white/15 rounded-xl shadow-2xl p-3 z-50">
+                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mb-2">Share to</p>
+                <div className="flex items-center gap-2">
+                  <button onClick={shareToFacebook} data-testid="button-share-facebook"
+                    className="p-2 bg-[#1877F2] text-white rounded-sm hover:opacity-80 transition-opacity">
+                    <SiFacebook className="w-5 h-5" />
                   </button>
-                ))}
-                <div className="border-t border-white/10 my-1" />
-                <button onClick={copyLink} data-testid="button-copy-link"
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-white/10 rounded-lg transition-colors font-medium">
-                  <Share2 className="w-4 h-4 text-white/60" /> Copy Link
-                </button>
+                  <button onClick={shareToTwitter} data-testid="button-share-twitter"
+                    className="p-2 bg-black text-white border border-white rounded-sm hover:opacity-80 transition-opacity">
+                    <SiX className="w-5 h-5" />
+                  </button>
+                  <button onClick={shareToWhatsApp} data-testid="button-share-whatsapp"
+                    className="p-2 bg-[#25D366] text-white rounded-sm hover:opacity-80 transition-opacity">
+                    <SiWhatsapp className="w-5 h-5" />
+                  </button>
+                  <button onClick={shareByEmail} data-testid="button-share-email"
+                    className="p-2 bg-gray-600 text-white rounded-sm hover:opacity-80 transition-opacity">
+                    <Mail className="w-5 h-5" />
+                  </button>
+                  <button onClick={copyLink} data-testid="button-copy-link"
+                    className="p-2 bg-gray-700 text-white rounded-sm hover:opacity-80 transition-opacity">
+                    <Link2 className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             )}
           </div>
