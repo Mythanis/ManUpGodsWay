@@ -1843,17 +1843,26 @@ export default function Home() {
                               const response = await fetch(`/api/devotionals/${devotional.id}/share-image`);
                               if (!response.ok) throw new Error('Failed');
                               const blob = await response.blob();
-                              const url = URL.createObjectURL(blob);
-                              const a = document.createElement('a');
-                              a.href = url;
-                              a.download = `manupgodsway-devotional-${devotional.id}.png`;
-                              document.body.appendChild(a);
-                              a.click();
-                              document.body.removeChild(a);
-                              URL.revokeObjectURL(url);
-                              toast({ title: "Image Downloaded!", description: "Share the image from your gallery" });
-                            } catch {
-                              toast({ title: "Download failed", description: "Could not download image. Please try again.", variant: "destructive" });
+                              const file = new File([blob], `manupgodsway-devotional.png`, { type: 'image/png' });
+                              // On iOS, use Web Share API to save to Photos — blob downloads don't work in PWA mode
+                              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                              if (isIOS && navigator.canShare && navigator.canShare({ files: [file] })) {
+                                await navigator.share({ files: [file], title: 'Man Up God\'s Way Devotional' });
+                              } else {
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `manupgodsway-devotional-${devotional.id}.png`;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                URL.revokeObjectURL(url);
+                                toast({ title: "Image Downloaded!", description: "Share the image from your gallery" });
+                              }
+                            } catch (err: any) {
+                              if (err?.name !== 'AbortError') {
+                                toast({ title: "Download failed", description: "Could not download image. Please try again.", variant: "destructive" });
+                              }
                             }
                           }}
                           className="block w-full p-2 bg-gray-700 text-white text-center rounded-sm hover:bg-gray-600 transition-colors font-bold text-xs uppercase"
