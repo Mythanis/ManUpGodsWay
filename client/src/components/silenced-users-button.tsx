@@ -85,7 +85,7 @@ export function SilencedUsersButton() {
       <DialogTrigger asChild>
         <Button 
           variant="ghost"
-          className="w-full justify-between p-4 h-auto hover:bg-muted border-b border-ministry-charcoal"
+          className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-sm"
           onClick={() => {
             setSilencedToRemove(new Set());
             setSilencedDialogOpen(true);
@@ -93,17 +93,12 @@ export function SilencedUsersButton() {
           data-testid="button-silenced-users"
         >
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-ministry-steel/20 flex items-center justify-center">
-              <UserX className="w-4 h-4 text-ministry-steel" />
+            <div className="w-8 h-8 rounded-sm bg-ministry-gold-exact flex items-center justify-center">
+              <UserX className="w-4 h-4 text-black" />
             </div>
-            <div className="text-left">
-              <span className="font-medium text-foreground">Silenced Users</span>
-              <p className="text-xs text-muted-foreground">
-                Manage users you have silenced ({silencedUsers.length} users)
-              </p>
-            </div>
+            <span className="font-bold text-white uppercase tracking-wide">Silenced Users</span>
           </div>
-          <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-ministry-gold-exact" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
           </svg>
         </Button>
