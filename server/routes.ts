@@ -5596,6 +5596,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
 
+      // Prevent duplicate subscriptions — block if already active
+      if (user.subscriptionStatus === 'active') {
+        return res.status(400).json({ message: "You already have an active subscription." });
+      }
+
       const { billingCycle, startTrial } = req.body;
 
       if (!billingCycle || !['monthly', 'yearly'].includes(billingCycle)) {
