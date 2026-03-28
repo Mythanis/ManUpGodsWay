@@ -2040,21 +2040,70 @@ export default function Home() {
                           <button
                             onClick={async () => {
                               const waText = `${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | https://app.manupgodsway.org`;
+                              const waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+                              const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                              // Open blank window NOW (before any await) so popup blockers allow it on desktop
+                              const waWin = !isMobile ? window.open('', '_blank') : null;
+
+                              // Step 1: Save image
                               try {
                                 const response = await fetch(`/api/devotionals/${devotional.id}/share-image`);
                                 if (!response.ok) throw new Error('Failed to fetch image');
                                 const blob = await response.blob();
                                 const file = new File([blob], 'manupgodsway-devotional.png', { type: 'image/png' });
                                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                                  // Native share sheet — user picks WhatsApp and gets both image + text
-                                  await navigator.share({ files: [file], text: waText });
-                                  return;
+                                  await navigator.share({ files: [file] });
+                                } else {
+                                  const dlUrl = URL.createObjectURL(blob);
+                                  const a = document.createElement('a');
+                                  a.href = dlUrl;
+                                  a.download = 'manupgodsway-devotional.png';
+                                  document.body.appendChild(a);
+                                  a.click();
+                                  document.body.removeChild(a);
+                                  URL.revokeObjectURL(dlUrl);
                                 }
                               } catch (e: any) {
-                                if (e.name === 'AbortError') return;
+                                if (e.name === 'AbortError') {
+                                  waWin?.close();
+                                  return;
+                                }
                               }
-                              // Desktop fallback: text-only WhatsApp web
-                              window.open(`https://wa.me/?text=${encodeURIComponent(waText)}`, '_blank', 'noopener,noreferrer');
+
+                              // Step 2: Open WhatsApp — app deep link on mobile, browser tab on desktop
+                              toast({
+                                title: "Image saved!",
+                                description: "Attach the saved image in WhatsApp before sending.",
+                                duration: 8000,
+                              });
+
+                              if (isMobile) {
+                                // Try WhatsApp app deep link; browser fallback after 1.5s
+                                const appLink = document.createElement('a');
+                                appLink.href = `whatsapp://send?text=${encodeURIComponent(waText)}`;
+                                appLink.style.display = 'none';
+                                document.body.appendChild(appLink);
+                                appLink.click();
+                                document.body.removeChild(appLink);
+                                const onVis = () => {
+                                  if (document.hidden) {
+                                    clearTimeout(fallback);
+                                    document.removeEventListener('visibilitychange', onVis);
+                                  }
+                                };
+                                const fallback = setTimeout(() => {
+                                  document.removeEventListener('visibilitychange', onVis);
+                                  window.open(waUrl, '_blank', 'noopener,noreferrer');
+                                }, 1500);
+                                document.addEventListener('visibilitychange', onVis);
+                              } else {
+                                if (waWin) {
+                                  waWin.location.href = waUrl;
+                                } else {
+                                  window.open(waUrl, '_blank', 'noopener,noreferrer');
+                                }
+                              }
                             }}
                             className="p-2 bg-[#25D366] text-white rounded-sm hover:opacity-80 transition-opacity"
                             data-testid="share-whatsapp"
