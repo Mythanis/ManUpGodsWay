@@ -8,5 +8,5 @@ npm run build
 # flag from your deployment environment variables.
 if [ "${SEED_ON_BUILD}" = "true" ]; then
   echo "[build] SEED_ON_BUILD=true detected — running production data seed..."
-  npx tsx scripts/seed-prod.ts || echo "[build] Seed script exited with an error — check logs. Continuing build."
+  npx tsx scripts/seed-prod.ts
 fi
