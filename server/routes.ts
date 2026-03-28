@@ -5633,7 +5633,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               currency: 'usd',
               product_data: {
                 name: "Man Up God's Way Subscription",
-                description: ((effectiveSettings as any).features || []).join(', '),
+                ...( ((effectiveSettings as any).features || []).length > 0
+                  ? { description: ((effectiveSettings as any).features as string[]).join(', ') }
+                  : {} ),
               },
               unit_amount: Math.round(parseFloat(price) * 100),
               recurring: {

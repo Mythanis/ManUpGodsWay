@@ -1207,16 +1207,13 @@ export class DatabaseStorage implements IStorage {
         return topRatedStudies.slice(0, limit);
       }
       
-      // Fallback: get any published studies with tier logic
+      // Fallback: get any published studies accessible at the user's tier
       return await db
         .select()
         .from(studies)
         .where(and(
           eq(studies.isPublished, true),
-          or(
-            eq(studies.requiredTier, userTier),
-            eq(studies.requiredTier, 'free')
-          )
+          isSubscriber ? sql`1=1` : eq(studies.requiredTier, 'free')
         ))
         .orderBy(desc(studies.rating), desc(studies.createdAt))
         .limit(limit);
