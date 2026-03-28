@@ -1884,7 +1884,7 @@ export default function Home() {
                             onClick={async () => {
                               // Step 1 (done first — must run while the original tap gesture is active):
                               // Copy devotional text to clipboard
-                              const postText = `${devotional.title}\n\n"${devotional.verse}"\n— ${devotional.verseReference}\n\n📖 Man Up God's Way | www.manupgodsway.org`;
+                              const postText = `${devotional.title}\n\n${devotional.content}\n\n📖 Man Up God's Way | www.manupgodsway.org`;
                               try {
                                 await navigator.clipboard.writeText(postText);
                               } catch {
