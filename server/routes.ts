@@ -62,6 +62,7 @@ import {
   sendPushToAllUsers
 } from "./pushNotificationService";
 import Parser from 'rss-parser';
+import { sendFeedbackEmail, sendHelpRequestEmail } from './emailService';
 
 // Role checking helper functions
 function isAdmin(user: any): boolean {
@@ -6864,7 +6865,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userName = user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Unknown' : 'Unknown';
       const userEmail = user?.email ?? 'unknown@unknown.com';
 
-      const { sendFeedbackEmail } = await import('./emailService');
       await sendFeedbackEmail(validatedData.feedback, validatedData.category, userEmail, userName);
       
       res.json({ message: "Feedback sent successfully" });
@@ -6895,7 +6895,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userName = user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Unknown' : 'Unknown';
       const userEmail = user?.email ?? 'unknown@unknown.com';
 
-      const { sendHelpRequestEmail } = await import('./emailService');
       await sendHelpRequestEmail(message.trim(), userEmail, userName);
 
       res.json({ message: "Help request sent successfully" });
