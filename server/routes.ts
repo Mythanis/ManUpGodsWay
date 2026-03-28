@@ -5028,6 +5028,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get count of active push subscriptions for a user (admin only)
+  app.get('/api/admin/users/:id/push-status', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const result = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(schema.pushSubscriptions)
+        .where(
+          and(
+            eq(schema.pushSubscriptions.userId, req.params.id),
+            eq(schema.pushSubscriptions.isActive, true)
+          )
+        );
+      const count = result[0]?.count ?? 0;
+      res.json({ enabled: count > 0, deviceCount: count });
+    } catch (error) {
+      console.error("Error fetching push status:", error);
+      res.status(500).json({ message: "Failed to fetch push status" });
+    }
+  });
+
   app.put('/api/admin/users/:id/role', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);

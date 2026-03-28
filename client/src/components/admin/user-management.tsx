@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X } from "lucide-react";
+import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X, Bell, BellOff } from "lucide-react";
 
 interface User {
   id: string;
@@ -55,6 +55,13 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["/api/admin/users"],
     retry: false,
+  });
+
+  const { data: pushStatus } = useQuery<{ enabled: boolean; deviceCount: number }>({
+    queryKey: ["/api/admin/users", selectedUser?.id, "push-status"],
+    queryFn: () =>
+      fetch(`/api/admin/users/${selectedUser!.id}/push-status`, { credentials: "include" }).then(r => r.json()),
+    enabled: !!selectedUser,
   });
 
   const updateUserRole = useMutation({
@@ -522,6 +529,25 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                     <div>
                       <p className="text-xs text-ministry-slate">Last Active</p>
                       <p className="text-sm text-muted-foreground">{formatLocalDateTime(selectedUser.updatedAt)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    {pushStatus?.enabled
+                      ? <Bell className="w-4 h-4 text-green-500" />
+                      : <BellOff className="w-4 h-4 text-ministry-slate" />
+                    }
+                    <div>
+                      <p className="text-xs text-ministry-slate">Push Notifications</p>
+                      {pushStatus === undefined ? (
+                        <p className="text-sm text-muted-foreground">Loading…</p>
+                      ) : pushStatus.enabled ? (
+                        <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                          Enabled ({pushStatus.deviceCount} {pushStatus.deviceCount === 1 ? 'device' : 'devices'})
+                        </p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Not enabled</p>
+                      )}
                     </div>
                   </div>
                 </div>
