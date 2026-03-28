@@ -122,14 +122,53 @@ async function seed() {
     // ── Insert phase ───────────────────────────────────────────────────────
     await client.query('BEGIN');
 
-    // Ensure both owner user records exist so all FK constraints pass
-    for (const ownerId of OWNER_IDS) {
+    // ── Seed full user records from seed-data.json (users key) ────────────
+    // App-specific fields are upserted on conflict; Replit Auth fields
+    // (email, first_name, last_name, profile_image_url) are left untouched
+    // if the user already exists so a prior Replit login isn't overwritten.
+    const APP_USER_UPDATE_COLS = [
+      'role', 'subscription_tier', 'subscription_status', 'subscription_expires_at',
+      'stripe_customer_id', 'stripe_subscription_id',
+      'rations', 'ration_rank', 'streak_days',
+      'has_seen_welcome', 'has_completed_tour', 'is_profile_complete',
+      'total_studies_completed', 'total_active_days', 'last_study_activity_date',
+      'has_fitness_access', 'prayer_permissions_granted',
+      'allow_direct_messages', 'allow_group_invites',
+      'theme_preference', 'is_profile_private',
+      'last_active_date', 'trial_start_date', 'trial_end_date',
+    ];
+
+    const seededUserIds = new Set<string>();
+    const usersToSeed: any[] = seedData['users'] ?? [];
+    for (const user of usersToSeed) {
+      const cols = Object.keys(user);
+      const params: any[] = cols.map(c => user[c] ?? null);
+      const quotedCols = cols.map(c => `"${c}"`).join(', ');
+      const placeholders = cols.map((_, i) => `$${i + 1}`).join(', ');
+      const updateClause = APP_USER_UPDATE_COLS
+        .filter(c => cols.includes(c))
+        .map(c => `"${c}" = EXCLUDED."${c}"`)
+        .join(', ');
       await client.query(
-        `INSERT INTO users (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`,
-        [ownerId]
+        `INSERT INTO users (${quotedCols}) VALUES (${placeholders})
+         ON CONFLICT (id) DO UPDATE SET ${updateClause}`,
+        params
       );
+      seededUserIds.add(user.id);
+      console.log(`[seed] users: upserted ${user.first_name ?? user.id} (${user.id}) role=${user.role} tier=${user.subscription_tier}`);
     }
-    console.log('\n[seed] Owner user records ensured (46399196, 46399698).');
+
+    // Ensure any remaining owner IDs have at least a placeholder record
+    for (const ownerId of OWNER_IDS) {
+      if (!seededUserIds.has(ownerId)) {
+        await client.query(
+          `INSERT INTO users (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`,
+          [ownerId]
+        );
+        console.log(`[seed] users: placeholder inserted for ${ownerId}`);
+      }
+    }
+    console.log('[seed] Owner user records ensured (46399196, 46399698).');
 
     for (const cfg of TABLE_ORDER) {
       const rows: any[] = (seedData[cfg.key] ?? []).map((r: any) =>
