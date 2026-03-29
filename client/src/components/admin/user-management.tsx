@@ -30,6 +30,8 @@ interface User {
   bannedAt?: string;
   bannedReason?: string;
   hasFitnessAccess: boolean;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -49,6 +51,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
   const [banReason, setBanReason] = useState('');
   const [editedUser, setEditedUser] = useState<Partial<User>>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [stripeSubInput, setStripeSubInput] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -178,6 +181,21 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
         description: "Failed to update fitness access.",
         variant: "destructive",
       });
+    },
+  });
+
+  const linkStripeSubscription = useMutation({
+    mutationFn: async ({ userId, stripeSubscriptionId }: { userId: string; stripeSubscriptionId: string }) => {
+      return await apiRequest('PUT', `/api/admin/users/${userId}/link-stripe-subscription`, { stripeSubscriptionId });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setSelectedUser(prev => prev ? { ...prev, stripeSubscriptionId: data.stripeSubscriptionId, stripeCustomerId: data.stripeCustomerId, subscriptionStatus: 'active', subscriptionTier: 'subscriber' } : null);
+      setStripeSubInput('');
+      toast({ title: "Subscription Linked", description: "The Stripe subscription has been linked to this user." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to link subscription.", variant: "destructive" });
     },
   });
 
@@ -614,6 +632,52 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                       )}
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Stripe Subscription Linking */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center space-x-2">
+                    <CreditCard className="w-5 h-5 text-ministry-gold" />
+                    <span>Stripe Subscription</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {selectedUser.stripeSubscriptionId ? (
+                    <div className="space-y-1">
+                      <p className="text-xs text-ministry-slate">Linked Subscription ID</p>
+                      <p className="text-sm font-mono text-green-600 dark:text-green-400 break-all">{selectedUser.stripeSubscriptionId}</p>
+                      {selectedUser.stripeCustomerId && (
+                        <>
+                          <p className="text-xs text-ministry-slate mt-2">Customer ID</p>
+                          <p className="text-sm font-mono text-muted-foreground break-all">{selectedUser.stripeCustomerId}</p>
+                        </>
+                      )}
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">Cancel button on the user's profile page will work correctly.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">No Stripe subscription linked — cancellation won't work until one is linked.</p>
+                      <p className="text-xs text-ministry-slate">Find the subscription ID in Stripe Dashboard (starts with <span className="font-mono">sub_</span>) and paste it below.</p>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="sub_..."
+                          value={stripeSubInput}
+                          onChange={(e) => setStripeSubInput(e.target.value)}
+                          className="font-mono text-sm"
+                        />
+                        <Button
+                          size="sm"
+                          className="bg-ministry-gold hover:bg-yellow-500 text-black whitespace-nowrap"
+                          disabled={!stripeSubInput.startsWith('sub_') || linkStripeSubscription.isPending}
+                          onClick={() => linkStripeSubscription.mutate({ userId: selectedUser.id, stripeSubscriptionId: stripeSubInput.trim() })}
+                        >
+                          {linkStripeSubscription.isPending ? "Linking…" : "Link"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

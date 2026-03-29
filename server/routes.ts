@@ -5181,6 +5181,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Link an existing Stripe subscription to a user account
+  app.put('/api/admin/users/:id/link-stripe-subscription', isAuthenticated, async (req: any, res) => {
+    try {
+      const admin = await storage.getUser(req.user.claims.sub);
+      if (!admin || !isAdmin(admin)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { stripeSubscriptionId } = req.body;
+      if (!stripeSubscriptionId || !stripeSubscriptionId.startsWith('sub_')) {
+        return res.status(400).json({ message: "A valid Stripe subscription ID (sub_...) is required" });
+      }
+
+      const targetUser = await storage.getUser(req.params.id);
+      if (!targetUser) return res.status(404).json({ message: "User not found" });
+
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(503).json({ message: "Stripe not configured" });
+      }
+
+      const { default: Stripe } = await import('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
+
+      // Verify the subscription exists on Stripe
+      let subscription: any;
+      try {
+        subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+      } catch (err: any) {
+        return res.status(400).json({ message: `Subscription not found in Stripe: ${err.message}` });
+      }
+
+      if (subscription.status === 'canceled') {
+        return res.status(400).json({ message: "That subscription is already cancelled in Stripe" });
+      }
+
+      const periodEnd = subscription.current_period_end
+        ? new Date(subscription.current_period_end * 1000)
+        : null;
+
+      await storage.updateUserSubscriptionDetails(targetUser.id, {
+        subscriptionTier: 'subscriber',
+        subscriptionStatus: 'active',
+        stripeCustomerId: subscription.customer as string,
+        stripeSubscriptionId: subscription.id,
+        subscriptionExpiresAt: periodEnd ?? undefined,
+      });
+
+      console.log(`[Admin] Linked Stripe subscription ${subscription.id} to user ${targetUser.id}`);
+      res.json({ success: true, stripeSubscriptionId: subscription.id, stripeCustomerId: subscription.customer });
+    } catch (error: any) {
+      console.error("Error linking Stripe subscription:", error);
+      res.status(500).json({ message: error.message || "Failed to link subscription" });
+    }
+  });
+
   app.put('/api/admin/users/:id/ban', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
