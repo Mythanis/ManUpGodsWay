@@ -45,6 +45,7 @@ interface UserManagementProps {
 
 export default function UserManagement({ subscriptionFilter, onClearSubscriptionFilter, currentUserRole }: UserManagementProps = {}) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [showBanDialog, setShowBanDialog] = useState(false);
@@ -233,16 +234,13 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
 
     if (!matchesSearch) return false;
 
-    if (subscriptionFilter === 'active') {
-      return user.subscriptionStatus === 'active';
-    }
-    if (subscriptionFilter === 'cancelled') {
-      return user.subscriptionStatus === 'cancelled' && new Date(user.createdAt) <= sevenDaysAgo;
-    }
-    if (subscriptionFilter === 'non-subscriber') {
-      return (user.subscriptionStatus === 'trial' || user.subscriptionStatus === 'expired') &&
-        new Date(user.createdAt) <= sevenDaysAgo;
-    }
+    // Prop-based quick filter (from dashboard stat cards)
+    if (subscriptionFilter === 'active' && user.subscriptionStatus !== 'active') return false;
+    if (subscriptionFilter === 'cancelled' && !(user.subscriptionStatus === 'cancelled' && new Date(user.createdAt) <= sevenDaysAgo)) return false;
+    if (subscriptionFilter === 'non-subscriber' && !((user.subscriptionStatus === 'trial' || user.subscriptionStatus === 'expired') && new Date(user.createdAt) <= sevenDaysAgo)) return false;
+
+    // Inline dropdown status filter
+    if (statusFilter !== 'all' && user.subscriptionStatus !== statusFilter) return false;
 
     return true;
   });
@@ -347,32 +345,49 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
       <CardContent className="p-0">
         {/* Search Users */}
         <div className="p-4 border-b border-gray-100 space-y-2">
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-50 rounded-lg pl-10 pr-4 py-2 text-sm border-0 focus:ring-2 focus:ring-ministry-steel focus:bg-white"
-              data-testid="input-search-users"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-ministry-slate" />
-          </div>
-          {subscriptionFilter && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">Filtered by:</span>
-              <button
-                onClick={onClearSubscriptionFilter}
-                className="flex items-center gap-1 bg-[#FCD000] text-black text-xs font-bold px-2 py-0.5 rounded-full hover:bg-yellow-400 transition-colors"
-              >
-                {subscriptionFilter === 'active' && 'Active Subscribers'}
-                {subscriptionFilter === 'cancelled' && 'Cancelled'}
-                {subscriptionFilter === 'non-subscriber' && 'Never Subscribed'}
-                <X className="w-3 h-3 ml-0.5" />
-              </button>
-              <span className="text-xs text-gray-400">{filteredUsers.length} users</span>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Input
+                type="text"
+                placeholder="Search users..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-gray-50 rounded-lg pl-10 pr-4 py-2 text-sm text-black border-0 focus:ring-2 focus:ring-ministry-steel focus:bg-white placeholder:text-gray-400"
+                data-testid="input-search-users"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-ministry-slate" />
             </div>
-          )}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-36 text-sm text-black bg-gray-50 border-0 focus:ring-2 focus:ring-ministry-steel">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="trial">Trial</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+                <SelectItem value="past_due">Past Due</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {subscriptionFilter && (
+              <>
+                <span className="text-xs text-gray-500">Quick filter:</span>
+                <button
+                  onClick={onClearSubscriptionFilter}
+                  className="flex items-center gap-1 bg-[#FCD000] text-black text-xs font-bold px-2 py-0.5 rounded-full hover:bg-yellow-400 transition-colors"
+                >
+                  {subscriptionFilter === 'active' && 'Active Subscribers'}
+                  {subscriptionFilter === 'cancelled' && 'Cancelled'}
+                  {subscriptionFilter === 'non-subscriber' && 'Never Subscribed'}
+                  <X className="w-3 h-3 ml-0.5" />
+                </button>
+              </>
+            )}
+            <span className="text-xs text-gray-400 ml-auto">{filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''}</span>
+          </div>
         </div>
         
         {/* User List */}
