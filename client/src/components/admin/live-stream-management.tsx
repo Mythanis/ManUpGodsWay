@@ -186,7 +186,12 @@ function SetupGuide({ stream, onGoLive, onEndStream, goLivePending, endPending }
           </div>
         )}
 
-        {/* End stream button */}
+        {/* Mark as Live / End Stream buttons — shown on all tabs */}
+        {stream.status === "scheduled" && tab !== "app" && (
+          <Button onClick={onGoLive} disabled={goLivePending} size="sm" className="w-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold">
+            🔴 {goLivePending ? "Starting…" : "Mark as Live"}
+          </Button>
+        )}
         {stream.status === "live" && tab !== "app" && (
           <Button onClick={onEndStream} disabled={endPending} size="sm" variant="outline" className="w-full border-gray-600 text-gray-300 text-xs">
             <Square className="w-3 h-3 mr-1" />
