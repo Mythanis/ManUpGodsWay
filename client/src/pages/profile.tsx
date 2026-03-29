@@ -43,7 +43,8 @@ import {
   BookOpen,
   Trash2,
   PenLine,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -55,6 +56,10 @@ export default function Profile() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showFitnessManageModal, setShowFitnessManageModal] = useState(false);
   const [showFitnessCancelConfirm, setShowFitnessCancelConfirm] = useState(false);
+  // True while we're verifying the Stripe session after returning from checkout
+  const [verifyingSubscription, setVerifyingSubscription] = useState(
+    () => new URLSearchParams(window.location.search).get('upgrade') === 'success'
+  );
   const { user } = useAuth();
   const { startTour } = useTour();
   const [, setLocation] = useLocation();
@@ -71,29 +76,19 @@ export default function Profile() {
     if (upgradeStatus === 'success') {
       window.history.replaceState({}, document.title, window.location.pathname);
 
-      if (sessionId) {
-        // Verify the Stripe session directly — activates the user even if the webhook missed
-        fetch(`/api/subscription/verify-session?session_id=${sessionId}`, { credentials: 'include' })
-          .then(r => r.json())
-          .then(() => {
-            queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-            toast({
-              title: isTrial ? "Free Trial Started!" : "Subscription Activated!",
-              description: isTrial
-                ? "Welcome! Your free trial is active. You have full access to all content."
-                : "Welcome! You now have access to all subscriber content.",
-              variant: "default",
-            });
-          })
-          .catch(() => {
-            // Fallback: still refresh queries even if verify call fails
-            queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-          });
-      } else {
-        queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      const finalize = async () => {
+        try {
+          if (sessionId) {
+            // Verify the Stripe session directly — activates the user even if the webhook missed
+            await fetch(`/api/subscription/verify-session?session_id=${sessionId}`, { credentials: 'include' });
+          }
+        } catch {
+          // Ignore verify errors — still refresh below
+        }
+        // Wait for the fresh user data to actually load before hiding the confirming state
+        await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
+        await queryClient.refetchQueries({ queryKey: ['/api/auth/me'] });
+        setVerifyingSubscription(false);
         toast({
           title: isTrial ? "Free Trial Started!" : "Subscription Activated!",
           description: isTrial
@@ -101,7 +96,9 @@ export default function Profile() {
             : "Welcome! You now have access to all subscriber content.",
           variant: "default",
         });
-      }
+      };
+
+      finalize();
     } else if (upgradeStatus === 'cancelled') {
       window.history.replaceState({}, document.title, window.location.pathname);
       toast({
@@ -383,26 +380,39 @@ export default function Profile() {
               {/* Main Subscription Row */}
               <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                 <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
-                  <Crown className="w-6 h-6 text-white relative z-10" />
+                  {verifyingSubscription
+                    ? <Loader2 className="w-6 h-6 text-white relative z-10 animate-spin" />
+                    : <Crown className="w-6 h-6 text-white relative z-10" />
+                  }
                 </div>
                 <div className="flex-1 px-4 relative z-10">
-                  <span className="font-black text-sm text-black uppercase tracking-wide">
-                    {(user as any)?.subscriptionStatus === 'active' ? 'Active Subscription' :
-                     (user as any)?.subscriptionStatus === 'trial' ? 'Trial' :
-                     (user as any)?.subscriptionStatus === 'cancelled' ? 'Cancels Soon' :
-                     (user as any)?.subscriptionStatus === 'past_due' ? 'Payment Failed' :
-                     (user as any)?.subscriptionStatus === 'expired' ? 'Expired' : 'No Subscription'}
-                  </span>
-                  {subDetails?.cancelAtPeriodEnd && subDetails.currentPeriodEnd && (
-                    <p className="text-[10px] text-black/60 font-semibold">
-                      Active until {new Date(subDetails.currentPeriodEnd).toLocaleDateString()}
-                    </p>
+                  {verifyingSubscription ? (
+                    <>
+                      <span className="font-black text-sm text-black uppercase tracking-wide">Confirming Subscription…</span>
+                      <p className="text-[10px] text-black/60 font-semibold">Please wait, activating your account</p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-black text-sm text-black uppercase tracking-wide">
+                        {(user as any)?.subscriptionStatus === 'active' ? 'Active Subscription' :
+                         (user as any)?.subscriptionStatus === 'trial' ? 'Trial' :
+                         (user as any)?.subscriptionStatus === 'cancelled' ? 'Cancels Soon' :
+                         (user as any)?.subscriptionStatus === 'past_due' ? 'Payment Failed' :
+                         (user as any)?.subscriptionStatus === 'expired' ? 'Expired' : 'No Subscription'}
+                      </span>
+                      {subDetails?.cancelAtPeriodEnd && subDetails.currentPeriodEnd && (
+                        <p className="text-[10px] text-black/60 font-semibold">
+                          Active until {new Date(subDetails.currentPeriodEnd).toLocaleDateString()}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
                 <Button 
                   variant="ghost"
                   className="text-black font-black text-sm hover:bg-black/10 relative z-10 uppercase tracking-wide pr-4"
                   data-testid="button-manage-subscription"
+                  disabled={verifyingSubscription}
                   onClick={() => {
                     if ((user as any)?.subscriptionStatus === 'active' || (user as any)?.subscriptionStatus === 'cancelled') {
                       setShowManageModal(true);
@@ -411,7 +421,7 @@ export default function Profile() {
                     }
                   }}
                 >
-                  {(user as any)?.subscriptionStatus === 'active' || (user as any)?.subscriptionStatus === 'cancelled' ? 'Manage' : 'Subscribe'}
+                  {verifyingSubscription ? '…' : (user as any)?.subscriptionStatus === 'active' || (user as any)?.subscriptionStatus === 'cancelled' ? 'Manage' : 'Subscribe'}
                 </Button>
               </div>
 
