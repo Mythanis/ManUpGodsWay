@@ -187,8 +187,7 @@ export default function Profile() {
   // Cancel main subscription
   const cancelSubscriptionMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest('POST', '/api/subscription/cancel');
-      return res.json();
+      return await apiRequest('POST', '/api/subscription/cancel');
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/subscription/details'] });
@@ -208,8 +207,7 @@ export default function Profile() {
   // Switch billing cycle
   const switchBillingMutation = useMutation({
     mutationFn: async (newBillingCycle: 'monthly' | 'yearly') => {
-      const res = await apiRequest('POST', '/api/subscription/switch-billing', { newBillingCycle });
-      return res.json();
+      return await apiRequest('POST', '/api/subscription/switch-billing', { newBillingCycle });
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/subscription/details'] });
