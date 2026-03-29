@@ -85,7 +85,9 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
   const isTrialEligible = trialEligibility?.eligible ?? false;
   const trialDays = trialEligibility?.trialDays ?? 7;
-  const isExpired = (user as any)?.subscriptionStatus === 'expired' || (user as any)?.subscriptionStatus === 'cancelled';
+  const isExpired = (user as any)?.subscriptionStatus === 'expired' ||
+    ((user as any)?.subscriptionStatus === 'cancelled' &&
+      (!((user as any)?.subscriptionExpiresAt) || new Date((user as any).subscriptionExpiresAt) <= new Date()));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

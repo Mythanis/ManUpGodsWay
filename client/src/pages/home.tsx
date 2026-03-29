@@ -1003,7 +1003,8 @@ export default function Home() {
         </div>
         
         {/* Subscription Banner */}
-        {(user as any)?.subscriptionStatus !== 'active' && (
+        {!((user as any)?.subscriptionStatus === 'active' ||
+          ((user as any)?.subscriptionStatus === 'cancelled' && (user as any)?.subscriptionExpiresAt && new Date((user as any).subscriptionExpiresAt) > new Date())) && (
           <div className="bg-[#FCD000] glow-gold text-black rounded-sm border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="banner-subscription">
             <div className="flex items-center justify-between">
               <div>

@@ -137,7 +137,9 @@ export default function RationsStorePage() {
   };
 
   const userBalance = rations?.balance || 0;
-  const isSubscriber = (user as any)?.subscriptionStatus === 'active' || (user as any)?.subscriptionStatus === 'trial';
+  const isSubscriber = (user as any)?.subscriptionStatus === 'active' ||
+    (user as any)?.subscriptionStatus === 'trial' ||
+    ((user as any)?.subscriptionStatus === 'cancelled' && (user as any)?.subscriptionExpiresAt && new Date((user as any).subscriptionExpiresAt) > new Date());
 
   const renderProductCard = (product: StoreProduct) => {
     const canAfford = userBalance >= product.rationCost;

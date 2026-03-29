@@ -87,7 +87,14 @@ function hasOwnerPrivileges(user: any): boolean {
 
 // Subscription access checking helpers
 function hasActiveSubscription(user: any): boolean {
-  return user && (user.subscriptionStatus === 'active' || user.role === 'admin' || user.role === 'owner');
+  if (!user) return false;
+  if (user.role === 'admin' || user.role === 'owner') return true;
+  if (user.subscriptionStatus === 'active') return true;
+  // Cancelled users retain full access until their expiration date
+  if (user.subscriptionStatus === 'cancelled' && user.subscriptionExpiresAt) {
+    return new Date(user.subscriptionExpiresAt) > new Date();
+  }
+  return false;
 }
 
 function isOnTrial(user: any): boolean {

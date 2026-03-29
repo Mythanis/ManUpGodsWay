@@ -67,6 +67,17 @@ export function parseDateSafely(dateString: string): Date {
   return new Date(dateString + 'T12:00:00');
 }
 
+// Returns true if a user has paid subscriber access (active OR cancelled-but-still-within-period)
+export function isSubscriberActive(user: any): boolean {
+  if (!user) return false;
+  if (user.role === 'admin' || user.role === 'owner') return true;
+  if (user.subscriptionStatus === 'active') return true;
+  if (user.subscriptionStatus === 'cancelled' && user.subscriptionExpiresAt) {
+    return new Date(user.subscriptionExpiresAt) > new Date();
+  }
+  return false;
+}
+
 // Map internal tier names to display names
 export function getTierDisplayName(tier: string): string {
   const tierNames: Record<string, string> = {

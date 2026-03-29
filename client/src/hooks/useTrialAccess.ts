@@ -11,9 +11,24 @@ export function useTrialAccess(area: string) {
     staleTime: 0,
   });
 
-  const isActiveSubscriber = user?.subscriptionStatus === "active" || user?.role === "admin" || user?.role === "owner";
+  // Cancelled users keep full access until their expiration date
+  const cancelledButActive =
+    user?.subscriptionStatus === "cancelled" &&
+    user?.subscriptionExpiresAt &&
+    new Date(user.subscriptionExpiresAt) > new Date();
+
+  const isActiveSubscriber =
+    user?.subscriptionStatus === "active" ||
+    cancelledButActive ||
+    user?.role === "admin" ||
+    user?.role === "owner";
+
   const isTrialUser = user?.subscriptionStatus === "trial";
-  const isExpiredUser = user?.subscriptionStatus === "expired" || user?.subscriptionStatus === "cancelled";
+
+  // Truly expired: either explicitly expired, or cancelled past the expiration date
+  const isExpiredUser =
+    user?.subscriptionStatus === "expired" ||
+    (user?.subscriptionStatus === "cancelled" && !cancelledButActive);
 
   const trialAreaEnabled = settings?.trialContentAreas?.[area] === true;
 

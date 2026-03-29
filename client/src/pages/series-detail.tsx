@@ -100,7 +100,10 @@ export default function SeriesDetail() {
   const canAccessStudy = (study: StudyInSeries) => {
     if (study.requiredTier === 'free') return true;
     if (!user) return false;
-    return (user as any).subscriptionStatus === 'active';
+    const u = user as any;
+    return u.subscriptionStatus === 'active' ||
+      (u.subscriptionStatus === 'cancelled' && u.subscriptionExpiresAt && new Date(u.subscriptionExpiresAt) > new Date()) ||
+      u.role === 'admin' || u.role === 'owner';
   };
 
   const isLockedByConsecutive = (study: StudyInSeries) => {

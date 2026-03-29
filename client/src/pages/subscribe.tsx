@@ -76,7 +76,8 @@ export default function Subscribe() {
 
   const isTrialEligible = trialEligibility?.eligible ?? false;
   const trialDays = trialEligibility?.trialDays ?? 7;
-  const isAlreadyActive = (user as any)?.subscriptionStatus === 'active';
+  const isAlreadyActive = (user as any)?.subscriptionStatus === 'active' ||
+    ((user as any)?.subscriptionStatus === 'cancelled' && (user as any)?.subscriptionExpiresAt && new Date((user as any).subscriptionExpiresAt) > new Date());
 
   if (isLoading) {
     return (

@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { triggerRefTagger } from "@/hooks/useRefTagger";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { getTierDisplayName } from "@/lib/utils";
+import { getTierDisplayName, isSubscriberActive } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -502,11 +502,11 @@ export default function StudyDetail() {
       }
       
       // If their tier doesn't require purchase, check subscription access
-      return study.requiredTier === 'free' || (user as any)?.subscriptionStatus === 'active';
+      return study.requiredTier === 'free' || isSubscriberActive(user);
     }
     
     // Subscription-based access for non-purchasable studies
-    return study.requiredTier === 'free' || (user as any)?.subscriptionStatus === 'active';
+    return study.requiredTier === 'free' || isSubscriberActive(user);
   };
 
   const hasAccess = canAccess();
