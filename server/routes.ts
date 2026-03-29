@@ -3127,6 +3127,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Returns the Mux WHIP URL for direct browser→Mux connection (admin only).
+  // Exposes the stream key in the URL, but only to authenticated admins.
+  app.get('/api/live-streams/:id/whip-url', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) return res.status(403).json({ message: 'Forbidden' });
+      const stream = await storage.getLiveStream(req.params.id);
+      if (!stream || !stream.muxStreamKey) return res.status(404).json({ message: 'Stream not found' });
+      res.json({ whipUrl: `https://global-live.mux.com/app/${stream.muxStreamKey}/whip` });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // WHIP proxy — forwards the WebRTC SDP offer from the browser to Mux's WHIP endpoint.
   // Uses Node.js https module (HTTP/1.1) because undici/fetch tries HTTP/2 which Mux WHIP rejects.
   app.post('/api/live-streams/:id/whip', isAuthenticated, async (req: any, res) => {
@@ -3159,14 +3173,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bodyBuf = Buffer.from(sdpBody, 'utf-8');
 
       console.log(`WHIP proxy: sending ${bodyBuf.length} bytes to Mux, stream key prefix: ${streamKey?.slice(0, 8)}...`);
+      console.log(`WHIP SDP preview: ${sdpBody.slice(0, 120).replace(/\r?\n/g, '|')}`);
 
       // Mux WHIP authenticates via the stream key in the URL — no Authorization header needed.
       // The API token (MUX_TOKEN_ID/SECRET) is for the REST API only, not WHIP ingestion.
+      // ALPNProtocols forces HTTP/1.1 — Mux WHIP does not support HTTP/2.
 
-      // Use Node.js https module (forces HTTP/1.1, avoids undici HTTP/2 negotiation)
       const https = await import('https');
       const result = await new Promise<{ status: number; contentType: string; body: string }>((resolve, reject) => {
-        const options = {
+        const options: any = {
           hostname: 'global-live.mux.com',
           port: 443,
           path: `/app/${streamKey}/whip`,
@@ -3176,6 +3191,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Content-Length': bodyBuf.length,
             'User-Agent': 'ManUpGodsWay/1.0',
           },
+          // Explicitly negotiate HTTP/1.1 only — prevents TLS ALPN from upgrading to HTTP/2
+          ALPNProtocols: ['http/1.1'],
         };
 
         const httpReq = https.request(options, (httpRes) => {

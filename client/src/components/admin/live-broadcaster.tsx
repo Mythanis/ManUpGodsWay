@@ -100,25 +100,56 @@ export function LiveBroadcaster({ streamKey, streamId, onBroadcastStart, onBroad
         setTimeout(resolve, 4000);
       });
 
-      // Route through our server proxy (avoids CORS — direct browser→Mux is blocked)
-      const whipUrl = `/api/live-streams/${streamId}/whip`;
-      let resp: Response;
+      const sdpBody = pc.localDescription?.sdp;
+
+      // Try server proxy first, then fall back to direct browser→Mux if proxy fails
+      let answerSdp: string | null = null;
+
+      // Attempt 1: server proxy
       try {
-        resp = await fetch(whipUrl, {
+        const proxyResp = await fetch(`/api/live-streams/${streamId}/whip`, {
           method: "POST",
           headers: { "Content-Type": "application/sdp" },
-          body: pc.localDescription?.sdp,
+          body: sdpBody,
         });
-      } catch (fetchErr: any) {
-        throw new Error(`Network error: ${(fetchErr as any)?.message}`);
+        if (proxyResp.ok) {
+          answerSdp = await proxyResp.text();
+        } else {
+          console.warn("WHIP proxy failed, trying direct connection…");
+        }
+      } catch (proxyErr: any) {
+        console.warn("WHIP proxy network error, trying direct connection…", proxyErr?.message);
       }
 
-      if (!resp.ok) {
-        const text = await resp.text().catch(() => "");
-        throw new Error(`Could not connect to the streaming server (${resp.status}). ${text ? text + ". " : ""}You can use OBS or Riverside with the RTMP credentials shown below to go live instead.`);
-      }
+      // Attempt 2: direct browser → Mux (if proxy failed)
+      if (!answerSdp) {
+        let whipUrl: string;
+        try {
+          const urlResp = await fetch(`/api/live-streams/${streamId}/whip-url`);
+          if (!urlResp.ok) throw new Error("Could not get WHIP URL");
+          const data = await urlResp.json();
+          whipUrl = data.whipUrl;
+        } catch {
+          throw new Error("Could not connect to the streaming server. Use OBS or Riverside with the RTMP credentials shown below to go live instead.");
+        }
 
-      const answerSdp = await resp.text();
+        let directResp: Response;
+        try {
+          directResp = await fetch(whipUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/sdp" },
+            body: sdpBody,
+          });
+        } catch (directErr: any) {
+          throw new Error("Could not connect to the streaming server. Use OBS or Riverside with the RTMP credentials shown below to go live instead.");
+        }
+
+        if (!directResp.ok) {
+          const text = await directResp.text().catch(() => "");
+          throw new Error(`Streaming server rejected the connection (${directResp.status}). ${text ? text + ". " : ""}Use OBS or Riverside with the RTMP credentials shown below to go live instead.`);
+        }
+        answerSdp = await directResp.text();
+      }
       await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
 
       pc.onconnectionstatechange = () => {
