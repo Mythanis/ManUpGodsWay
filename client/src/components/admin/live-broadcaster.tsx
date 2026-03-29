@@ -115,10 +115,7 @@ export function LiveBroadcaster({ streamKey, streamId, onBroadcastStart, onBroad
 
       if (!resp.ok) {
         const text = await resp.text().catch(() => "");
-        if (resp.status === 502) {
-          throw new Error("In-app broadcasting requires the app to be deployed (published). Use OBS or Riverside with the RTMP credentials shown below to go live now.");
-        }
-        throw new Error(`Connection failed (${resp.status}): ${text || "check your Mux credentials"}`);
+        throw new Error(`Could not connect to the streaming server (${resp.status}). ${text ? text + ". " : ""}You can use OBS or Riverside with the RTMP credentials shown below to go live instead.`);
       }
 
       const answerSdp = await resp.text();
