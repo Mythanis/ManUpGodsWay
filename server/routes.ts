@@ -5706,8 +5706,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           billingCycle: billingCycle,
           startTrial: applyTrial ? 'true' : 'false',
         },
-        success_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile?upgrade=success${applyTrial ? '&trial=true' : ''}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile?upgrade=cancelled`,
+        success_url: `${process.env.FRONTEND_URL || 'https://app.manupgodsway.org'}/profile?upgrade=success${applyTrial ? '&trial=true' : ''}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.FRONTEND_URL || 'https://app.manupgodsway.org'}/profile?upgrade=cancelled`,
       };
 
       sessionParams.subscription_data = {
@@ -5844,7 +5844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const session = await stripe.billingPortal.sessions.create({
         customer: user.stripeCustomerId,
-        return_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/profile`,
+        return_url: `${process.env.FRONTEND_URL || 'https://app.manupgodsway.org'}/profile`,
       });
 
       res.json({ portalUrl: session.url });
