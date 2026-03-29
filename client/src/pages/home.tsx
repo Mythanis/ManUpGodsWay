@@ -397,7 +397,7 @@ export default function Home() {
   });
 
   const handleShareApp = async () => {
-    const shareUrl = window.location.origin;
+    const shareUrl = 'https://app.manupgodsway.org';
     const shareText = "Join me on Man Up God's Way — faith-based tools for biblical masculinity, Bible studies, discipleship, and brotherhood.";
     if (navigator.share) {
       try {
