@@ -234,8 +234,11 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
     }
   };
 
+  const nextLesson = lessons[currentDayIndex + 1];
+  const isNextLessonLocked = !!nextLesson?.isLocked;
+
   const goToNextDay = () => {
-    if (currentDayIndex < lessons.length - 1) {
+    if (currentDayIndex < lessons.length - 1 && !isNextLessonLocked) {
       setCurrentDayIndex(currentDayIndex + 1);
     }
   };
@@ -442,12 +445,20 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           <Button
             size="sm"
             onClick={goToNextDay}
-            disabled={currentDayIndex === lessons.length - 1}
+            disabled={currentDayIndex === lessons.length - 1 || isNextLessonLocked}
+            title={isNextLessonLocked ? `Unlocks ${formatUnlockTime(nextLesson?.unlocksAt)}` : undefined}
             className="bg-black text-white rounded-sm font-black uppercase text-[10px] hover:bg-gray-800 disabled:opacity-30 px-3 py-1 h-8 min-w-0 border-2 border-white"
             data-testid="button-next-lesson"
           >
-            <span className="hidden sm:inline mr-1 text-white">Next</span>
-            <ChevronRight className="w-4 h-4 text-white" />
+            {isNextLessonLocked
+              ? <Lock className="w-4 h-4 text-white" />
+              : (
+                <>
+                  <span className="hidden sm:inline mr-1 text-white">Next</span>
+                  <ChevronRight className="w-4 h-4 text-white" />
+                </>
+              )
+            }
           </Button>
         </div>
       </div>
