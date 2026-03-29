@@ -32,6 +32,7 @@ interface User {
   hasFitnessAccess: boolean;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
+  subscriptionExpiresAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -507,6 +508,11 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                             <SelectItem value="past_due">Past Due (Payment Failed)</SelectItem>
                           </SelectContent>
                         </Select>
+                        {selectedUser.subscriptionStatus === 'cancelled' && selectedUser.subscriptionExpiresAt && (
+                          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                            Access ends: {new Date(selectedUser.subscriptionExpiresAt).toLocaleDateString()}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </CardContent>
