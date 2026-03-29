@@ -20,6 +20,8 @@ app.set("trust proxy", 1);
 // Stripe webhook MUST be registered before express.json() and the general rate limiter
 // so it receives the raw body for signature verification and is exempt from IP-based throttling
 app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
+// Alias so both /api/stripe/webhook and /api/stripe-webhook are accepted
+app.post("/api/stripe-webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
 
 // WHIP proxy route needs raw text/plain body (SDP) before express.json() parses it
 app.post(/^\/api\/live-streams\/[^/]+\/whip$/, express.text({ type: "application/sdp", limit: "64kb" }));
