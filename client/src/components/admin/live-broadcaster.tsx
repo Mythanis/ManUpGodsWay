@@ -283,23 +283,11 @@ export function LiveBroadcaster({ streamKey, streamId, onBroadcastStart, onBroad
       {/* Controls */}
       <div className="p-3">
         {state === "error" && errorMsg && (
-          <div className="mb-3 space-y-2">
+          <div className="mb-3">
             <div className="flex items-start gap-2 bg-red-950 border border-red-700 rounded p-2">
               <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
               <p className="text-red-300 text-xs">{errorMsg}</p>
             </div>
-            {errorMsg.includes("deployed") && (
-              <div className="bg-gray-900 border border-gray-700 rounded p-2">
-                <p className="text-[#FCD000] text-xs font-bold mb-1">👉 Go live right now with OBS (free):</p>
-                <ol className="text-gray-400 text-xs space-y-0.5 list-decimal list-inside">
-                  <li>Open OBS → Settings → Stream</li>
-                  <li>Service: Custom, then click "Show RTMP credentials" below</li>
-                  <li>Paste the Server URL and Stream Key into OBS</li>
-                  <li>Hit "Start Streaming" in OBS</li>
-                </ol>
-                <p className="text-gray-500 text-xs mt-1">In-app broadcasting will work after publishing the app.</p>
-              </div>
-            )}
           </div>
         )}
 

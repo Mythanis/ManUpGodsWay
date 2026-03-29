@@ -58,7 +58,7 @@ function SetupGuide({ stream, onGoLive, onEndStream, goLivePending, endPending }
   goLivePending: boolean;
   endPending: boolean;
 }) {
-  const [tab, setTab] = useState<Tab>("app");
+  const [tab, setTab] = useState<Tab>("obs");
 
   const rtmpServer = "rtmps://global-live.mux.com:443/app";
   const streamKey = stream.muxStreamKey || "";
@@ -93,28 +93,28 @@ function SetupGuide({ stream, onGoLive, onEndStream, goLivePending, endPending }
         {/* IN-APP TAB */}
         {tab === "app" && (
           <div className="space-y-3">
-            <p className="text-gray-400 text-xs">Go live directly from your phone or browser camera — no extra apps needed.</p>
-
-            {stream.status === "scheduled" && (
-              <Button onClick={onGoLive} disabled={goLivePending} size="sm" className="w-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold">
-                🔴 {goLivePending ? "Starting…" : "Mark as Live First"}
-              </Button>
-            )}
-
-            {stream.status === "live" ? (
-              <>
-                <LiveBroadcaster
-                  streamKey={streamKey}
-                  streamId={stream.id}
-                  onBroadcastEnd={onEndStream}
-                />
-              </>
-            ) : (
-              <div className="bg-black/50 rounded p-3 text-center">
-                <Smartphone className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                <p className="text-gray-500 text-xs">Click "Mark as Live First" above, then the camera broadcaster will appear here.</p>
-              </div>
-            )}
+            <div className="bg-yellow-950/50 border border-yellow-700/50 rounded p-3">
+              <p className="text-yellow-400 text-xs font-bold mb-1">⚠️ In-App Broadcasting Unavailable</p>
+              <p className="text-gray-300 text-xs">Browser-based WebRTC streaming to Mux is blocked by the hosting environment's network restrictions. This is not something that can be fixed in the app code.</p>
+            </div>
+            <p className="text-gray-400 text-xs">Use one of these free options instead — they work great from your phone or desktop:</p>
+            <div className="space-y-2">
+              <button
+                onClick={() => setTab("obs")}
+                className="w-full text-left bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded p-2.5 transition-colors"
+              >
+                <p className="text-white text-xs font-bold">📺 OBS Studio (Desktop)</p>
+                <p className="text-gray-400 text-[10px] mt-0.5">Free, professional software. Best for desktop/laptop streaming.</p>
+              </button>
+              <button
+                onClick={() => setTab("riverside")}
+                className="w-full text-left bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded p-2.5 transition-colors"
+              >
+                <p className="text-white text-xs font-bold">🎙 Riverside.fm (Browser/Phone)</p>
+                <p className="text-gray-400 text-[10px] mt-0.5">Works from any browser, including mobile. Great for phone streaming.</p>
+              </button>
+              <p className="text-gray-600 text-[10px]">Also works: Larix Broadcaster app (iOS/Android), StreamYard, Ecamm Live.</p>
+            </div>
           </div>
         )}
 
