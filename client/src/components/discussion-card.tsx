@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus, Edit, Share2, Trash2, ThumbsDown, Mail, Link2 } from "lucide-react";
+import { Heart, MessageCircle, Send, ChevronDown, ChevronUp, UserPlus, Flag, Plus, Edit, Share2, Trash2, ThumbsDown, Mail, Link2, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Custom Christian Cross icon component
 const ChristianCross = ({ className }: { className?: string }) => (
@@ -74,6 +74,7 @@ export default function DiscussionCard({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   
   // Check if content is long enough to need expansion
   const plainContentLength = (discussion.content || '').replace(/<[^>]+>/g, '').length;
@@ -488,7 +489,7 @@ export default function DiscussionCard({
                   ) : (
                     <img src={url} alt={`Post media ${index + 1}`}
                       className={`w-full ${discussion.mediaUrls.length === 1 ? 'max-h-96' : 'h-44'} object-cover cursor-pointer hover:opacity-95 transition-opacity`}
-                      onClick={() => window.open(url, '_blank')}
+                      onClick={() => setLightboxIndex(index)}
                       data-testid={`img-media-${index}`}
                     />
                   )}
@@ -839,6 +840,62 @@ export default function DiscussionCard({
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* ── Image Lightbox ──────────────────────── */}
+      {lightboxIndex !== null && discussion.mediaUrls && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          onClick={() => setLightboxIndex(null)}
+        >
+          {/* Close button */}
+          <button
+            className="absolute top-4 right-4 z-10 bg-black/60 hover:bg-black/90 text-white rounded-full p-2.5 transition-colors"
+            onClick={() => setLightboxIndex(null)}
+            aria-label="Close image"
+          >
+            <X className="w-6 h-6" />
+          </button>
+
+          {/* Prev arrow */}
+          {discussion.mediaUrls.filter((_: string, i: number) => (discussion.mediaTypes?.[i] || 'image') !== 'video').length > 1 && (
+            <button
+              className="absolute left-4 z-10 bg-black/60 hover:bg-black/90 text-white rounded-full p-2.5 transition-colors"
+              onClick={(e) => { e.stopPropagation(); const imageUrls = discussion.mediaUrls.filter((_: string, i: number) => (discussion.mediaTypes?.[i] || 'image') !== 'video'); const cur = imageUrls.indexOf(discussion.mediaUrls[lightboxIndex]); setLightboxIndex(discussion.mediaUrls.indexOf(imageUrls[(cur - 1 + imageUrls.length) % imageUrls.length])); }}
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+          )}
+
+          {/* Image */}
+          <img
+            src={discussion.mediaUrls[lightboxIndex]}
+            alt="Post image"
+            className="max-w-[92vw] max-h-[88vh] object-contain rounded-md shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {/* Next arrow */}
+          {discussion.mediaUrls.filter((_: string, i: number) => (discussion.mediaTypes?.[i] || 'image') !== 'video').length > 1 && (
+            <button
+              className="absolute right-16 z-10 bg-black/60 hover:bg-black/90 text-white rounded-full p-2.5 transition-colors"
+              onClick={(e) => { e.stopPropagation(); const imageUrls = discussion.mediaUrls.filter((_: string, i: number) => (discussion.mediaTypes?.[i] || 'image') !== 'video'); const cur = imageUrls.indexOf(discussion.mediaUrls[lightboxIndex]); setLightboxIndex(discussion.mediaUrls.indexOf(imageUrls[(cur + 1) % imageUrls.length])); }}
+              aria-label="Next image"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          )}
+
+          {/* Image counter */}
+          {discussion.mediaUrls.filter((_: string, i: number) => (discussion.mediaTypes?.[i] || 'image') !== 'video').length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-3 py-1 rounded-full">
+              {discussion.mediaUrls.filter((_: string, i: number) => (discussion.mediaTypes?.[i] || 'image') !== 'video').indexOf(discussion.mediaUrls[lightboxIndex]) + 1}
+              {' / '}
+              {discussion.mediaUrls.filter((_: string, i: number) => (discussion.mediaTypes?.[i] || 'image') !== 'video').length}
+            </div>
+          )}
+        </div>
+      )}
     </Card>
   );
 }
