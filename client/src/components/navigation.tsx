@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Home, BookOpen, Video, Users, MessageCircle, Settings, Headphones, Trophy, ExternalLink, FileText, UserPlus, Dumbbell, Shield, Crown, Book, Calendar, MoreHorizontal, MapPin, Flame } from "lucide-react";
+import { Home, BookOpen, Video, Users, MessageCircle, Settings, Headphones, Trophy, ExternalLink, FileText, UserPlus, Dumbbell, Shield, Crown, Book, Calendar, MoreHorizontal, MapPin, Flame, Bell } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -30,6 +30,7 @@ function markSeen(key: string) {
 const navItems = [
   { id: 'home', path: '/', label: 'Home', icon: Home },
   { id: 'library', path: '/library', label: 'Studies', icon: BookOpen },
+  { id: 'notifications', path: '/notifications', label: 'Alerts', icon: Bell },
   { id: 'videos', path: '/videos', label: 'Videos', icon: Video },
   { id: 'podcasts', path: '/podcasts', label: 'Podcasts', icon: Headphones },
   { id: 'challenges', path: '/challenges', label: 'Challenges', icon: Trophy },
@@ -163,6 +164,10 @@ export default function Navigation() {
   const isDropdownActive = dropdownItems.some(item => isActive(item.path));
 
   const getBadgeCount = (itemId: string): number => {
+    if (itemId === 'notifications') {
+      const n = unreadData?.count ?? 0;
+      return isNaN(n) ? 0 : n;
+    }
     const raw = itemId === 'library' ? badges?.studies : itemId === 'community' ? badges?.community : undefined;
     if (raw === undefined || raw === null) return 0;
     const n = Number(raw);
@@ -229,12 +234,13 @@ export default function Navigation() {
             {dropdownItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
+              const dropdownBadge = getBadgeCount(item.id);
 
               return (
                 <DropdownMenuItem
                   key={item.id}
                   onClick={() => setLocation(item.path)}
-                  className={`cursor-pointer rounded-sm font-bold uppercase text-sm tracking-wide px-3 py-3 ${
+                  className={`relative cursor-pointer rounded-sm font-bold uppercase text-sm tracking-wide px-3 py-3 ${
                     active
                       ? 'text-black bg-ministry-gold-exact'
                       : 'text-white hover:bg-ministry-gold-exact hover:text-black'
@@ -243,6 +249,11 @@ export default function Navigation() {
                 >
                   <Icon className={`w-5 h-5 mr-2 flex-shrink-0 ${active ? 'text-black' : 'text-ministry-gold-exact'}`} />
                   {item.label}
+                  {dropdownBadge > 0 && (
+                    <span className="ml-auto bg-red-600 text-white text-[10px] font-black rounded-full px-1.5 py-0.5 leading-none">
+                      {dropdownBadge > 99 ? '99+' : dropdownBadge}
+                    </span>
+                  )}
                 </DropdownMenuItem>
               );
             })}

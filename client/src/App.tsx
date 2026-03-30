@@ -33,6 +33,7 @@ import WordViewer from "@/pages/word-viewer";
 import AdminWordEditor from "@/pages/admin-word-editor";
 import UserProfile from "@/pages/user-profile";
 import NotificationPreferences from "@/pages/notification-preferences";
+import Notifications from "@/pages/notifications";
 import MoreManUp from "@/pages/more-man-up";
 import Blog from "@/pages/blog";
 import BlogDetail from "@/pages/blog-detail";
@@ -248,6 +249,7 @@ function Router() {
               <Route path="/studies/:id/word" component={WordViewer} />
               <Route path="/users/:userId" component={UserProfile} />
               <Route path="/notification-preferences" component={NotificationPreferences} />
+              <Route path="/notifications" component={Notifications} />
               <Route path="/blog" component={BlogGuarded} />
               <Route path="/blog/:slug" component={BlogDetail} />
               <Route path="/hurdle-wall" component={HurdleWallGuarded} />
