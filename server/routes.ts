@@ -1057,6 +1057,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Return the user's currently active series and topical study (for "one active per type" lock)
+  app.get('/api/user/active-studies', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      // Admins/owners bypass all type locks — return empty so nothing appears locked
+      if (user && hasAdminPrivileges(user)) {
+        return res.json({ activeSeriesId: null, activeTopicalStudyId: null });
+      }
+      const info = await storage.getUserActiveStudyInfo(userId);
+      res.json(info);
+    } catch (error) {
+      console.error("Error fetching active study info:", error);
+      res.status(500).json({ message: "Failed to fetch active study info" });
+    }
+  });
+
   // Check if user has purchased a study
   app.get('/api/purchases/check/:studyId', isAuthenticated, async (req: any, res) => {
     try {

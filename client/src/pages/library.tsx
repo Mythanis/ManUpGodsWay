@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 // Card is used for search bar only
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, BookOpen, ChevronRight, Layers, CalendarDays } from "lucide-react";
+import { Search, BookOpen, ChevronRight, Layers, CalendarDays, Lock } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { BackButton } from "@/components/BackButton";
@@ -93,6 +93,16 @@ export default function Library() {
 
   const { data: userProgress = [] } = useQuery({
     queryKey: ["/api/progress"],
+    enabled: isAuthenticated,
+    retry: false,
+  });
+
+  // Which series and topical study the user is currently active in
+  const { data: activeStudyInfo } = useQuery<{
+    activeSeriesId: string | null;
+    activeTopicalStudyId: string | null;
+  }>({
+    queryKey: ["/api/user/active-studies"],
     enabled: isAuthenticated,
     retry: false,
   });
@@ -230,24 +240,42 @@ export default function Library() {
                   <div className="flex-1 h-px bg-white/10" />
                 </div>
                 <div className="space-y-3">
-                  {filteredSeries.map((s) => (
-                    <Link key={s.id} href={`/series/${s.id}`}>
+                  {filteredSeries.map((s) => {
+                    const isSeriesLocked =
+                      isAuthenticated &&
+                      !!activeStudyInfo?.activeSeriesId &&
+                      activeStudyInfo.activeSeriesId !== s.id;
+
+                    const card = (
                       <div
-                        className="flex items-stretch rounded-sm border-2 border-white/10 overflow-hidden glow-gold hover:border-[#FCD000]/40 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
+                        className={`flex items-stretch rounded-sm border-2 overflow-hidden transition-all ${
+                          isSeriesLocked
+                            ? 'border-white/10 opacity-60 cursor-not-allowed'
+                            : 'border-white/10 glow-gold hover:border-[#FCD000]/40 hover:translate-x-[-1px] hover:translate-y-[-1px] cursor-pointer'
+                        }`}
                         style={{ background: '#0f0f0f' }}
                         data-testid={`series-card-${s.id}`}
                       >
                         {/* Thumbnail */}
-                        <div className="w-20 flex-shrink-0 bg-black flex items-center justify-center overflow-hidden self-stretch">
+                        <div className="w-20 flex-shrink-0 bg-black flex items-center justify-center overflow-hidden self-stretch relative">
                           {s.thumbnailUrl ? (
                             <img src={s.thumbnailUrl} alt={s.title} className="h-full w-full object-cover" />
                           ) : (
                             <Layers className="w-7 h-7 text-[#FCD000]" />
                           )}
+                          {isSeriesLocked && (
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                              <Lock className="w-5 h-5 text-[#FCD000]" />
+                            </div>
+                          )}
                         </div>
                         {/* Content */}
                         <div className="flex-1 px-4 py-3 min-w-0">
-                          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FCD000]">Series</span>
+                          {isSeriesLocked ? (
+                            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FCD000]">Finish Current Series First</span>
+                          ) : (
+                            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FCD000]">Series</span>
+                          )}
                           <p className="font-black text-white text-sm leading-tight mt-0.5 uppercase tracking-tight line-clamp-2" data-testid={`text-series-title-${s.id}`}>{s.title}</p>
                           <div className="flex items-center gap-2 mt-1.5">
                             <span className="text-[10px] font-bold text-white/40 uppercase tracking-wide">{s.studyCount} {s.studyCount === 1 ? 'Study' : 'Studies'}</span>
@@ -255,13 +283,22 @@ export default function Library() {
                             <span className="text-[10px] font-bold text-white/40 uppercase tracking-wide">{s.totalLessons} Lessons</span>
                           </div>
                         </div>
-                        {/* Arrow */}
+                        {/* Arrow / Lock */}
                         <div className="flex items-center pr-4">
-                          <ChevronRight className="w-5 h-5 text-[#FCD000]" />
+                          {isSeriesLocked
+                            ? <Lock className="w-5 h-5 text-white/30" />
+                            : <ChevronRight className="w-5 h-5 text-[#FCD000]" />
+                          }
                         </div>
                       </div>
-                    </Link>
-                  ))}
+                    );
+
+                    return isSeriesLocked ? (
+                      <div key={s.id}>{card}</div>
+                    ) : (
+                      <Link key={s.id} href={`/series/${s.id}`}>{card}</Link>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -280,48 +317,77 @@ export default function Library() {
                     const isCompleted = progress?.isCompleted || false;
                     const hasStarted = !!progress && !isCompleted;
                     const isFree = study.requiredTier === 'free';
+                    // Lock this topical study if the user is currently working on a DIFFERENT one
+                    const isTopicalLocked =
+                      isAuthenticated &&
+                      !isCompleted &&
+                      !!activeStudyInfo?.activeTopicalStudyId &&
+                      activeStudyInfo.activeTopicalStudyId !== study.id;
 
-                    return (
-                      <Link key={study.id} href={`/studies/${study.id}`}>
-                        <div
-                          className="flex items-stretch rounded-sm border-2 overflow-hidden glow-gold hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
-                          style={{ background: '#0f0f0f', borderColor: isCompleted ? 'rgba(252,208,0,0.5)' : 'rgba(255,255,255,0.1)' }}
-                          data-testid={`study-card-${study.id}`}
-                        >
-                          {/* Thumbnail */}
-                          <div className="w-20 flex-shrink-0 bg-black flex items-center justify-center overflow-hidden self-stretch">
-                            {study.thumbnailUrl ? (
-                              <img src={study.thumbnailUrl} alt={study.title} className="h-full w-full object-cover" />
+                    const card = (
+                      <div
+                        className={`flex items-stretch rounded-sm border-2 overflow-hidden transition-all ${
+                          isTopicalLocked
+                            ? 'opacity-60 cursor-not-allowed'
+                            : 'glow-gold hover:translate-x-[-1px] hover:translate-y-[-1px] cursor-pointer'
+                        }`}
+                        style={{
+                          background: '#0f0f0f',
+                          borderColor: isCompleted
+                            ? 'rgba(252,208,0,0.5)'
+                            : isTopicalLocked
+                            ? 'rgba(255,255,255,0.1)'
+                            : 'rgba(255,255,255,0.1)',
+                        }}
+                        data-testid={`study-card-${study.id}`}
+                      >
+                        {/* Thumbnail */}
+                        <div className="w-20 flex-shrink-0 bg-black flex items-center justify-center overflow-hidden self-stretch relative">
+                          {study.thumbnailUrl ? (
+                            <img src={study.thumbnailUrl} alt={study.title} className="h-full w-full object-cover" />
+                          ) : (
+                            <BookOpen className="w-7 h-7 text-[#FCD000]" />
+                          )}
+                          {isTopicalLocked && (
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                              <Lock className="w-5 h-5 text-[#FCD000]" />
+                            </div>
+                          )}
+                        </div>
+                        {/* Content */}
+                        <div className="flex-1 px-4 py-3 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            {isTopicalLocked ? (
+                              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FCD000]">Finish Current Study First</span>
+                            ) : isCompleted ? (
+                              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FCD000]">✓ Complete</span>
+                            ) : hasStarted ? (
+                              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/50">In Progress</span>
                             ) : (
-                              <BookOpen className="w-7 h-7 text-[#FCD000]" />
+                              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FCD000]">{isFree ? 'Free' : 'Members'}</span>
                             )}
                           </div>
-                          {/* Content */}
-                          <div className="flex-1 px-4 py-3 min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5">
-                              {isCompleted && (
-                                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FCD000]">✓ Complete</span>
-                              )}
-                              {hasStarted && (
-                                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/50">In Progress</span>
-                              )}
-                              {!isCompleted && !hasStarted && (
-                                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FCD000]">{isFree ? 'Free' : 'Members'}</span>
-                              )}
-                            </div>
-                            <p className="font-black text-white text-sm leading-tight uppercase tracking-tight line-clamp-2" data-testid={`text-study-title-${study.id}`}>{study.title}</p>
-                            <div className="flex items-center gap-2 mt-1.5">
-                              {study.totalDays > 0 && (
-                                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wide">{study.totalDays} {study.totalDays === 1 ? 'Day' : 'Days'}</span>
-                              )}
-                            </div>
-                          </div>
-                          {/* Arrow */}
-                          <div className="flex items-center pr-4">
-                            <ChevronRight className="w-5 h-5 text-[#FCD000]" />
+                          <p className="font-black text-white text-sm leading-tight uppercase tracking-tight line-clamp-2" data-testid={`text-study-title-${study.id}`}>{study.title}</p>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            {study.totalDays > 0 && (
+                              <span className="text-[10px] font-bold text-white/40 uppercase tracking-wide">{study.totalDays} {study.totalDays === 1 ? 'Day' : 'Days'}</span>
+                            )}
                           </div>
                         </div>
-                      </Link>
+                        {/* Arrow / Lock */}
+                        <div className="flex items-center pr-4">
+                          {isTopicalLocked
+                            ? <Lock className="w-5 h-5 text-white/30" />
+                            : <ChevronRight className="w-5 h-5 text-[#FCD000]" />
+                          }
+                        </div>
+                      </div>
+                    );
+
+                    return isTopicalLocked ? (
+                      <div key={study.id}>{card}</div>
+                    ) : (
+                      <Link key={study.id} href={`/studies/${study.id}`}>{card}</Link>
                     );
                   })}
                 </div>

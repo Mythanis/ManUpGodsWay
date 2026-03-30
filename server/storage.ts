@@ -269,6 +269,11 @@ export interface IStorage {
   updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
   updateUserStreak(userId: string, userLocalDate?: Date): Promise<void>;
   getWeeklyStudyCompletions(userId: string): Promise<number>;
+  getUserActiveStudyInfo(userId: string): Promise<{
+    activeSeriesId: string | null;
+    activeTopicalStudyId: string | null;
+  }>;
+
   getStudyTimeGateStatus(userId: string, studyId: string, userTimezone: string): Promise<{
     isLocked: boolean;
     unlockTime: Date | null;
@@ -4365,6 +4370,32 @@ export class DatabaseStorage implements IStorage {
       );
 
     return result[0]?.count || 0;
+  }
+
+  async getUserActiveStudyInfo(userId: string): Promise<{
+    activeSeriesId: string | null;
+    activeTopicalStudyId: string | null;
+  }> {
+    // Find all in-progress studies for this user, joined with the study to get seriesId
+    const inProgressRecords = await db
+      .select({ studyId: userProgress.studyId, seriesId: studies.seriesId })
+      .from(userProgress)
+      .innerJoin(studies, eq(userProgress.studyId, studies.id))
+      .where(and(
+        eq(userProgress.userId, userId),
+        eq(userProgress.status, 'in_progress'),
+      ));
+
+    let activeSeriesId: string | null = null;
+    let activeTopicalStudyId: string | null = null;
+    for (const row of inProgressRecords) {
+      if (row.seriesId && !activeSeriesId) {
+        activeSeriesId = row.seriesId;
+      } else if (!row.seriesId && !activeTopicalStudyId) {
+        activeTopicalStudyId = row.studyId;
+      }
+    }
+    return { activeSeriesId, activeTopicalStudyId };
   }
 
   async getStudyTimeGateStatus(userId: string, studyId: string, userTimezone: string): Promise<{

@@ -249,6 +249,32 @@ export default function StudyDetail() {
     enabled: !!id && !!user?.id,
   });
 
+  // Check if this study is blocked by the "one active per type" rule
+  const { data: activeStudyInfo } = useQuery<{
+    activeSeriesId: string | null;
+    activeTopicalStudyId: string | null;
+  }>({
+    queryKey: ["/api/user/active-studies"],
+    retry: false,
+    enabled: !!id && !!user?.id,
+  });
+
+  // A topical study is type-locked when another topical is already in progress
+  // A series study is type-locked when another series is already in progress
+  // (series-level lock is shown on the series-detail page; here we handle both to be safe)
+  const isTypeLocked = (() => {
+    if (!activeStudyInfo || !study) return false;
+    const isTopical = !(study as any).seriesId;
+    const isSeriesStudy = !!(study as any).seriesId;
+    if (isTopical && activeStudyInfo.activeTopicalStudyId && activeStudyInfo.activeTopicalStudyId !== id) {
+      return true;
+    }
+    if (isSeriesStudy && activeStudyInfo.activeSeriesId && activeStudyInfo.activeSeriesId !== (study as any).seriesId) {
+      return true;
+    }
+    return false;
+  })();
+
   // Check time-gate status for series studies
   const { data: timeGateStatus } = useQuery<{
     isLocked: boolean;
@@ -583,8 +609,30 @@ export default function StudyDetail() {
               {study.description}
             </p>
 
+            {/* One-Active-Per-Type Lock Gate */}
+            {isTypeLocked && (
+              <div className="bg-black border-2 border-ministry-gold-exact rounded-sm p-6 mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="type-lock-gate">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-16 h-16 rounded-sm bg-ministry-gold-exact/20 flex items-center justify-center border-2 border-ministry-gold-exact mb-4">
+                    <Lock className="w-8 h-8 text-ministry-gold-exact" />
+                  </div>
+                  <h3 className="font-black uppercase tracking-tight text-ministry-gold-exact text-xl mb-2">Study Locked</h3>
+                  <p className="text-sm text-gray-400 mb-4">
+                    {(study as any).seriesId
+                      ? 'You can only work on one series at a time. Complete your current series before starting this one.'
+                      : 'You can only work on one topical study at a time. Complete your current study before starting this one.'}
+                  </p>
+                  <Link href="/library">
+                    <Button className="bg-ministry-gold-exact text-black font-black uppercase tracking-wide rounded-sm border-2 border-black hover:bg-yellow-400 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                      Back to Library
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            )}
+
             {/* Time-Gate Locked State */}
-            {isStudyLocked && (
+            {!isTypeLocked && isStudyLocked && (
               <div className="bg-black border-2 border-ministry-gold-exact rounded-sm p-6 mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="time-gate-locked">
                 <div className="flex flex-col items-center text-center">
                   <div className="w-16 h-16 rounded-sm bg-ministry-gold-exact/20 flex items-center justify-center border-2 border-ministry-gold-exact mb-4">
@@ -608,8 +656,8 @@ export default function StudyDetail() {
               </div>
             )}
 
-            {/* Embedded Study Viewer - Only show when user has access and study has lessons and not time-gated */}
-            {hasAccess && !isStudyLocked && user?.id && studyLessons.length > 0 && (
+            {/* Embedded Study Viewer - Only show when user has access and study has lessons and not locked */}
+            {hasAccess && !isTypeLocked && !isStudyLocked && user?.id && studyLessons.length > 0 && (
               <div className="mb-6">
                 <EmbeddedLessonViewer 
                   studyId={study.id!}
@@ -619,8 +667,8 @@ export default function StudyDetail() {
               </div>
             )}
 
-            {/* Legacy Study Materials - Show as backup/alternative resources (not when time-gated) */}
-            {hasAccess && !isStudyLocked && (study.pdfFilename || study.wordFilename) && (
+            {/* Legacy Study Materials - Show as backup/alternative resources (not when locked) */}
+            {hasAccess && !isTypeLocked && !isStudyLocked && (study.pdfFilename || study.wordFilename) && (
               <div className="bg-black rounded-sm p-4 mb-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <h3 className="font-bold uppercase tracking-wide text-ministry-gold-exact mb-2 text-sm flex items-center">
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

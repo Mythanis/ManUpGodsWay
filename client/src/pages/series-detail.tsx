@@ -74,8 +74,23 @@ export default function SeriesDetail() {
     enabled: !!seriesId,
   });
 
+  const { data: activeStudyInfo } = useQuery<{
+    activeSeriesId: string | null;
+    activeTopicalStudyId: string | null;
+  }>({
+    queryKey: ["/api/user/active-studies"],
+    enabled: isAuthenticated,
+    retry: false,
+  });
+
   const queryClient = useQueryClient();
   const isLoading = seriesLoading || studiesLoading;
+
+  // This series is locked when the user is actively working on a DIFFERENT series
+  const isSeriesTypeLocked =
+    isAuthenticated &&
+    !!activeStudyInfo?.activeSeriesId &&
+    activeStudyInfo.activeSeriesId !== seriesId;
 
   const startSeriesMutation = useMutation({
     mutationFn: async () => {
@@ -169,6 +184,28 @@ export default function SeriesDetail() {
           <p className="text-gray-400 mb-4 font-bold uppercase">Series not found</p>
           <Link href="/library">
             <Button className="bg-[#FCD000] text-black font-black uppercase tracking-wide rounded-sm border-2 border-black hover:bg-yellow-400">
+              Back to Library
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (isSeriesTypeLocked) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center px-6 text-center">
+        <BackButton />
+        <div className="bg-black border-2 border-[#FCD000] rounded-sm p-8 max-w-sm w-full shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="w-14 h-14 rounded-sm bg-[#FCD000] flex items-center justify-center mx-auto mb-4 border-2 border-black">
+            <Lock className="w-8 h-8 text-black" />
+          </div>
+          <h2 className="text-xl font-black uppercase tracking-tight text-[#FCD000] mb-2">Series Locked</h2>
+          <p className="text-white/80 text-sm mb-6">
+            You can only work on one series at a time. Complete your current series before starting a new one.
+          </p>
+          <Link href="/library">
+            <Button className="w-full bg-[#FCD000] text-black font-black uppercase tracking-wide rounded-sm border-2 border-black hover:bg-yellow-400 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
               Back to Library
             </Button>
           </Link>
