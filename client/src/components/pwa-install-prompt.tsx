@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 import { X, Download, Share, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 export function PWAInstallPrompt() {
   const { deferredPrompt, isInstalled, isIOSSafari, install } = usePWAInstall();
+  const [location] = useLocation();
   const [dismissed, setDismissed] = useState(() => {
     const dismissedAt = localStorage.getItem('pwa-install-dismissed');
     if (!dismissedAt) return false;
@@ -21,6 +23,8 @@ export function PWAInstallPrompt() {
     localStorage.setItem('pwa-install-dismissed', Date.now().toString());
   };
 
+  // Profile page has its own inline install section — avoid duplicate CTA
+  if (location === '/profile') return null;
   if (isInstalled || dismissed) return null;
   if (!deferredPrompt && !isIOSSafari) return null;
 

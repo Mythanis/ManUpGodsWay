@@ -42,9 +42,13 @@ function getIsInstalled(): boolean {
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(_deferredPrompt);
-  const [isInstalled, setIsInstalled] = useState(false);
+  // Initialize synchronously so standalone-mode components never render a flash
+  const [isInstalled, setIsInstalled] = useState(() =>
+    typeof window !== "undefined" ? getIsInstalled() : false
+  );
 
   useEffect(() => {
+    // Re-check in case matchMedia wasn't ready on SSR-like fast-render
     setIsInstalled(getIsInstalled());
 
     // Re-sync with module singleton in case prompt fired before this hook mounted
