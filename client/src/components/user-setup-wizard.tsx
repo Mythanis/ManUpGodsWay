@@ -544,8 +544,8 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                       <Checkbox
                         id="terms"
                         checked={acceptedTerms}
-                        disabled={true}
-                        className="mt-0.5 border-ministry-gold data-[state=checked]:bg-ministry-gold data-[state=checked]:text-ministry-charcoal"
+                        onCheckedChange={() => !acceptedTerms && setShowTermsDialog(true)}
+                        className="mt-0.5 border-ministry-gold data-[state=checked]:bg-ministry-gold data-[state=checked]:text-ministry-charcoal cursor-pointer"
                       />
                       <div className="flex-1">
                         <span className="text-sm text-white dark:text-white">
@@ -566,8 +566,8 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                       <Checkbox
                         id="privacy"
                         checked={acceptedPrivacy}
-                        disabled={true}
-                        className="mt-0.5 border-ministry-gold data-[state=checked]:bg-ministry-gold data-[state=checked]:text-ministry-charcoal"
+                        onCheckedChange={() => !acceptedPrivacy && setShowPrivacyDialog(true)}
+                        className="mt-0.5 border-ministry-gold data-[state=checked]:bg-ministry-gold data-[state=checked]:text-ministry-charcoal cursor-pointer"
                       />
                       <div className="flex-1">
                         <span className="text-sm text-white dark:text-white">
