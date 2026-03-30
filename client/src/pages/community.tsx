@@ -308,10 +308,13 @@ export default function Community() {
   const isAdmin = (user as any)?.role === 'admin' || (user as any)?.role === 'owner';
   const contentEditableRef = useRef<HTMLDivElement>(null);
 
+  const normalizeHtml = (html: string) =>
+    html.replace(/&nbsp;/g, ' ').replace(/\u00a0/g, ' ').trim();
+
   const applyFormat = (command: string) => {
     contentEditableRef.current?.focus();
     document.execCommand(command, false);
-    const html = contentEditableRef.current?.innerHTML || '';
+    const html = normalizeHtml(contentEditableRef.current?.innerHTML || '');
     form.setValue('content', html, { shouldValidate: true });
   };
 
@@ -424,7 +427,7 @@ export default function Community() {
     
     const discussionData = {
       title: autoTitle,
-      content: data.content,
+      content: normalizeHtml(data.content),
       category: 'miscellaneous',
       userId: (user as any).id,
       mediaUrls: uploadedMedia.urls.length > 0 ? uploadedMedia.urls : undefined,
@@ -647,7 +650,7 @@ export default function Community() {
                               contentEditable
                               suppressContentEditableWarning
                               onInput={() => {
-                                const html = contentEditableRef.current?.innerHTML || '';
+                                const html = normalizeHtml(contentEditableRef.current?.innerHTML || '');
                                 form.setValue('content', html, { shouldValidate: true });
                               }}
                               data-placeholder="Share your thoughts, photos, videos, or memes..."

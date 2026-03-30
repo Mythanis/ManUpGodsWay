@@ -19,7 +19,7 @@ export function sanitizeHtml(html: string): string {
     return html;
   }
 
-  return DOMPurify.sanitize(html, {
+  const sanitized = DOMPurify.sanitize(html, {
     ALLOWED_TAGS: [
       "p", "br",
       "strong", "b", "em", "i", "u", "s", "strike",
@@ -37,4 +37,7 @@ export function sanitizeHtml(html: string): string {
     ALLOW_DATA_ATTR: false,
     FORCE_BODY: false,
   });
+  return sanitized
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\u00a0/g, ' ');
 }

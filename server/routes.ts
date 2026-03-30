@@ -2680,8 +2680,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/discussions', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const body = { ...req.body };
+      if (typeof body.content === 'string') {
+        body.content = body.content.replace(/&nbsp;/g, ' ').replace(/\u00a0/g, ' ').trim();
+      }
       const discussionData = insertDiscussionSchema.parse({
-        ...req.body,
+        ...body,
         userId,
       });
       
