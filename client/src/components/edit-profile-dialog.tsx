@@ -192,6 +192,14 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
       });
       return;
     }
+    if (!profileData.lastName.trim()) {
+      toast({
+        title: "Last Name Required",
+        description: "Please enter your last name.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       // Upload profile picture first if a new one is selected
@@ -314,7 +322,7 @@ export function EditProfileDialog({ children }: { children: React.ReactNode }) {
             </div>
 
             <div>
-              <Label htmlFor="edit-lastName" className="text-white">Last Name</Label>
+              <Label htmlFor="edit-lastName" className="text-white">Last Name *</Label>
               <Input
                 id="edit-lastName"
                 value={profileData.lastName}
