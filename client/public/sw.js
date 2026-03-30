@@ -1,4 +1,4 @@
-const CACHE_NAME = 'man-up-gods-way-v7';
+const CACHE_NAME = 'man-up-gods-way-v8';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -185,15 +185,20 @@ self.addEventListener('notificationclick', (event) => {
   console.log('Notification clicked:', event);
   event.notification.close();
 
-  const urlToOpen = event.notification.data?.url || '/';
+  // Always resolve to an absolute URL — clients.openWindow() and client.navigate()
+  // require absolute URLs per spec; passing a relative path causes browsers to
+  // silently open just the origin, which the SPA then routes to the join page.
+  const rawUrl = event.notification.data?.url || '/';
+  const urlToOpen = rawUrl.startsWith('http')
+    ? rawUrl
+    : new URL(rawUrl, self.location.origin).href;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Prefer reusing an existing app window rather than opening a new one
       for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.focus();
-          client.navigate(urlToOpen);
-          return;
+        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+          return client.focus().then(() => client.navigate(urlToOpen));
         }
       }
       if (clients.openWindow) {
