@@ -59,22 +59,27 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
+  // Check if this is a new user before upserting
+  const existingUser = await storage.getUser(claims["sub"]);
+  const isNewUser = !existingUser;
+
   const userData: any = {
     id: claims["sub"],
     email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
   };
+
+  // For new users, seed names from Replit claims if available.
+  // For existing users, never overwrite — names are user-controlled within the app.
+  if (isNewUser) {
+    userData.firstName = claims["first_name"] ?? null;
+    userData.lastName = claims["last_name"] ?? null;
+  }
   
   // Include role from claims if present (for testing purposes)
   if (claims["role"]) {
     userData.role = claims["role"];
   }
-  
-  // Check if this is a new user before upserting
-  const existingUser = await storage.getUser(claims["sub"]);
-  const isNewUser = !existingUser;
   
   // Set trial dates for new users
   if (isNewUser) {
