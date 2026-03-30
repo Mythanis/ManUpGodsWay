@@ -503,35 +503,37 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-1 print:hidden">
-              {/* Font size controls */}
-              <button
-                onClick={() => adjustFontSize(-1)}
-                disabled={fontSizeLevel === 0}
-                className="w-7 h-7 flex items-center justify-center rounded text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-black"
-                title="Decrease font size"
-                aria-label="Decrease font size"
-              >
-                A-
-              </button>
-              <button
-                onClick={() => adjustFontSize(1)}
-                disabled={fontSizeLevel === 2}
-                className="w-7 h-7 flex items-center justify-center rounded text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-black"
-                title="Increase font size"
-                aria-label="Increase font size"
-              >
-                A+
-              </button>
+            <div className="flex flex-col items-center gap-1 print:hidden">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handlePrint}
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 h-7 w-7 p-0"
                 data-testid="button-print-lesson"
               >
                 <Printer className="w-4 h-4" />
               </Button>
+              {/* Font size controls */}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => adjustFontSize(-1)}
+                  disabled={fontSizeLevel === 0}
+                  className="w-7 h-7 flex items-center justify-center rounded bg-[#FCD000] text-black hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-black"
+                  title="Decrease font size"
+                  aria-label="Decrease font size"
+                >
+                  A-
+                </button>
+                <button
+                  onClick={() => adjustFontSize(1)}
+                  disabled={fontSizeLevel === 2}
+                  className="w-7 h-7 flex items-center justify-center rounded bg-[#FCD000] text-black hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-black"
+                  title="Increase font size"
+                  aria-label="Increase font size"
+                >
+                  A+
+                </button>
+              </div>
             </div>
           </div>
         </CardHeader>
