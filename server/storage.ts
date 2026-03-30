@@ -1346,6 +1346,7 @@ export class DatabaseStorage implements IStorage {
       const [updated] = await db
         .update(userLessonProgress)
         .set({
+          isCompleted: true,
           completedAt: now,
           answers: answers || existing.answers,
           updatedAt: now,
@@ -1364,6 +1365,7 @@ export class DatabaseStorage implements IStorage {
         .values({
           userId,
           lessonId,
+          isCompleted: true,
           completedAt: now,
           answers,
         })
