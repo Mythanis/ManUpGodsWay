@@ -450,343 +450,228 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
       {/* User Detail Dialog */}
       <Dialog open={showUserDialog} onOpenChange={setShowUserDialog}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-3">
-              <img 
-                src={selectedUser?.profileImageUrl || `https://ui-avatars.com/api/?name=${selectedUser?.firstName}+${selectedUser?.lastName}&background=FCD000&color=000`}
-                alt={`${selectedUser?.firstName} ${selectedUser?.lastName}`}
-                className="w-12 h-12 rounded-full object-cover"
-              />
-              <div>
-                <h2 className="text-xl font-bold text-foreground">
-                  {selectedUser?.firstName} {selectedUser?.lastName}
-                </h2>
-                <p className="text-sm text-ministry-slate">{selectedUser?.email}</p>
-              </div>
-            </DialogTitle>
-          </DialogHeader>
-
           {selectedUser && (
-            <div className="space-y-6">
-              {/* User Status */}
-              <div className="grid grid-cols-2 gap-4">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-3">
-                      <Shield className="w-5 h-5 text-ministry-steel" />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Role</p>
-                        {selectedUser.role === 'owner' && currentUserRole !== 'owner' ? (
-                          <p className="text-sm font-semibold text-foreground capitalize mt-1">Owner</p>
-                        ) : (
-                          <Select
-                            value={editedUser.role || selectedUser.role}
-                            onValueChange={(role) => {
-                              setEditedUser(prev => ({ ...prev, role }));
-                              setHasUnsavedChanges(true);
-                            }}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="user">User</SelectItem>
-                              <SelectItem value="moderator">Moderator</SelectItem>
-                              <SelectItem value="admin">Admin</SelectItem>
-                              {currentUserRole === 'owner' && (
-                                <SelectItem value="owner">Owner</SelectItem>
-                              )}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+            <div className="space-y-5">
 
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-3">
-                      <CreditCard className="w-5 h-5 text-ministry-gold" />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Subscription Status</p>
-                        <Select
-                          value={editedUser.subscriptionStatus || selectedUser.subscriptionStatus || 'expired'}
-                          onValueChange={(subscriptionStatus) => {
-                            setEditedUser(prev => ({ ...prev, subscriptionStatus }));
-                            setHasUnsavedChanges(true);
-                          }}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="active">Active (Subscriber)</SelectItem>
-                            <SelectItem value="trial">Trial</SelectItem>
-                            <SelectItem value="expired">Expired (Free)</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                            <SelectItem value="past_due">Past Due (Payment Failed)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {selectedUser.subscriptionStatus === 'active' && selectedUser.role !== 'owner' && selectedUser.subscriptionExpiresAt && (
-                          <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                            Renews: {new Date(selectedUser.subscriptionExpiresAt).toLocaleDateString()}
-                          </p>
-                        )}
-                        {selectedUser.subscriptionStatus === 'cancelled' && selectedUser.subscriptionExpiresAt && (
-                          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                            Access ends: {new Date(selectedUser.subscriptionExpiresAt).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* User Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <Mail className="w-4 h-4 text-ministry-slate" />
-                    <div>
-                      <p className="text-xs text-ministry-slate">Email</p>
-                      <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    <Activity className="w-4 h-4 text-ministry-slate" />
-                    <div>
-                      <p className="text-xs text-ministry-slate">Streak Days</p>
-                      <p className="text-sm text-muted-foreground">{selectedUser.streakDays} days</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <Calendar className="w-4 h-4 text-ministry-slate" />
-                    <div>
-                      <p className="text-xs text-ministry-slate">Joined</p>
-                      <p className="text-sm text-muted-foreground">{formatLocalDateTime(selectedUser.createdAt)}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    <Calendar className="w-4 h-4 text-ministry-slate" />
-                    <div>
-                      <p className="text-xs text-ministry-slate">Last Active</p>
-                      <p className="text-sm text-muted-foreground">{formatLocalDateTime(selectedUser.updatedAt)}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    {pushStatus?.enabled
-                      ? <Bell className="w-4 h-4 text-green-500" />
-                      : <BellOff className="w-4 h-4 text-ministry-slate" />
-                    }
-                    <div>
-                      <p className="text-xs text-ministry-slate">Push Notifications</p>
-                      {pushStatus === undefined ? (
-                        <p className="text-sm text-muted-foreground">Loading…</p>
-                      ) : pushStatus.enabled ? (
-                        <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                          Enabled ({pushStatus.deviceCount} {pushStatus.deviceCount === 1 ? 'device' : 'devices'})
-                        </p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Not enabled</p>
-                      )}
-                    </div>
+              {/* ── Header ── */}
+              <div className="flex items-center gap-4 pb-4 border-b">
+                <img
+                  src={selectedUser.profileImageUrl || `https://ui-avatars.com/api/?name=${selectedUser.firstName}+${selectedUser.lastName}&background=FCD000&color=000`}
+                  alt={`${selectedUser.firstName} ${selectedUser.lastName}`}
+                  className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-xl font-bold text-foreground leading-tight">
+                    {selectedUser.firstName} {selectedUser.lastName}
+                  </h2>
+                  <p className="text-sm text-muted-foreground truncate">{selectedUser.email}</p>
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    <Badge variant="outline" className="text-xs capitalize">{selectedUser.role}</Badge>
+                    {selectedUser.isBanned && (
+                      <Badge variant="destructive" className="text-xs">Banned</Badge>
+                    )}
+                    <Badge
+                      className={`text-xs ${selectedUser.subscriptionStatus === 'active' ? 'bg-green-100 text-green-800 border-green-200' : selectedUser.subscriptionStatus === 'trial' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}
+                      variant="outline"
+                    >
+                      {selectedUser.subscriptionStatus}
+                    </Badge>
                   </div>
                 </div>
               </div>
 
-              {/* Privacy Settings */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Privacy Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-foreground">Allow Direct Messages</span>
-                    <Badge variant={selectedUser.allowDirectMessages ? "default" : "secondary"}>
-                      {selectedUser.allowDirectMessages ? "Enabled" : "Disabled"}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-foreground">Allow Group Invites</span>
-                    <Badge variant={selectedUser.allowGroupInvites ? "default" : "secondary"}>
-                      {selectedUser.allowGroupInvites ? "Enabled" : "Disabled"}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Fitness Access */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center space-x-2">
-                    <Dumbbell className="w-5 h-5 text-ministry-gold" />
-                    <span>Fitness Access</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-foreground">Fitness Community ($4.99/mo add-on)</p>
-                      <p className="text-xs text-ministry-slate">Grant or revoke manual fitness access for this user</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant={selectedUser.hasFitnessAccess ? "default" : "secondary"}>
-                        {selectedUser.hasFitnessAccess ? "Granted" : "No Access"}
-                      </Badge>
-                      {selectedUser.hasFitnessAccess ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-red-600 border-red-300 hover:bg-red-50"
-                          onClick={() => setFitnessAccess.mutate({ userId: selectedUser.id, hasAccess: false })}
-                          disabled={setFitnessAccess.isPending}
-                        >
-                          Revoke
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          className="bg-ministry-gold hover:bg-yellow-500 text-black"
-                          onClick={() => setFitnessAccess.mutate({ userId: selectedUser.id, hasAccess: true })}
-                          disabled={setFitnessAccess.isPending}
-                        >
-                          Grant Access
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Stripe Subscription Linking */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center space-x-2">
-                    <CreditCard className="w-5 h-5 text-ministry-gold" />
-                    <span>Stripe Subscription</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {selectedUser.stripeSubscriptionId ? (
-                    <div className="space-y-1">
-                      <p className="text-xs text-ministry-slate">Linked Subscription ID</p>
-                      <p className="text-sm font-mono text-green-600 dark:text-green-400 break-all">{selectedUser.stripeSubscriptionId}</p>
-                      {selectedUser.stripeCustomerId && (
-                        <>
-                          <p className="text-xs text-ministry-slate mt-2">Customer ID</p>
-                          <p className="text-sm font-mono text-muted-foreground break-all">{selectedUser.stripeCustomerId}</p>
-                        </>
-                      )}
-                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">Cancel button on the user's profile page will work correctly.</p>
-                    </div>
+              {/* ── Stats strip ── */}
+              <div className="grid grid-cols-4 gap-2 text-center">
+                <div className="bg-muted/40 rounded-lg p-2.5">
+                  <p className="text-xs text-muted-foreground mb-0.5">Joined</p>
+                  <p className="text-xs font-semibold text-foreground leading-tight">{new Date(selectedUser.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div className="bg-muted/40 rounded-lg p-2.5">
+                  <p className="text-xs text-muted-foreground mb-0.5">Last Active</p>
+                  <p className="text-xs font-semibold text-foreground leading-tight">{new Date(selectedUser.updatedAt).toLocaleDateString()}</p>
+                </div>
+                <div className="bg-muted/40 rounded-lg p-2.5">
+                  <p className="text-xs text-muted-foreground mb-0.5">Streak</p>
+                  <p className="text-xs font-semibold text-foreground">{selectedUser.streakDays}d</p>
+                </div>
+                <div className="bg-muted/40 rounded-lg p-2.5">
+                  <p className="text-xs text-muted-foreground mb-0.5">Push</p>
+                  {pushStatus === undefined ? (
+                    <p className="text-xs text-muted-foreground">…</p>
+                  ) : pushStatus.enabled ? (
+                    <p className="text-xs font-semibold text-green-600">{pushStatus.deviceCount} device{pushStatus.deviceCount !== 1 ? 's' : ''}</p>
                   ) : (
-                    <div className="space-y-2">
-                      <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">No Stripe subscription linked — cancellation won't work until one is linked.</p>
-                      <p className="text-xs text-ministry-slate">Find the subscription ID in Stripe Dashboard (starts with <span className="font-mono">sub_</span>) and paste it below.</p>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="sub_..."
-                          value={stripeSubInput}
-                          onChange={(e) => setStripeSubInput(e.target.value)}
-                          className="font-mono text-sm"
-                        />
-                        <Button
-                          size="sm"
-                          className="bg-ministry-gold hover:bg-yellow-500 text-black whitespace-nowrap"
-                          disabled={!stripeSubInput.startsWith('sub_') || linkStripeSubscription.isPending}
-                          onClick={() => linkStripeSubscription.mutate({ userId: selectedUser.id, stripeSubscriptionId: stripeSubInput.trim() })}
-                        >
-                          {linkStripeSubscription.isPending ? "Linking…" : "Link"}
-                        </Button>
-                      </div>
-                    </div>
+                    <p className="text-xs text-muted-foreground">Off</p>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              {/* Ban Status */}
+              {/* ── Role & Subscription ── */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
+                    <Shield className="w-3 h-3" /> Role
+                  </Label>
+                  {selectedUser.role === 'owner' && currentUserRole !== 'owner' ? (
+                    <p className="text-sm font-semibold text-foreground px-3 py-2 bg-muted/40 rounded-md">Owner</p>
+                  ) : (
+                    <Select
+                      value={editedUser.role || selectedUser.role}
+                      onValueChange={(role) => { setEditedUser(prev => ({ ...prev, role })); setHasUnsavedChanges(true); }}
+                    >
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="moderator">Moderator</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        {currentUserRole === 'owner' && <SelectItem value="owner">Owner</SelectItem>}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
+                    <CreditCard className="w-3 h-3" /> Subscription
+                  </Label>
+                  <Select
+                    value={editedUser.subscriptionStatus || selectedUser.subscriptionStatus || 'expired'}
+                    onValueChange={(subscriptionStatus) => { setEditedUser(prev => ({ ...prev, subscriptionStatus })); setHasUnsavedChanges(true); }}
+                  >
+                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active (Subscriber)</SelectItem>
+                      <SelectItem value="trial">Trial</SelectItem>
+                      <SelectItem value="expired">Expired (Free)</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="past_due">Past Due</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {selectedUser.subscriptionStatus === 'active' && selectedUser.role !== 'owner' && selectedUser.subscriptionExpiresAt && (
+                    <p className="text-xs text-green-600 mt-1">Renews {new Date(selectedUser.subscriptionExpiresAt).toLocaleDateString()}</p>
+                  )}
+                  {selectedUser.subscriptionStatus === 'cancelled' && selectedUser.subscriptionExpiresAt && (
+                    <p className="text-xs text-amber-600 mt-1">Access ends {new Date(selectedUser.subscriptionExpiresAt).toLocaleDateString()}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Settings row: Privacy + Fitness ── */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="border rounded-lg p-3 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Privacy</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-foreground">Direct Messages</span>
+                    <Badge variant={selectedUser.allowDirectMessages ? "default" : "secondary"} className="text-xs">
+                      {selectedUser.allowDirectMessages ? "On" : "Off"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-foreground">Group Invites</span>
+                    <Badge variant={selectedUser.allowGroupInvites ? "default" : "secondary"} className="text-xs">
+                      {selectedUser.allowGroupInvites ? "On" : "Off"}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="border rounded-lg p-3 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                    <Dumbbell className="w-3 h-3 text-ministry-gold" /> Fitness Access
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <Badge variant={selectedUser.hasFitnessAccess ? "default" : "secondary"} className="text-xs">
+                      {selectedUser.hasFitnessAccess ? "Granted" : "No Access"}
+                    </Badge>
+                    {selectedUser.hasFitnessAccess ? (
+                      <Button size="sm" variant="outline" className="h-7 text-xs text-red-600 border-red-300 hover:bg-red-50"
+                        onClick={() => setFitnessAccess.mutate({ userId: selectedUser.id, hasAccess: false })}
+                        disabled={setFitnessAccess.isPending}>Revoke</Button>
+                    ) : (
+                      <Button size="sm" className="h-7 text-xs bg-ministry-gold hover:bg-yellow-500 text-black"
+                        onClick={() => setFitnessAccess.mutate({ userId: selectedUser.id, hasAccess: true })}
+                        disabled={setFitnessAccess.isPending}>Grant</Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">$4.99/mo add-on</p>
+                </div>
+              </div>
+
+              {/* ── Stripe ── */}
+              <div className="border rounded-lg p-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-2">
+                  <CreditCard className="w-3 h-3 text-ministry-gold" /> Stripe Subscription
+                </p>
+                {selectedUser.stripeSubscriptionId ? (
+                  <div className="space-y-1">
+                    <p className="text-xs font-mono text-green-600 break-all">{selectedUser.stripeSubscriptionId}</p>
+                    {selectedUser.stripeCustomerId && (
+                      <p className="text-xs font-mono text-muted-foreground break-all">{selectedUser.stripeCustomerId}</p>
+                    )}
+                    <p className="text-xs text-green-600">Cancellation will work correctly.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-xs text-amber-600 font-medium">No subscription linked — cancellation won't work until linked.</p>
+                    <div className="flex gap-2">
+                      <Input placeholder="sub_..." value={stripeSubInput} onChange={(e) => setStripeSubInput(e.target.value)} className="font-mono text-xs h-8" />
+                      <Button size="sm" className="h-8 text-xs bg-ministry-gold hover:bg-yellow-500 text-black whitespace-nowrap"
+                        disabled={!stripeSubInput.startsWith('sub_') || linkStripeSubscription.isPending}
+                        onClick={() => linkStripeSubscription.mutate({ userId: selectedUser.id, stripeSubscriptionId: stripeSubInput.trim() })}>
+                        {linkStripeSubscription.isPending ? "Linking…" : "Link"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Ban info (only when banned) ── */}
               {selectedUser.isBanned && (
-                <Card className="border-red-200">
-                  <CardHeader>
-                    <CardTitle className="text-lg text-red-600 flex items-center space-x-2">
-                      <Ban className="w-5 h-5" />
-                      <span>User Banned</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Banned Date</p>
-                      <p className="text-sm text-ministry-slate">{selectedUser.bannedAt ? formatLocalDateTime(selectedUser.bannedAt) : 'Unknown'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Reason</p>
-                      <p className="text-sm text-ministry-slate">{selectedUser.bannedReason || 'No reason provided'}</p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="border border-red-200 bg-red-50 rounded-lg p-3 space-y-1">
+                  <p className="text-xs font-semibold text-red-600 uppercase tracking-wide flex items-center gap-1">
+                    <Ban className="w-3 h-3" /> Banned
+                  </p>
+                  <p className="text-xs text-red-700">
+                    <span className="font-medium">Date:</span> {selectedUser.bannedAt ? formatLocalDateTime(selectedUser.bannedAt) : 'Unknown'}
+                  </p>
+                  <p className="text-xs text-red-700">
+                    <span className="font-medium">Reason:</span> {selectedUser.bannedReason || 'No reason provided'}
+                  </p>
+                </div>
               )}
 
-              {/* Bottom Button Layout */}
-              <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                {/* Ban/Unban and Delete Buttons - Bottom Left */}
-                <div className="flex space-x-2">
+              {/* ── Action bar ── */}
+              <div className="flex justify-between items-center pt-3 border-t">
+                <div className="flex gap-2">
                   {selectedUser.role === 'owner' ? (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-300 rounded-md">
-                      <Shield className="w-4 h-4 text-yellow-600 flex-shrink-0" />
-                      <p className="text-xs text-yellow-800 font-medium">Owner accounts cannot be banned or deleted</p>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 border border-yellow-300 rounded-md">
+                      <Shield className="w-3.5 h-3.5 text-yellow-600 flex-shrink-0" />
+                      <p className="text-xs text-yellow-800 font-medium">Owner — cannot be banned or deleted</p>
                     </div>
                   ) : (
                     <>
                       {selectedUser.isBanned ? (
-                        <Button
-                          onClick={() => unbanUser.mutate(selectedUser.id)}
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                          disabled={unbanUser.isPending}
-                        >
-                          <UserCheck className="w-4 h-4 mr-2" />
-                          Unban User
+                        <Button size="sm" onClick={() => unbanUser.mutate(selectedUser.id)}
+                          className="bg-green-600 hover:bg-green-700 text-white" disabled={unbanUser.isPending}>
+                          <UserCheck className="w-3.5 h-3.5 mr-1.5" /> Unban
                         </Button>
                       ) : (
-                        <Button
-                          variant="destructive"
-                          onClick={() => setShowBanDialog(true)}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          <Ban className="w-4 h-4 mr-2" />
-                          Ban User
+                        <Button size="sm" variant="destructive" onClick={() => setShowBanDialog(true)} className="bg-red-600 hover:bg-red-700">
+                          <Ban className="w-3.5 h-3.5 mr-1.5" /> Ban User
                         </Button>
                       )}
-                      <Button
-                        variant="destructive"
-                        onClick={() => setShowDeleteDialog(true)}
-                        className="bg-red-800 hover:bg-red-900"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete User
+                      <Button size="sm" variant="destructive" onClick={() => setShowDeleteDialog(true)} className="bg-red-800 hover:bg-red-900">
+                        <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Delete
                       </Button>
                     </>
                   )}
                 </div>
-
-                {/* Save Button - Bottom Right */}
-                <div>
-                  <Button
-                    onClick={() => handleSaveChanges()}
-                    disabled={!hasUnsavedChanges || updateUserRole.isPending || updateUserSubscription.isPending}
-                    className="bg-ministry-navy hover:bg-ministry-charcoal text-white"
-                  >
-                    {(updateUserRole.isPending || updateUserSubscription.isPending) ? "Saving..." : "Save Changes"}
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => handleSaveChanges()}
+                  disabled={!hasUnsavedChanges || updateUserRole.isPending || updateUserSubscription.isPending}
+                  className="bg-ministry-navy hover:bg-ministry-charcoal text-white"
+                >
+                  {(updateUserRole.isPending || updateUserSubscription.isPending) ? "Saving…" : "Save Changes"}
+                </Button>
               </div>
+
             </div>
           )}
         </DialogContent>
