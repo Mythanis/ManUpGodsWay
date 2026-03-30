@@ -417,6 +417,11 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                     <p className="text-xs text-gray-500 truncate" data-testid="text-user-email">
                       {user.email} • {getLastActive(user.updatedAt)}
                     </p>
+                    {user.subscriptionStatus === 'active' && user.role !== 'owner' && user.subscriptionExpiresAt && (
+                      <p className="text-xs text-green-600 dark:text-green-400">
+                        Renews {new Date(user.subscriptionExpiresAt).toLocaleDateString()}
+                      </p>
+                    )}
                   </div>
                 </div>
                 
@@ -523,6 +528,11 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                             <SelectItem value="past_due">Past Due (Payment Failed)</SelectItem>
                           </SelectContent>
                         </Select>
+                        {selectedUser.subscriptionStatus === 'active' && selectedUser.role !== 'owner' && selectedUser.subscriptionExpiresAt && (
+                          <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                            Renews: {new Date(selectedUser.subscriptionExpiresAt).toLocaleDateString()}
+                          </p>
+                        )}
                         {selectedUser.subscriptionStatus === 'cancelled' && selectedUser.subscriptionExpiresAt && (
                           <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
                             Access ends: {new Date(selectedUser.subscriptionExpiresAt).toLocaleDateString()}
