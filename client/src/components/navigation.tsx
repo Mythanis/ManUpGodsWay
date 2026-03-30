@@ -205,13 +205,14 @@ export default function Navigation() {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className={`flex flex-col items-center justify-center h-full px-3 py-1 min-w-[60px] max-w-[80px] flex-shrink-0 rounded-sm ${
+              className={`relative flex flex-col items-center justify-center h-full px-3 py-1 min-w-[60px] max-w-[80px] flex-shrink-0 rounded-sm ${
                 isDropdownActive
                   ? 'text-ministry-gold font-semibold bg-ministry-gold/10'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
               }`}
               data-testid="nav-more"
             >
+              {(unreadData?.count ?? 0) > 0 && <NavBadge count={unreadData!.count} />}
               <MoreHorizontal className="w-5 h-5 mb-0.5 flex-shrink-0" />
               <span className="font-medium text-[10px] leading-tight truncate w-full text-center">
                 More

@@ -578,21 +578,30 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
     );
   }
 
+  const hasUnread = unreadCount > 0 || pendingRequests.length > 0;
+  const totalUnread = unreadCount + pendingRequests.length;
+
   return (
     <div className="relative">
       <Button
         variant="ghost"
         size="sm"
         onClick={() => setShowPanel(!showPanel)}
-        className="relative"
+        className={`relative flex items-center gap-1.5 px-2 ${hasUnread ? 'text-white' : ''}`}
       >
-        <Bell className="h-5 w-5" />
-        {(unreadCount > 0 || pendingRequests.length > 0) && (
-          <Badge 
-            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-[#FCD000] text-black border-2 border-black rounded-sm font-bold"
-          >
-            {unreadCount + pendingRequests.length}
-          </Badge>
+        <div className="relative">
+          <Bell className={`h-5 w-5 ${hasUnread ? 'text-[#FCD000]' : ''}`} />
+          {hasUnread && (
+            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600" />
+            </span>
+          )}
+        </div>
+        {hasUnread && (
+          <span className="text-xs font-bold text-[#FCD000] leading-none">
+            {totalUnread}
+          </span>
         )}
       </Button>
 
