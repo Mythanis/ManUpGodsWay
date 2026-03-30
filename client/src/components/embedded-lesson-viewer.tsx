@@ -213,6 +213,9 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
     },
     onSuccess: (data: any) => {
       setHasTrackedStudyStart(true);
+      // Invalidate active-studies so the library immediately shows the type lock
+      // for any other series/topical studies of the same category
+      queryClient.invalidateQueries({ queryKey: ["/api/user/active-studies"] });
       if (data?.rationsAwarded > 0) {
         toast({
           title: "Mission Started!",

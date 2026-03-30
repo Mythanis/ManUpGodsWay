@@ -3466,7 +3466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Track "Start a Study" activity - awards rations on first study view
+  // Track "Start a Study" activity - awards rations on first study view and marks study as in_progress
   app.post('/api/studies/:studyId/track-start', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -3477,6 +3477,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!study) {
         return res.status(404).json({ message: "Study not found" });
       }
+
+      // Ensure a user_progress record exists with status = 'in_progress' so the
+      // "one active per type" lock fires as soon as the user opens the study —
+      // not only after they complete their first lesson.
+      await storage.markStudyStarted(userId, studyId);
 
       // Award rations for starting a study (RationsService handles deduplication via missionKey + referenceId)
       const { rationsService } = await import('./rations-service');

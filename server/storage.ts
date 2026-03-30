@@ -269,6 +269,8 @@ export interface IStorage {
   updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
   updateUserStreak(userId: string, userLocalDate?: Date): Promise<void>;
   getWeeklyStudyCompletions(userId: string): Promise<number>;
+  markStudyStarted(userId: string, studyId: string): Promise<void>;
+
   getUserActiveStudyInfo(userId: string): Promise<{
     activeSeriesId: string | null;
     activeTopicalStudyId: string | null;
@@ -4370,6 +4372,25 @@ export class DatabaseStorage implements IStorage {
       );
 
     return result[0]?.count || 0;
+  }
+
+  async markStudyStarted(userId: string, studyId: string): Promise<void> {
+    // Create an in_progress record only if no progress exists yet for this study.
+    // Does NOT update streak or activity-day counters — those should only fire on
+    // lesson completion, not on first study open.
+    const [existing] = await db
+      .select({ id: userProgress.id })
+      .from(userProgress)
+      .where(and(eq(userProgress.userId, userId), eq(userProgress.studyId, studyId)));
+
+    if (!existing) {
+      await db.insert(userProgress).values({
+        userId,
+        studyId,
+        status: 'in_progress',
+        lastAccessedAt: new Date(),
+      });
+    }
   }
 
   async getUserActiveStudyInfo(userId: string): Promise<{
