@@ -52,6 +52,13 @@ interface NextStudySuggestion {
   seriesTitle?: string;
 }
 
+// Font size levels: 0=normal, 1=large, 2=xl
+const FONT_SIZE_LEVELS = [
+  { prose: 'prose-base', p: 'prose-p:text-base prose-li:text-base', scripture: 'text-base', question: 'text-sm'  },
+  { prose: 'prose-lg',   p: 'prose-p:text-lg prose-li:text-lg',     scripture: 'text-lg',   question: 'text-base' },
+  { prose: 'prose-xl',   p: 'prose-p:text-xl prose-li:text-xl',     scripture: 'text-xl',   question: 'text-lg'  },
+];
+
 export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLessonViewerProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -62,6 +69,20 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
   const [notesExpanded, setNotesExpanded] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [nextStudySuggestion, setNextStudySuggestion] = useState<NextStudySuggestion | null>(null);
+  const [fontSizeLevel, setFontSizeLevel] = useState<number>(() => {
+    const saved = localStorage.getItem('lessonFontSize');
+    return saved ? Math.min(2, Math.max(0, parseInt(saved))) : 0;
+  });
+
+  const fontConfig = FONT_SIZE_LEVELS[fontSizeLevel];
+
+  const adjustFontSize = (delta: number) => {
+    setFontSizeLevel(prev => {
+      const next = Math.min(2, Math.max(0, prev + delta));
+      localStorage.setItem('lessonFontSize', String(next));
+      return next;
+    });
+  };
   
   const contentRef = useRefTagger([currentDayIndex]);
 
@@ -482,15 +503,36 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                 </p>
               )}
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handlePrint}
-              className="print:hidden text-white hover:bg-white/20"
-              data-testid="button-print-lesson"
-            >
-              <Printer className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-1 print:hidden">
+              {/* Font size controls */}
+              <button
+                onClick={() => adjustFontSize(-1)}
+                disabled={fontSizeLevel === 0}
+                className="w-7 h-7 flex items-center justify-center rounded text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-black"
+                title="Decrease font size"
+                aria-label="Decrease font size"
+              >
+                A-
+              </button>
+              <button
+                onClick={() => adjustFontSize(1)}
+                disabled={fontSizeLevel === 2}
+                className="w-7 h-7 flex items-center justify-center rounded text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-black"
+                title="Increase font size"
+                aria-label="Increase font size"
+              >
+                A+
+              </button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handlePrint}
+                className="text-white hover:bg-white/20"
+                data-testid="button-print-lesson"
+              >
+                <Printer className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6 relative z-10">
@@ -518,7 +560,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           {currentLesson.scripture && (
             <div className="p-4 bg-[#FCD000] rounded-sm border-l-4 border-black">
               <p className="text-xs font-black text-black mb-1 uppercase tracking-wide">Scripture</p>
-              <p className="font-serif text-base text-black" data-testid="text-scripture">
+              <p className={`font-serif ${fontConfig.scripture} text-black`} data-testid="text-scripture">
                 {currentLesson.scripture}
               </p>
             </div>
@@ -526,7 +568,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
 
           {/* Main Content */}
           <div
-            className="prose prose-base max-w-none prose-invert prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-p:text-gray-200 prose-p:text-base prose-strong:text-[#FCD000] prose-strong:font-bold prose-em:italic prose-em:text-gray-300 prose-ul:list-disc prose-ul:pl-4 prose-ol:list-decimal prose-ol:pl-4 prose-li:text-gray-200 prose-li:text-base prose-blockquote:border-l-4 prose-blockquote:border-[#FCD000] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-300 prose-a:text-[#FCD000] prose-a:underline"
+            className={`prose ${fontConfig.prose} max-w-none prose-invert prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-p:text-gray-200 ${fontConfig.p} prose-strong:text-[#FCD000] prose-strong:font-bold prose-em:italic prose-em:text-gray-300 prose-ul:list-disc prose-ul:pl-4 prose-ol:list-decimal prose-ol:pl-4 prose-li:text-gray-200 prose-blockquote:border-l-4 prose-blockquote:border-[#FCD000] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-300 prose-a:text-[#FCD000] prose-a:underline`}
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentLesson.content) }}
             data-testid="content-lesson-body"
           />
@@ -537,7 +579,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
               <p className="text-xs font-black text-black mb-2 uppercase tracking-wide">
                 💡 Key Takeaway
               </p>
-              <p className="text-base text-black font-medium" data-testid="text-key-takeaway">
+              <p className={`${fontConfig.scripture} text-black font-medium`} data-testid="text-key-takeaway">
                 {currentLesson.keyTakeaway}
               </p>
             </div>
@@ -603,7 +645,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                   let blankIndex = 0;
                   
                   return (
-                    <div className="text-sm text-white font-medium leading-relaxed">
+                    <div className={`${fontConfig.question} text-white font-medium leading-relaxed`}>
                       {parts.map((part, partIdx) => {
                         if (part.match(/^_+$|^\[blank\]$|^\[___\]$/i)) {
                           const currentBlankIndex = blankIndex;
@@ -649,7 +691,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                           {renderFillInBlank()}
                         </div>
                       ) : (
-                        <p className="text-sm flex-1 font-bold text-white" data-testid={`question-text-${index}`}>
+                        <p className={`${fontConfig.question} flex-1 font-bold text-white`} data-testid={`question-text-${index}`}>
                           {index + 1}. {q.question}
                         </p>
                       )}
