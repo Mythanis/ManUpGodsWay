@@ -177,6 +177,14 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
         });
         return;
       }
+      if (!setupData.lastName.trim()) {
+        toast({
+          title: "Last Name Required",
+          description: "Please enter your last name to continue.",
+          variant: "destructive",
+        });
+        return;
+      }
       setStep(2);
     } else if (step === 2) {
       if (profileImage) {
@@ -261,7 +269,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                   </div>
 
                   <div>
-                    <Label htmlFor="lastName" className="text-white dark:text-white">Last Name</Label>
+                    <Label htmlFor="lastName" className="text-white dark:text-white">Last Name *</Label>
                     <Input
                       id="lastName"
                       value={setupData.lastName}

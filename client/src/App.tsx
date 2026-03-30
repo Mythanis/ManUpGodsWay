@@ -58,6 +58,7 @@ import TermsConditions from "@/pages/terms-conditions";
 import NotFound from "@/pages/not-found";
 import Navigation from "@/components/navigation";
 import { UserSetupWizard } from "@/components/user-setup-wizard";
+import { NameCompletionModal } from "@/components/name-completion-modal";
 import { AccountSettingsButton } from "@/components/account-settings-button";
 import { TopRightLogo } from "@/components/top-right-logo";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
@@ -208,6 +209,9 @@ function Router() {
   return (
     <PrevLocationCtx.Provider value={prevLocation}>
       <>
+        {isAuthenticated && user && user.isProfileComplete && (!user.firstName?.trim() || !user.lastName?.trim()) && (
+          <NameCompletionModal currentFirstName={user.firstName} currentLastName={user.lastName} />
+        )}
         <Switch>
           <Route path="/banned" component={Banned} />
           {!isAuthenticated ? (
