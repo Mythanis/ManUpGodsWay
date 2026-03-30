@@ -138,6 +138,8 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/lesson-progress`] });
       queryClient.invalidateQueries({ queryKey: [`/api/studies/${studyId}/progress`] });
+      // Refresh lessons so the next lesson's isLocked/unlocksAt reflects the new completion time
+      queryClient.invalidateQueries({ queryKey: [`/api/studies/${studyId}/lessons`] });
       setAnswers({});
       if (data?.studyCompleted) {
         setNextStudySuggestion(data.nextStudy || null);
