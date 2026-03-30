@@ -494,21 +494,25 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           </div>
         </CardHeader>
         <CardContent className="space-y-6 relative z-10">
-          {/* Lock Banner */}
-          {isCurrentLessonLocked && (
-            <div className="flex items-center gap-3 p-4 bg-zinc-900 border-2 border-zinc-600 rounded-sm">
-              <div className="w-10 h-10 flex-shrink-0 bg-zinc-800 border-2 border-zinc-600 rounded-sm flex items-center justify-center">
-                <Lock className="w-5 h-5 text-zinc-400" />
+          {/* Full Lock Screen — hides all content when lesson is drip-locked */}
+          {isCurrentLessonLocked ? (
+            <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
+              <div className="w-20 h-20 flex-shrink-0 bg-zinc-800 border-4 border-zinc-600 rounded-full flex items-center justify-center">
+                <Lock className="w-10 h-10 text-zinc-400" />
               </div>
-              <div>
-                <p className="text-sm font-black text-zinc-300 uppercase tracking-wide">Lesson Locked</p>
-                <p className="text-xs text-zinc-500 font-medium flex items-center gap-1 mt-0.5">
-                  <Clock className="w-3 h-3" />
-                  Unlocks {formatUnlockTime(currentLesson.unlocksAt)}
+              <div className="space-y-2">
+                <p className="text-xl font-black text-zinc-200 uppercase tracking-wide">Day {currentLesson.dayNumber} Locked</p>
+                <p className="text-sm text-zinc-400 font-medium">
+                  Complete one day at a time. This lesson unlocks{" "}
+                  <span className="text-[#FCD000] font-black">{formatUnlockTime(currentLesson.unlocksAt)}</span>.
                 </p>
               </div>
+              <p className="text-xs text-zinc-600 max-w-xs">
+                The one-day-at-a-time format helps you reflect and apply each lesson before moving forward.
+              </p>
             </div>
-          )}
+          ) : (
+          <>
 
           {/* Scripture Reference */}
           {currentLesson.scripture && (
@@ -701,6 +705,8 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
               )}
             </div>
           )}
+          </>
+          )}
         </CardContent>
       </Card>
 
@@ -713,7 +719,9 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           return (
             <button
               key={lesson.id}
+              disabled={locked}
               onClick={() => {
+                if (locked) return;
                 setCurrentDayIndex(index);
                 setAnswers({});
               }}
@@ -723,7 +731,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                   : completed
                   ? "bg-green-600 border-green-800"
                   : locked
-                  ? "bg-zinc-800 border-zinc-600 opacity-60"
+                  ? "bg-zinc-800 border-zinc-600 opacity-60 cursor-not-allowed"
                   : "bg-gray-600 border-gray-500 hover:bg-gray-500"
               }`}
               title={`Day ${lesson.dayNumber}: ${lesson.title}${completed ? " (Completed)" : locked ? " (Locked)" : ""}`}
