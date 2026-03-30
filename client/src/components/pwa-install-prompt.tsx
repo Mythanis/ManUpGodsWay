@@ -1,65 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, Download, Share, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 export function PWAInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showIOSPrompt, setShowIOSPrompt] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
-
-  useEffect(() => {
-    const standalone = window.matchMedia('(display-mode: standalone)').matches
-      || (navigator as any).standalone === true;
-    setIsStandalone(standalone);
-
+  const { deferredPrompt, isInstalled, isIOSSafari, install } = usePWAInstall();
+  const [dismissed, setDismissed] = useState(() => {
     const dismissedAt = localStorage.getItem('pwa-install-dismissed');
-    if (dismissedAt) {
-      const daysSince = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60 * 24);
-      if (daysSince < 7) {
-        setDismissed(true);
-      }
-    }
-
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    window.addEventListener('beforeinstallprompt', handler);
-
-    const isIOS = /iP(hone|od|ad)/.test(navigator.userAgent) && !(navigator as any).standalone;
-    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-    if (isIOS && isSafari && !standalone) {
-      setTimeout(() => setShowIOSPrompt(true), 3000);
-    }
-
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
+    if (!dismissedAt) return false;
+    const daysSince = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60 * 24);
+    return daysSince < 7;
+  });
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-    }
+    await install();
   };
 
   const handleDismiss = () => {
     setDismissed(true);
-    setDeferredPrompt(null);
-    setShowIOSPrompt(false);
     localStorage.setItem('pwa-install-dismissed', Date.now().toString());
   };
 
-  if (isStandalone || dismissed) return null;
-  if (!deferredPrompt && !showIOSPrompt) return null;
+  if (isInstalled || dismissed) return null;
+  if (!deferredPrompt && !isIOSSafari) return null;
 
   return (
     <div className="fixed bottom-20 left-2 right-2 z-50 max-w-md mx-auto animate-in slide-in-from-bottom-4 duration-300">
@@ -89,7 +52,7 @@ export function PWAInstallPrompt() {
             <Download className="h-4 w-4 mr-2" />
             Install App
           </Button>
-        ) : showIOSPrompt ? (
+        ) : isIOSSafari ? (
           <div className="mt-3 text-center">
             <p className="text-gray-200 text-xs">
               Tap <Share className="h-3.5 w-3.5 inline-block mx-1 text-[#FCD000]" /> then

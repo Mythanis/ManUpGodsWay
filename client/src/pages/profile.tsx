@@ -48,8 +48,10 @@ import {
   Smartphone,
   Share,
   Plus,
-  ChevronDown
+  ChevronDown,
+  Download
 } from "lucide-react";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { Link } from "wouter";
 
 export default function Profile() {
@@ -61,41 +63,10 @@ export default function Profile() {
   const [showFitnessManageModal, setShowFitnessManageModal] = useState(false);
   const [showFitnessCancelConfirm, setShowFitnessCancelConfirm] = useState(false);
 
-  // PWA install state
-  const [installPrompt, setInstallPrompt] = useState<any>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
+  // PWA install — shared hook captures beforeinstallprompt at module-load time
+  // so the event is never missed regardless of when the user navigates here
+  const { deferredPrompt, isInstalled, isIOSSafari, install } = usePWAInstall();
   const [showIOSSteps, setShowIOSSteps] = useState(false);
-
-  useEffect(() => {
-    // Already running as installed PWA
-    if ((window.navigator as any).standalone === true || window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstalled(true);
-      return;
-    }
-    // Detect iOS Safari (no beforeinstallprompt support)
-    const ua = window.navigator.userAgent;
-    const isiOS = /iphone|ipad|ipod/i.test(ua) && !(window as any).MSStream;
-    setIsIOS(isiOS);
-
-    // Capture Android/Chrome install prompt
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setInstallPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
-
-  const handleInstall = async () => {
-    if (!installPrompt) return;
-    installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setInstallPrompt(null);
-      setIsInstalled(true);
-    }
-  };
 
   // True while we're verifying the Stripe session after returning from checkout
   const [verifyingSubscription, setVerifyingSubscription] = useState(
@@ -710,36 +681,36 @@ export default function Profile() {
               </svg>
             </Button>
             
-            {/* Add to Home Screen — hidden if already installed or no install path available */}
-            {!isInstalled && (installPrompt || isIOS) && (
+            {/* Add to Home Screen — hidden if already installed or no install path */}
+            {!isInstalled && (deferredPrompt || isIOSSafari) && (
               <div className="border-b-2 border-ministry-gold-exact/30">
-                {installPrompt ? (
-                  /* Android/Chrome — trigger native prompt */
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-between p-4 h-auto hover:bg-gray-800 rounded-sm"
-                    onClick={handleInstall}
-                    data-testid="button-install-app"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-sm bg-ministry-gold-exact flex items-center justify-center">
+                {deferredPrompt ? (
+                  /* Android/Chrome — one-tap yellow Install App button */
+                  <div className="p-4">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-8 h-8 rounded-sm bg-ministry-gold-exact flex items-center justify-center shrink-0">
                         <Smartphone className="w-4 h-4 text-black" />
                       </div>
-                      <div className="text-left">
+                      <div>
                         <span className="font-bold text-white uppercase tracking-wide block">Add to Home Screen</span>
-                        <span className="text-xs text-gray-400 normal-case font-normal tracking-normal">Install the app for quick access</span>
+                        <span className="text-xs text-gray-400">Install the app for quick access</span>
                       </div>
                     </div>
-                    <svg className="w-5 h-5 text-ministry-gold-exact" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                  </Button>
+                    <Button
+                      onClick={() => install()}
+                      className="w-full bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                      data-testid="button-install-app"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Install App
+                    </Button>
+                  </div>
                 ) : (
-                  /* iOS Safari — show step-by-step instructions */
+                  /* iOS Safari — expandable step-by-step instructions */
                   <div>
                     <button
                       className="w-full flex items-center justify-between p-4 hover:bg-gray-800 transition-colors text-left"
-                      onClick={() => setShowIOSSteps(s => !s)}
+                      onClick={() => setShowIOSSteps((s) => !s)}
                       data-testid="button-ios-install"
                     >
                       <div className="flex items-center space-x-3">
@@ -748,10 +719,12 @@ export default function Profile() {
                         </div>
                         <div>
                           <span className="font-bold text-white uppercase tracking-wide block">Add to Home Screen</span>
-                          <span className="text-xs text-gray-400 normal-case font-normal tracking-normal">Install the app for quick access</span>
+                          <span className="text-xs text-gray-400">Install the app for quick access</span>
                         </div>
                       </div>
-                      <ChevronDown className={`w-5 h-5 text-ministry-gold-exact transition-transform ${showIOSSteps ? 'rotate-180' : ''}`} />
+                      <ChevronDown
+                        className={`w-5 h-5 text-ministry-gold-exact transition-transform ${showIOSSteps ? "rotate-180" : ""}`}
+                      />
                     </button>
                     {showIOSSteps && (
                       <div className="px-4 pb-4 space-y-3">
@@ -759,19 +732,25 @@ export default function Profile() {
                           <div className="w-6 h-6 rounded-full bg-ministry-gold-exact text-black font-black text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
                           <div className="flex items-center gap-2">
                             <Share className="w-4 h-4 text-[#007AFF] shrink-0" />
-                            <p className="text-sm text-white font-medium">Tap the <span className="font-black text-[#FCD000]">Share</span> button at the bottom of Safari</p>
+                            <p className="text-sm text-white font-medium">
+                              Tap the <span className="font-black text-[#FCD000]">Share</span> button at the bottom of Safari
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-start gap-3 p-3 bg-white/5 rounded-sm border border-ministry-gold-exact/20">
                           <div className="w-6 h-6 rounded-full bg-ministry-gold-exact text-black font-black text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
                           <div className="flex items-center gap-2">
                             <Plus className="w-4 h-4 text-[#FCD000] shrink-0" />
-                            <p className="text-sm text-white font-medium">Scroll down and tap <span className="font-black text-[#FCD000]">Add to Home Screen</span></p>
+                            <p className="text-sm text-white font-medium">
+                              Scroll down and tap <span className="font-black text-[#FCD000]">Add to Home Screen</span>
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-start gap-3 p-3 bg-white/5 rounded-sm border border-ministry-gold-exact/20">
                           <div className="w-6 h-6 rounded-full bg-ministry-gold-exact text-black font-black text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
-                          <p className="text-sm text-white font-medium">Tap <span className="font-black text-[#FCD000]">Add</span> in the top-right corner</p>
+                          <p className="text-sm text-white font-medium">
+                            Tap <span className="font-black text-[#FCD000]">Add</span> in the top-right corner
+                          </p>
                         </div>
                       </div>
                     )}
