@@ -75,6 +75,7 @@ export default function DiscussionCard({
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [showLikersDialog, setShowLikersDialog] = useState(false);
   
   // Check if content is long enough to need expansion
   const plainContentLength = (discussion.content || '').replace(/<[^>]+>/g, '').length;
@@ -96,6 +97,13 @@ export default function DiscussionCard({
     retry: false,
     refetchInterval: showReplies ? 3000 : false, // Real-time updates every 3 seconds when expanded
     refetchIntervalInBackground: true,
+  });
+
+  type Liker = { id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null };
+  const { data: likers = [], isLoading: likersLoading } = useQuery<Liker[]>({
+    queryKey: ["/api/discussions", discussion.id, "likers"],
+    enabled: showLikersDialog && likeCount > 0,
+    retry: false,
   });
 
   const form = useForm({
@@ -506,12 +514,15 @@ export default function DiscussionCard({
         {(likeCount > 0 || (discussion.replyCount || 0) > 0) && (
           <div className="flex items-center justify-between px-4 py-2 text-xs text-white/40">
             {likeCount > 0 && (
-              <span className="flex items-center gap-1">
+              <button
+                onClick={() => setShowLikersDialog(true)}
+                className="flex items-center gap-1 hover:text-white/70 transition-colors"
+              >
                 <span className="w-4 h-4 rounded-full bg-[#FCD000] flex items-center justify-center">
                   <ChristianCross className="w-2.5 h-2.5 text-black" />
                 </span>
                 {likeCount}
-              </span>
+              </button>
             )}
             {(discussion.replyCount || 0) > 0 && (
               <button onClick={() => setShowReplies(!showReplies)} className="ml-auto text-white/40 hover:text-white/70 transition-colors">
@@ -520,6 +531,38 @@ export default function DiscussionCard({
             )}
           </div>
         )}
+
+        {/* ── Who Amened dialog ──────────────────── */}
+        <Dialog open={showLikersDialog} onOpenChange={setShowLikersDialog}>
+          <DialogContent className="bg-[#1a1a1a] border-white/10 text-white max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-[#FCD000]">
+                <ChristianCross className="w-4 h-4" />
+                Who said Amen
+              </DialogTitle>
+            </DialogHeader>
+            <div className="mt-2 max-h-72 overflow-y-auto space-y-3">
+              {likersLoading ? (
+                <p className="text-sm text-white/50 text-center py-4">Loading...</p>
+              ) : likers.length === 0 ? (
+                <p className="text-sm text-white/50 text-center py-4">No one has said Amen yet.</p>
+              ) : (
+                likers.map((liker) => (
+                  <div key={liker.id} className="flex items-center gap-3">
+                    <img
+                      src={liker.profileImageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent((liker.firstName || '') + '+' + (liker.lastName || ''))}&background=FCD000&color=000`}
+                      alt={`${liker.firstName} ${liker.lastName}`}
+                      className="w-8 h-8 rounded-full object-cover border border-[#FCD000]/30 flex-shrink-0"
+                    />
+                    <span className="text-sm font-medium text-white">
+                      {liker.firstName} {liker.lastName?.charAt(0)}.
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* ── Facebook-style action bar ───────────── */}
         <div className="flex items-center border-t border-white/8 mx-0">

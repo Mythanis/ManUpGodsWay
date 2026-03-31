@@ -310,6 +310,7 @@ export interface IStorage {
   
   // Like operations
   toggleDiscussionLike(discussionId: string, userId: string): Promise<{ liked: boolean; totalLikes: number }>;
+  getDiscussionLikers(discussionId: string): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null }[]>;
   
   // Discussion subscription operations
   subscribeToDiscussion(subscription: InsertDiscussionSubscription): Promise<DiscussionSubscription>;
@@ -2335,6 +2336,21 @@ export class DatabaseStorage implements IStorage {
         .returning({ likes: discussions.likes });
       return { liked: true, totalLikes: updated?.likes ?? 0 };
     }
+  }
+
+  async getDiscussionLikers(discussionId: string): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null }[]> {
+    const rows = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+      })
+      .from(discussionLikes)
+      .innerJoin(users, eq(discussionLikes.userId, users.id))
+      .where(eq(discussionLikes.discussionId, discussionId))
+      .orderBy(desc(discussionLikes.createdAt));
+    return rows;
   }
 
   // Discussion subscription operations
