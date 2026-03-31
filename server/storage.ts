@@ -3319,9 +3319,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUnreadNotificationCount(userId: string): Promise<number> {
+    const COMMUNITY_TYPES = ['new_discussion', 'discussion', 'discussion_reply'];
     const [result] = await db.select({ count: sql<number>`count(*)` })
       .from(notifications)
-      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+      .where(and(
+        eq(notifications.userId, userId),
+        eq(notifications.isRead, false),
+        not(inArray(notifications.type, COMMUNITY_TYPES))
+      ));
     return Number(result.count);
   }
 
