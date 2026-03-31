@@ -81,9 +81,27 @@ interface PassageSheetProps {
   versionId: string;
 }
 
+const FONT_SIZES = [14, 16, 17, 19, 21];
+const FONT_SIZE_KEY = "bibleReaderFontSize";
+
 function PassageSheet({ open, onOpenChange, passagesStr, dayLabel, versionId }: PassageSheetProps) {
   const chapterIds = useMemo(() => parsePassages(passagesStr), [passagesStr]);
   const isSpecial = passagesStr === "Review & Reflection" || chapterIds.length === 0;
+
+  const [fontSize, setFontSize] = useState<number>(() => {
+    const saved = typeof window !== "undefined" ? localStorage.getItem(FONT_SIZE_KEY) : null;
+    const parsed = saved ? parseInt(saved, 10) : NaN;
+    return FONT_SIZES.includes(parsed) ? parsed : 17;
+  });
+
+  const changeFontSize = (delta: -1 | 1) => {
+    setFontSize(prev => {
+      const idx = FONT_SIZES.indexOf(prev);
+      const next = FONT_SIZES[Math.min(Math.max(idx + delta, 0), FONT_SIZES.length - 1)];
+      localStorage.setItem(FONT_SIZE_KEY, String(next));
+      return next;
+    });
+  };
 
   const { data: chapters, isLoading, error } = useQuery<ChapterContent[]>({
     queryKey: ["/api/bible/passages", versionId, passagesStr],
@@ -109,16 +127,36 @@ function PassageSheet({ open, onOpenChange, passagesStr, dayLabel, versionId }: 
       >
         {/* Sheet header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/10 flex-shrink-0">
-          <div>
+          <div className="flex-1 min-w-0 mr-3">
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FCD000]">{dayLabel}</p>
             <p className="text-white font-bold text-sm mt-0.5 leading-tight">{passagesStr}</p>
           </div>
-          <button
-            onClick={() => onOpenChange(false)}
-            className="text-white/50 hover:text-white transition-colors p-1"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={() => changeFontSize(-1)}
+              disabled={fontSize <= FONT_SIZES[0]}
+              className="flex items-center justify-center w-8 h-8 rounded text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              aria-label="Decrease font size"
+              title="Smaller text"
+            >
+              <span className="font-bold leading-none" style={{ fontSize: 12 }}>A−</span>
+            </button>
+            <button
+              onClick={() => changeFontSize(1)}
+              disabled={fontSize >= FONT_SIZES[FONT_SIZES.length - 1]}
+              className="flex items-center justify-center w-8 h-8 rounded text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              aria-label="Increase font size"
+              title="Larger text"
+            >
+              <span className="font-bold leading-none" style={{ fontSize: 16 }}>A+</span>
+            </button>
+            <button
+              onClick={() => onOpenChange(false)}
+              className="text-white/50 hover:text-white transition-colors p-1 ml-1"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -156,7 +194,7 @@ function PassageSheet({ open, onOpenChange, passagesStr, dayLabel, versionId }: 
                 </h3>
                 <div className="space-y-2">
                   {verses.map(({ verse, text }) => (
-                    <p key={verse} className="text-white/90 text-[17px] leading-relaxed">
+                    <p key={verse} className="text-white/90 leading-relaxed" style={{ fontSize: `${fontSize}px` }}>
                       <sup className="text-[#FCD000] font-bold text-[11px] mr-1 align-super">{verse}</sup>
                       {text}
                     </p>
