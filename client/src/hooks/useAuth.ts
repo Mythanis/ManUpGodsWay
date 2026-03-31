@@ -15,14 +15,16 @@ export type User = {
 };
 
 export function useAuth() {
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isPending } = useQuery({
     queryKey: ["/api/auth/user"],
-    retry: false,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1500 * 2 ** attempt, 10000),
+    staleTime: 30 * 1000,
   });
 
   return {
     user: user as User | undefined,
-    isLoading,
+    isLoading: isPending,
     isAuthenticated: !!user,
   };
 }
