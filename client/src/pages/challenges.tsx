@@ -142,12 +142,14 @@ export default function Challenges() {
     mutationFn: async (challengeId: string) => {
       return apiRequest('POST', `/api/challenges/${challengeId}/complete`);
     },
-    onSuccess: () => {
+    onSuccess: (_data, challengeId) => {
       toast({
         title: "Challenge Completed!",
         description: "Congratulations! You've earned rations for completing this challenge.",
       });
       queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', challengeId, 'user-accepted'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', challengeId, 'participant-count'] });
       queryClient.invalidateQueries({ queryKey: ['/api/rations'] });
     },
     onError: () => {
@@ -164,12 +166,13 @@ export default function Challenges() {
     mutationFn: async (challengeId: string) => {
       return apiRequest('POST', `/api/challenges/${challengeId}/regroup`);
     },
-    onSuccess: () => {
+    onSuccess: (_data, challengeId) => {
       toast({
         title: "Regrouping!",
         description: "Keep your head up, soldier! The next challenge awaits.",
       });
       queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', challengeId, 'user-accepted'] });
     },
     onError: () => {
       toast({
