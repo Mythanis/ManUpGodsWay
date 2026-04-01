@@ -12496,9 +12496,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { rationsService } = await import('./rations-service');
       const rationResult = await rationsService.awardRations(userId, 'war_group_post', post.id, 'war_group_post');
 
-      // Broadcast to all connected clients so War Group page updates in real-time
-      (req.app as any).broadcastToAll({ type: 'war_group_post_created', data: { post, groupId } });
-
       res.status(201).json({ ...post, rations: rationResult });
 
       // Fire-and-forget: notify all approved members of the new post (except the poster)
@@ -12513,6 +12510,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const groupName = group?.name || 'your War Group';
           const preview = (content || '').trim().slice(0, 80) + ((content || '').length > 80 ? '…' : '');
           const targets = members.filter(m => m.userId !== userId).map(m => m.userId);
+
+          // Send targeted real-time cache invalidation signal to each approved member
+          // (minimal payload — no post content — scoped to members only)
+          const sendToUser = (req.app as any).sendToUser;
+          if (sendToUser) {
+            members.map(m => m.userId).forEach(memberId => {
+              sendToUser(memberId, { type: 'war_group_post_created', data: { groupId } });
+            });
+          }
+
           await Promise.allSettled(targets.map(memberId =>
             sendPushNotification(memberId, {
               title: `New post in ${groupName}`,
@@ -12671,24 +12678,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { rationsService } = await import('./rations-service');
       const rationResult = await rationsService.awardRations(userId, 'war_group_comment', reply.id, 'war_group_reply');
 
-      // Broadcast to all connected clients so War Group reply thread updates in real-time
       const groupId = req.params.id;
-      (req.app as any).broadcastToAll({ type: 'war_group_reply_created', data: { reply, postId, groupId } });
-
       res.status(201).json({ ...reply, rations: rationResult });
 
-      // Fire-and-forget: notify the original post author (if they're not the replier)
+      // Fire-and-forget: send real-time signals + push notification for reply
       (async () => {
         try {
-          const [post, replier] = await Promise.all([
+          const [post, replier, members] = await Promise.all([
             (async () => {
               const [p] = await db.select().from(schema.warGroupPosts).where(eq(schema.warGroupPosts.id, postId)).limit(1);
               return p;
             })(),
             storage.getUser(userId),
+            warGroupsService.getGroupMembers(groupId, 'approved'),
           ]);
-          if (!post || post.userId === userId) return; // Don't notify yourself
-          const [group] = await Promise.all([warGroupsService.getGroupById(post.groupId)]);
+
+          // Send targeted real-time cache invalidation signal to each approved member
+          // (minimal payload — no reply content — scoped to members only)
+          const sendToUser = (req.app as any).sendToUser;
+          if (sendToUser) {
+            members.map(m => m.userId).forEach(memberId => {
+              sendToUser(memberId, { type: 'war_group_reply_created', data: { groupId, postId } });
+            });
+          }
+
+          if (!post || post.userId === userId) return; // Don't push-notify yourself
+          const group = await warGroupsService.getGroupById(post.groupId);
           const replierName = replier?.firstName ? `${replier.firstName}${replier.lastName ? ' ' + replier.lastName : ''}` : 'Someone';
           const groupName = group?.name || 'your War Group';
           const preview = content.trim().slice(0, 80) + (content.length > 80 ? '…' : '');
@@ -14200,6 +14215,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const sockets = connectedClients.get(userId);
     if (!sockets) return;
     const payload = JSON.stringify({ type: 'notification', data: notification });
+    sockets.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(payload);
+      }
+    });
+  };
+
+  // Add function to send an arbitrary typed message to a single user (all their tabs)
+  // Use for private/scoped events where broadcastToAll would leak content to non-members
+  (app as any).sendToUser = (userId: string, message: { type: string; data?: any }) => {
+    const sockets = connectedClients.get(userId);
+    if (!sockets) return;
+    const payload = JSON.stringify(message);
     sockets.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(payload);
