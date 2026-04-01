@@ -6598,7 +6598,11 @@ export class DatabaseStorage implements IStorage {
       const deleted = await db
         .delete(hurdleWallPraises)
         .where(and(eq(hurdleWallPraises.postId, postId), eq(hurdleWallPraises.userId, userId)));
-      return deleted.length > 0;
+      if (deleted.length === 0) return false;
+      // Cascade: clear all amens for this post and reset amenCount to 0
+      await db.delete(hurdleWallAmens).where(eq(hurdleWallAmens.postId, postId));
+      await db.update(hurdleWallPosts).set({ amenCount: 0 }).where(eq(hurdleWallPosts.id, postId));
+      return true;
     } catch (error) {
       console.error('Error deleting praise:', error);
       return false;

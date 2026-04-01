@@ -75,6 +75,8 @@ export default function HurdleWall() {
   const [praiseContent, setPraiseContent] = useState<Record<string, string>>({});
   // optimistic amen counts: postId -> { count, hasAmened }
   const [optimisticAmens, setOptimisticAmens] = useState<Record<string, { count: number; hasAmened: boolean }>>({});
+  const [pendingAmenPosts, setPendingAmenPosts] = useState<Set<string>>(new Set());
+  const [pendingPraisePosts, setPendingPraisePosts] = useState<Set<string>>(new Set());
 
   // Get current user
   const { data: currentUser } = useQuery<{ id: string; role?: string }>({ queryKey: ['/api/auth/user'] });
@@ -188,10 +190,13 @@ export default function HurdleWall() {
     },
   });
 
-  // Praise mutation
+  // Praise mutation (per-post pending tracking)
   const praiseMutation = useMutation({
     mutationFn: async ({ postId, content }: { postId: string; content: string }) => {
       return apiRequest('POST', `/api/hurdle-wall/${postId}/praise`, { content });
+    },
+    onMutate: ({ postId }) => {
+      setPendingPraisePosts(prev => new Set(prev).add(postId));
     },
     onSuccess: (_, variables) => {
       toast({ title: "Praise Shared", description: "Your praise has been added to your prayer request" });
@@ -202,12 +207,18 @@ export default function HurdleWall() {
     onError: (error: any) => {
       toast({ title: "Error", description: error.response?.data?.message || "Failed to add praise", variant: "destructive" });
     },
+    onSettled: (_, __, { postId }) => {
+      setPendingPraisePosts(prev => { const s = new Set(prev); s.delete(postId); return s; });
+    },
   });
 
-  // Delete praise mutation
+  // Delete praise mutation (per-post pending tracking)
   const deletePraiseMutation = useMutation({
     mutationFn: async (postId: string) => {
       return apiRequest('DELETE', `/api/hurdle-wall/${postId}/praise`);
+    },
+    onMutate: (postId) => {
+      setPendingPraisePosts(prev => new Set(prev).add(postId));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
@@ -215,15 +226,19 @@ export default function HurdleWall() {
     onError: (error: any) => {
       toast({ title: "Error", description: error.response?.data?.message || "Failed to remove praise", variant: "destructive" });
     },
+    onSettled: (_, __, postId) => {
+      setPendingPraisePosts(prev => { const s = new Set(prev); s.delete(postId); return s; });
+    },
   });
 
-  // Amen mutation (optimistic)
+  // Amen mutation (optimistic, per-post pending tracking)
   const amenMutation = useMutation({
     mutationFn: async ({ postId, action }: { postId: string; action: 'add' | 'remove' }) => {
       if (action === 'add') return apiRequest('POST', `/api/hurdle-wall/${postId}/amen`);
       return apiRequest('DELETE', `/api/hurdle-wall/${postId}/amen`);
     },
     onMutate: ({ postId, action }) => {
+      setPendingAmenPosts(prev => new Set(prev).add(postId));
       const post = allPosts.find(p => p.id === postId);
       const current = optimisticAmens[postId] ?? { count: post?.amenCount ?? 0, hasAmened: post?.userHasAmened ?? false };
       const next = action === 'add'
@@ -240,6 +255,7 @@ export default function HurdleWall() {
       queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
     },
     onSettled: (_, __, { postId }) => {
+      setPendingAmenPosts(prev => { const s = new Set(prev); s.delete(postId); return s; });
       setOptimisticAmens(prev => {
         const next = { ...prev };
         delete next[postId];
@@ -598,12 +614,12 @@ export default function HurdleWall() {
                                   if (!praiseContent[post.id]?.trim()) return;
                                   praiseMutation.mutate({ postId: post.id, content: praiseContent[post.id] });
                                 }}
-                                disabled={praiseMutation.isPending || !praiseContent[post.id]?.trim()}
+                                disabled={pendingPraisePosts.has(post.id) || !praiseContent[post.id]?.trim()}
                                 className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                                 data-testid={`button-submit-praise-${post.id}`}
                               >
                                 <Star className="h-3 w-3 mr-1" />
-                                {praiseMutation.isPending ? 'Sharing...' : 'Share Praise'}
+                                {pendingPraisePosts.has(post.id) ? 'Sharing...' : 'Share Praise'}
                               </Button>
                               <Button
                                 size="sm"
@@ -650,7 +666,7 @@ export default function HurdleWall() {
                                 if (window.confirm('Remove your praise?')) deletePraiseMutation.mutate(post.id);
                               }}
                               className="text-red-500 hover:text-red-400 p-1 h-auto text-xs"
-                              disabled={deletePraiseMutation.isPending}
+                              disabled={pendingPraisePosts.has(post.id)}
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -667,7 +683,7 @@ export default function HurdleWall() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleAmen(post)}
-                          disabled={amenMutation.isPending}
+                          disabled={pendingAmenPosts.has(post.id)}
                           className={`flex items-center gap-2 font-semibold ${
                             hasAmened
                               ? 'text-ministry-gold-exact hover:text-yellow-300'
