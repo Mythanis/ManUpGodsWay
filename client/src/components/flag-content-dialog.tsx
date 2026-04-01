@@ -55,7 +55,7 @@ export function FlagContentDialog({
       reason: string;
       description?: string;
     }) => {
-      return apiRequest('/api/content/flag', 'POST', flagData);
+      return apiRequest('POST', '/api/content/flag', flagData);
     },
     onSuccess: () => {
       toast({
