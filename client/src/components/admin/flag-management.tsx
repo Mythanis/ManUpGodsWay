@@ -130,7 +130,7 @@ export default function FlagManagement() {
         >
           {REASON_LABELS[flag.reason] ?? flag.reason}
         </Badge>
-        <span className={`text-xs text-gray-400 ${dim ? "opacity-60" : ""}`}>
+        <span className={`text-xs text-black ${dim ? "opacity-60" : ""}`}>
           {flag.createdAt
             ? formatDistanceToNow(new Date(flag.createdAt), { addSuffix: true })
             : ""}
@@ -173,20 +173,20 @@ export default function FlagManagement() {
                   tabIndex={0}
                   onClick={() => handlePendingRowClick(flag)}
                   onKeyDown={(e) => e.key === "Enter" && handlePendingRowClick(flag)}
-                  className="flex items-start justify-between gap-3 p-3 rounded-lg border border-red-200 bg-white hover:bg-red-50 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
+                  className="flex items-start justify-between gap-3 p-3 rounded-lg border border-yellow-400 bg-ministry-gold hover:brightness-95 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 >
                   <div className="flex-1 min-w-0">
                     <FlagBadges flag={flag} />
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-xs text-black truncate">
                       Reported by:{" "}
-                      <span className="font-medium text-gray-700">
+                      <span className="font-bold text-black">
                         {flag.reporter?.firstName && flag.reporter?.lastName
                           ? `${flag.reporter.firstName} ${flag.reporter.lastName}`
                           : "Unknown"}
                       </span>
                     </p>
                     {flag.description && (
-                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 italic">
+                      <p className="text-xs text-black mt-0.5 line-clamp-2 italic">
                         "{flag.description}"
                       </p>
                     )}
@@ -230,20 +230,20 @@ export default function FlagManagement() {
               {inReview.map((flag) => (
                 <div
                   key={flag.id}
-                  className="flex items-start justify-between gap-3 p-3 rounded-lg border border-yellow-200 bg-yellow-50"
+                  className="flex items-start justify-between gap-3 p-3 rounded-lg border border-yellow-400 bg-ministry-gold"
                 >
                   <div className="flex-1 min-w-0">
                     <FlagBadges flag={flag} />
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-xs text-black truncate">
                       Reported by:{" "}
-                      <span className="font-medium text-gray-700">
+                      <span className="font-bold text-black">
                         {flag.reporter?.firstName && flag.reporter?.lastName
                           ? `${flag.reporter.firstName} ${flag.reporter.lastName}`
                           : "Unknown"}
                       </span>
                     </p>
                     {flag.description && (
-                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 italic">
+                      <p className="text-xs text-black mt-0.5 line-clamp-2 italic">
                         "{flag.description}"
                       </p>
                     )}
@@ -252,7 +252,7 @@ export default function FlagManagement() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-7 px-2 text-xs border-blue-200 text-blue-700 hover:bg-blue-50"
+                      className="h-7 px-2 text-xs border-gray-800 text-black hover:bg-black/10"
                       onClick={() => handleViewInReview(flag)}
                     >
                       View
@@ -297,18 +297,20 @@ export default function FlagManagement() {
               {completed.map((flag) => (
                 <div
                   key={flag.id}
-                  className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50"
+                  className="flex items-start gap-3 p-3 rounded-lg border border-yellow-400 bg-ministry-gold"
                 >
                   <div className="flex-1 min-w-0">
                     <FlagBadges flag={flag} dim />
-                    <p className="text-xs text-gray-400 truncate">
+                    <p className="text-xs text-black truncate">
                       Reported by:{" "}
-                      {flag.reporter?.firstName && flag.reporter?.lastName
-                        ? `${flag.reporter.firstName} ${flag.reporter.lastName}`
-                        : "Unknown"}
+                      <span className="font-medium text-black">
+                        {flag.reporter?.firstName && flag.reporter?.lastName
+                          ? `${flag.reporter.firstName} ${flag.reporter.lastName}`
+                          : "Unknown"}
+                      </span>
                     </p>
                   </div>
-                  <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="h-4 w-4 text-green-700 flex-shrink-0 mt-0.5" />
                 </div>
               ))}
             </div>
