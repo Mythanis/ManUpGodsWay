@@ -197,7 +197,9 @@ export function useWebSocket(userId?: string) {
           case 'war_group_reply_created': {
             const { groupId: rGroupId, postId } = message.data ?? {};
             if (rGroupId && postId) {
+              // Invalidate both the reply list and the posts list (keeps replyCount fresh)
               queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${rGroupId}/posts/${postId}/replies`] });
+              queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${rGroupId}/posts`] });
             }
             break;
           }

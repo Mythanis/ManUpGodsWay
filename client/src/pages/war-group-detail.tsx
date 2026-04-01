@@ -139,8 +139,10 @@ export default function WarGroupDetail() {
     enabled: !!id,
   });
 
+  const { data: currentUser } = useQuery<{ id: string }>({ queryKey: ['/api/auth/user'] });
+
   // Enable real-time WebSocket updates for new posts and replies
-  useWebSocket(membership?.userId);
+  useWebSocket(currentUser?.id);
 
   const { data: myGroups = [] } = useQuery<WarGroup[]>({
     queryKey: ['/api/user/war-groups'],
@@ -1101,6 +1103,8 @@ function PostCard({
   const { data: replies = [] } = useQuery<GroupReply[]>({
     queryKey: [`/api/war-groups/${groupId}/posts/${post.id}/replies`],
     enabled: isExpanded,
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   // Edit reply mutation
