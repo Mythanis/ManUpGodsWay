@@ -11403,6 +11403,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (request.userId === userId) {
         return res.status(403).json({ message: "You cannot support your own request" });
       }
+      if (!request.assistedById) {
+        return res.status(400).json({ message: "Request must be assisted before it can be supported" });
+      }
       const result = await storage.toggleAccountabilitySupport(requestId, userId);
       res.json(result);
     } catch (error) {

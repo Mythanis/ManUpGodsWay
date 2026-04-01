@@ -94,8 +94,8 @@ export default function DiscussionCard({
   const [replyingToName, setReplyingToName] = useState('');
   const [userHasLiked, setUserHasLiked] = useState((discussion as any).likedByMe ?? false);
   const [likeCount, setLikeCount] = useState(discussion.likes || 0);
-  const [userHasDisliked, setUserHasDisliked] = useState((discussion as any).dislikedByMe ?? false);
-  const [dislikeCount, setDislikeCount] = useState((discussion as any).dislikes || 0);
+  const [userHasDisliked, setUserHasDisliked] = useState(discussion.dislikedByMe ?? false);
+  const [dislikeCount, setDislikeCount] = useState(discussion.dislikes || 0);
   const [replyLikedByMe, setReplyLikedByMe] = useState<Record<string, boolean>>({});
   const [replyLikeCounts, setReplyLikeCounts] = useState<Record<string, number>>({});
   const [showEditDialog, setShowEditDialog] = useState(false);
