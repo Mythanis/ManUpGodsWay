@@ -10968,7 +10968,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Hurdle Wall routes
   app.get('/api/hurdle-wall', isAuthenticated, async (req: any, res) => {
     try {
-      const posts = await storage.getHurdleWallPosts();
+      const userId = req.user?.claims?.sub;
+      const posts = await storage.getHurdleWallPosts(userId);
       res.json(posts);
     } catch (error) {
       console.error("Error fetching hurdle wall posts:", error);
@@ -11039,8 +11040,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/hurdle-wall/:postId', isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user?.claims?.sub;
       const { postId } = req.params;
-      const post = await storage.getHurdleWallPost(postId);
+      const post = await storage.getHurdleWallPost(postId, userId);
       
       if (!post) {
         return res.status(404).json({ message: "Post not found" });
