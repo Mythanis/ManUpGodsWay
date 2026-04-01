@@ -17,7 +17,7 @@ import { warGroupsService } from "./warGroupsService";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
 import * as schema from "@shared/schema";
-import { eq, and, sql, desc, asc, gt, gte, ne, count } from "drizzle-orm";
+import { eq, and, sql, desc, asc, gt, gte, ne, count, or, isNull } from "drizzle-orm";
 import { 
   insertStudySchema, 
   insertStudySeriesSchema,
@@ -946,6 +946,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const studiesSince = req.query.studiesSince ? new Date(parseInt(req.query.studiesSince as string)) : null;
       const communitySince = req.query.communitySince ? new Date(parseInt(req.query.communitySince as string)) : null;
+      const warRoomSince = req.query.warRoomSince ? new Date(parseInt(req.query.warRoomSince as string)) : null;
+      const underFireSince = req.query.underFireSince ? new Date(parseInt(req.query.underFireSince as string)) : null;
 
       const [studyRow] = studiesSince
         ? await db.select({ count: sql<number>`count(*)::int` }).from(schema.studies)
@@ -957,12 +959,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .where(gt(schema.discussions.createdAt, communitySince))
         : [{ count: 0 }];
 
+      const [warRoomRow] = warRoomSince
+        ? await db.select({ count: sql<number>`count(*)::int` }).from(schema.hurdleWallPosts)
+            .where(gt(schema.hurdleWallPosts.createdAt, warRoomSince))
+        : [{ count: 0 }];
+
+      const [underFireRow] = underFireSince
+        ? await db.select({ count: sql<number>`count(*)::int` }).from(schema.accountabilityRequests)
+            .where(gt(schema.accountabilityRequests.createdAt, underFireSince))
+        : [{ count: 0 }];
+
       res.json({
         studies: studyRow?.count ?? 0,
         community: discussionRow?.count ?? 0,
+        warRoom: warRoomRow?.count ?? 0,
+        underFire: underFireRow?.count ?? 0,
       });
     } catch (error) {
-      res.json({ studies: 0, community: 0 });
+      res.json({ studies: 0, community: 0, warRoom: 0, underFire: 0 });
     }
   });
 
@@ -10970,6 +10984,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Broadcast to all connected clients about new post
       (app as any).broadcastToAll({ type: 'hurdle_wall_post_created', data: post });
 
+      // Fan-out in-app notifications to all users with War Room notifications enabled
+      try {
+        const usersToNotify = await db
+          .select({ id: schema.users.id })
+          .from(schema.users)
+          .leftJoin(schema.notificationPreferences, eq(schema.users.id, schema.notificationPreferences.userId))
+          .where(
+            and(
+              ne(schema.users.id, userId),
+              or(
+                eq(schema.notificationPreferences.warRoomNotifications, true),
+                isNull(schema.notificationPreferences.userId)
+              )
+            )
+          );
+
+        if (usersToNotify.length > 0) {
+          await Promise.all(usersToNotify.map(u =>
+            storage.createNotificationWithPreferences({
+              userId: u.id,
+              type: 'war_room_post',
+              title: 'New War Room Post',
+              message: 'A brother posted in the War Room. Stand with him.',
+              relatedId: post.id,
+            })
+          ));
+        }
+      } catch (notifError) {
+        console.error('Error sending War Room notifications:', notifError);
+      }
+
       res.json(post);
     } catch (error) {
       console.error("Error creating hurdle wall post:", error);
@@ -11189,6 +11234,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         content: content.trim(),
       });
+
+      // Fan-out in-app notifications to all users with Under Fire notifications enabled
+      try {
+        const usersToNotify = await db
+          .select({ id: schema.users.id })
+          .from(schema.users)
+          .leftJoin(schema.notificationPreferences, eq(schema.users.id, schema.notificationPreferences.userId))
+          .where(
+            and(
+              ne(schema.users.id, userId),
+              or(
+                eq(schema.notificationPreferences.underFireNotifications, true),
+                isNull(schema.notificationPreferences.userId)
+              )
+            )
+          );
+
+        if (usersToNotify.length > 0) {
+          await Promise.all(usersToNotify.map(u =>
+            storage.createNotificationWithPreferences({
+              userId: u.id,
+              type: 'under_fire_post',
+              title: 'Brother Under Fire',
+              message: 'A brother needs accountability. Will you step up?',
+              relatedId: request.id,
+            })
+          ));
+        }
+      } catch (notifError) {
+        console.error('Error sending Under Fire notifications:', notifError);
+      }
       
       res.status(201).json(request);
     } catch (error) {

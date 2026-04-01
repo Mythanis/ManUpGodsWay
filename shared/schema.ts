@@ -662,6 +662,8 @@ export const notificationPreferences = pgTable("notification_preferences", {
   videoNotifications: boolean("video_notifications").default(true),
   communityNotifications: boolean("community_notifications").default(true),
   liveStreamNotifications: boolean("live_stream_notifications").default(true),
+  warRoomNotifications: boolean("war_room_notifications").default(true),
+  underFireNotifications: boolean("under_fire_notifications").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

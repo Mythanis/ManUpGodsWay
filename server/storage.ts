@@ -3434,6 +3434,10 @@ export class DatabaseStorage implements IStorage {
         return preferences.communityNotifications ?? true;
       case 'live_stream':
         return preferences.liveStreamNotifications ?? true;
+      case 'war_room_post':
+        return preferences.warRoomNotifications ?? true;
+      case 'under_fire_post':
+        return preferences.underFireNotifications ?? true;
       default:
         // For unknown types, default to true (send notification)
         return true;

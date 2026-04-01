@@ -17,6 +17,7 @@ import {
   Users, 
   Mail,
   Shield,
+  Flame,
   Radio,
   Smartphone,
   Loader2,
@@ -38,6 +39,8 @@ interface NotificationPreferences {
   groupMessages: boolean;
   weeklyDigest: boolean;
   liveStreamNotifications: boolean;
+  warRoomNotifications: boolean;
+  underFireNotifications: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -51,6 +54,8 @@ const preferencesSchema = z.object({
   groupMessages: z.boolean(),
   weeklyDigest: z.boolean(),
   liveStreamNotifications: z.boolean(),
+  warRoomNotifications: z.boolean(),
+  underFireNotifications: z.boolean(),
 });
 
 type PreferencesFormValues = z.infer<typeof preferencesSchema>;
@@ -162,6 +167,8 @@ export default function NotificationPreferences() {
       groupMessages: true,
       weeklyDigest: true,
       liveStreamNotifications: true,
+      warRoomNotifications: true,
+      underFireNotifications: true,
     },
   });
 
@@ -176,6 +183,8 @@ export default function NotificationPreferences() {
         groupMessages: preferences.groupMessages,
         weeklyDigest: preferences.weeklyDigest,
         liveStreamNotifications: preferences.liveStreamNotifications,
+        warRoomNotifications: preferences.warRoomNotifications ?? true,
+        underFireNotifications: preferences.underFireNotifications ?? true,
       });
     }
   }, [preferences]);
@@ -455,6 +464,52 @@ export default function NotificationPreferences() {
                       </div>
                       <div className="flex-1 px-4 relative z-10">
                         <span className="font-black text-sm text-black uppercase tracking-wide">Group Messages</span>
+                      </div>
+                      <FormControl>
+                        <div className="pr-4 relative z-10">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </div>
+                      </FormControl>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="warRoomNotifications"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                        <Shield className="w-6 h-6 text-white relative z-10" />
+                      </div>
+                      <div className="flex-1 px-4 relative z-10">
+                        <span className="font-black text-sm text-black uppercase tracking-wide">War Room Posts</span>
+                        <p className="text-xs text-black/70 mt-0.5">New posts in the War Room</p>
+                      </div>
+                      <FormControl>
+                        <div className="pr-4 relative z-10">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </div>
+                      </FormControl>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="underFireNotifications"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                        <Flame className="w-6 h-6 text-white relative z-10" />
+                      </div>
+                      <div className="flex-1 px-4 relative z-10">
+                        <span className="font-black text-sm text-black uppercase tracking-wide">Under Fire Posts</span>
+                        <p className="text-xs text-black/70 mt-0.5">Brothers needing accountability</p>
                       </div>
                       <FormControl>
                         <div className="pr-4 relative z-10">

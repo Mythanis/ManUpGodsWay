@@ -14,6 +14,8 @@ import {
 
 const LS_KEY_STUDIES = "nav_seen_studies";
 const LS_KEY_COMMUNITY = "nav_seen_community";
+const LS_KEY_WAR_ROOM = "nav_seen_war_room";
+const LS_KEY_UNDER_FIRE = "nav_seen_under_fire";
 
 function getSeenTs(key: string): number {
   const val = localStorage.getItem(key);
@@ -72,15 +74,17 @@ export default function Navigation() {
 
   const studiesSince = getSeenTs(LS_KEY_STUDIES);
   const communitySince = getSeenTs(LS_KEY_COMMUNITY);
+  const warRoomSince = getSeenTs(LS_KEY_WAR_ROOM);
+  const underFireSince = getSeenTs(LS_KEY_UNDER_FIRE);
 
-  const { data: badges, refetch: refetchBadges } = useQuery<{ studies: number; community: number }>({
-    queryKey: ['/api/nav/badges/v2', studiesSince, communitySince],
+  const { data: badges, refetch: refetchBadges } = useQuery<{ studies: number; community: number; warRoom: number; underFire: number }>({
+    queryKey: ['/api/nav/badges/v2', studiesSince, communitySince, warRoomSince, underFireSince],
     queryFn: async () => {
       const res = await fetch(
-        `/api/nav/badges?studiesSince=${studiesSince}&communitySince=${communitySince}`,
+        `/api/nav/badges?studiesSince=${studiesSince}&communitySince=${communitySince}&warRoomSince=${warRoomSince}&underFireSince=${underFireSince}`,
         { credentials: "include" }
       );
-      if (!res.ok) return { studies: 0, community: 0 };
+      if (!res.ok) return { studies: 0, community: 0, warRoom: 0, underFire: 0 };
       return res.json();
     },
     refetchInterval: 5 * 60 * 1000,
@@ -130,6 +134,14 @@ export default function Navigation() {
       markSeen(LS_KEY_COMMUNITY);
       refetchBadges();
     }
+    if (itemId === 'war-room') {
+      markSeen(LS_KEY_WAR_ROOM);
+      refetchBadges();
+    }
+    if (itemId === 'under-fire') {
+      markSeen(LS_KEY_UNDER_FIRE);
+      refetchBadges();
+    }
   }, [refetchBadges]);
 
   useEffect(() => {
@@ -138,6 +150,12 @@ export default function Navigation() {
     }
     if (location.startsWith('/community') || location === '/community') {
       markSeen(LS_KEY_COMMUNITY);
+    }
+    if (location === '/hurdle-wall') {
+      markSeen(LS_KEY_WAR_ROOM);
+    }
+    if (location === '/under-fire') {
+      markSeen(LS_KEY_UNDER_FIRE);
     }
   }, [location]);
 
@@ -168,7 +186,11 @@ export default function Navigation() {
       const n = unreadData?.count ?? 0;
       return isNaN(n) ? 0 : n;
     }
-    const raw = itemId === 'library' ? badges?.studies : itemId === 'community' ? badges?.community : undefined;
+    let raw: number | undefined;
+    if (itemId === 'library') raw = badges?.studies;
+    else if (itemId === 'community') raw = badges?.community;
+    else if (itemId === 'war-room') raw = badges?.warRoom;
+    else if (itemId === 'under-fire') raw = badges?.underFire;
     if (raw === undefined || raw === null) return 0;
     const n = Number(raw);
     return isNaN(n) ? 0 : n;
@@ -239,7 +261,7 @@ export default function Navigation() {
               return (
                 <DropdownMenuItem
                   key={item.id}
-                  onClick={() => setLocation(item.path)}
+                  onClick={() => { handleNavClick(item.id); setLocation(item.path); }}
                   className={`relative cursor-pointer rounded-sm font-bold uppercase text-sm tracking-wide px-3 py-3 ${
                     active
                       ? 'text-black bg-ministry-gold-exact'
