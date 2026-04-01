@@ -537,7 +537,7 @@ export interface IStorage {
   // Hurdle Wall operations
   getHurdleWallPosts(userId?: string): Promise<(HurdleWallPost & { 
     user: { id: string; firstName: string; lastName: string }; 
-    userHasPrayed?: boolean;
+    userHasPrayed: boolean;
     userHasAmened: boolean;
     replyCount: number;
     praise: HurdleWallPraise | null;
@@ -546,7 +546,7 @@ export interface IStorage {
   getHurdleWallPost(postId: string, userId?: string): Promise<(HurdleWallPost & { 
     user: { id: string; firstName: string; lastName: string }; 
     replies: (HurdleWallReply & { user: { id: string; firstName: string; lastName: string } })[];
-    userHasPrayed?: boolean;
+    userHasPrayed: boolean;
     userHasAmened: boolean;
     praise: HurdleWallPraise | null;
     amenCount: number;
@@ -6307,7 +6307,7 @@ export class DatabaseStorage implements IStorage {
   // Hurdle Wall implementation methods
   async getHurdleWallPosts(userId?: string): Promise<(HurdleWallPost & { 
     user: { id: string; firstName: string; lastName: string }; 
-    userHasPrayed?: boolean;
+    userHasPrayed: boolean;
     userHasAmened: boolean;
     replyCount: number;
     replies: (HurdleWallReply & { user: { id: string; firstName: string; lastName: string } })[];
@@ -6361,12 +6361,16 @@ export class DatabaseStorage implements IStorage {
       .where(inArray(hurdleWallReplies.postId, postIds))
       .orderBy(asc(hurdleWallReplies.createdAt));
 
-    // Batch-fetch all praises and current-user amens in parallel
-    const [allPraises, userAmens] = await Promise.all([
+    // Batch-fetch praises, current-user amens, and current-user prayers in parallel
+    const [allPraises, userAmens, userPrayers] = await Promise.all([
       db.select().from(hurdleWallPraises).where(inArray(hurdleWallPraises.postId, postIds)),
       userId
         ? db.select({ postId: hurdleWallAmens.postId }).from(hurdleWallAmens)
             .where(and(inArray(hurdleWallAmens.postId, postIds), eq(hurdleWallAmens.userId, userId)))
+        : Promise.resolve([] as { postId: string }[]),
+      userId
+        ? db.select({ postId: hurdleWallPrayers.postId }).from(hurdleWallPrayers)
+            .where(and(inArray(hurdleWallPrayers.postId, postIds), eq(hurdleWallPrayers.userId, userId)))
         : Promise.resolve([] as { postId: string }[]),
     ]);
 
@@ -6381,10 +6385,12 @@ export class DatabaseStorage implements IStorage {
       praiseByPostId.set(praise.postId, praise);
     }
     const amenedPostIds = new Set(userAmens.map(a => a.postId));
+    const prayedPostIds = new Set(userPrayers.map(p => p.postId));
 
     return posts.map(post => ({
       ...post,
       amenCount: post.amenCount ?? 0,
+      userHasPrayed: prayedPostIds.has(post.id),
       userHasAmened: amenedPostIds.has(post.id),
       replies: repliesByPostId.get(post.id) ?? [],
       praise: praiseByPostId.get(post.id) ?? null,
@@ -6394,7 +6400,7 @@ export class DatabaseStorage implements IStorage {
   async getHurdleWallPost(postId: string, userId?: string): Promise<(HurdleWallPost & { 
     user: { id: string; firstName: string; lastName: string }; 
     replies: (HurdleWallReply & { user: { id: string; firstName: string; lastName: string } })[];
-    userHasPrayed?: boolean;
+    userHasPrayed: boolean;
     userHasAmened: boolean;
     praise: HurdleWallPraise | null;
     amenCount: number;
@@ -6423,7 +6429,7 @@ export class DatabaseStorage implements IStorage {
     
     if (!post) return undefined;
     
-    const [replies, praises, userAmens] = await Promise.all([
+    const [replies, praises, userAmens, userPrayers] = await Promise.all([
       db
         .select({
           id: hurdleWallReplies.id,
@@ -6451,11 +6457,16 @@ export class DatabaseStorage implements IStorage {
         ? db.select({ postId: hurdleWallAmens.postId }).from(hurdleWallAmens)
             .where(and(eq(hurdleWallAmens.postId, postId), eq(hurdleWallAmens.userId, userId)))
         : Promise.resolve([] as { postId: string }[]),
+      userId
+        ? db.select({ postId: hurdleWallPrayers.postId }).from(hurdleWallPrayers)
+            .where(and(eq(hurdleWallPrayers.postId, postId), eq(hurdleWallPrayers.userId, userId)))
+        : Promise.resolve([] as { postId: string }[]),
     ]);
 
     return {
       ...post,
       amenCount: post.amenCount ?? 0,
+      userHasPrayed: userPrayers.length > 0,
       userHasAmened: userAmens.length > 0,
       replies,
       praise: praises[0] ?? null,
