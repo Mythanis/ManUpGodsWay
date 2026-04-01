@@ -11176,15 +11176,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Amen routes — any authenticated user
+  // Amen routes — any authenticated user (post must have a praise first)
   app.post('/api/hurdle-wall/:postId/amen', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { postId } = req.params;
 
+      const post = await storage.getHurdleWallPost(postId);
+      if (!post) return res.status(404).json({ message: "Post not found" });
+      if (!post.praise) return res.status(400).json({ message: "Can only say Amen to a praised post" });
+
       const result = await storage.addAmenToPost(postId, userId);
       if (!result.success) return res.status(400).json({ message: "Already said Amen" });
 
+      (app as any).broadcastToAll({ type: 'hurdle_wall_post_created', data: { postId } });
       res.json({ amenCount: result.amenCount });
     } catch (error) {
       console.error("Error adding amen:", error);
@@ -11200,6 +11205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await storage.removeAmenFromPost(postId, userId);
       if (!result.success) return res.status(400).json({ message: "Haven't said Amen" });
 
+      (app as any).broadcastToAll({ type: 'hurdle_wall_post_created', data: { postId } });
       res.json({ amenCount: result.amenCount });
     } catch (error) {
       console.error("Error removing amen:", error);
