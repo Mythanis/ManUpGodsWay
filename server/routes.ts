@@ -8173,6 +8173,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { status, reviewNotes } = req.body;
+      const VALID_STATUSES = ['pending', 'in_review', 'completed'];
+      if (!status || !VALID_STATUSES.includes(status)) {
+        return res.status(400).json({ message: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
+      }
       const updateData: { status: string; reviewNotes?: string; reviewedBy?: string; reviewedAt?: Date } = { status, reviewNotes };
       // Only stamp reviewer info when marking complete
       if (status === 'completed') {

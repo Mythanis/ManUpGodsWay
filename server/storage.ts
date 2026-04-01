@@ -5402,6 +5402,8 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(contentFlags.reporterId, users.id))
       .where(
         or(
+          // NULL status treated as pending — always show
+          isNull(contentFlags.status),
           // Non-completed flags always show
           not(inArray(contentFlags.status, COMPLETED_STATUSES as unknown as string[])),
           // Completed flags only show for 30 days
@@ -5429,18 +5431,18 @@ export class DatabaseStorage implements IStorage {
       }
     }
 
-    const BASE_URL = 'https://app.manupgodsway.org';
+    // Return relative paths so the URL works on any host (dev and production)
     return rawFlags.map(flag => {
       let contentUrl: string;
       if (flag.contentType === 'reply') {
         const discussionId = replyDiscussionMap.get(flag.contentId);
         contentUrl = discussionId
-          ? `${BASE_URL}/community?discussion=${discussionId}`
-          : `${BASE_URL}/community`;
+          ? `/community?discussion=${discussionId}&reply=${flag.contentId}`
+          : '/community';
       } else if (flag.contentType === 'discussion') {
-        contentUrl = `${BASE_URL}/community?discussion=${flag.contentId}`;
+        contentUrl = `/community?discussion=${flag.contentId}`;
       } else {
-        contentUrl = `${BASE_URL}/community`;
+        contentUrl = '/community';
       }
       return { ...flag, contentUrl };
     });
