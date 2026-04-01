@@ -7,6 +7,7 @@ import {
   userSeriesProgress,
   discussions,
   discussionLikes,
+  discussionDislikes,
   discussionReplies,
   discussionSubscriptions,
   discussionHonors,
@@ -152,6 +153,7 @@ import {
   type HurdleWallPrayer,
   type InsertHurdleWallPrayer,
   accountabilityRequests,
+  accountabilitySupports,
   type AccountabilityRequest,
   type UserPrayerStats,
   type InsertUserPrayerStats,
@@ -310,9 +312,10 @@ export interface IStorage {
   updateDiscussionReply(replyId: string, userId: string, content: string, discussionId?: string): Promise<DiscussionReply | null>;
   updateHurdleWallReply(replyId: string, userId: string, content: string): Promise<HurdleWallReply | null>;
   
-  // Like operations
+  // Like/Dislike operations
   toggleDiscussionLike(discussionId: string, userId: string): Promise<{ liked: boolean; totalLikes: number }>;
   getDiscussionLikers(discussionId: string): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null }[]>;
+  toggleDiscussionDislike(discussionId: string, userId: string): Promise<{ disliked: boolean; totalDislikes: number }>;
   
   // Discussion subscription operations
   subscribeToDiscussion(subscription: InsertDiscussionSubscription): Promise<DiscussionSubscription>;
@@ -635,12 +638,13 @@ export interface IStorage {
   updateRedemptionStatus(id: string, status: string, fulfilledBy?: string, trackingNumber?: string): Promise<StoreRedemption>;
   
   // Accountability requests operations
-  getAccountabilityRequests(): Promise<any[]>;
+  getAccountabilityRequests(currentUserId?: string): Promise<any[]>;
   getAccountabilityRequestById(id: string): Promise<any | undefined>;
   createAccountabilityRequest(request: { userId: string; content: string }): Promise<any>;
   markAccountabilityRequestAssisted(requestId: string, assisterId: string): Promise<any>;
   unassistAccountabilityRequest(requestId: string): Promise<any>;
   deleteAccountabilityRequest(id: string): Promise<void>;
+  toggleAccountabilitySupport(requestId: string, userId: string): Promise<{ supported: boolean; totalSupports: number }>;
 
   getActiveManUpLinks(): Promise<ManUpLink[]>;
   getAllManUpLinks(): Promise<ManUpLink[]>;
@@ -2119,15 +2123,43 @@ export class DatabaseStorage implements IStorage {
 
     if (currentUserId && rows.length > 0) {
       const discussionIds = rows.map((r: any) => r.id);
-      const likedRows = await db
-        .select({ discussionId: discussionLikes.discussionId })
-        .from(discussionLikes)
-        .where(and(eq(discussionLikes.userId, currentUserId), inArray(discussionLikes.discussionId, discussionIds)));
+      const [likedRows, dislikedRows, dislikeCounts] = await Promise.all([
+        db.select({ discussionId: discussionLikes.discussionId })
+          .from(discussionLikes)
+          .where(and(eq(discussionLikes.userId, currentUserId), inArray(discussionLikes.discussionId, discussionIds))),
+        db.select({ discussionId: discussionDislikes.discussionId })
+          .from(discussionDislikes)
+          .where(and(eq(discussionDislikes.userId, currentUserId), inArray(discussionDislikes.discussionId, discussionIds))),
+        db.select({ discussionId: discussionDislikes.discussionId, count: sql<number>`count(*)` })
+          .from(discussionDislikes)
+          .where(inArray(discussionDislikes.discussionId, discussionIds))
+          .groupBy(discussionDislikes.discussionId),
+      ]);
       const likedSet = new Set(likedRows.map((r) => r.discussionId));
-      return rows.map((r: any) => ({ ...r, likedByMe: likedSet.has(r.id) }));
+      const dislikedSet = new Set(dislikedRows.map((r) => r.discussionId));
+      const dislikeCountMap: Record<string, number> = {};
+      for (const row of dislikeCounts) { dislikeCountMap[row.discussionId] = Number(row.count); }
+      return rows.map((r: any) => ({
+        ...r,
+        likedByMe: likedSet.has(r.id),
+        dislikedByMe: dislikedSet.has(r.id),
+        dislikes: dislikeCountMap[r.id] || 0,
+      }));
     }
 
-    return rows.map((r: any) => ({ ...r, likedByMe: false }));
+    // No current user — still return dislike counts
+    if (rows.length > 0) {
+      const discussionIds = rows.map((r: any) => r.id);
+      const dislikeCounts = await db.select({ discussionId: discussionDislikes.discussionId, count: sql<number>`count(*)` })
+        .from(discussionDislikes)
+        .where(inArray(discussionDislikes.discussionId, discussionIds))
+        .groupBy(discussionDislikes.discussionId);
+      const dislikeCountMap: Record<string, number> = {};
+      for (const row of dislikeCounts) { dislikeCountMap[row.discussionId] = Number(row.count); }
+      return rows.map((r: any) => ({ ...r, likedByMe: false, dislikedByMe: false, dislikes: dislikeCountMap[r.id] || 0 }));
+    }
+
+    return rows.map((r: any) => ({ ...r, likedByMe: false, dislikedByMe: false, dislikes: 0 }));
   }
 
   async getDiscussion(id: string, currentUserId?: string): Promise<(Discussion & { user: User; replies: (DiscussionReply & { user: User })[]; study?: { id: string; title: string; requiredTier: string | null } | null }) | undefined> {
@@ -2365,6 +2397,27 @@ export class DatabaseStorage implements IStorage {
       .where(eq(discussionLikes.discussionId, discussionId))
       .orderBy(desc(discussionLikes.createdAt));
     return rows;
+  }
+
+  async toggleDiscussionDislike(discussionId: string, userId: string): Promise<{ disliked: boolean; totalDislikes: number }> {
+    const [existing] = await db
+      .select()
+      .from(discussionDislikes)
+      .where(and(eq(discussionDislikes.discussionId, discussionId), eq(discussionDislikes.userId, userId)));
+
+    if (existing) {
+      await db.delete(discussionDislikes).where(
+        and(eq(discussionDislikes.discussionId, discussionId), eq(discussionDislikes.userId, userId))
+      );
+      const [{ count }] = await db.select({ count: sql<number>`count(*)` })
+        .from(discussionDislikes).where(eq(discussionDislikes.discussionId, discussionId));
+      return { disliked: false, totalDislikes: Number(count) };
+    } else {
+      await db.insert(discussionDislikes).values({ discussionId, userId });
+      const [{ count }] = await db.select({ count: sql<number>`count(*)` })
+        .from(discussionDislikes).where(eq(discussionDislikes.discussionId, discussionId));
+      return { disliked: true, totalDislikes: Number(count) };
+    }
   }
 
   // Discussion subscription operations
@@ -3349,13 +3402,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUnreadNotificationCount(userId: string): Promise<number> {
-    const COMMUNITY_TYPES = ['new_discussion', 'discussion', 'discussion_reply'];
+    const EXCLUDED_TYPES = ['new_discussion', 'discussion', 'discussion_reply', 'war_room_post', 'under_fire_post'];
     const [result] = await db.select({ count: sql<number>`count(*)` })
       .from(notifications)
       .where(and(
         eq(notifications.userId, userId),
         eq(notifications.isRead, false),
-        not(inArray(notifications.type, COMMUNITY_TYPES))
+        not(inArray(notifications.type, EXCLUDED_TYPES))
       ));
     return Number(result.count);
   }
@@ -7027,11 +7080,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Accountability requests operations
-  async getAccountabilityRequests(): Promise<any[]> {
+  async getAccountabilityRequests(currentUserId?: string): Promise<any[]> {
     const requests = await db
       .select()
       .from(accountabilityRequests)
       .orderBy(desc(accountabilityRequests.createdAt));
+
+    // Pre-fetch support counts and current user's support status in bulk
+    const requestIds = requests.map(r => r.id);
+    let supportCountsMap: Record<string, number> = {};
+    let userSupportedSet = new Set<string>();
+
+    if (requestIds.length > 0) {
+      const supportRows = await db
+        .select({ requestId: accountabilitySupports.requestId, userId: accountabilitySupports.userId })
+        .from(accountabilitySupports)
+        .where(inArray(accountabilitySupports.requestId, requestIds));
+      for (const row of supportRows) {
+        supportCountsMap[row.requestId] = (supportCountsMap[row.requestId] || 0) + 1;
+        if (currentUserId && row.userId === currentUserId) {
+          userSupportedSet.add(row.requestId);
+        }
+      }
+    }
 
     const requestsWithUsers = await Promise.all(
       requests.map(async (request) => {
@@ -7055,11 +7126,34 @@ export class DatabaseStorage implements IStorage {
             lastName: assister.lastName,
             profileImageUrl: assister.profileImageUrl,
           } : null,
+          supportCount: supportCountsMap[request.id] || 0,
+          gotYour6ByMe: userSupportedSet.has(request.id),
         };
       })
     );
 
     return requestsWithUsers;
+  }
+
+  async toggleAccountabilitySupport(requestId: string, userId: string): Promise<{ supported: boolean; totalSupports: number }> {
+    const [existing] = await db
+      .select()
+      .from(accountabilitySupports)
+      .where(and(eq(accountabilitySupports.requestId, requestId), eq(accountabilitySupports.userId, userId)));
+
+    if (existing) {
+      await db.delete(accountabilitySupports).where(
+        and(eq(accountabilitySupports.requestId, requestId), eq(accountabilitySupports.userId, userId))
+      );
+      const [{ count }] = await db.select({ count: sql<number>`count(*)` })
+        .from(accountabilitySupports).where(eq(accountabilitySupports.requestId, requestId));
+      return { supported: false, totalSupports: Number(count) };
+    } else {
+      await db.insert(accountabilitySupports).values({ requestId, userId });
+      const [{ count }] = await db.select({ count: sql<number>`count(*)` })
+        .from(accountabilitySupports).where(eq(accountabilitySupports.requestId, requestId));
+      return { supported: true, totalSupports: Number(count) };
+    }
   }
 
   async getAccountabilityRequestById(id: string): Promise<AccountabilityRequest | undefined> {

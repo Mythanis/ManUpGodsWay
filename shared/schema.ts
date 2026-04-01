@@ -378,6 +378,17 @@ export const discussionLikes = pgTable("discussion_likes", {
   index("idx_discussion_likes_user_id").on(table.userId),
 ]);
 
+export const discussionDislikes = pgTable("discussion_dislikes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  discussionId: varchar("discussion_id").notNull().references(() => discussions.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.discussionId),
+  index("idx_discussion_dislikes_discussion_id").on(table.discussionId),
+  index("idx_discussion_dislikes_user_id").on(table.userId),
+]);
+
 // User testimonies
 export const testimonies = pgTable("testimonies", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1732,6 +1743,19 @@ export const insertAccountabilityRequestSchema = createInsertSchema(accountabili
 
 export type AccountabilityRequest = typeof accountabilityRequests.$inferSelect;
 export type InsertAccountabilityRequest = z.infer<typeof insertAccountabilityRequestSchema>;
+
+export const accountabilitySupports = pgTable("accountability_supports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requestId: varchar("request_id").notNull().references(() => accountabilityRequests.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.requestId),
+  index("idx_accountability_supports_request_id").on(table.requestId),
+  index("idx_accountability_supports_user_id").on(table.userId),
+]);
+
+export type AccountabilitySupport = typeof accountabilitySupports.$inferSelect;
 
 // Carousel items for homepage featured content
 export const carouselItems = pgTable("carousel_items", {

@@ -2922,6 +2922,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/discussions/:id/dislike', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const discussionId = req.params.id;
+      const result = await storage.toggleDiscussionDislike(discussionId, userId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error toggling dislike:", error);
+      res.status(500).json({ message: "Failed to update dislike" });
+    }
+  });
+
   app.get('/api/discussions/:id/likers', async (req: any, res) => {
     try {
       const likers = await storage.getDiscussionLikers(req.params.id);
@@ -11215,7 +11227,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all accountability requests
   app.get('/api/accountability-requests', isAuthenticated, async (req: any, res) => {
     try {
-      const requests = await storage.getAccountabilityRequests();
+      const userId = req.user.claims.sub;
+      const requests = await storage.getAccountabilityRequests(userId);
       res.json(requests);
     } catch (error) {
       console.error("Error fetching accountability requests:", error);
@@ -11378,6 +11391,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Toggle "Got Your 6" support on an assisted accountability request
+  app.post('/api/accountability-requests/:requestId/support', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { requestId } = req.params;
+      const request = await storage.getAccountabilityRequestById(requestId);
+      if (!request) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+      if (request.userId === userId) {
+        return res.status(403).json({ message: "You cannot support your own request" });
+      }
+      const result = await storage.toggleAccountabilitySupport(requestId, userId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error toggling accountability support:", error);
+      res.status(500).json({ message: "Failed to toggle support" });
+    }
+  });
+
   // Delete accountability request (own, or any if moderator/admin)
   app.delete('/api/accountability-requests/:requestId', isAuthenticated, async (req: any, res) => {
     try {

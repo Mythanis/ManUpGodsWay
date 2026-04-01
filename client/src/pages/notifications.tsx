@@ -8,7 +8,7 @@ import { cn, formatLocalDateTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Bell, CheckCheck, Trash2, MessageSquare, BookOpen, Heart, Users, MoreVertical, UserCheck, UserX, Calendar, Settings } from "lucide-react";
+import { Bell, CheckCheck, Trash2, MessageSquare, BookOpen, Heart, Users, MoreVertical, UserCheck, UserX, Calendar, Settings, Flame, Shield } from "lucide-react";
 import Navigation from "@/components/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { NotificationPreferences } from "@/components/notification-preferences";
@@ -41,6 +41,8 @@ const getIcon = (type: string) => {
     case 'new_devotional': case 'devotional': return <Heart className="h-4 w-4 text-red-400" />;
     case 'brotherhood': return <Users className="h-4 w-4 text-yellow-400" />;
     case 'new_event': case 'event': return <Calendar className="h-4 w-4 text-orange-400" />;
+    case 'war_room_post': return <Shield className="h-4 w-4 text-blue-300" />;
+    case 'under_fire_post': return <Flame className="h-4 w-4 text-orange-400" />;
     default: return <Bell className="h-4 w-4 text-gray-400" />;
   }
 };
@@ -55,8 +57,8 @@ export default function Notifications() {
   const { data: notifications = [] } = useQuery<Notification[]>({ queryKey: ['/api/notifications'] });
   const { data: messageRequests = [] } = useQuery<MessageRequest[]>({ queryKey: ['/api/message-requests'] });
 
-  const COMMUNITY_TYPES = ['new_discussion', 'discussion', 'discussion_reply'];
-  const filtered = notifications.filter(n => !COMMUNITY_TYPES.includes(n.type));
+  const EXCLUDED_TYPES = ['new_discussion', 'discussion', 'discussion_reply', 'war_room_post', 'under_fire_post'];
+  const filtered = notifications.filter(n => !EXCLUDED_TYPES.includes(n.type));
   const pending = messageRequests.filter(r => r.status === 'pending');
   const unread = filtered.filter(n => !n.isRead).length;
 
@@ -125,6 +127,10 @@ export default function Notifications() {
         setLocation('/challenges'); break;
       case 'war_group':
         setLocation('/war-groups'); break;
+      case 'war_room_post':
+        setLocation(n.relatedId ? `/hurdle-wall?post=${n.relatedId}` : '/hurdle-wall'); break;
+      case 'under_fire_post':
+        setLocation(n.relatedId ? `/under-fire?request=${n.relatedId}` : '/under-fire'); break;
       default:
         if (n.relatedId) setLocation(`/messages?conversation=${n.relatedId}`);
     }

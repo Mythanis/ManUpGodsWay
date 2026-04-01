@@ -94,8 +94,8 @@ export default function DiscussionCard({
   const [replyingToName, setReplyingToName] = useState('');
   const [userHasLiked, setUserHasLiked] = useState((discussion as any).likedByMe ?? false);
   const [likeCount, setLikeCount] = useState(discussion.likes || 0);
-  const [userHasDisliked, setUserHasDisliked] = useState(false);
-  const [dislikeCount, setDislikeCount] = useState(0);
+  const [userHasDisliked, setUserHasDisliked] = useState((discussion as any).dislikedByMe ?? false);
+  const [dislikeCount, setDislikeCount] = useState((discussion as any).dislikes || 0);
   const [replyLikedByMe, setReplyLikedByMe] = useState<Record<string, boolean>>({});
   const [replyLikeCounts, setReplyLikeCounts] = useState<Record<string, number>>({});
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -292,18 +292,31 @@ export default function DiscussionCard({
     },
   });
 
-  const handleToggleDislike = () => {
-    if (userHasDisliked) {
-      setUserHasDisliked(false);
-      setDislikeCount((prev: number) => Math.max(0, prev - 1));
-    } else {
-      setUserHasDisliked(true);
-      setDislikeCount((prev: number) => prev + 1);
-      if (userHasLiked) {
-        setUserHasLiked(false);
-        setLikeCount((prev: number) => Math.max(0, prev - 1));
+  const dislikeMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', `/api/discussions/${discussion.id}/dislike`);
+    },
+    onSuccess: (data: any) => {
+      if (data && typeof data.disliked === 'boolean') {
+        setUserHasDisliked(data.disliked);
+        setDislikeCount(data.totalDislikes ?? dislikeCount);
+        if (data.disliked && userHasLiked) {
+          setUserHasLiked(false);
+          setLikeCount((prev: number) => Math.max(0, prev - 1));
+        }
       }
-    }
+      queryClient.invalidateQueries({ queryKey: ['/api/discussions'] });
+    },
+    onError: () => {
+      setUserHasDisliked((prev: boolean) => !prev);
+      setDislikeCount((prev: number) => userHasDisliked ? prev + 1 : Math.max(0, prev - 1));
+    },
+  });
+
+  const handleToggleDislike = () => {
+    setUserHasDisliked((prev: boolean) => !prev);
+    setDislikeCount((prev: number) => userHasDisliked ? Math.max(0, prev - 1) : prev + 1);
+    dislikeMutation.mutate();
   };
 
   const updateDiscussion = useMutation({

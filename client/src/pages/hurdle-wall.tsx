@@ -60,6 +60,7 @@ export default function HurdleWall() {
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
   const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
   const [editReplyContent, setEditReplyContent] = useState('');
+  const [highlightedPost, setHighlightedPost] = useState<string | null>(null);
   
   // Get current user
   const { data: currentUser } = useQuery<{ id: string; role?: string }>({ queryKey: ['/api/auth/user'] });
@@ -75,6 +76,21 @@ export default function HurdleWall() {
   useEffect(() => {
     if (allPosts.length > 0) {
       triggerRefTagger();
+    }
+  }, [allPosts]);
+
+  // Handle deep-link ?post= query param
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const postId = urlParams.get('post');
+    if (postId) {
+      setHighlightedPost(postId);
+      setTimeout(() => {
+        const element = document.querySelector(`[data-post-id="${postId}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 800);
     }
   }, [allPosts]);
   
@@ -433,7 +449,11 @@ export default function HurdleWall() {
             </Card>
           ) : (
             posts.map((post) => (
-              <Card key={post.id} className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+              <Card
+                key={post.id}
+                data-post-id={post.id}
+                className={`liquid-black-white border-2 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] ${highlightedPost === post.id ? 'border-[#FCD000] ring-2 ring-[#FCD000] ring-opacity-70' : 'border-ministry-gold-exact'}`}
+              >
                 <CardHeader className="relative z-10">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">

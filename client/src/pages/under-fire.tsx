@@ -24,6 +24,8 @@ interface AccountabilityRequest {
   assistedById: string | null;
   assistedAt: string | null;
   createdAt: string;
+  supportCount: number;
+  gotYour6ByMe: boolean;
   user: {
     id: string;
     firstName: string;
@@ -45,6 +47,7 @@ export default function UnderFire() {
   const [newRequestContent, setNewRequestContent] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
+  const [highlightedRequest, setHighlightedRequest] = useState<string | null>(null);
   
   const { data: currentUser } = useQuery<{ id: string; role?: string }>({ queryKey: ['/api/auth/user'] });
   
@@ -58,6 +61,21 @@ export default function UnderFire() {
   useEffect(() => {
     if (allRequests.length > 0) {
       triggerRefTagger();
+    }
+  }, [allRequests]);
+
+  // Handle deep-link ?request= query param
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestId = urlParams.get('request');
+    if (requestId) {
+      setHighlightedRequest(requestId);
+      setTimeout(() => {
+        const element = document.querySelector(`[data-request-id="${requestId}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 800);
     }
   }, [allRequests]);
   
@@ -158,6 +176,22 @@ export default function UnderFire() {
       toast({
         title: "Error",
         description: error.response?.data?.message || "Failed to unassist",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const supportMutation = useMutation({
+    mutationFn: async (requestId: string) => {
+      return apiRequest('POST', `/api/accountability-requests/${requestId}/support`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to toggle support",
         variant: "destructive",
       });
     },
@@ -300,7 +334,11 @@ export default function UnderFire() {
             </Card>
           ) : (
             requests.map((request) => (
-              <Card key={request.id} className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+              <Card
+                key={request.id}
+                data-request-id={request.id}
+                className={`liquid-black-white border-2 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] ${highlightedRequest === request.id ? 'border-[#FCD000] ring-2 ring-[#FCD000] ring-opacity-70' : 'border-ministry-gold-exact'}`}
+              >
                 <CardHeader className="relative z-10">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
@@ -362,6 +400,23 @@ export default function UnderFire() {
                           >
                             {unassistMutation.isPending ? 'Processing...' : 'Unassist'}
                           </Button>
+                        )}
+                        {currentUser?.id !== request.userId && (
+                          <button
+                            onClick={() => supportMutation.mutate(request.id)}
+                            disabled={supportMutation.isPending}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border-2 border-black text-sm font-bold transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
+                              request.gotYour6ByMe
+                                ? 'bg-ministry-gold-exact text-black'
+                                : 'bg-transparent text-white hover:bg-ministry-gold-exact hover:text-black'
+                            }`}
+                          >
+                            <Shield className="h-4 w-4" />
+                            <span>Got Your 6</span>
+                            {(request.supportCount ?? 0) > 0 && (
+                              <span className="text-xs opacity-80">{request.supportCount}</span>
+                            )}
+                          </button>
                         )}
                       </>
                     ) : currentUser?.id !== request.userId ? (
