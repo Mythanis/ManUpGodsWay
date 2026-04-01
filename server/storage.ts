@@ -307,7 +307,7 @@ export interface IStorage {
   // Reply operations
   createReply(reply: InsertDiscussionReply): Promise<DiscussionReply>;
   getDiscussionReplies(discussionId: string): Promise<(DiscussionReply & { user: User })[]>;
-  updateDiscussionReply(replyId: string, userId: string, content: string): Promise<DiscussionReply | null>;
+  updateDiscussionReply(replyId: string, userId: string, content: string, discussionId?: string): Promise<DiscussionReply | null>;
   updateHurdleWallReply(replyId: string, userId: string, content: string): Promise<HurdleWallReply | null>;
   
   // Like operations
@@ -2255,9 +2255,10 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateDiscussionReply(replyId: string, userId: string, content: string): Promise<DiscussionReply | null> {
+  async updateDiscussionReply(replyId: string, userId: string, content: string, discussionId?: string): Promise<DiscussionReply | null> {
     const [reply] = await db.select().from(discussionReplies).where(eq(discussionReplies.id, replyId)).limit(1);
     if (!reply || reply.userId !== userId) return null;
+    if (discussionId && reply.discussionId !== discussionId) return null;
     const [updated] = await db
       .update(discussionReplies)
       .set({ content, updatedAt: new Date() })

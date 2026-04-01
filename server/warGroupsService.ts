@@ -1034,13 +1034,14 @@ export class WarGroupsService {
     return { success: true };
   }
 
-  async updateGroupPostReply(replyId: string, userId: string, content: string) {
+  async updateGroupPostReply(replyId: string, userId: string, content: string, postId?: string) {
     const [reply] = await db.select()
       .from(schema.warGroupPostReplies)
       .where(eq(schema.warGroupPostReplies.id, replyId))
       .limit(1);
 
     if (!reply) throw new Error('Reply not found');
+    if (postId && reply.postId !== postId) throw new Error('Reply does not belong to this post');
     if (reply.userId !== userId) throw new Error('Only the reply author can edit this reply');
 
     const [updated] = await db

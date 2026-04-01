@@ -2886,7 +2886,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { content } = req.body;
       if (!content?.trim()) return res.status(400).json({ message: "Content is required" });
-      const updated = await storage.updateDiscussionReply(req.params.replyId, userId, content.trim());
+      const updated = await storage.updateDiscussionReply(req.params.replyId, userId, content.trim(), req.params.id);
       if (!updated) return res.status(403).json({ message: "You can only edit your own replies" });
       res.json(updated);
     } catch (error) {
@@ -12492,7 +12492,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { replyId } = req.params;
       const { content } = req.body;
       if (!content?.trim()) return res.status(400).json({ message: "Content is required" });
-      const updated = await warGroupsService.updateGroupPostReply(replyId, userId, content.trim());
+      const updated = await warGroupsService.updateGroupPostReply(replyId, userId, content.trim(), req.params.postId);
       res.json(updated);
     } catch (error: any) {
       console.error('Error updating group post reply:', error);
