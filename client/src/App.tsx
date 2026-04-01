@@ -67,7 +67,6 @@ import { useTrialAccess } from "@/hooks/useTrialAccess";
 import TrialPaywallModal from "@/components/trial-paywall-modal";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { AprilFoolsPrank } from "@/components/april-fools-prank";
 
 // Tracks the last path the user was on before navigating to the current one,
 // so the paywall can send them back somewhere sensible.
@@ -308,8 +307,6 @@ function AppContent() {
       </div>
       {/* Tour overlay — renders on top of all content during onboarding */}
       {isAuthenticated && <AppTour />}
-      {/* April Fools prank — only fires once for dev user 52953639 */}
-      {isAuthenticated && !isLoading && <AprilFoolsPrank />}
     </div>
   );
 }
