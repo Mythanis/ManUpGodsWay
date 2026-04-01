@@ -556,6 +556,7 @@ export interface IStorage {
   prayForPost(userId: string, postId: string): Promise<{ success: boolean; prayerCount: number }>;
   removePrayerFromPost(userId: string, postId: string): Promise<{ success: boolean; prayerCount: number }>;
   createHurdleWallPraise(postId: string, userId: string, content: string): Promise<{ success: boolean; praise?: HurdleWallPraise }>;
+  updateHurdleWallPraise(postId: string, userId: string, content: string): Promise<HurdleWallPraise | null>;
   deleteHurdleWallPraise(postId: string, userId: string): Promise<boolean>;
   addAmenToPost(postId: string, userId: string): Promise<{ success: boolean; amenCount: number }>;
   removeAmenFromPost(postId: string, userId: string): Promise<{ success: boolean; amenCount: number }>;
@@ -6590,6 +6591,20 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error creating praise:', error);
       return { success: false };
+    }
+  }
+
+  async updateHurdleWallPraise(postId: string, userId: string, content: string): Promise<HurdleWallPraise | null> {
+    try {
+      const [updated] = await db
+        .update(hurdleWallPraises)
+        .set({ content })
+        .where(and(eq(hurdleWallPraises.postId, postId), eq(hurdleWallPraises.userId, userId)))
+        .returning();
+      return updated ?? null;
+    } catch (error) {
+      console.error('Error updating praise:', error);
+      return null;
     }
   }
 

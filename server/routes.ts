@@ -11160,6 +11160,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/hurdle-wall/:postId/praise', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+      const { content } = req.body;
+
+      if (!content || content.trim().length === 0) {
+        return res.status(400).json({ message: "Praise content is required" });
+      }
+
+      const updated = await storage.updateHurdleWallPraise(postId, userId, content.trim());
+      if (!updated) return res.status(403).json({ message: "Praise not found or not yours" });
+
+      (app as any).broadcastToAll({ type: 'hurdle_wall_post_created', data: { postId } });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating praise:", error);
+      res.status(500).json({ message: "Failed to update praise" });
+    }
+  });
+
   app.delete('/api/hurdle-wall/:postId/praise', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

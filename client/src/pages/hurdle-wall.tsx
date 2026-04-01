@@ -11,7 +11,15 @@ import { useToast } from '@/hooks/use-toast';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { triggerRefTagger } from '@/hooks/useRefTagger';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageSquare, HandHeart, Plus, Trash2, Search, SortDesc, Send, ArrowLeft, Pencil, Star, HeartHandshake } from 'lucide-react';
+import { MessageSquare, HandHeart, Plus, Trash2, Search, SortDesc, Send, ArrowLeft, Pencil, Star } from 'lucide-react';
+
+function ChristianCross({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M11 2h2v6h6v2h-6v12h-2V10H5V8h6V2z" />
+    </svg>
+  );
+}
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'wouter';
@@ -77,6 +85,8 @@ export default function HurdleWall() {
   const [optimisticAmens, setOptimisticAmens] = useState<Record<string, { count: number; hasAmened: boolean }>>({});
   const [pendingAmenPosts, setPendingAmenPosts] = useState<Set<string>>(new Set());
   const [pendingPraisePosts, setPendingPraisePosts] = useState<Set<string>>(new Set());
+  const [praiseEditOpen, setPraiseEditOpen] = useState<Record<string, boolean>>({});
+  const [praiseEditContent, setPraiseEditContent] = useState<Record<string, string>>({});
 
   // Get current user
   const { data: currentUser } = useQuery<{ id: string; role?: string }>({ queryKey: ['/api/auth/user'] });
@@ -227,6 +237,27 @@ export default function HurdleWall() {
       toast({ title: "Error", description: error.response?.data?.message || "Failed to remove praise", variant: "destructive" });
     },
     onSettled: (_, __, postId) => {
+      setPendingPraisePosts(prev => { const s = new Set(prev); s.delete(postId); return s; });
+    },
+  });
+
+  // Edit praise mutation (per-post pending tracking)
+  const editPraiseMutation = useMutation({
+    mutationFn: async ({ postId, content }: { postId: string; content: string }) => {
+      return apiRequest('PATCH', `/api/hurdle-wall/${postId}/praise`, { content });
+    },
+    onMutate: ({ postId }) => {
+      setPendingPraisePosts(prev => new Set(prev).add(postId));
+    },
+    onSuccess: (_, variables) => {
+      toast({ title: "Praise Updated", description: "Your praise has been updated" });
+      setPraiseEditOpen(prev => ({ ...prev, [variables.postId]: false }));
+      queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.response?.data?.message || "Failed to update praise", variant: "destructive" });
+    },
+    onSettled: (_, __, { postId }) => {
       setPendingPraisePosts(prev => { const s = new Set(prev); s.delete(postId); return s; });
     },
   });
@@ -652,27 +683,76 @@ export default function HurdleWall() {
 
                     {/* Praise display box (visible to everyone if praise exists) */}
                     {hasPraise && (
-                      <div className="bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-sm p-3 space-y-1">
+                      <div className="bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-sm p-3 space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-black uppercase tracking-widest text-black flex items-center gap-1">
                             <Star className="h-3 w-3 fill-current text-ministry-gold-exact" />
                             Praise
                           </span>
-                          {isOwner && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                if (window.confirm('Remove your praise?')) deletePraiseMutation.mutate(post.id);
-                              }}
-                              className="text-red-500 hover:text-red-400 p-1 h-auto text-xs"
-                              disabled={pendingPraisePosts.has(post.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                          {isOwner && !praiseEditOpen[post.id] && (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setPraiseEditContent(prev => ({ ...prev, [post.id]: post.praise!.content }));
+                                  setPraiseEditOpen(prev => ({ ...prev, [post.id]: true }));
+                                }}
+                                className="text-black/50 hover:text-black p-1 h-auto text-xs"
+                                disabled={pendingPraisePosts.has(post.id)}
+                                data-testid={`button-edit-praise-${post.id}`}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (window.confirm('Remove your praise?')) deletePraiseMutation.mutate(post.id);
+                                }}
+                                className="text-red-500 hover:text-red-400 p-1 h-auto text-xs"
+                                disabled={pendingPraisePosts.has(post.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           )}
                         </div>
-                        <p className="text-black leading-relaxed text-sm">{post.praise!.content}</p>
+                        {praiseEditOpen[post.id] ? (
+                          <div className="space-y-2">
+                            <Textarea
+                              value={praiseEditContent[post.id] ?? ''}
+                              onChange={e => setPraiseEditContent(prev => ({ ...prev, [post.id]: e.target.value }))}
+                              className="text-sm text-black border-black min-h-[80px]"
+                              placeholder="Share how God answered this prayer..."
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  if (!praiseEditContent[post.id]?.trim()) return;
+                                  editPraiseMutation.mutate({ postId: post.id, content: praiseEditContent[post.id] });
+                                }}
+                                disabled={pendingPraisePosts.has(post.id) || !praiseEditContent[post.id]?.trim()}
+                                className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                                data-testid={`button-save-praise-edit-${post.id}`}
+                              >
+                                <Star className="h-3 w-3 mr-1" />
+                                {pendingPraisePosts.has(post.id) ? 'Saving...' : 'Save'}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-black/60 hover:text-black"
+                                onClick={() => setPraiseEditOpen(prev => ({ ...prev, [post.id]: false }))}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-black leading-relaxed text-sm">{post.praise!.content}</p>
+                        )}
                       </div>
                     )}
 
@@ -691,7 +771,7 @@ export default function HurdleWall() {
                           }`}
                           data-testid={`button-amen-${post.id}`}
                         >
-                          <HeartHandshake className={`h-4 w-4 ${hasAmened ? 'fill-current' : ''}`} />
+                          <ChristianCross className={`h-4 w-4 ${hasAmened ? 'opacity-100' : 'opacity-60'}`} />
                           {amenCount > 0 && <span>{amenCount}</span>}
                           Amen
                         </Button>
