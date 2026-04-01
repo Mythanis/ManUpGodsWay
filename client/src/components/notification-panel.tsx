@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Bell, Check, CheckCheck, MessageSquare, BookOpen, Heart, Users, Trash2, X, MoreVertical, Settings, UserCheck, UserX, Calendar } from "lucide-react";
+import { Bell, Check, CheckCheck, MessageSquare, BookOpen, Heart, Users, Trash2, X, MoreVertical, Settings, UserCheck, UserX, Calendar, Shield, Flame } from "lucide-react";
 import { cn, formatLocalDateTime } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { NotificationPreferences } from "./notification-preferences";
@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 interface Notification {
   id: string;
   userId: string;
-  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'discussion_reply' | 'study' | 'video' | 'new_video' | 'admin' | 'brotherhood' | 'event' | 'new_event' | 'challenge' | 'challenge_ended' | 'new_challenge' | 'war_group' | 'content_flag';
+  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'discussion_reply' | 'study' | 'video' | 'new_video' | 'admin' | 'brotherhood' | 'event' | 'new_event' | 'challenge' | 'challenge_ended' | 'new_challenge' | 'war_group' | 'content_flag' | 'war_room_post' | 'under_fire_post';
   title: string;
   message: string;
   relatedId?: string;
@@ -61,6 +61,10 @@ const getNotificationIcon = (type: string) => {
     case 'event':
     case 'new_event':
       return <Calendar className="h-4 w-4" />;
+    case 'war_room_post':
+      return <Shield className="h-4 w-4 text-blue-300" />;
+    case 'under_fire_post':
+      return <Flame className="h-4 w-4 text-orange-400" />;
     default:
       return <Bell className="h-4 w-4" />;
   }
@@ -260,6 +264,14 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         }
         break;
       }
+
+      case 'war_room_post':
+        goTo(notification.relatedId ? `/hurdle-wall?post=${notification.relatedId}` : '/hurdle-wall');
+        break;
+
+      case 'under_fire_post':
+        goTo(notification.relatedId ? `/under-fire?request=${notification.relatedId}` : '/under-fire');
+        break;
 
       default:
         if (notification.relatedId && (notification.type.includes('message') || notification.type === 'message_request')) {
