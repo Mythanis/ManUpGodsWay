@@ -186,6 +186,13 @@ export function useWebSocket(userId?: string) {
             queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall/user'] });
             break;
 
+          case 'accountability_request_created':
+            // Invalidate accountability requests so new posts appear immediately across all clients
+            queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+            break;
+
           case 'accountability_request_assist':
             // Invalidate accountability requests to show updated assist status
             queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });

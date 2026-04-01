@@ -71,6 +71,8 @@ export default function HurdleWall() {
   // Fetch hurdle wall posts
   const { data: allPosts = [], isLoading } = useQuery<HurdleWallPost[]>({
     queryKey: ['/api/hurdle-wall'],
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
   
   useEffect(() => {

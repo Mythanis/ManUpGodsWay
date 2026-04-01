@@ -11281,7 +11281,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (notifError) {
         console.error('Error sending Under Fire notifications:', notifError);
       }
-      
+
+      // Broadcast to all connected clients so Under Fire page updates in real-time
+      if ((req.app as any).broadcastToAll) {
+        (req.app as any).broadcastToAll({ type: 'accountability_request_created', data: request });
+      }
+
       res.status(201).json(request);
     } catch (error) {
       console.error("Error creating accountability request:", error);

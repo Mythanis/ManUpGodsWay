@@ -56,6 +56,8 @@ export default function UnderFire() {
   
   const { data: allRequests = [], isLoading } = useQuery<AccountabilityRequest[]>({
     queryKey: ['/api/accountability-requests'],
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
   
   useEffect(() => {
