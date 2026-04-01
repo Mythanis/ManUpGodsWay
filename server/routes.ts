@@ -6806,7 +6806,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'discussionReplyNotifications',
         'messageNotifications',
         'videoNotifications',
-        'communityNotifications'
+        'communityNotifications',
+        'liveStreamNotifications',
+        'warRoomNotifications',
+        'underFireNotifications'
       ];
       
       const filteredUpdates: any = {};
