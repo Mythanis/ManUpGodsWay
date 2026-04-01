@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -54,6 +54,8 @@ const replySchema = z.object({
   content: z.string().min(1, "Reply content is required"),
 });
 
+const FONT_SIZE_CLASSES = ['text-sm', 'text-base', 'text-lg'];
+
 export default function DiscussionCard({ 
   discussion, 
   onStartDirectMessage,
@@ -61,6 +63,31 @@ export default function DiscussionCard({
   currentUserTier = 'free',
   currentUserSubscriptionStatus = 'trial'
 }: DiscussionCardProps) {
+  const [fontSizeLevel, setFontSizeLevel] = useState<number>(() => {
+    const saved = localStorage.getItem('communityFontSize');
+    return saved ? Math.min(2, Math.max(0, parseInt(saved))) : 0;
+  });
+
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'communityFontSize' && e.newValue !== null) {
+        setFontSizeLevel(Math.min(2, Math.max(0, parseInt(e.newValue))));
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  const adjustFontSize = (delta: number) => {
+    setFontSizeLevel(prev => {
+      const next = Math.min(2, Math.max(0, prev + delta));
+      localStorage.setItem('communityFontSize', String(next));
+      // Broadcast to all other mounted DiscussionCard instances on this page
+      window.dispatchEvent(new StorageEvent('storage', { key: 'communityFontSize', newValue: String(next) }));
+      return next;
+    });
+  };
+
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const [replyingToReplyId, setReplyingToReplyId] = useState<string | null>(null);
@@ -446,8 +473,27 @@ export default function DiscussionCard({
             </div>
             <span className="text-xs text-white/40" data-testid="text-time-ago">{getTimeAgo(discussion.createdAt)}</span>
           </div>
-          {/* Overflow menu: edit / delete / flag */}
+          {/* Overflow menu: font size + edit / delete / flag */}
           <div className="flex items-center gap-1 flex-shrink-0">
+            {/* Font size controls */}
+            <button
+              onClick={(e) => { e.stopPropagation(); adjustFontSize(-1); }}
+              disabled={fontSizeLevel === 0}
+              className="w-7 h-7 flex items-center justify-center rounded bg-[#FCD000] text-black hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-black"
+              title="Decrease font size"
+              aria-label="Decrease font size"
+            >
+              A-
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); adjustFontSize(1); }}
+              disabled={fontSizeLevel === 2}
+              className="w-7 h-7 flex items-center justify-center rounded bg-[#FCD000] text-black hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-black"
+              title="Increase font size"
+              aria-label="Increase font size"
+            >
+              A+
+            </button>
             {isOwner && (
               <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-white/40 hover:text-white hover:bg-white/10 rounded-full"
                 onClick={() => { editForm.reset({ title: discussion.title || '', content: discussion.content || '' }); setShowEditDialog(true); }}
@@ -483,12 +529,12 @@ export default function DiscussionCard({
             >
               {hasHtml ? (
                 <div
-                  className={`text-sm text-white/80 leading-relaxed prose-invert [&_strong]:font-bold [&_em]:italic [&_u]:underline [&_s]:line-through ${!isExpanded && isLongContent ? 'line-clamp-5' : ''}`}
+                  className={`${FONT_SIZE_CLASSES[fontSizeLevel]} text-white/80 leading-relaxed prose-invert [&_strong]:font-bold [&_em]:italic [&_u]:underline [&_s]:line-through ${!isExpanded && isLongContent ? 'line-clamp-5' : ''}`}
                   dangerouslySetInnerHTML={{ __html: sanitizeHtml(discussion.content) }}
                   data-testid="text-discussion-content"
                 />
               ) : (
-                <p className={`text-sm text-white/80 leading-relaxed ${!isExpanded && isLongContent ? 'line-clamp-5' : ''}`}
+                <p className={`${FONT_SIZE_CLASSES[fontSizeLevel]} text-white/80 leading-relaxed ${!isExpanded && isLongContent ? 'line-clamp-5' : ''}`}
                   data-testid="text-discussion-content">
                   {discussion.content}
                 </p>
