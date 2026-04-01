@@ -45,6 +45,8 @@ import {
   hurdleWallPosts,
   hurdleWallReplies,
   hurdleWallPrayers,
+  hurdleWallPraises,
+  hurdleWallAmens,
   tierPricing,
   subscriptionSettings,
   userPrayerStats,
@@ -152,6 +154,8 @@ import {
   type InsertHurdleWallReply,
   type HurdleWallPrayer,
   type InsertHurdleWallPrayer,
+  type HurdleWallPraise,
+  type HurdleWallAmen,
   accountabilityRequests,
   accountabilitySupports,
   type AccountabilityRequest,
@@ -535,16 +539,24 @@ export interface IStorage {
     user: { id: string; firstName: string; lastName: string }; 
     userHasPrayed?: boolean;
     replyCount: number;
+    praise: HurdleWallPraise | null;
+    amenCount: number;
   })[]>;
   getHurdleWallPost(postId: string): Promise<(HurdleWallPost & { 
     user: { id: string; firstName: string; lastName: string }; 
     replies: (HurdleWallReply & { user: { id: string; firstName: string; lastName: string } })[];
     userHasPrayed?: boolean;
+    praise: HurdleWallPraise | null;
+    amenCount: number;
   }) | undefined>;
   createHurdleWallPost(post: InsertHurdleWallPost): Promise<HurdleWallPost>;
   createHurdleWallReply(reply: InsertHurdleWallReply): Promise<HurdleWallReply>;
   prayForPost(userId: string, postId: string): Promise<{ success: boolean; prayerCount: number }>;
   removePrayerFromPost(userId: string, postId: string): Promise<{ success: boolean; prayerCount: number }>;
+  createHurdleWallPraise(postId: string, userId: string, content: string): Promise<{ success: boolean; praise?: HurdleWallPraise }>;
+  deleteHurdleWallPraise(postId: string, userId: string): Promise<boolean>;
+  addAmenToPost(postId: string, userId: string): Promise<{ success: boolean; amenCount: number }>;
+  removeAmenFromPost(postId: string, userId: string): Promise<{ success: boolean; amenCount: number }>;
   getUserPrayerStats(userId: string): Promise<UserPrayerStats | undefined>;
   ensurePrayerStatsExist(userId: string): Promise<UserPrayerStats>;
 
@@ -6296,6 +6308,8 @@ export class DatabaseStorage implements IStorage {
     userHasPrayed?: boolean;
     replyCount: number;
     replies: (HurdleWallReply & { user: { id: string; firstName: string; lastName: string } })[];
+    praise: HurdleWallPraise | null;
+    amenCount: number;
   })[]> {
     const posts = await db
       .select({
@@ -6306,6 +6320,7 @@ export class DatabaseStorage implements IStorage {
         postType: hurdleWallPosts.postType,
         prayerCount: hurdleWallPosts.prayerCount,
         replyCount: hurdleWallPosts.replyCount,
+        amenCount: hurdleWallPosts.amenCount,
         createdAt: hurdleWallPosts.createdAt,
         updatedAt: hurdleWallPosts.updatedAt,
         user: {
@@ -6319,6 +6334,8 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(hurdleWallPosts.createdAt));
     
     if (posts.length === 0) return [];
+
+    const postIds = posts.map(p => p.id);
 
     // Batch-fetch all replies for all posts in one query
     const allReplies = await db
@@ -6338,23 +6355,40 @@ export class DatabaseStorage implements IStorage {
       })
       .from(hurdleWallReplies)
       .innerJoin(users, eq(hurdleWallReplies.userId, users.id))
-      .where(inArray(hurdleWallReplies.postId, posts.map(p => p.id)))
+      .where(inArray(hurdleWallReplies.postId, postIds))
       .orderBy(asc(hurdleWallReplies.createdAt));
 
-    // Group replies by postId in memory
+    // Batch-fetch all praises for all posts
+    const allPraises = await db
+      .select()
+      .from(hurdleWallPraises)
+      .where(inArray(hurdleWallPraises.postId, postIds));
+
+    // Group replies and praises by postId in memory
     const repliesByPostId = new Map<string, typeof allReplies>();
     for (const reply of allReplies) {
       if (!repliesByPostId.has(reply.postId)) repliesByPostId.set(reply.postId, []);
       repliesByPostId.get(reply.postId)!.push(reply);
     }
+    const praiseByPostId = new Map<string, HurdleWallPraise>();
+    for (const praise of allPraises) {
+      praiseByPostId.set(praise.postId, praise);
+    }
 
-    return posts.map(post => ({ ...post, replies: repliesByPostId.get(post.id) ?? [] }));
+    return posts.map(post => ({
+      ...post,
+      amenCount: post.amenCount ?? 0,
+      replies: repliesByPostId.get(post.id) ?? [],
+      praise: praiseByPostId.get(post.id) ?? null,
+    }));
   }
 
   async getHurdleWallPost(postId: string): Promise<(HurdleWallPost & { 
     user: { id: string; firstName: string; lastName: string }; 
     replies: (HurdleWallReply & { user: { id: string; firstName: string; lastName: string } })[];
     userHasPrayed?: boolean;
+    praise: HurdleWallPraise | null;
+    amenCount: number;
   }) | undefined> {
     const [post] = await db
       .select({
@@ -6365,6 +6399,7 @@ export class DatabaseStorage implements IStorage {
         postType: hurdleWallPosts.postType,
         prayerCount: hurdleWallPosts.prayerCount,
         replyCount: hurdleWallPosts.replyCount,
+        amenCount: hurdleWallPosts.amenCount,
         createdAt: hurdleWallPosts.createdAt,
         updatedAt: hurdleWallPosts.updatedAt,
         user: {
@@ -6379,27 +6414,33 @@ export class DatabaseStorage implements IStorage {
     
     if (!post) return undefined;
     
-    const replies = await db
-      .select({
-        id: hurdleWallReplies.id,
-        postId: hurdleWallReplies.postId,
-        userId: hurdleWallReplies.userId,
-        content: hurdleWallReplies.content,
-        isAnonymous: hurdleWallReplies.isAnonymous,
-        createdAt: hurdleWallReplies.createdAt,
-        updatedAt: hurdleWallReplies.updatedAt,
-        user: {
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-        }
-      })
-      .from(hurdleWallReplies)
-      .innerJoin(users, eq(hurdleWallReplies.userId, users.id))
-      .where(eq(hurdleWallReplies.postId, postId))
-      .orderBy(asc(hurdleWallReplies.createdAt));
+    const [replies, praises] = await Promise.all([
+      db
+        .select({
+          id: hurdleWallReplies.id,
+          postId: hurdleWallReplies.postId,
+          userId: hurdleWallReplies.userId,
+          content: hurdleWallReplies.content,
+          isAnonymous: hurdleWallReplies.isAnonymous,
+          createdAt: hurdleWallReplies.createdAt,
+          updatedAt: hurdleWallReplies.updatedAt,
+          user: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+          }
+        })
+        .from(hurdleWallReplies)
+        .innerJoin(users, eq(hurdleWallReplies.userId, users.id))
+        .where(eq(hurdleWallReplies.postId, postId))
+        .orderBy(asc(hurdleWallReplies.createdAt)),
+      db
+        .select()
+        .from(hurdleWallPraises)
+        .where(eq(hurdleWallPraises.postId, postId)),
+    ]);
     
-    return { ...post, replies };
+    return { ...post, amenCount: post.amenCount ?? 0, replies, praise: praises[0] ?? null };
   }
 
   async createHurdleWallPost(post: InsertHurdleWallPost): Promise<HurdleWallPost> {
@@ -6507,6 +6548,63 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error removing prayer from post:', error);
       return { success: false, prayerCount: 0 };
+    }
+  }
+
+  async createHurdleWallPraise(postId: string, userId: string, content: string): Promise<{ success: boolean; praise?: HurdleWallPraise }> {
+    try {
+      const [existing] = await db.select().from(hurdleWallPraises).where(eq(hurdleWallPraises.postId, postId));
+      if (existing) return { success: false };
+      const [praise] = await db.insert(hurdleWallPraises).values({ postId, userId, content }).returning();
+      return { success: true, praise };
+    } catch (error) {
+      console.error('Error creating praise:', error);
+      return { success: false };
+    }
+  }
+
+  async deleteHurdleWallPraise(postId: string, userId: string): Promise<boolean> {
+    try {
+      const deleted = await db
+        .delete(hurdleWallPraises)
+        .where(and(eq(hurdleWallPraises.postId, postId), eq(hurdleWallPraises.userId, userId)));
+      return deleted.length > 0;
+    } catch (error) {
+      console.error('Error deleting praise:', error);
+      return false;
+    }
+  }
+
+  async addAmenToPost(postId: string, userId: string): Promise<{ success: boolean; amenCount: number }> {
+    try {
+      const [existing] = await db.select().from(hurdleWallAmens).where(and(eq(hurdleWallAmens.postId, postId), eq(hurdleWallAmens.userId, userId)));
+      if (existing) return { success: false, amenCount: 0 };
+      await db.insert(hurdleWallAmens).values({ postId, userId });
+      const [updated] = await db
+        .update(hurdleWallPosts)
+        .set({ amenCount: sql`${hurdleWallPosts.amenCount} + 1`, updatedAt: new Date() })
+        .where(eq(hurdleWallPosts.id, postId))
+        .returning({ amenCount: hurdleWallPosts.amenCount });
+      return { success: true, amenCount: updated?.amenCount ?? 0 };
+    } catch (error) {
+      console.error('Error adding amen:', error);
+      return { success: false, amenCount: 0 };
+    }
+  }
+
+  async removeAmenFromPost(postId: string, userId: string): Promise<{ success: boolean; amenCount: number }> {
+    try {
+      const deleted = await db.delete(hurdleWallAmens).where(and(eq(hurdleWallAmens.postId, postId), eq(hurdleWallAmens.userId, userId)));
+      if (deleted.length === 0) return { success: false, amenCount: 0 };
+      const [updated] = await db
+        .update(hurdleWallPosts)
+        .set({ amenCount: sql`GREATEST(${hurdleWallPosts.amenCount} - 1, 0)`, updatedAt: new Date() })
+        .where(eq(hurdleWallPosts.id, postId))
+        .returning({ amenCount: hurdleWallPosts.amenCount });
+      return { success: true, amenCount: updated?.amenCount ?? 0 };
+    } catch (error) {
+      console.error('Error removing amen:', error);
+      return { success: false, amenCount: 0 };
     }
   }
 

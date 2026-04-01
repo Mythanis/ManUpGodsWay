@@ -1651,6 +1651,7 @@ export const hurdleWallPosts = pgTable("hurdle_wall_posts", {
   postType: varchar("post_type").notNull().default("discussion"), // "discussion" or "prayer_request"
   prayerCount: integer("prayer_count").default(0),
   replyCount: integer("reply_count").default(0),
+  amenCount: integer("amen_count").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -1678,6 +1679,25 @@ export const hurdleWallPrayers = pgTable("hurdle_wall_prayers", {
   unique().on(table.postId, table.userId), // Prevent duplicate prayers from same user
 ]);
 
+// Hurdle Wall Praises table (one testimony per post, by post author only)
+export const hurdleWallPraises = pgTable("hurdle_wall_praises", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull().references(() => hurdleWallPosts.id, { onDelete: 'cascade' }).unique(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Hurdle Wall Amens table (per-user toggle, one amen per user per post)
+export const hurdleWallAmens = pgTable("hurdle_wall_amens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull().references(() => hurdleWallPosts.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.postId, table.userId),
+]);
+
 // User Prayer Statistics table
 export const userPrayerStats = pgTable("user_prayer_stats", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1693,6 +1713,7 @@ export const insertHurdleWallPostSchema = createInsertSchema(hurdleWallPosts).om
   id: true,
   prayerCount: true,
   replyCount: true,
+  amenCount: true,
   createdAt: true,
   updatedAt: true,
 });
@@ -1704,6 +1725,16 @@ export const insertHurdleWallReplySchema = createInsertSchema(hurdleWallReplies)
 });
 
 export const insertHurdleWallPrayerSchema = createInsertSchema(hurdleWallPrayers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertHurdleWallPraiseSchema = createInsertSchema(hurdleWallPraises).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertHurdleWallAmenSchema = createInsertSchema(hurdleWallAmens).omit({
   id: true,
   createdAt: true,
 });
@@ -1721,6 +1752,10 @@ export type HurdleWallReply = typeof hurdleWallReplies.$inferSelect;
 export type InsertHurdleWallReply = z.infer<typeof insertHurdleWallReplySchema>;
 export type HurdleWallPrayer = typeof hurdleWallPrayers.$inferSelect;
 export type InsertHurdleWallPrayer = z.infer<typeof insertHurdleWallPrayerSchema>;
+export type HurdleWallPraise = typeof hurdleWallPraises.$inferSelect;
+export type InsertHurdleWallPraise = z.infer<typeof insertHurdleWallPraiseSchema>;
+export type HurdleWallAmen = typeof hurdleWallAmens.$inferSelect;
+export type InsertHurdleWallAmen = z.infer<typeof insertHurdleWallAmenSchema>;
 export type UserPrayerStats = typeof userPrayerStats.$inferSelect;
 export type InsertUserPrayerStats = z.infer<typeof insertUserPrayerStatsSchema>;
 

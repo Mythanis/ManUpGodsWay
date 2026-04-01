@@ -11,11 +11,19 @@ import { useToast } from '@/hooks/use-toast';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { triggerRefTagger } from '@/hooks/useRefTagger';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageSquare, HandHeart, Plus, Trash2, Search, Filter, SortDesc, Send, ArrowLeft, Pencil } from 'lucide-react';
+import { MessageSquare, HandHeart, Plus, Trash2, Search, SortDesc, Send, ArrowLeft, Pencil, Star, HeartHandshake } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'wouter';
 import { BackButton } from "@/components/BackButton";
+
+interface HurdleWallPraise {
+  id: string;
+  postId: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+}
 
 interface HurdleWallPost {
   id: string;
@@ -25,6 +33,7 @@ interface HurdleWallPost {
   postType: 'discussion' | 'prayer_request';
   prayerCount: number;
   replyCount: number;
+  amenCount: number;
   createdAt: string;
   user: {
     id: string;
@@ -32,6 +41,8 @@ interface HurdleWallPost {
     lastName: string;
   };
   userHasPrayed?: boolean;
+  userHasAmened?: boolean;
+  praise: HurdleWallPraise | null;
   replies: HurdleWallReply[];
 }
 
@@ -56,15 +67,18 @@ export default function HurdleWall() {
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [commentContent, setCommentContent] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<'all' | 'prayer_request'>('all');
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'mine' | 'praised'>('newest');
   const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
   const [editReplyContent, setEditReplyContent] = useState('');
   const [highlightedPost, setHighlightedPost] = useState<string | null>(null);
-  
+  const [praiseInputOpen, setPraiseInputOpen] = useState<Record<string, boolean>>({});
+  const [praiseContent, setPraiseContent] = useState<Record<string, string>>({});
+  // optimistic amen counts: postId -> { count, hasAmened }
+  const [optimisticAmens, setOptimisticAmens] = useState<Record<string, { count: number; hasAmened: boolean }>>({});
+
   // Get current user
   const { data: currentUser } = useQuery<{ id: string; role?: string }>({ queryKey: ['/api/auth/user'] });
-  
+
   // Set up real-time WebSocket connection
   useWebSocket(currentUser?.id);
 
@@ -74,7 +88,7 @@ export default function HurdleWall() {
     refetchOnMount: 'always',
     staleTime: 0,
   });
-  
+
   useEffect(() => {
     if (allPosts.length > 0) {
       triggerRefTagger();
@@ -95,32 +109,41 @@ export default function HurdleWall() {
       }, 800);
     }
   }, [allPosts]);
-  
+
   // Filter and sort posts
   const posts = React.useMemo(() => {
     let filtered = allPosts;
-    
+
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(post => 
+      filtered = filtered.filter(post =>
         post.content.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
-    // Apply type filter
-    if (filterType !== 'all') {
-      filtered = filtered.filter(post => post.postType === filterType);
+
+    // Apply sort/filter options
+    if (sortBy === 'mine' && currentUser?.id) {
+      filtered = filtered.filter(post => post.userId === currentUser.id);
+    } else if (sortBy === 'praised') {
+      filtered = filtered.filter(post => post.praise !== null);
     }
-    
-    // Apply sorting
+
+    // Apply date sorting (mine/praised still sort by newest by default)
     filtered = [...filtered].sort((a, b) => {
       const dateA = new Date(a.createdAt).getTime();
       const dateB = new Date(b.createdAt).getTime();
-      return sortBy === 'newest' ? dateB - dateA : dateA - dateB;
+      return sortBy === 'oldest' ? dateA - dateB : dateB - dateA;
     });
-    
+
     return filtered;
-  }, [allPosts, searchTerm, filterType, sortBy]);
+  }, [allPosts, searchTerm, sortBy, currentUser?.id]);
+
+  // Resolve amen display values (optimistic or server)
+  const getAmenDisplay = (post: HurdleWallPost) => {
+    const opt = optimisticAmens[post.id];
+    if (opt !== undefined) return opt;
+    return { count: post.amenCount ?? 0, hasAmened: post.userHasAmened ?? false };
+  };
 
   // Create post mutation
   const createPostMutation = useMutation({
@@ -161,6 +184,66 @@ export default function HurdleWall() {
         title: "Error",
         description: error.response?.data?.message || "Failed to update prayer",
         variant: "destructive",
+      });
+    },
+  });
+
+  // Praise mutation
+  const praiseMutation = useMutation({
+    mutationFn: async ({ postId, content }: { postId: string; content: string }) => {
+      return apiRequest('POST', `/api/hurdle-wall/${postId}/praise`, { content });
+    },
+    onSuccess: (_, variables) => {
+      toast({ title: "Praise Shared", description: "Your praise has been added to your prayer request" });
+      setPraiseInputOpen(prev => ({ ...prev, [variables.postId]: false }));
+      setPraiseContent(prev => ({ ...prev, [variables.postId]: '' }));
+      queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.response?.data?.message || "Failed to add praise", variant: "destructive" });
+    },
+  });
+
+  // Delete praise mutation
+  const deletePraiseMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      return apiRequest('DELETE', `/api/hurdle-wall/${postId}/praise`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.response?.data?.message || "Failed to remove praise", variant: "destructive" });
+    },
+  });
+
+  // Amen mutation (optimistic)
+  const amenMutation = useMutation({
+    mutationFn: async ({ postId, action }: { postId: string; action: 'add' | 'remove' }) => {
+      if (action === 'add') return apiRequest('POST', `/api/hurdle-wall/${postId}/amen`);
+      return apiRequest('DELETE', `/api/hurdle-wall/${postId}/amen`);
+    },
+    onMutate: ({ postId, action }) => {
+      const post = allPosts.find(p => p.id === postId);
+      const current = optimisticAmens[postId] ?? { count: post?.amenCount ?? 0, hasAmened: post?.userHasAmened ?? false };
+      const next = action === 'add'
+        ? { count: current.count + 1, hasAmened: true }
+        : { count: Math.max(0, current.count - 1), hasAmened: false };
+      setOptimisticAmens(prev => ({ ...prev, [postId]: next }));
+      return { prev: current };
+    },
+    onError: (_, { postId }, ctx) => {
+      setOptimisticAmens(prev => ({ ...prev, [postId]: ctx!.prev }));
+      toast({ title: "Error", description: "Failed to update Amen", variant: "destructive" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
+    },
+    onSettled: (_, __, { postId }) => {
+      setOptimisticAmens(prev => {
+        const next = { ...prev };
+        delete next[postId];
+        return next;
       });
     },
   });
@@ -274,7 +357,7 @@ export default function HurdleWall() {
 
     createCommentMutation.mutate({ postId, content });
   };
-  
+
   const handleDeletePost = (postId: string) => {
     if (window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
       deletePostMutation.mutate(postId);
@@ -294,6 +377,11 @@ export default function HurdleWall() {
     });
   };
 
+  const handleAmen = (post: HurdleWallPost) => {
+    const { hasAmened } = getAmenDisplay(post);
+    amenMutation.mutate({ postId: post.id, action: hasAmened ? 'remove' : 'add' });
+  };
+
   const getUserDisplayName = (user: HurdleWallPost['user'], isAnonymous: boolean) => {
     if (isAnonymous) {
       return 'Anonymous';
@@ -305,7 +393,7 @@ export default function HurdleWall() {
     if (isAnonymous) {
       return <span className="text-white font-medium">Anonymous</span>;
     }
-    
+
     return (
       <Link href={`/users/${user.id}`}>
         <span className="text-white font-medium hover:text-ministry-gold-exact cursor-pointer transition-colors">
@@ -364,10 +452,10 @@ export default function HurdleWall() {
           <p className="text-ministry-gold-exact text-xs font-bold tracking-widest uppercase ml-11">A Sacred Space For Prayer Requests</p>
         </div>
       </div>
-      
+
       <div className="max-w-2xl mx-auto p-4 space-y-6">
-        
-        {/* Search and Filter Controls */}
+
+        {/* Search and Sort Controls */}
         <div className="flex flex-col sm:flex-row gap-4 items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black" />
@@ -378,28 +466,18 @@ export default function HurdleWall() {
               className="pl-10 border-2 border-black bg-ministry-gold-exact rounded-sm text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide font-medium"
             />
           </div>
-          <div className="flex gap-2">
-            <Select value={filterType} onValueChange={(value: any) => setFilterType(value)}>
-              <SelectTrigger className="w-40 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-sm">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Requests</SelectItem>
-                <SelectItem value="prayer_request">Prayer Requests</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-              <SelectTrigger className="w-36 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-sm">
-                <SortDesc className="h-4 w-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest</SelectItem>
-                <SelectItem value="oldest">Oldest</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+            <SelectTrigger className="w-48 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-sm">
+              <SortDesc className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="oldest">Oldest</SelectItem>
+              <SelectItem value="mine">My Prayer Requests</SelectItem>
+              <SelectItem value="praised">Praised Requests</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* New Post Form */}
@@ -429,7 +507,7 @@ export default function HurdleWall() {
               />
             </div>
 
-            <Button 
+            <Button
               onClick={handleCreatePost}
               disabled={createPostMutation.isPending || !newPostContent.trim()}
               className="w-full bg-ministry-gold-exact hover:bg-yellow-400 text-black font-black text-lg py-6 rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] border-2 border-black transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] uppercase tracking-wide"
@@ -450,176 +528,293 @@ export default function HurdleWall() {
               </CardContent>
             </Card>
           ) : (
-            posts.map((post) => (
-              <Card
-                key={post.id}
-                data-post-id={post.id}
-                className={`liquid-black-white border-2 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] ${highlightedPost === post.id ? 'border-[#FCD000] ring-2 ring-[#FCD000] ring-opacity-70' : 'border-ministry-gold-exact'}`}
-              >
-                <CardHeader className="relative z-10">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        {renderUserName(post.user, post.isAnonymous)}
-                        <Badge 
-                          className="bg-ministry-gold-exact text-black font-semibold"
-                        >
-                          Prayer Request
-                        </Badge>
+            posts.map((post) => {
+              const { count: amenCount, hasAmened } = getAmenDisplay(post);
+              const isOwner = currentUser?.id === post.userId;
+              const isMod = currentUser?.role === 'admin' || currentUser?.role === 'moderator' || currentUser?.role === 'owner';
+              const hasPraise = !!post.praise;
+
+              return (
+                <Card
+                  key={post.id}
+                  data-post-id={post.id}
+                  className={`liquid-black-white border-2 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] ${highlightedPost === post.id ? 'border-[#FCD000] ring-2 ring-[#FCD000] ring-opacity-70' : 'border-ministry-gold-exact'}`}
+                >
+                  <CardHeader className="relative z-10">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {renderUserName(post.user, post.isAnonymous)}
+                          <Badge className="bg-ministry-gold-exact text-black font-semibold">
+                            Prayer Request
+                          </Badge>
+                          {hasPraise && (
+                            <Badge className="bg-ministry-gold-exact text-black font-semibold flex items-center gap-1">
+                              <Star className="h-3 w-3 fill-current" />
+                              Praised
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-white/50">{formatTimeAgo(post.createdAt)}</p>
                       </div>
-                      <p className="text-sm text-white/50">{formatTimeAgo(post.createdAt)}</p>
+                      {(isOwner || isMod) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeletePost(post.id)}
+                          className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-1 h-auto"
+                          disabled={deletePostMutation.isPending}
+                          title="Delete post"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-                    {(currentUser?.id === post.userId || currentUser?.role === 'admin' || currentUser?.role === 'moderator' || currentUser?.role === 'owner') && (
+                  </CardHeader>
+                  <CardContent className="space-y-4 relative z-10">
+                    {/* Prayer request text box */}
+                    <div className="bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-sm p-3">
+                      <p className="text-black leading-relaxed">{post.content}</p>
+                    </div>
+
+                    {/* Praise input (owner only, when no praise yet) */}
+                    {isOwner && !hasPraise && (
+                      <div>
+                        {praiseInputOpen[post.id] ? (
+                          <div className="space-y-2">
+                            <Label className="text-white font-semibold text-sm">Share Your Praise</Label>
+                            <Textarea
+                              placeholder="Share how God answered your prayer..."
+                              value={praiseContent[post.id] || ''}
+                              onChange={(e) => setPraiseContent(prev => ({ ...prev, [post.id]: e.target.value }))}
+                              className="bg-white text-black border-2 border-black placeholder:text-black/50 min-h-[80px]"
+                              autoFocus
+                              data-testid={`textarea-praise-${post.id}`}
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  if (!praiseContent[post.id]?.trim()) return;
+                                  praiseMutation.mutate({ postId: post.id, content: praiseContent[post.id] });
+                                }}
+                                disabled={praiseMutation.isPending || !praiseContent[post.id]?.trim()}
+                                className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                                data-testid={`button-submit-praise-${post.id}`}
+                              >
+                                <Star className="h-3 w-3 mr-1" />
+                                {praiseMutation.isPending ? 'Sharing...' : 'Share Praise'}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-white/60 hover:text-white"
+                                onClick={() => {
+                                  setPraiseInputOpen(prev => ({ ...prev, [post.id]: false }));
+                                  setPraiseContent(prev => ({ ...prev, [post.id]: '' }));
+                                }}
+                                data-testid={`button-cancel-praise-${post.id}`}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setPraiseInputOpen(prev => ({ ...prev, [post.id]: true }))}
+                            className="text-ministry-gold-exact hover:text-yellow-300 font-semibold flex items-center gap-1"
+                            data-testid={`button-open-praise-${post.id}`}
+                          >
+                            <Star className="h-4 w-4" />
+                            Praise
+                          </Button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Praise display box (visible to everyone if praise exists) */}
+                    {hasPraise && (
+                      <div className="bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-sm p-3 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black uppercase tracking-widest text-black flex items-center gap-1">
+                            <Star className="h-3 w-3 fill-current text-ministry-gold-exact" />
+                            Praise
+                          </span>
+                          {isOwner && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (window.confirm('Remove your praise?')) deletePraiseMutation.mutate(post.id);
+                              }}
+                              className="text-red-500 hover:text-red-400 p-1 h-auto text-xs"
+                              disabled={deletePraiseMutation.isPending}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                        <p className="text-black leading-relaxed text-sm">{post.praise!.content}</p>
+                      </div>
+                    )}
+
+                    {/* Amen button (only visible when there's a praise) */}
+                    {hasPraise && (
+                      <div className="flex items-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleAmen(post)}
+                          disabled={amenMutation.isPending}
+                          className={`flex items-center gap-2 font-semibold ${
+                            hasAmened
+                              ? 'text-ministry-gold-exact hover:text-yellow-300'
+                              : 'text-white/60 hover:text-ministry-gold-exact'
+                          }`}
+                          data-testid={`button-amen-${post.id}`}
+                        >
+                          <HeartHandshake className={`h-4 w-4 ${hasAmened ? 'fill-current' : ''}`} />
+                          {amenCount > 0 && <span>{amenCount}</span>}
+                          Amen
+                        </Button>
+                      </div>
+                    )}
+
+                    <Separator className="bg-ministry-gold-exact/30" />
+
+                    <div className="flex items-center gap-4">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeletePost(post.id)}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-1 h-auto"
-                        disabled={deletePostMutation.isPending}
-                        title="Delete post"
+                        onClick={() => handlePrayer(post.id, post.userHasPrayed)}
+                        className={`flex items-center gap-2 ${
+                          post.userHasPrayed
+                            ? 'text-ministry-gold-exact hover:text-yellow-300'
+                            : 'text-white/60 hover:text-ministry-gold-exact'
+                        }`}
+                        disabled={prayerMutation.isPending}
+                        data-testid={`button-prayer-${post.id}`}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <HandHeart className={`h-4 w-4 ${post.userHasPrayed ? 'fill-current' : ''}`} />
+                        {post.prayerCount} {post.prayerCount === 1 ? 'Prayer' : 'Prayers'}
                       </Button>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4 relative z-10">
-                  <div className="bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-sm p-3">
-                    <p className="text-black leading-relaxed">{post.content}</p>
-                  </div>
-                  
-                  <Separator className="bg-ministry-gold-exact/30" />
-                  
-                  <div className="flex items-center gap-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handlePrayer(post.id, post.userHasPrayed)}
-                      className={`flex items-center gap-2 ${
-                        post.userHasPrayed 
-                          ? 'text-ministry-gold-exact hover:text-yellow-300' 
-                          : 'text-white/60 hover:text-ministry-gold-exact'
-                      }`}
-                      disabled={prayerMutation.isPending}
-                      data-testid={`button-prayer-${post.id}`}
-                    >
-                      <HandHeart className={`h-4 w-4 ${post.userHasPrayed ? 'fill-current' : ''}`} />
-                      {post.prayerCount} {post.prayerCount === 1 ? 'Prayer' : 'Prayers'}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
-                      className="flex items-center gap-2 text-white/60 hover:text-white"
-                      data-testid={`button-toggle-comments-${post.id}`}
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                      {post.replyCount} {post.replyCount === 1 ? 'Comment' : 'Comments'}
-                    </Button>
-                  </div>
-
-                  {/* Comments Section */}
-                  {expandedPost === post.id && (
-                    <div className="space-y-4 pt-4 border-t border-ministry-gold-exact/30">
-                      {/* Existing Comments */}
-                      {post.replies && post.replies.length > 0 && (
-                        <div className="space-y-3">
-                          <h4 className="text-white font-bold text-sm uppercase tracking-wide">Comments</h4>
-                          {post.replies.map((reply) => (
-                            <div key={reply.id} className="bg-white rounded-sm p-3 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                              <div className="flex items-start justify-between mb-2">
-                                <span className="text-sm font-bold text-black">
-                                  {reply.isAnonymous ? 'Anonymous' : `${reply.user.firstName} ${reply.user.lastName}`}
-                                </span>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-black/50 text-xs">
-                                    {formatTimeAgo(reply.createdAt)}
-                                  </span>
-                                  <div className="flex items-center gap-1">
-                                    {currentUser?.id === reply.userId && (
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => { setEditingReplyId(reply.id); setEditReplyContent(reply.content); }}
-                                        className="text-black/40 hover:text-black p-1 h-auto"
-                                        data-testid={`button-edit-comment-${reply.id}`}
-                                        title="Edit comment"
-                                      >
-                                        <Pencil className="h-3 w-3" />
-                                      </Button>
-                                    )}
-                                    {(currentUser?.id === reply.userId || currentUser?.role === 'admin' || currentUser?.role === 'moderator' || currentUser?.role === 'owner') && (
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleDeleteComment(reply.id)}
-                                        className="text-red-600 hover:text-red-500 hover:bg-red-100 p-1 h-auto"
-                                        disabled={deleteCommentMutation.isPending}
-                                        data-testid={`button-delete-comment-${reply.id}`}
-                                        title="Delete comment"
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                              {editingReplyId === reply.id ? (
-                                <div>
-                                  <Textarea
-                                    value={editReplyContent}
-                                    onChange={(e) => setEditReplyContent(e.target.value)}
-                                    className="bg-white text-black border-2 border-black text-sm min-h-[60px] resize-none"
-                                    autoFocus
-                                  />
-                                  <div className="flex gap-2 mt-1.5">
-                                    <Button size="sm" className="h-7 px-3 text-xs bg-black text-white hover:bg-black/80"
-                                      onClick={() => editCommentMutation.mutate({ commentId: reply.id, content: editReplyContent })}
-                                      disabled={editCommentMutation.isPending || !editReplyContent.trim()}>
-                                      Save
-                                    </Button>
-                                    <Button size="sm" variant="ghost" className="h-7 px-3 text-xs text-black/60 hover:text-black"
-                                      onClick={() => { setEditingReplyId(null); setEditReplyContent(''); }}>
-                                      Cancel
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <p className="text-black text-sm leading-relaxed">{reply.content}</p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {/* Comment Form */}
-                      <div className="space-y-3">
-                        <Textarea
-                          placeholder="Add a comment..."
-                          value={commentContent[post.id] || ''}
-                          onChange={(e) => setCommentContent(prev => ({
-                            ...prev,
-                            [post.id]: e.target.value
-                          }))}
-                          className="bg-white text-black border-2 border-black placeholder:text-black/50"
-                          data-testid={`textarea-comment-${post.id}`}
-                        />
-                        <Button
-                          onClick={() => handleCreateComment(post.id)}
-                          disabled={createCommentMutation.isPending || !commentContent[post.id]?.trim()}
-                          size="sm"
-                          className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                          data-testid={`button-post-comment-${post.id}`}
-                        >
-                          <Send className="h-4 w-4 mr-2" />
-                          Post Comment
-                        </Button>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
+                        className="flex items-center gap-2 text-white/60 hover:text-white"
+                        data-testid={`button-toggle-comments-${post.id}`}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        {post.replyCount} {post.replyCount === 1 ? 'Comment' : 'Comments'}
+                      </Button>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))
+
+                    {/* Comments Section */}
+                    {expandedPost === post.id && (
+                      <div className="space-y-4 pt-4 border-t border-ministry-gold-exact/30">
+                        {/* Existing Comments */}
+                        {post.replies && post.replies.length > 0 && (
+                          <div className="space-y-3">
+                            <h4 className="text-white font-bold text-sm uppercase tracking-wide">Comments</h4>
+                            {post.replies.map((reply) => (
+                              <div key={reply.id} className="bg-white rounded-sm p-3 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                                <div className="flex items-start justify-between mb-2">
+                                  <span className="text-sm font-bold text-black">
+                                    {reply.isAnonymous ? 'Anonymous' : `${reply.user.firstName} ${reply.user.lastName}`}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-black/50 text-xs">
+                                      {formatTimeAgo(reply.createdAt)}
+                                    </span>
+                                    <div className="flex items-center gap-1">
+                                      {currentUser?.id === reply.userId && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => { setEditingReplyId(reply.id); setEditReplyContent(reply.content); }}
+                                          className="text-black/40 hover:text-black p-1 h-auto"
+                                          data-testid={`button-edit-comment-${reply.id}`}
+                                          title="Edit comment"
+                                        >
+                                          <Pencil className="h-3 w-3" />
+                                        </Button>
+                                      )}
+                                      {(currentUser?.id === reply.userId || isMod) && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleDeleteComment(reply.id)}
+                                          className="text-red-600 hover:text-red-500 hover:bg-red-100 p-1 h-auto"
+                                          disabled={deleteCommentMutation.isPending}
+                                          data-testid={`button-delete-comment-${reply.id}`}
+                                          title="Delete comment"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                {editingReplyId === reply.id ? (
+                                  <div>
+                                    <Textarea
+                                      value={editReplyContent}
+                                      onChange={(e) => setEditReplyContent(e.target.value)}
+                                      className="bg-white text-black border-2 border-black text-sm min-h-[60px] resize-none"
+                                      autoFocus
+                                    />
+                                    <div className="flex gap-2 mt-1.5">
+                                      <Button size="sm" className="h-7 px-3 text-xs bg-black text-white hover:bg-black/80"
+                                        onClick={() => editCommentMutation.mutate({ commentId: reply.id, content: editReplyContent })}
+                                        disabled={editCommentMutation.isPending || !editReplyContent.trim()}>
+                                        Save
+                                      </Button>
+                                      <Button size="sm" variant="ghost" className="h-7 px-3 text-xs text-black/60 hover:text-black"
+                                        onClick={() => { setEditingReplyId(null); setEditReplyContent(''); }}>
+                                        Cancel
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="text-black text-sm leading-relaxed">{reply.content}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Comment Form */}
+                        <div className="space-y-3">
+                          <Textarea
+                            placeholder="Add a comment..."
+                            value={commentContent[post.id] || ''}
+                            onChange={(e) => setCommentContent(prev => ({
+                              ...prev,
+                              [post.id]: e.target.value
+                            }))}
+                            className="bg-white text-black border-2 border-black placeholder:text-black/50"
+                            data-testid={`textarea-comment-${post.id}`}
+                          />
+                          <Button
+                            onClick={() => handleCreateComment(post.id)}
+                            disabled={createCommentMutation.isPending || !commentContent[post.id]?.trim()}
+                            size="sm"
+                            className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                            data-testid={`button-post-comment-${post.id}`}
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            Post Comment
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
       </div>

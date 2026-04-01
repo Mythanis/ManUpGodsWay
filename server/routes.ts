@@ -11132,6 +11132,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Praise routes — post author only
+  app.post('/api/hurdle-wall/:postId/praise', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+      const { content } = req.body;
+
+      if (!content || content.trim().length === 0) {
+        return res.status(400).json({ message: "Praise content is required" });
+      }
+
+      const post = await storage.getHurdleWallPost(postId);
+      if (!post) return res.status(404).json({ message: "Post not found" });
+      if (post.userId !== userId) return res.status(403).json({ message: "Only the post author can add a praise" });
+
+      const result = await storage.createHurdleWallPraise(postId, userId, content.trim());
+      if (!result.success) return res.status(409).json({ message: "This post already has a praise" });
+
+      (app as any).broadcastToAll({ type: 'hurdle_wall_post_created', data: { postId } });
+      res.json(result.praise);
+    } catch (error) {
+      console.error("Error creating praise:", error);
+      res.status(500).json({ message: "Failed to create praise" });
+    }
+  });
+
+  app.delete('/api/hurdle-wall/:postId/praise', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+
+      const success = await storage.deleteHurdleWallPraise(postId, userId);
+      if (!success) return res.status(403).json({ message: "Praise not found or not yours" });
+
+      (app as any).broadcastToAll({ type: 'hurdle_wall_post_created', data: { postId } });
+      res.json({ message: "Praise removed" });
+    } catch (error) {
+      console.error("Error deleting praise:", error);
+      res.status(500).json({ message: "Failed to delete praise" });
+    }
+  });
+
+  // Amen routes — any authenticated user
+  app.post('/api/hurdle-wall/:postId/amen', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+
+      const result = await storage.addAmenToPost(postId, userId);
+      if (!result.success) return res.status(400).json({ message: "Already said Amen" });
+
+      res.json({ amenCount: result.amenCount });
+    } catch (error) {
+      console.error("Error adding amen:", error);
+      res.status(500).json({ message: "Failed to add Amen" });
+    }
+  });
+
+  app.delete('/api/hurdle-wall/:postId/amen', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+
+      const result = await storage.removeAmenFromPost(postId, userId);
+      if (!result.success) return res.status(400).json({ message: "Haven't said Amen" });
+
+      res.json({ amenCount: result.amenCount });
+    } catch (error) {
+      console.error("Error removing amen:", error);
+      res.status(500).json({ message: "Failed to remove Amen" });
+    }
+  });
+
   app.get('/api/prayer-stats/:userId', isAuthenticated, async (req: any, res) => {
     try {
       const { userId } = req.params;
