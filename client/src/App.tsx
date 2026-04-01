@@ -309,7 +309,7 @@ function AppContent() {
       {/* Tour overlay — renders on top of all content during onboarding */}
       {isAuthenticated && <AppTour />}
       {/* April Fools prank — only fires once for dev user 52953639 */}
-      <AprilFoolsPrank />
+      {isAuthenticated && !isLoading && <AprilFoolsPrank />}
     </div>
   );
 }
