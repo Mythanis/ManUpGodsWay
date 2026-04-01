@@ -186,6 +186,22 @@ export function useWebSocket(userId?: string) {
             queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall/user'] });
             break;
 
+          case 'war_group_post_created': {
+            const groupId = message.data?.groupId;
+            if (groupId) {
+              queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${groupId}/posts`] });
+            }
+            break;
+          }
+
+          case 'war_group_reply_created': {
+            const { groupId: rGroupId, postId } = message.data ?? {};
+            if (rGroupId && postId) {
+              queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${rGroupId}/posts/${postId}/replies`] });
+            }
+            break;
+          }
+
           case 'accountability_request_created':
             // Invalidate accountability requests so new posts appear immediately across all clients
             queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });

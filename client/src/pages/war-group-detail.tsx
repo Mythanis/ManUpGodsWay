@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 interface WarGroup {
   id: string;
@@ -137,6 +138,9 @@ export default function WarGroupDetail() {
     queryKey: [`/api/war-groups/${id}/membership`],
     enabled: !!id,
   });
+
+  // Enable real-time WebSocket updates for new posts and replies
+  useWebSocket(membership?.userId);
 
   const { data: myGroups = [] } = useQuery<WarGroup[]>({
     queryKey: ['/api/user/war-groups'],
@@ -321,6 +325,8 @@ export default function WarGroupDetail() {
   const { data: posts = [], isLoading: postsLoading } = useQuery<GroupPost[]>({
     queryKey: [`/api/war-groups/${id}/posts`],
     enabled: !!id && isMember,
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   // Scroll to the target post once posts have loaded (deep-link from notification)

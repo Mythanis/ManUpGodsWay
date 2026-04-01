@@ -12495,7 +12495,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Award rations for posting
       const { rationsService } = await import('./rations-service');
       const rationResult = await rationsService.awardRations(userId, 'war_group_post', post.id, 'war_group_post');
-      
+
+      // Broadcast to all connected clients so War Group page updates in real-time
+      (req.app as any).broadcastToAll({ type: 'war_group_post_created', data: { post, groupId } });
+
       res.status(201).json({ ...post, rations: rationResult });
 
       // Fire-and-forget: notify all approved members of the new post (except the poster)
@@ -12667,7 +12670,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Award rations for commenting
       const { rationsService } = await import('./rations-service');
       const rationResult = await rationsService.awardRations(userId, 'war_group_comment', reply.id, 'war_group_reply');
-      
+
+      // Broadcast to all connected clients so War Group reply thread updates in real-time
+      const groupId = req.params.id;
+      (req.app as any).broadcastToAll({ type: 'war_group_reply_created', data: { reply, postId, groupId } });
+
       res.status(201).json({ ...reply, rations: rationResult });
 
       // Fire-and-forget: notify the original post author (if they're not the replier)
