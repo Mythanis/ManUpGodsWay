@@ -477,7 +477,7 @@ export interface IStorage {
   // Content flagging operations
   flagContent(flagData: InsertContentFlag): Promise<ContentFlag>;
   notifyAdminsOfFlag(flag: ContentFlag): Promise<void>;
-  getAllFlags(): Promise<(ContentFlag & { reporter: { firstName: string | null; lastName: string | null } })[]>;
+  getAllFlags(): Promise<(ContentFlag & { reporter: { firstName: string | null; lastName: string | null }; contentUrl: string })[]>;
   updateFlagStatus(flagId: string, updateData: {
     status: string;
     reviewNotes?: string;
@@ -5373,11 +5373,13 @@ export class DatabaseStorage implements IStorage {
     await db.insert(notifications).values(notificationData);
   }
 
-  async getAllFlags(): Promise<(ContentFlag & { reporter: { firstName: string | null; lastName: string | null } })[]> {
+  async getAllFlags(): Promise<(ContentFlag & { reporter: { firstName: string | null; lastName: string | null }; contentUrl: string })[]> {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const flags = await db
+    const COMPLETED_STATUSES = ['completed', 'resolved', 'dismissed'] as const;
+
+    const rawFlags = await db
       .select({
         id: contentFlags.id,
         reporterId: contentFlags.reporterId,
@@ -5401,17 +5403,47 @@ export class DatabaseStorage implements IStorage {
       .where(
         or(
           // Non-completed flags always show
-          not(eq(contentFlags.status, 'completed')),
+          not(inArray(contentFlags.status, COMPLETED_STATUSES as unknown as string[])),
           // Completed flags only show for 30 days
           and(
-            eq(contentFlags.status, 'completed'),
+            inArray(contentFlags.status, COMPLETED_STATUSES as unknown as string[]),
             gte(contentFlags.updatedAt, thirtyDaysAgo)
           )
         )
       )
       .orderBy(desc(contentFlags.createdAt));
 
-    return flags;
+    // Resolve contentUrl for reply-type flags by looking up discussionId
+    const replyFlagIds = rawFlags
+      .filter(f => f.contentType === 'reply')
+      .map(f => f.contentId);
+
+    const replyDiscussionMap = new Map<string, string>();
+    if (replyFlagIds.length > 0) {
+      const replyRows = await db
+        .select({ id: discussionReplies.id, discussionId: discussionReplies.discussionId })
+        .from(discussionReplies)
+        .where(inArray(discussionReplies.id, replyFlagIds));
+      for (const row of replyRows) {
+        replyDiscussionMap.set(row.id, row.discussionId);
+      }
+    }
+
+    const BASE_URL = 'https://app.manupgodsway.org';
+    return rawFlags.map(flag => {
+      let contentUrl: string;
+      if (flag.contentType === 'reply') {
+        const discussionId = replyDiscussionMap.get(flag.contentId);
+        contentUrl = discussionId
+          ? `${BASE_URL}/community?discussion=${discussionId}`
+          : `${BASE_URL}/community`;
+      } else if (flag.contentType === 'discussion') {
+        contentUrl = `${BASE_URL}/community?discussion=${flag.contentId}`;
+      } else {
+        contentUrl = `${BASE_URL}/community`;
+      }
+      return { ...flag, contentUrl };
+    });
   }
 
   async updateFlagStatus(flagId: string, updateData: {
