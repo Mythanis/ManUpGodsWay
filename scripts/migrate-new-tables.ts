@@ -4,8 +4,8 @@ import { sql } from 'drizzle-orm';
 async function migrate() {
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS discussion_dislikes (
-      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      discussion_id uuid NOT NULL REFERENCES discussions(id) ON DELETE CASCADE,
+      id varchar PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      discussion_id varchar NOT NULL REFERENCES discussions(id) ON DELETE CASCADE,
       user_id varchar NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       created_at timestamp DEFAULT now(),
       UNIQUE(user_id, discussion_id)
@@ -16,8 +16,8 @@ async function migrate() {
   
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS accountability_supports (
-      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      request_id uuid NOT NULL REFERENCES accountability_requests(id) ON DELETE CASCADE,
+      id varchar PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      request_id varchar NOT NULL,
       user_id varchar NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       created_at timestamp DEFAULT now(),
       UNIQUE(user_id, request_id)

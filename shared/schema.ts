@@ -1746,7 +1746,7 @@ export type InsertAccountabilityRequest = z.infer<typeof insertAccountabilityReq
 
 export const accountabilitySupports = pgTable("accountability_supports", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  requestId: varchar("request_id").notNull().references(() => accountabilityRequests.id, { onDelete: 'cascade' }),
+  requestId: varchar("request_id").notNull(),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
