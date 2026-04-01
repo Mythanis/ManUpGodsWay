@@ -239,7 +239,10 @@ export default function Navigation() {
               }`}
               data-testid="nav-more"
             >
-              {(unreadData?.count ?? 0) > 0 && <NavBadge count={unreadData!.count} />}
+              {(() => {
+                const moreTotal = (unreadData?.count ?? 0) + (badges?.warRoom ?? 0) + (badges?.underFire ?? 0);
+                return moreTotal > 0 ? <NavBadge count={moreTotal} /> : null;
+              })()}
               <MoreHorizontal className="w-5 h-5 mb-0.5 flex-shrink-0" />
               <span className="font-medium text-[10px] leading-tight truncate w-full text-center">
                 More

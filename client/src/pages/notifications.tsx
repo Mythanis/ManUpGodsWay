@@ -57,10 +57,11 @@ export default function Notifications() {
   const { data: notifications = [] } = useQuery<Notification[]>({ queryKey: ['/api/notifications'] });
   const { data: messageRequests = [] } = useQuery<MessageRequest[]>({ queryKey: ['/api/message-requests'] });
 
-  const EXCLUDED_TYPES = ['new_discussion', 'discussion', 'discussion_reply', 'war_room_post', 'under_fire_post'];
-  const filtered = notifications.filter(n => !EXCLUDED_TYPES.includes(n.type));
+  const DISPLAY_EXCLUDED = ['new_discussion', 'discussion', 'discussion_reply'];
+  const BADGE_EXCLUDED = [...DISPLAY_EXCLUDED, 'war_room_post', 'under_fire_post'];
+  const filtered = notifications.filter(n => !DISPLAY_EXCLUDED.includes(n.type));
   const pending = messageRequests.filter(r => r.status === 'pending');
-  const unread = filtered.filter(n => !n.isRead).length;
+  const unread = notifications.filter(n => !BADGE_EXCLUDED.includes(n.type) && !n.isRead).length;
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
