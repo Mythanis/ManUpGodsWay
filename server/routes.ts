@@ -11160,7 +11160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/hurdle-wall/:postId/praise', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/hurdle-wall/:postId/praise', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { postId } = req.params;
@@ -11177,7 +11177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Amen routes — any authenticated user (post must have a praise first)
-  app.post('/api/hurdle-wall/:postId/amen', isAuthenticated, async (req: any, res) => {
+  app.post('/api/hurdle-wall/:postId/amen', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { postId } = req.params;
@@ -11197,7 +11197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/hurdle-wall/:postId/amen', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/hurdle-wall/:postId/amen', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { postId } = req.params;
