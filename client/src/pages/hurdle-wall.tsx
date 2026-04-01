@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { triggerRefTagger } from '@/hooks/useRefTagger';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageSquare, HandHeart, Plus, Trash2, Search, Filter, SortDesc, Send, ArrowLeft } from 'lucide-react';
+import { MessageSquare, HandHeart, Plus, Trash2, Search, Filter, SortDesc, Send, ArrowLeft, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'wouter';
@@ -58,6 +58,8 @@ export default function HurdleWall() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'prayer_request'>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
+  const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
+  const [editReplyContent, setEditReplyContent] = useState('');
   
   // Get current user
   const { data: currentUser } = useQuery<{ id: string; role?: string }>({ queryKey: ['/api/auth/user'] });
@@ -206,6 +208,21 @@ export default function HurdleWall() {
         description: error.response?.data?.message || "Failed to delete comment",
         variant: "destructive",
       });
+    },
+  });
+
+  const editCommentMutation = useMutation({
+    mutationFn: async ({ commentId, content }: { commentId: string; content: string }) => {
+      return apiRequest('PATCH', `/api/hurdle-wall/replies/${commentId}`, { content });
+    },
+    onSuccess: () => {
+      toast({ title: "Updated", description: "Comment updated successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/hurdle-wall'] });
+      setEditingReplyId(null);
+      setEditReplyContent('');
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update comment", variant: "destructive" });
     },
   });
 
@@ -496,22 +513,58 @@ export default function HurdleWall() {
                                   <span className="text-black/50 text-xs">
                                     {formatTimeAgo(reply.createdAt)}
                                   </span>
-                                  {(currentUser?.id === reply.userId || currentUser?.role === 'admin' || currentUser?.role === 'moderator' || currentUser?.role === 'owner') && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleDeleteComment(reply.id)}
-                                      className="text-red-600 hover:text-red-500 hover:bg-red-100 p-1 h-auto"
-                                      disabled={deleteCommentMutation.isPending}
-                                      data-testid={`button-delete-comment-${reply.id}`}
-                                      title="Delete comment"
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  )}
+                                  <div className="flex items-center gap-1">
+                                    {currentUser?.id === reply.userId && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => { setEditingReplyId(reply.id); setEditReplyContent(reply.content); }}
+                                        className="text-black/40 hover:text-black p-1 h-auto"
+                                        data-testid={`button-edit-comment-${reply.id}`}
+                                        title="Edit comment"
+                                      >
+                                        <Pencil className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                    {(currentUser?.id === reply.userId || currentUser?.role === 'admin' || currentUser?.role === 'moderator' || currentUser?.role === 'owner') && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDeleteComment(reply.id)}
+                                        className="text-red-600 hover:text-red-500 hover:bg-red-100 p-1 h-auto"
+                                        disabled={deleteCommentMutation.isPending}
+                                        data-testid={`button-delete-comment-${reply.id}`}
+                                        title="Delete comment"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                              <p className="text-black text-sm leading-relaxed">{reply.content}</p>
+                              {editingReplyId === reply.id ? (
+                                <div>
+                                  <Textarea
+                                    value={editReplyContent}
+                                    onChange={(e) => setEditReplyContent(e.target.value)}
+                                    className="bg-white text-black border-2 border-black text-sm min-h-[60px] resize-none"
+                                    autoFocus
+                                  />
+                                  <div className="flex gap-2 mt-1.5">
+                                    <Button size="sm" className="h-7 px-3 text-xs bg-black text-white hover:bg-black/80"
+                                      onClick={() => editCommentMutation.mutate({ commentId: reply.id, content: editReplyContent })}
+                                      disabled={editCommentMutation.isPending || !editReplyContent.trim()}>
+                                      Save
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="h-7 px-3 text-xs text-black/60 hover:text-black"
+                                      onClick={() => { setEditingReplyId(null); setEditReplyContent(''); }}>
+                                      Cancel
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-black text-sm leading-relaxed">{reply.content}</p>
+                              )}
                             </div>
                           ))}
                         </div>

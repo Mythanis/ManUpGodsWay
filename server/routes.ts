@@ -2881,6 +2881,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/discussions/:id/replies/:replyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { content } = req.body;
+      if (!content?.trim()) return res.status(400).json({ message: "Content is required" });
+      const updated = await storage.updateDiscussionReply(req.params.replyId, userId, content.trim());
+      if (!updated) return res.status(403).json({ message: "You can only edit your own replies" });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating discussion reply:", error);
+      res.status(500).json({ message: "Failed to update reply" });
+    }
+  });
+
   app.post('/api/discussions/:id/like', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -11116,6 +11130,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/hurdle-wall/replies/:replyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { content } = req.body;
+      if (!content?.trim()) return res.status(400).json({ message: "Content is required" });
+      const updated = await storage.updateHurdleWallReply(req.params.replyId, userId, content.trim());
+      if (!updated) return res.status(403).json({ message: "You can only edit your own replies" });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating hurdle wall reply:", error);
+      res.status(500).json({ message: "Failed to update reply" });
+    }
+  });
+
   app.get('/api/hurdle-wall/user/:userId', isAuthenticated, async (req: any, res) => {
     try {
       const { userId } = req.params;
@@ -12455,6 +12483,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Error deleting group post reply:', error);
       res.status(403).json({ message: error.message || 'Failed to delete reply' });
+    }
+  });
+
+  app.patch('/api/war-groups/:id/posts/:postId/replies/:replyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { replyId } = req.params;
+      const { content } = req.body;
+      if (!content?.trim()) return res.status(400).json({ message: "Content is required" });
+      const updated = await warGroupsService.updateGroupPostReply(replyId, userId, content.trim());
+      res.json(updated);
+    } catch (error: any) {
+      console.error('Error updating group post reply:', error);
+      res.status(403).json({ message: error.message || 'Failed to update reply' });
     }
   });
 

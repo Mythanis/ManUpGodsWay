@@ -1088,11 +1088,28 @@ function PostCard({
 }: PostCardProps) {
   const { toast } = useToast();
   const canDelete = post.userId === currentUserId || isLeader;
+  const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
+  const [editReplyContent, setEditReplyContent] = useState('');
 
   // Fetch replies when expanded
   const { data: replies = [] } = useQuery<GroupReply[]>({
     queryKey: [`/api/war-groups/${groupId}/posts/${post.id}/replies`],
     enabled: isExpanded,
+  });
+
+  // Edit reply mutation
+  const editReplyMutation = useMutation({
+    mutationFn: ({ replyId, content }: { replyId: string; content: string }) =>
+      apiRequest('PATCH', `/api/war-groups/${groupId}/posts/${post.id}/replies/${replyId}`, { content }),
+    onSuccess: () => {
+      toast({ title: "Updated", description: "Reply has been updated" });
+      queryClient.invalidateQueries({ queryKey: [`/api/war-groups/${groupId}/posts/${post.id}/replies`] });
+      setEditingReplyId(null);
+      setEditReplyContent('');
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update reply", variant: "destructive" });
+    },
   });
 
   // Delete reply mutation
@@ -1269,18 +1286,52 @@ function PostCard({
                         <span className="text-black/50 text-xs font-medium">
                           {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
                         </span>
-                        {(reply.userId === currentUserId || isLeader) && (
-                          <button
-                            onClick={() => deleteReplyMutation.mutate(reply.id)}
-                            disabled={deleteReplyMutation.isPending}
-                            className="ml-auto text-black/30 hover:text-red-500 transition-colors p-0.5"
-                            title="Delete reply"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        )}
+                        <div className="flex items-center gap-1 ml-auto">
+                          {reply.userId === currentUserId && (
+                            <button
+                              onClick={() => { setEditingReplyId(reply.id); setEditReplyContent(reply.content); }}
+                              className="text-black/30 hover:text-black transition-colors p-0.5"
+                              title="Edit reply"
+                              data-testid={`button-edit-reply-${reply.id}`}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                          {(reply.userId === currentUserId || isLeader) && (
+                            <button
+                              onClick={() => deleteReplyMutation.mutate(reply.id)}
+                              disabled={deleteReplyMutation.isPending}
+                              className="text-black/30 hover:text-red-500 transition-colors p-0.5"
+                              title="Delete reply"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-black text-sm font-medium leading-relaxed mt-1">{reply.content}</p>
+                      {editingReplyId === reply.id ? (
+                        <div className="mt-1">
+                          <Textarea
+                            value={editReplyContent}
+                            onChange={(e) => setEditReplyContent(e.target.value)}
+                            className="bg-white text-black border-2 border-ministry-gold-exact text-sm min-h-[60px] resize-none"
+                            autoFocus
+                          />
+                          <div className="flex gap-2 mt-1.5">
+                            <Button size="sm" className="h-7 px-3 text-xs bg-ministry-gold-exact text-black hover:bg-ministry-gold-exact/90"
+                              onClick={() => editReplyMutation.mutate({ replyId: reply.id, content: editReplyContent })}
+                              disabled={editReplyMutation.isPending || !editReplyContent.trim()}>
+                              <Save className="h-3 w-3 mr-1" />Save
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 px-3 text-xs text-black/60 hover:text-black"
+                              onClick={() => { setEditingReplyId(null); setEditReplyContent(''); }}>
+                              <X className="h-3 w-3 mr-1" />Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-black text-sm font-medium leading-relaxed mt-1">{reply.content}</p>
+                      )}
                     </div>
                   </div>
                 ))}

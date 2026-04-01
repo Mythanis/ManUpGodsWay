@@ -76,6 +76,8 @@ export default function DiscussionCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [showLikersDialog, setShowLikersDialog] = useState(false);
+  const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
+  const [editReplyContent, setEditReplyContent] = useState('');
   
   // Check if content is long enough to need expansion
   const plainContentLength = (discussion.content || '').replace(/<[^>]+>/g, '').length;
@@ -186,6 +188,21 @@ export default function DiscussionCard({
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to delete reply", variant: "destructive" });
+    },
+  });
+
+  const editReply = useMutation({
+    mutationFn: async ({ replyId, content }: { replyId: string; content: string }) => {
+      return apiRequest('PATCH', `/api/discussions/${discussion.id}/replies/${replyId}`, { content });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/discussions", discussion.id, "replies"] });
+      setEditingReplyId(null);
+      setEditReplyContent('');
+      toast({ title: "Updated", description: "Reply updated successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update reply", variant: "destructive" });
     },
   });
 
@@ -697,7 +714,29 @@ export default function DiscussionCard({
                             ↩ reply
                           </span>
                         )}
-                        <p className="text-sm text-white/80 leading-relaxed mt-0.5">{reply.content}</p>
+                        {editingReplyId === reply.id ? (
+                          <div className="mt-1">
+                            <Textarea
+                              value={editReplyContent}
+                              onChange={(e) => setEditReplyContent(e.target.value)}
+                              className="bg-white/10 text-white border-white/20 text-sm min-h-[60px] resize-none"
+                              autoFocus
+                            />
+                            <div className="flex gap-2 mt-1.5">
+                              <Button size="sm" className="h-6 px-2 text-xs bg-[#FCD000] text-black hover:bg-[#FCD000]/90"
+                                onClick={() => editReply.mutate({ replyId: reply.id, content: editReplyContent })}
+                                disabled={editReply.isPending || !editReplyContent.trim()}>
+                                Save
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-white/60 hover:text-white"
+                                onClick={() => { setEditingReplyId(null); setEditReplyContent(''); }}>
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-white/80 leading-relaxed mt-0.5">{reply.content}</p>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 mt-1 px-1">
                         <span className="text-[10px] text-white/35">{getTimeAgo(reply.createdAt)}</span>
@@ -740,6 +779,16 @@ export default function DiscussionCard({
                               </Button>
                             }
                           />
+                          {(user && (user as any).id === reply.userId) && (
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-white/30 hover:text-[#FCD000] hover:bg-[#FCD000]/10 rounded-full"
+                              onClick={() => {
+                                setEditingReplyId(reply.id);
+                                setEditReplyContent(reply.content);
+                              }}
+                              data-testid={`button-edit-reply-${reply.id}`}>
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          )}
                           {(isAdmin || (user && (user as any).id === reply.userId)) && (
                             <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-white/30 hover:text-red-400 hover:bg-red-500/10 rounded-full"
                               onClick={() => handleDeleteReply(reply.id)} disabled={deleteReply.isPending}

@@ -307,6 +307,8 @@ export interface IStorage {
   // Reply operations
   createReply(reply: InsertDiscussionReply): Promise<DiscussionReply>;
   getDiscussionReplies(discussionId: string): Promise<(DiscussionReply & { user: User })[]>;
+  updateDiscussionReply(replyId: string, userId: string, content: string): Promise<DiscussionReply | null>;
+  updateHurdleWallReply(replyId: string, userId: string, content: string): Promise<HurdleWallReply | null>;
   
   // Like operations
   toggleDiscussionLike(discussionId: string, userId: string): Promise<{ liked: boolean; totalLikes: number }>;
@@ -2251,6 +2253,17 @@ export class DatabaseStorage implements IStorage {
       console.error('Error deleting discussion reply:', error);
       return false;
     }
+  }
+
+  async updateDiscussionReply(replyId: string, userId: string, content: string): Promise<DiscussionReply | null> {
+    const [reply] = await db.select().from(discussionReplies).where(eq(discussionReplies.id, replyId)).limit(1);
+    if (!reply || reply.userId !== userId) return null;
+    const [updated] = await db
+      .update(discussionReplies)
+      .set({ content, updatedAt: new Date() })
+      .where(eq(discussionReplies.id, replyId))
+      .returning();
+    return updated ?? null;
   }
 
   // Reply operations
@@ -6480,6 +6493,19 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  async updateHurdleWallReply(replyId: string, userId: string, content: string): Promise<HurdleWallReply | null> {
+    const [reply] = await db.select().from(hurdleWallReplies).where(eq(hurdleWallReplies.id, replyId)).limit(1);
+    if (!reply || reply.userId !== userId) return null;
+    const [updated] = await db
+      .update(hurdleWallReplies)
+      .set({ content, updatedAt: new Date() })
+      .where(eq(hurdleWallReplies.id, replyId))
+      .returning();
+    return updated ?? null;
+  }
+
+
 
   async getUserHurdleWallPosts(userId: string): Promise<(HurdleWallPost & { 
     user: { id: string; firstName: string; lastName: string }; 

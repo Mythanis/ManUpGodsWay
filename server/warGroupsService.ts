@@ -1034,6 +1034,24 @@ export class WarGroupsService {
     return { success: true };
   }
 
+  async updateGroupPostReply(replyId: string, userId: string, content: string) {
+    const [reply] = await db.select()
+      .from(schema.warGroupPostReplies)
+      .where(eq(schema.warGroupPostReplies.id, replyId))
+      .limit(1);
+
+    if (!reply) throw new Error('Reply not found');
+    if (reply.userId !== userId) throw new Error('Only the reply author can edit this reply');
+
+    const [updated] = await db
+      .update(schema.warGroupPostReplies)
+      .set({ content, updatedAt: new Date() })
+      .where(eq(schema.warGroupPostReplies.id, replyId))
+      .returning();
+
+    return updated;
+  }
+
   async togglePinPost(postId: string, userId: string) {
     const [post] = await db.select()
       .from(schema.warGroupPosts)
