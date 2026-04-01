@@ -1,0 +1,20 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "75SrOYebJVMZBwsg3il3n"
+uri = "file://attached_assets/email-brotherhood.png"
+type = "image"
+title = "men brotherhood"
+
+[[generated]]
+id = "_bX4aMajeXRp-c-xPE5Ak"
+uri = "file://attached_assets/email-bible-study.png"
+type = "image"
+title = "bible study"
+
+[[generated]]
+id = "jAoGS2H35lLvu3oWKhBOZ"
+uri = "file://attached_assets/email-hero-man.png"
+type = "image"
+title = "hero silhouette man"
