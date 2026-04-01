@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 
-const PRANK_USER_ID = "52953639";
+const PRANK_USER_IDS = new Set(["46399196", "46399698"]);
 const STORAGE_KEY = "april_fools_2026_done";
 
 export function AprilFoolsPrank() {
@@ -12,7 +12,7 @@ export function AprilFoolsPrank() {
   useEffect(() => {
     if (isLoading) return;
     if (!user) return;
-    if (user.id !== PRANK_USER_ID) return;
+    if (!PRANK_USER_IDS.has(user.id)) return;
     if (localStorage.getItem(STORAGE_KEY)) return;
 
     // Start the prank — show black overlay + red box
