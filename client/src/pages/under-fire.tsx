@@ -46,7 +46,7 @@ export default function UnderFire() {
   const [, setLocation] = useLocation();
   const [newRequestContent, setNewRequestContent] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'my_posts' | 'my_assisted'>('newest');
   const [highlightedRequest, setHighlightedRequest] = useState<string | null>(null);
   
   const { data: currentUser } = useQuery<{ id: string; role?: string }>({ queryKey: ['/api/auth/user'] });
@@ -87,15 +87,21 @@ export default function UnderFire() {
         request.content.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
-    filtered = [...filtered].sort((a, b) => {
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
-      return sortBy === 'newest' ? dateB - dateA : dateA - dateB;
-    });
+
+    if (sortBy === 'my_posts') {
+      filtered = filtered.filter(request => request.userId === currentUser?.id);
+    } else if (sortBy === 'my_assisted') {
+      filtered = filtered.filter(request => request.assistedById === currentUser?.id);
+    } else {
+      filtered = [...filtered].sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return sortBy === 'newest' ? dateB - dateA : dateA - dateB;
+      });
+    }
     
     return filtered;
-  }, [allRequests, searchTerm, sortBy]);
+  }, [allRequests, searchTerm, sortBy, currentUser?.id]);
 
   const createRequestMutation = useMutation({
     mutationFn: async (content: string) => {
@@ -276,13 +282,15 @@ export default function UnderFire() {
           </div>
           <div className="flex gap-2">
             <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-              <SelectTrigger className="w-36 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-sm">
+              <SelectTrigger className="w-44 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-sm">
                 <SortDesc className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="newest">Newest</SelectItem>
                 <SelectItem value="oldest">Oldest</SelectItem>
+                <SelectItem value="my_posts">Requests I Posted</SelectItem>
+                <SelectItem value="my_assisted">Requests I Assisted</SelectItem>
               </SelectContent>
             </Select>
           </div>
