@@ -19,17 +19,22 @@ if (typeof window !== "undefined") {
   });
 }
 
-function getIsIOSSafari(): boolean {
+function getIsIOSBrowser(): boolean {
   const ua = navigator.userAgent;
-  const isiOS = /iP(hone|od|ad)/.test(ua);
-  // Must be Safari: has "Safari" token but NOT Chrome/CriOS/FxiOS/GSA
-  const isSafari =
-    /Safari/.test(ua) &&
-    !/Chrome/.test(ua) &&
-    !/CriOS/.test(ua) &&
-    !/FxiOS/.test(ua) &&
-    !/GSA/.test(ua);
-  return isiOS && isSafari;
+  // Any iOS device — ALL iOS browsers (Safari, Chrome/CriOS, Firefox/FxiOS, Edge)
+  // use the same Share → Add to Home Screen mechanism since iOS enforces WebKit
+  return /iP(hone|od|ad)/.test(ua);
+}
+
+function getIsChromeAndroid(): boolean {
+  const ua = navigator.userAgent;
+  // Chrome on Android (but not Edge which also has "Chrome" in its UA)
+  return (
+    /Android/.test(ua) &&
+    /Chrome/.test(ua) &&
+    !/EdgA/.test(ua) &&
+    !/OPR/.test(ua)
+  );
 }
 
 function getIsInstalled(): boolean {
@@ -61,7 +66,14 @@ export function usePWAInstall() {
     };
   }, []);
 
-  const isIOSSafari = typeof navigator !== "undefined" ? getIsIOSSafari() : false;
+  const isIOSBrowser =
+    typeof navigator !== "undefined" ? getIsIOSBrowser() : false;
+
+  // Keep legacy export name for any callers that already use isIOSSafari
+  const isIOSSafari = isIOSBrowser;
+
+  const isChromeAndroid =
+    typeof navigator !== "undefined" ? getIsChromeAndroid() : false;
 
   const install = async (): Promise<boolean> => {
     if (!deferredPrompt) return false;
@@ -76,5 +88,5 @@ export function usePWAInstall() {
     return false;
   };
 
-  return { deferredPrompt, isInstalled, isIOSSafari, install };
+  return { deferredPrompt, isInstalled, isIOSSafari, isIOSBrowser, isChromeAndroid, install };
 }

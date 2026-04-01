@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { X, Download, Share, Plus } from 'lucide-react';
+import { X, Download, Share, Plus, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 export function PWAInstallPrompt() {
-  const { deferredPrompt, isInstalled, isIOSSafari, install } = usePWAInstall();
+  const { deferredPrompt, isInstalled, isIOSBrowser, isChromeAndroid, install } = usePWAInstall();
   const [location] = useLocation();
   const [dismissed, setDismissed] = useState(() => {
     const dismissedAt = localStorage.getItem('pwa-install-dismissed');
@@ -26,7 +26,11 @@ export function PWAInstallPrompt() {
   // Profile page has its own inline install section — avoid duplicate CTA
   if (location === '/profile') return null;
   if (isInstalled || dismissed) return null;
-  if (!deferredPrompt && !isIOSSafari) return null;
+
+  // Show for: native Chrome/Edge install prompt, any iOS browser, or Chrome on Android (manual instructions)
+  const showForIOS = isIOSBrowser;
+  const showForChromeAndroid = isChromeAndroid && !deferredPrompt;
+  if (!deferredPrompt && !showForIOS && !showForChromeAndroid) return null;
 
   return (
     <div className="fixed bottom-20 left-2 right-2 z-50 max-w-md mx-auto animate-in slide-in-from-bottom-4 duration-300">
@@ -48,6 +52,7 @@ export function PWAInstallPrompt() {
           </div>
         </div>
 
+        {/* Native install prompt (Chrome/Edge desktop & Android when event fires) */}
         {deferredPrompt ? (
           <Button
             onClick={handleInstall}
@@ -56,15 +61,27 @@ export function PWAInstallPrompt() {
             <Download className="h-4 w-4 mr-2" />
             Install App
           </Button>
-        ) : isIOSSafari ? (
+
+        ) : showForIOS ? (
+          /* iOS — all browsers (Safari, Chrome/CriOS, Firefox/FxiOS, Edge) use the same Share sheet */
           <div className="mt-3 text-center">
-            <p className="text-gray-200 text-xs">
+            <p className="text-gray-200 text-xs leading-relaxed">
               Tap <Share className="h-3.5 w-3.5 inline-block mx-1 text-[#FCD000]" /> then
               <span className="inline-flex items-center mx-1 text-[#FCD000]">
                 <Plus className="h-3.5 w-3.5 mr-0.5" />Add to Home Screen
               </span>
             </p>
           </div>
+
+        ) : showForChromeAndroid ? (
+          /* Chrome on Android — manual instructions via the three-dot menu */
+          <div className="mt-3 text-center">
+            <p className="text-gray-200 text-xs leading-relaxed">
+              Tap <MoreVertical className="h-3.5 w-3.5 inline-block mx-1 text-[#FCD000]" /> then
+              <span className="text-[#FCD000] mx-1 font-medium">Add to Home Screen</span>
+            </p>
+          </div>
+
         ) : null}
       </div>
     </div>
