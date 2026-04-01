@@ -33,8 +33,9 @@ import LiveStreamManagement from "@/components/admin/live-stream-management";
 import RationsManagement from "@/components/admin/rations-management";
 import StoreManagement from "@/components/admin/store-management";
 import ManUpLinksManagement from "@/components/admin/man-up-links-management";
+import FlagManagement from "@/components/admin/flag-management";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio, FileText, Coins, ShoppingBag, ExternalLink } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio, FileText, Coins, ShoppingBag, ExternalLink, Flag } from "lucide-react";
 
 interface Study {
   id: string;
@@ -78,6 +79,7 @@ const adminTabs = [
   { id: "notifications", label: "Push Notifications", icon: Bell },
   { id: "settings", label: "Settings", icon: Settings },
   { id: "users", label: "Users", icon: Users },
+  { id: "flags", label: "Flags", icon: Flag },
 ];
 
 export default function Admin() {
@@ -177,6 +179,13 @@ export default function Admin() {
       container.removeEventListener('scroll', handleScroll);
       resizeObserver.disconnect();
     };
+  }, []);
+
+  // Read ?tab=xxx query param to auto-select a tab on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab) setActiveTab(tab);
   }, []);
 
   // Check admin access
@@ -855,6 +864,13 @@ export default function Admin() {
                 onClearSubscriptionFilter={() => setSubscriptionFilter(null)}
                 currentUserRole={(user as any)?.role}
               />
+            </div>
+          )}
+
+          {activeTab === "flags" && (
+            <div>
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Flagged Content</h2>
+              <FlagManagement />
             </div>
           )}
           </div>

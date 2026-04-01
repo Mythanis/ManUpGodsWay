@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 interface Notification {
   id: string;
   userId: string;
-  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'discussion_reply' | 'study' | 'video' | 'new_video' | 'admin' | 'brotherhood' | 'event' | 'new_event' | 'challenge' | 'challenge_ended' | 'new_challenge' | 'war_group';
+  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'discussion_reply' | 'study' | 'video' | 'new_video' | 'admin' | 'brotherhood' | 'event' | 'new_event' | 'challenge' | 'challenge_ended' | 'new_challenge' | 'war_group' | 'content_flag';
   title: string;
   message: string;
   relatedId?: string;
@@ -213,6 +213,10 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       case 'new_discussion':
       case 'discussion_reply':
         goTo(notification.relatedId ? `/community?discussion=${notification.relatedId}` : '/community');
+        break;
+
+      case 'content_flag':
+        goTo('/admin?tab=flags');
         break;
 
       case 'admin':

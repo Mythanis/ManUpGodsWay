@@ -8173,12 +8173,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { status, reviewNotes } = req.body;
-      const flag = await storage.updateFlagStatus(req.params.id, {
-        status,
-        reviewNotes,
-        reviewedBy: user.id,
-        reviewedAt: new Date()
-      });
+      const updateData: { status: string; reviewNotes?: string; reviewedBy?: string; reviewedAt?: Date } = { status, reviewNotes };
+      // Only stamp reviewer info when marking complete
+      if (status === 'completed') {
+        updateData.reviewedBy = user.id;
+        updateData.reviewedAt = new Date();
+      }
+      const flag = await storage.updateFlagStatus(req.params.id, updateData);
       
       res.json(flag);
     } catch (error) {

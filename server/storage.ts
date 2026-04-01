@@ -477,12 +477,12 @@ export interface IStorage {
   // Content flagging operations
   flagContent(flagData: InsertContentFlag): Promise<ContentFlag>;
   notifyAdminsOfFlag(flag: ContentFlag): Promise<void>;
-  getAllFlags(): Promise<(ContentFlag & { reporter: { firstName: string; lastName: string } })[]>;
+  getAllFlags(): Promise<(ContentFlag & { reporter: { firstName: string | null; lastName: string | null } })[]>;
   updateFlagStatus(flagId: string, updateData: {
     status: string;
     reviewNotes?: string;
-    reviewedBy: string;
-    reviewedAt: Date;
+    reviewedBy?: string;
+    reviewedAt?: Date;
   }): Promise<ContentFlag>;
 
   // Honor system operations
@@ -5320,11 +5320,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async notifyAdminsOfFlag(flag: ContentFlag): Promise<void> {
-    // Get all admin users
+    // Get all admin AND owner users
     const admins = await db
       .select()
       .from(users)
-      .where(eq(users.role, 'admin'));
+      .where(or(eq(users.role, 'admin'), eq(users.role, 'owner')));
+
+    if (admins.length === 0) return;
 
     // Get the content details for notification
     let contentTitle = '';
@@ -5351,18 +5353,18 @@ export class DatabaseStorage implements IStorage {
       contentUrl = `/community?discussion=${reply?.discussionId}&reply=${flag.contentId}`;
     }
 
-    // Create notifications for all admins
+    // Create notifications for all admins and owners
     const notificationData = admins.map(admin => ({
       userId: admin.id,
       title: 'Content Flagged',
       message: `A user has flagged ${flag.contentType}: "${contentTitle}" for ${flag.reason}`,
-      type: 'admin' as const,
+      type: 'content_flag' as string,
       metadata: JSON.stringify({
         flagId: flag.id,
         contentType: flag.contentType,
         contentId: flag.contentId,
         reason: flag.reason,
-        url: contentUrl
+        contentUrl
       }),
       isRead: false,
       createdAt: new Date()
@@ -5371,7 +5373,10 @@ export class DatabaseStorage implements IStorage {
     await db.insert(notifications).values(notificationData);
   }
 
-  async getAllFlags(): Promise<(ContentFlag & { reporter: { firstName: string; lastName: string } })[]> {
+  async getAllFlags(): Promise<(ContentFlag & { reporter: { firstName: string | null; lastName: string | null } })[]> {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     const flags = await db
       .select({
         id: contentFlags.id,
@@ -5393,6 +5398,17 @@ export class DatabaseStorage implements IStorage {
       })
       .from(contentFlags)
       .leftJoin(users, eq(contentFlags.reporterId, users.id))
+      .where(
+        or(
+          // Non-completed flags always show
+          not(eq(contentFlags.status, 'completed')),
+          // Completed flags only show for 30 days
+          and(
+            eq(contentFlags.status, 'completed'),
+            gte(contentFlags.updatedAt, thirtyDaysAgo)
+          )
+        )
+      )
       .orderBy(desc(contentFlags.createdAt));
 
     return flags;
@@ -5401,8 +5417,8 @@ export class DatabaseStorage implements IStorage {
   async updateFlagStatus(flagId: string, updateData: {
     status: string;
     reviewNotes?: string;
-    reviewedBy: string;
-    reviewedAt: Date;
+    reviewedBy?: string;
+    reviewedAt?: Date;
   }): Promise<ContentFlag> {
     const [flag] = await db
       .update(contentFlags)
