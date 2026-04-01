@@ -290,7 +290,7 @@ export default function UnderFire() {
                 <SelectItem value="newest">Newest</SelectItem>
                 <SelectItem value="oldest">Oldest</SelectItem>
                 <SelectItem value="my_posts">Requests I Posted</SelectItem>
-                <SelectItem value="my_assisted">Requests I Assisted</SelectItem>
+                <SelectItem value="my_assisted">Requests I Assisted With</SelectItem>
               </SelectContent>
             </Select>
           </div>
