@@ -212,38 +212,15 @@ async function checkBanAndUpdateActivity(userId: string, req: any, res: any): Pr
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user?.expires_at) {
+  // Session validity is governed by the 1-week session cookie TTL, not OIDC token
+  // expiry. This allows multiple devices to maintain independent, concurrent sessions
+  // without being logged out when another device re-authenticates (which would
+  // rotate the refresh token and invalidate this session's ability to refresh).
+  if (!req.isAuthenticated() || !user?.claims?.sub) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const now = Math.floor(Date.now() / 1000);
-  if (now <= user.expires_at) {
-    const userId = user.claims?.sub;
-    if (userId) {
-      const allowed = await checkBanAndUpdateActivity(userId, req, res);
-      if (!allowed) return;
-    }
-    return next();
-  }
-
-  const refreshToken = user.refresh_token;
-  if (!refreshToken) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
-
-  try {
-    const config = await getOidcConfig();
-    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
-    updateUserSession(user, tokenResponse);
-    const userId = user.claims?.sub;
-    if (userId) {
-      const allowed = await checkBanAndUpdateActivity(userId, req, res);
-      if (!allowed) return;
-    }
-    return next();
-  } catch (error) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
+  const allowed = await checkBanAndUpdateActivity(user.claims.sub, req, res);
+  if (!allowed) return;
+  return next();
 };
