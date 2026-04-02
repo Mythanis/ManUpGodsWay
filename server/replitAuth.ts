@@ -30,14 +30,54 @@ export function getSession() {
   // Reuse the application's existing Neon pool (WebSocket-based) rather than
   // letting connect-pg-simple open its own raw TCP connection via conString.
   // In production the Neon endpoint is reachable over WebSockets but a bare
-  // TCP/DNS path to the internal "helium" host may not be, which caused
-  // getaddrinfo EAI_AGAIN helium errors during the OAuth callback flow.
+  // TCP/DNS path to the internal "helium" host may not be.
   const sessionStore = new pgStore({
     pool: pool as any,
     createTableIfMissing: false,
     ttl: sessionTtl,
     tableName: "sessions",
   });
+
+  // Wrap all session store I/O methods so that a DB failure (e.g. the "helium"
+  // host is unreachable from a preview/isolated deployment container) is caught
+  // and handled gracefully instead of propagating to Express's global error
+  // handler as a raw {"message":"getaddrinfo EAI_AGAIN helium"} response.
+  //
+  // Fail-open strategy:
+  //   get  → treat DB error as "no session" (user re-authenticates)
+  //   set  → log the error, don't persist the session (acceptable in preview)
+  //   destroy → log the error, continue (logout still works client-side)
+  const _get = sessionStore.get.bind(sessionStore);
+  (sessionStore as any).get = (sid: string, fn: any) => {
+    _get(sid, (err: any, sess: any) => {
+      if (err) {
+        console.error("Session store get error (treating as empty):", err);
+        return fn(null, null);
+      }
+      fn(null, sess);
+    });
+  };
+
+  const _set = sessionStore.set.bind(sessionStore);
+  (sessionStore as any).set = (sid: string, sess: any, fn?: any) => {
+    _set(sid, sess, (err: any) => {
+      if (err) {
+        console.error("Session store set error (session not persisted):", err);
+      }
+      if (fn) fn();
+    });
+  };
+
+  const _destroy = sessionStore.destroy.bind(sessionStore);
+  (sessionStore as any).destroy = (sid: string, fn?: any) => {
+    _destroy(sid, (err: any) => {
+      if (err) {
+        console.error("Session store destroy error:", err);
+      }
+      if (fn) fn();
+    });
+  };
+
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,

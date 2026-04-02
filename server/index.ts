@@ -68,10 +68,16 @@ app.use((req, res, next) => {
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    // Never expose raw internal error messages (e.g. DB connection strings,
+    // internal hostnames like "helium") to the client.  Only pass through
+    // client-safe messages for 4xx errors; everything else becomes generic.
+    const isClientError = status >= 400 && status < 500;
+    const message = isClientError
+      ? (err.message || "Bad Request")
+      : "Internal Server Error";
 
+    console.error(`[error] ${status} ${err.message || err}`);
     res.status(status).json({ message });
-    throw err;
   });
 
   // importantly only setup vite in development and after
