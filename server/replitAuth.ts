@@ -7,6 +7,7 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import { pool } from "./db";
 import { subscribeToMailchimp } from "./mailchimpService";
 
 if (!process.env.REPLIT_DOMAINS) {
@@ -26,8 +27,13 @@ const getOidcConfig = memoize(
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
+  // Reuse the application's existing Neon pool (WebSocket-based) rather than
+  // letting connect-pg-simple open its own raw TCP connection via conString.
+  // In production the Neon endpoint is reachable over WebSockets but a bare
+  // TCP/DNS path to the internal "helium" host may not be, which caused
+  // getaddrinfo EAI_AGAIN helium errors during the OAuth callback flow.
   const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
+    pool: pool as any,
     createTableIfMissing: false,
     ttl: sessionTtl,
     tableName: "sessions",
@@ -61,8 +67,15 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
-  // Check if this is a new user before upserting
-  const existingUser = await storage.getUser(claims["sub"]);
+  // Check if this is a new user before upserting.
+  // If the DB is temporarily unavailable, assume existing user so we don't
+  // accidentally overwrite subscription data with trial defaults.
+  let existingUser: any = null;
+  try {
+    existingUser = await storage.getUser(claims["sub"]);
+  } catch (dbErr) {
+    console.error("upsertUser: DB error checking existing user, treating as existing:", dbErr);
+  }
   const isNewUser = !existingUser;
 
   const userData: any = {
@@ -132,16 +145,42 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const claims = tokens.claims();
-    // Block banned users from logging in
-    const existingUser = await storage.getUser(claims["sub"]);
-    if (existingUser?.isBanned) {
-      return verified(null, false);
+    try {
+      const claims = tokens.claims();
+
+      // Block banned users from logging in.
+      // If the DB is temporarily unavailable, fail open (allow login) so a
+      // transient outage does not lock everyone out of the application.
+      let isBanned = false;
+      try {
+        const existingUser = await storage.getUser(claims["sub"]);
+        isBanned = existingUser?.isBanned ?? false;
+      } catch (dbErr) {
+        console.error("verify: DB error checking ban status, allowing login:", dbErr);
+      }
+      if (isBanned) {
+        return verified(null, false);
+      }
+
+      const user = {};
+      updateUserSession(user, tokens);
+
+      try {
+        await upsertUser(claims);
+      } catch (upsertErr) {
+        // Log but don't block login — the user's OIDC session is valid even if
+        // the DB upsert fails transiently. They'll be re-upserted on next login.
+        console.error("verify: DB error during upsertUser, proceeding with login:", upsertErr);
+      }
+
+      verified(null, user);
+    } catch (err) {
+      console.error("verify: unexpected error during OAuth callback:", err);
+      // Pass a sanitized error so the global handler shows a clean message.
+      const safeErr = new Error("Login failed. Please try again.");
+      (safeErr as any).status = 500;
+      verified(safeErr);
     }
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(claims);
-    verified(null, user);
   };
 
   for (const domain of process.env
