@@ -3568,7 +3568,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { studyId, lessonId } = req.params;
       const { answers } = req.body;
 
-      // Check lesson-a-day drip: block if previous lesson not yet completed or completed < 24h ago
+      // Check lesson-a-day drip: block if previous lesson not yet completed or not yet midnight of the next day
       const allLessons = await storage.getStudyLessons(studyId);
       const sortedForDrip = [...allLessons].sort((a: any, b: any) =>
         (a.displayOrder ?? a.dayNumber ?? 0) - (b.displayOrder ?? b.dayNumber ?? 0)
@@ -3581,7 +3581,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: "Complete the previous lesson first." });
         }
         const prevCompleted = new Date(prevProg.completedAt);
-        const unlockTime = new Date(prevCompleted.getTime() + 24 * 60 * 60 * 1000);
+        const unlockTime = new Date(prevCompleted);
+        unlockTime.setDate(unlockTime.getDate() + 1);
+        unlockTime.setHours(0, 0, 0, 0);
         if (new Date() < unlockTime) {
           return res.status(403).json({
             message: "This lesson isn't available yet. Come back tomorrow!",

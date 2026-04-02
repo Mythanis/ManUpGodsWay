@@ -882,12 +882,14 @@ export class DatabaseStorage implements IStorage {
           const previousComplete = studyCompletionStatus.get(previousStudyId) ?? false;
           isLockedByPrevious = !previousComplete;
 
-          // 24-hour drip: study unlocks 24 hours after previous study was completed
+          // Midnight drip: study unlocks at 12:00am of the day after the previous study was completed
           if (previousComplete) {
             const prevCompletionTime = studyCompletionTime.get(previousStudyId);
             if (prevCompletionTime) {
               const now = new Date();
-              const unlockTime = new Date(prevCompletionTime.getTime() + (24 * 60 * 60 * 1000));
+              const unlockTime = new Date(prevCompletionTime);
+              unlockTime.setDate(unlockTime.getDate() + 1);
+              unlockTime.setHours(0, 0, 0, 0);
               if (now < unlockTime) {
                 isLockedByDrip = true;
                 unlocksAt = unlockTime;
@@ -4736,15 +4738,18 @@ export class DatabaseStorage implements IStorage {
       };
     }
 
-    // Previous study is complete - check 24-hour drip timer
+    // Previous study is complete - check midnight drip timer
+    // Unlocks at 12:00am of the day after the previous study was completed
     if (prevCompletionTime) {
       const now = new Date();
-      const unlockTime = new Date(prevCompletionTime.getTime() + (24 * 60 * 60 * 1000));
+      const unlockTime = new Date(prevCompletionTime);
+      unlockTime.setDate(unlockTime.getDate() + 1);
+      unlockTime.setHours(0, 0, 0, 0);
       if (now < unlockTime) {
         const hoursRemaining = Math.ceil((unlockTime.getTime() - now.getTime()) / (1000 * 60 * 60));
-        const timeMessage = hoursRemaining < 24 
-          ? `Unlocks in ${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''}`
-          : `Unlocks ${unlockTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`;
+        const timeMessage = hoursRemaining <= 1
+          ? `Unlocks in less than an hour`
+          : `Unlocks in ${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''}`;
         
         return {
           isLocked: true,
