@@ -458,7 +458,10 @@ export default function EventManagement() {
     }
   };
 
-  const formatDate = (dateString: string) => format(new Date(dateString), 'EEEE, MMMM d, yyyy');
+  const formatDate = (dateString: string) => {
+    const [year, month, day] = dateString.split('T')[0].split('-').map(Number);
+    return format(new Date(year, month - 1, day), 'EEEE, MMMM d, yyyy');
+  };
   const formatTime = (timeString: string) => {
     if (!timeString) return null;
     const [hours, minutes] = timeString.split(':');

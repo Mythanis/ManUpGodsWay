@@ -548,7 +548,10 @@ export default function Events() {
   const isRegisteredForEvent = (eventId: string) =>
     userRegistrations.some(reg => reg.eventId === eventId && reg.paymentStatus === 'completed');
 
-  const formatDate = (dateString: string) => format(new Date(dateString), 'EEEE, MMMM d, yyyy');
+  const formatDate = (dateString: string) => {
+    const [year, month, day] = dateString.split('T')[0].split('-').map(Number);
+    return format(new Date(year, month - 1, day), 'EEEE, MMMM d, yyyy');
+  };
   const formatTime = (timeString: string) => {
     const [hours, minutes] = timeString.split(':');
     const date = new Date();
