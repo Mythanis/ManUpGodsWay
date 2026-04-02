@@ -51,9 +51,11 @@ function updateUserSession(
   tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
 ) {
   user.claims = tokens.claims();
+  // Persist userId as a top-level canonical identity field so isAuthenticated
+  // can key off it directly without coupling to OIDC claim shape.
+  user.userId = user.claims?.sub;
   user.access_token = tokens.access_token;
   user.refresh_token = tokens.refresh_token;
-  user.expires_at = user.claims?.exp;
 }
 
 async function upsertUser(
@@ -216,11 +218,13 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   // expiry. This allows multiple devices to maintain independent, concurrent sessions
   // without being logged out when another device re-authenticates (which would
   // rotate the refresh token and invalidate this session's ability to refresh).
-  if (!req.isAuthenticated() || !user?.claims?.sub) {
+  // userId is the canonical identity field; claims.sub is retained for profile routes.
+  const userId = user?.userId ?? user?.claims?.sub;
+  if (!req.isAuthenticated() || !userId) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const allowed = await checkBanAndUpdateActivity(user.claims.sub, req, res);
+  const allowed = await checkBanAndUpdateActivity(userId, req, res);
   if (!allowed) return;
   return next();
 };
