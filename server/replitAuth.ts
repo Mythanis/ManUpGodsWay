@@ -199,7 +199,10 @@ export async function setupAuth(app: Express) {
         console.error("verify: DB error checking ban status, allowing login:", dbErr);
       }
       if (isBanned) {
-        return verified(null, false);
+        // Pass info so the callback handler can redirect to /banned specifically,
+        // rather than conflating a genuine ban with other auth failures like a
+        // broken PKCE session (which would also produce verified(null, false)).
+        return verified(null, false, { banned: true });
       }
 
       const user = {};
@@ -248,10 +251,37 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/banned",
-    })(req, res, next);
+    passport.authenticate(
+      `replitauth:${req.hostname}`,
+      (err: any, user: any, info: any) => {
+        if (err) {
+          console.error("OAuth callback error:", err);
+          // Pass sanitized error so global handler returns "Login failed" not
+          // a raw DB/PKCE message.
+          const safeErr = new Error("Login failed. Please try again.");
+          (safeErr as any).status = 500;
+          return next(safeErr);
+        }
+        if (!user) {
+          // info.banned is set only when the verify function explicitly marks
+          // the user as banned.  All other failures (PKCE mismatch, missing
+          // session state, token exchange errors) land here too — redirect
+          // those to the login page so the user can retry, not to /banned.
+          if (info?.banned) {
+            return res.redirect("/banned");
+          }
+          console.warn("OAuth callback: authentication failed (non-ban):", info);
+          return res.redirect("/api/login");
+        }
+        req.logIn(user, (loginErr: any) => {
+          if (loginErr) {
+            console.error("req.logIn error:", loginErr);
+            return next(loginErr);
+          }
+          return res.redirect("/");
+        });
+      }
+    )(req, res, next);
   });
 
   app.get("/api/logout", (req, res) => {
