@@ -188,7 +188,15 @@ export async function setupAuth(app: Express) {
 }
 
 async function checkBanAndUpdateActivity(userId: string, req: any, res: any): Promise<boolean> {
-  const currentUser = await storage.getUser(userId);
+  let currentUser: any;
+  try {
+    currentUser = await storage.getUser(userId);
+  } catch (dbErr) {
+    console.error("checkBanAndUpdateActivity: DB error fetching user, allowing request through:", dbErr);
+    // DB temporarily unavailable — fail open so users aren't locked out during transient outages.
+    // Ban checks will resume once the DB recovers.
+    return true;
+  }
   if (currentUser?.isBanned) {
     req.logout(() => {});
     res.status(401).json({ message: "Your account has been banned.", banned: true });
@@ -224,7 +232,13 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const allowed = await checkBanAndUpdateActivity(userId, req, res);
-  if (!allowed) return;
+  try {
+    const allowed = await checkBanAndUpdateActivity(userId, req, res);
+    if (!allowed) return;
+  } catch (err) {
+    console.error("isAuthenticated: unexpected error in checkBanAndUpdateActivity:", err);
+    // Don't expose raw DB/network errors to the client.
+    return res.status(500).json({ message: "An unexpected error occurred. Please try again." });
+  }
   return next();
 };
