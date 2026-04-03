@@ -2955,6 +2955,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reply dislike (Oh Me!) route
+  app.post('/api/discussions/:id/replies/:replyId/dislike', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { replyId } = req.params;
+      const result = await storage.toggleDiscussionReplyDislike(replyId, userId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error toggling reply dislike:", error);
+      res.status(500).json({ message: "Failed to update reply dislike" });
+    }
+  });
+
   // Discussion subscription routes
   app.post('/api/discussions/:id/subscribe', isAuthenticated, async (req: any, res) => {
     try {

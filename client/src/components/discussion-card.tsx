@@ -98,6 +98,8 @@ export default function DiscussionCard({
   const [dislikeCount, setDislikeCount] = useState(discussion.dislikes || 0);
   const [replyLikedByMe, setReplyLikedByMe] = useState<Record<string, boolean>>({});
   const [replyLikeCounts, setReplyLikeCounts] = useState<Record<string, number>>({});
+  const [replyDislikedByMe, setReplyDislikedByMe] = useState<Record<string, boolean>>({});
+  const [replyDislikeCounts, setReplyDislikeCounts] = useState<Record<string, number>>({});
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -289,6 +291,27 @@ export default function DiscussionCard({
       const wasLiked = !(replyLikedByMe[replyId] ?? false);
       setReplyLikedByMe(prev => ({ ...prev, [replyId]: wasLiked }));
       setReplyLikeCounts(prev => ({ ...prev, [replyId]: Math.max(0, (prev[replyId] ?? 0) + (wasLiked ? 1 : -1)) }));
+    },
+  });
+
+  const toggleReplyDislike = useMutation({
+    mutationFn: async (replyId: string) => {
+      const response = await apiRequest('POST', `/api/discussions/${discussion.id}/replies/${replyId}/dislike`, {});
+      return response as { disliked: boolean; totalDislikes: number };
+    },
+    onMutate: (replyId: string) => {
+      const wasDisliked = replyDislikedByMe[replyId] ?? false;
+      setReplyDislikedByMe(prev => ({ ...prev, [replyId]: !wasDisliked }));
+      setReplyDislikeCounts(prev => ({ ...prev, [replyId]: Math.max(0, (prev[replyId] ?? 0) + (wasDisliked ? -1 : 1)) }));
+    },
+    onSuccess: (data, replyId) => {
+      setReplyDislikedByMe(prev => ({ ...prev, [replyId]: data.disliked }));
+      setReplyDislikeCounts(prev => ({ ...prev, [replyId]: data.totalDislikes }));
+    },
+    onError: (_err, replyId) => {
+      const wasDisliked = !(replyDislikedByMe[replyId] ?? false);
+      setReplyDislikedByMe(prev => ({ ...prev, [replyId]: wasDisliked }));
+      setReplyDislikeCounts(prev => ({ ...prev, [replyId]: Math.max(0, (prev[replyId] ?? 0) + (wasDisliked ? 1 : -1)) }));
     },
   });
 
@@ -811,6 +834,20 @@ export default function DiscussionCard({
                           <span>Amen</span>
                           {(replyLikeCounts[reply.id] ?? reply.likes ?? 0) > 0 && (
                             <span className="opacity-70">{replyLikeCounts[reply.id] ?? reply.likes}</span>
+                          )}
+                        </button>
+                        <button
+                          className={`text-xs font-bold transition-colors flex items-center gap-1 ${
+                            (replyDislikedByMe[reply.id] ?? (reply as any).dislikedByMe ?? false)
+                              ? 'text-red-400'
+                              : 'text-white/40 hover:text-red-400'
+                          }`}
+                          onClick={() => toggleReplyDislike.mutate(reply.id)}
+                          data-testid={`button-dislike-reply-${reply.id}`}>
+                          <ThumbsDown className="w-3 h-3" />
+                          <span>Oh Me!</span>
+                          {(replyDislikeCounts[reply.id] ?? (reply as any).dislikes ?? 0) > 0 && (
+                            <span className="opacity-70">{replyDislikeCounts[reply.id] ?? (reply as any).dislikes}</span>
                           )}
                         </button>
                         {!isNested && canReply && (

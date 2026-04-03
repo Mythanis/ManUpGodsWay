@@ -366,6 +366,18 @@ export const replyHonors = pgTable("reply_honors", {
   unique().on(table.userId, table.replyId), // Prevent duplicate honors from same user
 ]);
 
+// Dislike system for replies (Oh Me!)
+export const discussionReplyDislikes = pgTable("discussion_reply_dislikes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  replyId: varchar("reply_id").notNull().references(() => discussionReplies.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.replyId),
+  index("idx_discussion_reply_dislikes_reply_id").on(table.replyId),
+  index("idx_discussion_reply_dislikes_user_id").on(table.userId),
+]);
+
 // Discussion likes (per-user, toggleable)
 export const discussionLikes = pgTable("discussion_likes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

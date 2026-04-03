@@ -736,14 +736,21 @@ export default function StudyDetail() {
                   </div>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <Button
-                    onClick={() => setDiscussionDialogOpen(true)}
-                    className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold uppercase tracking-wide rounded-sm border-2 border-black"
-                    data-testid="button-join-discussion"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Join
-                  </Button>
+                  <div className="relative">
+                    <Button
+                      onClick={() => setDiscussionDialogOpen(true)}
+                      className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold uppercase tracking-wide rounded-sm border-2 border-black"
+                      data-testid="button-join-discussion"
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Join
+                    </Button>
+                    {(studyDiscussion.replyCount ?? 0) > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 h-5 min-w-5 px-1 bg-red-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border border-black leading-none">
+                        {studyDiscussion.replyCount > 99 ? '99+' : studyDiscussion.replyCount}
+                      </span>
+                    )}
+                  </div>
                   {(studyDiscussion.replyCount ?? 0) > 0 && (
                     <span className="text-xs text-ministry-gold-exact font-bold">
                       {studyDiscussion.replyCount} {studyDiscussion.replyCount === 1 ? 'comment' : 'comments'}

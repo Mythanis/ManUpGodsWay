@@ -8,6 +8,7 @@ import {
   discussions,
   discussionLikes,
   discussionDislikes,
+  discussionReplyDislikes,
   discussionReplies,
   discussionSubscriptions,
   discussionHonors,
@@ -320,6 +321,7 @@ export interface IStorage {
   toggleDiscussionLike(discussionId: string, userId: string): Promise<{ liked: boolean; totalLikes: number }>;
   getDiscussionLikers(discussionId: string): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null }[]>;
   toggleDiscussionDislike(discussionId: string, userId: string): Promise<{ disliked: boolean; totalDislikes: number }>;
+  toggleDiscussionReplyDislike(replyId: string, userId: string): Promise<{ disliked: boolean; totalDislikes: number }>;
   
   // Discussion subscription operations
   subscribeToDiscussion(subscription: InsertDiscussionSubscription): Promise<DiscussionSubscription>;
@@ -2332,7 +2334,7 @@ export class DatabaseStorage implements IStorage {
     return newReply;
   }
 
-  async getDiscussionReplies(discussionId: string, currentUserId?: string): Promise<(DiscussionReply & { user: User; likedByMe: boolean })[]> {
+  async getDiscussionReplies(discussionId: string, currentUserId?: string): Promise<(DiscussionReply & { user: User; likedByMe: boolean; dislikedByMe: boolean; dislikes: number })[]> {
     const replyConditions = [eq(discussionReplies.discussionId, discussionId)];
     
     // Filter out silenced users from replies if currentUserId is provided
@@ -2361,17 +2363,33 @@ export class DatabaseStorage implements IStorage {
       .orderBy(discussionReplies.createdAt);
 
     if (!currentUserId || rows.length === 0) {
-      return rows.map(r => ({ ...r, likedByMe: false }));
+      return rows.map(r => ({ ...r, likedByMe: false, dislikedByMe: false, dislikes: 0 }));
     }
 
     const replyIds = rows.map(r => r.id);
-    const honored = await db
-      .select({ replyId: replyHonors.replyId })
-      .from(replyHonors)
-      .where(and(eq(replyHonors.userId, currentUserId), inArray(replyHonors.replyId, replyIds)));
+    const [honored, dislikedRows, dislikeCounts] = await Promise.all([
+      db.select({ replyId: replyHonors.replyId })
+        .from(replyHonors)
+        .where(and(eq(replyHonors.userId, currentUserId), inArray(replyHonors.replyId, replyIds))),
+      db.select({ replyId: discussionReplyDislikes.replyId })
+        .from(discussionReplyDislikes)
+        .where(and(eq(discussionReplyDislikes.userId, currentUserId), inArray(discussionReplyDislikes.replyId, replyIds))),
+      db.select({ replyId: discussionReplyDislikes.replyId, count: sql<number>`count(*)` })
+        .from(discussionReplyDislikes)
+        .where(inArray(discussionReplyDislikes.replyId, replyIds))
+        .groupBy(discussionReplyDislikes.replyId),
+    ]);
     const honoredSet = new Set(honored.map(h => h.replyId));
+    const dislikedSet = new Set(dislikedRows.map(d => d.replyId));
+    const dislikeCountMap: Record<string, number> = {};
+    for (const row of dislikeCounts) { dislikeCountMap[row.replyId] = Number(row.count); }
 
-    return rows.map(r => ({ ...r, likedByMe: honoredSet.has(r.id) }));
+    return rows.map(r => ({
+      ...r,
+      likedByMe: honoredSet.has(r.id),
+      dislikedByMe: dislikedSet.has(r.id),
+      dislikes: dislikeCountMap[r.id] ?? 0,
+    }));
   }
 
   async toggleDiscussionLike(discussionId: string, userId: string): Promise<{ liked: boolean; totalLikes: number }> {
@@ -2433,6 +2451,27 @@ export class DatabaseStorage implements IStorage {
       await db.insert(discussionDislikes).values({ discussionId, userId });
       const [{ count }] = await db.select({ count: sql<number>`count(*)` })
         .from(discussionDislikes).where(eq(discussionDislikes.discussionId, discussionId));
+      return { disliked: true, totalDislikes: Number(count) };
+    }
+  }
+
+  async toggleDiscussionReplyDislike(replyId: string, userId: string): Promise<{ disliked: boolean; totalDislikes: number }> {
+    const [existing] = await db
+      .select()
+      .from(discussionReplyDislikes)
+      .where(and(eq(discussionReplyDislikes.replyId, replyId), eq(discussionReplyDislikes.userId, userId)));
+
+    if (existing) {
+      await db.delete(discussionReplyDislikes).where(
+        and(eq(discussionReplyDislikes.replyId, replyId), eq(discussionReplyDislikes.userId, userId))
+      );
+      const [{ count }] = await db.select({ count: sql<number>`count(*)` })
+        .from(discussionReplyDislikes).where(eq(discussionReplyDislikes.replyId, replyId));
+      return { disliked: false, totalDislikes: Number(count) };
+    } else {
+      await db.insert(discussionReplyDislikes).values({ replyId, userId });
+      const [{ count }] = await db.select({ count: sql<number>`count(*)` })
+        .from(discussionReplyDislikes).where(eq(discussionReplyDislikes.replyId, replyId));
       return { disliked: true, totalDislikes: Number(count) };
     }
   }
