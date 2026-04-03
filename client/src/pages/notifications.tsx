@@ -8,7 +8,7 @@ import { cn, formatLocalDateTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Bell, CheckCheck, Trash2, MessageSquare, BookOpen, Heart, Users, MoreVertical, UserCheck, UserX, Calendar, Settings, Flame, Shield } from "lucide-react";
+import { Bell, CheckCheck, Trash2, MessageSquare, BookOpen, Heart, Users, MoreVertical, UserCheck, UserX, Calendar, Settings, Flame, Shield, Megaphone } from "lucide-react";
 import Navigation from "@/components/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { NotificationPreferences } from "@/components/notification-preferences";
@@ -43,6 +43,7 @@ const getIcon = (type: string) => {
     case 'new_event': case 'event': return <Calendar className="h-4 w-4 text-orange-400" />;
     case 'war_room_post': return <Shield className="h-4 w-4 text-blue-300" />;
     case 'under_fire_post': return <Flame className="h-4 w-4 text-orange-400" />;
+    case 'admin': return <Megaphone className="h-4 w-4 text-[#FCD000]" />;
     default: return <Bell className="h-4 w-4 text-gray-400" />;
   }
 };
@@ -132,6 +133,8 @@ export default function Notifications() {
         setLocation(n.relatedId ? `/hurdle-wall?post=${n.relatedId}` : '/hurdle-wall'); break;
       case 'under_fire_post':
         setLocation(n.relatedId ? `/under-fire?request=${n.relatedId}` : '/under-fire'); break;
+      case 'admin':
+        break;
       default:
         if (n.relatedId) setLocation(`/messages?conversation=${n.relatedId}`);
     }
@@ -205,7 +208,8 @@ export default function Notifications() {
               className={cn(
                 "p-4 border rounded-xl transition-colors",
                 n.isRead ? "opacity-60" : "bg-muted/20",
-                n.type === 'brotherhood' && !n.isRead && "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800"
+                n.type === 'brotherhood' && !n.isRead && "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800",
+                n.type === 'admin' && !n.isRead && "bg-yellow-50 dark:bg-yellow-950/30 border-[#FCD000]"
               )}
             >
               <div className="flex items-start gap-3">

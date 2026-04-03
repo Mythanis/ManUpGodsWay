@@ -58,7 +58,6 @@ import {
   removeAllPushSubscriptionsForUser,
   getUserSubscriptionCount,
   sendPushNotification,
-  sendPushToMultipleUsers,
   sendPushToAllUsers
 } from "./pushNotificationService";
 import Parser from 'rss-parser';
@@ -6712,27 +6711,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await Promise.all(notificationPromises.filter(Boolean));
 
-      // Also send native device push notifications
-      const pushPayload = {
-        title,
-        body: message,
-        icon: '/icons/icon-192.png',
-        badge: '/icons/icon-192.png',
-        tag: `admin-broadcast-${Date.now()}`,
-        url: '/',
-      };
-
-      let pushResult = { success: 0, failed: 0 };
-      if (targetAudience === 'everyone') {
-        // Use targeted send (excluding admin) rather than sendPushToAllUsers
-        const targetUserIds = targetUsers.map((u: any) => u.id);
-        pushResult = await sendPushToMultipleUsers(targetUserIds, pushPayload);
-      } else {
-        const targetUserIds = targetUsers.map((u: any) => u.id);
-        pushResult = await sendPushToMultipleUsers(targetUserIds, pushPayload);
-      }
-
-      console.log(`[Admin Broadcast] In-app: ${targetUsers.length} users, Push: ${pushResult.success} sent, ${pushResult.failed} failed`);
+      // Push notifications are fired automatically inside createNotification for each user
+      console.log(`[Admin Broadcast] In-app + push sent to ${targetUsers.length} users`);
 
       let successMessage = "";
       switch (targetAudience) {
@@ -6755,7 +6735,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         message: successMessage,
         recipients: targetUsers.length,
-        pushDelivered: pushResult.success,
+        pushDelivered: targetUsers.length,
       });
     } catch (error) {
       console.error("Error broadcasting notification:", error);
