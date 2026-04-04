@@ -606,15 +606,16 @@ export default function Community() {
       {/* Post Dialog */}
       <div className="px-6">
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-md mx-auto bg-[#FCD000] border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-visible" data-testid="dialog-new-discussion">
-            <DialogHeader>
+          <DialogContent className="max-w-md mx-auto bg-[#FCD000] border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col max-h-[90vh]" data-testid="dialog-new-discussion">
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle className="text-black text-xl font-black uppercase tracking-tight">Create Post</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form 
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
+                className="flex flex-col flex-1 min-h-0"
               >
+                <div className="flex-1 overflow-y-auto space-y-4 pr-0.5">
                 <FormField
                   control={form.control}
                   name="content"
@@ -654,13 +655,13 @@ export default function Community() {
                                 form.setValue('content', html, { shouldValidate: true });
                               }}
                               data-placeholder="Share your thoughts, photos, videos, or memes..."
-                              className="min-h-[100px] bg-white border-2 border-black text-black rounded-sm p-2.5 text-sm leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400"
+                              className="min-h-[120px] max-h-[40vh] overflow-y-auto bg-white border-2 border-black text-black rounded-sm p-2.5 text-sm leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400"
                               data-testid="div-discussion-content"
                             />
                           ) : (
                             <Textarea
                               placeholder="Share your thoughts, photos, videos, or memes..."
-                              className="min-h-[100px] bg-white border-2 border-black text-black placeholder:text-gray-500 rounded-sm"
+                              className="min-h-[120px] max-h-[40vh] bg-white border-2 border-black text-black placeholder:text-gray-500 rounded-sm resize-none"
                               {...field}
                               data-testid="textarea-discussion-content"
                             />
@@ -753,8 +754,9 @@ export default function Community() {
                     </div>
                   )}
                 </div>
+                </div>
 
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 flex-shrink-0 pt-3 border-t border-black/20">
                   <Button
                     type="button"
                     variant="outline"
