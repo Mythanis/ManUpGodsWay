@@ -2893,7 +2893,9 @@ export class DatabaseStorage implements IStorage {
           lte(users.createdAt, sevenDaysAgo)
         )
       );
-    } else if (statusFilter && statusFilter !== 'all') {
+    }
+
+    if (statusFilter && statusFilter !== 'all') {
       conditions.push(eq(users.subscriptionStatus, statusFilter));
     }
 

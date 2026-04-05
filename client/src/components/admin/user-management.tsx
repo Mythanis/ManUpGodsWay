@@ -83,7 +83,14 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
 
   const { data: pageData, isLoading } = useQuery<{ users: User[]; total: number }>({
     queryKey: ["/api/admin/users", page, PAGE_SIZE, sortBy, debouncedSearch, statusFilter, subscriptionFilter ?? ''],
-    queryFn: () => fetch(`/api/admin/users?${queryParams}`, { credentials: 'include' }).then(r => r.json()),
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/users?${queryParams}`, { credentials: 'include' });
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) throw new Error('Unauthorized');
+        throw new Error(`Failed to fetch users (${res.status})`);
+      }
+      return res.json();
+    },
     retry: false,
   });
 
