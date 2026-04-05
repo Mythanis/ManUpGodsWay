@@ -5141,11 +5141,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const { limit } = req.query;
-      const users = await storage.getAllUsers(
-        limit ? parseInt(limit as string) : undefined
-      );
-      res.json(users);
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const pageSize = Math.min(200, Math.max(1, parseInt(req.query.pageSize as string) || 100));
+      const sortBy = (req.query.sortBy as string) || 'newest';
+      const search = (req.query.search as string) || '';
+      const statusFilter = (req.query.statusFilter as string) || 'all';
+      const subscriptionFilter = (req.query.subscriptionFilter as string) || null;
+
+      const result = await storage.getAdminUsersPage({ page, pageSize, sortBy, search, statusFilter, subscriptionFilter });
+      res.json(result);
     } catch (error) {
       console.error("Error fetching users:", error);
       res.status(500).json({ message: "Failed to fetch users" });

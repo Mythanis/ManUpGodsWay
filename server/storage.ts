@@ -366,6 +366,7 @@ export interface IStorage {
   
   // Admin operations
   getAllUsers(limit?: number): Promise<User[]>;
+  getAdminUsersPage(options: { page: number; pageSize: number; sortBy: string; search?: string; statusFilter?: string; subscriptionFilter?: string | null }): Promise<{ users: User[]; total: number }>;
   updateUserRole(userId: string, role: string): Promise<User>;
   updateUserSubscription(userId: string, subscriptionTier: string): Promise<User>;
   setUserFitnessAccess(userId: string, hasAccess: boolean): Promise<User>;
@@ -2855,6 +2856,72 @@ export class DatabaseStorage implements IStorage {
       .from(users)
       .orderBy(desc(users.createdAt))
       .limit(limit);
+  }
+
+  async getAdminUsersPage({ page, pageSize, sortBy, search, statusFilter, subscriptionFilter }: { page: number; pageSize: number; sortBy: string; search?: string; statusFilter?: string; subscriptionFilter?: string | null }): Promise<{ users: User[]; total: number }> {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const conditions: any[] = [];
+
+    if (search && search.trim()) {
+      const term = `%${search.trim()}%`;
+      conditions.push(
+        or(
+          ilike(users.firstName, term),
+          ilike(users.lastName, term),
+          ilike(users.email, term)
+        )
+      );
+    }
+
+    if (subscriptionFilter === 'active') {
+      conditions.push(eq(users.subscriptionStatus, 'active'));
+    } else if (subscriptionFilter === 'cancelled') {
+      conditions.push(
+        and(
+          eq(users.subscriptionStatus, 'cancelled'),
+          lte(users.createdAt, sevenDaysAgo)
+        )
+      );
+    } else if (subscriptionFilter === 'non-subscriber') {
+      conditions.push(
+        and(
+          or(
+            eq(users.subscriptionStatus, 'trial'),
+            eq(users.subscriptionStatus, 'expired')
+          ),
+          lte(users.createdAt, sevenDaysAgo)
+        )
+      );
+    } else if (statusFilter && statusFilter !== 'all') {
+      conditions.push(eq(users.subscriptionStatus, statusFilter));
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const orderClause = (() => {
+      switch (sortBy) {
+        case 'oldest': return asc(users.createdAt);
+        case 'recent-online': return desc(users.updatedAt);
+        case 'longest-offline': return asc(users.updatedAt);
+        default: return desc(users.createdAt);
+      }
+    })();
+
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(users)
+      .where(whereClause);
+
+    const result = await db
+      .select()
+      .from(users)
+      .where(whereClause)
+      .orderBy(orderClause)
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
+
+    return { users: result, total };
   }
 
   async updateUserRole(userId: string, role: string): Promise<User> {

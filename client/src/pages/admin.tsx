@@ -229,6 +229,7 @@ export default function Admin() {
   // Fetch users for individual targeting
   const { data: allUsers = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/users"],
+    select: (data: any) => data?.users ?? (Array.isArray(data) ? data : []),
     retry: false,
     enabled: isAdminOrOwner && notificationData.targetAudience === 'individual',
   });

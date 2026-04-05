@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -12,7 +12,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X, Bell, BellOff } from "lucide-react";
+import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X, Bell, BellOff, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
+
+const PAGE_SIZE = 100;
 
 interface User {
   id: string;
@@ -44,8 +46,11 @@ interface UserManagementProps {
 }
 
 export default function UserManagement({ subscriptionFilter, onClearSubscriptionFilter, currentUserRole }: UserManagementProps = {}) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('newest');
+  const [page, setPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [showBanDialog, setShowBanDialog] = useState(false);
@@ -57,10 +62,34 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ["/api/admin/users"],
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => { setPage(1); }, [statusFilter, sortBy, subscriptionFilter]);
+
+  const queryParams = new URLSearchParams({
+    page: String(page),
+    pageSize: String(PAGE_SIZE),
+    sortBy,
+    search: debouncedSearch,
+    statusFilter,
+    ...(subscriptionFilter ? { subscriptionFilter } : {}),
+  }).toString();
+
+  const { data: pageData, isLoading } = useQuery<{ users: User[]; total: number }>({
+    queryKey: ["/api/admin/users", page, PAGE_SIZE, sortBy, debouncedSearch, statusFilter, subscriptionFilter ?? ''],
+    queryFn: () => fetch(`/api/admin/users?${queryParams}`, { credentials: 'include' }).then(r => r.json()),
     retry: false,
   });
+
+  const pagedUsers: User[] = pageData?.users ?? [];
+  const total: number = pageData?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const { data: pushStatus } = useQuery<{ enabled: boolean; deviceCount: number }>({
     queryKey: ["/api/admin/users", selectedUser?.id, "push-status"],
@@ -225,25 +254,6 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
     },
   });
 
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-  const filteredUsers = users.filter((user: any) => {
-    const matchesSearch =
-      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    if (!matchesSearch) return false;
-
-    // Prop-based quick filter (from dashboard stat cards)
-    if (subscriptionFilter === 'active' && user.subscriptionStatus !== 'active') return false;
-    if (subscriptionFilter === 'cancelled' && !(user.subscriptionStatus === 'cancelled' && new Date(user.createdAt) <= sevenDaysAgo)) return false;
-    if (subscriptionFilter === 'non-subscriber' && !((user.subscriptionStatus === 'trial' || user.subscriptionStatus === 'expired') && new Date(user.createdAt) <= sevenDaysAgo)) return false;
-
-    // Inline dropdown status filter
-    if (statusFilter !== 'all' && user.subscriptionStatus !== statusFilter) return false;
-
-    return true;
-  });
 
   const handleSaveChanges = async () => {
     if (!selectedUser || !hasUnsavedChanges) return;
@@ -255,7 +265,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
       if (editedUser.role && editedUser.role !== selectedUser.role) {
         // Block downgrading the last owner on the client side before hitting the server
         if (selectedUser.role === 'owner' && editedUser.role !== 'owner') {
-          const ownerCount = (users as any[]).filter((u: any) => u.role === 'owner').length;
+          const ownerCount = pagedUsers.filter((u: any) => u.role === 'owner').length;
           if (ownerCount <= 1) {
             toast({
               title: "Cannot Change Role",
@@ -331,15 +341,6 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
     return `${diffInDays}d ago`;
   };
 
-  if (isLoading) {
-    return (
-      <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-navy mx-auto mb-4"></div>
-        <p className="text-ministry-slate">Loading users...</p>
-      </div>
-    );
-  }
-
   return (
     <Card className="border-gray-100 overflow-hidden" data-testid="card-user-management">
       <CardContent className="p-0">
@@ -350,15 +351,15 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
               <Input
                 type="text"
                 placeholder="Search users..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className="w-full bg-gray-50 rounded-lg pl-10 pr-4 py-2 text-sm text-black border-0 focus:ring-2 focus:ring-ministry-steel focus:bg-white placeholder:text-gray-400"
                 data-testid="input-search-users"
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-ministry-slate" />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-36 text-sm text-black bg-gray-50 border-0 focus:ring-2 focus:ring-ministry-steel">
+              <SelectTrigger className="w-32 text-sm text-black bg-gray-50 border-0 focus:ring-2 focus:ring-ministry-steel">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -368,6 +369,18 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                 <SelectItem value="cancelled">Cancelled</SelectItem>
                 <SelectItem value="expired">Expired</SelectItem>
                 <SelectItem value="past_due">Past Due</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-40 text-sm text-black bg-gray-50 border-0 focus:ring-2 focus:ring-ministry-steel" data-testid="select-sort-users">
+                <ArrowUpDown className="w-3.5 h-3.5 mr-1 text-gray-500 flex-shrink-0" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest Joined</SelectItem>
+                <SelectItem value="oldest">Oldest Joined</SelectItem>
+                <SelectItem value="recent-online">Most Recent Online</SelectItem>
+                <SelectItem value="longest-offline">Longest Offline</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -386,18 +399,23 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                 </button>
               </>
             )}
-            <span className="text-xs text-gray-400 ml-auto">{filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''}</span>
+            <span className="text-xs text-gray-400 ml-auto">{total} user{total !== 1 ? 's' : ''}</span>
           </div>
         </div>
         
         {/* User List */}
-        <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
-          {filteredUsers.length === 0 ? (
+        <div className="divide-y divide-gray-100">
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-ministry-navy mx-auto mb-3"></div>
+              <p className="text-ministry-slate text-sm">Loading users...</p>
+            </div>
+          ) : pagedUsers.length === 0 ? (
             <div className="p-8 text-center" data-testid="empty-users">
               <p className="text-ministry-slate">No users found</p>
             </div>
           ) : (
-            filteredUsers.map((user: any) => (
+            pagedUsers.map((user: any) => (
               <div key={user.id} className="p-4 flex items-center justify-between" data-testid={`user-row-${user.id}`}>
                 <div className="flex items-center space-x-3 flex-1">
                   <img 
@@ -445,6 +463,35 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
             ))
           )}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="text-xs font-bold text-black border-gray-300 hover:bg-gray-50"
+            >
+              <ChevronLeft className="w-3.5 h-3.5 mr-1" />
+              Previous
+            </Button>
+            <span className="text-xs text-gray-500 font-medium">
+              Page {page} of {totalPages} · {total} users
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="text-xs font-bold text-black border-gray-300 hover:bg-gray-50"
+            >
+              Next
+              <ChevronRight className="w-3.5 h-3.5 ml-1" />
+            </Button>
+          </div>
+        )}
       </CardContent>
 
       {/* User Detail Dialog */}
