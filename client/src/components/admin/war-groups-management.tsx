@@ -94,7 +94,11 @@ export default function WarGroupsManagement() {
   });
 
   const { data: users = [] } = useQuery<User[]>({
-    queryKey: [`/api/admin/users?search=${userSearchQuery}`],
+    queryKey: [`/api/admin/users`, userSearchQuery, 'war-groups-search'],
+    queryFn: () =>
+      fetch(`/api/admin/users?search=${encodeURIComponent(userSearchQuery)}&pageSize=200`, { credentials: 'include' })
+        .then(r => r.json())
+        .then((d: any) => d?.users ?? (Array.isArray(d) ? d : [])),
     enabled: showChangeLeaderDialog,
   });
 

@@ -5142,7 +5142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const page = Math.max(1, parseInt(req.query.page as string) || 1);
-      const pageSize = Math.min(200, Math.max(1, parseInt(req.query.pageSize as string) || 100));
+      const pageSize = Math.min(10000, Math.max(1, parseInt(req.query.pageSize as string) || 100));
       const sortBy = (req.query.sortBy as string) || 'newest';
       const search = (req.query.search as string) || '';
       const statusFilter = (req.query.statusFilter as string) || 'all';

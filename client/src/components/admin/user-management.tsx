@@ -263,18 +263,6 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
       
       // Save role change if it was modified
       if (editedUser.role && editedUser.role !== selectedUser.role) {
-        // Block downgrading the last owner on the client side before hitting the server
-        if (selectedUser.role === 'owner' && editedUser.role !== 'owner') {
-          const ownerCount = pagedUsers.filter((u: any) => u.role === 'owner').length;
-          if (ownerCount <= 1) {
-            toast({
-              title: "Cannot Change Role",
-              description: "This is the last owner. Appoint another owner first before changing their role.",
-              variant: "destructive",
-            });
-            return;
-          }
-        }
         promises.push(updateUserRole.mutateAsync({ userId: selectedUser.id, role: editedUser.role }));
       }
       

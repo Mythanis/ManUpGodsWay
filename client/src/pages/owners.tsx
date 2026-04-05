@@ -715,9 +715,10 @@ export default function Owners() {
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
-      const res = await fetch('/api/admin/users?limit=1000', { credentials: 'include' });
+      const res = await fetch('/api/admin/users?pageSize=10000', { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch users');
-      return res.json();
+      const data = await res.json();
+      return data?.users ?? (Array.isArray(data) ? data : []);
     },
   });
 
