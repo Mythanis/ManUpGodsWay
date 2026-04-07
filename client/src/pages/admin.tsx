@@ -1414,7 +1414,7 @@ export default function Admin() {
                   <SelectItem value="/journal">Journal</SelectItem>
                   <SelectItem value="/live">Live Stream</SelectItem>
                   <SelectItem value="/blog">Blog</SelectItem>
-                  <SelectItem value="/hurdle-wall">Hurdle Wall</SelectItem>
+                  <SelectItem value="/hurdle-wall">War Room</SelectItem>
                   <SelectItem value="/under-fire">Under Fire</SelectItem>
                   <SelectItem value="/war-groups">War Groups</SelectItem>
                   <SelectItem value="/bible">Bible</SelectItem>
