@@ -99,7 +99,8 @@ export default function Admin() {
     message: "",
     type: "general" as "general" | "devotional" | "announcement",
     targetAudience: "everyone" as "everyone" | "subscribers" | "trial" | "expired" | "individual",
-    selectedUserIds: [] as string[]
+    selectedUserIds: [] as string[],
+    landingPage: "/",
   });
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [subscriptionFilter, setSubscriptionFilter] = useState<string | null>(null);
@@ -505,7 +506,7 @@ export default function Admin() {
         description: "Notification sent successfully!",
       });
       setShowNotificationDialog(false);
-      setNotificationData({ title: "", message: "", type: "general", targetAudience: "everyone", selectedUserIds: [] });
+      setNotificationData({ title: "", message: "", type: "general", targetAudience: "everyone", selectedUserIds: [], landingPage: "/" });
       setUserSearchQuery("");
     },
     onError: () => {
@@ -1380,6 +1381,47 @@ export default function Admin() {
             </div>
 
             <div>
+              <Label htmlFor="landing-page" className="text-sm font-medium">
+                Landing Page
+              </Label>
+              <Select
+                value={notificationData.landingPage}
+                onValueChange={(value: string) =>
+                  setNotificationData({ ...notificationData, landingPage: value })
+                }
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="/">Home</SelectItem>
+                  <SelectItem value="/library">Library</SelectItem>
+                  <SelectItem value="/videos">Videos</SelectItem>
+                  <SelectItem value="/podcasts">Podcasts</SelectItem>
+                  <SelectItem value="/challenges">Challenges</SelectItem>
+                  <SelectItem value="/fitness">Fitness</SelectItem>
+                  <SelectItem value="/events">Events</SelectItem>
+                  <SelectItem value="/community">Community</SelectItem>
+                  <SelectItem value="/brothers">Brothers</SelectItem>
+                  <SelectItem value="/messages">Messages</SelectItem>
+                  <SelectItem value="/profile">Profile</SelectItem>
+                  <SelectItem value="/journal">Journal</SelectItem>
+                  <SelectItem value="/live">Live Stream</SelectItem>
+                  <SelectItem value="/blog">Blog</SelectItem>
+                  <SelectItem value="/hurdle-wall">Hurdle Wall</SelectItem>
+                  <SelectItem value="/under-fire">Under Fire</SelectItem>
+                  <SelectItem value="/war-groups">War Groups</SelectItem>
+                  <SelectItem value="/bible">Bible</SelectItem>
+                  <SelectItem value="/rations">Rations</SelectItem>
+                  <SelectItem value="/rations-store">Rations Store</SelectItem>
+                  <SelectItem value="/notifications">Notifications</SelectItem>
+                  <SelectItem value="/subscribe">Subscribe</SelectItem>
+                  <SelectItem value="/more-man-up">More Man Up</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
               <Label htmlFor="target-audience" className="text-sm font-medium">
                 Target Audience
               </Label>
@@ -1493,7 +1535,7 @@ export default function Admin() {
                 variant="outline"
                 onClick={() => {
                   setShowNotificationDialog(false);
-                  setNotificationData({ title: "", message: "", type: "general", targetAudience: "everyone", selectedUserIds: [] });
+                  setNotificationData({ title: "", message: "", type: "general", targetAudience: "everyone", selectedUserIds: [], landingPage: "/" });
                   setUserSearchQuery("");
                 }}
               >

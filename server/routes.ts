@@ -6676,7 +6676,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const { title, message, type, targetAudience, selectedUserIds } = req.body;
+      const { title, message, type, targetAudience, selectedUserIds, landingPage } = req.body;
       
       if (!title || !message) {
         return res.status(400).json({ message: "Title and message are required" });
@@ -6715,6 +6715,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create notifications for targeted users (Note: Admin notifications bypass preferences)
+      const pushUrl = (landingPage && landingPage.startsWith('/')) ? landingPage : '/';
       const notificationPromises = targetUsers.map(async (targetUser) => {
         // Admin notifications are always sent (cannot be disabled)
         return await storage.createNotification({
@@ -6723,7 +6724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title,
           message,
           relatedId: null,
-        });
+        }, { pushUrl });
       });
 
       await Promise.all(notificationPromises.filter(Boolean));

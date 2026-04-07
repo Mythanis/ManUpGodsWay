@@ -3482,7 +3482,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Notification methods
-  async createNotification(notification: InsertNotification): Promise<Notification> {
+  async createNotification(notification: InsertNotification, options?: { pushUrl?: string }): Promise<Notification> {
     const [newNotification] = await db.insert(notifications)
       .values(notification)
       .returning();
@@ -3490,7 +3490,7 @@ export class DatabaseStorage implements IStorage {
     // Fire push notification for every in-app notification created
     try {
       const { sendPushNotification, getPushUrl } = await import('./pushNotificationService');
-      const url = getPushUrl(notification.type, notification.relatedId);
+      const url = options?.pushUrl ?? getPushUrl(notification.type, notification.relatedId);
       await sendPushNotification(notification.userId, {
         title: notification.title,
         body: notification.message,
