@@ -6715,7 +6715,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create notifications for targeted users (Note: Admin notifications bypass preferences)
-      const pushUrl = (landingPage && landingPage.startsWith('/')) ? landingPage : '/';
+      const allowedLandingPages = new Set([
+        '/', '/library', '/videos', '/podcasts', '/challenges', '/fitness',
+        '/events', '/community', '/brothers', '/messages', '/profile', '/journal',
+        '/live', '/blog', '/hurdle-wall', '/under-fire', '/war-groups', '/bible',
+        '/rations', '/rations-store', '/notifications', '/subscribe', '/more-man-up',
+      ]);
+      const pushUrl = (landingPage && allowedLandingPages.has(landingPage)) ? landingPage : '/';
       const notificationPromises = targetUsers.map(async (targetUser) => {
         // Admin notifications are always sent (cannot be disabled)
         return await storage.createNotification({

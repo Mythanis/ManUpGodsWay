@@ -1314,7 +1314,13 @@ export default function Admin() {
       </div>
 
       {/* Send Notification Dialog */}
-      <Dialog open={showNotificationDialog} onOpenChange={setShowNotificationDialog}>
+      <Dialog open={showNotificationDialog} onOpenChange={(open) => {
+        setShowNotificationDialog(open);
+        if (!open) {
+          setNotificationData({ title: "", message: "", type: "general", targetAudience: "everyone", selectedUserIds: [], landingPage: "/" });
+          setUserSearchQuery("");
+        }
+      }}>
         <DialogContent className="w-[95vw] max-w-lg h-auto max-h-[85vh] flex flex-col p-0">
           <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
             <DialogTitle className="flex items-center space-x-2">
