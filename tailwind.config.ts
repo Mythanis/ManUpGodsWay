@@ -79,6 +79,7 @@ export default {
         mono: ["var(--font-mono)"],
         inter: ["Inter", "sans-serif"],
         grunge: ["var(--font-grunge)"],
+        bebas: ["'Bebas Neue'", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {
