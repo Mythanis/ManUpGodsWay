@@ -431,7 +431,7 @@ export default function Home() {
   const { data: recentDiscussions = [], isLoading: feedLoading } = useQuery<any[]>({
     queryKey: ["/api/discussions", "home-feed"],
     queryFn: async () => {
-      const response = await fetch('/api/discussions?sortBy=recent&limit=4', { credentials: 'include' });
+      const response = await fetch('/api/discussions?sortBy=recent&limit=1', { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch discussions');
       return response.json();
     },
@@ -1073,35 +1073,25 @@ export default function Home() {
                 <p className="text-xs text-white/50">Be the first brother to post today</p>
               </div>
             </Link>
-          ) : (
-            <div className="space-y-3">
-              {recentDiscussions.map((discussion: any) => {
-                const name = [discussion.user?.firstName, discussion.user?.lastName].filter(Boolean).join(' ') || 'A Brother';
-                const initials = name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
-                const postedAt = discussion.createdAt ? new Date(discussion.createdAt) : null;
-                const now = Date.now();
-                const diffMs = postedAt ? now - postedAt.getTime() : 0;
-                const diffMins = Math.floor(diffMs / 60000);
-                const timeAgo = diffMins < 1 ? 'just now'
-                  : diffMins < 60 ? `${diffMins}m ago`
-                  : diffMins < 1440 ? `${Math.floor(diffMins / 60)}h ago`
-                  : `${Math.floor(diffMins / 1440)}d ago`;
-                const preview = (discussion.content || '').replace(/<[^>]+>/g, '').slice(0, 120);
-
-                return (
-                  <Link
-                    key={discussion.id}
-                    href={`/community?discussion=${discussion.id}`}
-                    className="block"
-                  >
+          ) : (() => {
+              const discussion = recentDiscussions[0];
+              if (!discussion) return null;
+              const name = [discussion.user?.firstName, discussion.user?.lastName].filter(Boolean).join(' ') || 'A Brother';
+              const initials = name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+              const postedAt = discussion.createdAt ? new Date(discussion.createdAt) : null;
+              const diffMins = postedAt ? Math.floor((Date.now() - postedAt.getTime()) / 60000) : 0;
+              const timeAgo = diffMins < 1 ? 'just now'
+                : diffMins < 60 ? `${diffMins}m ago`
+                : diffMins < 1440 ? `${Math.floor(diffMins / 60)}h ago`
+                : `${Math.floor(diffMins / 1440)}d ago`;
+              const preview = (discussion.content || '').replace(/<[^>]+>/g, '').slice(0, 120);
+              return (
+                <div className="space-y-3">
+                  <Link href={`/community?discussion=${discussion.id}`} className="block">
                     <div className="bg-black border-2 border-[#FCD000]/30 rounded-sm p-4 hover:border-[#FCD000] transition-colors shadow-[2px_2px_0px_0px_rgba(252,208,0,0.15)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]">
                       <div className="flex items-center gap-2 mb-2">
                         {discussion.user?.profileImageUrl ? (
-                          <img
-                            src={discussion.user.profileImageUrl}
-                            alt={name}
-                            className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-[#FCD000]/40"
-                          />
+                          <img src={discussion.user.profileImageUrl} alt={name} className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-[#FCD000]/40" />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-[#FCD000] flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-black text-black">{initials}</span>
@@ -1131,21 +1121,20 @@ export default function Home() {
                       </div>
                     </div>
                   </Link>
-                );
-              })}
-              <Link href="/community" className="block h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold">
-                <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
-                  <Plus className="w-6 h-6 text-white relative z-10" />
+                  <Link href="/community" className="block h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold">
+                    <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                      <Plus className="w-6 h-6 text-white relative z-10" />
+                    </div>
+                    <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Start a Discussion</span>
+                    <div className="pr-4">
+                      <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
+                  </Link>
                 </div>
-                <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Start a Discussion</span>
-                <div className="pr-4">
-                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                  </svg>
-                </div>
-              </Link>
-            </div>
-          )}
+              );
+            })()}
         </div>
 
         {/* Featured Carousel */}
