@@ -1126,7 +1126,7 @@ export default function Home() {
                     <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                       <Plus className="w-6 h-6 text-white relative z-10" />
                     </div>
-                    <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Start a Discussion</span>
+                    <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Join the Discussion</span>
                     <div className="pr-4">
                       <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
