@@ -1133,10 +1133,15 @@ export default function Home() {
                   </Link>
                 );
               })}
-              <Link href="/community" className="block">
-                <div className="h-12 w-full flex items-center justify-center bg-[#FCD000]/10 border-2 border-dashed border-[#FCD000]/30 rounded-sm hover:border-[#FCD000]/60 transition-colors">
-                  <Plus className="w-4 h-4 text-[#FCD000] mr-2" />
-                  <span className="text-xs font-black text-[#FCD000] uppercase tracking-wide">Start a Discussion</span>
+              <Link href="/community" className="block h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold">
+                <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                  <Plus className="w-6 h-6 text-white relative z-10" />
+                </div>
+                <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Start a Discussion</span>
+                <div className="pr-4">
+                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
                 </div>
               </Link>
             </div>
