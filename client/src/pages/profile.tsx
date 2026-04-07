@@ -834,7 +834,7 @@ export default function Profile() {
         {/* Section heading */}
         <div className="flex items-center gap-3 mb-4">
           <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
-          <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Your Journey</h2>
+          <h2 className="text-xl font-coalition text-white uppercase tracking-widest">Your Journey</h2>
           <div className="flex-1 h-px bg-white/10" />
         </div>
 

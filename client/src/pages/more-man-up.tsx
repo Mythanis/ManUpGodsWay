@@ -66,7 +66,7 @@ export default function MoreManUp() {
                         <IconComponent className={`w-5 h-5 ${link.iconColor || 'text-black'}`} />
                       )}
                     </div>
-                    <span className="text-base font-black text-white uppercase tracking-[0.18em]">
+                    <span className="text-xl font-coalition text-white uppercase tracking-widest">
                       {link.name}
                     </span>
                   </div>

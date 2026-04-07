@@ -153,7 +153,7 @@ export default function WarGroups() {
       {/* My Groups Section - Full Width */}
       {myGroups.length > 0 && (
         <div className="px-4 py-3 max-w-4xl mx-auto">
-          <h2 className="text-base font-black text-white uppercase tracking-[0.18em] mb-3 flex items-center gap-2">
+          <h2 className="text-xl font-coalition text-white uppercase tracking-widest mb-3 flex items-center gap-2">
             <Shield className="h-5 w-5 text-ministry-gold-exact" />
             My War Group
           </h2>
@@ -331,7 +331,7 @@ export default function WarGroups() {
           <>
             {/* Search Section */}
             <div className="relative z-10">
-              <h2 className="text-base font-black text-white uppercase tracking-[0.18em] mb-4">Discover Groups</h2>
+              <h2 className="text-xl font-coalition text-white uppercase tracking-widest mb-4">Discover Groups</h2>
           <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
             <CardContent className="pt-6 relative z-10">
               <div className="space-y-3">
@@ -399,7 +399,7 @@ export default function WarGroups() {
         {/* Groups List/Map */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">
+            <h2 className="text-xl font-coalition text-white uppercase tracking-widest">
               Available Groups {!isLoading && groups.length > 0 && <span className="text-ministry-gold-exact">({groups.length})</span>}
             </h2>
             {groups.length > 0 && (
