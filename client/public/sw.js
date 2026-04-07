@@ -1,4 +1,4 @@
-const CACHE_NAME = 'man-up-gods-way-v8';
+const CACHE_NAME = 'man-up-gods-way-v9';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -168,11 +168,11 @@ self.addEventListener('push', (event) => {
     icon: data.icon || '/icon-192.png',
     badge: data.badge || '/icon-192.png',
     tag: data.tag || 'default',
+    renotify: true,
     vibrate: [200, 100, 200],
     data: {
       url: data.url || '/'
     },
-    actions: data.actions || [],
     requireInteraction: data.requireInteraction || false
   };
 

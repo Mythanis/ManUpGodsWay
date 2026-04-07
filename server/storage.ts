@@ -3500,8 +3500,8 @@ export class DatabaseStorage implements IStorage {
         tag: notification.type,
         url,
       });
-    } catch (error) {
-      // Never let push failure break the notification creation
+    } catch (error: any) {
+      console.error(`[Push] createNotification push error (type=${notification.type}, user=${notification.userId}):`, error?.message ?? error);
     }
 
     return newNotification;
