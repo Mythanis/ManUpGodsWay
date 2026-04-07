@@ -1475,6 +1475,26 @@ export const insertChallengeParticipantSchema = createInsertSchema(challengePart
 export type ChallengeParticipant = typeof challengeParticipants.$inferSelect;
 export type InsertChallengeParticipant = z.infer<typeof insertChallengeParticipantSchema>;
 
+// Challenge Daily Check-ins - tracks each day's check-in for a weekly challenge
+export const challengeDailyCheckins = pgTable("challenge_daily_checkins", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  challengeId: varchar("challenge_id").notNull().references(() => challenges.id, { onDelete: 'cascade' }),
+  dayNumber: integer("day_number").notNull(), // 1-7 (1=Monday, 7=Sunday)
+  checkedInAt: timestamp("checked_in_at").defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.challengeId, table.dayNumber), // One check-in per day per user per challenge
+  index("idx_challenge_checkins_user_challenge").on(table.userId, table.challengeId),
+]);
+
+export const insertChallengeDailyCheckinSchema = createInsertSchema(challengeDailyCheckins).omit({
+  id: true,
+  checkedInAt: true,
+});
+
+export type ChallengeDailyCheckin = typeof challengeDailyCheckins.$inferSelect;
+export type InsertChallengeDailyCheckin = z.infer<typeof insertChallengeDailyCheckinSchema>;
+
 // Events
 export const events = pgTable("events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

@@ -8096,6 +8096,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get user's daily check-ins for a challenge
+  app.get('/api/challenges/:id/checkins', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const challengeId = req.params.id;
+      const checkins = await storage.getDailyChallengeCheckins(userId, challengeId);
+      res.json(checkins);
+    } catch (error) {
+      console.error('Error fetching challenge checkins:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Submit a daily check-in for a challenge
+  app.post('/api/challenges/:id/checkin', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const challengeId = req.params.id;
+      const { dayNumber } = req.body;
+
+      if (!dayNumber || dayNumber < 1 || dayNumber > 7) {
+        return res.status(400).json({ message: 'dayNumber must be between 1 and 7' });
+      }
+
+      const challenge = await storage.getChallenge(challengeId);
+      if (!challenge) return res.status(404).json({ message: 'Challenge not found' });
+
+      // Auto-accept challenge if not yet accepted
+      const hasAccepted = await storage.hasUserAcceptedChallenge(userId, challengeId);
+      if (!hasAccepted) {
+        await storage.acceptChallenge(userId, challengeId);
+        const { rationsService } = await import('./rations-service');
+        await rationsService.awardCustomRations(
+          userId, challenge.rationReward || 25, 'challenge',
+          `Joined challenge: ${challenge.title}`, 'challenge_join', challengeId, 'challenge'
+        );
+      }
+
+      // Check if already checked in for this day
+      const alreadyCheckedIn = await storage.hasDailyCheckin(userId, challengeId, dayNumber);
+      if (alreadyCheckedIn) {
+        return res.status(400).json({ message: 'Already checked in for this day' });
+      }
+
+      const checkin = await storage.addDailyChallengeCheckin(userId, challengeId, dayNumber);
+
+      // Get total checkins to see if all 7 are done
+      const allCheckins = await storage.getDailyChallengeCheckins(userId, challengeId);
+      let completionResult = null;
+
+      if (allCheckins.length >= 7) {
+        // Check if not already completed
+        const participation = await storage.getChallengeParticipation(userId, challengeId);
+        if (!participation?.completedAt) {
+          await storage.completeChallenge(userId, challengeId);
+          const { rationsService } = await import('./rations-service');
+          const completionReward = challenge.completionReward || 200;
+          completionResult = await rationsService.awardCustomRations(
+            userId, completionReward, 'challenge',
+            `Completed 7-day challenge: ${challenge.title}`, 'challenge_complete', challengeId, 'challenge'
+          );
+        }
+      } else {
+        // Award daily check-in rations (30 per day, days 1-6)
+        const { rationsService } = await import('./rations-service');
+        await rationsService.awardCustomRations(
+          userId, 30, 'challenge',
+          `Day ${dayNumber} check-in: ${challenge.title}`, 'challenge_daily', challengeId, 'challenge'
+        );
+      }
+
+      res.json({ checkin, totalCheckins: allCheckins.length, completed: allCheckins.length >= 7, completionResult });
+    } catch (error) {
+      console.error('Error submitting challenge checkin:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Get user's challenge status (accepted, completed, deadline)
   app.get('/api/challenges/:id/user-status', isAuthenticated, async (req: any, res) => {
     try {

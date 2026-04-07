@@ -121,6 +121,8 @@ import {
   challengeParticipants,
   type ChallengeParticipant,
   type InsertChallengeParticipant,
+  challengeDailyCheckins,
+  type ChallengeDailyCheckin,
   type ContentFlag,
   type InsertContentFlag,
   type Testimony,
@@ -483,6 +485,11 @@ export interface IStorage {
   getChallengeParticipation(userId: string, challengeId: string): Promise<ChallengeParticipant | undefined>;
   completeChallenge(userId: string, challengeId: string): Promise<void>;
   getChallenge(id: string): Promise<Challenge | undefined>;
+
+  // Daily challenge check-ins
+  getDailyChallengeCheckins(userId: string, challengeId: string): Promise<ChallengeDailyCheckin[]>;
+  addDailyChallengeCheckin(userId: string, challengeId: string, dayNumber: number): Promise<ChallengeDailyCheckin>;
+  hasDailyCheckin(userId: string, challengeId: string, dayNumber: number): Promise<boolean>;
 
   // Content flagging operations
   flagContent(flagData: InsertContentFlag): Promise<ContentFlag>;
@@ -5424,6 +5431,38 @@ export class DatabaseStorage implements IStorage {
       .where(eq(challenges.id, id));
     
     return challenge;
+  }
+
+  async getDailyChallengeCheckins(userId: string, challengeId: string): Promise<ChallengeDailyCheckin[]> {
+    return await db
+      .select()
+      .from(challengeDailyCheckins)
+      .where(and(
+        eq(challengeDailyCheckins.userId, userId),
+        eq(challengeDailyCheckins.challengeId, challengeId)
+      ))
+      .orderBy(challengeDailyCheckins.dayNumber);
+  }
+
+  async addDailyChallengeCheckin(userId: string, challengeId: string, dayNumber: number): Promise<ChallengeDailyCheckin> {
+    const [checkin] = await db
+      .insert(challengeDailyCheckins)
+      .values({ userId, challengeId, dayNumber })
+      .onConflictDoNothing()
+      .returning();
+    return checkin;
+  }
+
+  async hasDailyCheckin(userId: string, challengeId: string, dayNumber: number): Promise<boolean> {
+    const [row] = await db
+      .select({ id: challengeDailyCheckins.id })
+      .from(challengeDailyCheckins)
+      .where(and(
+        eq(challengeDailyCheckins.userId, userId),
+        eq(challengeDailyCheckins.challengeId, challengeId),
+        eq(challengeDailyCheckins.dayNumber, dayNumber)
+      ));
+    return !!row;
   }
 
   // Get all challenges completed by a user
