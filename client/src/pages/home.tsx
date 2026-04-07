@@ -427,6 +427,18 @@ export default function Home() {
     refetchIntervalInBackground: true,
   });
 
+  // Fetch recent community discussions for live feed
+  const { data: recentDiscussions = [], isLoading: feedLoading } = useQuery<any[]>({
+    queryKey: ["/api/discussions", "home-feed"],
+    queryFn: async () => {
+      const response = await fetch('/api/discussions?sortBy=recent&limit=4', { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch discussions');
+      return response.json();
+    },
+    retry: false,
+    refetchInterval: 60000,
+  });
+
   // Fetch system settings for homepage tagline
   const { data: systemSettings } = useQuery({
     queryKey: ['/api/system-settings'],
@@ -1278,6 +1290,118 @@ export default function Home() {
             </div>
           </Button>
         </div>
+      </div>
+
+      {/* Brotherhood Feed */}
+      <div className="px-6 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+          <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Brotherhood Feed</h2>
+          <div className="flex-1 h-px bg-white/10" />
+          <Link href="/community" className="text-xs font-black text-[#FCD000] uppercase tracking-wide hover:opacity-80">
+            View All
+          </Link>
+        </div>
+
+        {feedLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-black border-2 border-white/10 rounded-sm p-4 animate-pulse">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex-shrink-0" />
+                  <div className="h-3 bg-white/10 rounded w-24" />
+                </div>
+                <div className="h-4 bg-white/10 rounded w-3/4 mb-2" />
+                <div className="h-3 bg-white/10 rounded w-full mb-1" />
+                <div className="h-3 bg-white/10 rounded w-2/3" />
+              </div>
+            ))}
+          </div>
+        ) : recentDiscussions.length === 0 ? (
+          <Link href="/community" className="block">
+            <div className="bg-black border-2 border-dashed border-white/20 rounded-sm p-6 text-center">
+              <MessageSquare className="w-8 h-8 text-[#FCD000] mx-auto mb-2" />
+              <p className="text-sm font-black text-white uppercase tracking-wide mb-1">Start the Conversation</p>
+              <p className="text-xs text-white/50">Be the first brother to post today</p>
+            </div>
+          </Link>
+        ) : (
+          <div className="space-y-3">
+            {recentDiscussions.map((discussion: any) => {
+              const name = [discussion.user?.firstName, discussion.user?.lastName].filter(Boolean).join(' ') || 'A Brother';
+              const initials = name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+              const postedAt = discussion.createdAt ? new Date(discussion.createdAt) : null;
+              const now = Date.now();
+              const diffMs = postedAt ? now - postedAt.getTime() : 0;
+              const diffMins = Math.floor(diffMs / 60000);
+              const timeAgo = diffMins < 1 ? 'just now'
+                : diffMins < 60 ? `${diffMins}m ago`
+                : diffMins < 1440 ? `${Math.floor(diffMins / 60)}h ago`
+                : `${Math.floor(diffMins / 1440)}d ago`;
+              const preview = (discussion.content || '').replace(/<[^>]+>/g, '').slice(0, 120);
+
+              return (
+                <Link
+                  key={discussion.id}
+                  href={`/community?discussion=${discussion.id}`}
+                  className="block"
+                >
+                  <div className="bg-black border-2 border-[#FCD000]/30 rounded-sm p-4 hover:border-[#FCD000] transition-colors shadow-[2px_2px_0px_0px_rgba(252,208,0,0.15)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]">
+                    {/* Author row */}
+                    <div className="flex items-center gap-2 mb-2">
+                      {discussion.user?.profileImageUrl ? (
+                        <img
+                          src={discussion.user.profileImageUrl}
+                          alt={name}
+                          className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-[#FCD000]/40"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-[#FCD000] flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-black text-black">{initials}</span>
+                        </div>
+                      )}
+                      <span className="text-xs font-bold text-white/80 truncate flex-1">{name}</span>
+                      <span className="text-xs text-white/40 flex-shrink-0">{timeAgo}</span>
+                    </div>
+
+                    {/* Title */}
+                    <p className="text-sm font-black text-white leading-snug mb-1 line-clamp-2">{discussion.title}</p>
+
+                    {/* Content preview */}
+                    {preview && (
+                      <p className="text-xs text-white/55 leading-relaxed line-clamp-2 mb-2">{preview}{(discussion.content || '').length > 120 ? '…' : ''}</p>
+                    )}
+
+                    {/* Footer stats */}
+                    <div className="flex items-center gap-4 mt-1">
+                      <span className="flex items-center gap-1 text-xs text-white/40">
+                        <MessageSquare className="w-3 h-3" />
+                        {discussion.replyCount ?? 0} {discussion.replyCount === 1 ? 'reply' : 'replies'}
+                      </span>
+                      {(discussion.likes ?? 0) > 0 && (
+                        <span className="flex items-center gap-1 text-xs text-white/40">
+                          <Heart className="w-3 h-3" />
+                          {discussion.likes}
+                        </span>
+                      )}
+                      {discussion.category && (
+                        <span className="text-xs text-[#FCD000]/60 font-bold uppercase tracking-wide ml-auto">{discussion.category}</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+
+            {/* CTA to post */}
+            <Link href="/community" className="block">
+              <div className="h-12 w-full flex items-center justify-center bg-[#FCD000]/10 border-2 border-dashed border-[#FCD000]/30 rounded-sm hover:border-[#FCD000]/60 transition-colors">
+                <Plus className="w-4 h-4 text-[#FCD000] mr-2" />
+                <span className="text-xs font-black text-[#FCD000] uppercase tracking-wide">Start a Discussion</span>
+              </div>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Recent Activity */}
