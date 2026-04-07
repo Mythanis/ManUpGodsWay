@@ -1085,7 +1085,7 @@ export default function Home() {
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
-            <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Brotherhood Feed</h2>
+            <h2 className="text-xl font-grunge text-white uppercase tracking-wide">Brotherhood Feed</h2>
             <div className="flex-1 h-px bg-white/10" />
             <Link href="/community" className="text-xs font-black text-[#FCD000] uppercase tracking-wide hover:opacity-80">
               View All
@@ -1182,7 +1182,7 @@ export default function Home() {
 
         <div className="flex items-center gap-3 mb-4">
           <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
-          <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Today's Devotional</h2>
+          <h2 className="text-xl font-grunge text-white uppercase tracking-wide">Today's Devotional</h2>
           <div className="flex-1 h-px bg-white/10" />
         </div>
         <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] border-2 border-ministry-gold-exact liquid-black-white mb-6 rounded-sm overflow-hidden" data-testid="card-devotional">
@@ -1246,7 +1246,7 @@ export default function Home() {
       <div className="px-6 mb-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
-          <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Your Journey</h2>
+          <h2 className="text-xl font-grunge text-white uppercase tracking-wide">Your Journey</h2>
           <div className="flex-1 h-px bg-white/10" />
         </div>
         
@@ -1320,7 +1320,7 @@ export default function Home() {
       <div className="px-6 mb-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
-          <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Popular</h2>
+          <h2 className="text-xl font-grunge text-white uppercase tracking-wide">Popular</h2>
           <div className="flex-1 h-px bg-white/10" />
         </div>
         
@@ -1436,7 +1436,7 @@ export default function Home() {
       <div className="px-6 mb-8">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
-          <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Recent Activity</h2>
+          <h2 className="text-xl font-grunge text-white uppercase tracking-wide">Recent Activity</h2>
           <div className="flex-1 h-px bg-white/10" />
         </div>
         
