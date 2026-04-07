@@ -2850,11 +2850,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Admin operations
-  async getAllUsers(limit = 50): Promise<User[]> {
+  async getAllUsers(limit = 10000): Promise<User[]> {
     return await db
       .select()
       .from(users)
-      .orderBy(desc(users.createdAt))
       .limit(limit);
   }
 
