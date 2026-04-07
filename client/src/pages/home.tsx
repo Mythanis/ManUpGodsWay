@@ -1051,6 +1051,7 @@ export default function Home() {
             </Link>
           </div>
 
+          <div className="border-2 border-[#FCD000] rounded-sm p-3">
           {feedLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
@@ -1135,13 +1136,9 @@ export default function Home() {
                 </div>
               );
             })()}
+          </div>
         </div>
 
-        {/* Featured Carousel */}
-        <div className="mb-6">
-          <HomeCarousel />
-        </div>
-        
         <div className="flex items-center gap-3 mb-4">
           <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
           <h2 className="text-base font-black text-white uppercase tracking-[0.18em]">Today's Devotional</h2>
@@ -1194,7 +1191,12 @@ export default function Home() {
             )}
           </CardContent>
         </Card>
-        
+
+        {/* Featured Carousel */}
+        <div className="mb-6">
+          <HomeCarousel />
+        </div>
+
         {/* Brotherhood Requests Section */}
         <BrotherhoodRequests />
       </div>
