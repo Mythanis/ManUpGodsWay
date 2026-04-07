@@ -80,6 +80,7 @@ export default {
         inter: ["Inter", "sans-serif"],
         grunge: ["var(--font-grunge)"],
         bebas: ["'Bebas Neue'", "sans-serif"],
+        coalition: ["'Coalition'", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {
