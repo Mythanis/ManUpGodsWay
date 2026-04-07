@@ -7944,7 +7944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send notifications to all users about the new challenge
       try {
-        const allUsers = await storage.getUsers();
+        const allUsers = await storage.getAllUsers();
         const notificationPromises = allUsers.map(async (targetUser) => {
           if (targetUser.id === user.id) return null; // Skip the admin who posted
           return await storage.createNotificationWithPreferences({
