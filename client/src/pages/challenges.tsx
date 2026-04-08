@@ -113,6 +113,38 @@ export default function Challenges() {
     enabled: !!selectedChallenge?.id && !!user,
   });
 
+  // Daily check-ins for current week challenge
+  const { data: dailyCheckins = [], refetch: refetchCheckins } = useQuery<{ dayNumber: number; checkedInAt: string }[]>({
+    queryKey: ['api', 'challenges', currentWeekChallenge?.id, 'checkins'],
+    queryFn: async () => {
+      const res = await fetch(`/api/challenges/${currentWeekChallenge?.id}/checkins`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!currentWeekChallenge?.id && !!user,
+    refetchInterval: 5000,
+  });
+
+  const checkinMutation = useMutation({
+    mutationFn: async ({ challengeId, dayNumber }: { challengeId: string; dayNumber: number }) => {
+      return apiRequest('POST', `/api/challenges/${challengeId}/checkin`, { dayNumber });
+    },
+    onSuccess: (data: any) => {
+      refetchCheckins();
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', currentWeekChallenge?.id, 'participant-count'] });
+      queryClient.invalidateQueries({ queryKey: ['api', 'challenges', currentWeekChallenge?.id, 'user-accepted'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/rations'] });
+      if (data?.completed) {
+        toast({ title: "Challenge Complete! 🏆", description: "All 7 days finished! Rations earned, soldier!" });
+      } else {
+        toast({ title: `Day ${data?.checkin?.dayNumber} Checked In!`, description: "+30 Rations earned. Keep pushing!" });
+      }
+    },
+    onError: (error: any) => {
+      toast({ title: "Already checked in", description: error.message || "You've already checked in for this day.", variant: "destructive" });
+    },
+  });
+
   // Accept challenge mutation
   const acceptChallengeMutation = useMutation({
     mutationFn: async (challengeId: string) => {
@@ -313,92 +345,58 @@ export default function Challenges() {
                 )}
               </div>
 
-            {/* Accept Challenge Section - Only for current week */}
-            {isCurrentWeek && (
-              <div className="mt-3 pt-3 border-t border-ministry-gold-exact/30">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                  <div className="flex items-center space-x-2">
-                    <Users className="w-4 h-4 text-ministry-gold-exact flex-shrink-0" />
-                    <span className="text-xs text-white font-bold">
-                      {participantCount?.count || 0} accepted
-                    </span>
+            {/* 7-Day Check-in Grid - Only for current week */}
+            {isCurrentWeek && user && (() => {
+              const releaseDate = new Date(challenge.releaseDate);
+              const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+              const checkedDays = new Set((dailyCheckins || []).map((c: any) => c.dayNumber));
+              const totalChecked = checkedDays.size;
+              const isAllDone = userAccepted?.hasCompleted || totalChecked >= 7;
+              const msPerDay = 24 * 60 * 60 * 1000;
+              const todayDayNum = Math.min(7, Math.max(1, Math.floor((Date.now() - releaseDate.getTime()) / msPerDay) + 1));
+
+              return (
+                <div className="mt-3 pt-3 border-t border-ministry-gold-exact/30" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-black text-white uppercase tracking-widest">Daily Check-in</span>
+                    <span className="text-xs font-bold text-ministry-gold-exact">{totalChecked}/7</span>
                   </div>
-                  {user ? (
-                    <div className="flex items-center gap-2">
-                      {!userAccepted?.hasAccepted ? (
-                        <Button
-                          size="sm"
-                          className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-ministry-gold-exact text-xs px-3 py-1 h-auto"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            acceptChallengeMutation.mutate(challenge.id);
-                          }}
-                          disabled={acceptChallengeMutation.isPending}
-                          data-testid="button-accept-challenge"
+                  <div className="h-1.5 bg-white/10 rounded-full mb-3 overflow-hidden">
+                    <div className="h-full bg-ministry-gold-exact rounded-full transition-all duration-500" style={{ width: `${(totalChecked / 7) * 100}%` }} />
+                  </div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {dayLabels.map((label, i) => {
+                      const dayNum = i + 1;
+                      const isChecked = checkedDays.has(dayNum);
+                      const isFuture = dayNum > todayDayNum;
+                      return (
+                        <button
+                          key={dayNum}
+                          disabled={isChecked || isFuture || isAllDone || checkinMutation.isPending}
+                          onClick={() => checkinMutation.mutate({ challengeId: challenge.id, dayNumber: dayNum })}
+                          className={`flex flex-col items-center justify-center rounded-sm py-1.5 transition-all border ${
+                            isChecked ? 'bg-ministry-gold-exact border-ministry-gold-exact text-black'
+                            : isFuture ? 'bg-white/5 border-white/10 text-white/30 cursor-not-allowed'
+                            : 'bg-black border-white/20 text-white hover:border-ministry-gold-exact active:scale-95 cursor-pointer'
+                          }`}
                         >
-                          {acceptChallengeMutation.isPending ? "..." : "Accept"}
-                        </Button>
-                      ) : userAccepted?.hasCompleted ? (
-                        <Button
-                          size="sm"
-                          className="bg-ministry-gold-exact text-black font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-ministry-gold-exact cursor-not-allowed opacity-90 text-xs px-3 py-1 h-auto"
-                          disabled
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          DONE
-                        </Button>
-                      ) : userAccepted?.hasRegrouped ? (
-                        <Button
-                          size="sm"
-                          className="bg-gray-600 text-white font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-gray-500 cursor-not-allowed opacity-90 text-xs px-3 py-1 h-auto"
-                          disabled
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          REGROUPED
-                        </Button>
-                      ) : (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-ministry-gold-exact text-xs px-3 py-1 h-auto"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              completeChallengeMutation.mutate(challenge.id);
-                            }}
-                            disabled={completeChallengeMutation.isPending}
-                            data-testid="button-complete-challenge"
-                          >
-                            {completeChallengeMutation.isPending ? "..." : "Complete"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="bg-gray-700 hover:bg-gray-600 text-white font-black whitespace-nowrap rounded-sm uppercase tracking-wide border border-gray-500 text-xs px-3 py-1 h-auto"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              regroupChallengeMutation.mutate(challenge.id);
-                            }}
-                            disabled={regroupChallengeMutation.isPending}
-                            data-testid="button-regroup-challenge"
-                          >
-                            {regroupChallengeMutation.isPending ? "..." : "Regroup"}
-                          </Button>
-                        </div>
-                      )}
+                          <span className="text-[9px] font-bold uppercase leading-none">{label}</span>
+                          <span className="text-xs font-black mt-0.5">{isChecked ? '✓' : dayNum}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {isAllDone && (
+                    <div className="mt-2 bg-ministry-gold-exact rounded-sm p-2 text-center">
+                      <p className="text-black font-black text-xs uppercase tracking-wide">🏆 Complete! Rations Earned!</p>
                     </div>
-                  ) : (
-                    <Button
-                      size="sm"
-                      className="bg-white/10 text-white/50 rounded-sm text-xs px-3 py-1 h-auto"
-                      disabled
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Login
-                    </Button>
+                  )}
+                  {!isAllDone && (
+                    <p className="text-[10px] text-white/40 text-center mt-2">+30 rations/day · tap today to check in</p>
                   )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       </CardContent>
@@ -588,78 +586,69 @@ export default function Challenges() {
                 </p>
               </div>
 
-              {/* Participant Count Banner */}
-              <div className="bg-[#FCD000] text-black border-2 border-black rounded-sm p-4 overflow-hidden">
-                <div className="flex items-center justify-between flex-wrap gap-3 relative z-10">
+              {/* 7-Day Check-in Grid for current week / participant count for past challenges */}
+              {isSelectedCurrentWeek && user ? (() => {
+                const releaseDate = new Date(selectedChallenge.releaseDate);
+                const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                const checkedDays = new Set((dailyCheckins || []).map((c: any) => c.dayNumber));
+                const totalChecked = checkedDays.size;
+                const isAllDone = selectedUserAccepted?.hasCompleted || totalChecked >= 7;
+                const msPerDay = 24 * 60 * 60 * 1000;
+                const todayDayNum = Math.min(7, Math.max(1, Math.floor((Date.now() - releaseDate.getTime()) / msPerDay) + 1));
+                return (
+                  <div className="bg-black border-2 border-ministry-gold-exact rounded-sm p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-black text-white uppercase tracking-widest">Daily Check-in</span>
+                      <span className="text-xs font-bold text-ministry-gold-exact">{totalChecked}/7 Days</span>
+                    </div>
+                    <div className="h-2 bg-white/10 rounded-full mb-3 overflow-hidden">
+                      <div className="h-full bg-ministry-gold-exact rounded-full transition-all duration-500" style={{ width: `${(totalChecked / 7) * 100}%` }} />
+                    </div>
+                    <div className="grid grid-cols-7 gap-1.5">
+                      {dayLabels.map((label, i) => {
+                        const dayNum = i + 1;
+                        const isChecked = checkedDays.has(dayNum);
+                        const isFuture = dayNum > todayDayNum;
+                        return (
+                          <button
+                            key={dayNum}
+                            disabled={isChecked || isFuture || isAllDone || checkinMutation.isPending}
+                            onClick={() => checkinMutation.mutate({ challengeId: selectedChallenge.id, dayNumber: dayNum })}
+                            className={`flex flex-col items-center justify-center rounded-sm py-2 transition-all border-2 ${
+                              isChecked ? 'bg-ministry-gold-exact border-ministry-gold-exact text-black'
+                              : isFuture ? 'bg-white/5 border-white/10 text-white/30 cursor-not-allowed'
+                              : 'bg-black border-white/20 text-white hover:border-ministry-gold-exact active:scale-95 cursor-pointer'
+                            }`}
+                          >
+                            <span className="text-[10px] font-bold uppercase">{label}</span>
+                            <span className="text-sm font-black mt-0.5">{isChecked ? '✓' : dayNum}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {isAllDone ? (
+                      <div className="mt-3 bg-ministry-gold-exact rounded-sm p-2 text-center">
+                        <p className="text-black font-black text-xs uppercase tracking-wide">🏆 Complete! Rations Earned!</p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-white/40 text-center mt-3">+30 rations per day · +{(selectedChallenge as any).completionReward || 200} rations when complete</p>
+                    )}
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
+                      <Users className="w-4 h-4 text-ministry-gold-exact" />
+                      <span className="text-xs text-white/60">{selectedParticipantCount?.count || 0} brothers in this challenge</span>
+                    </div>
+                  </div>
+                );
+              })() : (
+                <div className="bg-[#FCD000] text-black border-2 border-black rounded-sm p-4">
                   <div className="flex items-center space-x-2">
                     <Users className="w-5 h-5 text-black" />
                     <span className="text-sm font-black text-black uppercase tracking-wide">
                       {selectedParticipantCount?.count || 0} {(selectedParticipantCount?.count || 0) === 1 ? 'brother has' : 'brothers have'} taken this challenge
                     </span>
                   </div>
-                  {user ? (
-                    <div className="flex items-center gap-2">
-                      {!selectedUserAccepted?.hasAccepted ? (
-                        <Button 
-                          size="sm"
-                          className="bg-black hover:bg-black/90 text-ministry-gold-exact font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-                          onClick={() => acceptChallengeMutation.mutate(selectedChallenge.id)}
-                          disabled={acceptChallengeMutation.isPending}
-                          data-testid="button-accept-challenge-dialog"
-                        >
-                          {acceptChallengeMutation.isPending ? "..." : "Accept"}
-                        </Button>
-                      ) : selectedUserAccepted?.hasCompleted ? (
-                        <Button
-                          size="sm"
-                          className="bg-ministry-gold-exact text-black font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
-                          disabled
-                        >
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          COMPLETED
-                        </Button>
-                      ) : selectedUserAccepted?.hasRegrouped ? (
-                        <Button
-                          size="sm"
-                          className="bg-gray-600 text-white font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed opacity-90"
-                          disabled
-                        >
-                          REGROUPED
-                        </Button>
-                      ) : (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            className="bg-ministry-gold-exact hover:bg-ministry-gold-exact/90 text-black font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-                            onClick={() => completeChallengeMutation.mutate(selectedChallenge.id)}
-                            disabled={completeChallengeMutation.isPending}
-                            data-testid="button-complete-challenge-dialog"
-                          >
-                            {completeChallengeMutation.isPending ? "..." : "Complete"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="bg-gray-700 hover:bg-gray-600 text-white font-black whitespace-nowrap rounded-sm uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-                            onClick={() => regroupChallengeMutation.mutate(selectedChallenge.id)}
-                            disabled={regroupChallengeMutation.isPending}
-                            data-testid="button-regroup-challenge-dialog"
-                          >
-                            {regroupChallengeMutation.isPending ? "..." : "Regroup"}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <Button
-                      size="sm"
-                      className="bg-black/50 text-white/50 rounded-sm"
-                      disabled
-                    >
-                      Login to Accept
-                    </Button>
-                  )}
                 </div>
-              </div>
+              )}
 
               {/* Close Button */}
               <div className="flex justify-end pt-2">
