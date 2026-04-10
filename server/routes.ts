@@ -5463,7 +5463,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Force-complete a study for a user, unlocking the next one (admin)
+  // Unlock Day 1 of a study by completing the previous study in the series (admin).
+  // Only the previous study is marked complete — the target study is left untouched so
+  // the user starts on Day 1 and continues on the normal drip schedule.
   app.post('/api/admin/users/:id/unlock-study/:studyId', isAuthenticated, async (req: any, res) => {
     try {
       const adminUser = await storage.getUser(req.user.claims.sub);
@@ -5471,23 +5473,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
       const targetUserId = req.params.id;
-      const studyId = req.params.studyId;
+      const studyId = req.params.studyId; // the study to OPEN (e.g., Week 2)
 
-      const lessons = await db.select().from(schema.studyLessons)
-        .where(eq(schema.studyLessons.studyId, studyId));
+      // Find the study and its series
+      const [study] = await db.select().from(schema.studies).where(eq(schema.studies.id, studyId));
+      if (!study || !study.seriesId) {
+        return res.status(400).json({ message: "Study is not part of a series" });
+      }
 
-      // Set completedAt to 48 hours ago so drip timers are already cleared
+      // Get all published studies in the series ordered by position
+      const seriesStudies = await db.select().from(schema.studies)
+        .where(and(eq(schema.studies.seriesId, study.seriesId), eq(schema.studies.isPublished, true)))
+        .orderBy(asc(schema.studies.seriesOrder), asc(schema.studies.createdAt));
+
+      const studyIndex = seriesStudies.findIndex(s => s.id === studyId);
+      if (studyIndex <= 0) {
+        return res.status(400).json({ message: "This is the first study — no previous study to complete" });
+      }
+
+      // Mark the PREVIOUS study as complete (48hrs ago so drip timers are already cleared)
+      const previousStudy = seriesStudies[studyIndex - 1];
       const completedAt = new Date(Date.now() - 48 * 60 * 60 * 1000);
 
-      if (lessons.length > 0) {
-        for (const lesson of lessons) {
+      const prevLessons = await db.select().from(schema.studyLessons)
+        .where(eq(schema.studyLessons.studyId, previousStudy.id));
+
+      if (prevLessons.length > 0) {
+        for (const lesson of prevLessons) {
           await db.insert(schema.userLessonProgress)
-            .values({
-              userId: targetUserId,
-              lessonId: lesson.id,
-              isCompleted: true,
-              completedAt,
-            })
+            .values({ userId: targetUserId, lessonId: lesson.id, isCompleted: true, completedAt })
             .onConflictDoUpdate({
               target: [schema.userLessonProgress.userId, schema.userLessonProgress.lessonId],
               set: { isCompleted: true, completedAt, updatedAt: new Date() },
@@ -5495,21 +5509,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Also mark study-level progress as complete
+      // Mark previous study-level progress as complete
       await db.insert(schema.userProgress)
-        .values({
-          userId: targetUserId,
-          studyId,
-          status: 'completed',
-          completedAt,
-          lastAccessedAt: completedAt,
-        })
+        .values({ userId: targetUserId, studyId: previousStudy.id, status: 'completed', completedAt, lastAccessedAt: completedAt })
         .onConflictDoUpdate({
           target: [schema.userProgress.userId, schema.userProgress.studyId],
           set: { status: 'completed', completedAt, lastAccessedAt: completedAt },
         });
 
-      res.json({ success: true, lessonsCompleted: lessons.length });
+      // The target study (studyId) is intentionally left untouched —
+      // Day 1 is now accessible and the drip schedule takes it from there.
+      res.json({ success: true, unlockedStudyTitle: study.title, previousStudyTitle: previousStudy.title });
     } catch (error) {
       console.error("Error unlocking study:", error);
       res.status(500).json({ message: "Failed to unlock study" });
