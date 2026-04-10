@@ -17,7 +17,7 @@ import { warGroupsService } from "./warGroupsService";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
 import * as schema from "@shared/schema";
-import { eq, and, sql, desc, asc, gt, gte, ne, count, or, isNull } from "drizzle-orm";
+import { eq, and, sql, desc, asc, gt, gte, ne, count, or, isNull, inArray } from "drizzle-orm";
 import { 
   insertStudySchema, 
   insertStudySeriesSchema,
@@ -5397,6 +5397,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating fitness access:", error);
       res.status(500).json({ message: "Failed to update fitness access" });
+    }
+  });
+
+  // Get study progress overview for a user (admin)
+  app.get('/api/admin/users/:id/study-progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const adminUser = await storage.getUser(req.user.claims.sub);
+      if (!adminUser || !isAdmin(adminUser)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const targetUserId = req.params.id;
+
+      // Fetch all series
+      const allSeries = await db.select().from(schema.studySeries).orderBy(asc(schema.studySeries.createdAt));
+
+      const result = await Promise.all(allSeries.map(async (series) => {
+        const seriesStudies = await db.select().from(schema.studies)
+          .where(and(eq(schema.studies.seriesId, series.id), eq(schema.studies.isPublished, true)))
+          .orderBy(asc(schema.studies.seriesOrder), asc(schema.studies.createdAt));
+
+        const studiesWithProgress = await Promise.all(seriesStudies.map(async (study) => {
+          const lessons = await db.select().from(schema.studyLessons)
+            .where(eq(schema.studyLessons.studyId, study.id))
+            .orderBy(asc(schema.studyLessons.displayOrder), asc(schema.studyLessons.dayNumber));
+
+          let completedLessons = 0;
+          let isStudyComplete = false;
+
+          if (lessons.length === 0) {
+            const [prog] = await db.select().from(schema.userProgress)
+              .where(and(eq(schema.userProgress.userId, targetUserId), eq(schema.userProgress.studyId, study.id)));
+            isStudyComplete = !!prog?.completedAt;
+          } else {
+            const lessonIds = lessons.map(l => l.id);
+            const lessonProgress = lessonIds.length > 0
+              ? await db.select().from(schema.userLessonProgress)
+                  .where(and(
+                    eq(schema.userLessonProgress.userId, targetUserId),
+                    inArray(schema.userLessonProgress.lessonId, lessonIds)
+                  ))
+              : [];
+            completedLessons = lessonProgress.filter(lp => !!lp.completedAt).length;
+            isStudyComplete = completedLessons >= lessons.length && lessons.length > 0;
+          }
+
+          return {
+            id: study.id,
+            title: study.title,
+            seriesOrder: study.seriesOrder,
+            totalLessons: lessons.length,
+            completedLessons,
+            isComplete: isStudyComplete,
+          };
+        }));
+
+        return { id: series.id, title: series.title, studies: studiesWithProgress };
+      }));
+
+      // Filter to only series that have studies
+      res.json(result.filter(s => s.studies.length > 0));
+    } catch (error) {
+      console.error("Error fetching user study progress:", error);
+      res.status(500).json({ message: "Failed to fetch study progress" });
+    }
+  });
+
+  // Force-complete a study for a user, unlocking the next one (admin)
+  app.post('/api/admin/users/:id/unlock-study/:studyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const adminUser = await storage.getUser(req.user.claims.sub);
+      if (!adminUser || !isAdmin(adminUser)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const targetUserId = req.params.id;
+      const studyId = req.params.studyId;
+
+      const lessons = await db.select().from(schema.studyLessons)
+        .where(eq(schema.studyLessons.studyId, studyId));
+
+      // Set completedAt to 48 hours ago so drip timers are already cleared
+      const completedAt = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+      if (lessons.length > 0) {
+        for (const lesson of lessons) {
+          await db.insert(schema.userLessonProgress)
+            .values({
+              userId: targetUserId,
+              lessonId: lesson.id,
+              isCompleted: true,
+              completedAt,
+            })
+            .onConflictDoUpdate({
+              target: [schema.userLessonProgress.userId, schema.userLessonProgress.lessonId],
+              set: { isCompleted: true, completedAt, updatedAt: new Date() },
+            });
+        }
+      }
+
+      // Also mark study-level progress as complete
+      await db.insert(schema.userProgress)
+        .values({
+          userId: targetUserId,
+          studyId,
+          status: 'completed',
+          completedAt,
+          lastAccessedAt: completedAt,
+        })
+        .onConflictDoUpdate({
+          target: [schema.userProgress.userId, schema.userProgress.studyId],
+          set: { status: 'completed', completedAt, lastAccessedAt: completedAt },
+        });
+
+      res.json({ success: true, lessonsCompleted: lessons.length });
+    } catch (error) {
+      console.error("Error unlocking study:", error);
+      res.status(500).json({ message: "Failed to unlock study" });
     }
   });
 

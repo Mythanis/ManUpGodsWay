@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X, Bell, BellOff, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
+import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X, Bell, BellOff, ChevronLeft, ChevronRight, ArrowUpDown, BookOpen, CheckCircle, Circle, Unlock, ChevronDown } from "lucide-react";
 
 const PAGE_SIZE = 100;
 
@@ -55,6 +55,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [showBanDialog, setShowBanDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showStudyProgress, setShowStudyProgress] = useState(false);
   const [banReason, setBanReason] = useState('');
   const [editedUser, setEditedUser] = useState<Partial<User>>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -262,6 +263,29 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
   });
 
 
+  const { data: studyProgress, isLoading: studyProgressLoading, refetch: refetchStudyProgress } = useQuery<{ id: string; title: string; studies: { id: string; title: string; seriesOrder: number | null; totalLessons: number; completedLessons: number; isComplete: boolean }[] }[]>({
+    queryKey: ["/api/admin/users", selectedUser?.id, "study-progress"],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/users/${selectedUser!.id}/study-progress`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch study progress');
+      return res.json();
+    },
+    enabled: showStudyProgress && !!selectedUser,
+  });
+
+  const unlockStudy = useMutation({
+    mutationFn: async ({ userId, studyId }: { userId: string; studyId: string }) => {
+      return await apiRequest('POST', `/api/admin/users/${userId}/unlock-study/${studyId}`);
+    },
+    onSuccess: () => {
+      refetchStudyProgress();
+      toast({ title: "Study Unlocked", description: "All lessons marked complete. The next week is now accessible." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to unlock study.", variant: "destructive" });
+    },
+  });
+
   const handleSaveChanges = async () => {
     if (!selectedUser || !hasUnsavedChanges) return;
 
@@ -445,6 +469,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                       setSelectedUser(user);
                       setEditedUser({});
                       setHasUnsavedChanges(false);
+                      setShowStudyProgress(false);
                       setShowUserDialog(true);
                     }}
                     className="bg-[#FCD000] text-black border-2 border-black font-black uppercase text-xs rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
@@ -660,6 +685,68 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                         {linkStripeSubscription.isPending ? "Linking…" : "Link"}
                       </Button>
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Study Progress ── */}
+              <div className="border rounded-lg overflow-hidden">
+                <button
+                  className="w-full flex items-center justify-between p-3 text-left hover:bg-muted/30 transition-colors"
+                  onClick={() => setShowStudyProgress(prev => !prev)}
+                >
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                    <BookOpen className="w-3 h-3 text-ministry-gold" /> Study Progress
+                  </p>
+                  <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${showStudyProgress ? 'rotate-180' : ''}`} />
+                </button>
+                {showStudyProgress && (
+                  <div className="border-t p-3 space-y-3">
+                    {studyProgressLoading ? (
+                      <div className="flex items-center gap-2 py-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-ministry-navy" />
+                        <span className="text-xs text-muted-foreground">Loading progress…</span>
+                      </div>
+                    ) : !studyProgress || studyProgress.length === 0 ? (
+                      <p className="text-xs text-muted-foreground py-1">No series studies found.</p>
+                    ) : (
+                      studyProgress.map((series) => (
+                        <div key={series.id}>
+                          <p className="text-xs font-bold text-foreground mb-1.5">{series.title}</p>
+                          <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                            {series.studies.map((study, idx) => (
+                              <div key={study.id} className="flex items-center justify-between gap-2 py-1 border-b border-muted/30 last:border-0">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  {study.isComplete
+                                    ? <CheckCircle className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                                    : <Circle className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                                  }
+                                  <span className="text-xs text-foreground truncate">
+                                    {idx + 1}. {study.title}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                    {study.totalLessons > 0 ? `${study.completedLessons}/${study.totalLessons}` : study.isComplete ? 'Done' : 'Not started'}
+                                  </span>
+                                  {!study.isComplete && (
+                                    <Button
+                                      size="sm"
+                                      className="h-6 text-[10px] px-2 bg-ministry-gold hover:bg-yellow-500 text-black font-bold"
+                                      disabled={unlockStudy.isPending}
+                                      onClick={() => unlockStudy.mutate({ userId: selectedUser.id, studyId: study.id })}
+                                    >
+                                      <Unlock className="w-2.5 h-2.5 mr-1" />
+                                      Unlock
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
