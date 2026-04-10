@@ -6710,7 +6710,8 @@ export class DatabaseStorage implements IStorage {
         .where(and(
           eq(hurdleWallPrayers.postId, postId),
           eq(hurdleWallPrayers.userId, userId)
-        ));
+        ))
+        .returning({ postId: hurdleWallPrayers.postId });
       
       if (deletedRows.length === 0) {
         return { success: false, prayerCount: 0 };
@@ -6763,7 +6764,8 @@ export class DatabaseStorage implements IStorage {
     try {
       const deleted = await db
         .delete(hurdleWallPraises)
-        .where(and(eq(hurdleWallPraises.postId, postId), eq(hurdleWallPraises.userId, userId)));
+        .where(and(eq(hurdleWallPraises.postId, postId), eq(hurdleWallPraises.userId, userId)))
+        .returning({ postId: hurdleWallPraises.postId });
       if (deleted.length === 0) return false;
       // Cascade: clear all amens for this post and reset amenCount to 0
       await db.delete(hurdleWallAmens).where(eq(hurdleWallAmens.postId, postId));
@@ -6794,7 +6796,7 @@ export class DatabaseStorage implements IStorage {
 
   async removeAmenFromPost(postId: string, userId: string): Promise<{ success: boolean; amenCount: number }> {
     try {
-      const deleted = await db.delete(hurdleWallAmens).where(and(eq(hurdleWallAmens.postId, postId), eq(hurdleWallAmens.userId, userId)));
+      const deleted = await db.delete(hurdleWallAmens).where(and(eq(hurdleWallAmens.postId, postId), eq(hurdleWallAmens.userId, userId))).returning({ postId: hurdleWallAmens.postId });
       if (deleted.length === 0) return { success: false, amenCount: 0 };
       const [updated] = await db
         .update(hurdleWallPosts)
