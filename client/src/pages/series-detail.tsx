@@ -130,6 +130,13 @@ export default function SeriesDetail() {
     return studies[index - 1]?.title || null;
   };
 
+  const getPreviousStudyProgress = (index: number): { completed: number; total: number } | null => {
+    if (index <= 0) return null;
+    const prev = studies[index - 1];
+    if (!prev) return null;
+    return { completed: prev.completedLessons ?? 0, total: prev.totalLessons ?? 0 };
+  };
+
   const formatUnlockDate = (dateStr: string | null | undefined): string => {
     if (!dateStr) return '';
     const unlockDate = new Date(dateStr);
@@ -300,6 +307,7 @@ export default function SeriesDetail() {
             const hasAccess = canAccessStudy(study);
             const isConsecutiveLocked = isLockedByConsecutive(study);
             const previousTitle = getPreviousStudyTitle(studyIndex);
+            const prevProgress = getPreviousStudyProgress(studyIndex);
             const studyProgress = study.totalLessons > 0
               ? Math.round((study.completedLessons / study.totalLessons) * 100)
               : 0;
@@ -402,15 +410,30 @@ export default function SeriesDetail() {
 
                 {/* Lock reason pill */}
                 {isConsecutiveLocked && (
-                  <div className="mb-2 ml-1 flex items-center gap-1.5 text-[11px] text-zinc-500 font-medium">
-                    <Lock className="w-3 h-3" />
-                    {study.isScheduledFuture && study.unlocksAt
-                      ? `Coming ${formatUnlockDate(study.unlocksAt)}`
-                      : study.isLockedByDrip && study.unlocksAt
-                        ? `Unlocks ${formatUnlockDate(study.unlocksAt)}`
-                        : previousTitle
-                          ? `Complete "${previousTitle.replace(/^Week\s+\d+[-–—:]\s*/i, '')}" first`
-                          : 'Start the series to begin'}
+                  <div className="mb-2 ml-1 space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 font-medium">
+                      <Lock className="w-3 h-3" />
+                      {study.isScheduledFuture && study.unlocksAt
+                        ? `Coming ${formatUnlockDate(study.unlocksAt)}`
+                        : study.isLockedByDrip && study.unlocksAt
+                          ? `Unlocks ${formatUnlockDate(study.unlocksAt)}`
+                          : previousTitle
+                            ? prevProgress && prevProgress.total > 0 && prevProgress.completed > 0
+                              ? `${prevProgress.total - prevProgress.completed} lesson${prevProgress.total - prevProgress.completed !== 1 ? 's' : ''} remaining in "${previousTitle.replace(/^Week\s+\d+[-–—:]\s*/i, '')}" to unlock`
+                              : `Complete "${previousTitle.replace(/^Week\s+\d+[-–—:]\s*/i, '')}" to unlock`
+                            : 'Start the series to begin'}
+                    </div>
+                    {prevProgress && prevProgress.total > 0 && prevProgress.completed > 0 && (
+                      <div className="flex items-center gap-2 ml-4">
+                        <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden max-w-[120px]">
+                          <div
+                            className="h-full bg-[#FCD000]/60 rounded-full transition-all"
+                            style={{ width: `${Math.round((prevProgress.completed / prevProgress.total) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-zinc-600 font-bold">{prevProgress.completed}/{prevProgress.total}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
