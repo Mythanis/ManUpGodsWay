@@ -1959,7 +1959,7 @@ export default function Fitness() {
 
         {/* Tab Navigation */}
         <Tabs defaultValue="workout" className="w-full">
-          <TabsList className="grid grid-cols-4 w-full h-auto p-0 bg-transparent gap-2">
+          <TabsList className="grid grid-cols-4 w-full h-auto p-2 bg-transparent gap-2 border-2 border-[#FCD000] rounded-sm">
             <TabsTrigger value="workout" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Dumbbell className="w-5 h-5" />
               Workout
