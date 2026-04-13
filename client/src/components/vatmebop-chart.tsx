@@ -25,10 +25,17 @@ function getCurrentWeek(): number {
   return Math.min(Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7), 52);
 }
 
-function cellStyle(state: number): string {
-  if (state === 2) return "bg-green-500 border-green-400";
-  if (state === 1) return "bg-amber-400 border-amber-300";
-  return "bg-zinc-800 border-zinc-700";
+function cellBorderClass(state: number): string {
+  if (state === 2) return "border-green-400";
+  if (state === 1) return "border-amber-300";
+  return "border-zinc-700";
+}
+
+// Inline style for the cell background — state 1 is half-filled (bottom half amber, top half dark)
+function cellBg(state: number): { background: string } {
+  if (state === 2) return { background: "#22c55e" }; // green-500
+  if (state === 1) return { background: "linear-gradient(to top, #fbbf24 50%, #27272a 50%)" }; // half amber
+  return { background: "#27272a" }; // zinc-800
 }
 
 interface WeekRow {
@@ -115,11 +122,12 @@ export function VatmebopChart() {
         <div className="flex-1 h-px bg-white/10" />
       </div>
 
-      {/* Year selector */}
+      {/* Year selector — current year ±1 */}
       <div className="flex items-center justify-center gap-3 mb-4">
         <button
           onClick={() => setYear((y) => y - 1)}
-          className="w-8 h-8 flex items-center justify-center rounded-sm bg-zinc-800 border border-zinc-700 text-white/70 hover:text-white hover:bg-zinc-700 transition-colors"
+          disabled={year <= new Date().getFullYear() - 1}
+          className="w-8 h-8 flex items-center justify-center rounded-sm bg-zinc-800 border border-zinc-700 text-white/70 hover:text-white hover:bg-zinc-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           aria-label="Previous year"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -127,7 +135,8 @@ export function VatmebopChart() {
         <span className="text-sm font-black text-white tracking-wide">{year}</span>
         <button
           onClick={() => setYear((y) => y + 1)}
-          className="w-8 h-8 flex items-center justify-center rounded-sm bg-zinc-800 border border-zinc-700 text-white/70 hover:text-white hover:bg-zinc-700 transition-colors"
+          disabled={year >= new Date().getFullYear() + 1}
+          className="w-8 h-8 flex items-center justify-center rounded-sm bg-zinc-800 border border-zinc-700 text-white/70 hover:text-white hover:bg-zinc-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           aria-label="Next year"
         >
           <ChevronRight className="w-4 h-4" />
@@ -197,17 +206,12 @@ export function VatmebopChart() {
                         <td key={key} className="text-center py-1">
                           <button
                             onClick={() => handleCellClick(week, key)}
-                            className={`w-7 h-7 rounded-sm border transition-all active:scale-90 mx-auto block ${cellStyle(state)} ${
+                            style={cellBg(state)}
+                            className={`w-7 h-7 rounded-sm border transition-all active:scale-90 mx-auto block ${cellBorderClass(state)} ${
                               isCurrentWeek ? "ring-1 ring-ministry-gold-exact/50" : ""
                             }`}
                             title={`Week ${week} – ${DISCIPLINES.find(d => d.key === key)?.name} (${state === 0 ? "blank" : state === 1 ? "repented" : "accomplished"})`}
-                          >
-                            {state === 1 && (
-                              <span className="block w-full h-full relative overflow-hidden">
-                                <span className="absolute inset-0 bg-amber-400" style={{ clipPath: "polygon(0 100%, 100% 0, 100% 100%)" }} />
-                              </span>
-                            )}
-                          </button>
+                          />
                         </td>
                       );
                     })}
@@ -221,15 +225,15 @@ export function VatmebopChart() {
         {/* Legend */}
         <div className="flex items-center justify-center gap-4 py-3 border-t border-zinc-800 bg-zinc-950">
           <span className="flex items-center gap-1.5 text-xs font-bold text-white/50 uppercase tracking-wide">
-            <span className="w-4 h-4 rounded-sm inline-block bg-zinc-800 border border-zinc-700" />
+            <span className="w-4 h-4 rounded-sm inline-block border border-zinc-700" style={{ background: "#27272a" }} />
             Blank
           </span>
           <span className="flex items-center gap-1.5 text-xs font-bold text-white/50 uppercase tracking-wide">
-            <span className="w-4 h-4 rounded-sm inline-block bg-amber-400 border border-amber-300" />
+            <span className="w-4 h-4 rounded-sm inline-block border border-amber-300" style={{ background: "linear-gradient(to top, #fbbf24 50%, #27272a 50%)" }} />
             Repented
           </span>
           <span className="flex items-center gap-1.5 text-xs font-bold text-white/50 uppercase tracking-wide">
-            <span className="w-4 h-4 rounded-sm inline-block bg-green-500 border border-green-400" />
+            <span className="w-4 h-4 rounded-sm inline-block border border-green-400" style={{ background: "#22c55e" }} />
             Accomplished
           </span>
         </div>
