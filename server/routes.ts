@@ -85,9 +85,18 @@ function hasOwnerPrivileges(user: any): boolean {
 }
 
 /**
- * Returns the UTC time that corresponds to midnight at the start of the *next*
- * calendar day in `timezone`, measured from `completedAt`.
- * Falls back to a 24-hour rolling window when the timezone string is invalid.
+ * Returns the UTC instant that represents midnight at the start of the next
+ * calendar day (in `timezone`) after `completedAt`, as seen from the current
+ * server time.
+ *
+ * This is NOT a pure / deterministic function of `completedAt` alone — it
+ * also reads `new Date()` internally to decide whether "next midnight" has
+ * already passed.  When it has, it returns `new Date(0)` (epoch) so callers
+ * can use a simple `now < result` check without a separate "already unlocked"
+ * branch.
+ *
+ * Call sites: lesson-list lock display and lesson-completion submission gate.
+ * Falls back to a 24-hour rolling window from `completedAt` on invalid TZ.
  */
 function getNextMidnightInTimezone(completedAt: Date, timezone: string): Date {
   try {
