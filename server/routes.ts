@@ -15012,6 +15012,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── VATMEBOP Accountability Chart ───────────────────────────────────────────
+
+  // GET /api/vatmebop?year=2026 — fetch all checks for the authenticated user for the given year
+  app.get('/api/vatmebop', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const year = parseInt(req.query.year as string) || new Date().getFullYear();
+      const checks = await storage.getVatmebopChecks(userId, year);
+      res.json(checks);
+    } catch (error) {
+      console.error('[VATMEBOP] GET error', error);
+      res.status(500).json({ message: 'Failed to fetch VATMEBOP data' });
+    }
+  });
+
+  // POST /api/vatmebop — upsert a single cell (week × discipline × state)
+  app.post('/api/vatmebop', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const schema = z.object({
+        year: z.number().int().min(2020).max(2100),
+        week: z.number().int().min(1).max(53),
+        discipline: z.enum(['V', 'A', 'T', 'M', 'E', 'B', 'O', 'P']),
+        state: z.number().int().min(0).max(2),
+      });
+      const parsed = schema.parse(req.body);
+      const check = await storage.upsertVatmebopCheck(userId, parsed.year, parsed.week, parsed.discipline, parsed.state);
+      res.json(check);
+    } catch (error) {
+      if (error instanceof ZodError) return res.status(400).json({ message: 'Invalid data', errors: error.errors });
+      console.error('[VATMEBOP] POST error', error);
+      res.status(500).json({ message: 'Failed to save VATMEBOP check' });
+    }
+  });
+
   // ─────────────────────────────────────────────────────────────────────────────
 
   return httpServer;

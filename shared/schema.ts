@@ -2778,6 +2778,23 @@ export const insertFoodIntakeEntrySchema = createInsertSchema(foodIntakeEntries)
 export type FoodIntakeEntry = typeof foodIntakeEntries.$inferSelect;
 export type InsertFoodIntakeEntry = z.infer<typeof insertFoodIntakeEntrySchema>;
 
+// ─── VATMEBOP Accountability Chart ────────────────────────────────────────────
+
+export const vatmebopChecks = pgTable("vatmebop_checks", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  year: integer("year").notNull(),
+  week: integer("week").notNull(), // 1-52
+  discipline: varchar("discipline", { length: 1 }).notNull(), // V,A,T,M,E,B,O,P
+  state: integer("state").notNull().default(0), // 0=blank, 1=repented, 2=accomplished
+}, (table) => [
+  unique("vatmebop_user_year_week_disc").on(table.userId, table.year, table.week, table.discipline),
+]);
+
+export type VatmebopCheck = typeof vatmebopChecks.$inferSelect;
+export const insertVatmebopCheckSchema = createInsertSchema(vatmebopChecks).omit({ id: true });
+export type InsertVatmebopCheck = z.infer<typeof insertVatmebopCheckSchema>;
+
 // ─── Stripe Test Subscription (Owner testing tool) ────────────────────────────
 
 export const stripeTestSubscriptions = pgTable("stripe_test_subscriptions", {

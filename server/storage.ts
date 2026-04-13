@@ -202,6 +202,8 @@ import {
   foodIntakeEntries,
   type FoodIntakeEntry,
   type InsertFoodIntakeEntry,
+  vatmebopChecks,
+  type VatmebopCheck,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne } from "drizzle-orm";
@@ -626,6 +628,10 @@ export interface IStorage {
   addFoodIntakeEntry(entry: InsertFoodIntakeEntry): Promise<FoodIntakeEntry>;
   getFoodIntakeEntries(userId: string, startDate: string, endDate: string): Promise<FoodIntakeEntry[]>;
   deleteFoodIntakeEntry(id: string, userId: string): Promise<void>;
+
+  // VATMEBOP accountability chart
+  getVatmebopChecks(userId: string, year: number): Promise<VatmebopCheck[]>;
+  upsertVatmebopCheck(userId: string, year: number, week: number, discipline: string, state: number): Promise<VatmebopCheck>;
 
   // Events operations
   getEvents(): Promise<(Event & { tiers: EventTier[] })[]>;
@@ -7741,6 +7747,27 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(foodIntakeEntries)
       .where(and(eq(foodIntakeEntries.id, id), eq(foodIntakeEntries.userId, userId)));
+  }
+
+  // ─── VATMEBOP Accountability Chart ─────────────────────────────────────────
+
+  async getVatmebopChecks(userId: string, year: number): Promise<VatmebopCheck[]> {
+    return db
+      .select()
+      .from(vatmebopChecks)
+      .where(and(eq(vatmebopChecks.userId, userId), eq(vatmebopChecks.year, year)));
+  }
+
+  async upsertVatmebopCheck(userId: string, year: number, week: number, discipline: string, state: number): Promise<VatmebopCheck> {
+    const [row] = await db
+      .insert(vatmebopChecks)
+      .values({ userId, year, week, discipline, state })
+      .onConflictDoUpdate({
+        target: [vatmebopChecks.userId, vatmebopChecks.year, vatmebopChecks.week, vatmebopChecks.discipline],
+        set: { state },
+      })
+      .returning();
+    return row;
   }
 }
 

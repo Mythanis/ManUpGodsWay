@@ -53,6 +53,7 @@ import {
 } from "lucide-react";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { Link } from "wouter";
+import { VatmebopChart } from "@/components/vatmebop-chart";
 
 export default function Profile() {
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
@@ -902,6 +903,9 @@ export default function Profile() {
           )}
         </Card>
       </div>
+
+      {/* VATMEBOP Accountability Chart */}
+      <VatmebopChart />
 
       {/* Testimony Section */}
       <div className="px-6 mt-6 mb-6">
