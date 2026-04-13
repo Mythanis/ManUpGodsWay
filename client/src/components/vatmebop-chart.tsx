@@ -1,33 +1,22 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
-const DISCIPLINES = [
-  { key: "V", label: "Vision" },
-  { key: "A", label: "Accountability" },
-  { key: "T", label: "Truth" },
-  { key: "M", label: "Meditation" },
-  { key: "E", label: "Exercise" },
-  { key: "B", label: "Bible" },
-  { key: "O", label: "Obedience" },
-  { key: "P", label: "Prayer" },
-] as const;
+type DisciplineKey = "v" | "a" | "t" | "m" | "e" | "b" | "o" | "p";
 
-type DisciplineKey = typeof DISCIPLINES[number]["key"];
+const DISCIPLINES: { key: DisciplineKey; letter: string; name: string; scripture: string }[] = [
+  { key: "v", letter: "V", name: "Viewing", scripture: "Stayed away from inappropriate content (2 Tim 2:22)" },
+  { key: "a", letter: "A", name: "Action", scripture: "Did not act on temptation — sex, envy, greed, gossip" },
+  { key: "t", letter: "T", name: "Thoughts", scripture: "Controlled thoughts; turned head from temptation (Matt 5:28)" },
+  { key: "m", letter: "M", name: "Memorization", scripture: "Memorized or practiced a scripture this week (Ps 119:11)" },
+  { key: "e", letter: "E", name: "Exercise", scripture: "Did physical exercise (1 Cor 9:24-27)" },
+  { key: "b", letter: "B", name: "Bible", scripture: "Had a daily devotion (Acts 18:5)" },
+  { key: "o", letter: "O", name: "Outside Reading", scripture: "Read something beyond the Bible" },
+  { key: "p", letter: "P", name: "Prayer", scripture: "Prayed daily (Acts 6:4)" },
+];
 
 const WEEKS = Array.from({ length: 52 }, (_, i) => i + 1);
-
-function getWeekLabel(week: number, year: number): string {
-  const jan1 = new Date(year, 0, 1);
-  const dayOfWeek = jan1.getDay();
-  const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const firstMonday = new Date(jan1);
-  firstMonday.setDate(jan1.getDate() + daysToMonday);
-  const target = new Date(firstMonday);
-  target.setDate(firstMonday.getDate() + (week - 1) * 7);
-  return target.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
 
 function getCurrentWeek(): number {
   const now = new Date();
@@ -36,145 +25,218 @@ function getCurrentWeek(): number {
   return Math.min(Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7), 52);
 }
 
-function cellColor(state: number, isCurrent: boolean): string {
+function cellStyle(state: number): string {
   if (state === 2) return "bg-green-500 border-green-400";
   if (state === 1) return "bg-amber-400 border-amber-300";
-  if (isCurrent) return "bg-zinc-700 border-ministry-gold-exact/60";
   return "bg-zinc-800 border-zinc-700";
+}
+
+interface WeekRow {
+  week: number;
+  v: number; a: number; t: number; m: number; e: number; b: number; o: number; p: number;
 }
 
 export function VatmebopChart() {
   const [year, setYear] = useState(() => new Date().getFullYear());
+  const [activeHeader, setActiveHeader] = useState<DisciplineKey | null>(null);
   const currentWeek = getCurrentWeek();
+  const currentWeekRef = useRef<HTMLTableRowElement | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: checks = [] } = useQuery<{ week: number; discipline: string; state: number }[]>({
+  const { data: rows = [], isLoading } = useQuery<WeekRow[]>({
     queryKey: ["/api/vatmebop", year],
     queryFn: () => apiRequest("GET", `/api/vatmebop?year=${year}`),
   });
 
-  const stateMap = new Map<string, number>();
-  for (const c of checks) {
-    stateMap.set(`${c.week}-${c.discipline}`, c.state);
+  // Build a map: week → row data
+  const weekMap = new Map<number, WeekRow>();
+  for (const row of rows) {
+    weekMap.set(row.week, row);
   }
 
+  const getState = useCallback(
+    (week: number, key: DisciplineKey): number => weekMap.get(week)?.[key] ?? 0,
+    [weekMap],
+  );
+
   const mutation = useMutation({
-    mutationFn: (payload: { year: number; week: number; discipline: string; state: number }) =>
+    mutationFn: (payload: { year: number; week: number; disciplines: Partial<Record<DisciplineKey, number>> }) =>
       apiRequest("POST", "/api/vatmebop", payload),
-    onSuccess: () => {
+    onMutate: async (payload) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/vatmebop", year] });
+      const prev = queryClient.getQueryData<WeekRow[]>(["/api/vatmebop", year]);
+      queryClient.setQueryData<WeekRow[]>(["/api/vatmebop", year], (old = []) => {
+        const existing = old.find((r) => r.week === payload.week);
+        if (existing) {
+          return old.map((r) =>
+            r.week === payload.week ? { ...r, ...payload.disciplines } : r,
+          );
+        }
+        return [
+          ...old,
+          { week: payload.week, year: payload.year, id: 0, userId: "", v: 0, a: 0, t: 0, m: 0, e: 0, b: 0, o: 0, p: 0, ...payload.disciplines } as WeekRow,
+        ];
+      });
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["/api/vatmebop", year], ctx.prev);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/vatmebop", year] });
     },
   });
 
   const handleCellClick = useCallback(
-    (week: number, discipline: DisciplineKey) => {
-      const current = stateMap.get(`${week}-${discipline}`) ?? 0;
+    (week: number, key: DisciplineKey) => {
+      const current = getState(week, key);
       const next = (current + 1) % 3;
-      mutation.mutate({ year, week, discipline, state: next });
+      mutation.mutate({ year, week, disciplines: { [key]: next } });
     },
-    [stateMap, year, mutation],
+    [getState, year, mutation],
   );
+
+  // Auto-scroll current week into view on mount / year change
+  useEffect(() => {
+    if (year === new Date().getFullYear() && currentWeekRef.current) {
+      currentWeekRef.current.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  }, [year, isLoading]);
+
+  const activeDisc = activeHeader ? DISCIPLINES.find((d) => d.key === activeHeader) : null;
 
   return (
     <div className="px-6 mt-6 mb-6">
       <div className="flex items-center gap-3 mb-4">
         <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
         <h2 className="text-lg font-black text-white tracking-tight uppercase">
-          VATMEBOP Accountability
+          My Accountability
         </h2>
         <div className="flex-1 h-px bg-white/10" />
       </div>
 
-      {/* Legend + year nav */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3 text-xs font-bold text-white/60 uppercase tracking-wide">
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-sm inline-block bg-green-500" />
-            Accomplished
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-sm inline-block bg-amber-400" />
-            Repented
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setYear((y) => y - 1)}
-            className="w-7 h-7 flex items-center justify-center rounded-sm bg-zinc-800 border border-zinc-700 text-white/70 hover:text-white hover:bg-zinc-700 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="text-sm font-black text-white w-12 text-center">{year}</span>
-          <button
-            onClick={() => setYear((y) => y + 1)}
-            className="w-7 h-7 flex items-center justify-center rounded-sm bg-zinc-800 border border-zinc-700 text-white/70 hover:text-white hover:bg-zinc-700 transition-colors"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+      {/* Year selector */}
+      <div className="flex items-center justify-center gap-3 mb-4">
+        <button
+          onClick={() => setYear((y) => y - 1)}
+          className="w-8 h-8 flex items-center justify-center rounded-sm bg-zinc-800 border border-zinc-700 text-white/70 hover:text-white hover:bg-zinc-700 transition-colors"
+          aria-label="Previous year"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <span className="text-sm font-black text-white tracking-wide">{year}</span>
+        <button
+          onClick={() => setYear((y) => y + 1)}
+          className="w-8 h-8 flex items-center justify-center rounded-sm bg-zinc-800 border border-zinc-700 text-white/70 hover:text-white hover:bg-zinc-700 transition-colors"
+          aria-label="Next year"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
       </div>
 
-      {/* Scrollable grid */}
+      {/* Discipline header tooltip / sheet */}
+      {activeDisc && (
+        <div className="mb-3 bg-zinc-900 border-2 border-ministry-gold-exact rounded-sm p-3 relative">
+          <button
+            onClick={() => setActiveHeader(null)}
+            className="absolute top-2 right-2 text-white/40 hover:text-white"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <p className="font-black text-ministry-gold-exact text-base uppercase tracking-wide">
+            {activeDisc.letter} — {activeDisc.name}
+          </p>
+          <p className="text-sm text-white/70 mt-1">{activeDisc.scripture}</p>
+        </div>
+      )}
+
+      {/* Grid card */}
       <div className="border-2 border-ministry-gold-exact rounded-sm overflow-hidden shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] bg-zinc-900">
-        {/* Month labels row */}
-        <div className="overflow-x-auto">
-          <div className="flex min-w-max">
-            {/* discipline label column spacer */}
-            <div className="w-8 flex-shrink-0" />
-            {/* week header */}
-            <div className="flex gap-0.5 px-1 pt-2 pb-0">
-              {WEEKS.map((w) => (
-                <div
-                  key={w}
-                  className={`w-5 h-4 flex items-center justify-center text-[7px] font-bold flex-shrink-0 ${
-                    w === currentWeek && year === new Date().getFullYear()
-                      ? "text-ministry-gold-exact"
-                      : "text-zinc-600"
-                  }`}
-                >
-                  {w % 4 === 1 ? w : ""}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Discipline rows */}
-          {DISCIPLINES.map(({ key, label }) => (
-            <div key={key} className="flex min-w-max items-center">
-              {/* Discipline letter label */}
-              <div
-                className="w-8 flex-shrink-0 flex items-center justify-center text-xs font-black text-ministry-gold-exact py-0.5"
-                title={label}
-              >
-                {key}
-              </div>
-              {/* Week cells */}
-              <div className="flex gap-0.5 px-1 py-0.5">
-                {WEEKS.map((w) => {
-                  const state = stateMap.get(`${w}-${key}`) ?? 0;
-                  const isCurrent = w === currentWeek && year === new Date().getFullYear();
-                  return (
+        {/* Scrollable container */}
+        <div className="overflow-y-auto max-h-[480px]">
+          <table className="w-full border-collapse">
+            <thead className="sticky top-0 z-10 bg-zinc-950">
+              <tr>
+                {/* Week # column header */}
+                <th className="w-10 py-2 text-center text-xs font-black text-zinc-500 uppercase tracking-wide border-b border-zinc-800">
+                  Wk
+                </th>
+                {/* Discipline column headers — tappable */}
+                {DISCIPLINES.map(({ key, letter }) => (
+                  <th key={key} className="py-2 text-center border-b border-zinc-800">
                     <button
-                      key={w}
-                      onClick={() => handleCellClick(w, key as DisciplineKey)}
-                      title={`Week ${w} – ${label}\n${getWeekLabel(w, year)}`}
-                      className={`w-5 h-5 flex-shrink-0 rounded-sm border transition-all active:scale-90 ${cellColor(state, isCurrent)} ${
-                        isCurrent ? "ring-1 ring-ministry-gold-exact" : ""
-                      }`}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+                      onClick={() => setActiveHeader(activeHeader === key ? null : key)}
+                      className={`w-full h-7 flex items-center justify-center text-xs font-black uppercase rounded-sm transition-colors mx-auto
+                        ${activeHeader === key
+                          ? "bg-ministry-gold-exact text-black"
+                          : "text-ministry-gold-exact hover:bg-zinc-800"}`}
+                    >
+                      {letter}
+                    </button>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {WEEKS.map((week) => {
+                const isCurrentWeek = week === currentWeek && year === new Date().getFullYear();
+                return (
+                  <tr
+                    key={week}
+                    ref={isCurrentWeek ? currentWeekRef : null}
+                    className={`border-b border-zinc-800/50 ${isCurrentWeek ? "bg-yellow-950/40" : ""}`}
+                  >
+                    {/* Week number */}
+                    <td className={`text-center text-xs font-bold py-1 w-10 ${isCurrentWeek ? "text-ministry-gold-exact font-black" : "text-zinc-500"}`}>
+                      {week}
+                    </td>
+                    {/* 8 discipline cells */}
+                    {DISCIPLINES.map(({ key }) => {
+                      const state = getState(week, key);
+                      return (
+                        <td key={key} className="text-center py-1">
+                          <button
+                            onClick={() => handleCellClick(week, key)}
+                            className={`w-7 h-7 rounded-sm border transition-all active:scale-90 mx-auto block ${cellStyle(state)} ${
+                              isCurrentWeek ? "ring-1 ring-ministry-gold-exact/50" : ""
+                            }`}
+                            title={`Week ${week} – ${DISCIPLINES.find(d => d.key === key)?.name} (${state === 0 ? "blank" : state === 1 ? "repented" : "accomplished"})`}
+                          >
+                            {state === 1 && (
+                              <span className="block w-full h-full relative overflow-hidden">
+                                <span className="absolute inset-0 bg-amber-400" style={{ clipPath: "polygon(0 100%, 100% 0, 100% 100%)" }} />
+                              </span>
+                            )}
+                          </button>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
-          {/* Bottom padding */}
-          <div className="h-2" />
+        {/* Legend */}
+        <div className="flex items-center justify-center gap-4 py-3 border-t border-zinc-800 bg-zinc-950">
+          <span className="flex items-center gap-1.5 text-xs font-bold text-white/50 uppercase tracking-wide">
+            <span className="w-4 h-4 rounded-sm inline-block bg-zinc-800 border border-zinc-700" />
+            Blank
+          </span>
+          <span className="flex items-center gap-1.5 text-xs font-bold text-white/50 uppercase tracking-wide">
+            <span className="w-4 h-4 rounded-sm inline-block bg-amber-400 border border-amber-300" />
+            Repented
+          </span>
+          <span className="flex items-center gap-1.5 text-xs font-bold text-white/50 uppercase tracking-wide">
+            <span className="w-4 h-4 rounded-sm inline-block bg-green-500 border border-green-400" />
+            Accomplished
+          </span>
         </div>
       </div>
 
       <p className="text-xs text-white/30 mt-2 font-bold text-center uppercase tracking-wide">
-        Tap a cell to cycle: blank → repented → accomplished
+        Tap a column letter for details · Tap a cell to cycle states
       </p>
     </div>
   );

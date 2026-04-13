@@ -2779,16 +2779,24 @@ export type FoodIntakeEntry = typeof foodIntakeEntries.$inferSelect;
 export type InsertFoodIntakeEntry = z.infer<typeof insertFoodIntakeEntrySchema>;
 
 // ─── VATMEBOP Accountability Chart ────────────────────────────────────────────
+// One row per (user, year, week). Each discipline column stores 0=blank,
+// 1=failed-but-repented, 2=accomplished.
 
 export const vatmebopChecks = pgTable("vatmebop_checks", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   year: integer("year").notNull(),
   week: integer("week").notNull(), // 1-52
-  discipline: varchar("discipline", { length: 1 }).notNull(), // V,A,T,M,E,B,O,P
-  state: integer("state").notNull().default(0), // 0=blank, 1=repented, 2=accomplished
+  v: integer("v").notNull().default(0), // Viewing
+  a: integer("a").notNull().default(0), // Action
+  t: integer("t").notNull().default(0), // Thoughts
+  m: integer("m").notNull().default(0), // Memorization
+  e: integer("e").notNull().default(0), // Exercise
+  b: integer("b").notNull().default(0), // Bible
+  o: integer("o").notNull().default(0), // Outside reading
+  p: integer("p").notNull().default(0), // Prayer
 }, (table) => [
-  unique("vatmebop_user_year_week_disc").on(table.userId, table.year, table.week, table.discipline),
+  unique("vatmebop_user_year_week").on(table.userId, table.year, table.week),
 ]);
 
 export type VatmebopCheck = typeof vatmebopChecks.$inferSelect;
