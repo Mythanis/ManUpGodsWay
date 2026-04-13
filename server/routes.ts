@@ -14813,18 +14813,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await _spellCheckerInitPromise;
       return _spellChecker;
     }
-    _spellCheckerInitPromise = new Promise<void>((resolve) => {
+    _spellCheckerInitPromise = (async () => {
       try {
-        const nspell = require('nspell');
-        const dictionaryEn = require('dictionary-en');
-        dictionaryEn((err: any, dict: any) => {
-          if (!err) _spellChecker = nspell(dict);
-          resolve();
-        });
-      } catch {
-        resolve(); // graceful degradation — spell checker unavailable
+        // Both nspell and dictionary-en are ESM modules — use dynamic import()
+        const [{ default: nspell }, { default: dict }] = await Promise.all([
+          import('nspell'),
+          import('dictionary-en'),
+        ]);
+        // dictionary-en v4 exports { aff: Uint8Array, dic: Uint8Array } directly
+        _spellChecker = nspell(dict);
+        console.log('[Nutrition] Spell checker initialized');
+      } catch (err: any) {
+        console.warn('[Nutrition] Spell checker unavailable:', err?.message ?? err);
       }
-    });
+    })();
     await _spellCheckerInitPromise;
     return _spellChecker;
   }
