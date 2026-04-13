@@ -712,23 +712,51 @@ export default function Fitness() {
   });
 
   // ─── Intake: compute date range for selected period ───────────────────────
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const fmtDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const getCurrentMonday = () => {
+    const today = new Date();
+    const dow = today.getDay(); // 0=Sun
+    const mon = new Date(today);
+    mon.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+    mon.setHours(0, 0, 0, 0);
+    return mon;
+  };
+
   const getIntakeDateRange = () => {
     const today = new Date();
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    const todayStr = fmt(today);
+    const todayStr = fmtDate(today);
     if (intakePeriod === 'day') return { start: todayStr, end: todayStr };
+    const mon = getCurrentMonday();
     if (intakePeriod === 'week') {
-      const dow = today.getDay(); // 0=Sun
-      const mon = new Date(today); mon.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
       const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-      return { start: fmt(mon), end: fmt(sun) };
+      return { start: fmtDate(mon), end: fmtDate(sun) };
     }
-    // month
-    const first = new Date(today.getFullYear(), today.getMonth(), 1);
-    const last  = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    return { start: fmt(first), end: fmt(last) };
+    // month = 4 full weeks: Mon-28days ago through current Sunday
+    const start = new Date(mon); start.setDate(mon.getDate() - 21);
+    const end   = new Date(mon); end.setDate(mon.getDate() + 6);
+    return { start: fmtDate(start), end: fmtDate(end) };
   };
+
+  // Precompute Mon–Sun dates for the current week
+  const currentWeekDays = (() => {
+    const mon = getCurrentMonday();
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(mon);
+      d.setDate(mon.getDate() + i);
+      return d;
+    });
+  })();
+
+  // 4 week boundaries for the month view (newest first)
+  const fourWeeks = (() => {
+    const mon = getCurrentMonday();
+    return Array.from({ length: 4 }, (_, i) => {
+      const weekMon = new Date(mon); weekMon.setDate(mon.getDate() - i * 7);
+      const weekSun = new Date(weekMon); weekSun.setDate(weekMon.getDate() + 6);
+      return { mon: weekMon, sun: weekSun };
+    });
+  })();
 
   const { data: intakeEntries = [], isLoading: intakeLoading } = useQuery<any[]>({
     queryKey: ['/api/intake', intakePeriod],
@@ -778,6 +806,22 @@ export default function Fitness() {
     intakeByMeal[entry.meal].push(entry);
   }
   const mealOrder = ['breakfast', 'lunch', 'dinner', 'snack'];
+
+  // Per-date totals (for week view)
+  const intakeByDate: Record<string, number> = {};
+  for (const entry of intakeEntries) {
+    intakeByDate[entry.date] = (intakeByDate[entry.date] || 0) + (entry.totalCalories || 0);
+  }
+
+  // Per-week totals (for month/4-week view)
+  const weekTotals = fourWeeks.map(({ mon, sun }) => {
+    const monStr = fmtDate(mon);
+    const sunStr = fmtDate(sun);
+    const total = intakeEntries
+      .filter((e: any) => e.date >= monStr && e.date <= sunStr)
+      .reduce((s: number, e: any) => s + (e.totalCalories || 0), 0);
+    return { mon, sun, total };
+  });
 
   const handleOpenAddIntake = (prefill?: { foodName: string; caloriesPerServing: number }) => {
     setAddIntakePrefill(prefill || null);
@@ -3252,56 +3296,126 @@ export default function Fitness() {
             {/* Loading state */}
             {intakeLoading && (
               <div className="space-y-2">
-                {[1, 2, 3].map(i => <div key={i} className="h-16 bg-zinc-800 rounded-sm animate-pulse" />)}
+                {[1, 2, 3].map(i => <div key={i} className="h-14 bg-zinc-800 rounded-sm animate-pulse" />)}
               </div>
             )}
 
-            {/* Empty state */}
-            {!intakeLoading && intakeEntries.length === 0 && (
-              <div className="text-center py-16 text-white/40">
-                <Utensils className="w-14 h-14 mx-auto mb-3 opacity-20" />
-                <p className="font-black uppercase tracking-wide">No food logged yet</p>
-                <p className="text-xs mt-1 text-white/30">Tap "Add Food" to log your meals</p>
-              </div>
-            )}
-
-            {/* Grouped entries by meal */}
-            {!intakeLoading && intakeEntries.length > 0 && (
-              <div className="space-y-4">
-                {mealOrder.filter(meal => intakeByMeal[meal]?.length > 0).map(meal => (
-                  <div key={meal}>
-                    <p className="text-[10px] font-black text-[#FCD000]/80 uppercase tracking-widest mb-2">
-                      {meal.charAt(0).toUpperCase() + meal.slice(1)}
-                    </p>
-                    <div className="space-y-2">
-                      {intakeByMeal[meal].map((entry: any) => (
-                        <div key={entry.id} className="flex items-center gap-3 liquid-black border border-white/10 rounded-sm px-3 py-3">
-                          <div className="w-8 h-8 bg-[#FCD000]/20 rounded-sm flex items-center justify-center shrink-0">
-                            <Utensils className="w-4 h-4 text-[#FCD000]" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-white text-sm font-semibold leading-tight truncate">{entry.foodName}</p>
-                            <p className="text-white/50 text-xs mt-0.5">
-                              {entry.servings} serving{entry.servings !== 1 ? 's' : ''} · {entry.caloriesPerServing} kcal/serving
-                            </p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-[#FCD000] font-black text-sm tabular-nums">{entry.totalCalories}</p>
-                            <p className="text-white/40 text-[10px]">kcal</p>
-                          </div>
-                          <button
-                            onClick={() => deleteIntakeMutation.mutate(entry.id)}
-                            disabled={deleteIntakeMutation.isPending}
-                            className="p-1.5 text-white/30 hover:text-red-400 transition-colors shrink-0"
-                            aria-label="Delete entry"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+            {/* TODAY: meal-grouped entries */}
+            {!intakeLoading && intakePeriod === 'day' && (
+              <>
+                {intakeEntries.length === 0 ? (
+                  <div className="text-center py-16 text-white/40">
+                    <Utensils className="w-14 h-14 mx-auto mb-3 opacity-20" />
+                    <p className="font-black uppercase tracking-wide">No food logged today</p>
+                    <p className="text-xs mt-1 text-white/30">Tap "Add Food" to log your meals</p>
                   </div>
-                ))}
+                ) : (
+                  <div className="space-y-4">
+                    {mealOrder.filter(meal => intakeByMeal[meal]?.length > 0).map(meal => (
+                      <div key={meal}>
+                        <p className="text-[10px] font-black text-[#FCD000]/80 uppercase tracking-widest mb-2">
+                          {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                        </p>
+                        <div className="space-y-2">
+                          {intakeByMeal[meal].map((entry: any) => (
+                            <div key={entry.id} className="flex items-center gap-3 liquid-black border border-white/10 rounded-sm px-3 py-3">
+                              <div className="w-8 h-8 bg-[#FCD000]/20 rounded-sm flex items-center justify-center shrink-0">
+                                <Utensils className="w-4 h-4 text-[#FCD000]" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm font-semibold leading-tight truncate">{entry.foodName}</p>
+                                <p className="text-white/50 text-xs mt-0.5">
+                                  {entry.servings} serving{entry.servings !== 1 ? 's' : ''} · {entry.caloriesPerServing} kcal/serving
+                                </p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="text-[#FCD000] font-black text-sm tabular-nums">{entry.totalCalories}</p>
+                                <p className="text-white/40 text-[10px]">kcal</p>
+                              </div>
+                              <button
+                                onClick={() => deleteIntakeMutation.mutate(entry.id)}
+                                disabled={deleteIntakeMutation.isPending}
+                                className="p-1.5 text-white/30 hover:text-red-400 transition-colors shrink-0"
+                                aria-label="Delete entry"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* THIS WEEK: Mon–Sun daily totals */}
+            {!intakeLoading && intakePeriod === 'week' && (
+              <div className="space-y-2">
+                {currentWeekDays.map((day) => {
+                  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                  const dayStr = fmtDate(day);
+                  const kcal = intakeByDate[dayStr] || 0;
+                  const isToday = dayStr === fmtDate(new Date());
+                  return (
+                    <div key={dayStr} className={`flex items-center justify-between px-4 py-3 rounded-sm border ${isToday ? 'border-[#FCD000]/60 bg-[#FCD000]/5' : 'border-white/10 liquid-black'}`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-sm flex flex-col items-center justify-center shrink-0 ${isToday ? 'bg-[#FCD000] text-black' : 'bg-zinc-800 text-white/60'}`}>
+                          <span className="text-[10px] font-black uppercase leading-none">{dayNames[day.getDay()]}</span>
+                          <span className="text-sm font-black leading-none mt-0.5">{day.getDate()}</span>
+                        </div>
+                        <span className={`text-sm font-bold ${isToday ? 'text-white' : 'text-white/60'}`}>
+                          {day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          {isToday && <span className="ml-1.5 text-[10px] font-black text-[#FCD000] uppercase tracking-widest">Today</span>}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        {kcal > 0 ? (
+                          <>
+                            <span className="text-[#FCD000] font-black text-base tabular-nums">{kcal.toLocaleString()}</span>
+                            <span className="text-white/40 text-[10px] ml-1">kcal</span>
+                          </>
+                        ) : (
+                          <span className="text-white/25 text-sm font-bold">—</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* THIS MONTH: 4-week totals */}
+            {!intakeLoading && intakePeriod === 'month' && (
+              <div className="space-y-2">
+                {weekTotals.map(({ mon, total }, i) => {
+                  const isCurrentWeek = i === 0;
+                  const d = mon.getDate();
+                  const m = mon.getMonth() + 1;
+                  const y = mon.getFullYear();
+                  const label = `The week of ${d}/${m}/${y}`;
+                  return (
+                    <div key={fmtDate(mon)} className={`flex items-center justify-between px-4 py-4 rounded-sm border ${isCurrentWeek ? 'border-[#FCD000]/60 bg-[#FCD000]/5' : 'border-white/10 liquid-black'}`}>
+                      <div>
+                        <p className={`text-sm font-bold ${isCurrentWeek ? 'text-white' : 'text-white/70'}`}>{label}</p>
+                        {isCurrentWeek && (
+                          <p className="text-[10px] font-black text-[#FCD000] uppercase tracking-widest mt-0.5">Current week</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        {total > 0 ? (
+                          <>
+                            <span className="text-[#FCD000] font-black text-base tabular-nums">{total.toLocaleString()}</span>
+                            <span className="text-white/40 text-[10px] ml-1">kcal</span>
+                          </>
+                        ) : (
+                          <span className="text-white/25 text-sm font-bold">—</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
