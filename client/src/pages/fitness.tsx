@@ -3599,7 +3599,7 @@ export default function Fitness() {
             {/* Meal type */}
             <div className="space-y-1">
               <label className="text-[10px] font-black text-white/60 uppercase tracking-widest">Meal</label>
-              <Select value={intakeFormMeal} onValueChange={(v: any) => setIntakeFormMeal(v)}>
+              <Select value={intakeFormMeal} onValueChange={(v) => setIntakeFormMeal(v as 'breakfast' | 'lunch' | 'dinner' | 'snack')}>
                 <SelectTrigger className="bg-zinc-900 border-2 border-white/20 text-white rounded-sm focus:border-[#FCD000]">
                   <SelectValue />
                 </SelectTrigger>
