@@ -79,10 +79,12 @@ export function VatmebopChart() {
             r.week === payload.week ? { ...r, ...payload.disciplines } : r,
           );
         }
-        return [
-          ...old,
-          { week: payload.week, year: payload.year, id: 0, userId: "", v: 0, a: 0, t: 0, m: 0, e: 0, b: 0, o: 0, p: 0, ...payload.disciplines } as WeekRow,
-        ];
+        const newRow: WeekRow = {
+          week: payload.week,
+          v: 0, a: 0, t: 0, m: 0, e: 0, b: 0, o: 0, p: 0,
+          ...payload.disciplines,
+        };
+        return [...old, newRow];
       });
       return { prev };
     },
