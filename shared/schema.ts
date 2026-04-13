@@ -2754,11 +2754,13 @@ export const bibleApiCalls = pgTable("bible_api_calls", {
 
 // ─── Food Intake Entries ───────────────────────────────────────────────────────
 
+export const mealTypeEnum = pgEnum("meal_type", ["breakfast", "lunch", "dinner", "snack"]);
+
 export const foodIntakeEntries = pgTable("food_intake_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   date: varchar("date").notNull(), // YYYY-MM-DD
-  meal: varchar("meal").notNull(), // breakfast, lunch, dinner, snack
+  meal: mealTypeEnum("meal").notNull(),
   foodName: varchar("food_name", { length: 300 }).notNull(),
   caloriesPerServing: integer("calories_per_serving").notNull(),
   servings: real("servings").notNull().default(1),

@@ -14989,6 +14989,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) {
         return res.status(400).json({ message: 'start and end must be YYYY-MM-DD' });
       }
+      if (start > end) {
+        return res.status(400).json({ message: 'start must be on or before end' });
+      }
       const entries = await storage.getFoodIntakeEntries(userId, start, end);
       res.json(entries);
     } catch (error) {
