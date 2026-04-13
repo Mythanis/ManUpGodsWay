@@ -743,8 +743,7 @@ export default function Fitness() {
 
   const addIntakeMutation = useMutation({
     mutationFn: async (data: { date: string; meal: string; foodName: string; caloriesPerServing: number; servings: number }) => {
-      const res = await apiRequest('POST', '/api/intake', data);
-      return res.json();
+      return await apiRequest('POST', '/api/intake', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/intake'] });
@@ -761,8 +760,7 @@ export default function Fitness() {
 
   const deleteIntakeMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiRequest('DELETE', `/api/intake/${id}`);
-      return res.json();
+      return await apiRequest('DELETE', `/api/intake/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/intake'] });
