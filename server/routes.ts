@@ -15018,7 +15018,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vatmebop', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const year = parseInt(req.query.year as string) || new Date().getFullYear();
+      const yearSchema = z.coerce.number().int().min(2020).max(2100);
+      const yearResult = yearSchema.safeParse(req.query.year);
+      const year = yearResult.success ? yearResult.data : new Date().getFullYear();
       const rows = await storage.getVatmebopChart(userId, year);
       res.json(rows);
     } catch (error) {
@@ -15032,19 +15034,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const disciplineValueSchema = z.number().int().min(0).max(2);
+      const disciplinesSchema = z.object({
+        v: disciplineValueSchema.optional(),
+        a: disciplineValueSchema.optional(),
+        t: disciplineValueSchema.optional(),
+        m: disciplineValueSchema.optional(),
+        e: disciplineValueSchema.optional(),
+        b: disciplineValueSchema.optional(),
+        o: disciplineValueSchema.optional(),
+        p: disciplineValueSchema.optional(),
+      }).refine(
+        (d) => Object.values(d).some((v) => v !== undefined),
+        { message: 'At least one discipline value must be provided' }
+      );
       const bodySchema = z.object({
         year: z.number().int().min(2020).max(2100),
         week: z.number().int().min(1).max(52),
-        disciplines: z.object({
-          v: disciplineValueSchema.optional(),
-          a: disciplineValueSchema.optional(),
-          t: disciplineValueSchema.optional(),
-          m: disciplineValueSchema.optional(),
-          e: disciplineValueSchema.optional(),
-          b: disciplineValueSchema.optional(),
-          o: disciplineValueSchema.optional(),
-          p: disciplineValueSchema.optional(),
-        }),
+        disciplines: disciplinesSchema,
       });
       const parsed = bodySchema.parse(req.body);
       const row = await storage.upsertVatmebopCheck(userId, parsed.year, parsed.week, parsed.disciplines);
