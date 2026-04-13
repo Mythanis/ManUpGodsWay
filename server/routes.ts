@@ -14800,6 +14800,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // Nutrition routes (USDA FoodData Central)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // Lazy-loaded nspell instance — initialised once on first nutrition request
+  let _spellChecker: any = null;
+  let _spellCheckerInitPromise: Promise<void> | null = null;
+
+  async function getNutritionSpellChecker(): Promise<any | null> {
+    if (_spellChecker) return _spellChecker;
+    if (_spellCheckerInitPromise) {
+      await _spellCheckerInitPromise;
+      return _spellChecker;
+    }
+    _spellCheckerInitPromise = new Promise<void>((resolve) => {
+      try {
+        const nspell = require('nspell');
+        const dictionaryEn = require('dictionary-en');
+        dictionaryEn((err: any, dict: any) => {
+          if (!err) _spellChecker = nspell(dict);
+          resolve();
+        });
+      } catch {
+        resolve(); // graceful degradation — spell checker unavailable
+      }
+    });
+    await _spellCheckerInitPromise;
+    return _spellChecker;
+  }
+
+  async function spellCorrectQuery(raw: string): Promise<{ correctedQuery: string; wasChanged: boolean }> {
+    try {
+      const spell = await getNutritionSpellChecker();
+      if (!spell) return { correctedQuery: raw, wasChanged: false };
+      const words = raw.trim().split(/\s+/);
+      const corrected = words.map((w) => {
+        if (spell.correct(w)) return w;
+        const suggestions: string[] = spell.suggest(w);
+        return suggestions.length > 0 ? suggestions[0] : w;
+      });
+      const correctedQuery = corrected.join(' ');
+      return {
+        correctedQuery,
+        wasChanged: correctedQuery.toLowerCase() !== raw.toLowerCase(),
+      };
+    } catch {
+      return { correctedQuery: raw, wasChanged: false };
+    }
+  }
+
+  // Key FDC nutrient IDs to surface on the detail panel
+  const LABEL_NUTRIENT_IDS = new Set([
+    1008, // Energy (kcal)
+    1004, // Total Fat
+    1258, // Saturated Fat
+    1257, // Trans Fat
+    1253, // Cholesterol
+    1093, // Sodium
+    1005, // Total Carbohydrates
+    1079, // Dietary Fiber
+    2000, // Total Sugars
+    1003, // Protein
+    1114, // Vitamin D
+    1087, // Calcium
+    1089, // Iron
+    1092, // Potassium
+  ]);
+
+  // GET /api/nutrition/search?q=<query>
+  app.get('/api/nutrition/search', isAuthenticated, async (req: any, res) => {
+    try {
+      const raw = (req.query.q as string || '').trim();
+      if (!raw) return res.status(400).json({ message: 'Query is required' });
+
+      const apiKey = process.env.FDC_API_KEY;
+      if (!apiKey) return res.status(503).json({ message: 'Nutrition service is not configured' });
+
+      const { correctedQuery, wasChanged } = await spellCorrectQuery(raw);
+
+      const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(correctedQuery)}&pageSize=25&api_key=${apiKey}`;
+      const fdcRes = await fetch(url);
+      if (!fdcRes.ok) {
+        console.error('[FDC] search error', fdcRes.status, await fdcRes.text());
+        return res.status(502).json({ message: 'Failed to reach nutrition database' });
+      }
+
+      const data: any = await fdcRes.json();
+      const foods = (data.foods || []).map((f: any) => ({
+        fdcId: f.fdcId,
+        description: f.description,
+        brandOwner: f.brandOwner || null,
+        brandName: f.brandName || null,
+        dataType: f.dataType,
+        servingSize: f.servingSize || null,
+        servingSizeUnit: f.servingSizeUnit || null,
+        calories: (f.foodNutrients || []).find((n: any) => n.nutrientId === 1008)?.value ?? null,
+      }));
+
+      res.json({ correctedQuery, wasChanged, originalQuery: raw, foods, totalHits: data.totalHits || 0 });
+    } catch (error) {
+      console.error('[FDC] search exception', error);
+      res.status(500).json({ message: 'Failed to search nutrition database' });
+    }
+  });
+
+  // GET /api/nutrition/food/:fdcId
+  app.get('/api/nutrition/food/:fdcId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { fdcId } = req.params;
+      const apiKey = process.env.FDC_API_KEY;
+      if (!apiKey) return res.status(503).json({ message: 'Nutrition service is not configured' });
+
+      const url = `https://api.nal.usda.gov/fdc/v1/food/${fdcId}?api_key=${apiKey}`;
+      const fdcRes = await fetch(url);
+      if (!fdcRes.ok) {
+        console.error('[FDC] food detail error', fdcRes.status);
+        return res.status(502).json({ message: 'Failed to fetch food details' });
+      }
+
+      const data: any = await fdcRes.json();
+
+      const nutrients = (data.foodNutrients || [])
+        .filter((n: any) => {
+          const id = n.nutrient?.id ?? n.nutrientId;
+          return LABEL_NUTRIENT_IDS.has(id);
+        })
+        .map((n: any) => ({
+          id: n.nutrient?.id ?? n.nutrientId,
+          name: n.nutrient?.name ?? n.nutrientName,
+          amount: n.amount ?? n.value ?? null,
+          unitName: n.nutrient?.unitName ?? n.unitName ?? '',
+        }))
+        .sort((a: any, b: any) => {
+          const order = [1008, 1004, 1258, 1257, 1253, 1093, 1005, 1079, 2000, 1003, 1114, 1087, 1089, 1092];
+          return order.indexOf(a.id) - order.indexOf(b.id);
+        });
+
+      res.json({
+        fdcId: data.fdcId,
+        description: data.description,
+        brandOwner: data.brandOwner || null,
+        brandName: data.brandName || null,
+        dataType: data.dataType,
+        servingSize: data.servingSize || null,
+        servingSizeUnit: data.servingSizeUnit || null,
+        householdServingFullText: data.householdServingFullText || null,
+        nutrients,
+      });
+    } catch (error) {
+      console.error('[FDC] food detail exception', error);
+      res.status(500).json({ message: 'Failed to fetch food details' });
+    }
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
 
   return httpServer;
 }

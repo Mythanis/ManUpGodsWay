@@ -47,7 +47,11 @@ import {
   Users,
   MessageSquare,
   Send,
-  ImagePlus
+  ImagePlus,
+  Apple,
+  ChevronRight,
+  ArrowLeft,
+  AlertCircle
 } from "lucide-react";
 import { format, isToday, isPast, isFuture } from "date-fns";
 import { Link } from "wouter";
@@ -229,6 +233,11 @@ export default function Fitness() {
   const [communityCategory, setCommunityCategory] = useState('encouragement');
   const [communityMedia, setCommunityMedia] = useState<{ url: string; type: string }[]>([]);
   const [communityUploading, setCommunityUploading] = useState(false);
+
+  // Nutrition tab state
+  const [nutritionInputQuery, setNutritionInputQuery] = useState('');
+  const [nutritionSubmittedQuery, setNutritionSubmittedQuery] = useState('');
+  const [selectedFdcId, setSelectedFdcId] = useState<number | null>(null);
 
   // Check fitness membership status
   const { data: membershipData, isLoading: membershipLoading } = useQuery<{ hasMembership: boolean; membership?: any }>({
@@ -641,6 +650,55 @@ export default function Fitness() {
       if (!response.ok) throw new Error('Failed to fetch fitness plans');
       return response.json();
     },
+  });
+
+  // Nutrition: search results
+  const { data: nutritionSearchData, isLoading: nutritionSearchLoading, error: nutritionSearchError } = useQuery<{
+    correctedQuery: string;
+    wasChanged: boolean;
+    originalQuery: string;
+    foods: Array<{
+      fdcId: number;
+      description: string;
+      brandOwner: string | null;
+      brandName: string | null;
+      dataType: string;
+      servingSize: number | null;
+      servingSizeUnit: string | null;
+      calories: number | null;
+    }>;
+    totalHits: number;
+  }>({
+    queryKey: ['/api/nutrition/search', nutritionSubmittedQuery],
+    queryFn: async () => {
+      const res = await fetch(`/api/nutrition/search?q=${encodeURIComponent(nutritionSubmittedQuery)}`, { credentials: 'include' });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.message || 'Search failed'); }
+      return res.json();
+    },
+    enabled: !!nutritionSubmittedQuery,
+    staleTime: 60000,
+  });
+
+  // Nutrition: food detail
+  const { data: nutritionFoodDetail, isLoading: nutritionDetailLoading, error: nutritionDetailError } = useQuery<{
+    fdcId: number;
+    description: string;
+    brandOwner: string | null;
+    brandName: string | null;
+    dataType: string;
+    servingSize: number | null;
+    servingSizeUnit: string | null;
+    householdServingFullText: string | null;
+    nutrients: Array<{ id: number; name: string; amount: number | null; unitName: string }>;
+  }>({
+    queryKey: ['/api/nutrition/food', selectedFdcId],
+    queryFn: async () => {
+      const res = await fetch(`/api/nutrition/food/${selectedFdcId}`, { credentials: 'include' });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.message || 'Failed to load details'); }
+      return res.json();
+    },
+    enabled: !!selectedFdcId,
+    staleTime: 300000,
   });
 
   // Extract data from local database response (returns array directly)
@@ -1772,6 +1830,10 @@ export default function Fitness() {
               <List className="w-4 h-4" />
               My Plans
             </TabsTrigger>
+            <TabsTrigger value="nutrition" className="flex flex-col items-center gap-0.5 text-[10px] text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-1">
+              <Apple className="w-4 h-4" />
+              Nutrition
+            </TabsTrigger>
           </TabsList>
 
           {/* Daily Workout Tab */}
@@ -2793,6 +2855,216 @@ export default function Fitness() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Nutrition Tab */}
+          <TabsContent value="nutrition" className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center mb-4 liquid-black p-4 rounded-sm border-2 border-black overflow-hidden">
+              <Apple className="w-6 h-6 text-[#FCD000] mr-2 relative z-10" />
+              <h2 className="text-xl font-black text-white uppercase tracking-wide relative z-10">Nutrition Lookup</h2>
+              <span className="ml-auto text-xs text-[#FCD000]/70 relative z-10">Powered by USDA FDC</span>
+            </div>
+
+            {/* Search form */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = nutritionInputQuery.trim();
+                if (!q) return;
+                setSelectedFdcId(null);
+                setNutritionSubmittedQuery(q);
+              }}
+              className="flex gap-2"
+            >
+              <Input
+                value={nutritionInputQuery}
+                onChange={(e) => setNutritionInputQuery(e.target.value)}
+                placeholder="Search for a food (e.g. chicken breast, oats…)"
+                className="flex-1 bg-zinc-900 border-2 border-white/20 text-white placeholder:text-white/40 focus:border-[#FCD000] rounded-sm"
+              />
+              <Button
+                type="submit"
+                disabled={nutritionSearchLoading}
+                className="bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black shrink-0"
+              >
+                {nutritionSearchLoading ? (
+                  <span className="flex items-center gap-1"><span className="animate-spin">⏳</span>Searching…</span>
+                ) : (
+                  <span className="flex items-center gap-1"><Search className="w-4 h-4" />Search</span>
+                )}
+              </Button>
+            </form>
+
+            {/* Spell-correction notice */}
+            {nutritionSearchData?.wasChanged && !selectedFdcId && (
+              <div className="flex items-center gap-2 bg-[#FCD000]/10 border border-[#FCD000]/40 rounded-sm px-3 py-2 text-sm text-[#FCD000]">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>Showing results for <strong>"{nutritionSearchData.correctedQuery}"</strong> (corrected from "{nutritionSearchData.originalQuery}")</span>
+              </div>
+            )}
+
+            {/* Error state */}
+            {(nutritionSearchError || nutritionDetailError) && !nutritionSearchLoading && !nutritionDetailLoading && (
+              <div className="flex items-center gap-2 bg-red-900/30 border border-red-500/40 rounded-sm px-3 py-2 text-sm text-red-400">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{(nutritionSearchError as Error)?.message || (nutritionDetailError as Error)?.message || 'Something went wrong. Please try again.'}</span>
+              </div>
+            )}
+
+            {/* Food detail panel */}
+            {selectedFdcId && (
+              <div className="space-y-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedFdcId(null)}
+                  className="text-[#FCD000] hover:text-[#FCD000]/80 hover:bg-white/10 flex items-center gap-1 px-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to results
+                </Button>
+
+                {nutritionDetailLoading && (
+                  <div className="space-y-3">
+                    {[1,2,3,4,5,6,7,8].map(i => (
+                      <div key={i} className="h-8 bg-zinc-800 rounded-sm animate-pulse" />
+                    ))}
+                  </div>
+                )}
+
+                {nutritionFoodDetail && !nutritionDetailLoading && (
+                  <div className="bg-zinc-900 border-2 border-white/10 rounded-sm overflow-hidden">
+                    {/* Food header */}
+                    <div className="bg-[#FCD000] px-4 py-3 border-b-2 border-black">
+                      <h3 className="font-black text-black uppercase text-sm leading-tight">
+                        {nutritionFoodDetail.description}
+                      </h3>
+                      {(nutritionFoodDetail.brandOwner || nutritionFoodDetail.brandName) && (
+                        <p className="text-black/70 text-xs mt-0.5">
+                          {nutritionFoodDetail.brandName || nutritionFoodDetail.brandOwner}
+                        </p>
+                      )}
+                      {(nutritionFoodDetail.householdServingFullText || nutritionFoodDetail.servingSize) && (
+                        <p className="text-black/60 text-xs mt-0.5">
+                          Serving: {nutritionFoodDetail.householdServingFullText ||
+                            `${nutritionFoodDetail.servingSize}${nutritionFoodDetail.servingSizeUnit || ''}`}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Nutrition Facts table */}
+                    <div className="px-4 py-3">
+                      <p className="text-xs font-black text-white uppercase tracking-widest mb-2 border-b border-white/20 pb-1">
+                        Nutrition Facts
+                      </p>
+                      {nutritionFoodDetail.nutrients.length === 0 ? (
+                        <p className="text-sm text-white/50 py-2">No nutritional data available for this item.</p>
+                      ) : (
+                        <table className="w-full text-sm">
+                          <tbody>
+                            {nutritionFoodDetail.nutrients.map((n, i) => {
+                              const isBold = [1008, 1004, 1005, 1003].includes(n.id);
+                              const isIndented = [1258, 1257, 1079, 2000].includes(n.id);
+                              return (
+                                <tr
+                                  key={n.id}
+                                  className={`border-b border-white/10 ${i % 2 === 0 ? 'bg-white/5' : ''}`}
+                                >
+                                  <td className={`py-1.5 text-white/80 ${isIndented ? 'pl-5' : ''} ${isBold ? 'font-bold text-white' : ''}`}>
+                                    {n.name}
+                                  </td>
+                                  <td className={`py-1.5 text-right tabular-nums ${isBold ? 'font-bold text-[#FCD000]' : 'text-white/70'}`}>
+                                    {n.amount !== null ? `${Math.round(n.amount * 10) / 10} ${n.unitName}` : '—'}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+
+                    {/* Data type badge */}
+                    <div className="px-4 pb-3">
+                      <Badge variant="outline" className="text-[10px] text-white/40 border-white/20">
+                        {nutritionFoodDetail.dataType}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Search results list */}
+            {!selectedFdcId && nutritionSubmittedQuery && (
+              <div className="space-y-2">
+                {nutritionSearchLoading && (
+                  <div className="space-y-2">
+                    {[1,2,3,4,5].map(i => (
+                      <div key={i} className="h-16 bg-zinc-800 rounded-sm animate-pulse" />
+                    ))}
+                  </div>
+                )}
+
+                {!nutritionSearchLoading && nutritionSearchData && nutritionSearchData.foods.length === 0 && (
+                  <div className="text-center py-10 text-white/50">
+                    <Apple className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                    <p className="font-medium">No foods found for "{nutritionSearchData.correctedQuery}"</p>
+                    <p className="text-xs mt-1">Try a different search term</p>
+                  </div>
+                )}
+
+                {!nutritionSearchLoading && nutritionSearchData && nutritionSearchData.foods.length > 0 && (
+                  <>
+                    <p className="text-xs text-white/40">
+                      {nutritionSearchData.totalHits.toLocaleString()} results — showing top {nutritionSearchData.foods.length}
+                    </p>
+                    {nutritionSearchData.foods.map((food) => (
+                      <button
+                        key={food.fdcId}
+                        onClick={() => setSelectedFdcId(food.fdcId)}
+                        className="w-full text-left flex items-center gap-3 bg-zinc-900 border border-white/10 rounded-sm px-3 py-3 hover:border-[#FCD000]/50 hover:bg-zinc-800 transition-colors"
+                      >
+                        <div className="w-9 h-9 bg-[#FCD000] rounded-sm flex items-center justify-center shrink-0">
+                          <Apple className="w-5 h-5 text-black" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-semibold leading-snug truncate">
+                            {food.description}
+                          </p>
+                          {(food.brandOwner || food.brandName) && (
+                            <p className="text-white/50 text-xs truncate">
+                              {food.brandName || food.brandOwner}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <Badge variant="outline" className="text-[10px] text-white/40 border-white/20 py-0">
+                              {food.dataType}
+                            </Badge>
+                            {food.calories !== null && (
+                              <span className="text-[10px] text-[#FCD000]/80 font-bold">
+                                {Math.round(food.calories)} kcal
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-white/30 shrink-0" />
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Empty / initial state */}
+            {!nutritionSubmittedQuery && (
+              <div className="text-center py-16 text-white/40">
+                <Apple className="w-14 h-14 mx-auto mb-3 opacity-20" />
+                <p className="font-black uppercase tracking-wide">Search for any food</p>
+                <p className="text-xs mt-1 text-white/30">Powered by the USDA FoodData Central database</p>
               </div>
             )}
           </TabsContent>
