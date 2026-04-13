@@ -51,7 +51,10 @@ import {
   Apple,
   ChevronRight,
   ArrowLeft,
-  AlertCircle
+  AlertCircle,
+  Utensils,
+  Flame,
+  PlusCircle,
 } from "lucide-react";
 import { format, isToday, isPast, isFuture } from "date-fns";
 import { Link } from "wouter";
@@ -238,6 +241,13 @@ export default function Fitness() {
   const [nutritionInputQuery, setNutritionInputQuery] = useState('');
   const [nutritionSubmittedQuery, setNutritionSubmittedQuery] = useState('');
   const [selectedFdcId, setSelectedFdcId] = useState<number | null>(null);
+
+  // Intake tab state
+  const [intakePeriod, setIntakePeriod] = useState<'day' | 'week' | 'month'>('day');
+  const [showAddIntakeDialog, setShowAddIntakeDialog] = useState(false);
+  const [addIntakePrefill, setAddIntakePrefill] = useState<{ foodName: string; caloriesPerServing: number } | null>(null);
+  const [intakeForm, setIntakeForm] = useState({ foodName: '', caloriesPerServing: '', servings: '1', meal: 'breakfast' as const });
+  const [intakeFormMeal, setIntakeFormMeal] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
 
   // Check fitness membership status
   const { data: membershipData, isLoading: membershipLoading } = useQuery<{ hasMembership: boolean; membership?: any }>({
@@ -700,6 +710,108 @@ export default function Fitness() {
     enabled: !!selectedFdcId,
     staleTime: 300000,
   });
+
+  // ─── Intake: compute date range for selected period ───────────────────────
+  const getIntakeDateRange = () => {
+    const today = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const todayStr = fmt(today);
+    if (intakePeriod === 'day') return { start: todayStr, end: todayStr };
+    if (intakePeriod === 'week') {
+      const dow = today.getDay(); // 0=Sun
+      const mon = new Date(today); mon.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+      const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+      return { start: fmt(mon), end: fmt(sun) };
+    }
+    // month
+    const first = new Date(today.getFullYear(), today.getMonth(), 1);
+    const last  = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    return { start: fmt(first), end: fmt(last) };
+  };
+
+  const { data: intakeEntries = [], isLoading: intakeLoading } = useQuery<any[]>({
+    queryKey: ['/api/intake', intakePeriod],
+    queryFn: async () => {
+      const { start, end } = getIntakeDateRange();
+      const res = await fetch(`/api/intake?start=${start}&end=${end}`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to load intake');
+      return res.json();
+    },
+    enabled: hasMembership,
+  });
+
+  const addIntakeMutation = useMutation({
+    mutationFn: async (data: { date: string; meal: string; foodName: string; caloriesPerServing: number; servings: number }) => {
+      const res = await apiRequest('POST', '/api/intake', data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/intake'] });
+      setShowAddIntakeDialog(false);
+      setAddIntakePrefill(null);
+      setIntakeForm({ foodName: '', caloriesPerServing: '', servings: '1', meal: 'breakfast' });
+      setIntakeFormMeal('breakfast');
+      toast({ title: 'Added to intake!', description: 'Food entry saved.' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Error', description: err.message || 'Failed to add entry', variant: 'destructive' });
+    },
+  });
+
+  const deleteIntakeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest('DELETE', `/api/intake/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/intake'] });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Error', description: err.message || 'Failed to delete', variant: 'destructive' });
+    },
+  });
+
+  const totalIntakeCalories = intakeEntries.reduce((sum: number, e: any) => sum + (e.totalCalories || 0), 0);
+
+  const intakeByMeal: Record<string, any[]> = {};
+  for (const entry of intakeEntries) {
+    if (!intakeByMeal[entry.meal]) intakeByMeal[entry.meal] = [];
+    intakeByMeal[entry.meal].push(entry);
+  }
+  const mealOrder = ['breakfast', 'lunch', 'dinner', 'snack'];
+
+  const handleOpenAddIntake = (prefill?: { foodName: string; caloriesPerServing: number }) => {
+    setAddIntakePrefill(prefill || null);
+    setIntakeForm({
+      foodName: prefill?.foodName || '',
+      caloriesPerServing: prefill ? String(Math.round(prefill.caloriesPerServing)) : '',
+      servings: '1',
+      meal: 'breakfast',
+    });
+    setIntakeFormMeal('breakfast');
+    setShowAddIntakeDialog(true);
+  };
+
+  const handleSubmitIntake = () => {
+    const todayStr = (() => {
+      const d = new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    })();
+    const cal = parseInt(addIntakePrefill ? String(Math.round(addIntakePrefill.caloriesPerServing)) : intakeForm.caloriesPerServing);
+    const srv = parseFloat(intakeForm.servings);
+    if (!intakeForm.foodName.trim()) return toast({ title: 'Missing info', description: 'Please enter a food name', variant: 'destructive' });
+    if (isNaN(cal) || cal < 0) return toast({ title: 'Invalid calories', description: 'Enter a valid calorie count', variant: 'destructive' });
+    if (isNaN(srv) || srv <= 0) return toast({ title: 'Invalid servings', description: 'Enter a valid serving count', variant: 'destructive' });
+    addIntakeMutation.mutate({
+      date: todayStr,
+      meal: intakeFormMeal,
+      foodName: intakeForm.foodName.trim(),
+      caloriesPerServing: cal,
+      servings: srv,
+    });
+  };
 
   // Extract data from local database response (returns array directly)
   const exercises = exerciseResponse || [];
@@ -1833,6 +1945,10 @@ export default function Fitness() {
             <TabsTrigger value="nutrition" className="flex flex-col items-center gap-0.5 text-[10px] text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-1">
               <Apple className="w-4 h-4" />
               Nutrition
+            </TabsTrigger>
+            <TabsTrigger value="intake" className="flex flex-col items-center gap-0.5 text-[10px] text-white data-[state=active]:bg-[#FCD000] data-[state=active]:text-black rounded-sm font-black uppercase py-2 px-1">
+              <Utensils className="w-4 h-4" />
+              Intake
             </TabsTrigger>
           </TabsList>
 
@@ -2993,6 +3109,20 @@ export default function Fitness() {
                         {nutritionFoodDetail.dataType}
                       </Badge>
                     </div>
+
+                    {/* Add to Intake button */}
+                    <div className="px-4 pb-4 border-t border-white/10 pt-3">
+                      <Button
+                        onClick={() => {
+                          const calories = nutritionFoodDetail.nutrients.find((n: any) => n.id === 1008)?.amount ?? 0;
+                          handleOpenAddIntake({ foodName: nutritionFoodDetail.description, caloriesPerServing: Math.round(calories) });
+                        }}
+                        className="w-full bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black flex items-center justify-center gap-2"
+                      >
+                        <PlusCircle className="w-4 h-4" />
+                        Add to Intake
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -3072,6 +3202,110 @@ export default function Fitness() {
             <p className="text-[10px] text-white/30 text-center pt-2 pb-1 border-t border-white/10">
               U.S. Department of Agriculture, Agricultural Research Service. FoodData Central, 2019. fdc.nal.usda.gov.
             </p>
+          </TabsContent>
+
+          {/* Intake Tab */}
+          <TabsContent value="intake" className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center liquid-black p-4 rounded-sm border-2 border-black overflow-hidden">
+              <Utensils className="w-6 h-6 text-[#FCD000] mr-2 relative z-10" />
+              <h2 className="text-xl font-black text-white uppercase tracking-wide relative z-10">Food Intake Log</h2>
+              <Button
+                onClick={() => handleOpenAddIntake()}
+                size="sm"
+                className="ml-auto bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black flex items-center gap-1 relative z-10"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Add Food
+              </Button>
+            </div>
+
+            {/* Period selector */}
+            <div className="flex gap-2">
+              {(['day', 'week', 'month'] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setIntakePeriod(p)}
+                  className={`flex-1 py-2 text-xs font-black uppercase tracking-wide rounded-sm border-2 border-black transition-colors ${
+                    intakePeriod === p
+                      ? 'bg-[#FCD000] text-black'
+                      : 'liquid-black text-white/70 hover:text-white'
+                  }`}
+                >
+                  {p === 'day' ? 'Today' : p === 'week' ? 'This Week' : 'This Month'}
+                </button>
+              ))}
+            </div>
+
+            {/* Calorie total banner */}
+            <div className="flex items-center justify-between liquid-black border-2 border-[#FCD000]/40 rounded-sm px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-[#FCD000]" />
+                <span className="text-white font-black uppercase tracking-wide text-sm">
+                  {intakePeriod === 'day' ? "Today's" : intakePeriod === 'week' ? "This Week's" : "This Month's"} Calories
+                </span>
+              </div>
+              <span className="text-[#FCD000] font-black text-2xl tabular-nums">
+                {intakeLoading ? '—' : totalIntakeCalories.toLocaleString()}
+              </span>
+              <span className="text-white/40 text-xs font-bold ml-1">kcal</span>
+            </div>
+
+            {/* Loading state */}
+            {intakeLoading && (
+              <div className="space-y-2">
+                {[1, 2, 3].map(i => <div key={i} className="h-16 bg-zinc-800 rounded-sm animate-pulse" />)}
+              </div>
+            )}
+
+            {/* Empty state */}
+            {!intakeLoading && intakeEntries.length === 0 && (
+              <div className="text-center py-16 text-white/40">
+                <Utensils className="w-14 h-14 mx-auto mb-3 opacity-20" />
+                <p className="font-black uppercase tracking-wide">No food logged yet</p>
+                <p className="text-xs mt-1 text-white/30">Tap "Add Food" to log your meals</p>
+              </div>
+            )}
+
+            {/* Grouped entries by meal */}
+            {!intakeLoading && intakeEntries.length > 0 && (
+              <div className="space-y-4">
+                {mealOrder.filter(meal => intakeByMeal[meal]?.length > 0).map(meal => (
+                  <div key={meal}>
+                    <p className="text-[10px] font-black text-[#FCD000]/80 uppercase tracking-widest mb-2">
+                      {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                    </p>
+                    <div className="space-y-2">
+                      {intakeByMeal[meal].map((entry: any) => (
+                        <div key={entry.id} className="flex items-center gap-3 liquid-black border border-white/10 rounded-sm px-3 py-3">
+                          <div className="w-8 h-8 bg-[#FCD000]/20 rounded-sm flex items-center justify-center shrink-0">
+                            <Utensils className="w-4 h-4 text-[#FCD000]" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm font-semibold leading-tight truncate">{entry.foodName}</p>
+                            <p className="text-white/50 text-xs mt-0.5">
+                              {entry.servings} serving{entry.servings !== 1 ? 's' : ''} · {entry.caloriesPerServing} kcal/serving
+                            </p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-[#FCD000] font-black text-sm tabular-nums">{entry.totalCalories}</p>
+                            <p className="text-white/40 text-[10px]">kcal</p>
+                          </div>
+                          <button
+                            onClick={() => deleteIntakeMutation.mutate(entry.id)}
+                            disabled={deleteIntakeMutation.isPending}
+                            className="p-1.5 text-white/30 hover:text-red-400 transition-colors shrink-0"
+                            aria-label="Delete entry"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
         </Tabs>
@@ -3306,6 +3540,100 @@ export default function Fitness() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add to Intake Dialog */}
+      <Dialog open={showAddIntakeDialog} onOpenChange={(open) => { if (!open) { setShowAddIntakeDialog(false); setAddIntakePrefill(null); } }}>
+        <DialogContent className="w-[95vw] max-w-sm p-0 rounded-sm border-2 border-black bg-black">
+          <div className="bg-[#FCD000] px-5 py-4 border-b-2 border-black">
+            <div className="flex items-center gap-2">
+              <Utensils className="w-5 h-5 text-black" />
+              <h2 className="font-black text-black uppercase tracking-tight text-lg">
+                {addIntakePrefill ? 'Add to Intake' : 'Log Food'}
+              </h2>
+            </div>
+          </div>
+
+          <div className="px-5 py-4 space-y-4">
+            {/* Food name */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-white/60 uppercase tracking-widest">Food Name</label>
+              <Input
+                value={addIntakePrefill ? addIntakePrefill.foodName : intakeForm.foodName}
+                onChange={(e) => !addIntakePrefill && setIntakeForm(f => ({ ...f, foodName: e.target.value }))}
+                readOnly={!!addIntakePrefill}
+                placeholder="e.g. Chicken Breast"
+                className={`bg-zinc-900 border-2 border-white/20 text-white placeholder:text-white/30 rounded-sm ${addIntakePrefill ? 'opacity-70' : 'focus:border-[#FCD000]'}`}
+              />
+            </div>
+
+            {/* Calories per serving */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-white/60 uppercase tracking-widest">Calories per Serving</label>
+              <Input
+                type="number"
+                value={addIntakePrefill ? Math.round(addIntakePrefill.caloriesPerServing) : intakeForm.caloriesPerServing}
+                onChange={(e) => !addIntakePrefill && setIntakeForm(f => ({ ...f, caloriesPerServing: e.target.value }))}
+                readOnly={!!addIntakePrefill}
+                min={0}
+                placeholder="e.g. 165"
+                className={`bg-zinc-900 border-2 border-white/20 text-white placeholder:text-white/30 rounded-sm ${addIntakePrefill ? 'opacity-70' : 'focus:border-[#FCD000]'}`}
+              />
+            </div>
+
+            {/* Number of servings */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-white/60 uppercase tracking-widest">Number of Servings</label>
+              <Input
+                type="number"
+                value={intakeForm.servings}
+                onChange={(e) => setIntakeForm(f => ({ ...f, servings: e.target.value }))}
+                min={0.1}
+                step={0.5}
+                placeholder="e.g. 1.5"
+                className="bg-zinc-900 border-2 border-white/20 text-white placeholder:text-white/30 focus:border-[#FCD000] rounded-sm"
+              />
+            </div>
+
+            {/* Meal type */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-white/60 uppercase tracking-widest">Meal</label>
+              <Select value={intakeFormMeal} onValueChange={(v: any) => setIntakeFormMeal(v)}>
+                <SelectTrigger className="bg-zinc-900 border-2 border-white/20 text-white rounded-sm focus:border-[#FCD000]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-900 border-2 border-white/20 text-white rounded-sm">
+                  <SelectItem value="breakfast">Breakfast</SelectItem>
+                  <SelectItem value="lunch">Lunch</SelectItem>
+                  <SelectItem value="dinner">Dinner</SelectItem>
+                  <SelectItem value="snack">Snack</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Calorie preview */}
+            {(() => {
+              const cal = addIntakePrefill ? addIntakePrefill.caloriesPerServing : parseFloat(intakeForm.caloriesPerServing);
+              const srv = parseFloat(intakeForm.servings);
+              const total = !isNaN(cal) && !isNaN(srv) && srv > 0 ? Math.round(cal * srv) : null;
+              return total !== null ? (
+                <div className="flex items-center justify-between bg-[#FCD000]/10 border border-[#FCD000]/30 rounded-sm px-3 py-2">
+                  <span className="text-[#FCD000] text-xs font-black uppercase tracking-wide">Total Calories</span>
+                  <span className="text-[#FCD000] font-black text-lg tabular-nums">{total} kcal</span>
+                </div>
+              ) : null;
+            })()}
+
+            {/* Submit */}
+            <Button
+              onClick={handleSubmitIntake}
+              disabled={addIntakeMutation.isPending}
+              className="w-full bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black"
+            >
+              {addIntakeMutation.isPending ? 'Saving…' : 'Save Entry'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

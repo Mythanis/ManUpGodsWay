@@ -14955,6 +14955,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── Food Intake Routes ───────────────────────────────────────────────────────
+
+  const intakeEntrySchema = z.object({
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be YYYY-MM-DD'),
+    meal: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
+    foodName: z.string().min(1).max(300),
+    caloriesPerServing: z.number().int().min(0).max(100000),
+    servings: z.number().min(0.1).max(100),
+  });
+
+  // POST /api/intake — add an entry
+  app.post('/api/intake', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const parsed = intakeEntrySchema.parse(req.body);
+      const totalCalories = Math.round(parsed.caloriesPerServing * parsed.servings);
+      const entry = await storage.addFoodIntakeEntry({ userId, ...parsed, totalCalories });
+      res.json(entry);
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ message: error.errors[0].message });
+      console.error('[Intake] POST error', error);
+      res.status(500).json({ message: 'Failed to save food intake entry' });
+    }
+  });
+
+  // GET /api/intake?start=YYYY-MM-DD&end=YYYY-MM-DD — fetch entries for a date range
+  app.get('/api/intake', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { start, end } = req.query as { start?: string; end?: string };
+      if (!start || !end) return res.status(400).json({ message: 'start and end query params are required' });
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) {
+        return res.status(400).json({ message: 'start and end must be YYYY-MM-DD' });
+      }
+      const entries = await storage.getFoodIntakeEntries(userId, start, end);
+      res.json(entries);
+    } catch (error) {
+      console.error('[Intake] GET error', error);
+      res.status(500).json({ message: 'Failed to fetch food intake entries' });
+    }
+  });
+
+  // DELETE /api/intake/:id — delete entry owned by the requesting user
+  app.delete('/api/intake/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.deleteFoodIntakeEntry(req.params.id, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('[Intake] DELETE error', error);
+      res.status(500).json({ message: 'Failed to delete food intake entry' });
+    }
+  });
+
   // ─────────────────────────────────────────────────────────────────────────────
 
   return httpServer;

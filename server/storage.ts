@@ -199,6 +199,9 @@ import {
   type DailyAppReminder,
   devotionalReflections,
   type DevotionalReflection,
+  foodIntakeEntries,
+  type FoodIntakeEntry,
+  type InsertFoodIntakeEntry,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne } from "drizzle-orm";
@@ -618,6 +621,11 @@ export interface IStorage {
   markExerciseComplete(userId: string, planId: string, exerciseId: string): Promise<ExerciseCompletion>;
   unmarkExerciseComplete(userId: string, exerciseId: string): Promise<void>;
   getExerciseCompletions(userId: string, planId: string): Promise<ExerciseCompletion[]>;
+
+  // Food intake operations
+  addFoodIntakeEntry(entry: InsertFoodIntakeEntry): Promise<FoodIntakeEntry>;
+  getFoodIntakeEntries(userId: string, startDate: string, endDate: string): Promise<FoodIntakeEntry[]>;
+  deleteFoodIntakeEntry(id: string, userId: string): Promise<void>;
 
   // Events operations
   getEvents(): Promise<(Event & { tiers: EventTier[] })[]>;
@@ -7706,6 +7714,33 @@ export class DatabaseStorage implements IStorage {
 
   async getAllDailyReminders(): Promise<DailyAppReminder[]> {
     return db.select().from(dailyAppReminders);
+  }
+
+  // ─── Food Intake ───────────────────────────────────────────────────────────
+
+  async addFoodIntakeEntry(entry: InsertFoodIntakeEntry): Promise<FoodIntakeEntry> {
+    const [row] = await db.insert(foodIntakeEntries).values(entry).returning();
+    return row;
+  }
+
+  async getFoodIntakeEntries(userId: string, startDate: string, endDate: string): Promise<FoodIntakeEntry[]> {
+    return db
+      .select()
+      .from(foodIntakeEntries)
+      .where(
+        and(
+          eq(foodIntakeEntries.userId, userId),
+          gte(foodIntakeEntries.date, startDate),
+          lte(foodIntakeEntries.date, endDate),
+        ),
+      )
+      .orderBy(asc(foodIntakeEntries.date), asc(foodIntakeEntries.createdAt));
+  }
+
+  async deleteFoodIntakeEntry(id: string, userId: string): Promise<void> {
+    await db
+      .delete(foodIntakeEntries)
+      .where(and(eq(foodIntakeEntries.id, id), eq(foodIntakeEntries.userId, userId)));
   }
 }
 

@@ -2752,6 +2752,30 @@ export const bibleApiCalls = pgTable("bible_api_calls", {
   calledAt: timestamp("called_at").defaultNow().notNull(),
 });
 
+// ─── Food Intake Entries ───────────────────────────────────────────────────────
+
+export const foodIntakeEntries = pgTable("food_intake_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  date: varchar("date").notNull(), // YYYY-MM-DD
+  meal: varchar("meal").notNull(), // breakfast, lunch, dinner, snack
+  foodName: varchar("food_name", { length: 300 }).notNull(),
+  caloriesPerServing: integer("calories_per_serving").notNull(),
+  servings: real("servings").notNull().default(1),
+  totalCalories: integer("total_calories").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_food_intake_user_date").on(table.userId, table.date),
+]);
+
+export const insertFoodIntakeEntrySchema = createInsertSchema(foodIntakeEntries).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type FoodIntakeEntry = typeof foodIntakeEntries.$inferSelect;
+export type InsertFoodIntakeEntry = z.infer<typeof insertFoodIntakeEntrySchema>;
+
 // ─── Stripe Test Subscription (Owner testing tool) ────────────────────────────
 
 export const stripeTestSubscriptions = pgTable("stripe_test_subscriptions", {
