@@ -3067,6 +3067,11 @@ export default function Fitness() {
                 <p className="text-xs mt-1 text-white/30">Powered by the USDA FoodData Central database</p>
               </div>
             )}
+
+            {/* Required USDA citation */}
+            <p className="text-[10px] text-white/30 text-center pt-2 pb-1 border-t border-white/10">
+              U.S. Department of Agriculture, Agricultural Research Service. FoodData Central, 2019. fdc.nal.usda.gov.
+            </p>
           </TabsContent>
 
         </Tabs>
