@@ -2703,10 +2703,13 @@ export default function Fitness() {
           {/* My Fitness Plans Tab */}
           <TabsContent value="my-plans" className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-black text-white uppercase tracking-tight">My Fitness Plans</h2>
+              <div>
+                <h2 className="text-xl font-black text-white uppercase tracking-tight">My Fitness Plans</h2>
+                <p className="text-white/40 text-xs mt-0.5">Build and manage your personal workout plans</p>
+              </div>
               <Link href="/create-plan">
                 <Button
-                  className="bg-[#FCD000] hover:bg-yellow-300 text-black font-black uppercase text-xs tracking-wide rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                  className="bg-[#FCD000] hover:bg-yellow-300 text-black font-black uppercase text-xs tracking-wide rounded-sm border-2 border-black"
                   data-testid="button-create-plan"
                 >
                   <Plus className="w-4 h-4 mr-1" />
@@ -2717,40 +2720,44 @@ export default function Fitness() {
 
             {/* Create Plan Modal */}
             {showCreatePlan && (
-              <div className="bg-[#FCD000] rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 space-y-3">
-                <h3 className="font-black text-black uppercase tracking-tight">New Fitness Plan</h3>
+              <div className="bg-zinc-900 rounded-sm border-2 border-[#FCD000]/60 p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-1 h-5 bg-[#FCD000] rounded-full" />
+                  <h3 className="font-black text-white uppercase tracking-tight">New Fitness Plan</h3>
+                </div>
                 <div>
-                  <label className="block text-xs font-black text-black uppercase tracking-wider mb-1">Plan Name</label>
+                  <label className="block text-xs font-black text-white/60 uppercase tracking-wider mb-1">Plan Name</label>
                   <Input
                     value={newPlanName}
                     onChange={(e) => setNewPlanName(e.target.value)}
                     placeholder="Enter plan name..."
-                    className="bg-white border-2 border-black text-black rounded-sm"
+                    className="bg-zinc-800 border-2 border-zinc-700 text-white placeholder:text-white/30 rounded-sm focus:border-[#FCD000]"
                     data-testid="input-plan-name"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-black text-black uppercase tracking-wider mb-1">Description (optional)</label>
+                  <label className="block text-xs font-black text-white/60 uppercase tracking-wider mb-1">Description (optional)</label>
                   <Input
                     value={newPlanDescription}
                     onChange={(e) => setNewPlanDescription(e.target.value)}
                     placeholder="Enter plan description..."
-                    className="bg-white border-2 border-black text-black rounded-sm"
+                    className="bg-zinc-800 border-2 border-zinc-700 text-white placeholder:text-white/30 rounded-sm focus:border-[#FCD000]"
                     data-testid="input-plan-description"
                   />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 pt-1">
                   <Button
                     onClick={handleCreatePlan}
                     disabled={createPlanMutation.isPending}
-                    className="bg-black text-[#FCD000] font-black uppercase text-xs tracking-wide rounded-sm border-2 border-black"
+                    className="bg-[#FCD000] text-black font-black uppercase text-xs tracking-wide rounded-sm border-2 border-black hover:bg-yellow-300"
                     data-testid="button-save-plan"
                   >
                     {createPlanMutation.isPending ? 'Creating...' : 'Create Plan'}
                   </Button>
                   <Button
                     onClick={() => { setShowCreatePlan(false); setNewPlanName(''); setNewPlanDescription(''); }}
-                    className="bg-white text-black font-black uppercase text-xs tracking-wide rounded-sm border-2 border-black"
+                    variant="outline"
+                    className="border-2 border-zinc-600 text-white/70 font-black uppercase text-xs tracking-wide rounded-sm bg-transparent hover:bg-zinc-800"
                     data-testid="button-cancel-plan"
                   >
                     Cancel
@@ -2761,60 +2768,64 @@ export default function Fitness() {
 
             {/* Plans List */}
             {fitnessPlans.length === 0 ? (
-              <div className="text-center py-12 bg-[#FCD000] rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                <BookOpen className="w-12 h-12 mx-auto text-black mb-4" />
-                <h3 className="text-lg font-black text-black uppercase tracking-tight mb-1">No Plans Yet</h3>
-                <p className="text-black/70 text-sm font-medium">Create your first fitness plan to get started</p>
+              <div className="text-center py-14 bg-zinc-900 rounded-sm border-2 border-zinc-700">
+                <div className="w-14 h-14 rounded-sm bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center mx-auto mb-4">
+                  <BookOpen className="w-7 h-7 text-white/30" />
+                </div>
+                <h3 className="text-base font-black text-white uppercase tracking-tight mb-1">No Plans Yet</h3>
+                <p className="text-white/40 text-sm">Create your first fitness plan to get started</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {fitnessPlans.map((plan: FitnessPlan) => (
-                  <div key={plan.id} className="bg-[#FCD000] rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                  <div key={plan.id} className="bg-zinc-900 rounded-sm border-2 border-zinc-700 overflow-hidden">
+                    {/* Gold accent bar */}
+                    <div className="h-1 bg-[#FCD000]" />
                     <div className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-black text-black text-base leading-tight flex-1 mr-2">{plan.name}</h3>
+                      <div className="flex items-start justify-between mb-1.5">
+                        <h3 className="font-black text-white text-base leading-tight flex-1 mr-2">{plan.name}</h3>
                         {plan.isPublic && (
-                          <Badge className="text-xs bg-black text-[#FCD000] font-bold rounded-sm border-none flex-shrink-0">Public</Badge>
+                          <Badge className="text-[10px] bg-[#FCD000]/20 text-[#FCD000] font-bold rounded-sm border border-[#FCD000]/40 flex-shrink-0">Public</Badge>
                         )}
                       </div>
                       {plan.description && (
-                        <p className="text-black/70 text-sm mb-2 font-medium">{plan.description}</p>
+                        <p className="text-white/55 text-sm mb-3 leading-snug">{plan.description}</p>
                       )}
-                      <div className="flex items-center gap-3 text-xs font-bold text-black/60">
-                        <span className="flex items-center gap-1">
-                          <List className="w-3 h-3" />
+                      <div className="flex items-center gap-4 text-xs font-semibold text-white/40">
+                        <span className="flex items-center gap-1.5">
+                          <List className="w-3.5 h-3.5 text-[#FCD000]/60" />
                           {plan.exercises?.length || 0} exercises
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-[#FCD000]/60" />
                           {format(new Date(plan.createdAt), 'MMM d, yyyy')}
                         </span>
                       </div>
                     </div>
-                    {/* Action buttons - full-width row at bottom */}
-                    <div className="flex border-t-2 border-black">
+                    {/* Action buttons */}
+                    <div className="flex border-t-2 border-zinc-700">
                       <button
                         onClick={() => handleViewPlan(plan)}
-                        className="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-black uppercase tracking-wide text-black hover:bg-black hover:text-[#FCD000] transition-colors border-r-2 border-black"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-black uppercase tracking-wide text-white/70 hover:text-[#FCD000] hover:bg-zinc-800 transition-colors border-r border-zinc-700"
                         data-testid={`button-view-plan-${plan.id}`}
                       >
-                        <BookOpen className="w-3 h-3" /> View
+                        <BookOpen className="w-3.5 h-3.5" /> View
                       </button>
                       <Link href={`/edit-plan/${plan.id}`} className="flex-1">
                         <button
-                          className="w-full flex items-center justify-center gap-1 py-2 text-xs font-black uppercase tracking-wide text-black hover:bg-black hover:text-[#FCD000] transition-colors border-r-2 border-black"
+                          className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-black uppercase tracking-wide text-white/70 hover:text-[#FCD000] hover:bg-zinc-800 transition-colors border-r border-zinc-700"
                           data-testid={`button-edit-plan-${plan.id}`}
                         >
-                          <Edit className="w-3 h-3" /> Edit
+                          <Edit className="w-3.5 h-3.5" /> Edit
                         </button>
                       </Link>
                       <button
                         onClick={() => deletePlanMutation.mutate(plan.id)}
                         disabled={deletePlanMutation.isPending}
-                        className="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-black uppercase tracking-wide text-red-700 hover:bg-red-600 hover:text-white transition-colors"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-black uppercase tracking-wide text-white/40 hover:text-red-400 hover:bg-zinc-800 transition-colors"
                         data-testid={`button-delete-plan-${plan.id}`}
                       >
-                        <Trash2 className="w-3 h-3" /> Delete
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
                       </button>
                     </div>
                   </div>
