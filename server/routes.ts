@@ -84,6 +84,56 @@ function hasOwnerPrivileges(user: any): boolean {
   return isOwner(user);
 }
 
+/**
+ * Returns the UTC time that corresponds to midnight at the start of the *next*
+ * calendar day in `timezone`, measured from `completedAt`.
+ * Falls back to a 24-hour rolling window when the timezone string is invalid.
+ */
+function getNextMidnightInTimezone(completedAt: Date, timezone: string): Date {
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false,
+    });
+    const getParts = (d: Date) => {
+      const parts = formatter.formatToParts(d);
+      const get = (type: string) => parseInt(parts.find(p => p.type === type)?.value || '0');
+      return { year: get('year'), month: get('month'), day: get('day') };
+    };
+
+    const { year, month, day } = getParts(completedAt);
+    const now = new Date();
+    const nowParts = getParts(now);
+
+    // "next day" in the user's timezone (midnight = 00:00:00 local)
+    const nextDay = new Date(year, month - 1, day + 1);           // local wall-clock midnight
+    const nowDate = new Date(nowParts.year, nowParts.month - 1, nowParts.day);
+
+    if (nowDate >= nextDay) {
+      // Already past midnight — return a time in the past so callers treat it as unlocked
+      return new Date(0);
+    }
+
+    // Compute ms remaining from *now* until that local midnight
+    const nowFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false,
+    });
+    const nowTimeParts = nowFormatter.formatToParts(now);
+    const getT = (type: string) => parseInt(nowTimeParts.find(p => p.type === type)?.value || '0');
+    const secondsPassedToday = getT('hour') * 3600 + getT('minute') * 60 + getT('second');
+    const secondsUntilMidnight = 86400 - secondsPassedToday;
+
+    return new Date(now.getTime() + secondsUntilMidnight * 1000);
+  } catch {
+    // Invalid timezone — fall back to a 24-hour rolling window
+    return new Date(completedAt.getTime() + 24 * 60 * 60 * 1000);
+  }
+}
+
 // Subscription access checking helpers
 function hasActiveSubscription(user: any): boolean {
   if (!user) return false;
@@ -3437,13 +3487,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const sorted = [...lessons].sort((a: any, b: any) =>
           (a.displayOrder ?? a.dayNumber ?? 0) - (b.displayOrder ?? b.dayNumber ?? 0)
         );
+        const timezone = (req.query.timezone as string) || 'America/New_York';
         const withLock = sorted.map((lesson: any, index: number) => {
           if (index === 0) return { ...lesson, isLocked: false, unlocksAt: null };
           const prevLesson = sorted[index - 1];
           const prevProg = progressMap.get(prevLesson.id);
           if (!prevProg?.completedAt) return { ...lesson, isLocked: true, unlocksAt: null };
           const prevCompleted = new Date(prevProg.completedAt);
-          const unlockTime = new Date(prevCompleted.getTime() + 24 * 60 * 60 * 1000);
+          const unlockTime = getNextMidnightInTimezone(prevCompleted, timezone);
           if (new Date() < unlockTime) return { ...lesson, isLocked: true, unlocksAt: unlockTime.toISOString() };
           return { ...lesson, isLocked: false, unlocksAt: null };
         });
@@ -3593,9 +3644,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: "Complete the previous lesson first." });
         }
         const prevCompleted = new Date(prevProg.completedAt);
-        const unlockTime = new Date(prevCompleted);
-        unlockTime.setDate(unlockTime.getDate() + 1);
-        unlockTime.setHours(0, 0, 0, 0);
+        const lessonTimezone = (req.body.timezone as string) || 'America/New_York';
+        const unlockTime = getNextMidnightInTimezone(prevCompleted, lessonTimezone);
         if (new Date() < unlockTime) {
           return res.status(403).json({
             message: "This lesson isn't available yet. Come back tomorrow!",

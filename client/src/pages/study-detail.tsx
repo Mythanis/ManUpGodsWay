@@ -385,8 +385,16 @@ export default function StudyDetail() {
   });
 
   // Fetch all lessons for this study to calculate progress
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { data: studyLessons = [] } = useQuery<any[]>({
-    queryKey: [`/api/studies/${id}/lessons`],
+    queryKey: [`/api/studies/${id}/lessons`, userTimezone],
+    queryFn: async () => {
+      const res = await fetch(`/api/studies/${id}/lessons?timezone=${encodeURIComponent(userTimezone)}`, {
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to fetch lessons');
+      return res.json();
+    },
     enabled: !!id,
   });
 

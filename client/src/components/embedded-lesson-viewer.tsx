@@ -86,9 +86,17 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
   
   const contentRef = useRefTagger([currentDayIndex]);
 
-  // Fetch all lessons for this study
+  // Fetch all lessons for this study (include timezone so drip locks use local midnight)
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { data: lessons = [], isLoading: lessonsLoading } = useQuery<StudyLesson[]>({
-    queryKey: [`/api/studies/${studyId}/lessons`],
+    queryKey: [`/api/studies/${studyId}/lessons`, userTimezone],
+    queryFn: async () => {
+      const res = await fetch(`/api/studies/${studyId}/lessons?timezone=${encodeURIComponent(userTimezone)}`, {
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to fetch lessons');
+      return res.json();
+    },
   });
 
   // Fetch user's overall progress for this study
@@ -154,13 +162,19 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
     mutationFn: async () => {
       return apiRequest("POST", `/api/studies/${studyId}/lessons/${currentLesson.id}/complete`, {
         answers: Object.keys(answers).length > 0 ? answers : undefined,
+        timezone: userTimezone,
       });
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/lesson-progress`] });
       queryClient.invalidateQueries({ queryKey: [`/api/studies/${studyId}/progress`] });
       // Refresh lessons so the next lesson's isLocked/unlocksAt reflects the new completion time
-      queryClient.invalidateQueries({ queryKey: [`/api/studies/${studyId}/lessons`] });
+      // Use a predicate to match all timezone variants of this key
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          query.queryKey[0] === `/api/studies/${studyId}/lessons`,
+      });
       setAnswers({});
       if (data?.studyCompleted) {
         setNextStudySuggestion(data.nextStudy || null);
