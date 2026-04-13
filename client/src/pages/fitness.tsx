@@ -1959,37 +1959,37 @@ export default function Fitness() {
 
         {/* Tab Navigation */}
         <Tabs defaultValue="workout" className="w-full">
-          <TabsList className="w-full bg-zinc-900 border-2 border-black rounded-sm h-12 p-1 flex overflow-x-auto scrollbar-hide gap-0.5">
-            <TabsTrigger value="workout" className="flex-shrink-0 flex items-center gap-1.5 px-3 rounded-sm data-[state=active]:bg-[#FCD000] data-[state=active]:text-black text-white/70 font-black uppercase text-[10px] tracking-wide whitespace-nowrap">
-              <Dumbbell className="w-3.5 h-3.5" />
+          <TabsList className="grid grid-cols-4 w-full h-auto p-0 bg-transparent gap-2">
+            <TabsTrigger value="workout" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+              <Dumbbell className="w-5 h-5" />
               Workout
             </TabsTrigger>
-            <TabsTrigger value="community" className="flex-shrink-0 flex items-center gap-1.5 px-3 rounded-sm data-[state=active]:bg-[#FCD000] data-[state=active]:text-black text-white/70 font-black uppercase text-[10px] tracking-wide whitespace-nowrap">
-              <Users className="w-3.5 h-3.5" />
+            <TabsTrigger value="community" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+              <Users className="w-5 h-5" />
               Community
             </TabsTrigger>
-            <TabsTrigger value="exercises" className="flex-shrink-0 flex items-center gap-1.5 px-3 rounded-sm data-[state=active]:bg-[#FCD000] data-[state=active]:text-black text-white/70 font-black uppercase text-[10px] tracking-wide whitespace-nowrap">
-              <Search className="w-3.5 h-3.5" />
+            <TabsTrigger value="exercises" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+              <Search className="w-5 h-5" />
               Exercises
             </TabsTrigger>
-            <TabsTrigger value="favorites" className="flex-shrink-0 flex items-center gap-1.5 px-3 rounded-sm data-[state=active]:bg-[#FCD000] data-[state=active]:text-black text-white/70 font-black uppercase text-[10px] tracking-wide whitespace-nowrap">
-              <Heart className="w-3.5 h-3.5" />
+            <TabsTrigger value="favorites" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+              <Heart className="w-5 h-5" />
               Favorites
             </TabsTrigger>
-            <TabsTrigger value="pre-built-plans" className="flex-shrink-0 flex items-center gap-1.5 px-3 rounded-sm data-[state=active]:bg-[#FCD000] data-[state=active]:text-black text-white/70 font-black uppercase text-[10px] tracking-wide whitespace-nowrap">
-              <BookOpen className="w-3.5 h-3.5" />
+            <TabsTrigger value="pre-built-plans" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+              <BookOpen className="w-5 h-5" />
               Plans
             </TabsTrigger>
-            <TabsTrigger value="my-plans" className="flex-shrink-0 flex items-center gap-1.5 px-3 rounded-sm data-[state=active]:bg-[#FCD000] data-[state=active]:text-black text-white/70 font-black uppercase text-[10px] tracking-wide whitespace-nowrap">
-              <List className="w-3.5 h-3.5" />
+            <TabsTrigger value="my-plans" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+              <List className="w-5 h-5" />
               My Plans
             </TabsTrigger>
-            <TabsTrigger value="nutrition" className="flex-shrink-0 flex items-center gap-1.5 px-3 rounded-sm data-[state=active]:bg-[#FCD000] data-[state=active]:text-black text-white/70 font-black uppercase text-[10px] tracking-wide whitespace-nowrap">
-              <Apple className="w-3.5 h-3.5" />
+            <TabsTrigger value="nutrition" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+              <Apple className="w-5 h-5" />
               Nutrition
             </TabsTrigger>
-            <TabsTrigger value="intake" className="flex-shrink-0 flex items-center gap-1.5 px-3 rounded-sm data-[state=active]:bg-[#FCD000] data-[state=active]:text-black text-white/70 font-black uppercase text-[10px] tracking-wide whitespace-nowrap">
-              <Utensils className="w-3.5 h-3.5" />
+            <TabsTrigger value="intake" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+              <Utensils className="w-5 h-5" />
               Intake
             </TabsTrigger>
           </TabsList>
