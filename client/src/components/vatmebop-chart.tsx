@@ -165,6 +165,13 @@ export function VatmebopChart() {
           <table className="w-full border-collapse">
             <thead className="sticky top-0 z-10 bg-zinc-950">
               <tr>
+                <th colSpan={9} className="pt-1.5 pb-0.5 px-2 border-b border-zinc-800/40">
+                  <p className="text-[9px] text-white/30 font-bold text-center uppercase tracking-wide">
+                    Tap letter for details · tap cell to cycle · scroll to see all 52 weeks
+                  </p>
+                </th>
+              </tr>
+              <tr>
                 <th className="w-10 py-2 text-center text-xs font-black text-zinc-500 uppercase tracking-wide border-b border-zinc-800">
                   Wk
                 </th>
@@ -230,10 +237,6 @@ export function VatmebopChart() {
           </span>
         </div>
       </div>
-
-      <p className="text-[10px] text-white/30 mt-1.5 font-bold text-center uppercase tracking-wide">
-        Tap column letter for details · tap cell to cycle · scroll to see all 52 weeks
-      </p>
     </div>
   );
 }
