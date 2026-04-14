@@ -116,7 +116,7 @@ export function VatmebopChart() {
     <div className="mt-5">
       {/* Sub-section label + year picker */}
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FCD000]">
+        <span className="font-coalition text-sm uppercase tracking-widest text-[#FCD000]">
           My Accountability
         </span>
         <div className="flex-1 h-px bg-white/10" />
