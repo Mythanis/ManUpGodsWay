@@ -1,4 +1,4 @@
-const CACHE_NAME = 'man-up-gods-way-v9';
+const CACHE_NAME = 'man-up-gods-way-v10';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -177,7 +177,19 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    Promise.all([
+      self.registration.showNotification(data.title, options),
+      // Notify all open app windows so they can refresh data immediately
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        clientList.forEach((client) => {
+          client.postMessage({
+            type: 'PUSH_RECEIVED',
+            notificationType: data.tag || 'default',
+            url: data.url || '/'
+          });
+        });
+      })
+    ])
   );
 });
 

@@ -290,6 +290,24 @@ function AppContent() {
   const { splashCompleted } = useSplash();
   const { isTourActive } = useTour();
 
+  // When a push notification arrives while the app is open, the service worker
+  // broadcasts PUSH_RECEIVED so we can immediately refresh notifications and messages
+  // without waiting for the next polling interval.
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    const handleSwMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'PUSH_RECEIVED') {
+        queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+        // Also refetch any open message list
+        queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', handleSwMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', handleSwMessage);
+  }, []);
+
   return (
     <div
       className="max-w-md mx-auto text-foreground shadow-2xl min-h-screen relative"

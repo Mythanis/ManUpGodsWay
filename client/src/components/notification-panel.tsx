@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -77,6 +77,7 @@ interface NotificationPanelProps {
 export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) {
   const [showPanel, setShowPanel] = useState(false);
   const [respondedRequestIds, setRespondedRequestIds] = useState<Set<string>>(new Set());
+  const [isRinging, setIsRinging] = useState(false);
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const { user } = useAuth();
@@ -104,6 +105,19 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
   const filteredNotifications = notifications;
   const unreadCount = filteredNotifications.filter(n => !n.isRead).length;
   const pendingRequests = messageRequests.filter(r => r.status === 'pending');
+  const totalUnreadAll = unreadCount + pendingRequests.length;
+
+  // Ring the bell when new notifications arrive (panel is closed)
+  const prevTotalRef = useRef(totalUnreadAll);
+  useEffect(() => {
+    if (totalUnreadAll > prevTotalRef.current && !showPanel) {
+      setIsRinging(true);
+      const t = setTimeout(() => setIsRinging(false), 2000);
+      prevTotalRef.current = totalUnreadAll;
+      return () => clearTimeout(t);
+    }
+    prevTotalRef.current = totalUnreadAll;
+  }, [totalUnreadAll, showPanel]);
 
   // Mark notification as read
   const markAsReadMutation = useMutation({
@@ -594,18 +608,17 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
   }
 
   const hasUnread = unreadCount > 0 || pendingRequests.length > 0;
-  const totalUnread = unreadCount + pendingRequests.length;
 
   return (
     <div className="relative">
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => setShowPanel(!showPanel)}
+        onClick={() => { setShowPanel(!showPanel); setIsRinging(false); }}
         className={`relative flex items-center gap-1.5 px-2 ${hasUnread ? 'text-white' : ''}`}
       >
         <div className="relative">
-          <Bell className={`h-5 w-5 ${hasUnread ? 'text-[#FCD000]' : ''}`} />
+          <Bell className={`h-5 w-5 transition-transform ${hasUnread ? 'text-[#FCD000]' : ''} ${isRinging ? 'animate-bounce' : ''}`} />
           {hasUnread && (
             <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
@@ -615,7 +628,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         </div>
         {hasUnread && (
           <span className="text-xs font-bold text-[#FCD000] leading-none">
-            {totalUnread}
+            {totalUnreadAll}
           </span>
         )}
       </Button>
