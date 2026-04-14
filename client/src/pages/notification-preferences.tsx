@@ -34,6 +34,8 @@ interface NotificationPreferences {
   newStudies: boolean;
   newVideos: boolean;
   newDevotionals: boolean;
+  discussionNotifications: boolean;
+  discussionReplyNotifications: boolean;
   discussionReplies: boolean;
   directMessages: boolean;
   groupMessages: boolean;
@@ -49,6 +51,8 @@ const preferencesSchema = z.object({
   newStudies: z.boolean(),
   newVideos: z.boolean(),
   newDevotionals: z.boolean(),
+  discussionNotifications: z.boolean(),
+  discussionReplyNotifications: z.boolean(),
   discussionReplies: z.boolean(),
   directMessages: z.boolean(),
   groupMessages: z.boolean(),
@@ -162,6 +166,8 @@ export default function NotificationPreferences() {
       newStudies: true,
       newVideos: true,
       newDevotionals: true,
+      discussionNotifications: true,
+      discussionReplyNotifications: true,
       discussionReplies: true,
       directMessages: true,
       groupMessages: true,
@@ -178,6 +184,8 @@ export default function NotificationPreferences() {
         newStudies: preferences.newStudies,
         newVideos: preferences.newVideos,
         newDevotionals: preferences.newDevotionals,
+        discussionNotifications: preferences.discussionNotifications ?? true,
+        discussionReplyNotifications: preferences.discussionReplyNotifications ?? true,
         discussionReplies: preferences.discussionReplies,
         directMessages: preferences.directMessages,
         groupMessages: preferences.groupMessages,
@@ -409,6 +417,52 @@ export default function NotificationPreferences() {
               Community Activity
             </h2>
             <div className="space-y-2">
+              <FormField
+                control={form.control}
+                name="discussionNotifications"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                        <Users className="w-6 h-6 text-white relative z-10" />
+                      </div>
+                      <div className="flex-1 px-4 relative z-10">
+                        <span className="font-black text-sm text-black uppercase tracking-wide">Community Messages</span>
+                        <p className="text-xs text-black/70 mt-0.5">New posts from the community</p>
+                      </div>
+                      <FormControl>
+                        <div className="pr-4 relative z-10">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </div>
+                      </FormControl>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="discussionReplyNotifications"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                        <MessageCircle className="w-6 h-6 text-white relative z-10" />
+                      </div>
+                      <div className="flex-1 px-4 relative z-10">
+                        <span className="font-black text-sm text-black uppercase tracking-wide">Community Replies</span>
+                        <p className="text-xs text-black/70 mt-0.5">Replies to discussions you follow</p>
+                      </div>
+                      <FormControl>
+                        <div className="pr-4 relative z-10">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </div>
+                      </FormControl>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="discussionReplies"
