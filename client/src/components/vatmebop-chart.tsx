@@ -44,10 +44,10 @@ interface WeekRow {
 
 // Header: py-2 (8px each side) + h-7 button (28px) + border-b (1px) ≈ 45px
 // Each data row: py-1 (4px each side) + h-7 cell (28px) + border-b (1px) ≈ 37px
-// Show header + 4 rows: 45 + 4×37 = 193px
-const WINDOW_HEIGHT = 193;
+// Show header + 2 rows: 45 + 2×37 = 119px
+const WINDOW_HEIGHT = 119;
 
-// Row height for manual scroll positioning (without border)
+// Row height for manual scroll positioning
 const ROW_HEIGHT = 37;
 
 export function VatmebopChart() {
@@ -106,7 +106,7 @@ export function VatmebopChart() {
     // Center the target row: move scrollTop so the row is ~2 rows from the top
     const headerHeight = 45;
     const rowTop = headerHeight + (targetWeek - 1) * ROW_HEIGHT;
-    const center = rowTop - Math.floor(2 * ROW_HEIGHT);
+    const center = rowTop - Math.floor(1 * ROW_HEIGHT);
     scrollRef.current.scrollTop = Math.max(0, center);
   }, [year, isLoading]);
 
