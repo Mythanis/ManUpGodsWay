@@ -905,21 +905,10 @@ export class DatabaseStorage implements IStorage {
           const previousStudyId = seriesStudies[index - 1].id;
           const previousComplete = studyCompletionStatus.get(previousStudyId) ?? false;
           isLockedByPrevious = !previousComplete;
-
-          // Midnight drip: study unlocks at 12:00am of the day after the previous study was completed
-          if (previousComplete) {
-            const prevCompletionTime = studyCompletionTime.get(previousStudyId);
-            if (prevCompletionTime) {
-              const now = new Date();
-              const unlockTime = new Date(prevCompletionTime);
-              unlockTime.setDate(unlockTime.getDate() + 1);
-              unlockTime.setHours(0, 0, 0, 0);
-              if (now < unlockTime) {
-                isLockedByDrip = true;
-                unlocksAt = unlockTime;
-              }
-            }
-          }
+          // No inter-week drip: once the previous week is fully complete the next week
+          // opens immediately. The per-lesson 24-hour drip within each week already
+          // enforces the daily cadence, so an extra midnight gate here is redundant
+          // and causes users to see the week remain locked after completing the previous one.
         }
 
         const isLocked = isLockedByDrip || isLockedByPrevious || isScheduledFuture;
@@ -4866,33 +4855,9 @@ export class DatabaseStorage implements IStorage {
       };
     }
 
-    // Previous study is complete - check midnight drip timer
-    // Unlocks at 12:00am of the day after the previous study was completed
-    if (prevCompletionTime) {
-      const now = new Date();
-      const unlockTime = new Date(prevCompletionTime);
-      unlockTime.setDate(unlockTime.getDate() + 1);
-      unlockTime.setHours(0, 0, 0, 0);
-      if (now < unlockTime) {
-        const hoursRemaining = Math.ceil((unlockTime.getTime() - now.getTime()) / (1000 * 60 * 60));
-        const timeMessage = hoursRemaining <= 1
-          ? `Unlocks in less than an hour`
-          : `Unlocks in ${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''}`;
-        
-        return {
-          isLocked: true,
-          previousStudyTitle: null,
-          previousStudyId: null,
-          message: timeMessage,
-          studyNumber,
-          totalStudiesInSeries,
-          isLockedByDrip: true,
-          unlocksAt: unlockTime.toISOString()
-        };
-      }
-    }
-
-    // Previous study complete and 24 hours have passed - unlocked
+    // Previous study is complete — unlock immediately (no inter-week drip).
+    // The per-lesson 24-hour drip within each week already enforces the daily
+    // cadence; an extra midnight gate here is redundant.
     if (previousComplete) {
       return { isLocked: false, previousStudyTitle: null, previousStudyId: null, message: null, studyNumber, totalStudiesInSeries };
     }
