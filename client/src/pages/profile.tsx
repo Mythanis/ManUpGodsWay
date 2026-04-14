@@ -902,10 +902,9 @@ export default function Profile() {
             </CardContent>
           )}
         </Card>
+        {/* VATMEBOP Accountability Chart — lives inside Your Journey */}
+        <VatmebopChart />
       </div>
-
-      {/* VATMEBOP Accountability Chart */}
-      <VatmebopChart />
 
       {/* Testimony Section */}
       <div className="px-6 mt-6 mb-6">
