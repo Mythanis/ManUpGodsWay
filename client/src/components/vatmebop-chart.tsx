@@ -160,7 +160,7 @@ export function VatmebopChart() {
           </div>
 
           <div className="px-4 py-3 space-y-3">
-            <p className="text-xs text-white/70 leading-relaxed">
+            <p className="text-sm text-white/70 leading-relaxed">
               VATMEBOP is a 52-week spiritual discipline tracker. Each letter represents one area of your walk with God.
               At the end of each week, reflect honestly and tap each cell to record how you did.
             </p>
@@ -169,12 +169,12 @@ export function VatmebopChart() {
             <div className="space-y-1.5">
               {DISCIPLINES.map(({ letter, name, scripture }) => (
                 <div key={letter} className="flex items-start gap-2">
-                  <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-sm bg-ministry-gold-exact text-black text-[10px] font-black mt-0.5">
+                  <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-sm bg-ministry-gold-exact text-black text-xs font-black mt-0.5">
                     {letter}
                   </span>
                   <div className="min-w-0">
-                    <span className="text-xs font-black text-white uppercase tracking-wide">{name}</span>
-                    <span className="text-[10px] text-white/50 ml-1.5">{scripture}</span>
+                    <span className="text-sm font-black text-white uppercase tracking-wide">{name}</span>
+                    <span className="text-xs text-white/50 ml-1.5">{scripture}</span>
                   </div>
                 </div>
               ))}
@@ -182,31 +182,31 @@ export function VatmebopChart() {
 
             {/* Cell state guide */}
             <div className="border-t border-zinc-800 pt-3 space-y-1.5">
-              <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Tap a cell to cycle:</p>
+              <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-2">Tap a cell to cycle:</p>
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-sm border border-zinc-700 flex-shrink-0" style={{ background: "#27272a" }} />
                 <div>
-                  <span className="text-xs font-black text-white">Blank</span>
-                  <span className="text-[10px] text-white/50 ml-1.5">Not yet recorded</span>
+                  <span className="text-sm font-black text-white">Blank</span>
+                  <span className="text-xs text-white/50 ml-1.5">Not yet recorded</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-sm border border-amber-300 flex-shrink-0" style={{ background: "linear-gradient(to top, #fbbf24 50%, #27272a 50%)" }} />
                 <div>
-                  <span className="text-xs font-black text-white">Repented</span>
-                  <span className="text-[10px] text-white/50 ml-1.5">Fell short, but owned it before God</span>
+                  <span className="text-sm font-black text-white">Repented</span>
+                  <span className="text-xs text-white/50 ml-1.5">Fell short, but owned it before God</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-sm border border-green-400 flex-shrink-0" style={{ background: "#22c55e" }} />
                 <div>
-                  <span className="text-xs font-black text-white">Accomplished</span>
-                  <span className="text-[10px] text-white/50 ml-1.5">Walked in victory this week</span>
+                  <span className="text-sm font-black text-white">Accomplished</span>
+                  <span className="text-xs text-white/50 ml-1.5">Walked in victory this week</span>
                 </div>
               </div>
             </div>
 
-            <p className="text-[10px] text-white/40 italic border-t border-zinc-800 pt-2">
+            <p className="text-xs text-white/40 italic border-t border-zinc-800 pt-2">
               Be honest — this is between you and God. Repentance is not failure; it is faithfulness.
             </p>
           </div>
