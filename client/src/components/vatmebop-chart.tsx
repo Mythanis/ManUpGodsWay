@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Info } from "lucide-react";
 
 type DisciplineKey = "v" | "a" | "t" | "m" | "e" | "b" | "o" | "p";
 
@@ -46,13 +46,12 @@ interface WeekRow {
 // Each data row: py-1 (4px each side) + h-7 cell (28px) + border-b (1px) ≈ 37px
 // Show header + 2 rows: 45 + 2×37 = 119px
 const WINDOW_HEIGHT = 119;
-
-// Row height for manual scroll positioning
 const ROW_HEIGHT = 37;
 
 export function VatmebopChart() {
   const [year, setYear] = useState(() => new Date().getFullYear());
   const [activeHeader, setActiveHeader] = useState<DisciplineKey | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
   const currentWeek = getCurrentWeek();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
@@ -98,12 +97,9 @@ export function VatmebopChart() {
     [getState, year, mutation],
   );
 
-  // Scroll so current week is centered in the 4-row viewport
-  // The sticky header takes ~45px; data rows start after that inside the scroll container.
   useEffect(() => {
     if (!scrollRef.current) return;
     const targetWeek = year === new Date().getFullYear() ? currentWeek : 1;
-    // Center the target row: move scrollTop so the row is ~2 rows from the top
     const headerHeight = 45;
     const rowTop = headerHeight + (targetWeek - 1) * ROW_HEIGHT;
     const center = rowTop - Math.floor(1 * ROW_HEIGHT);
@@ -114,11 +110,21 @@ export function VatmebopChart() {
 
   return (
     <div className="mt-5">
-      {/* Sub-section label + year picker */}
+      {/* Sub-section label + info button + year picker */}
       <div className="flex items-center gap-2 mb-3">
         <span className="font-coalition text-sm uppercase tracking-widest text-[#FCD000]">
           My Accountability
         </span>
+        <button
+          onClick={() => setShowHelp((v) => !v)}
+          className={`w-6 h-6 flex items-center justify-center rounded-sm border transition-colors flex-shrink-0
+            ${showHelp
+              ? "bg-ministry-gold-exact border-ministry-gold-exact text-black"
+              : "bg-zinc-800 border-zinc-700 text-white/60 hover:text-white hover:bg-zinc-700"}`}
+          aria-label="How to use VATMEBOP"
+        >
+          <Info className="w-3 h-3" />
+        </button>
         <div className="flex-1 h-px bg-white/10" />
         <div className="flex items-center gap-1.5">
           <button
@@ -141,7 +147,73 @@ export function VatmebopChart() {
         </div>
       </div>
 
-      {/* Discipline tooltip */}
+      {/* Expandable How to Use panel */}
+      {showHelp && (
+        <div className="mb-3 bg-zinc-900 border-2 border-ministry-gold-exact rounded-sm overflow-hidden shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+          <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-zinc-800">
+            <p className="font-coalition text-sm uppercase tracking-widest text-[#FCD000]">
+              How to Use VATMEBOP
+            </p>
+            <button onClick={() => setShowHelp(false)} className="text-white/40 hover:text-white transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="px-4 py-3 space-y-3">
+            <p className="text-xs text-white/70 leading-relaxed">
+              VATMEBOP is a 52-week spiritual discipline tracker. Each letter represents one area of your walk with God.
+              At the end of each week, reflect honestly and tap each cell to record how you did.
+            </p>
+
+            {/* Discipline list */}
+            <div className="space-y-1.5">
+              {DISCIPLINES.map(({ letter, name, scripture }) => (
+                <div key={letter} className="flex items-start gap-2">
+                  <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-sm bg-ministry-gold-exact text-black text-[10px] font-black mt-0.5">
+                    {letter}
+                  </span>
+                  <div className="min-w-0">
+                    <span className="text-xs font-black text-white uppercase tracking-wide">{name}</span>
+                    <span className="text-[10px] text-white/50 ml-1.5">{scripture}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Cell state guide */}
+            <div className="border-t border-zinc-800 pt-3 space-y-1.5">
+              <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Tap a cell to cycle:</p>
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-sm border border-zinc-700 flex-shrink-0" style={{ background: "#27272a" }} />
+                <div>
+                  <span className="text-xs font-black text-white">Blank</span>
+                  <span className="text-[10px] text-white/50 ml-1.5">Not yet recorded</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-sm border border-amber-300 flex-shrink-0" style={{ background: "linear-gradient(to top, #fbbf24 50%, #27272a 50%)" }} />
+                <div>
+                  <span className="text-xs font-black text-white">Repented</span>
+                  <span className="text-[10px] text-white/50 ml-1.5">Fell short, but owned it before God</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-sm border border-green-400 flex-shrink-0" style={{ background: "#22c55e" }} />
+                <div>
+                  <span className="text-xs font-black text-white">Accomplished</span>
+                  <span className="text-[10px] text-white/50 ml-1.5">Walked in victory this week</span>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-[10px] text-white/40 italic border-t border-zinc-800 pt-2">
+              Be honest — this is between you and God. Repentance is not failure; it is faithfulness.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Discipline column tooltip */}
       {activeDisc && (
         <div className="mb-3 bg-zinc-900 border-2 border-ministry-gold-exact rounded-sm p-3 relative">
           <button onClick={() => setActiveHeader(null)} className="absolute top-2 right-2 text-white/40 hover:text-white">
@@ -156,7 +228,6 @@ export function VatmebopChart() {
 
       {/* Grid card */}
       <div className="border-2 border-ministry-gold-exact rounded-sm overflow-hidden shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] bg-zinc-900">
-        {/* Single scrollable container — sticky thead keeps header fixed, tbody scrolls beneath */}
         <div
           ref={scrollRef}
           className="overflow-y-auto"
