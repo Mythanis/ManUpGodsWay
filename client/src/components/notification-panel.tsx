@@ -101,8 +101,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
     refetchInterval: 15000, // Poll every 15 seconds
   });
 
-  const COMMUNITY_TYPES = ['new_discussion', 'discussion', 'discussion_reply'];
-  const filteredNotifications = notifications.filter(n => !COMMUNITY_TYPES.includes(n.type));
+  const filteredNotifications = notifications;
   const unreadCount = filteredNotifications.filter(n => !n.isRead).length;
   const pendingRequests = messageRequests.filter(r => r.status === 'pending');
 

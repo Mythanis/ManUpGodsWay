@@ -249,21 +249,17 @@ export default function Community() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Handle discussion query parameter from URL
-  useEffect(() => {
+  // Handle discussion query parameter from URL — extract the target ID once
+  const [targetDiscussionId] = useState<string | null>(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const discussionId = urlParams.get('discussion');
-    if (discussionId) {
-      setHighlightedDiscussion(discussionId);
-      // Scroll to the highlighted discussion after discussions load
-      setTimeout(() => {
-        const element = document.querySelector(`[data-discussion-id="${discussionId}"]`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 1000);
+    return urlParams.get('discussion');
+  });
+
+  useEffect(() => {
+    if (targetDiscussionId) {
+      setHighlightedDiscussion(targetDiscussionId);
     }
-  }, []);
+  }, [targetDiscussionId]);
 
   // Fetch real community stats with live updates
   const { data: communityStats } = useQuery<{
@@ -304,6 +300,18 @@ export default function Community() {
       triggerRefTagger();
     }
   }, [discussions]);
+
+  // Scroll to highlighted discussion once discussions are loaded
+  useEffect(() => {
+    if (!targetDiscussionId || discussions.length === 0) return;
+    const timer = setTimeout(() => {
+      const element = document.querySelector(`[data-discussion-id="${targetDiscussionId}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [targetDiscussionId, discussions]);
 
   const isAdmin = (user as any)?.role === 'admin' || (user as any)?.role === 'owner';
   const contentEditableRef = useRef<HTMLDivElement>(null);
