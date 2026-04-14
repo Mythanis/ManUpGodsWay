@@ -48,6 +48,8 @@ interface DiscussionCardProps {
   onAddToGroup?: (userId: string) => void;
   currentUserTier?: string; // legacy — kept for callsite compat
   currentUserSubscriptionStatus?: string;
+  autoOpenReplies?: boolean;
+  highlightReplyId?: string;
 }
 
 const replySchema = z.object({
@@ -61,7 +63,9 @@ export default function DiscussionCard({
   onStartDirectMessage,
   onAddToGroup,
   currentUserTier = 'free',
-  currentUserSubscriptionStatus = 'trial'
+  currentUserSubscriptionStatus = 'trial',
+  autoOpenReplies = false,
+  highlightReplyId,
 }: DiscussionCardProps) {
   const [fontSizeLevel, setFontSizeLevel] = useState<number>(() => {
     const saved = localStorage.getItem('communityFontSize');
@@ -89,7 +93,7 @@ export default function DiscussionCard({
   };
 
   const [showReplyForm, setShowReplyForm] = useState(false);
-  const [showReplies, setShowReplies] = useState(false);
+  const [showReplies, setShowReplies] = useState(autoOpenReplies);
   const [replyingToReplyId, setReplyingToReplyId] = useState<string | null>(null);
   const [replyingToName, setReplyingToName] = useState('');
   const [userHasLiked, setUserHasLiked] = useState((discussion as any).likedByMe ?? false);
@@ -136,6 +140,20 @@ export default function DiscussionCard({
     enabled: showLikersDialog && likeCount > 0,
     retry: false,
   });
+
+  // Scroll to and flash-highlight the target reply from a notification link
+  useEffect(() => {
+    if (!highlightReplyId || !showReplies || (replies as any[]).length === 0) return;
+    const timer = setTimeout(() => {
+      const el = document.querySelector(`[data-reply-id="${highlightReplyId}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('reply-highlight-flash');
+        setTimeout(() => el.classList.remove('reply-highlight-flash'), 2500);
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [highlightReplyId, showReplies, replies]);
 
   const form = useForm({
     resolver: zodResolver(replySchema),
@@ -778,8 +796,8 @@ export default function DiscussionCard({
               });
 
               const renderReply = (reply: any, isNested = false) => (
-                <div key={reply.id} className={isNested ? "ml-9 mt-1" : ""}>
-                  <div className={`flex items-start gap-3 ${isNested ? "py-2" : "px-4 py-3 border-b border-white/5"}`}>
+                <div key={reply.id} data-reply-id={reply.id} className={isNested ? "ml-9 mt-1" : ""}>
+                  <div className={`flex items-start gap-3 transition-colors duration-300 ${isNested ? "py-2" : "px-4 py-3 border-b border-white/5"}`}>
                     <img
                       src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent((reply.user?.firstName || '') + '+' + (reply.user?.lastName || ''))}&background=FCD000&color=000&size=32`}
                       alt={`${reply.user?.firstName} ${reply.user?.lastName}`}

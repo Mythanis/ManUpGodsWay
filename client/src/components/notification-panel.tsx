@@ -228,9 +228,18 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
 
       case 'discussion':
       case 'new_discussion':
-      case 'discussion_reply':
         goTo(notification.relatedId ? `/community?discussion=${notification.relatedId}` : '/community');
         break;
+
+      case 'discussion_reply': {
+        if (notification.relatedId && notification.relatedId.includes('__reply__')) {
+          const [discussionId, replyId] = notification.relatedId.split('__reply__');
+          goTo(`/community?discussion=${discussionId}&reply=${replyId}`);
+        } else {
+          goTo(notification.relatedId ? `/community?discussion=${notification.relatedId}` : '/community');
+        }
+        break;
+      }
 
       case 'content_flag':
         goTo('/admin?tab=flags');

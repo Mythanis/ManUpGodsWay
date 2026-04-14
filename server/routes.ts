@@ -2900,7 +2900,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               type: 'discussion_reply',
               title: '💬 New Reply in Subscribed Discussion',
               message: `${replierName} replied to "${discussion.title}"`,
-              relatedId: discussion.id,
+              relatedId: `${discussion.id}__reply__${reply.id}`,
             });
           });
           

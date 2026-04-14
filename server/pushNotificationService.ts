@@ -37,8 +37,14 @@ export function getPushUrl(type: string, relatedId?: string | null): string {
       return relatedId ? `/messages?conversation=${relatedId}` : '/messages';
     case 'discussion':
     case 'new_discussion':
-    case 'discussion_reply':
       return relatedId ? `/community?discussion=${relatedId}` : '/community';
+    case 'discussion_reply': {
+      if (relatedId && relatedId.includes('__reply__')) {
+        const [discussionId, replyId] = relatedId.split('__reply__');
+        return `/community?discussion=${discussionId}&reply=${replyId}`;
+      }
+      return relatedId ? `/community?discussion=${relatedId}` : '/community';
+    }
     case 'study':
     case 'new_study':
       return relatedId ? `/studies/${relatedId}` : '/library';

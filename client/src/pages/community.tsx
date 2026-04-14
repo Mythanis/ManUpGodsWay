@@ -249,10 +249,14 @@ export default function Community() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Handle discussion query parameter from URL — extract the target ID once
+  // Handle discussion + reply query parameters from URL — extract once on mount
   const [targetDiscussionId] = useState<string | null>(() => {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('discussion');
+  });
+  const [targetReplyId] = useState<string | null>(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('reply');
   });
 
   useEffect(() => {
@@ -862,6 +866,8 @@ export default function Community() {
                   onAddToGroup={handleAddToGroup}
                   currentUserTier={(user as any)?.subscriptionTier || 'free'}
                   currentUserSubscriptionStatus={(user as any)?.subscriptionStatus || 'trial'}
+                  autoOpenReplies={!!targetReplyId && discussion.id === targetDiscussionId}
+                  highlightReplyId={discussion.id === targetDiscussionId ? targetReplyId ?? undefined : undefined}
                   data-testid={`discussion-${discussion.id}`}
                 />
               </div>

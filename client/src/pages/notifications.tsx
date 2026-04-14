@@ -121,8 +121,17 @@ export default function Notifications() {
         setLocation('/videos'); break;
       case 'new_devotional': case 'devotional':
         setLocation('/'); setTimeout(() => window.dispatchEvent(new CustomEvent('openDevotional')), 100); break;
-      case 'discussion': case 'new_discussion': case 'discussion_reply':
+      case 'discussion': case 'new_discussion':
         setLocation(n.relatedId ? `/community?discussion=${n.relatedId}` : '/community'); break;
+      case 'discussion_reply': {
+        if (n.relatedId && n.relatedId.includes('__reply__')) {
+          const [discussionId, replyId] = n.relatedId.split('__reply__');
+          setLocation(`/community?discussion=${discussionId}&reply=${replyId}`);
+        } else {
+          setLocation(n.relatedId ? `/community?discussion=${n.relatedId}` : '/community');
+        }
+        break;
+      }
       case 'event': case 'new_event':
         setLocation('/events'); break;
       case 'challenge': case 'challenge_ended': case 'new_challenge':
