@@ -74,8 +74,13 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
         title: "Welcome to Man Up God's Way!",
         description: "Your profile has been set up successfully.",
       });
-      // Advance to trial prompt before entering the app
-      setStep(5);
+      // Advance to trial prompt only if the user hasn't already seen it this
+      // account lifetime (e.g., tab closed on step 5 and profile already saved).
+      if (localStorage.getItem('hasSeenTrialPrompt') === '1') {
+        onComplete();
+      } else {
+        setStep(5);
+      }
     },
     onError: () => {
       toast({
@@ -524,7 +529,10 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
 
                 <div className="space-y-3">
                   <Button
-                    onClick={() => { window.location.href = '/subscribe'; }}
+                    onClick={() => {
+                      localStorage.setItem('hasSeenTrialPrompt', '1');
+                      window.location.href = '/subscribe';
+                    }}
                     className="w-full py-3 text-lg font-black uppercase tracking-wider bg-ministry-gold hover:bg-ministry-gold/90 text-black"
                     style={{ fontFamily: "'Bebas Neue', sans-serif" }}
                     size="lg"
@@ -534,7 +542,10 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={onComplete}
+                    onClick={() => {
+                      localStorage.setItem('hasSeenTrialPrompt', '1');
+                      onComplete();
+                    }}
                     className="w-full border-ministry-steel text-ministry-slate hover:text-white hover:border-white"
                   >
                     Maybe Later

@@ -1,6 +1,6 @@
 import { db } from './db';
 import { users } from '@shared/schema';
-import { eq, isNull, or, inArray } from 'drizzle-orm';
+import { eq, isNull } from 'drizzle-orm';
 import { sendPushNotification } from './pushNotificationService';
 
 const NUDGE_MILESTONES = [
@@ -8,16 +8,16 @@ const NUDGE_MILESTONES = [
     key: 'day1',
     minDays: 1,
     maxDays: 2,
-    title: 'Gear Up, Brother',
-    body: 'Welcome to Man Up God\'s Way! Unlock the full library of studies, videos, and community with a free 7-day trial.',
+    title: 'Your Mission Has Just Begun',
+    body: 'Day 1 checked in. Unlock the full 52-week study series, War Room, and brotherhood community with a free 7-day trial — no charge until it ends.',
     url: '/subscribe',
   },
   {
     key: 'day3',
     minDays: 3,
     maxDays: 4,
-    title: 'The Full Mission Awaits',
-    body: 'You\'ve been in the fight for 3 days. Unlock every study, video, and the War Room with a free trial — no charge for 7 days.',
+    title: 'Three Days In — Don\'t Stop Now',
+    body: 'You\'re building momentum. Get full access to every study, video, podcast, and War Group with a free 7-day trial. Cancel anytime.',
     url: '/subscribe',
   },
   {
@@ -25,7 +25,7 @@ const NUDGE_MILESTONES = [
     minDays: 7,
     maxDays: 8,
     title: 'One Week Strong',
-    body: 'A week in and still standing. Start your free 7-day trial today and get full access to the brotherhood platform.',
+    body: 'A week in the fight. Unlock the complete Man Up God\'s Way arsenal — studies, community, challenges, and more — free for 7 days.',
     url: '/subscribe',
   },
 ] as const;
