@@ -28,6 +28,9 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
+  // Account-scoped localStorage key so shared devices don't suppress this
+  // prompt for other accounts on the same browser.
+  const trialPromptKey = `hasSeenTrialPrompt:${user?.id ?? 'unknown'}`;
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
@@ -74,9 +77,9 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
         title: "Welcome to Man Up God's Way!",
         description: "Your profile has been set up successfully.",
       });
-      // Advance to trial prompt only if the user hasn't already seen it this
-      // account lifetime (e.g., tab closed on step 5 and profile already saved).
-      if (localStorage.getItem('hasSeenTrialPrompt') === '1') {
+      // Advance to trial prompt only if this account hasn't already seen it
+      // (e.g., tab closed on step 5 after profile was already saved to server).
+      if (localStorage.getItem(trialPromptKey) === '1') {
         onComplete();
       } else {
         setStep(5);
@@ -530,7 +533,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                 <div className="space-y-3">
                   <Button
                     onClick={() => {
-                      localStorage.setItem('hasSeenTrialPrompt', '1');
+                      localStorage.setItem(trialPromptKey, '1');
                       window.location.href = '/subscribe';
                     }}
                     className="w-full py-3 text-lg font-black uppercase tracking-wider bg-ministry-gold hover:bg-ministry-gold/90 text-black"
@@ -543,7 +546,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                   <Button
                     variant="outline"
                     onClick={() => {
-                      localStorage.setItem('hasSeenTrialPrompt', '1');
+                      localStorage.setItem(trialPromptKey, '1');
                       onComplete();
                     }}
                     className="w-full border-ministry-steel text-ministry-slate hover:text-white hover:border-white"
