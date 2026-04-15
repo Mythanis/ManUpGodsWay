@@ -66,7 +66,10 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
       } catch {
         // Non-fatal — they can set it in notification preferences
       }
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      // Do NOT invalidate the /api/auth/user query here. Doing so would update
+      // isProfileComplete → true, causing App.tsx to unmount the wizard before
+      // step 5 can be shown. The page reload triggered by the step-5 buttons
+      // will naturally refresh the user state once the user has made their choice.
       toast({
         title: "Welcome to Man Up God's Way!",
         description: "Your profile has been set up successfully.",

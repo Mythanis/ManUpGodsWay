@@ -141,6 +141,9 @@ function Router() {
 
   // Auto-launch tour on first login (profile complete, welcome popup dismissed, tour not completed yet)
   const hasLaunchedTourRef = useRef(false);
+  // Keeps the wizard mounted until onComplete() fires, even if background
+  // refetches update isProfileComplete before step 5 is acknowledged.
+  const wizardMountedRef = useRef(false);
   useEffect(() => {
     if (
       isAuthenticated &&
@@ -198,11 +201,18 @@ function Router() {
     );
   }
 
-  // Show setup wizard for new users
+  // Once the wizard is opened it must NOT be unmounted by a background refetch
+  // that sets isProfileComplete → true (which would prevent step 5 from rendering).
   if (isAuthenticated && user && !user.isProfileComplete) {
+    wizardMountedRef.current = true;
+  }
+  if (wizardMountedRef.current) {
     return (
       <UserSetupWizard 
-        onComplete={() => window.location.reload()} 
+        onComplete={() => {
+          wizardMountedRef.current = false;
+          window.location.reload();
+        }} 
       />
     );
   }
