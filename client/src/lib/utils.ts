@@ -68,13 +68,19 @@ export function parseDateSafely(dateString: string): Date {
 }
 
 // Returns true if a user has paid subscriber access (active OR cancelled-but-still-within-period)
+// Matches backend hasActiveSubscription() + the storage.ts isSubscriber check.
 export function isSubscriberActive(user: any): boolean {
   if (!user) return false;
   if (user.role === 'admin' || user.role === 'owner') return true;
   if (user.subscriptionStatus === 'active') return true;
+  // Cancelled subscribers keep access until the end of their paid period
   if (user.subscriptionStatus === 'cancelled' && user.subscriptionExpiresAt) {
     return new Date(user.subscriptionExpiresAt) > new Date();
   }
+  // Stripe past_due: payment failed but the webhook only sets status='past_due',
+  // it does NOT downgrade subscriptionTier. Check tier as a fallback so these
+  // users aren't incorrectly locked out during Stripe's payment retry window.
+  if (user.subscriptionTier === 'subscriber') return true;
   return false;
 }
 

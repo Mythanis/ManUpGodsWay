@@ -116,9 +116,15 @@ export default function SeriesDetail() {
     if (study.requiredTier === 'free') return true;
     if (!user) return false;
     const u = user as any;
-    return u.subscriptionStatus === 'active' ||
-      (u.subscriptionStatus === 'cancelled' && u.subscriptionExpiresAt && new Date(u.subscriptionExpiresAt) > new Date()) ||
-      u.role === 'admin' || u.role === 'owner';
+    if (u.role === 'admin' || u.role === 'owner') return true;
+    if (u.subscriptionStatus === 'active') return true;
+    // Cancelled subscribers retain access until their paid period ends
+    if (u.subscriptionStatus === 'cancelled' && u.subscriptionExpiresAt && new Date(u.subscriptionExpiresAt) > new Date()) return true;
+    // Stripe past_due: payment failed but subscription still technically active —
+    // the webhook sets status='past_due' but does NOT downgrade subscriptionTier,
+    // so subscriptionTier === 'subscriber' is the correct fallback (matches backend isSubscriber check)
+    if (u.subscriptionTier === 'subscriber') return true;
+    return false;
   };
 
   const isLockedByConsecutive = (study: StudyInSeries) => {

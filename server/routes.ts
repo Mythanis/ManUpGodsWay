@@ -152,6 +152,9 @@ function hasActiveSubscription(user: any): boolean {
   if (user.subscriptionStatus === 'cancelled' && user.subscriptionExpiresAt) {
     return new Date(user.subscriptionExpiresAt) > new Date();
   }
+  // Stripe past_due: payment failed but the webhook only sets status='past_due',
+  // it does NOT downgrade subscriptionTier. Allow access during the retry window.
+  if (user.subscriptionTier === 'subscriber') return true;
   return false;
 }
 
