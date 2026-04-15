@@ -8,6 +8,7 @@ import { warGroupsGeocodingService } from "./warGroupsGeocodingService";
 import { challengeNotificationService } from "./challengeNotificationService";
 import { prayerReminderService } from "./prayerReminderService";
 import { dailyReminderService } from "./dailyReminderService";
+import { conversionNudgeService } from "./conversionNudgeService";
 import { stripeWebhookHandler } from "./stripeWebhook";
 import { generalLimiter } from "./rateLimiter";
 
@@ -121,5 +122,8 @@ app.use((req, res, next) => {
     
     // Start the daily app reminder service
     dailyReminderService.start();
+    
+    // Start the subscription conversion nudge service
+    conversionNudgeService.start();
   });
 })();

@@ -63,6 +63,7 @@ export const users = pgTable("users", {
   hasSeenWelcome: boolean("has_seen_welcome").default(false),
   hasFitnessAccess: boolean("has_fitness_access").default(false),
   hasCompletedTour: boolean("has_completed_tour").default(false),
+  conversionNudgesSent: jsonb("conversion_nudges_sent").default(sql`'{}'::jsonb`),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

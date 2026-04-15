@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Users, User, CheckCircle, Clock, Bell, FileText, Scale, Camera, Upload, X, Check, CalendarClock } from "lucide-react";
+import { MessageSquare, Users, User, CheckCircle, Clock, Bell, FileText, Scale, Camera, Upload, X, Check, CalendarClock, Crown, Shield, BookOpen, Video, Sword } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface SetupData {
@@ -71,7 +71,8 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
         title: "Welcome to Man Up God's Way!",
         description: "Your profile has been set up successfully.",
       });
-      onComplete();
+      // Advance to trial prompt before entering the app
+      setStep(5);
     },
     onError: () => {
       toast({
@@ -239,6 +240,7 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                 <div className={`w-3 h-3 rounded-full ${step >= 2 ? 'bg-ministry-gold' : 'bg-ministry-steel'}`} />
                 <div className={`w-3 h-3 rounded-full ${step >= 3 ? 'bg-ministry-gold' : 'bg-ministry-steel'}`} />
                 <div className={`w-3 h-3 rounded-full ${step >= 4 ? 'bg-ministry-gold' : 'bg-ministry-steel'}`} />
+                <div className={`w-3 h-3 rounded-full ${step >= 5 ? 'bg-ministry-gold' : 'bg-ministry-steel'}`} />
               </div>
             </div>
           </CardHeader>
@@ -487,6 +489,58 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
                     Continue
                   </Button>
                 </div>
+              </>
+            )}
+
+            {step === 5 && (
+              <>
+                <div className="text-center">
+                  <Crown className="w-14 h-14 mx-auto mb-3 text-ministry-gold" />
+                  <h3 className="text-2xl font-black text-white mb-1" style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.05em' }}>
+                    Unlock the Full Mission
+                  </h3>
+                  <p className="text-sm text-ministry-slate">
+                    Start your free 7-day trial — no charge until it ends.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  {[
+                    { icon: <BookOpen className="w-4 h-4 text-ministry-gold" />, text: "Full 52-week study library" },
+                    { icon: <Video className="w-4 h-4 text-ministry-gold" />, text: "Complete video & podcast library" },
+                    { icon: <Users className="w-4 h-4 text-ministry-gold" />, text: "Community, War Room & War Groups" },
+                    { icon: <Sword className="w-4 h-4 text-ministry-gold" />, text: "Weekly challenges & VATMEBOP tracking" },
+                    { icon: <Shield className="w-4 h-4 text-ministry-gold" />, text: "Under Fire prayer support network" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 px-3 py-2 bg-ministry-navy/40 rounded-lg border border-ministry-steel/50">
+                      {item.icon}
+                      <span className="text-sm text-white">{item.text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => { window.location.href = '/subscribe'; }}
+                    className="w-full py-3 text-lg font-black uppercase tracking-wider bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                    style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+                    size="lg"
+                  >
+                    <Crown className="w-5 h-5 mr-2" />
+                    Start Free Trial
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={onComplete}
+                    className="w-full border-ministry-steel text-ministry-slate hover:text-white hover:border-white"
+                  >
+                    Maybe Later
+                  </Button>
+                </div>
+
+                <p className="text-center text-xs text-ministry-slate/60">
+                  Card required. Cancel anytime. No charge for 7 days.
+                </p>
               </>
             )}
 
