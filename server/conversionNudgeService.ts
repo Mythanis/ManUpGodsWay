@@ -95,7 +95,7 @@ class ConversionNudgeService {
       if (sent[milestone.key]) continue;
       if (ageDays < milestone.minDays || ageDays >= milestone.maxDays) continue;
 
-      await sendPushNotification(user.id, {
+      const result = await sendPushNotification(user.id, {
         title: milestone.title,
         body: milestone.body,
         icon: '/icon-192.png',
@@ -104,13 +104,19 @@ class ConversionNudgeService {
         url: milestone.url,
       });
 
-      const updatedSent = { ...sent, [milestone.key]: true };
-      await db
-        .update(users)
-        .set({ conversionNudgesSent: updatedSent })
-        .where(eq(users.id, user.id));
-
-      console.log(`[ConversionNudge] Sent ${milestone.key} nudge to user ${user.id}`);
+      if (result.success > 0) {
+        // Only mark as sent when at least one subscription received the notification.
+        // This prevents silent suppression of future nudge attempts when the user
+        // has no registered push subscriptions yet.
+        const updatedSent = { ...sent, [milestone.key]: true };
+        await db
+          .update(users)
+          .set({ conversionNudgesSent: updatedSent })
+          .where(eq(users.id, user.id));
+        console.log(`[ConversionNudge] Sent ${milestone.key} nudge to user ${user.id} (${result.success} delivered)`);
+      } else {
+        console.log(`[ConversionNudge] No push subscriptions for user ${user.id} — ${milestone.key} not marked sent`);
+      }
     }
   }
 }
