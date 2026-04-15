@@ -54,11 +54,20 @@ class ConversionNudgeService {
   private async check() {
     const now = new Date();
 
-    // Target users who have never started a real Stripe subscription.
-    // The default subscriptionStatus is 'trial' for all new accounts, so we
-    // can't reliably filter on status alone — users with a genuine Stripe trial
-    // also have status='trial'. The reliable signal is the absence of a
-    // stripeSubscriptionId (which is only set after a real Stripe checkout completes).
+    // Eligibility rule: target users who have NEVER started a real Stripe
+    // subscription, identified by the absence of a stripeSubscriptionId.
+    //
+    // Why not filter on subscriptionStatus alone?
+    //   - All new accounts have status='trial' by DB default, even before they
+    //     visit the subscribe page. A genuine Stripe free-trial user also has
+    //     status='trial', so status-only filtering would incorrectly include
+    //     or exclude both groups.
+    //   - stripeSubscriptionId is set only when a Stripe subscription object is
+    //     created (active, trialing, or past_due). Its absence reliably marks
+    //     accounts that have never interacted with Stripe checkout.
+    //
+    // This excludes: active subscribers, genuine Stripe trial users, users whose
+    // subscriptions have lapsed (they retain the stripeSubscriptionId).
     const nonSubscribers = await db
       .select({
         id: users.id,
