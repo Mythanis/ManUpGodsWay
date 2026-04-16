@@ -3436,7 +3436,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Study lesson routes
   app.get('/api/studies/:studyId/lessons', async (req: any, res) => {
     try {
-      const lessons = await storage.getStudyLessons(req.params.studyId);
+      const studyId = req.params.studyId;
+      const lessons = await storage.getStudyLessons(studyId);
       const userId = req.user?.claims?.sub;
       if (userId && lessons.length > 0) {
         const lessonIds = lessons.map((l: any) => l.id);
@@ -3446,14 +3447,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
           (a.displayOrder ?? a.dayNumber ?? 0) - (b.displayOrder ?? b.dayNumber ?? 0)
         );
         const timezone = (req.query.timezone as string) || 'America/New_York';
+
+        // Cross-study drip: find the previous study's last lesson completion time
+        // so Day 1 of this study is also gated until midnight after Day 7 of the prior study.
+        let prevStudyLastCompletedAt: Date | null = null;
+        const [thisStudy] = await db.select().from(schema.studies).where(eq(schema.studies.id, studyId));
+        if (thisStudy?.seriesId) {
+          const seriesStudies = await db.select().from(schema.studies)
+            .where(and(eq(schema.studies.seriesId, thisStudy.seriesId), eq(schema.studies.isPublished, true)))
+            .orderBy(asc(schema.studies.seriesOrder), asc(schema.studies.createdAt));
+          const thisIdx = seriesStudies.findIndex(s => s.id === studyId);
+          if (thisIdx > 0) {
+            const prevStudy = seriesStudies[thisIdx - 1];
+            const prevLessons = await db.select().from(schema.studyLessons)
+              .where(eq(schema.studyLessons.studyId, prevStudy.id))
+              .orderBy(desc(schema.studyLessons.displayOrder), desc(schema.studyLessons.dayNumber));
+            if (prevLessons.length > 0) {
+              const lastLesson = prevLessons[0];
+              const [lastProg] = await db.select().from(schema.userLessonProgress)
+                .where(and(
+                  eq(schema.userLessonProgress.userId, userId),
+                  eq(schema.userLessonProgress.lessonId, lastLesson.id)
+                ));
+              if (lastProg?.completedAt) {
+                prevStudyLastCompletedAt = new Date(lastProg.completedAt);
+              }
+            }
+          }
+        }
+
         const withLock = sorted.map((lesson: any, index: number) => {
           const thisProg = progressMap.get(lesson.id);
           const isCompleted = !!thisProg?.completedAt;
-          if (index === 0) return { ...lesson, isLocked: false, unlocksAt: null, isCompleted };
+          // Admin bypass always takes precedence
+          if (thisProg?.dripBypassed) return { ...lesson, isLocked: false, unlocksAt: null, isCompleted };
+          if (index === 0) {
+            // Day 1: apply cross-study drip gate if the previous week's last lesson was just completed
+            if (prevStudyLastCompletedAt) {
+              const unlockTime = getNextMidnightInTimezone(prevStudyLastCompletedAt, timezone);
+              if (new Date() < unlockTime) return { ...lesson, isLocked: true, unlocksAt: unlockTime.toISOString(), isCompleted };
+            }
+            return { ...lesson, isLocked: false, unlocksAt: null, isCompleted };
+          }
           const prevLesson = sorted[index - 1];
           const prevProg = progressMap.get(prevLesson.id);
-          // Bypass drip lock if this lesson was explicitly unlocked by admin
-          if (thisProg?.dripBypassed) return { ...lesson, isLocked: false, unlocksAt: null, isCompleted };
           if (!prevProg?.completedAt) return { ...lesson, isLocked: true, unlocksAt: null, isCompleted };
           const prevCompleted = new Date(prevProg.completedAt);
           const unlockTime = getNextMidnightInTimezone(prevCompleted, timezone);
@@ -3602,20 +3639,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const lessonIndexForDrip = sortedForDrip.findIndex((l: any) => l.id === lessonId);
       const [thisLessonProg] = await storage.getLessonProgressForLessons(userId, [lessonId]);
       const dripBypassed = !!thisLessonProg?.dripBypassed;
-      if (lessonIndexForDrip > 0 && !dripBypassed) {
-        const prevLesson = sortedForDrip[lessonIndexForDrip - 1];
-        const [prevProg] = await storage.getLessonProgressForLessons(userId, [prevLesson.id]);
-        if (!prevProg?.completedAt) {
-          return res.status(403).json({ message: "Complete the previous lesson first." });
-        }
-        const prevCompleted = new Date(prevProg.completedAt);
-        const lessonTimezone = (req.body.timezone as string) || 'America/New_York';
-        const unlockTime = getNextMidnightInTimezone(prevCompleted, lessonTimezone);
-        if (new Date() < unlockTime) {
-          return res.status(403).json({
-            message: "This lesson isn't available yet. Come back tomorrow!",
-            unlocksAt: unlockTime.toISOString(),
-          });
+      const lessonTimezone = (req.body.timezone as string) || 'America/New_York';
+
+      if (!dripBypassed) {
+        if (lessonIndexForDrip === 0) {
+          // Day 1: check the previous study's last lesson as the drip anchor
+          const [thisStudy] = await db.select().from(schema.studies).where(eq(schema.studies.id, studyId));
+          if (thisStudy?.seriesId) {
+            const seriesStudies = await db.select().from(schema.studies)
+              .where(and(eq(schema.studies.seriesId, thisStudy.seriesId), eq(schema.studies.isPublished, true)))
+              .orderBy(asc(schema.studies.seriesOrder), asc(schema.studies.createdAt));
+            const thisIdx = seriesStudies.findIndex(s => s.id === studyId);
+            if (thisIdx > 0) {
+              const prevStudy = seriesStudies[thisIdx - 1];
+              const prevLessons = await db.select().from(schema.studyLessons)
+                .where(eq(schema.studyLessons.studyId, prevStudy.id))
+                .orderBy(desc(schema.studyLessons.displayOrder), desc(schema.studyLessons.dayNumber));
+              if (prevLessons.length > 0) {
+                const [lastProg] = await db.select().from(schema.userLessonProgress)
+                  .where(and(
+                    eq(schema.userLessonProgress.userId, userId),
+                    eq(schema.userLessonProgress.lessonId, prevLessons[0].id)
+                  ));
+                if (lastProg?.completedAt) {
+                  const unlockTime = getNextMidnightInTimezone(new Date(lastProg.completedAt), lessonTimezone);
+                  if (new Date() < unlockTime) {
+                    return res.status(403).json({
+                      message: "This lesson isn't available yet. Come back tomorrow!",
+                      unlocksAt: unlockTime.toISOString(),
+                    });
+                  }
+                }
+              }
+            }
+          }
+        } else {
+          // Day 2+: standard within-study drip check
+          const prevLesson = sortedForDrip[lessonIndexForDrip - 1];
+          const [prevProg] = await storage.getLessonProgressForLessons(userId, [prevLesson.id]);
+          if (!prevProg?.completedAt) {
+            return res.status(403).json({ message: "Complete the previous lesson first." });
+          }
+          const prevCompleted = new Date(prevProg.completedAt);
+          const unlockTime = getNextMidnightInTimezone(prevCompleted, lessonTimezone);
+          if (new Date() < unlockTime) {
+            return res.status(403).json({
+              message: "This lesson isn't available yet. Come back tomorrow!",
+              unlocksAt: unlockTime.toISOString(),
+            });
+          }
         }
       }
 
