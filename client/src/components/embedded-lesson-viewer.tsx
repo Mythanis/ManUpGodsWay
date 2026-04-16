@@ -113,27 +113,36 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
     staleTime: 0,
   });
 
-  // Auto-advance to the first unlocked incomplete lesson when data loads
+  // Auto-advance to resume from last completed lesson when data loads.
+  // We intentionally do NOT jump to "first unlocked incomplete" because an admin
+  // could have bypass-unlocked a future lesson far ahead of the user's real progress,
+  // which would confuse the user by skipping intermediate locked lessons.
   const [hasAutoAdvanced, setHasAutoAdvanced] = useState(false);
   useEffect(() => {
     if (hasAutoAdvanced || lessonsLoading || lessons.length === 0 || lessonProgressData === undefined) return;
-    // Find first lesson that is unlocked AND incomplete
-    // Use lesson.isCompleted (server-side, always accurate) with lessonProgressData as optimistic fallback
-    const firstUnlockedIncomplete = lessons.findIndex(
-      (lesson) =>
-        !lesson.isLocked &&
-        !lesson.isCompleted &&
-        !lessonProgressData.find((p) => p.lessonId === lesson.id && p.completedAt)
-    );
-    if (firstUnlockedIncomplete > 0) {
-      setCurrentDayIndex(firstUnlockedIncomplete);
-    } else if (firstUnlockedIncomplete === -1) {
-      // All unlocked lessons are done — stay on last completed unlocked lesson
-      const lastUnlocked = [...lessons].reverse().findIndex(l => !l.isLocked);
-      if (lastUnlocked >= 0) {
-        setCurrentDayIndex(lessons.length - 1 - lastUnlocked);
+
+    // Find the LAST lesson the user has actually completed.
+    // Use lesson.isCompleted (server-side) with lessonProgressData as fallback.
+    const lastCompletedIndex = lessons.reduce((last, lesson, idx) => {
+      const completed =
+        lesson.isCompleted ||
+        !!lessonProgressData.find((p) => p.lessonId === lesson.id && p.completedAt);
+      return completed ? idx : last;
+    }, -1);
+
+    if (lastCompletedIndex >= 0) {
+      const nextIndex = lastCompletedIndex + 1;
+      const nextLesson = lessons[nextIndex];
+      if (nextLesson && !nextLesson.isLocked) {
+        // The very next lesson after the last completed one is available — open it
+        setCurrentDayIndex(nextIndex);
+      } else {
+        // Next is locked (or doesn't exist) — stay on the last completed lesson
+        setCurrentDayIndex(lastCompletedIndex);
       }
     }
+    // If nothing is completed yet, stay on Day 1 (index 0, the default state)
+
     setHasAutoAdvanced(true);
   }, [lessons, lessonProgressData, lessonsLoading, hasAutoAdvanced]);
 
@@ -143,7 +152,9 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
   // Optimistic fallback: currentProgress.completedAt (set immediately on user's own mark-complete).
   // This ensures admin-completed lessons always show as complete without a separate stale-data race.
   const isCompleted = !!currentLesson?.isCompleted || !!currentProgress?.completedAt;
-  const isCurrentLessonLocked = !!currentLesson?.isLocked;
+  // Never show the lock screen for a lesson that is already completed — if a user
+  // (or admin) has finished it, they should always be able to view the content.
+  const isCurrentLessonLocked = !!currentLesson?.isLocked && !isCompleted;
 
   // Format unlock time for display
   const formatUnlockTime = (dateStr: string | null | undefined): string => {

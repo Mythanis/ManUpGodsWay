@@ -5603,11 +5603,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id: targetUserId, lessonId } = req.params;
       const now = new Date();
 
+      // Mark complete AND bypass the drip gate so the lesson is accessible immediately.
+      // Without dripBypassed the lesson could be isCompleted=true but still show a lock screen
+      // if the previous lesson's drip window hasn't expired yet.
       await db.insert(schema.userLessonProgress)
-        .values({ userId: targetUserId, lessonId, isCompleted: true, completedAt: now })
+        .values({ userId: targetUserId, lessonId, isCompleted: true, completedAt: now, dripBypassed: true })
         .onConflictDoUpdate({
           target: [schema.userLessonProgress.userId, schema.userLessonProgress.lessonId],
-          set: { isCompleted: true, completedAt: now, updatedAt: now },
+          set: { isCompleted: true, completedAt: now, dripBypassed: true, updatedAt: now },
         });
 
       // Check if all lessons in the parent study are now complete
