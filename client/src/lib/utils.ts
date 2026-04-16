@@ -67,12 +67,14 @@ export function parseDateSafely(dateString: string): Date {
   return new Date(dateString + 'T12:00:00');
 }
 
-// Returns true if a user has paid subscriber access (active OR cancelled-but-still-within-period)
-// Matches backend hasActiveSubscription() + the storage.ts isSubscriber check.
+// Returns true if a user has subscriber or active-trial access.
+// Matches backend hasAnyAccess() = hasActiveSubscription() || isOnTrial().
 export function isSubscriberActive(user: any): boolean {
   if (!user) return false;
   if (user.role === 'admin' || user.role === 'owner') return true;
   if (user.subscriptionStatus === 'active') return true;
+  // Platform trial (non-Stripe): grant access for the duration of the trial window
+  if (user.subscriptionStatus === 'trial' && user.trialEndDate && new Date(user.trialEndDate) > new Date()) return true;
   // Cancelled subscribers keep access until the end of their paid period
   if (user.subscriptionStatus === 'cancelled' && user.subscriptionExpiresAt) {
     return new Date(user.subscriptionExpiresAt) > new Date();
