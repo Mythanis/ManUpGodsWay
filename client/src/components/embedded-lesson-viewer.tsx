@@ -26,6 +26,7 @@ interface StudyLesson {
   estimatedMinutes?: number;
   isLocked?: boolean;
   unlocksAt?: string | null;
+  isCompleted?: boolean;
 }
 
 interface LessonProgress {
@@ -117,9 +118,11 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
   useEffect(() => {
     if (hasAutoAdvanced || lessonsLoading || lessons.length === 0 || lessonProgressData === undefined) return;
     // Find first lesson that is unlocked AND incomplete
+    // Use lesson.isCompleted (server-side, always accurate) with lessonProgressData as optimistic fallback
     const firstUnlockedIncomplete = lessons.findIndex(
       (lesson) =>
         !lesson.isLocked &&
+        !lesson.isCompleted &&
         !lessonProgressData.find((p) => p.lessonId === lesson.id && p.completedAt)
     );
     if (firstUnlockedIncomplete > 0) {
@@ -136,7 +139,10 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
 
   const currentLesson = lessons[currentDayIndex];
   const currentProgress = lessonProgressData.find(p => p.lessonId === currentLesson?.id);
-  const isCompleted = !!currentProgress?.completedAt;
+  // Primary source: lesson.isCompleted from the server (set in the /lessons endpoint from DB).
+  // Optimistic fallback: currentProgress.completedAt (set immediately on user's own mark-complete).
+  // This ensures admin-completed lessons always show as complete without a separate stale-data race.
+  const isCompleted = !!currentLesson?.isCompleted || !!currentProgress?.completedAt;
   const isCurrentLessonLocked = !!currentLesson?.isLocked;
 
   // Format unlock time for display
@@ -155,8 +161,12 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
     return "tomorrow";
   };
 
-  // Calculate overall progress
-  const completedLessons = lessonProgressData.filter(p => p.completedAt).length;
+  // Calculate overall progress — use lesson.isCompleted (server-fresh) with progress cache as fallback
+  const completedLessonIds = new Set([
+    ...lessons.filter(l => l.isCompleted).map(l => l.id),
+    ...lessonProgressData.filter(p => p.completedAt).map(p => p.lessonId),
+  ]);
+  const completedLessons = completedLessonIds.size;
   const progressPercentage = lessons.length > 0 ? (completedLessons / lessons.length) * 100 : 0;
 
   // Mark lesson as complete mutation
@@ -799,8 +809,9 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
       <div className="flex justify-center gap-2 print:hidden flex-wrap p-2 bg-black/50 border-2 border-[#FCD000] rounded-sm">
         {lessons.map((lesson, index) => {
           const progress = lessonProgressData.find(p => p.lessonId === lesson.id);
-          const completed = !!progress?.completedAt;
-          // Completed lessons are always accessible — never show as locked even if cache is stale
+          // Primary: lesson.isCompleted from server; fallback: optimistic completedAt from progress cache
+          const completed = !!lesson.isCompleted || !!progress?.completedAt;
+          // Completed lessons are always accessible — never show as locked
           const locked = !completed && !!lesson.isLocked;
           return (
             <button

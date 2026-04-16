@@ -3504,14 +3504,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
         const timezone = (req.query.timezone as string) || 'America/New_York';
         const withLock = sorted.map((lesson: any, index: number) => {
-          if (index === 0) return { ...lesson, isLocked: false, unlocksAt: null };
+          const thisProg = progressMap.get(lesson.id);
+          const isCompleted = !!thisProg?.completedAt;
+          if (index === 0) return { ...lesson, isLocked: false, unlocksAt: null, isCompleted };
           const prevLesson = sorted[index - 1];
           const prevProg = progressMap.get(prevLesson.id);
-          if (!prevProg?.completedAt) return { ...lesson, isLocked: true, unlocksAt: null };
+          // Bypass drip lock if this lesson was explicitly unlocked by admin
+          if (thisProg?.dripBypassed) return { ...lesson, isLocked: false, unlocksAt: null, isCompleted };
+          if (!prevProg?.completedAt) return { ...lesson, isLocked: true, unlocksAt: null, isCompleted };
           const prevCompleted = new Date(prevProg.completedAt);
           const unlockTime = getNextMidnightInTimezone(prevCompleted, timezone);
-          if (new Date() < unlockTime) return { ...lesson, isLocked: true, unlocksAt: unlockTime.toISOString() };
-          return { ...lesson, isLocked: false, unlocksAt: null };
+          if (new Date() < unlockTime) return { ...lesson, isLocked: true, unlocksAt: unlockTime.toISOString(), isCompleted };
+          return { ...lesson, isLocked: false, unlocksAt: null, isCompleted };
         });
         return res.json(withLock);
       }
