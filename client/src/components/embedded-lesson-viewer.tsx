@@ -183,7 +183,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
     },
     onSuccess: (data: any) => {
       setAnswers({});
-      // Sync server state for lessons list (drip lock times) and study-level progress
+      // Sync server state: lesson progress, study progress, drip lock times
       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/lesson-progress`] });
       queryClient.invalidateQueries({ queryKey: [`/api/studies/${studyId}/progress`] });
       queryClient.invalidateQueries({
@@ -191,6 +191,9 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           Array.isArray(query.queryKey) &&
           query.queryKey[0] === `/api/studies/${studyId}/lessons`,
       });
+      // Keep series overview page and admin study progress panel in sync
+      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users", userId, "study-progress"] });
       if (data?.studyCompleted) {
         setNextStudySuggestion(data.nextStudy || null);
         setShowCompleteModal(true);
