@@ -207,6 +207,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne } from "drizzle-orm";
+import { getNextMidnightInTimezone } from "./drip-utils";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -931,7 +932,7 @@ export class DatabaseStorage implements IStorage {
               lessonIsLocked = true;
             } else {
               const prevCompleted = new Date(prevProg.completedAt);
-              const unlockTime = new Date(prevCompleted.getTime() + 24 * 60 * 60 * 1000);
+              const unlockTime = getNextMidnightInTimezone(prevCompleted, 'America/New_York');
               if (new Date() < unlockTime) {
                 lessonIsLocked = true;
                 lessonUnlocksAt = unlockTime.toISOString();
@@ -1330,13 +1331,15 @@ export class DatabaseStorage implements IStorage {
     const conditions = [eq(userLessonProgress.userId, userId)];
     
     if (studyId) {
-      // Filter by studyId through a join with studyLessons
+      // Filter by studyId through a join with studyLessons — select ALL columns
       const result = await db
         .select({
           id: userLessonProgress.id,
           userId: userLessonProgress.userId,
           lessonId: userLessonProgress.lessonId,
           completedAt: userLessonProgress.completedAt,
+          isCompleted: userLessonProgress.isCompleted,
+          dripBypassed: userLessonProgress.dripBypassed,
           answers: userLessonProgress.answers,
           createdAt: userLessonProgress.createdAt,
           updatedAt: userLessonProgress.updatedAt,

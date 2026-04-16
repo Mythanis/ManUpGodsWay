@@ -13,6 +13,7 @@ import { createRequire } from 'module';
 const execAsync = promisify(exec);
 const require = createRequire(import.meta.url);
 import { storage } from "./storage";
+import { getNextMidnightInTimezone } from "./drip-utils";
 import { warGroupsService } from "./warGroupsService";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
@@ -84,64 +85,6 @@ function hasOwnerPrivileges(user: any): boolean {
   return isOwner(user);
 }
 
-/**
- * Returns the UTC instant that represents midnight at the start of the next
- * calendar day (in `timezone`) after `completedAt`, as seen from the current
- * server time.
- *
- * This is NOT a pure / deterministic function of `completedAt` alone — it
- * also reads `new Date()` internally to decide whether "next midnight" has
- * already passed.  When it has, it returns `new Date(0)` (epoch) so callers
- * can use a simple `now < result` check without a separate "already unlocked"
- * branch.
- *
- * Call sites: lesson-list lock display and lesson-completion submission gate.
- * Falls back to a 24-hour rolling window from `completedAt` on invalid TZ.
- */
-function getNextMidnightInTimezone(completedAt: Date, timezone: string): Date {
-  try {
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: timezone,
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
-      hour12: false,
-    });
-    const getParts = (d: Date) => {
-      const parts = formatter.formatToParts(d);
-      const get = (type: string) => parseInt(parts.find(p => p.type === type)?.value || '0');
-      return { year: get('year'), month: get('month'), day: get('day') };
-    };
-
-    const { year, month, day } = getParts(completedAt);
-    const now = new Date();
-    const nowParts = getParts(now);
-
-    // "next day" in the user's timezone (midnight = 00:00:00 local)
-    const nextDay = new Date(year, month - 1, day + 1);           // local wall-clock midnight
-    const nowDate = new Date(nowParts.year, nowParts.month - 1, nowParts.day);
-
-    if (nowDate >= nextDay) {
-      // Already past midnight — return a time in the past so callers treat it as unlocked
-      return new Date(0);
-    }
-
-    // Compute ms remaining from *now* until that local midnight
-    const nowFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: timezone,
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
-      hour12: false,
-    });
-    const nowTimeParts = nowFormatter.formatToParts(now);
-    const getT = (type: string) => parseInt(nowTimeParts.find(p => p.type === type)?.value || '0');
-    const secondsPassedToday = getT('hour') * 3600 + getT('minute') * 60 + getT('second');
-    const secondsUntilMidnight = 86400 - secondsPassedToday;
-
-    return new Date(now.getTime() + secondsUntilMidnight * 1000);
-  } catch {
-    // Invalid timezone — fall back to a 24-hour rolling window
-    return new Date(completedAt.getTime() + 24 * 60 * 60 * 1000);
-  }
-}
 
 // Subscription access checking helpers
 function hasActiveSubscription(user: any): boolean {
@@ -5525,17 +5468,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
             isStudyComplete = completedLessons >= lessons.length && lessons.length > 0;
           }
 
-          // Build per-lesson detail for admin view
-          const lessonDetails = lessons.map(l => {
-            const lp = lessonProgress.find(p => p.lessonId === l.id);
+          // Build per-lesson detail for admin view (sorted so drip-lock can be computed)
+          const sortedLessons = [...lessons].sort((a, b) =>
+            ((a.displayOrder ?? a.dayNumber ?? 0) - (b.displayOrder ?? b.dayNumber ?? 0))
+          );
+          const adminTimezone = (req.query.timezone as string) || 'America/New_York';
+          const progressMap = new Map(lessonProgress.map(lp => [lp.lessonId, lp]));
+          const lessonDetails = sortedLessons.map((l, idx) => {
+            const lp = progressMap.get(l.id);
+            const isCompleted = !!lp?.completedAt;
+            const dripBypassed = !!lp?.dripBypassed;
+            let isLocked = false;
+            let unlocksAt: string | null = null;
+            if (idx > 0 && !isCompleted && !dripBypassed) {
+              const prevLesson = sortedLessons[idx - 1];
+              const prevProg = progressMap.get(prevLesson.id);
+              if (!prevProg?.completedAt) {
+                isLocked = true;
+              } else {
+                const unlockTime = getNextMidnightInTimezone(new Date(prevProg.completedAt), adminTimezone);
+                if (new Date() < unlockTime) {
+                  isLocked = true;
+                  unlocksAt = unlockTime.toISOString();
+                }
+              }
+            }
             return {
               id: l.id,
               title: l.title,
               dayNumber: l.dayNumber,
               displayOrder: l.displayOrder,
-              isCompleted: !!lp?.completedAt,
+              isCompleted,
               completedAt: lp?.completedAt ?? null,
-              dripBypassed: !!lp?.dripBypassed,
+              dripBypassed,
+              isLocked,
+              unlocksAt,
             };
           });
 

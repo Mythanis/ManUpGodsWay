@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X, Bell, BellOff, ChevronLeft, ChevronRight, ArrowUpDown, BookOpen, CheckCircle, Circle, Unlock, Lock, ChevronDown } from "lucide-react";
+import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X, Bell, BellOff, ChevronLeft, ChevronRight, ArrowUpDown, BookOpen, CheckCircle, Circle, Unlock, Lock, ChevronDown, Clock } from "lucide-react";
 
 const PAGE_SIZE = 100;
 
@@ -264,13 +264,14 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
   });
 
 
-  type LessonDetail = { id: string; title: string; dayNumber: number | null; displayOrder: number | null; isCompleted: boolean; completedAt: string | null; dripBypassed: boolean };
+  type LessonDetail = { id: string; title: string; dayNumber: number | null; displayOrder: number | null; isCompleted: boolean; completedAt: string | null; dripBypassed: boolean; isLocked: boolean; unlocksAt: string | null };
   type StudyInProgress = { id: string; title: string; seriesOrder: number | null; totalLessons: number; completedLessons: number; isComplete: boolean; lessons: LessonDetail[] };
   type SeriesProgress = { id: string; title: string; studies: StudyInProgress[] };
   const { data: studyProgress, isLoading: studyProgressLoading, refetch: refetchStudyProgress } = useQuery<SeriesProgress[]>({
     queryKey: ["/api/admin/users", selectedUser?.id, "study-progress"],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/users/${selectedUser!.id}/study-progress`, { credentials: 'include' });
+      const tz = encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York');
+      const res = await fetch(`/api/admin/users/${selectedUser!.id}/study-progress?timezone=${tz}`, { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch study progress');
       return res.json();
     },
@@ -861,8 +862,10 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                                             {lesson.isCompleted
                                               ? <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" />
                                               : lesson.dripBypassed
-                                                ? <Unlock className="w-3 h-3 text-amber-500 flex-shrink-0" title="Drip bypassed" />
-                                                : <Circle className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                                ? <Unlock className="w-3 h-3 text-amber-500 flex-shrink-0" title="Drip bypassed — accessible now" />
+                                                : lesson.isLocked
+                                                  ? <Clock className="w-3 h-3 text-blue-400 flex-shrink-0" title="Drip-locked — not yet accessible" />
+                                                  : <Circle className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                                             }
                                             <span className="text-[11px] text-foreground truncate">
                                               Day {lesson.dayNumber ?? li + 1}. {lesson.title}
@@ -870,6 +873,11 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                                             {lesson.completedAt && (
                                               <span className="text-[10px] text-muted-foreground whitespace-nowrap flex-shrink-0">
                                                 {new Date(lesson.completedAt).toLocaleDateString()}
+                                              </span>
+                                            )}
+                                            {lesson.isLocked && lesson.unlocksAt && (
+                                              <span className="text-[9px] text-blue-400 whitespace-nowrap flex-shrink-0 font-medium">
+                                                unlocks {new Date(lesson.unlocksAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                               </span>
                                             )}
                                           </div>
