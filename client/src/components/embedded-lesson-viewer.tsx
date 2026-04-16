@@ -104,10 +104,12 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
     queryKey: [`/api/studies/${studyId}/progress`],
   });
 
-  // Fetch user's lesson completion data
+  // Fetch user's lesson completion data — staleTime: 0 ensures a fresh fetch on every mount
+  // so admin actions (mark complete / reset) are reflected immediately without a page reload
   const { data: lessonProgressData = [] } = useQuery<LessonProgress[]>({
     queryKey: [`/api/users/${userId}/lesson-progress`],
     enabled: !!userId,
+    staleTime: 0,
   });
 
   // Auto-advance to the first unlocked incomplete lesson when data loads
