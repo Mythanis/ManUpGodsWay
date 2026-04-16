@@ -5664,6 +5664,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Re-lock a lesson that was previously bypass-unlocked (set dripBypassed back to false)
+  app.post('/api/admin/users/:id/lessons/:lessonId/relock', isAuthenticated, async (req: any, res) => {
+    try {
+      const adminUser = await storage.getUser(req.user.claims.sub);
+      if (!adminUser || !isAdmin(adminUser)) return res.status(403).json({ message: "Admin access required" });
+      const { id: targetUserId, lessonId } = req.params;
+
+      await db.update(schema.userLessonProgress)
+        .set({ dripBypassed: false, updatedAt: new Date() })
+        .where(
+          and(
+            eq(schema.userLessonProgress.userId, targetUserId),
+            eq(schema.userLessonProgress.lessonId, lessonId)
+          )
+        );
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error relocking lesson:", error);
+      res.status(500).json({ message: "Failed to relock lesson" });
+    }
+  });
+
   // Unlock Day 1 of a study by completing the previous study in the series (admin).
   // Only the previous study is marked complete — the target study is left untouched so
   // the user starts on Day 1 and continues on the normal drip schedule.

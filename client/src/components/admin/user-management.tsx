@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X, Bell, BellOff, ChevronLeft, ChevronRight, ArrowUpDown, BookOpen, CheckCircle, Circle, Unlock, ChevronDown } from "lucide-react";
+import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X, Bell, BellOff, ChevronLeft, ChevronRight, ArrowUpDown, BookOpen, CheckCircle, Circle, Unlock, Lock, ChevronDown } from "lucide-react";
 
 const PAGE_SIZE = 100;
 
@@ -336,6 +336,18 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
       toast({ title: "Lesson Unlocked", description: "Drip wait bypassed — lesson is now accessible." });
     },
     onError: () => { toast({ title: "Error", description: "Failed to unlock lesson.", variant: "destructive" }); },
+  });
+
+  const relockLesson = useMutation({
+    mutationFn: async ({ userId, lessonId }: { userId: string; lessonId: string }) => {
+      return await apiRequest('POST', `/api/admin/users/${userId}/lessons/${lessonId}/relock`);
+    },
+    onSuccess: (_, { userId }) => {
+      refetchStudyProgress();
+      invalidateLessonCaches(userId);
+      toast({ title: "Lesson Relocked", description: "Drip bypass removed — lesson is drip-gated again." });
+    },
+    onError: () => { toast({ title: "Error", description: "Failed to relock lesson.", variant: "destructive" }); },
   });
 
   const handleSaveChanges = async () => {
@@ -796,7 +808,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                           <div className="space-y-1 pr-1">
                             {series.studies.map((study, idx) => {
                               const isExpanded = expandedStudies.has(study.id);
-                              const anyPending = resetLesson.isPending || completeLesson.isPending || unlockLesson.isPending || unlockStudy.isPending;
+                              const anyPending = resetLesson.isPending || completeLesson.isPending || unlockLesson.isPending || relockLesson.isPending || unlockStudy.isPending;
                               return (
                                 <div key={study.id} className="border border-muted/40 rounded-md overflow-hidden">
                                   {/* Week header row */}
@@ -882,9 +894,17 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                                               <Button size="sm"
                                                 className="h-5 text-[9px] px-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 border border-amber-200 font-medium"
                                                 disabled={anyPending}
-                                                title="Bypass 24-hr wait — makes this day accessible now without completing any other day"
+                                                title="Bypass 24-hr wait — makes this day accessible now"
                                                 onClick={() => unlockLesson.mutate({ userId: selectedUser.id, lessonId: lesson.id })}
-                                              >Unlock</Button>
+                                              ><Unlock className="w-2 h-2 mr-0.5" />Unlock</Button>
+                                            )}
+                                            {!lesson.isCompleted && lesson.dripBypassed && (
+                                              <Button size="sm"
+                                                className="h-5 text-[9px] px-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-medium"
+                                                disabled={anyPending}
+                                                title="Re-apply the drip gate — lesson will be locked until its scheduled unlock time"
+                                                onClick={() => relockLesson.mutate({ userId: selectedUser.id, lessonId: lesson.id })}
+                                              ><Lock className="w-2 h-2 mr-0.5" />Relock</Button>
                                             )}
                                           </div>
                                         </div>
