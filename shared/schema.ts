@@ -199,6 +199,7 @@ export const userLessonProgress = pgTable("user_lesson_progress", {
   completedAt: timestamp("completed_at"),
   answers: jsonb("answers").default(sql`'{}'::jsonb`), // User's answers to questions {questionId: answer}
   notes: text("notes"), // User's personal study notes for this lesson
+  dripBypassed: boolean("drip_bypassed").default(false), // Admin override: skip 24-hr drip wait for this lesson
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [

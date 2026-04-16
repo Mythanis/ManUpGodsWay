@@ -5502,6 +5502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           let completedLessons = 0;
           let isStudyComplete = false;
+          let lessonProgress: any[] = [];
 
           if (lessons.length === 0) {
             const [prog] = await db.select().from(schema.userProgress)
@@ -5509,7 +5510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             isStudyComplete = !!prog?.completedAt;
           } else {
             const lessonIds = lessons.map(l => l.id);
-            const lessonProgress = lessonIds.length > 0
+            lessonProgress = lessonIds.length > 0
               ? await db.select().from(schema.userLessonProgress)
                   .where(and(
                     eq(schema.userLessonProgress.userId, targetUserId),
@@ -5520,6 +5521,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             isStudyComplete = completedLessons >= lessons.length && lessons.length > 0;
           }
 
+          // Build per-lesson detail for admin view
+          const lessonDetails = lessons.map(l => {
+            const lp = lessonProgress.find((p: any) => p.lessonId === l.id);
+            return {
+              id: l.id,
+              title: l.title,
+              dayNumber: l.dayNumber,
+              displayOrder: l.displayOrder,
+              isCompleted: !!(lp as any)?.completedAt,
+              completedAt: (lp as any)?.completedAt ?? null,
+              dripBypassed: !!(lp as any)?.dripBypassed,
+            };
+          });
+
           return {
             id: study.id,
             title: study.title,
@@ -5527,6 +5542,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             totalLessons: lessons.length,
             completedLessons,
             isComplete: isStudyComplete,
+            lessons: lessonDetails,
           };
         }));
 
@@ -5538,6 +5554,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user study progress:", error);
       res.status(500).json({ message: "Failed to fetch study progress" });
+    }
+  });
+
+  // ── Admin per-lesson controls ──────────────────────────────────────────────
+
+  // Reset a single lesson: clear completed_at / is_completed and reset parent study progress
+  app.post('/api/admin/users/:id/lessons/:lessonId/reset', isAuthenticated, async (req: any, res) => {
+    try {
+      const adminUser = await storage.getUser(req.user.claims.sub);
+      if (!adminUser || !isAdmin(adminUser)) return res.status(403).json({ message: "Admin access required" });
+      const { id: targetUserId, lessonId } = req.params;
+
+      // Clear this lesson's completion
+      await db.insert(schema.userLessonProgress)
+        .values({ userId: targetUserId, lessonId, isCompleted: false, completedAt: null as any, dripBypassed: false })
+        .onConflictDoUpdate({
+          target: [schema.userLessonProgress.userId, schema.userLessonProgress.lessonId],
+          set: { isCompleted: false, completedAt: null as any, dripBypassed: false, updatedAt: new Date() },
+        });
+
+      // Find which study owns this lesson and reset that study's user_progress
+      const [lesson] = await db.select().from(schema.studyLessons).where(eq(schema.studyLessons.id, lessonId));
+      if (lesson?.studyId) {
+        await db.insert(schema.userProgress)
+          .values({ userId: targetUserId, studyId: lesson.studyId, isCompleted: false, completedAt: null as any, status: 'in_progress' })
+          .onConflictDoUpdate({
+            target: [schema.userProgress.userId, schema.userProgress.studyId],
+            set: { isCompleted: false, completedAt: null as any, status: 'in_progress', updatedAt: new Date() },
+          });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error resetting lesson:", error);
+      res.status(500).json({ message: "Failed to reset lesson" });
+    }
+  });
+
+  // Mark a single lesson complete and update parent study progress if all lessons done
+  app.post('/api/admin/users/:id/lessons/:lessonId/complete', isAuthenticated, async (req: any, res) => {
+    try {
+      const adminUser = await storage.getUser(req.user.claims.sub);
+      if (!adminUser || !isAdmin(adminUser)) return res.status(403).json({ message: "Admin access required" });
+      const { id: targetUserId, lessonId } = req.params;
+      const now = new Date();
+
+      await db.insert(schema.userLessonProgress)
+        .values({ userId: targetUserId, lessonId, isCompleted: true, completedAt: now })
+        .onConflictDoUpdate({
+          target: [schema.userLessonProgress.userId, schema.userLessonProgress.lessonId],
+          set: { isCompleted: true, completedAt: now, updatedAt: now },
+        });
+
+      // Check if all lessons in the parent study are now complete
+      const [lesson] = await db.select().from(schema.studyLessons).where(eq(schema.studyLessons.id, lessonId));
+      if (lesson?.studyId) {
+        const allLessons = await db.select().from(schema.studyLessons).where(eq(schema.studyLessons.studyId, lesson.studyId));
+        const allProgress = allLessons.length > 0
+          ? await db.select().from(schema.userLessonProgress).where(
+              and(eq(schema.userLessonProgress.userId, targetUserId),
+                  inArray(schema.userLessonProgress.lessonId, allLessons.map(l => l.id))))
+          : [];
+        const allDone = allLessons.length > 0 && allProgress.filter(p => !!p.completedAt).length >= allLessons.length;
+        await db.insert(schema.userProgress)
+          .values({
+            userId: targetUserId, studyId: lesson.studyId,
+            isCompleted: allDone, completedAt: allDone ? now : null as any,
+            status: allDone ? 'completed' : 'in_progress',
+          })
+          .onConflictDoUpdate({
+            target: [schema.userProgress.userId, schema.userProgress.studyId],
+            set: {
+              isCompleted: allDone, completedAt: allDone ? now : null as any,
+              status: allDone ? 'completed' : 'in_progress', updatedAt: now,
+            },
+          });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error completing lesson:", error);
+      res.status(500).json({ message: "Failed to complete lesson" });
+    }
+  });
+
+  // Unlock a single lesson by bypassing its drip gate (no other lesson is modified)
+  app.post('/api/admin/users/:id/lessons/:lessonId/unlock', isAuthenticated, async (req: any, res) => {
+    try {
+      const adminUser = await storage.getUser(req.user.claims.sub);
+      if (!adminUser || !isAdmin(adminUser)) return res.status(403).json({ message: "Admin access required" });
+      const { id: targetUserId, lessonId } = req.params;
+
+      await db.insert(schema.userLessonProgress)
+        .values({ userId: targetUserId, lessonId, dripBypassed: true })
+        .onConflictDoUpdate({
+          target: [schema.userLessonProgress.userId, schema.userLessonProgress.lessonId],
+          set: { dripBypassed: true, updatedAt: new Date() },
+        });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error unlocking lesson:", error);
+      res.status(500).json({ message: "Failed to unlock lesson" });
     }
   });
 

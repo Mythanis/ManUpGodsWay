@@ -56,6 +56,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
   const [showBanDialog, setShowBanDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showStudyProgress, setShowStudyProgress] = useState(false);
+  const [expandedStudies, setExpandedStudies] = useState<Set<string>>(new Set());
   const [banReason, setBanReason] = useState('');
   const [editedUser, setEditedUser] = useState<Partial<User>>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -263,7 +264,10 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
   });
 
 
-  const { data: studyProgress, isLoading: studyProgressLoading, refetch: refetchStudyProgress } = useQuery<{ id: string; title: string; studies: { id: string; title: string; seriesOrder: number | null; totalLessons: number; completedLessons: number; isComplete: boolean }[] }[]>({
+  type LessonDetail = { id: string; title: string; dayNumber: number | null; displayOrder: number | null; isCompleted: boolean; completedAt: string | null; dripBypassed: boolean };
+  type StudyInProgress = { id: string; title: string; seriesOrder: number | null; totalLessons: number; completedLessons: number; isComplete: boolean; lessons: LessonDetail[] };
+  type SeriesProgress = { id: string; title: string; studies: StudyInProgress[] };
+  const { data: studyProgress, isLoading: studyProgressLoading, refetch: refetchStudyProgress } = useQuery<SeriesProgress[]>({
     queryKey: ["/api/admin/users", selectedUser?.id, "study-progress"],
     queryFn: async () => {
       const res = await fetch(`/api/admin/users/${selectedUser!.id}/study-progress`, { credentials: 'include' });
@@ -284,6 +288,30 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
     onError: () => {
       toast({ title: "Error", description: "Failed to unlock study.", variant: "destructive" });
     },
+  });
+
+  const resetLesson = useMutation({
+    mutationFn: async ({ userId, lessonId }: { userId: string; lessonId: string }) => {
+      return await apiRequest('POST', `/api/admin/users/${userId}/lessons/${lessonId}/reset`);
+    },
+    onSuccess: () => { refetchStudyProgress(); toast({ title: "Lesson Reset", description: "Lesson cleared — the user can redo it from scratch." }); },
+    onError: () => { toast({ title: "Error", description: "Failed to reset lesson.", variant: "destructive" }); },
+  });
+
+  const completeLesson = useMutation({
+    mutationFn: async ({ userId, lessonId }: { userId: string; lessonId: string }) => {
+      return await apiRequest('POST', `/api/admin/users/${userId}/lessons/${lessonId}/complete`);
+    },
+    onSuccess: () => { refetchStudyProgress(); toast({ title: "Lesson Completed", description: "Lesson marked complete." }); },
+    onError: () => { toast({ title: "Error", description: "Failed to complete lesson.", variant: "destructive" }); },
+  });
+
+  const unlockLesson = useMutation({
+    mutationFn: async ({ userId, lessonId }: { userId: string; lessonId: string }) => {
+      return await apiRequest('POST', `/api/admin/users/${userId}/lessons/${lessonId}/unlock`);
+    },
+    onSuccess: () => { refetchStudyProgress(); toast({ title: "Lesson Unlocked", description: "Drip wait bypassed — lesson is now accessible." }); },
+    onError: () => { toast({ title: "Error", description: "Failed to unlock lesson.", variant: "destructive" }); },
   });
 
   const handleSaveChanges = async () => {
@@ -478,6 +506,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                       setEditedUser({});
                       setHasUnsavedChanges(false);
                       setShowStudyProgress(false);
+                      setExpandedStudies(new Set());
                       setShowUserDialog(true);
                     }}
                     className="bg-[#FCD000] text-black border-2 border-black font-black uppercase text-xs rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
@@ -740,37 +769,104 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                       studyProgress.map((series) => (
                         <div key={series.id}>
                           <p className="text-xs font-bold text-foreground mb-1.5">{series.title}</p>
-                          <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
-                            {series.studies.map((study, idx) => (
-                              <div key={study.id} className="flex items-center justify-between gap-2 py-1 border-b border-muted/30 last:border-0">
-                                <div className="flex items-center gap-1.5 min-w-0">
-                                  {study.isComplete
-                                    ? <CheckCircle className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
-                                    : <Circle className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                                  }
-                                  <span className="text-xs text-foreground truncate">
-                                    {idx + 1}. {study.title}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                    {study.totalLessons > 0 ? `${study.completedLessons}/${study.totalLessons}` : study.isComplete ? 'Done' : 'Not started'}
-                                  </span>
-                                  {!study.isComplete && idx > 0 && (
-                                    <Button
-                                      size="sm"
-                                      className="h-6 text-[10px] px-2 bg-ministry-gold hover:bg-yellow-500 text-black font-bold"
-                                      disabled={unlockStudy.isPending}
-                                      title="Completes the previous week so Day 1 of this week opens. The drip schedule continues normally."
-                                      onClick={() => unlockStudy.mutate({ userId: selectedUser.id, studyId: study.id })}
-                                    >
-                                      <Unlock className="w-2.5 h-2.5 mr-1" />
-                                      Open Day 1
-                                    </Button>
+                          <div className="space-y-1 pr-1">
+                            {series.studies.map((study, idx) => {
+                              const isExpanded = expandedStudies.has(study.id);
+                              const anyPending = resetLesson.isPending || completeLesson.isPending || unlockLesson.isPending || unlockStudy.isPending;
+                              return (
+                                <div key={study.id} className="border border-muted/40 rounded-md overflow-hidden">
+                                  {/* Week header row */}
+                                  <button
+                                    className="w-full flex items-center justify-between gap-2 px-2 py-1.5 hover:bg-muted/20 transition-colors text-left"
+                                    onClick={() => setExpandedStudies(prev => {
+                                      const next = new Set(prev);
+                                      next.has(study.id) ? next.delete(study.id) : next.add(study.id);
+                                      return next;
+                                    })}
+                                  >
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                      {study.isComplete
+                                        ? <CheckCircle className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                                        : <Circle className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                                      }
+                                      <span className="text-xs text-foreground truncate font-medium">
+                                        {idx + 1}. {study.title}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                        {study.totalLessons > 0 ? `${study.completedLessons}/${study.totalLessons}` : study.isComplete ? 'Done' : 'Not started'}
+                                      </span>
+                                      {!study.isComplete && idx > 0 && (
+                                        <Button
+                                          size="sm"
+                                          className="h-5 text-[10px] px-1.5 bg-ministry-gold hover:bg-yellow-500 text-black font-bold"
+                                          disabled={anyPending}
+                                          title="Completes the previous week so Day 1 of this week opens."
+                                          onClick={(e) => { e.stopPropagation(); unlockStudy.mutate({ userId: selectedUser.id, studyId: study.id }); }}
+                                        >
+                                          <Unlock className="w-2 h-2 mr-0.5" />
+                                          Open D1
+                                        </Button>
+                                      )}
+                                      <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} />
+                                    </div>
+                                  </button>
+
+                                  {/* Lesson rows (expandable) */}
+                                  {isExpanded && study.lessons && study.lessons.length > 0 && (
+                                    <div className="border-t border-muted/30 bg-muted/10">
+                                      {study.lessons.map((lesson, li) => (
+                                        <div key={lesson.id} className="flex items-center gap-2 px-3 py-1.5 border-b border-muted/20 last:border-0">
+                                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                            {lesson.isCompleted
+                                              ? <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" />
+                                              : lesson.dripBypassed
+                                                ? <Unlock className="w-3 h-3 text-amber-500 flex-shrink-0" title="Drip bypassed" />
+                                                : <Circle className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                            }
+                                            <span className="text-[11px] text-foreground truncate">
+                                              Day {lesson.dayNumber ?? li + 1}. {lesson.title}
+                                            </span>
+                                            {lesson.completedAt && (
+                                              <span className="text-[10px] text-muted-foreground whitespace-nowrap flex-shrink-0">
+                                                {new Date(lesson.completedAt).toLocaleDateString()}
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div className="flex items-center gap-1 flex-shrink-0">
+                                            {lesson.isCompleted && (
+                                              <Button size="sm"
+                                                className="h-5 text-[9px] px-1.5 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 font-medium"
+                                                disabled={anyPending}
+                                                title="Clear completion — user can redo this day"
+                                                onClick={() => resetLesson.mutate({ userId: selectedUser.id, lessonId: lesson.id })}
+                                              >Reset</Button>
+                                            )}
+                                            {!lesson.isCompleted && (
+                                              <Button size="sm"
+                                                className="h-5 text-[9px] px-1.5 bg-green-100 hover:bg-green-200 text-green-700 border border-green-200 font-medium"
+                                                disabled={anyPending}
+                                                title="Mark this day as complete"
+                                                onClick={() => completeLesson.mutate({ userId: selectedUser.id, lessonId: lesson.id })}
+                                              >Done</Button>
+                                            )}
+                                            {!lesson.isCompleted && !lesson.dripBypassed && (
+                                              <Button size="sm"
+                                                className="h-5 text-[9px] px-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 border border-amber-200 font-medium"
+                                                disabled={anyPending}
+                                                title="Bypass 24-hr wait — makes this day accessible now without completing any other day"
+                                                onClick={() => unlockLesson.mutate({ userId: selectedUser.id, lessonId: lesson.id })}
+                                              >Unlock</Button>
+                                            )}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
                                   )}
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       ))
