@@ -165,17 +165,32 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
         timezone: userTimezone,
       });
     },
+    onMutate: async () => {
+      // Cancel any in-flight lesson progress fetches to avoid overwriting our optimistic update
+      await queryClient.cancelQueries({ queryKey: [`/api/users/${userId}/lesson-progress`] });
+      // Snapshot current data for rollback
+      const previous = queryClient.getQueryData<LessonProgress[]>([`/api/users/${userId}/lesson-progress`]);
+      // Optimistically update: mark this lesson as completed immediately
+      queryClient.setQueryData<LessonProgress[]>([`/api/users/${userId}/lesson-progress`], (old = []) => {
+        const now = new Date();
+        const exists = old.some(p => p.lessonId === currentLesson.id);
+        if (exists) {
+          return old.map(p => p.lessonId === currentLesson.id ? { ...p, completedAt: now } : p);
+        }
+        return [...old, { userId, lessonId: currentLesson.id, completedAt: now }];
+      });
+      return { previous };
+    },
     onSuccess: (data: any) => {
+      setAnswers({});
+      // Sync server state for lessons list (drip lock times) and study-level progress
       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/lesson-progress`] });
       queryClient.invalidateQueries({ queryKey: [`/api/studies/${studyId}/progress`] });
-      // Refresh lessons so the next lesson's isLocked/unlocksAt reflects the new completion time
-      // Use a predicate to match all timezone variants of this key
       queryClient.invalidateQueries({
         predicate: (query) =>
           Array.isArray(query.queryKey) &&
           query.queryKey[0] === `/api/studies/${studyId}/lessons`,
       });
-      setAnswers({});
       if (data?.studyCompleted) {
         setNextStudySuggestion(data.nextStudy || null);
         setShowCompleteModal(true);
@@ -186,7 +201,11 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
         });
       }
     },
-    onError: (error: any) => {
+    onError: (error: any, _vars, context: any) => {
+      // Roll back the optimistic update on failure
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData([`/api/users/${userId}/lesson-progress`], context.previous);
+      }
       toast({
         title: "Error",
         description: error.message || "Failed to mark lesson as complete",
