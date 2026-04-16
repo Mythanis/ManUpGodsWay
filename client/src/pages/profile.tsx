@@ -270,7 +270,7 @@ export default function Profile() {
     setIsRefreshing(true);
     await queryClient.invalidateQueries();
     setIsRefreshing(false);
-    toast({ title: "App data refreshed", description: "All content has been updated with the latest data." });
+    toast({ title: "Cache refreshed", description: "Your app is now showing the latest content." });
   };
 
   const completedStudies = progress.filter((p: any) => p.isCompleted);
@@ -540,7 +540,7 @@ export default function Profile() {
                   }
                 </div>
                 <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">
-                  {isRefreshing ? 'Refreshing…' : 'Refresh App Data'}
+                  {isRefreshing ? 'Refreshing…' : 'Refresh App Cache'}
                 </span>
                 <div className="pr-4">
                   <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
