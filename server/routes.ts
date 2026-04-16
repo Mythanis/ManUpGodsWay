@@ -5502,7 +5502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           let completedLessons = 0;
           let isStudyComplete = false;
-          let lessonProgress: any[] = [];
+          let lessonProgress: schema.UserLessonProgress[] = [];
 
           if (lessons.length === 0) {
             const [prog] = await db.select().from(schema.userProgress)
@@ -5523,15 +5523,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Build per-lesson detail for admin view
           const lessonDetails = lessons.map(l => {
-            const lp = lessonProgress.find((p: any) => p.lessonId === l.id);
+            const lp = lessonProgress.find(p => p.lessonId === l.id);
             return {
               id: l.id,
               title: l.title,
               dayNumber: l.dayNumber,
               displayOrder: l.displayOrder,
-              isCompleted: !!(lp as any)?.completedAt,
-              completedAt: (lp as any)?.completedAt ?? null,
-              dripBypassed: !!(lp as any)?.dripBypassed,
+              isCompleted: !!lp?.completedAt,
+              completedAt: lp?.completedAt ?? null,
+              dripBypassed: !!lp?.dripBypassed,
             };
           });
 
@@ -5568,20 +5568,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Clear this lesson's completion
       await db.insert(schema.userLessonProgress)
-        .values({ userId: targetUserId, lessonId, isCompleted: false, completedAt: null as any, dripBypassed: false })
+        .values({ userId: targetUserId, lessonId, isCompleted: false, completedAt: null, dripBypassed: false })
         .onConflictDoUpdate({
           target: [schema.userLessonProgress.userId, schema.userLessonProgress.lessonId],
-          set: { isCompleted: false, completedAt: null as any, dripBypassed: false, updatedAt: new Date() },
+          set: { isCompleted: false, completedAt: null, dripBypassed: false, updatedAt: new Date() },
         });
 
       // Find which study owns this lesson and reset that study's user_progress
       const [lesson] = await db.select().from(schema.studyLessons).where(eq(schema.studyLessons.id, lessonId));
       if (lesson?.studyId) {
         await db.insert(schema.userProgress)
-          .values({ userId: targetUserId, studyId: lesson.studyId, isCompleted: false, completedAt: null as any, status: 'in_progress' })
+          .values({ userId: targetUserId, studyId: lesson.studyId, completedAt: null, status: 'in_progress' })
           .onConflictDoUpdate({
             target: [schema.userProgress.userId, schema.userProgress.studyId],
-            set: { isCompleted: false, completedAt: null as any, status: 'in_progress', updatedAt: new Date() },
+            set: { completedAt: null, status: 'in_progress' },
           });
       }
       res.json({ success: true });
@@ -5619,14 +5619,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await db.insert(schema.userProgress)
           .values({
             userId: targetUserId, studyId: lesson.studyId,
-            isCompleted: allDone, completedAt: allDone ? now : null as any,
+            completedAt: allDone ? now : null,
             status: allDone ? 'completed' : 'in_progress',
           })
           .onConflictDoUpdate({
             target: [schema.userProgress.userId, schema.userProgress.studyId],
             set: {
-              isCompleted: allDone, completedAt: allDone ? now : null as any,
-              status: allDone ? 'completed' : 'in_progress', updatedAt: now,
+              completedAt: allDone ? now : null,
+              status: allDone ? 'completed' : 'in_progress',
             },
           });
       }
