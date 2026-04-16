@@ -837,18 +837,6 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                                       <span className="text-xs text-muted-foreground whitespace-nowrap">
                                         {study.totalLessons > 0 ? `${study.completedLessons}/${study.totalLessons}` : study.isComplete ? 'Done' : 'Not started'}
                                       </span>
-                                      {!study.isComplete && idx > 0 && (
-                                        <Button
-                                          size="sm"
-                                          className="h-5 text-[10px] px-1.5 bg-ministry-gold hover:bg-yellow-500 text-black font-bold"
-                                          disabled={anyPending}
-                                          title="Completes the previous week so Day 1 of this week opens."
-                                          onClick={(e) => { e.stopPropagation(); unlockStudy.mutate({ userId: selectedUser.id, studyId: study.id }); }}
-                                        >
-                                          <Unlock className="w-2 h-2 mr-0.5" />
-                                          Open D1
-                                        </Button>
-                                      )}
                                       <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} />
                                     </div>
                                   </div>
