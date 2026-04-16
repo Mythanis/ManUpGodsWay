@@ -62,6 +62,7 @@ export default function Profile() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showFitnessManageModal, setShowFitnessManageModal] = useState(false);
   const [showFitnessCancelConfirm, setShowFitnessCancelConfirm] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // PWA install — shared hook captures beforeinstallprompt at module-load time
   // so the event is never missed regardless of when the user navigates here
@@ -264,6 +265,13 @@ export default function Profile() {
       toast({ title: 'Error', description: error.message || 'Failed to cancel fitness membership', variant: 'destructive' });
     },
   });
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await queryClient.invalidateQueries();
+    setIsRefreshing(false);
+    toast({ title: "App data refreshed", description: "All content has been updated with the latest data." });
+  };
 
   const completedStudies = progress.filter((p: any) => p.isCompleted);
   const currentStudies = progress.filter((p: any) => !p.isCompleted);
@@ -517,6 +525,29 @@ export default function Profile() {
                   </div>
                 </Button>
               </Link>
+
+              <Button
+                variant="outline"
+                className="h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all disabled:opacity-60"
+                data-testid="button-refresh-app-data"
+                disabled={isRefreshing}
+                onClick={handleRefresh}
+              >
+                <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+                  {isRefreshing
+                    ? <Loader2 className="w-6 h-6 text-white relative z-10 animate-spin" />
+                    : <RefreshCw className="w-6 h-6 text-white relative z-10" />
+                  }
+                </div>
+                <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">
+                  {isRefreshing ? 'Refreshing…' : 'Refresh App Data'}
+                </span>
+                <div className="pr-4">
+                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                  </svg>
+                </div>
+              </Button>
             </div>
           </CardContent>
         </Card>
