@@ -3594,12 +3594,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { answers } = req.body;
 
       // Check lesson-a-day drip: block if previous lesson not yet completed or not yet midnight of the next day
+      // Skip the drip gate entirely when an admin explicitly bypassed it for this lesson.
       const allLessons = await storage.getStudyLessons(studyId);
       const sortedForDrip = [...allLessons].sort((a: any, b: any) =>
         (a.displayOrder ?? a.dayNumber ?? 0) - (b.displayOrder ?? b.dayNumber ?? 0)
       );
       const lessonIndexForDrip = sortedForDrip.findIndex((l: any) => l.id === lessonId);
-      if (lessonIndexForDrip > 0) {
+      const [thisLessonProg] = await storage.getLessonProgressForLessons(userId, [lessonId]);
+      const dripBypassed = !!thisLessonProg?.dripBypassed;
+      if (lessonIndexForDrip > 0 && !dripBypassed) {
         const prevLesson = sortedForDrip[lessonIndexForDrip - 1];
         const [prevProg] = await storage.getLessonProgressForLessons(userId, [prevLesson.id]);
         if (!prevProg?.completedAt) {
