@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,7 +64,17 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const searchString = useSearch();
+  // If a ?day=N param is present (e.g. from a series-detail lesson link), open that
+  // lesson directly and skip auto-advance entirely.
+  const dayParam = new URLSearchParams(searchString).get("day");
+  const initialDayFromUrl = dayParam !== null ? parseInt(dayParam, 10) : null;
+  const [currentDayIndex, setCurrentDayIndex] = useState(
+    initialDayFromUrl !== null && !Number.isNaN(initialDayFromUrl) ? initialDayFromUrl : 0
+  );
+  // True as soon as the user manually taps a nav dot (or arrives via ?day=), so the
+  // auto-advance effect never overrides an explicit navigation choice.
+  const [userHasNavigated, setUserHasNavigated] = useState(initialDayFromUrl !== null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState<string>("");
   const [notesExpanded, setNotesExpanded] = useState(false);
@@ -113,13 +123,12 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
     staleTime: 0,
   });
 
-  // Auto-advance to resume from last completed lesson when data loads.
-  // We intentionally do NOT jump to "first unlocked incomplete" because an admin
-  // could have bypass-unlocked a future lesson far ahead of the user's real progress,
-  // which would confuse the user by skipping intermediate locked lessons.
+  // Auto-advance: on first load, resume from the last completed lesson (or the next
+  // available one after it).  Never runs if the user has already navigated manually
+  // or if a specific ?day= was supplied in the URL — both set userHasNavigated=true.
   const [hasAutoAdvanced, setHasAutoAdvanced] = useState(false);
   useEffect(() => {
-    if (hasAutoAdvanced || lessonsLoading || lessons.length === 0 || lessonProgressData === undefined) return;
+    if (hasAutoAdvanced || userHasNavigated || lessonsLoading || lessons.length === 0 || lessonProgressData === undefined) return;
 
     // Find the LAST lesson the user has actually completed.
     // Use lesson.isCompleted (server-side) with lessonProgressData as fallback.
@@ -144,7 +153,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
     // If nothing is completed yet, stay on Day 1 (index 0, the default state)
 
     setHasAutoAdvanced(true);
-  }, [lessons, lessonProgressData, lessonsLoading, hasAutoAdvanced]);
+  }, [lessons, lessonProgressData, lessonsLoading, hasAutoAdvanced, userHasNavigated]);
 
   const currentLesson = lessons[currentDayIndex];
   const currentProgress = lessonProgressData.find(p => p.lessonId === currentLesson?.id);
@@ -830,6 +839,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
               disabled={locked}
               onClick={() => {
                 if (locked) return;
+                setUserHasNavigated(true);
                 setCurrentDayIndex(index);
                 setAnswers({});
               }}

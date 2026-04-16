@@ -483,10 +483,9 @@ export default function SeriesDetail() {
 
                           {/* Go button or lock */}
                           {!isDripLocked && hasAccess && (
-                            <Link href={`/studies/${study.id}`}>
+                            <Link href={`/studies/${study.id}?day=${lessonIndex}`}>
                               <button
                                 className="flex-shrink-0 text-[#FCD000] hover:text-yellow-300 transition-colors"
-                                onClick={() => handleStudyClick(study, studyIndex)}
                                 data-testid={`button-lesson-${lesson.id}`}
                               >
                                 <ChevronRight className="w-4 h-4" />
