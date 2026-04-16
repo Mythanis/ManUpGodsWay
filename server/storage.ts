@@ -918,6 +918,23 @@ export class DatabaseStorage implements IStorage {
           (a.displayOrder ?? a.dayNumber ?? 0) - (b.displayOrder ?? b.dayNumber ?? 0)
         );
 
+        // Cross-study drip: find the previous study's last lesson completion time
+        // so Day 1 of this study is gated until midnight after Day 7 of the prior study.
+        let prevStudyLastCompletedAt: Date | null = null;
+        if (index > 0) {
+          const prevStudy = seriesStudies[index - 1];
+          const prevStudyLessons = (lessonsByStudyId.get(prevStudy.id) ?? [])
+            .slice()
+            .sort((a, b) => (a.displayOrder ?? a.dayNumber ?? 0) - (b.displayOrder ?? b.dayNumber ?? 0));
+          if (prevStudyLessons.length > 0) {
+            const lastLesson = prevStudyLessons[prevStudyLessons.length - 1];
+            const lastProg = lessonProgressByLessonId.get(lastLesson.id);
+            if (lastProg?.completedAt) {
+              prevStudyLastCompletedAt = new Date(lastProg.completedAt);
+            }
+          }
+        }
+
         const lessonList = sortedLessons.map((l, li) => {
           const prog = lessonProgressByLessonId.get(l.id);
           const isCompleted = !!prog?.completedAt;
@@ -925,17 +942,28 @@ export class DatabaseStorage implements IStorage {
           let lessonUnlocksAt: string | null = null;
           // drip_bypassed=true means admin unlocked this lesson — skip drip gate entirely
           const dripBypassed = !!prog?.dripBypassed;
-          if (li > 0 && !dripBypassed) {
-            const prevLesson = sortedLessons[li - 1];
-            const prevProg = lessonProgressByLessonId.get(prevLesson.id);
-            if (!prevProg?.completedAt) {
-              lessonIsLocked = true;
+          if (!dripBypassed) {
+            if (li === 0) {
+              // Day 1: gate against the previous study's last lesson completion time
+              if (prevStudyLastCompletedAt) {
+                const unlockTime = getNextMidnightInTimezone(prevStudyLastCompletedAt, 'America/New_York');
+                if (new Date() < unlockTime) {
+                  lessonIsLocked = true;
+                  lessonUnlocksAt = unlockTime.toISOString();
+                }
+              }
             } else {
-              const prevCompleted = new Date(prevProg.completedAt);
-              const unlockTime = getNextMidnightInTimezone(prevCompleted, 'America/New_York');
-              if (new Date() < unlockTime) {
+              const prevLesson = sortedLessons[li - 1];
+              const prevProg = lessonProgressByLessonId.get(prevLesson.id);
+              if (!prevProg?.completedAt) {
                 lessonIsLocked = true;
-                lessonUnlocksAt = unlockTime.toISOString();
+              } else {
+                const prevCompleted = new Date(prevProg.completedAt);
+                const unlockTime = getNextMidnightInTimezone(prevCompleted, 'America/New_York');
+                if (new Date() < unlockTime) {
+                  lessonIsLocked = true;
+                  lessonUnlocksAt = unlockTime.toISOString();
+                }
               }
             }
           }
