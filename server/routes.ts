@@ -148,14 +148,15 @@ function hasActiveSubscription(user: any): boolean {
   if (!user) return false;
   if (user.role === 'admin' || user.role === 'owner') return true;
   if (user.subscriptionStatus === 'active') return true;
+  // past_due = payment failed but Stripe is still retrying; keep access during retry window
+  if (user.subscriptionStatus === 'past_due') return true;
   // Platform trial: non-Stripe trial with a valid end date
   if (user.subscriptionStatus === 'trial' && user.trialEndDate && new Date(user.trialEndDate) > new Date()) return true;
   // Cancelled users retain full access until their expiration date
   if (user.subscriptionStatus === 'cancelled' && user.subscriptionExpiresAt) {
     return new Date(user.subscriptionExpiresAt) > new Date();
   }
-  // Stripe past_due: payment failed but the webhook only sets status='past_due',
-  // it does NOT downgrade subscriptionTier. Allow access during the retry window.
+  // Fallback: subscriptionTier still shows 'subscriber' (e.g. tier wasn't downgraded)
   if (user.subscriptionTier === 'subscriber') return true;
   return false;
 }

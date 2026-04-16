@@ -219,6 +219,12 @@ export async function stripeWebhookHandler(req: Request, res: Response) {
         const user = await storage.getUser(subscription.metadata?.userId);
         if (user && user.stripeSubscriptionId === subscription.id) {
           await storage.cancelUserSubscription(user.id);
+          // Also pin subscriptionExpiresAt to Stripe's authoritative period end so the
+          // "cancelled but within window" access check works correctly.
+          const periodEnd = new Date(subscription.current_period_end * 1000);
+          await storage.updateUserSubscriptionDetails(user.id, {
+            subscriptionExpiresAt: periodEnd,
+          });
 
           const notification = await storage.createNotification({
             userId: user.id,
@@ -268,9 +274,11 @@ export async function stripeWebhookHandler(req: Request, res: Response) {
             .where(eq(schema.users.stripeSubscriptionId, subscriptionId))
             .limit(1);
           if (affectedUser) {
+            // Keep subscriptionTier as 'subscriber' during the retry window so
+            // the user's content access is preserved while Stripe retries payment.
+            // Access will be fully revoked only if all retries fail (subscription.deleted).
             await storage.updateUserSubscriptionDetails(affectedUser.id, {
               subscriptionStatus: "past_due",
-              subscriptionTier: "expired",
             });
             const notification = await storage.createNotification({
               userId: affectedUser.id,

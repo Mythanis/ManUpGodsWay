@@ -1211,7 +1211,7 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!user) return [];
     
-    const isSubscriber = (user.subscriptionStatus === 'active') || (user.subscriptionTier === 'subscriber');
+    const isSubscriber = (user.subscriptionStatus === 'active') || (user.subscriptionStatus === 'past_due') || (user.subscriptionTier === 'subscriber');
     
     // Get user's completed studies to understand their interests
     const completedProgress = await db
