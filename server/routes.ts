@@ -5303,7 +5303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      let { subscriptionStatus, subscriptionTier } = req.body;
+      let { subscriptionStatus, subscriptionTier, subscriptionExpiresAt } = req.body;
 
       // Accept subscriptionTier from the frontend and translate to subscriptionStatus
       if (!subscriptionStatus && subscriptionTier) {
@@ -5337,6 +5337,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.trialStartDate = now;
         updateData.trialEndDate = trialEnd;
         updateData.subscriptionTier = 'trial';
+      }
+
+      // Apply admin-supplied expiry date override (null clears it, string sets it)
+      if (subscriptionExpiresAt !== undefined) {
+        if (subscriptionExpiresAt === null || subscriptionExpiresAt === '') {
+          updateData.subscriptionExpiresAt = null;
+        } else {
+          const parsed = new Date(subscriptionExpiresAt);
+          if (!isNaN(parsed.getTime())) {
+            updateData.subscriptionExpiresAt = parsed;
+          }
+        }
       }
 
       const updatedUser = await storage.updateUserSubscriptionDetails(req.params.id, updateData);

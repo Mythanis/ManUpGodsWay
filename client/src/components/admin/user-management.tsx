@@ -137,8 +137,8 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
   });
 
   const updateUserSubscription = useMutation({
-    mutationFn: async ({ userId, subscriptionStatus }: { userId: string; subscriptionStatus: string }) => {
-      await apiRequest('PUT', `/api/admin/users/${userId}/subscription`, { subscriptionStatus });
+    mutationFn: async ({ userId, subscriptionStatus, subscriptionExpiresAt }: { userId: string; subscriptionStatus: string; subscriptionExpiresAt?: string | null }) => {
+      await apiRequest('PUT', `/api/admin/users/${userId}/subscription`, { subscriptionStatus, subscriptionExpiresAt });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -297,19 +297,27 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
         promises.push(updateUserRole.mutateAsync({ userId: selectedUser.id, role: editedUser.role }));
       }
       
-      // Save subscription change if it was modified
-      if (editedUser.subscriptionStatus && editedUser.subscriptionStatus !== selectedUser.subscriptionStatus) {
-        promises.push(updateUserSubscription.mutateAsync({ userId: selectedUser.id, subscriptionStatus: editedUser.subscriptionStatus }));
+      // Save subscription change if status or expiry date was modified
+      const statusChanged = editedUser.subscriptionStatus !== undefined && editedUser.subscriptionStatus !== selectedUser.subscriptionStatus;
+      const expiryChanged = editedUser.subscriptionExpiresAt !== undefined && editedUser.subscriptionExpiresAt !== (selectedUser.subscriptionExpiresAt ? new Date(selectedUser.subscriptionExpiresAt).toISOString().split('T')[0] : '');
+      if (statusChanged || expiryChanged) {
+        const effectiveStatus = editedUser.subscriptionStatus || selectedUser.subscriptionStatus;
+        const effectiveExpiry = expiryChanged ? (editedUser.subscriptionExpiresAt || null) : undefined;
+        promises.push(updateUserSubscription.mutateAsync({ userId: selectedUser.id, subscriptionStatus: effectiveStatus, subscriptionExpiresAt: effectiveExpiry }));
       }
       
       // Wait for all changes to be saved
       await Promise.all(promises);
       
       // Update the selected user with the new values
+      const newExpiresAt = editedUser.subscriptionExpiresAt !== undefined
+        ? (editedUser.subscriptionExpiresAt ? new Date(editedUser.subscriptionExpiresAt).toISOString() : undefined)
+        : selectedUser.subscriptionExpiresAt;
       setSelectedUser(prev => prev ? { 
         ...prev, 
         role: editedUser.role || prev.role,
-        subscriptionStatus: editedUser.subscriptionStatus || prev.subscriptionStatus
+        subscriptionStatus: editedUser.subscriptionStatus || prev.subscriptionStatus,
+        subscriptionExpiresAt: newExpiresAt,
       } : null);
       
       // Clear edited state
@@ -613,12 +621,31 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                       <SelectItem value="past_due">Past Due</SelectItem>
                     </SelectContent>
                   </Select>
-                  {selectedUser.subscriptionStatus === 'active' && selectedUser.role !== 'owner' && selectedUser.subscriptionExpiresAt && (
-                    <p className="text-xs text-green-600 mt-1">Renews {new Date(selectedUser.subscriptionExpiresAt).toLocaleDateString()}</p>
-                  )}
-                  {selectedUser.subscriptionStatus === 'cancelled' && selectedUser.subscriptionExpiresAt && (
-                    <p className="text-xs text-amber-600 mt-1">Access ends {new Date(selectedUser.subscriptionExpiresAt).toLocaleDateString()}</p>
-                  )}
+                  {(() => {
+                    const currentStatus = editedUser.subscriptionStatus || selectedUser.subscriptionStatus;
+                    if (currentStatus === 'active' || currentStatus === 'cancelled') {
+                      const rawExpiry = editedUser.subscriptionExpiresAt !== undefined
+                        ? editedUser.subscriptionExpiresAt
+                        : (selectedUser.subscriptionExpiresAt ? new Date(selectedUser.subscriptionExpiresAt).toISOString().split('T')[0] : '');
+                      return (
+                        <div className="mt-2 space-y-1">
+                          <p className="text-xs text-muted-foreground">
+                            {currentStatus === 'cancelled' ? 'Access ends' : 'Renews'}
+                          </p>
+                          <input
+                            type="date"
+                            value={rawExpiry}
+                            onChange={(e) => {
+                              setEditedUser(prev => ({ ...prev, subscriptionExpiresAt: e.target.value }));
+                              setHasUnsavedChanges(true);
+                            }}
+                            className="w-full h-8 px-2 text-xs rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
               </div>
 
