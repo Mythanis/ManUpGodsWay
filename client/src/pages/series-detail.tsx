@@ -450,7 +450,8 @@ export default function SeriesDetail() {
                   <div className="ml-3 border-l-2 border-[#FCD000]/30 pl-3 space-y-1.5">
                     {study.lessons.map((lesson, lessonIndex) => {
                       const isCompleted = lesson.isCompleted;
-                      const isDripLocked = lesson.isLocked;
+                      // Completed lessons are always accessible — never show as locked
+                      const isDripLocked = !isCompleted && lesson.isLocked;
                       return (
                         <div
                           key={lesson.id}

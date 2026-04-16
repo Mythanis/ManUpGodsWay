@@ -798,7 +798,8 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
         {lessons.map((lesson, index) => {
           const progress = lessonProgressData.find(p => p.lessonId === lesson.id);
           const completed = !!progress?.completedAt;
-          const locked = !!lesson.isLocked;
+          // Completed lessons are always accessible — never show as locked even if cache is stale
+          const locked = !completed && !!lesson.isLocked;
           return (
             <button
               key={lesson.id}

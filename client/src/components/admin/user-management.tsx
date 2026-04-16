@@ -290,14 +290,25 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
     },
   });
 
+  const invalidateLessonCaches = (userId: string) => {
+    queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/lesson-progress`] });
+    queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+    // Invalidate all /api/studies/:id/lessons caches (drives isLocked state in the lesson viewer)
+    queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        typeof query.queryKey[0] === 'string' &&
+        (query.queryKey[0] as string).includes('/lessons'),
+    });
+  };
+
   const resetLesson = useMutation({
     mutationFn: async ({ userId, lessonId }: { userId: string; lessonId: string }) => {
       return await apiRequest('POST', `/api/admin/users/${userId}/lessons/${lessonId}/reset`);
     },
     onSuccess: (_, { userId }) => {
       refetchStudyProgress();
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/lesson-progress`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      invalidateLessonCaches(userId);
       toast({ title: "Lesson Reset", description: "Lesson cleared — the user can redo it from scratch." });
     },
     onError: () => { toast({ title: "Error", description: "Failed to reset lesson.", variant: "destructive" }); },
@@ -309,8 +320,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
     },
     onSuccess: (_, { userId }) => {
       refetchStudyProgress();
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/lesson-progress`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      invalidateLessonCaches(userId);
       toast({ title: "Lesson Completed", description: "Lesson marked complete." });
     },
     onError: () => { toast({ title: "Error", description: "Failed to complete lesson.", variant: "destructive" }); },
@@ -322,8 +332,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
     },
     onSuccess: (_, { userId }) => {
       refetchStudyProgress();
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/lesson-progress`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      invalidateLessonCaches(userId);
       toast({ title: "Lesson Unlocked", description: "Drip wait bypassed — lesson is now accessible." });
     },
     onError: () => { toast({ title: "Error", description: "Failed to unlock lesson.", variant: "destructive" }); },
