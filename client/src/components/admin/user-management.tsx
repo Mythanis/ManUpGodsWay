@@ -56,6 +56,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
   const [showBanDialog, setShowBanDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showStudyProgress, setShowStudyProgress] = useState(false);
+  const [expandedSeries, setExpandedSeries] = useState<Set<string>>(new Set());
   const [expandedStudies, setExpandedStudies] = useState<Set<string>>(new Set());
   const [banReason, setBanReason] = useState('');
   const [editedUser, setEditedUser] = useState<Partial<User>>({});
@@ -543,6 +544,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                       setEditedUser({});
                       setHasUnsavedChanges(false);
                       setShowStudyProgress(false);
+                      setExpandedSeries(new Set());
                       setExpandedStudies(new Set());
                       setShowUserDialog(true);
                     }}
@@ -801,13 +803,28 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                         <span className="text-xs text-muted-foreground">Loading progress…</span>
                       </div>
                     ) : !studyProgress || studyProgress.length === 0 ? (
-                      <p className="text-xs text-muted-foreground py-1">No series studies found.</p>
+                      <p className="text-xs text-muted-foreground py-1">No studies found.</p>
                     ) : (
-                      studyProgress.map((series) => (
-                        <div key={series.id}>
-                          <p className="text-xs font-bold text-foreground mb-1.5">{series.title}</p>
-                          <div className="space-y-1 pr-1">
-                            {series.studies.map((study, idx) => {
+                      studyProgress.map((series) => {
+                        const isSeriesExpanded = expandedSeries.has(series.id);
+                        const seriesCompleted = series.studies.reduce((a: number, s: any) => a + s.completedLessons, 0);
+                        const seriesTotal = series.studies.reduce((a: number, s: any) => a + s.totalLessons, 0);
+                        return (
+                        <div key={series.id} className="border border-muted/50 rounded-md overflow-hidden">
+                          {/* Series / group header — collapsible */}
+                          <button
+                            className="w-full flex items-center justify-between gap-2 px-2.5 py-2 hover:bg-muted/20 transition-colors text-left bg-muted/10"
+                            onClick={() => setExpandedSeries(prev => { const next = new Set(prev); next.has(series.id) ? next.delete(series.id) : next.add(series.id); return next; })}
+                          >
+                            <span className="text-xs font-bold text-foreground truncate">{series.title}</span>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <span className="text-[10px] text-muted-foreground whitespace-nowrap">{seriesCompleted}/{seriesTotal}</span>
+                              <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${isSeriesExpanded ? 'rotate-180' : ''}`} />
+                            </div>
+                          </button>
+                          {isSeriesExpanded && (
+                          <div className="border-t border-muted/30 p-2 space-y-1">
+                            {series.studies.map((study: any, idx: number) => {
                               const isExpanded = expandedStudies.has(study.id);
                               const anyPending = resetLesson.isPending || completeLesson.isPending || unlockLesson.isPending || relockLesson.isPending || unlockStudy.isPending;
                               return (
@@ -911,8 +928,10 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                               );
                             })}
                           </div>
+                          )}
                         </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 )}

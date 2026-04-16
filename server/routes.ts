@@ -5595,8 +5595,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return { id: series.id, title: series.title, studies: studiesWithProgress };
       }));
 
-      // Filter to only series that have studies
-      res.json(result.filter(s => s.studies.length > 0));
+      // Also include standalone/topical studies (no series) under a synthetic group
+      const topicalStudies = await db.select().from(schema.studies)
+        .where(and(isNull(schema.studies.seriesId), eq(schema.studies.isPublished, true)))
+        .orderBy(asc(schema.studies.createdAt));
+
+      const topicalWithProgress = await Promise.all(topicalStudies.map(async (study) => {
+        const lessons = await db.select().from(schema.studyLessons)
+          .where(eq(schema.studyLessons.studyId, study.id))
+          .orderBy(asc(schema.studyLessons.displayOrder), asc(schema.studyLessons.dayNumber));
+
+        let completedLessons = 0;
+        let isStudyComplete = false;
+        let lessonProgress: schema.UserLessonProgress[] = [];
+
+        if (lessons.length === 0) {
+          const [prog] = await db.select().from(schema.userProgress)
+            .where(and(eq(schema.userProgress.userId, targetUserId), eq(schema.userProgress.studyId, study.id)));
+          isStudyComplete = !!prog?.completedAt;
+        } else {
+          const lessonIds = lessons.map(l => l.id);
+          lessonProgress = lessonIds.length > 0
+            ? await db.select().from(schema.userLessonProgress)
+                .where(and(
+                  eq(schema.userLessonProgress.userId, targetUserId),
+                  inArray(schema.userLessonProgress.lessonId, lessonIds)
+                ))
+            : [];
+          completedLessons = lessonProgress.filter(lp => !!lp.completedAt).length;
+          isStudyComplete = completedLessons >= lessons.length && lessons.length > 0;
+        }
+
+        const sortedLessons = [...lessons].sort((a, b) =>
+          ((a.displayOrder ?? a.dayNumber ?? 0) - (b.displayOrder ?? b.dayNumber ?? 0))
+        );
+        const adminTimezone = (req.query.timezone as string) || 'America/New_York';
+        const progressMap = new Map(lessonProgress.map(lp => [lp.lessonId, lp]));
+        const lessonDetails = sortedLessons.map((l, idx) => {
+          const lp = progressMap.get(l.id);
+          const isCompleted = !!lp?.completedAt;
+          const dripBypassed = !!lp?.dripBypassed;
+          let isLocked = false;
+          let unlocksAt: string | null = null;
+          if (idx > 0 && !isCompleted && !dripBypassed) {
+            const prevLesson = sortedLessons[idx - 1];
+            const prevProg = progressMap.get(prevLesson.id);
+            if (!prevProg?.completedAt) {
+              isLocked = true;
+            } else {
+              const unlockTime = getNextMidnightInTimezone(new Date(prevProg.completedAt), adminTimezone);
+              if (new Date() < unlockTime) {
+                isLocked = true;
+                unlocksAt = unlockTime.toISOString();
+              }
+            }
+          }
+          return {
+            id: l.id,
+            title: l.title,
+            dayNumber: l.dayNumber,
+            displayOrder: l.displayOrder,
+            isCompleted,
+            completedAt: lp?.completedAt ?? null,
+            dripBypassed,
+            isLocked,
+            unlocksAt,
+          };
+        });
+
+        return {
+          id: study.id,
+          title: study.title,
+          seriesOrder: null,
+          totalLessons: lessons.length,
+          completedLessons,
+          isComplete: isStudyComplete,
+          lessons: lessonDetails,
+        };
+      }));
+
+      const seriesResult = result.filter(s => s.studies.length > 0);
+      if (topicalWithProgress.length > 0) {
+        seriesResult.push({ id: '__topical__', title: 'Topical Studies', studies: topicalWithProgress });
+      }
+      res.json(seriesResult);
     } catch (error) {
       console.error("Error fetching user study progress:", error);
       res.status(500).json({ message: "Failed to fetch study progress" });
