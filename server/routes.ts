@@ -5566,13 +5566,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!adminUser || !isAdmin(adminUser)) return res.status(403).json({ message: "Admin access required" });
       const { id: targetUserId, lessonId } = req.params;
 
-      // Clear this lesson's completion
-      await db.insert(schema.userLessonProgress)
-        .values({ userId: targetUserId, lessonId, isCompleted: false, completedAt: null, dripBypassed: false })
-        .onConflictDoUpdate({
-          target: [schema.userLessonProgress.userId, schema.userLessonProgress.lessonId],
-          set: { isCompleted: false, completedAt: null, dripBypassed: false, updatedAt: new Date() },
-        });
+      // Clear this lesson's completion via direct UPDATE to ensure completedAt=NULL is applied
+      await db.update(schema.userLessonProgress)
+        .set({ isCompleted: false, completedAt: null, dripBypassed: false, updatedAt: new Date() })
+        .where(and(
+          eq(schema.userLessonProgress.userId, targetUserId),
+          eq(schema.userLessonProgress.lessonId, lessonId)
+        ));
 
       // Find which study owns this lesson and reset that study's user_progress
       const [lesson] = await db.select().from(schema.studyLessons).where(eq(schema.studyLessons.id, lessonId));

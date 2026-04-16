@@ -294,7 +294,12 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
     mutationFn: async ({ userId, lessonId }: { userId: string; lessonId: string }) => {
       return await apiRequest('POST', `/api/admin/users/${userId}/lessons/${lessonId}/reset`);
     },
-    onSuccess: () => { refetchStudyProgress(); toast({ title: "Lesson Reset", description: "Lesson cleared — the user can redo it from scratch." }); },
+    onSuccess: (_, { userId }) => {
+      refetchStudyProgress();
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/lesson-progress`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      toast({ title: "Lesson Reset", description: "Lesson cleared — the user can redo it from scratch." });
+    },
     onError: () => { toast({ title: "Error", description: "Failed to reset lesson.", variant: "destructive" }); },
   });
 
@@ -302,7 +307,12 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
     mutationFn: async ({ userId, lessonId }: { userId: string; lessonId: string }) => {
       return await apiRequest('POST', `/api/admin/users/${userId}/lessons/${lessonId}/complete`);
     },
-    onSuccess: () => { refetchStudyProgress(); toast({ title: "Lesson Completed", description: "Lesson marked complete." }); },
+    onSuccess: (_, { userId }) => {
+      refetchStudyProgress();
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/lesson-progress`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      toast({ title: "Lesson Completed", description: "Lesson marked complete." });
+    },
     onError: () => { toast({ title: "Error", description: "Failed to complete lesson.", variant: "destructive" }); },
   });
 
@@ -310,7 +320,12 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
     mutationFn: async ({ userId, lessonId }: { userId: string; lessonId: string }) => {
       return await apiRequest('POST', `/api/admin/users/${userId}/lessons/${lessonId}/unlock`);
     },
-    onSuccess: () => { refetchStudyProgress(); toast({ title: "Lesson Unlocked", description: "Drip wait bypassed — lesson is now accessible." }); },
+    onSuccess: (_, { userId }) => {
+      refetchStudyProgress();
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/lesson-progress`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/study-series"] });
+      toast({ title: "Lesson Unlocked", description: "Drip wait bypassed — lesson is now accessible." });
+    },
     onError: () => { toast({ title: "Error", description: "Failed to unlock lesson.", variant: "destructive" }); },
   });
 
