@@ -923,7 +923,7 @@ export class DatabaseStorage implements IStorage {
           let lessonIsLocked = false;
           let lessonUnlocksAt: string | null = null;
           // drip_bypassed=true means admin unlocked this lesson — skip drip gate entirely
-          const dripBypassed = !!(prog as any)?.dripBypassed;
+          const dripBypassed = !!prog?.dripBypassed;
           if (li > 0 && !dripBypassed) {
             const prevLesson = sortedLessons[li - 1];
             const prevProg = lessonProgressByLessonId.get(prevLesson.id);
