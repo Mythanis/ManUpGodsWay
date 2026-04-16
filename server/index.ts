@@ -30,6 +30,19 @@ app.post(/^\/api\/live-streams\/[^/]+\/whip$/, express.text({ type: "application
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: false, limit: '2mb' }));
 
+// Prevent HTTP 304 "Not Modified" responses for all API routes.
+// Browsers cache API responses via ETags; after a mutation the cached JSON can
+// be silently reused, causing stale data in the UI even after a mutation.
+// Stripping the conditional-request headers forces a full 200 response every time.
+app.use("/api", (req: Request, res: Response, next: NextFunction) => {
+  delete (req.headers as any)["if-none-match"];
+  delete (req.headers as any)["if-modified-since"];
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  next();
+});
+
 // General rate limit: 200 requests/min per IP across all /api/* routes
 // The Stripe webhook above is exempt because it is registered before this middleware
 app.use("/api", generalLimiter);
