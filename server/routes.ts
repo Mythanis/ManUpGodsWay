@@ -5345,9 +5345,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           updateData.subscriptionExpiresAt = null;
         } else {
           const parsed = new Date(subscriptionExpiresAt);
-          if (!isNaN(parsed.getTime())) {
-            updateData.subscriptionExpiresAt = parsed;
+          if (isNaN(parsed.getTime())) {
+            return res.status(400).json({ message: "Invalid subscriptionExpiresAt date" });
           }
+          updateData.subscriptionExpiresAt = parsed;
         }
       }
 
