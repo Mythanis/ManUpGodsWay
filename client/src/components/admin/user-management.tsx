@@ -776,8 +776,11 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                               return (
                                 <div key={study.id} className="border border-muted/40 rounded-md overflow-hidden">
                                   {/* Week header row */}
-                                  <button
-                                    className="w-full flex items-center justify-between gap-2 px-2 py-1.5 hover:bg-muted/20 transition-colors text-left"
+                                  <div
+                                    className="w-full flex items-center justify-between gap-2 px-2 py-1.5 hover:bg-muted/20 transition-colors cursor-pointer select-none"
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedStudies(prev => { const next = new Set(prev); next.has(study.id) ? next.delete(study.id) : next.add(study.id); return next; }); } }}
                                     onClick={() => setExpandedStudies(prev => {
                                       const next = new Set(prev);
                                       next.has(study.id) ? next.delete(study.id) : next.add(study.id);
@@ -811,7 +814,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                                       )}
                                       <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} />
                                     </div>
-                                  </button>
+                                  </div>
 
                                   {/* Lesson rows (expandable) */}
                                   {isExpanded && study.lessons && study.lessons.length > 0 && (
