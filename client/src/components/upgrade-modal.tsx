@@ -214,6 +214,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             <div className="text-center text-xs text-white/40">
               <p>Secure payment powered by Stripe</p>
               {!isTrialEligible && <p>Cancel anytime - No hidden fees</p>}
+              <p className="mt-1">Have a promo code? You can enter it on the next screen.</p>
             </div>
           </div>
         )}

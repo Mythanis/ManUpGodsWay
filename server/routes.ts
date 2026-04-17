@@ -6335,6 +6335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           billingCycle: billingCycle,
           startTrial: applyTrial ? 'true' : 'false',
         },
+        allow_promotion_codes: true,
         success_url: `${process.env.FRONTEND_URL || 'https://app.manupgodsway.org'}/profile?upgrade=success${applyTrial ? '&trial=true' : ''}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.FRONTEND_URL || 'https://app.manupgodsway.org'}/profile?upgrade=cancelled`,
       };
