@@ -214,6 +214,25 @@ export default function Profile() {
     },
   });
 
+  // Reactivate a subscription that's pending cancellation
+  const reactivateSubscriptionMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('POST', '/api/subscription/reactivate');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/subscription/details'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      setShowManageModal(false);
+      toast({
+        title: 'Subscription Reactivated',
+        description: 'Welcome back — your subscription will continue to renew.',
+      });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to reactivate subscription', variant: 'destructive' });
+    },
+  });
+
   // Switch billing cycle
   const switchBillingMutation = useMutation({
     mutationFn: async (newBillingCycle: 'monthly' | 'yearly') => {
@@ -413,18 +432,15 @@ export default function Profile() {
                     </>
                   ) : (
                     <>
-                      <span className="font-black text-sm text-black uppercase tracking-wide">
+                      <span className="font-black text-sm text-black uppercase tracking-wide whitespace-nowrap">
                         {(user as any)?.subscriptionStatus === 'active' ? 'Active Subscription' :
                          (user as any)?.subscriptionStatus === 'trial' ? 'Trial' :
-                         (user as any)?.subscriptionStatus === 'cancelled' ? 'Cancels Soon' :
+                         (user as any)?.subscriptionStatus === 'cancelled'
+                           ? `Cancels Soon${subDetails?.cancelAtPeriodEnd && subDetails.currentPeriodEnd ? ` — ${new Date(subDetails.currentPeriodEnd).toLocaleDateString()}` : ''}`
+                           :
                          (user as any)?.subscriptionStatus === 'past_due' ? 'Payment Failed' :
                          (user as any)?.subscriptionStatus === 'expired' ? 'Expired' : 'No Subscription'}
                       </span>
-                      {subDetails?.cancelAtPeriodEnd && subDetails.currentPeriodEnd && (
-                        <p className="text-[10px] text-black/60 font-semibold">
-                          Active until {new Date(subDetails.currentPeriodEnd).toLocaleDateString()}
-                        </p>
-                      )}
                     </>
                   )}
                 </div>
@@ -989,6 +1005,25 @@ export default function Profile() {
                 <p className="text-xs text-red-400 font-semibold mt-1">Subscription scheduled to cancel — no further charges.</p>
               )}
             </div>
+
+            {/* Reactivate subscription */}
+            {subDetails?.cancelAtPeriodEnd && (
+              <div className="space-y-2">
+                <p className="text-xs text-white/50 uppercase tracking-wide font-bold">Changed your mind?</p>
+                <Button
+                  className="w-full bg-ministry-gold-exact hover:bg-yellow-400 text-black font-black uppercase tracking-wide rounded-sm"
+                  disabled={reactivateSubscriptionMutation.isPending}
+                  onClick={() => reactivateSubscriptionMutation.mutate()}
+                  data-testid="button-reactivate-subscription"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  {reactivateSubscriptionMutation.isPending ? 'Reactivating...' : 'Reactivate Subscription'}
+                </Button>
+                <p className="text-[10px] text-white/50">
+                  Resumes your existing subscription — no new charges, no duplicate plan.
+                </p>
+              </div>
+            )}
 
             {/* Switch billing cycle */}
             {!subDetails?.cancelAtPeriodEnd && (
