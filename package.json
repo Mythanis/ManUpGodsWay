@@ -148,6 +148,13 @@
   "overrides": {
     "protobufjs": ">=7.5.5",
     "@babel/helpers": ">=7.26.10",
-    "follow-redirects": ">=1.16.0"
+    "follow-redirects": ">=1.16.0",
+    "@tootallnate/once": ">=3.0.0",
+    "vite": {
+      "esbuild": "$esbuild"
+    },
+    "@esbuild-kit/core-utils": {
+      "esbuild": "$esbuild"
+    }
   }
 }
