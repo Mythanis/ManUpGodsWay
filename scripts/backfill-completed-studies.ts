@@ -1,8 +1,13 @@
 import { db } from '../server/db';
 import { sql } from 'drizzle-orm';
 
+interface RepairedRow {
+  user_id: string;
+  study_id: string;
+}
+
 async function backfill() {
-  const result: any = await db.execute(sql`
+  const result = await db.execute<RepairedRow>(sql`
     WITH study_totals AS (
       SELECT study_id, COUNT(*) AS total_days FROM study_lessons GROUP BY study_id
     ),
@@ -35,14 +40,15 @@ async function backfill() {
     RETURNING up.user_id, up.study_id;
   `);
 
-  const rows = (result?.rows ?? result ?? []) as any[];
+  const rows: RepairedRow[] = result.rows;
   console.log(`[backfill-completed-studies] Repaired ${rows.length} stuck user_progress row(s).`);
-  if (rows.length > 0) {
-    for (const r of rows) {
-      console.log(`  - user=${r.user_id} study=${r.study_id}`);
-    }
+  for (const r of rows) {
+    console.log(`  - user=${r.user_id} study=${r.study_id}`);
   }
   process.exit(0);
 }
 
-backfill().catch(e => { console.error('[backfill-completed-studies] FAILED:', e); process.exit(1); });
+backfill().catch((e: unknown) => {
+  console.error('[backfill-completed-studies] FAILED:', e);
+  process.exit(1);
+});
