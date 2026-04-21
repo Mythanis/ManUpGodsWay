@@ -5382,6 +5382,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: query Stripe for the user's subscription and reconcile local state.
+  // - active + !cancel_at_period_end → active / subscriber / expiresAt = current_period_end
+  // - active +  cancel_at_period_end → cancelled / subscriber / expiresAt = current_period_end
+  // - past_due / unpaid               → past_due / subscriber / expiresAt = current_period_end
+  // - canceled (already ended)        → expired / free / expiresAt cleared
+  app.post('/api/admin/users/:id/sync-stripe', isAuthenticated, async (req: any, res) => {
+    try {
+      const admin = await storage.getUser(req.user.claims.sub);
+      if (!admin || !isAdmin(admin)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const targetUser = await storage.getUser(req.params.id);
+      if (!targetUser) return res.status(404).json({ message: "User not found" });
+      if (!targetUser.stripeSubscriptionId) {
+        return res.status(400).json({ message: "User has no Stripe subscription linked" });
+      }
+
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(503).json({ message: "Stripe not configured" });
+      }
+
+      const { default: Stripe } = await import('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
+
+      let sub: any;
+      try {
+        sub = await stripe.subscriptions.retrieve(targetUser.stripeSubscriptionId);
+      } catch (err: any) {
+        return res.status(400).json({ message: `Stripe lookup failed: ${err.message}` });
+      }
+
+      const periodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000) : undefined;
+      const updateData: {
+        subscriptionTier?: string;
+        subscriptionStatus?: string;
+        subscriptionExpiresAt?: Date;
+      } = {};
+
+      if (sub.status === 'active' && !sub.cancel_at_period_end) {
+        updateData.subscriptionStatus = 'active';
+        updateData.subscriptionTier = 'subscriber';
+        if (periodEnd) updateData.subscriptionExpiresAt = periodEnd;
+      } else if (sub.status === 'active' && sub.cancel_at_period_end) {
+        updateData.subscriptionStatus = 'cancelled';
+        updateData.subscriptionTier = 'subscriber';
+        if (periodEnd) updateData.subscriptionExpiresAt = periodEnd;
+      } else if (sub.status === 'trialing') {
+        updateData.subscriptionStatus = 'trial';
+        updateData.subscriptionTier = 'trial';
+        if (periodEnd) updateData.subscriptionExpiresAt = periodEnd;
+      } else if (sub.status === 'past_due' || sub.status === 'unpaid') {
+        updateData.subscriptionStatus = 'past_due';
+        updateData.subscriptionTier = 'subscriber';
+        if (periodEnd) updateData.subscriptionExpiresAt = periodEnd;
+      } else if (sub.status === 'canceled' || sub.status === 'incomplete_expired') {
+        updateData.subscriptionStatus = 'expired';
+        updateData.subscriptionTier = 'free';
+      } else {
+        updateData.subscriptionStatus = 'expired';
+        updateData.subscriptionTier = 'free';
+      }
+
+      const updatedUser = await storage.updateUserSubscriptionDetails(req.params.id, updateData);
+
+      res.json({
+        message: 'Subscription state synced from Stripe',
+        stripeStatus: sub.status,
+        cancelAtPeriodEnd: !!sub.cancel_at_period_end,
+        currentPeriodEnd: periodEnd ? periodEnd.toISOString() : null,
+        user: updatedUser,
+      });
+    } catch (error: any) {
+      console.error("Error syncing Stripe subscription:", error);
+      res.status(500).json({ message: error.message || "Failed to sync from Stripe" });
+    }
+  });
+
   // Link an existing Stripe subscription to a user account
   app.put('/api/admin/users/:id/link-stripe-subscription', isAuthenticated, async (req: any, res) => {
     try {
@@ -6555,11 +6633,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cancel_at_period_end: false,
       });
 
-      await storage.reactivateUserSubscription(user.id);
+      const periodEnd = new Date(updated.current_period_end * 1000);
+      await storage.reactivateUserSubscription(user.id, periodEnd);
 
       res.json({
         message: 'Subscription reactivated',
-        currentPeriodEnd: new Date(updated.current_period_end * 1000).toISOString(),
+        currentPeriodEnd: periodEnd.toISOString(),
       });
     } catch (error: any) {
       console.error('Error reactivating subscription:', error);

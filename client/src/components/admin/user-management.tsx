@@ -225,6 +225,43 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
     },
   });
 
+  const syncStripeSubscription = useMutation({
+    mutationFn: async (userId: string) => {
+      return await apiRequest('POST', `/api/admin/users/${userId}/sync-stripe`, {}) as {
+        message: string;
+        stripeStatus: string;
+        cancelAtPeriodEnd: boolean;
+        currentPeriodEnd: string | null;
+        user: User;
+      };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription/details"] });
+      setSelectedUser(prev => prev ? {
+        ...prev,
+        subscriptionStatus: data.user.subscriptionStatus,
+        subscriptionTier: data.user.subscriptionTier,
+        subscriptionExpiresAt: data.user.subscriptionExpiresAt
+          ? (typeof data.user.subscriptionExpiresAt === 'string'
+              ? data.user.subscriptionExpiresAt
+              : new Date(data.user.subscriptionExpiresAt as any).toISOString())
+          : undefined,
+      } : null);
+      const dateStr = data.currentPeriodEnd ? new Date(data.currentPeriodEnd).toLocaleDateString() : '—';
+      const summary = data.cancelAtPeriodEnd
+        ? `Cancels on ${dateStr}`
+        : data.stripeStatus === 'active'
+          ? `Active, renews ${dateStr}`
+          : `Stripe status: ${data.stripeStatus}`;
+      toast({ title: "Synced from Stripe", description: summary });
+    },
+    onError: (error: any) => {
+      toast({ title: "Sync Failed", description: error.message || "Could not sync from Stripe.", variant: "destructive" });
+    },
+  });
+
   const linkStripeSubscription = useMutation({
     mutationFn: async ({ userId, stripeSubscriptionId }: { userId: string; stripeSubscriptionId: string }) => {
       return await apiRequest('PUT', `/api/admin/users/${userId}/link-stripe-subscription`, { stripeSubscriptionId });
@@ -762,12 +799,24 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                   <CreditCard className="w-3 h-3 text-ministry-gold" /> Stripe Subscription
                 </p>
                 {selectedUser.stripeSubscriptionId ? (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     <p className="text-xs font-mono text-green-600 break-all">{selectedUser.stripeSubscriptionId}</p>
                     {selectedUser.stripeCustomerId && (
                       <p className="text-xs font-mono text-muted-foreground break-all">{selectedUser.stripeCustomerId}</p>
                     )}
                     <p className="text-xs text-green-600">Cancellation will work correctly.</p>
+                    {(selectedUser.subscriptionStatus === 'active' || selectedUser.subscriptionStatus === 'cancelled' || selectedUser.subscriptionStatus === 'past_due') && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-xs w-full"
+                        data-testid="button-sync-stripe"
+                        disabled={syncStripeSubscription.isPending}
+                        onClick={() => syncStripeSubscription.mutate(selectedUser.id)}
+                      >
+                        {syncStripeSubscription.isPending ? "Syncing…" : "Sync with Stripe"}
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-2">
