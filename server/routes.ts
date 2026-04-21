@@ -14283,7 +14283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Send to both email addresses using Nodemailer SMTP (Nixihost)
           const nodemailer = await import('nodemailer');
           
-          const transporter = nodemailer.default.createTransport({
+          const transporter = nodemailer.createTransport({
             host: 'mail.manupgodsway.org',
             port: 465,
             secure: true,
