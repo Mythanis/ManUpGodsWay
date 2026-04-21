@@ -1477,6 +1477,43 @@ export class DatabaseStorage implements IStorage {
         ));
     }
 
+    // Auto-complete the study if every lesson in it is now complete.
+    // Only flips to 'completed' once; idempotent if already completed.
+    if (!existingStudyProgress || existingStudyProgress.status !== 'completed') {
+      const studyLessonRows = await db
+        .select({ id: studyLessons.id })
+        .from(studyLessons)
+        .where(eq(studyLessons.studyId, lesson.studyId));
+
+      const totalLessons = studyLessonRows.length;
+      if (totalLessons > 0) {
+        const lessonIds = studyLessonRows.map(l => l.id);
+        const completedRows = await db
+          .select({ id: userLessonProgress.lessonId })
+          .from(userLessonProgress)
+          .where(and(
+            eq(userLessonProgress.userId, userId),
+            eq(userLessonProgress.isCompleted, true),
+            inArray(userLessonProgress.lessonId, lessonIds)
+          ));
+
+        const completedCount = new Set(completedRows.map(r => r.id)).size;
+        if (completedCount >= totalLessons) {
+          await db
+            .update(userProgress)
+            .set({
+              status: 'completed',
+              completedAt: now,
+            })
+            .where(and(
+              eq(userProgress.userId, userId),
+              eq(userProgress.studyId, lesson.studyId),
+              ne(userProgress.status, 'completed')
+            ));
+        }
+      }
+    }
+
     // Update user's streak when they complete a lesson
     // Note: updateUserStreak has a guard clause that prevents multiple updates per day,
     // so this is safe to call even if the user completes multiple lessons in one day
