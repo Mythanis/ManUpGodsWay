@@ -1503,6 +1503,7 @@ export class DatabaseStorage implements IStorage {
             .update(userProgress)
             .set({
               status: 'completed',
+              isCompleted: true,
               completedAt: now,
             })
             .where(and(

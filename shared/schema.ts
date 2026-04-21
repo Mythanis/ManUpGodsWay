@@ -182,6 +182,7 @@ export const userProgress = pgTable("user_progress", {
   studyId: varchar("study_id").notNull().references(() => studies.id, { onDelete: 'cascade' }),
   currentDay: integer("current_day").default(1), // Current day/lesson user is on
   status: varchar("status").default("not_started"), // not_started, in_progress, completed
+  isCompleted: boolean("is_completed").default(false), // Mirrors status='completed' for legacy queries
   documentScrollPosition: integer("document_scroll_position").default(0), // Track reading position in document (for PDF fallback)
   lastAccessedAt: timestamp("last_accessed_at").defaultNow(),
   completedAt: timestamp("completed_at"),

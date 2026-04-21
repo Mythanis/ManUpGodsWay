@@ -51,3 +51,7 @@ integrations = ["javascript_stripe:1.0.0", "javascript_database:1.0.0", "javascr
 [userenv.shared]
 VAPID_PUBLIC_KEY = "BDzMYMTTzv3gVSmxEB2C6NzKAX2s95vFSJyWCa-Lyp6uVZFt8Q9dQTtvnMMlT3GN7AXIWwRGaaP0Z3Sbu6ptx_o"
 VITE_VAPID_PUBLIC_KEY = "BDzMYMTTzv3gVSmxEB2C6NzKAX2s95vFSJyWCa-Lyp6uVZFt8Q9dQTtvnMMlT3GN7AXIWwRGaaP0Z3Sbu6ptx_o"
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 180000
