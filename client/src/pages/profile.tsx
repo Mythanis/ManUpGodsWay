@@ -432,15 +432,18 @@ export default function Profile() {
                     </>
                   ) : (
                     <>
-                      <span className="font-black text-sm text-black uppercase tracking-wide whitespace-nowrap">
+                      <span className="font-black text-sm text-black uppercase tracking-wide block leading-tight">
                         {(user as any)?.subscriptionStatus === 'active' ? 'Active Subscription' :
                          (user as any)?.subscriptionStatus === 'trial' ? 'Trial' :
-                         (user as any)?.subscriptionStatus === 'cancelled'
-                           ? `Cancels Soon${subDetails?.cancelAtPeriodEnd && subDetails.currentPeriodEnd ? ` — ${new Date(subDetails.currentPeriodEnd).toLocaleDateString()}` : ''}`
-                           :
+                         (user as any)?.subscriptionStatus === 'cancelled' ? 'Cancels Soon' :
                          (user as any)?.subscriptionStatus === 'past_due' ? 'Payment Failed' :
                          (user as any)?.subscriptionStatus === 'expired' ? 'Expired' : 'No Subscription'}
                       </span>
+                      {(user as any)?.subscriptionStatus === 'cancelled' && subDetails?.cancelAtPeriodEnd && subDetails.currentPeriodEnd && (
+                        <span className="text-[10px] text-black/60 font-semibold block leading-tight">
+                          {new Date(subDetails.currentPeriodEnd).toLocaleDateString()}
+                        </span>
+                      )}
                     </>
                   )}
                 </div>
