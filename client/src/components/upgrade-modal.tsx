@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -84,12 +84,12 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
     createCheckoutMutation.mutate({ billingCycle, startTrial });
   };
 
-  const expiresAtDate = (user as any)?.subscriptionExpiresAt
-    ? new Date((user as any).subscriptionExpiresAt)
+  const expiresAtDate = user?.subscriptionExpiresAt
+    ? new Date(user.subscriptionExpiresAt)
     : null;
   const isPendingCancellation =
-    (user as any)?.subscriptionStatus === 'cancelled' &&
-    !!(user as any)?.stripeSubscriptionId &&
+    user?.subscriptionStatus === 'cancelled' &&
+    !!user?.stripeSubscriptionId &&
     !!expiresAtDate &&
     expiresAtDate > new Date();
 
@@ -109,9 +109,9 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
   const isTrialEligible = trialEligibility?.eligible ?? false;
   const trialDays = trialEligibility?.trialDays ?? 7;
-  const isExpired = (user as any)?.subscriptionStatus === 'expired' ||
-    ((user as any)?.subscriptionStatus === 'cancelled' &&
-      (!((user as any)?.subscriptionExpiresAt) || new Date((user as any).subscriptionExpiresAt) <= new Date()));
+  const isExpired = user?.subscriptionStatus === 'expired' ||
+    (user?.subscriptionStatus === 'cancelled' &&
+      (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) <= new Date()));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

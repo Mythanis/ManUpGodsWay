@@ -6545,8 +6545,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const sub = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
 
-      if (!sub.cancel_at_period_end) {
-        return res.status(400).json({ message: 'Subscription is not pending cancellation' });
+      if (!sub.cancel_at_period_end || sub.status !== 'active') {
+        return res.status(400).json({
+          message: 'Subscription is not eligible for reactivation. It must be active and pending cancellation.',
+        });
       }
 
       const updated = await stripe.subscriptions.update(user.stripeSubscriptionId, {
