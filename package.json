@@ -151,10 +151,10 @@
     "follow-redirects": ">=1.16.0",
     "@tootallnate/once": ">=3.0.0",
     "vite": {
-      "esbuild": "$esbuild"
+      "esbuild": ">=0.25.0"
     },
     "@esbuild-kit/core-utils": {
-      "esbuild": "$esbuild"
+      "esbuild": ">=0.25.0"
     }
   }
 }
