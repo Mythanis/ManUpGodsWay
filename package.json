@@ -146,7 +146,7 @@
     "bufferutil": "^4.0.8"
   },
   "overrides": {
-    "protobufjs": ">=7.5.5",
+    "protobufjs": "^7.5.5",
     "@babel/helpers": ">=7.26.10",
     "follow-redirects": ">=1.16.0",
     "@tootallnate/once": ">=3.0.0",
