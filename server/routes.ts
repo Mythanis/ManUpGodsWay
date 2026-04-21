@@ -6281,6 +6281,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "You already have an active subscription." });
       }
 
+      // Prevent double-subscription: a cancelled user whose Stripe sub is still
+      // pending cancellation (within their paid-through window) should reactivate
+      // the existing Stripe subscription instead of creating a brand new one.
+      if (
+        user.subscriptionStatus === 'cancelled' &&
+        user.stripeSubscriptionId &&
+        user.subscriptionExpiresAt &&
+        new Date(user.subscriptionExpiresAt) > new Date()
+      ) {
+        return res.status(400).json({
+          message: "Your subscription is scheduled to cancel. Please resume it instead of starting a new one.",
+          code: "RESUME_REQUIRED",
+        });
+      }
+
       const { billingCycle, startTrial } = req.body;
 
       if (!billingCycle || !['monthly', 'yearly'].includes(billingCycle)) {
@@ -6513,6 +6528,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Error fetching subscription details:', error);
       res.status(500).json({ message: 'Failed to fetch subscription details' });
+    }
+  });
+
+  // Reactivate a subscription that's scheduled to cancel at period end.
+  // Single Stripe API call — no new subscription created, no new charge.
+  app.post('/api/subscription/reactivate', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !user.stripeSubscriptionId) {
+        return res.status(404).json({ message: 'No subscription found' });
+      }
+
+      const { default: Stripe } = await import('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
+
+      const sub = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+
+      if (!sub.cancel_at_period_end) {
+        return res.status(400).json({ message: 'Subscription is not pending cancellation' });
+      }
+
+      const updated = await stripe.subscriptions.update(user.stripeSubscriptionId, {
+        cancel_at_period_end: false,
+      });
+
+      await storage.reactivateUserSubscription(user.id);
+
+      res.json({
+        message: 'Subscription reactivated',
+        currentPeriodEnd: new Date(updated.current_period_end * 1000).toISOString(),
+      });
+    } catch (error: any) {
+      console.error('Error reactivating subscription:', error);
+      res.status(500).json({ message: error.message || 'Failed to reactivate subscription' });
     }
   });
 

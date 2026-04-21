@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Shield, Check, Loader2, Clock, CreditCard } from "lucide-react";
+import { Shield, Check, Loader2, Clock, CreditCard, RotateCcw } from "lucide-react";
 
 interface SubscriptionInfo {
   monthlyPrice: string;
@@ -65,9 +65,33 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
     },
   });
 
+  const reactivateMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('POST', '/api/subscription/reactivate', {});
+    },
+    onSuccess: () => {
+      toast({ title: "Welcome back!", description: "Your subscription has been resumed." });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription/details"] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({ title: "Couldn't resume subscription", description: error.message || "Please try again.", variant: "destructive" });
+    },
+  });
+
   const handleSubscribe = (startTrial: boolean) => {
     createCheckoutMutation.mutate({ billingCycle, startTrial });
   };
+
+  const expiresAtDate = (user as any)?.subscriptionExpiresAt
+    ? new Date((user as any).subscriptionExpiresAt)
+    : null;
+  const isPendingCancellation =
+    (user as any)?.subscriptionStatus === 'cancelled' &&
+    !!(user as any)?.stripeSubscriptionId &&
+    !!expiresAtDate &&
+    expiresAtDate > new Date();
 
   const monthlyPrice = parseFloat(subscriptionInfo?.monthlyPrice || "9.99");
   const yearlyPrice = parseFloat(subscriptionInfo?.yearlyPrice || "99.99");
@@ -94,12 +118,18 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-black border border-[#FCD000]/30">
         <DialogHeader>
           <DialogTitle className="text-2xl font-black text-center text-[#FCD000] uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
-            {isExpired ? "Subscribe to Continue" : "Unlock Full Access"}
+            {isPendingCancellation
+              ? "Resume Your Subscription"
+              : isExpired
+                ? "Subscribe to Continue"
+                : "Unlock Full Access"}
           </DialogTitle>
           <DialogDescription className="text-center text-white/60">
-            {isExpired
-              ? "Your trial has ended. Subscribe now to keep access to all content."
-              : "Get unlimited access to everything Man Up God's Way has to offer."}
+            {isPendingCancellation && expiresAtDate
+              ? `Your subscription is set to end on ${expiresAtDate.toLocaleDateString()}. Resume it to keep your access without starting a new subscription.`
+              : isExpired
+                ? "Your trial has ended. Subscribe now to keep access to all content."
+                : "Get unlimited access to everything Man Up God's Way has to offer."}
           </DialogDescription>
         </DialogHeader>
 
@@ -157,7 +187,30 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             </div>
 
             <div className="space-y-3">
-              {isTrialEligible && (
+              {isPendingCancellation && (
+                <Button
+                  onClick={() => reactivateMutation.mutate()}
+                  disabled={reactivateMutation.isPending}
+                  className="w-full py-3 text-lg bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wider"
+                  style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+                  size="lg"
+                  data-testid="button-resume-subscription"
+                >
+                  {reactivateMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Resuming...
+                    </>
+                  ) : (
+                    <>
+                      <RotateCcw className="w-5 h-5 mr-2" />
+                      Resume Subscription
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {!isPendingCancellation && isTrialEligible && (
                 <Button
                   onClick={() => handleSubscribe(true)}
                   disabled={createCheckoutMutation.isPending}
@@ -179,6 +232,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 </Button>
               )}
 
+              {!isPendingCancellation && (
               <Button
                 onClick={() => handleSubscribe(false)}
                 disabled={createCheckoutMutation.isPending}
@@ -202,9 +256,10 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                   </>
                 )}
               </Button>
+              )}
             </div>
 
-            {isTrialEligible && (
+            {!isPendingCancellation && isTrialEligible && (
               <div className="text-center text-xs text-white/40 space-y-1">
                 <p>Free trial requires a card on file. You won't be charged until after {trialDays} days.</p>
                 <p>Cancel anytime during your trial — no charge.</p>

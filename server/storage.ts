@@ -388,6 +388,7 @@ export interface IStorage {
     trialEndDate?: Date;
   }): Promise<User>;
   cancelUserSubscription(userId: string): Promise<User>;
+  reactivateUserSubscription(userId: string): Promise<User>;
   checkExpiredSubscriptions(): Promise<User[]>;
   banUser(userId: string, reason: string): Promise<User>;
   unbanUser(userId: string): Promise<User>;
@@ -3061,6 +3062,20 @@ export class DatabaseStorage implements IStorage {
         subscriptionStatus: 'cancelled',
         subscriptionTier: 'expired',
         updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  async reactivateUserSubscription(userId: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        subscriptionStatus: 'active',
+        subscriptionTier: 'subscriber',
+        subscriptionExpiresAt: null,
+        updatedAt: new Date(),
       })
       .where(eq(users.id, userId))
       .returning();

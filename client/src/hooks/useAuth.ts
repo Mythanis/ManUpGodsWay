@@ -7,6 +7,9 @@ export type User = {
   lastName?: string;
   role?: string;
   subscriptionTier?: string;
+  subscriptionStatus?: string;
+  subscriptionExpiresAt?: string | null;
+  stripeSubscriptionId?: string | null;
   streakDays?: number;
   allowDirectMessages?: boolean;
   allowGroupInvites?: boolean;
