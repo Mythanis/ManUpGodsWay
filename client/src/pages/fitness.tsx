@@ -1650,9 +1650,38 @@ export default function Fitness() {
     // per-day exercise count using the per-style sets-per-exercise constant.
     const totalWorkingSets = Math.max(1, Math.floor(workingSec / perSetSec));
     const setsPerExercise  = workoutStyle === 'hiit' ? hiitRounds
-                           : isStretchingOnly        ? 2
+                           : isStretchingOnly        ? stretchSets
                            :                           stdConfig.sets;
     const exercisesPerDay  = Math.max(1, Math.floor(totalWorkingSets / setsPerExercise));
+
+    // Helper: prepend the opening stretch + main warm-up block (~10 min for
+    // non-stretching sessions) at the start of a day, biased toward today's
+    // body parts.
+    const emitWarmup = (parts: string[], dayExercises: PlanExercise[]) => {
+      if (warmupCount === 0 || stretchPool.length === 0) return;
+      const usedWarm = new Set<string>();
+      let added = 0;
+      for (const bp of parts) {
+        if (added >= warmupCount) break;
+        const matches = stretchPool.filter(s => s.bodyPart.toLowerCase() === bp.toLowerCase() && !usedWarm.has(s.id));
+        const fresh = matches.filter(s => !usedAcrossProgram.has(s.id));
+        const source = fresh.length > 0 ? fresh : matches;
+        const pick = shuffleArray(source).slice(0, 1);
+        pick.forEach(s => {
+          usedWarm.add(s.id);
+          dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: SEC_PER_STRETCH });
+          added++;
+        });
+      }
+      while (added < warmupCount) {
+        const remaining = stretchPool.filter(s => !usedWarm.has(s.id));
+        if (remaining.length === 0) break;
+        const s = shuffleArray(remaining)[0];
+        usedWarm.add(s.id);
+        dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: SEC_PER_STRETCH });
+        added++;
+      }
+    };
 
     // Helper: append the cooldown stretch block (~5 min) to the end of a
     // day, biased toward today's body parts and avoiding duplicates already
@@ -1719,6 +1748,9 @@ export default function Fitness() {
           );
           let cardioEx = picked[0];
           if (!cardioEx) cardioEx = shuffleArray(cardioPool)[0];
+          // Same opening stretch + warm-up block as a normal day so the
+          // cardio session still hits the user's selected total duration.
+          emitWarmup(dayPlan.parts, dayExercises);
           if (cardioEx) {
             dayExercises.push({
               exercise: cardioEx,
@@ -1736,43 +1768,8 @@ export default function Fitness() {
           continue;
         }
 
-        // Pre-workout warmup stretches targeting today's body parts
-        if (warmupCount > 0 && stretchPool.length > 0) {
-          const usedWarm = new Set<string>();
-          let added = 0;
-          for (const bp of dayPlan.parts) {
-            if (added >= warmupCount) break;
-            const matches = stretchPool.filter(s => s.bodyPart.toLowerCase() === bp.toLowerCase() && !usedWarm.has(s.id));
-            // Prefer stretches not yet used across program; fall back if exhausted
-            const fresh = matches.filter(s => !usedAcrossProgram.has(s.id));
-            const source = fresh.length > 0 ? fresh : matches;
-            const pick = shuffleArray(source).slice(0, 1);
-            pick.forEach(s => {
-              usedWarm.add(s.id);
-              dayExercises.push({
-                exercise: s,
-                sets: 1,
-                reps: null,
-                durationSec: SEC_PER_STRETCH,
-              });
-              added++;
-            });
-          }
-          // Fill remaining warmup slots with any stretches
-          while (added < warmupCount) {
-            const remaining = stretchPool.filter(s => !usedWarm.has(s.id));
-            if (remaining.length === 0) break;
-            const s = shuffleArray(remaining)[0];
-            usedWarm.add(s.id);
-            dayExercises.push({
-              exercise: s,
-              sets: 1,
-              reps: null,
-              durationSec: SEC_PER_STRETCH,
-            });
-            added++;
-          }
-        }
+        // Pre-workout opening stretch + main warm-up block (~10 min)
+        emitWarmup(dayPlan.parts, dayExercises);
 
         // Main work block
         if (workoutStyle === 'stretching') {
@@ -1784,7 +1781,7 @@ export default function Fitness() {
             picked.forEach(s => {
               dayExercises.push({
                 exercise: s,
-                sets: 2,
+                sets: stretchSets,
                 reps: null,
                 durationSec: 30,
               });
@@ -1800,7 +1797,7 @@ export default function Fitness() {
             usedExercisesThisWeek.add(s.id);
             dayExercises.push({
               exercise: s,
-              sets: 2,
+              sets: stretchSets,
               reps: null,
               durationSec: 30,
             });
