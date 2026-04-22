@@ -190,6 +190,26 @@ const imageUpload = multer({
   }
 });
 
+// Configure multer for exercise JSON file imports (admin only)
+const exerciseJsonUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 25 * 1024 * 1024 // 25MB — easily covers thousands of exercises
+  },
+  fileFilter: function (req, file, cb) {
+    const isJson =
+      file.mimetype === 'application/json' ||
+      file.mimetype === 'text/json' ||
+      file.mimetype === 'text/plain' ||
+      file.originalname.toLowerCase().endsWith('.json');
+    if (isJson) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JSON files are allowed!'));
+    }
+  }
+});
+
 // Configure multer for thumbnail uploads with memory storage (uploads to Object Storage)
 const thumbnailUpload = multer({
   storage: multer.memoryStorage(),
@@ -9926,39 +9946,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Import exercises from local JSON file (admin only)
-  app.post('/api/exercises/import-from-file', isAuthenticated, requireAdmin, async (req: any, res) => {
-    try {
-      const fs = await import('fs/promises');
-      const path = await import('path');
-      
-      const filePath = path.join(process.cwd(), 'attached_assets', 'exercises_db_330_short_1759200371273.json');
-      const fileContent = await fs.readFile(filePath, 'utf-8');
-      const exercises = JSON.parse(fileContent);
+  // Import exercises from an admin-uploaded JSON file (admin only)
+  app.post(
+    '/api/exercises/import-from-file',
+    isAuthenticated,
+    requireAdmin,
+    exerciseJsonUpload.single('file'),
+    async (req: any, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: 'No file uploaded. Please select a JSON file to import.' });
+        }
 
-      await db.delete(schema.exercises); // Clear existing exercises
-      
-      for (const exercise of exercises) {
-        await db.insert(schema.exercises).values({
-          id: exercise.id,
-          name: exercise.name,
-          bodyPart: exercise.body_part,
-          equipment: exercise.equipment,
-          level: exercise.level,
-          instructions: exercise.instructions,
-          mediaFile: exercise.media_file,
-          shortInstructions: exercise.short_instructions ?? null,
-          hiit: exercise.hiit ?? "No",
-          stretching: exercise.stretching ?? "No",
+        let exercises: any;
+        try {
+          exercises = JSON.parse(req.file.buffer.toString('utf-8'));
+        } catch (parseErr) {
+          return res.status(400).json({ message: 'Uploaded file is not valid JSON.' });
+        }
+
+        if (!Array.isArray(exercises)) {
+          return res.status(400).json({ message: 'JSON file must contain an array of exercises.' });
+        }
+
+        // Validate required fields up front so we don't half-import
+        for (const ex of exercises) {
+          if (
+            typeof ex?.id !== 'number' ||
+            typeof ex?.name !== 'string' ||
+            typeof ex?.body_part !== 'string' ||
+            typeof ex?.equipment !== 'string' ||
+            typeof ex?.level !== 'string' ||
+            typeof ex?.instructions !== 'string' ||
+            typeof ex?.media_file !== 'string'
+          ) {
+            return res.status(400).json({
+              message: `Invalid exercise entry (missing or wrong-typed required field). First bad row id: ${ex?.id ?? '(none)'}`,
+            });
+          }
+        }
+
+        await db.delete(schema.exercises); // Clear existing exercises
+
+        for (const exercise of exercises) {
+          await db.insert(schema.exercises).values({
+            id: exercise.id,
+            name: exercise.name,
+            bodyPart: exercise.body_part,
+            equipment: exercise.equipment,
+            level: exercise.level,
+            instructions: exercise.instructions,
+            mediaFile: exercise.media_file,
+            shortInstructions: exercise.short_instructions ?? null,
+            hiit: exercise.hiit ?? "No",
+            stretching: exercise.stretching ?? "No",
+          });
+        }
+
+        res.json({
+          message: `Imported ${exercises.length} exercises from ${req.file.originalname}`,
+          count: exercises.length,
+          fileName: req.file.originalname,
         });
+      } catch (error) {
+        console.error('Error importing exercises from file:', error);
+        res.status(500).json({ message: 'Internal server error' });
       }
-
-      res.json({ message: 'Exercises imported successfully from file', count: exercises.length });
-    } catch (error) {
-      console.error('Error importing exercises from file:', error);
-      res.status(500).json({ message: 'Internal server error' });
     }
-  });
+  );
 
   // Get all exercises with filtering and pagination
   app.get('/api/exercises', async (req: any, res) => {

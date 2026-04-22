@@ -179,6 +179,7 @@ export default function FitnessManagement() {
 
   // Bulk media import state
   const bulkInputRef = useRef<HTMLInputElement>(null);
+  const importFileInputRef = useRef<HTMLInputElement>(null);
   const [bulkUploading, setBulkUploading] = useState(false);
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
   const [bulkResult, setBulkResult] = useState<{
@@ -580,13 +581,21 @@ export default function FitnessManagement() {
     }
   };
 
-  // Import exercises from JSON file
-  const importExercises = async () => {
+  // Import exercises from a user-selected JSON file
+  const importExercises = async (file: File) => {
     try {
       setIsImporting(true);
-      const response = await fetch("/api/exercises/import-from-file", { method: "POST", credentials: "include" });
-      if (!response.ok) throw new Error("Failed to import exercises");
-      const data = await response.json();
+      const form = new FormData();
+      form.append("file", file);
+      const response = await fetch("/api/exercises/import-from-file", {
+        method: "POST",
+        credentials: "include",
+        body: form,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to import exercises");
+      }
       toast({ title: "Success", description: data.message || `${data.count} exercises imported successfully` });
       queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
     } catch (error) {
@@ -685,11 +694,23 @@ export default function FitnessManagement() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            Import the exercise database from the bundled JSON file, or clear all exercise data including user plans and favorites.
+            Upload a JSON file to replace the exercise database, or clear all exercise data including user plans and favorites.
           </p>
           <div className="flex flex-wrap gap-3">
+            <input
+              ref={importFileInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              data-testid="input-import-exercises-file"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) importExercises(file);
+                e.target.value = "";
+              }}
+            />
             <Button
-              onClick={importExercises}
+              onClick={() => importFileInputRef.current?.click()}
               disabled={isImporting}
               className="bg-ministry-charcoal hover:bg-ministry-charcoal/90 text-white"
               data-testid="button-import-exercises"
