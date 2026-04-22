@@ -64,6 +64,13 @@ import {
   sendPushToAllUsers
 } from "./pushNotificationService";
 import { selectLeverForStreak } from "./fitness-adjustment-levers";
+import {
+  applyTooHardLever,
+  applyLever6Decision,
+  type Level as TooHardLevel,
+  type WorkoutType as TooHardWorkoutType,
+  type LeverId as TooHardLeverId,
+} from "./fitness-too-hard-adjustments";
 import Parser from 'rss-parser';
 import { sendFeedbackEmail, sendHelpRequestEmail } from './emailService';
 
@@ -11006,8 +11013,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const lever = feeling === 'just_right' ? null : selectLeverForStreak(streak);
       const direction = feeling === 'too_hard' ? 'easier' : feeling === 'too_easy' ? 'harder' : null;
 
+      // Auto-apply the lever for "too hard" feedback (Levers 1–5).
+      // Lever 6 returns a confirmation prompt instead — the client
+      // posts the user's choice to /api/fitness-plans/:planId/level-decision.
+      // "too easy" rules will be implemented when that spec arrives.
+      let adjustment: Awaited<ReturnType<typeof applyTooHardLever>> | null = null;
+      if (lever && feeling === 'too_hard') {
+        const planLevel = ((plan.difficulty || 'beginner').toLowerCase()) as TooHardLevel;
+        if (planLevel === 'beginner' || planLevel === 'intermediate' || planLevel === 'advanced') {
+          adjustment = await applyTooHardLever({
+            planId: plan.id,
+            leverId: lever.id as TooHardLeverId,
+            level: planLevel,
+            workoutType: workoutType as TooHardWorkoutType,
+            sessionMinutes: plan.estimatedDuration ?? 60,
+          });
+        }
+      }
+
       console.log(
-        `[workoutFeedback] user=${user.id} type=${workoutType} feeling=${feeling} streak=${streak} level=${level} lever=${lever?.id ?? 'none'} direction=${direction ?? 'none'}`,
+        `[workoutFeedback] user=${user.id} type=${workoutType} feeling=${feeling} streak=${streak} level=${level} lever=${lever?.id ?? 'none'} direction=${direction ?? 'none'} applied=${adjustment?.applied ?? false} changes=${adjustment?.changes.length ?? 0}`,
       );
 
       res.json({
@@ -11023,9 +11048,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
               requiresConfirmation: lever.requiresConfirmation,
             }
           : null,
+        adjustment,
       });
     } catch (error) {
       console.error('Error recording workout feedback:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Lever 6 decision — user accepts/declines/postpones a level change
+  // after the feedback endpoint surfaced the prompt.
+  app.post('/api/fitness-plans/:planId/level-decision', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) return res.status(404).json({ message: 'Fitness plan not found' });
+      if (plan.userId !== user.id) return res.status(403).json({ message: 'Access denied' });
+
+      const decision = req.body?.decision;
+      const workoutType = req.body?.workoutType ?? 'standard';
+      if (!['yes', 'no', 'later'].includes(decision)) {
+        return res.status(400).json({ message: 'Invalid decision' });
+      }
+      if (!['standard', 'standard-cardio', 'hiit', 'stretching'].includes(workoutType)) {
+        return res.status(400).json({ message: 'Invalid workoutType' });
+      }
+
+      const planLevel = ((plan.difficulty || 'beginner').toLowerCase()) as TooHardLevel;
+      if (planLevel !== 'beginner' && planLevel !== 'intermediate' && planLevel !== 'advanced') {
+        return res.status(400).json({ message: 'Plan level is invalid' });
+      }
+
+      const result = await applyLever6Decision({
+        planId: plan.id,
+        decision,
+        currentLevel: planLevel,
+        workoutType: workoutType as TooHardWorkoutType,
+        sessionMinutes: plan.estimatedDuration ?? 60,
+      });
+
+      console.log(
+        `[lever6] user=${user.id} plan=${plan.id} decision=${decision} applied=${result.applied} changes=${result.changes.length}`,
+      );
+
+      res.json(result);
+    } catch (error) {
+      console.error('Error applying level decision:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

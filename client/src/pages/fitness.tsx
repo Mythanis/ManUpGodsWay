@@ -5036,7 +5036,23 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
     level: 'none' | 'minor' | 'full' | 'escalate';
     direction: 'easier' | 'harder' | null;
     lever: { id: number; name: string; description: string; requiresConfirmation: boolean } | null;
+    adjustment: {
+      leverId: number;
+      applied: boolean;
+      reason?: string;
+      changes: Array<{ exerciseName: string; field: string; before?: any; after?: any }>;
+      prompt?: {
+        title: string;
+        body: string;
+        confirmText: string;
+        declineText: string;
+        postponeText: string;
+        targetLevel: 'beginner' | 'intermediate' | null;
+      };
+    } | null;
   } | null>(null);
+  const [lever6Submitting, setLever6Submitting] = useState(false);
+  const [lever6Decided, setLever6Decided] = useState(false);
 
   // Derive a coarse workoutType label from the plan name. The streak counter
   // is scoped per (user, workoutType) so the Confirmation Rule only fires
@@ -5049,6 +5065,26 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
     return 'standard';
   })();
 
+  const submitLever6Decision = async (decision: 'yes' | 'no' | 'later') => {
+    if (lever6Submitting || lever6Decided) return;
+    setLever6Submitting(true);
+    try {
+      await apiRequest('POST', `/api/fitness-plans/${plan.id}/level-decision`, {
+        decision,
+        workoutType,
+      });
+      setLever6Decided(true);
+      toast({
+        title: decision === 'yes' ? 'Level updated' : decision === 'no' ? 'Level kept' : 'We\'ll ask again next session',
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to record decision';
+      toast({ title: 'Could not save', description: message, variant: 'destructive' });
+    } finally {
+      setLever6Submitting(false);
+    }
+  };
+
   const submitFeedback = async (feeling: 'too_hard' | 'just_right' | 'too_easy') => {
     if (feedbackSubmitting || feedbackDone) return;
     setFeedbackSubmitting(true);
@@ -5057,13 +5093,14 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
         feeling,
         workoutType,
       });
-      const data = await res.json().catch(() => ({}));
+      const data: any = await res.json().catch(() => ({}));
       setFeedbackResult({
         feeling,
         streak: typeof data?.streak === 'number' ? data.streak : 1,
         level: data?.level ?? 'none',
         direction: data?.direction ?? null,
         lever: data?.lever ?? null,
+        adjustment: data?.adjustment ?? null,
       });
       setFeedbackDone(true);
     } catch (err) {
@@ -5311,16 +5348,82 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
                     {feedbackResult.lever.requiresConfirmation && ' · Needs confirmation'}
                   </div>
                 )}
+
+                {/* List of concrete changes the system applied this round */}
+                {feedbackResult?.adjustment?.applied && feedbackResult.adjustment.changes.length > 0 && (
+                  <div className="w-full max-w-md mb-4 bg-white/5 border-2 border-white/20 rounded-sm p-3 text-left" data-testid="list-adjustment-changes">
+                    <div className="text-xs uppercase font-black text-[#FCD000] tracking-widest mb-2">
+                      What changed for next time
+                    </div>
+                    <ul className="space-y-1 text-xs text-white/80">
+                      {feedbackResult.adjustment.changes.slice(0, 6).map((c, i) => (
+                        <li key={i}>
+                          <span className="font-bold">{c.exerciseName}</span>{' '}
+                          {c.field === 'remove'
+                            ? '— removed from session'
+                            : c.field === 'swap'
+                              ? `→ ${c.after}`
+                              : `${c.field}: ${c.before} → ${c.after}`}
+                        </li>
+                      ))}
+                      {feedbackResult.adjustment.changes.length > 6 && (
+                        <li className="text-white/50">…plus {feedbackResult.adjustment.changes.length - 6} more</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+
                 <p className="text-white/80 mb-6 max-w-md" data-testid="text-feedback-message">
                   {feedbackMessage}
                 </p>
-                <Button
-                  onClick={onClose}
-                  className="bg-[#FCD000] text-black font-black uppercase px-8 py-6 text-lg border-2 border-black"
-                  data-testid="button-finish-workout"
-                >
-                  Finish
-                </Button>
+
+                {/* Lever 6 confirmation prompt — only shown when the server
+                    flagged a level change. Three explicit choices per spec. */}
+                {feedbackResult?.adjustment?.prompt && !lever6Decided ? (
+                  <div className="w-full max-w-md mb-6 bg-zinc-900 border-2 border-[#FCD000] rounded-sm p-4 text-left" data-testid="prompt-lever6">
+                    <h4 className="text-lg font-black text-white mb-2">
+                      {feedbackResult.adjustment.prompt.title}
+                    </h4>
+                    <p className="text-white/80 text-sm mb-4">
+                      {feedbackResult.adjustment.prompt.body}
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        onClick={() => submitLever6Decision('yes')}
+                        disabled={lever6Submitting}
+                        className="bg-[#FCD000] text-black font-black uppercase border-2 border-black"
+                        data-testid="button-lever6-yes"
+                      >
+                        {feedbackResult.adjustment.prompt.confirmText}
+                      </Button>
+                      <Button
+                        onClick={() => submitLever6Decision('no')}
+                        disabled={lever6Submitting}
+                        className="bg-white text-black font-bold border-2 border-black"
+                        data-testid="button-lever6-no"
+                      >
+                        {feedbackResult.adjustment.prompt.declineText}
+                      </Button>
+                      <Button
+                        onClick={() => submitLever6Decision('later')}
+                        disabled={lever6Submitting}
+                        variant="ghost"
+                        className="text-white/70"
+                        data-testid="button-lever6-later"
+                      >
+                        {feedbackResult.adjustment.prompt.postponeText}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={onClose}
+                    className="bg-[#FCD000] text-black font-black uppercase px-8 py-6 text-lg border-2 border-black"
+                    data-testid="button-finish-workout"
+                  >
+                    Finish
+                  </Button>
+                )}
               </>
             )}
           </>
