@@ -47,6 +47,8 @@ interface Exercise {
   instructions: string;
   shortInstructions: string | null;
   mediaFile: string;
+  hiit: string;
+  stretching: string;
 }
 
 interface ExerciseEditForm {
@@ -57,6 +59,8 @@ interface ExerciseEditForm {
   instructions: string;
   shortInstructions: string;
   mediaFile: string;
+  hiit: string;
+  stretching: string;
 }
 
 interface FitnessChallenge {
@@ -166,6 +170,8 @@ export default function FitnessManagement() {
     instructions: "",
     shortInstructions: "",
     mediaFile: "",
+    hiit: "No",
+    stretching: "No",
   });
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const mediaInputRef = useRef<HTMLInputElement>(null);
@@ -273,6 +279,8 @@ export default function FitnessManagement() {
       instructions: ex.instructions,
       shortInstructions: ex.shortInstructions ?? "",
       mediaFile: ex.mediaFile,
+      hiit: ex.hiit ?? "No",
+      stretching: ex.stretching ?? "No",
     });
     setShowExEdit(true);
   };
@@ -1057,7 +1065,7 @@ export default function FitnessManagement() {
                 <Label htmlFor="ex-equipment">Equipment</Label>
                 <Input id="ex-equipment" value={exForm.equipment} onChange={(e) => setExForm((f) => ({ ...f, equipment: e.target.value }))} />
               </div>
-              <div className="sm:col-span-2">
+              <div>
                 <Label htmlFor="ex-level">Level</Label>
                 <Select value={exForm.level} onValueChange={(v) => setExForm((f) => ({ ...f, level: v }))}>
                   <SelectTrigger id="ex-level"><SelectValue /></SelectTrigger>
@@ -1066,6 +1074,26 @@ export default function FitnessManagement() {
                     <SelectItem value="Intermediate">Intermediate</SelectItem>
                     <SelectItem value="Advanced">Advanced</SelectItem>
                     <SelectItem value="Expert">Expert</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ex-hiit">HIIT Exercise</Label>
+                <Select value={exForm.hiit} onValueChange={(v) => setExForm((f) => ({ ...f, hiit: v }))}>
+                  <SelectTrigger id="ex-hiit"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="No">No</SelectItem>
+                    <SelectItem value="Yes">Yes</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ex-stretching">Stretching Exercise</Label>
+                <Select value={exForm.stretching} onValueChange={(v) => setExForm((f) => ({ ...f, stretching: v }))}>
+                  <SelectTrigger id="ex-stretching"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="No">No</SelectItem>
+                    <SelectItem value="Yes">Yes</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

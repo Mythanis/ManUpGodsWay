@@ -9913,7 +9913,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           level: exercise.level,
           instructions: exercise.instructions,
           mediaFile: exercise.media_file,
-          shortInstructions: exercise.short_instructions
+          shortInstructions: exercise.short_instructions ?? null,
+          hiit: exercise.hiit ?? "No",
+          stretching: exercise.stretching ?? "No",
         });
       }
 
@@ -9945,7 +9947,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           level: exercise.level,
           instructions: exercise.instructions,
           mediaFile: exercise.media_file,
-          shortInstructions: exercise.short_instructions
+          shortInstructions: exercise.short_instructions ?? null,
+          hiit: exercise.hiit ?? "No",
+          stretching: exercise.stretching ?? "No",
         });
       }
 
@@ -9960,7 +9964,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/exercises', async (req: any, res) => {
     try {
       // Apply filters
-      const { bodyPart, equipment, level, search, offset, limit } = req.query;
+      const { bodyPart, equipment, level, search, offset, limit, hiit, stretching } = req.query;
       const conditions = [];
       
       if (bodyPart) conditions.push(eq(schema.exercises.bodyPart, bodyPart));
@@ -9975,6 +9979,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           conditions.push(sql`${schema.exercises.level} IN (${sql.join(levels.map((l: string) => sql`${l}`), sql`, `)})`);
         }
       }
+
+      // Filter by HIIT / Stretching tags ("Yes" or "No")
+      if (hiit) conditions.push(eq(schema.exercises.hiit, hiit as string));
+      if (stretching) conditions.push(eq(schema.exercises.stretching, stretching as string));
       
       if (search) conditions.push(sql`${schema.exercises.name} ILIKE ${'%' + search + '%'}`);
       

@@ -1872,6 +1872,8 @@ export const exercises = pgTable("exercises", {
   instructions: text("instructions").notNull(),
   mediaFile: varchar("media_file").notNull(),
   shortInstructions: text("short_instructions"),
+  hiit: varchar("hiit").notNull().default("No"),        // "Yes" | "No"
+  stretching: varchar("stretching").notNull().default("No"), // "Yes" | "No"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
