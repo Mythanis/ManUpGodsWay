@@ -47,7 +47,8 @@ import {
   insertUserStudyResponseSchema,
   insertWarGroupSchema,
   insertWarGroupMemberSchema,
-  insertFitnessPostSchema
+  insertFitnessPostSchema,
+  insertExerciseSchema
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -10035,21 +10036,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Clear entire exercise database + all dependent user data
   app.delete('/api/admin/exercises/clear-all', isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
-      // Delete in FK-dependency order so constraints don't block
-      const reminders = await db.delete(schema.fitnessPlanReminders).returning();
-      const planExercises = await db.delete(schema.fitnessPlanExercises).returning();
-      const plans = await db.delete(schema.fitnessPlans).returning();
-      const favorites = await db.delete(schema.favoriteExercises).returning();
-      const exercises = await db.delete(schema.exercises).returning();
+      const deleted = await db.transaction(async (tx) => {
+        // Delete in FK-dependency order so constraints don't block.
+        // fitnessPlanPurchases references preBuiltFitnessPlans (Stripe-paid records);
+        // include them so the exercise DB is wiped alongside all related user data.
+        const purchases = await tx.delete(schema.fitnessPlanPurchases).returning();
+        const reminders = await tx.delete(schema.fitnessPlanReminders).returning();
+        const planExercises = await tx.delete(schema.fitnessPlanExercises).returning();
+        const plans = await tx.delete(schema.fitnessPlans).returning();
+        const favorites = await tx.delete(schema.favoriteExercises).returning();
+        const exercises = await tx.delete(schema.exercises).returning();
+        return { purchases, reminders, planExercises, plans, favorites, exercises };
+      });
 
       res.json({
         message: 'Exercise database cleared',
         deleted: {
-          reminders: reminders.length,
-          planExercises: planExercises.length,
-          plans: plans.length,
-          favorites: favorites.length,
-          exercises: exercises.length,
+          purchases: deleted.purchases.length,
+          reminders: deleted.reminders.length,
+          planExercises: deleted.planExercises.length,
+          plans: deleted.plans.length,
+          favorites: deleted.favorites.length,
+          exercises: deleted.exercises.length,
         },
       });
     } catch (error) {
@@ -10058,21 +10066,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update a single exercise (partial)
+  // Update a single exercise (partial — validated via insertExerciseSchema)
   app.patch('/api/admin/exercises/:id', isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) return res.status(400).json({ message: 'Invalid exercise id' });
 
-      const allowed = ['name', 'bodyPart', 'equipment', 'level', 'instructions', 'shortInstructions', 'mediaFile'];
-      const updateData: Record<string, unknown> = { updatedAt: new Date() };
-      for (const key of allowed) {
-        if (req.body[key] !== undefined) updateData[key] = req.body[key];
+      const partialSchema = insertExerciseSchema.omit({ id: true }).partial();
+      const parsed = partialSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: 'Invalid exercise data', errors: parsed.error.issues });
+      }
+
+      const { data } = parsed;
+      if (Object.keys(data).length === 0) {
+        return res.status(400).json({ message: 'No fields provided to update' });
       }
 
       const [updated] = await db
         .update(schema.exercises)
-        .set(updateData)
+        .set({ ...data, updatedAt: new Date() })
         .where(eq(schema.exercises.id, id))
         .returning();
 
