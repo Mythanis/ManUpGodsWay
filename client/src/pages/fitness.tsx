@@ -1450,9 +1450,12 @@ export default function Fitness() {
     ];
     const isCompound = compoundKeywords.some(k => name.includes(k));
     if (isCompound) return 'compound';
+    // Per spec, bodyweight is its own equipment-based column distinct from
+    // compound/isolation. When no compound match was found, prefer the
+    // equipment signal before falling back to isolation keyword matching.
+    if (equip.includes('body weight') || equip === 'bodyweight') return 'bodyweight';
     const isIsolation = isolationKeywords.some(k => name.includes(k));
     if (isIsolation) return 'isolation';
-    if (equip.includes('body weight') || equip === 'bodyweight') return 'bodyweight';
     // Default to compound when ambiguous so rest is generous, not too short.
     return 'compound';
   }
@@ -2090,7 +2093,13 @@ export default function Fitness() {
           sets: exercise.sets,
           reps: repsValue,
           minutes: minutesValue,
-          restTime: parseInt(exercise.rest.replace(/[^0-9]/g, '')) || 60,
+          restTime: (() => {
+            // Preserve a legitimate 0 (e.g. cardio block has no inter-set
+            // rest). parseInt(...) || 60 would coerce 0 to the 60-second
+            // fallback and break consistency with the generator.
+            const parsed = Number.parseInt(exercise.rest.replace(/[^0-9]/g, ''), 10);
+            return Number.isNaN(parsed) ? 60 : parsed;
+          })(),
           notes: `${exercise.rest} rest - Training Day: ${exercise.day}`,
           daysOfWeek: [trainingDay],
           weekNumber: exercise.weekNumber || 1,
