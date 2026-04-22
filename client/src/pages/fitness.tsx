@@ -1306,16 +1306,64 @@ export default function Fitness() {
     try {
       console.log('Generating plans with params:', { level, equipmentList, startDay, duration, frequency, workoutDays, workoutStyle });
       
-      const exercises = await getExercisesForEquipment(equipmentList, level);
-      console.log(`Found ${exercises.length} exercises for equipment: ${equipmentList.join(', ')} at ${level} level`);
-
-      // Always fetch a Bodyweight pool for stretches (filter pre-workout warmups)
-      // and a Cardio pool when needed, regardless of selected equipment
+      // === Spec equipment-filtering rules ===
+      // 1) Query exercises WHERE equipment IN (user_selected) at the
+      //    user's exact level.
+      // 2) ALWAYS include Bodyweight exercises regardless of selection.
+      // 3) If the resulting pool < 10, expand to the adjacent level up
+      //    (e.g. Beginner → also pull Intermediate). Then re-include
+      //    Bodyweight at the expanded level.
+      // 4) If still < 6, surface a toast warning to the user.
+      // (Per-style filtering — HIIT=Yes / Stretching=Yes — is applied
+      // downstream where the workPool is built, so the broader fetched
+      // set still seeds warm-ups, cooldowns, and main movements.)
+      const NEXT_LEVEL_UP: Record<string, string | undefined> = {
+        Beginner: 'Intermediate',
+        Intermediate: 'Advanced',
+        Advanced: undefined,
+        Tabata: undefined,
+      };
       const bodyweightEquipment = ['Bodyweight', 'bodyweight'];
+      const userSelectedBodyweight = equipmentList.some(eq => eq.toLowerCase() === 'bodyweight');
+
+      const fetchPool = async (levels: string[]): Promise<APIExercise[]> => {
+        const main = await getExercisesForEquipment(equipmentList, level, levels);
+        if (userSelectedBodyweight) return main;
+        // Spec rule 2: always include Bodyweight even when not selected.
+        const seen = new Set(main.map(e => e.id));
+        try {
+          const bw = await getExercisesForEquipment(bodyweightEquipment, level, levels);
+          bw.forEach(e => { if (!seen.has(e.id)) main.push(e); });
+        } catch {}
+        return main;
+      };
+
+      let levelsUsed: string[] = [level];
+      let exercises = await fetchPool(levelsUsed);
+      if (exercises.length < 10) {
+        const up = NEXT_LEVEL_UP[level];
+        if (up) {
+          levelsUsed = [level, up];
+          exercises = await fetchPool(levelsUsed);
+          console.log(`Pool < 10; expanded to include ${up} → ${exercises.length} exercises`);
+        }
+      }
+      if (exercises.length < 6) {
+        toast({
+          title: 'Limited exercises available',
+          description: 'Limited exercises available for this equipment selection.',
+        });
+      }
+      console.log(`Found ${exercises.length} exercises for equipment: ${equipmentList.join(', ')} at levels: ${levelsUsed.join(', ')}`);
+
+      // Bodyweight subset of the (possibly expanded) main pool. Used
+      // downstream for stretches and warm-up/cooldown picks. We still
+      // top up to 20 from the dedicated bodyweight catalog if the
+      // selected equipment alone didn't surface enough.
       let bodyweightPool: APIExercise[] = exercises.filter(e => e.equipment.toLowerCase() === 'bodyweight');
       if (bodyweightPool.length < 20) {
         try {
-          const extra = await getExercisesForEquipment(bodyweightEquipment, level);
+          const extra = await getExercisesForEquipment(bodyweightEquipment, level, levelsUsed);
           const seen = new Set(bodyweightPool.map(e => e.id));
           extra.forEach(e => { if (!seen.has(e.id)) bodyweightPool.push(e); });
         } catch {}
@@ -1594,19 +1642,22 @@ export default function Fitness() {
     return await resp.json();
   }
 
-  async function getExercisesForEquipment(equipmentList: string[], selectedLevel: string): Promise<APIExercise[]> {
+  async function getExercisesForEquipment(
+    equipmentList: string[],
+    selectedLevel: string,
+    levelsOverride?: string[],
+  ): Promise<APIExercise[]> {
     let allExercises: APIExercise[] = [];
-    
-    // Determine which levels to include based on selected level
-    let levelsToInclude: string[];
-    if (selectedLevel.toLowerCase() === 'beginner') {
-      levelsToInclude = ['Beginner'];
-    } else if (selectedLevel.toLowerCase() === 'intermediate') {
-      levelsToInclude = ['Beginner', 'Intermediate'];
-    } else { // Advanced
-      levelsToInclude = ['Beginner', 'Intermediate', 'Advanced'];
-    }
-    
+
+    // Per spec: filter strictly to the user's selected level. Adjacent
+    // levels are only added by the caller as a fallback when the
+    // resulting pool is too small (see expandPoolIfNeeded). Callers can
+    // also pass `levelsOverride` to fetch a specific set of levels
+    // directly.
+    const levelsToInclude: string[] = levelsOverride && levelsOverride.length > 0
+      ? levelsOverride
+      : [selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1).toLowerCase()];
+
     const levelParam = levelsToInclude.join(',');
     
     try {
