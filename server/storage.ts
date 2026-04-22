@@ -629,7 +629,8 @@ export interface IStorage {
   // Exercise completion operations for weekly progression
   markExerciseComplete(userId: string, planId: string, exerciseId: string): Promise<ExerciseCompletion>;
   unmarkExerciseComplete(userId: string, exerciseId: string): Promise<void>;
-  recordWorkoutFeedback(userId: string, planId: string, feeling: 'too_hard' | 'just_right' | 'too_easy'): Promise<WorkoutFeedback>;
+  recordWorkoutFeedback(userId: string, planId: string, workoutType: string, feeling: 'too_hard' | 'just_right' | 'too_easy'): Promise<WorkoutFeedback>;
+  getRecentWorkoutFeedback(userId: string, workoutType: string, limit?: number): Promise<WorkoutFeedback[]>;
   getExerciseCompletions(userId: string, planId: string): Promise<ExerciseCompletion[]>;
 
   // Food intake operations
@@ -6514,13 +6515,30 @@ export class DatabaseStorage implements IStorage {
   async recordWorkoutFeedback(
     userId: string,
     planId: string,
+    workoutType: string,
     feeling: 'too_hard' | 'just_right' | 'too_easy',
   ): Promise<WorkoutFeedback> {
     const [row] = await db
       .insert(workoutFeedback)
-      .values({ userId, planId, feeling })
+      .values({ userId, planId, workoutType, feeling })
       .returning();
     return row;
+  }
+
+  async getRecentWorkoutFeedback(
+    userId: string,
+    workoutType: string,
+    limit: number = 10,
+  ): Promise<WorkoutFeedback[]> {
+    return await db
+      .select()
+      .from(workoutFeedback)
+      .where(and(
+        eq(workoutFeedback.userId, userId),
+        eq(workoutFeedback.workoutType, workoutType),
+      ))
+      .orderBy(desc(workoutFeedback.createdAt))
+      .limit(limit);
   }
 
   async unmarkExerciseComplete(userId: string, exerciseId: string): Promise<void> {

@@ -10950,6 +10950,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Record post-workout feedback ("How did that feel?")
+  // Implements the Confirmation Rule — counts consecutive same-feeling
+  // sessions of the same workoutType for this user and returns the
+  // computed adjustment level. Permanent plan changes are NEVER applied
+  // here; the level is informational so the next plan-generation pass
+  // can act on it.
+  //   1 in a row → level: 'none'    (flagged only)
+  //   2 in a row → level: 'minor'
+  //   3 in a row → level: 'full'
+  //   4+         → level: 'escalate'
+  // 'just_right' streaks always return 'none' — they are logged but
+  // never trigger an adjustment per spec.
   app.post('/api/fitness-plans/:planId/feedback', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
@@ -10960,12 +10971,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (plan.userId !== user.id) return res.status(403).json({ message: 'Access denied' });
 
       const feeling = req.body?.feeling;
+      const workoutType = req.body?.workoutType ?? 'standard';
       if (!['too_hard', 'just_right', 'too_easy'].includes(feeling)) {
         return res.status(400).json({ message: 'Invalid feeling value' });
       }
+      if (!['standard', 'standard-cardio', 'hiit', 'stretching'].includes(workoutType)) {
+        return res.status(400).json({ message: 'Invalid workoutType' });
+      }
 
-      const row = await storage.recordWorkoutFeedback(user.id, req.params.planId, feeling);
-      res.json(row);
+      const row = await storage.recordWorkoutFeedback(user.id, req.params.planId, workoutType, feeling);
+
+      // Walk the most recent feedback rows for this (user, workoutType) and
+      // count how many in a row carry the same feeling as the one just saved.
+      // The freshest row is the one we just inserted, so the streak is at
+      // least 1.
+      const recent = await storage.getRecentWorkoutFeedback(user.id, workoutType, 10);
+      let streak = 0;
+      for (const r of recent) {
+        if (r.feeling === feeling) streak += 1;
+        else break;
+      }
+
+      let level: 'none' | 'minor' | 'full' | 'escalate' = 'none';
+      if (feeling !== 'just_right') {
+        if (streak >= 4) level = 'escalate';
+        else if (streak === 3) level = 'full';
+        else if (streak === 2) level = 'minor';
+      }
+
+      console.log(
+        `[workoutFeedback] user=${user.id} type=${workoutType} feeling=${feeling} streak=${streak} level=${level}`,
+      );
+
+      res.json({ ...row, streak, level });
     } catch (error) {
       console.error('Error recording workout feedback:', error);
       res.status(500).json({ message: 'Internal server error' });

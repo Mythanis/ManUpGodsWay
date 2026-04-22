@@ -567,12 +567,16 @@ export const workoutFeedback = pgTable("workout_feedback", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   planId: varchar("plan_id").notNull().references(() => fitnessPlans.id, { onDelete: 'cascade' }),
+  // 'standard' | 'standard-cardio' | 'hiit' | 'stretching' — used to scope
+  // the consecutive-feedback streak (Confirmation Rule).
+  workoutType: varchar("workout_type", { length: 24 }).notNull().default('standard'),
   feeling: varchar("feeling", { length: 16 }).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertWorkoutFeedbackSchema = createInsertSchema(workoutFeedback, {
   feeling: z.enum(['too_hard', 'just_right', 'too_easy']),
+  workoutType: z.enum(['standard', 'standard-cardio', 'hiit', 'stretching']),
 }).omit({ id: true, createdAt: true });
 
 export type WorkoutFeedback = typeof workoutFeedback.$inferSelect;

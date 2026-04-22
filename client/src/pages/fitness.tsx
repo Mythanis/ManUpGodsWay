@@ -5030,11 +5030,37 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   // we POST it to the feedback endpoint and then close the player.
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [feedbackDone, setFeedbackDone] = useState(false);
+  const [feedbackResult, setFeedbackResult] = useState<{
+    feeling: 'too_hard' | 'just_right' | 'too_easy';
+    streak: number;
+    level: 'none' | 'minor' | 'full' | 'escalate';
+  } | null>(null);
+
+  // Derive a coarse workoutType label from the plan name. The streak counter
+  // is scoped per (user, workoutType) so the Confirmation Rule only fires
+  // when the SAME kind of workout produces the same feedback in a row.
+  const workoutType: 'standard' | 'standard-cardio' | 'hiit' | 'stretching' = (() => {
+    const n = (plan.name || '').toLowerCase();
+    if (n.includes('hiit')) return 'hiit';
+    if (n.includes('stretch')) return 'stretching';
+    if (n.includes('cardio')) return 'standard-cardio';
+    return 'standard';
+  })();
+
   const submitFeedback = async (feeling: 'too_hard' | 'just_right' | 'too_easy') => {
     if (feedbackSubmitting || feedbackDone) return;
     setFeedbackSubmitting(true);
     try {
-      await apiRequest('POST', `/api/fitness-plans/${plan.id}/feedback`, { feeling });
+      const res = await apiRequest('POST', `/api/fitness-plans/${plan.id}/feedback`, {
+        feeling,
+        workoutType,
+      });
+      const data = await res.json().catch(() => ({}));
+      setFeedbackResult({
+        feeling,
+        streak: typeof data?.streak === 'number' ? data.streak : 1,
+        level: data?.level ?? 'none',
+      });
       setFeedbackDone(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to record feedback';
@@ -5044,6 +5070,29 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
       setFeedbackSubmitting(false);
     }
   };
+
+  // Human-friendly explanation of what the Confirmation Rule did with the
+  // user's feedback this session — shown after they submit.
+  const feedbackMessage = ((): string => {
+    if (!feedbackResult) return '';
+    const { feeling, streak, level } = feedbackResult;
+    if (feeling === 'just_right') {
+      return streak >= 2
+        ? `Logged. You've felt this way ${streak} sessions in a row — your plan is dialed in.`
+        : `Logged. We'll keep this workout where it is.`;
+    }
+    const direction = feeling === 'too_hard' ? 'easier' : 'harder';
+    if (level === 'none') {
+      return `Logged. One session isn't enough to change anything yet — if you feel the same way next time, we'll start nudging this workout ${direction}.`;
+    }
+    if (level === 'minor') {
+      return `Two sessions in a row felt this way — we'll apply a minor tweak to make this workout ${direction} next time.`;
+    }
+    if (level === 'full') {
+      return `Three sessions in a row felt this way — we'll apply a full adjustment to make this workout ${direction} next time.`;
+    }
+    return `${streak} sessions in a row felt this way — escalating beyond a normal adjustment. Consider revisiting your level/equipment in plan settings.`;
+  })();
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   const currentExercise = exercises[exerciseIdx];
@@ -5250,7 +5299,21 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
               </>
             ) : (
               <>
-                <p className="text-white/70 mb-6">Thanks — we'll use this to tune your next session.</p>
+                {feedbackResult && feedbackResult.level !== 'none' && feedbackResult.feeling !== 'just_right' && (
+                  <div
+                    className={`mb-4 px-3 py-1 rounded-sm border-2 border-black font-black uppercase tracking-widest text-xs ${
+                      feedbackResult.level === 'escalate' ? 'bg-red-400 text-black' : 'bg-[#FCD000] text-black'
+                    }`}
+                    data-testid="text-feedback-level"
+                  >
+                    {feedbackResult.level === 'minor' && 'Minor adjustment queued'}
+                    {feedbackResult.level === 'full' && 'Full adjustment queued'}
+                    {feedbackResult.level === 'escalate' && 'Escalation flagged'}
+                  </div>
+                )}
+                <p className="text-white/80 mb-6 max-w-md" data-testid="text-feedback-message">
+                  {feedbackMessage}
+                </p>
                 <Button
                   onClick={onClose}
                   className="bg-[#FCD000] text-black font-black uppercase px-8 py-6 text-lg border-2 border-black"
