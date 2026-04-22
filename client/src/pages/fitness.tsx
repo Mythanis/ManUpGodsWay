@@ -1785,16 +1785,25 @@ export default function Fitness() {
     const COOLDOWN_HOLD          = COOLDOWN_HOLD_BY_LEVEL[levelKey];
     const COOLDOWN_TRANSITION    = 0;    // hold longer; no rest between
 
-    // Block sizes per spec (count, not duration). Stretching-only
-    // sessions skip the warmup/cooldown blocks (the budget is the holds
-    // themselves).
+    // Block sizes per spec (count, not duration).
+    // Standard / HIIT: opening stretch (5) + warm-up cardio (3) + cooldown (5).
+    // Stretching-only: light movement (3 min) + final rest (2 min) wrap
+    // the holds; the holds themselves consume the remaining time.
+    const STRETCHING_LIGHT_MOVEMENT_SEC = 3 * 60;     // 3 min total block
+    const STRETCHING_LIGHT_MOVEMENT_HOLD = 60;        // 3 movements * 60s
+    const STRETCHING_LIGHT_MOVEMENT_COUNT = isStretchingOnly
+      ? Math.round(STRETCHING_LIGHT_MOVEMENT_SEC / STRETCHING_LIGHT_MOVEMENT_HOLD)
+      : 0;
+    const STRETCHING_FINAL_REST_SEC = 2 * 60;         // 2 min savasana
     const openingStretchCount = isStretchingOnly ? 0 : 5;     // spec 4-6
     const mainWarmupCount     = isStretchingOnly ? 0 : 3;     // spec 2-3
     const cooldownCount       = isStretchingOnly ? 0 : 5;     // spec 4-6
     const mandatorySec =
       openingStretchCount * (OPENING_STRETCH_HOLD + OPENING_TRANSITION) +
       mainWarmupCount     * (WARMUP_CARDIO_HOLD   + WARMUP_TRANSITION) +
-      cooldownCount       * (COOLDOWN_HOLD        + COOLDOWN_TRANSITION);
+      cooldownCount       * (COOLDOWN_HOLD        + COOLDOWN_TRANSITION) +
+      STRETCHING_LIGHT_MOVEMENT_COUNT * STRETCHING_LIGHT_MOVEMENT_HOLD +
+      (isStretchingOnly ? STRETCHING_FINAL_REST_SEC : 0);
     const workingSec = Math.max(60, totalSec - mandatorySec);
 
     // Combined pre-workout count (opening stretch + warm-up cardio).
@@ -1991,35 +2000,93 @@ export default function Fitness() {
 
         // Main work block
         if (workoutStyle === 'stretching') {
-          // Pure stretching session - pick stretches for body parts
+          // STRETCHING-ONLY session, three blocks per spec:
+          //   1) LIGHT MOVEMENT (3 min) — gentle walking / arm circles
+          //   2) STRETCHING SESSION    — sorted by spec body-part order
+          //   3) FINAL REST (2 min)    — savasana / seated breathing
+
+          // 1) Light movement block. Prefer "walking", "arm circle",
+          //    "leg swing" matches from the main exercise pool; fall
+          //    back to warmupCardioPool, then to a stretch held at 60s.
+          const gentleNames = ['walking', 'arm circle', 'leg swing', 'march'];
+          const gentlePool = exercises.filter(e => {
+            const n = (e.name || '').toLowerCase();
+            return gentleNames.some(p => n.includes(p));
+          });
+          const lightPool = gentlePool.length > 0 ? gentlePool
+                          : warmupCardioPool.length > 0 ? warmupCardioPool
+                          : stretchPool;
+          {
+            const usedLight = new Set<string>();
+            const fresh = lightPool.filter(e => !usedAcrossProgram.has(e.id));
+            const source = fresh.length > 0 ? fresh : lightPool;
+            for (const ex of shuffleArray(source)) {
+              if (dayExercises.length >= STRETCHING_LIGHT_MOVEMENT_COUNT) break;
+              if (usedLight.has(ex.id)) continue;
+              usedLight.add(ex.id);
+              dayExercises.push({
+                exercise: ex, sets: 1, reps: null,
+                durationSec: STRETCHING_LIGHT_MOVEMENT_HOLD, restSec: 0,
+              });
+            }
+          }
+
+          // 2) Stretching session. Pick per body part, then sort the
+          //    main block by the spec's top-to-bottom body-part order:
+          //    neck → shoulders → chest/back → arms → core → hips →
+          //    legs → calves.
+          const STRETCH_BODY_ORDER = [
+            'neck', 'shoulders', 'chest', 'back', 'upper arms', 'lower arms',
+            'waist', 'core', 'abs', 'hips', 'upper legs', 'lower legs', 'calves',
+          ];
+          const orderRank = (bp: string): number => {
+            const lower = (bp || '').toLowerCase();
+            const idx = STRETCH_BODY_ORDER.indexOf(lower);
+            return idx === -1 ? STRETCH_BODY_ORDER.length : idx;
+          };
           const target = exercisesPerDay;
-          const perPart = Math.ceil(target / dayPlan.parts.length);
+          const perPart = Math.max(1, Math.ceil(target / dayPlan.parts.length));
+          const mainStretches: PlanExercise[] = [];
           for (const bp of dayPlan.parts) {
             const picked = pickRandomByBodyPart(stretchPool, bp, perPart, usedExercisesThisWeek, undefined, usedAcrossProgram);
             picked.forEach(s => {
-              dayExercises.push({
-                exercise: s,
-                sets: stretchSets,
-                reps: null,
-                durationSec: STRETCH_HOLD,
-                restSec: STRETCH_TRANSITION,
+              mainStretches.push({
+                exercise: s, sets: stretchSets, reps: null,
+                durationSec: STRETCH_HOLD, restSec: STRETCH_TRANSITION,
               });
             });
           }
-          // Trim to the budgeted exercise count.
-          while (dayExercises.length > target) dayExercises.pop();
-          // Fill remainder with any stretches if not enough
-          while (dayExercises.length < target) {
+          // Cap, then back-fill if we came up short.
+          while (mainStretches.length > target) mainStretches.pop();
+          while (mainStretches.length < target) {
             const remaining = stretchPool.filter(s => !usedExercisesThisWeek.has(s.id));
             if (remaining.length === 0) break;
             const s = shuffleArray(remaining)[0];
             usedExercisesThisWeek.add(s.id);
+            mainStretches.push({
+              exercise: s, sets: stretchSets, reps: null,
+              durationSec: STRETCH_HOLD, restSec: STRETCH_TRANSITION,
+            });
+          }
+          mainStretches.sort((a, b) => orderRank(a.exercise.bodyPart) - orderRank(b.exercise.bodyPart));
+          mainStretches.forEach(pe => dayExercises.push(pe));
+
+          // 3) Final rest (2 min savasana / seated breathing). Use a
+          //    relaxation-flavoured stretch if one is available; else
+          //    fall back to any unused stretch held for 2 min.
+          const restNames = ['savasana', 'corpse', 'child', "child's pose", 'relax', 'breathing'];
+          const restCandidates = stretchPool.filter(s => {
+            const n = (s.name || '').toLowerCase();
+            return restNames.some(p => n.includes(p));
+          });
+          const restPool = restCandidates.length > 0 ? restCandidates : stretchPool;
+          const usedIds = new Set<string>(dayExercises.map(e => e.exercise.id));
+          const restPick = shuffleArray(restPool.filter(s => !usedIds.has(s.id)))[0]
+                         || shuffleArray(restPool)[0];
+          if (restPick) {
             dayExercises.push({
-              exercise: s,
-              sets: stretchSets,
-              reps: null,
-              durationSec: STRETCH_HOLD,
-              restSec: STRETCH_TRANSITION,
+              exercise: restPick, sets: 1, reps: null,
+              durationSec: STRETCHING_FINAL_REST_SEC, restSec: 0,
             });
           }
         } else {
