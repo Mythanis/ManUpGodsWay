@@ -1789,6 +1789,20 @@ export default function Fitness() {
     stretchPool: APIExercise[] = [],
     cardioPool: APIExercise[] = []
   ): WeeklyPlan {
+    // Defensive normalization: the level select can emit lowercase
+    // values ("intermediate") that the TS cast at the callsite swallows
+    // silently. Without normalizing here, every Level-keyed lookup
+    // (STANDARD_SETS_TABLE, STANDARD_REST_TABLE, etc.) returns undefined
+    // and the function throws — caught upstream as "Unable to generate
+    // plans for <equipment>". Map any casing back to the canonical Level.
+    const normalizeLevel = (raw: string): "Beginner"|"Intermediate"|"Advanced"|"Tabata" => {
+      const lower = String(raw || '').toLowerCase();
+      if (lower === 'tabata') return 'Tabata';
+      if (lower === 'advanced') return 'Advanced';
+      if (lower === 'intermediate') return 'Intermediate';
+      return 'Beginner';
+    };
+    level = normalizeLevel(level);
     const weeks: DayPlan[][] = [];
     
     // Get all unique equipment types from the exercises
