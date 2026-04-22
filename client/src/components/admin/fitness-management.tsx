@@ -215,11 +215,25 @@ export default function FitnessManagement() {
     },
   });
 
+  // ── Media coverage stats ───────────────────────────────────────────────
+  const { data: mediaStats, isLoading: mediaStatsLoading } = useQuery<{
+    totalExercises: number;
+    withMedia: number;
+    missingMedia: number;
+    filesInStorage: number;
+  }>({
+    queryKey: ["/api/admin/exercises/media-stats"],
+  });
+
+  const invalidateMediaStats = () =>
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/exercises/media-stats"] });
+
   // ── Exercise mutations ─────────────────────────────────────────────────
   const clearAllMutation = useMutation({
     mutationFn: async () => apiRequest("DELETE", "/api/admin/exercises/clear-all"),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
+      invalidateMediaStats();
       setShowClearConfirm(false);
       setClearInput("");
       toast({
@@ -236,6 +250,7 @@ export default function FitnessManagement() {
     mutationFn: async () => apiRequest("DELETE", "/api/admin/exercise-media/clear-all"),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
+      invalidateMediaStats();
       setShowClearMediaConfirm(false);
       setClearMediaInput("");
       toast({
@@ -255,6 +270,7 @@ export default function FitnessManagement() {
       apiRequest("PATCH", `/api/admin/exercises/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
+      invalidateMediaStats();
       setShowExEdit(false);
       setSelectedEx(null);
       toast({ title: "Exercise Updated", description: "Changes saved successfully." });
@@ -268,6 +284,7 @@ export default function FitnessManagement() {
     mutationFn: async (id: number) => apiRequest("DELETE", `/api/admin/exercises/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
+      invalidateMediaStats();
       setDeleteExConfirm(null);
       toast({ title: "Exercise Deleted", description: "Exercise removed from the database." });
     },
@@ -280,6 +297,7 @@ export default function FitnessManagement() {
     mutationFn: async (id: number) => apiRequest("DELETE", `/api/admin/exercises/${id}/media`),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
+      invalidateMediaStats();
       setExForm((f) => ({ ...f, mediaFile: "" }));
       setSelectedEx((prev) => (prev ? { ...prev, mediaFile: "" } : prev));
       toast({ title: "Media Removed" });
@@ -329,6 +347,7 @@ export default function FitnessManagement() {
         }
         const updated: Exercise = await res.json();
         queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
+      invalidateMediaStats();
         setExForm((f) => ({ ...f, mediaFile: updated.mediaFile }));
         setSelectedEx((prev) => (prev ? { ...prev, mediaFile: updated.mediaFile } : prev));
         toast({ title: "Media Uploaded", description: "New file saved to storage." });
@@ -362,6 +381,7 @@ export default function FitnessManagement() {
         const data = await res.json();
         setBulkResult(data);
         queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
+      invalidateMediaStats();
         toast({
           title: "Bulk Import Complete",
           description: `Uploaded ${data.totals.uploaded}/${data.totals.received} files. ${data.totals.unmatched} unmatched, ${data.totals.failed} failed.`,
@@ -618,6 +638,7 @@ export default function FitnessManagement() {
       }
       toast({ title: "Success", description: data.message || `${data.count} exercises imported successfully` });
       queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
+      invalidateMediaStats();
     } catch (error) {
       toast({
         title: "Error",
@@ -713,6 +734,41 @@ export default function FitnessManagement() {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Media coverage stats — surface drift between DB and storage at a glance. */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4" data-testid="exercise-media-stats">
+            {[
+              { label: "Total Exercises", value: mediaStats?.totalExercises, testId: "stat-total-exercises" },
+              { label: "With Media", value: mediaStats?.withMedia, testId: "stat-with-media" },
+              { label: "Missing Media", value: mediaStats?.missingMedia, testId: "stat-missing-media" },
+              { label: "Files in Storage", value: mediaStats?.filesInStorage, testId: "stat-files-in-storage" },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="rounded-md border bg-muted/40 px-3 py-2"
+                data-testid={s.testId}
+              >
+                <div className="text-xs text-muted-foreground">{s.label}</div>
+                <div className="text-2xl font-semibold">
+                  {mediaStatsLoading ? (
+                    <span className="inline-block h-7 w-12 bg-muted rounded animate-pulse align-middle" />
+                  ) : (
+                    (s.value ?? 0).toLocaleString()
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          {!mediaStatsLoading &&
+            mediaStats &&
+            mediaStats.withMedia !== mediaStats.filesInStorage && (
+              <p className="text-xs text-orange-600 mb-3" data-testid="text-media-drift-warning">
+                Heads up: the database thinks {mediaStats.withMedia.toLocaleString()} exercise
+                {mediaStats.withMedia === 1 ? " has" : "s have"} media attached, but storage actually
+                holds {mediaStats.filesInStorage.toLocaleString()} file
+                {mediaStats.filesInStorage === 1 ? "" : "s"}. Re‑run Bulk Import Media or check the
+                JSON's <code className="font-mono">media_file</code> values.
+              </p>
+            )}
           <p className="text-sm text-muted-foreground mb-4">
             Upload a JSON file to replace the exercise database, or clear all exercise data including user plans and favorites.
           </p>

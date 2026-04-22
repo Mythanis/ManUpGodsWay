@@ -53,7 +53,7 @@ import {
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
 import { strictWriteLimiter } from "./rateLimiter";
-import { uploadPublicFile, uploadPrivateFile, deleteStorageFile, streamVideoFromStorage, streamPublicFileFromStorage, isStorageUrl } from "./objectStorage";
+import { uploadPublicFile, uploadPrivateFile, deleteStorageFile, streamVideoFromStorage, streamPublicFileFromStorage, isStorageUrl, countStorageFiles } from "./objectStorage";
 import { 
   savePushSubscription, 
   removePushSubscription, 
@@ -10387,6 +10387,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Error deleting all exercise media:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Coverage stats: how many exercises have media attached vs missing, and how
+  // many files actually live in object storage under the exercise media prefix.
+  // Surfaces drift between the database and storage on the admin Fitness page.
+  app.get('/api/admin/exercises/media-stats', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const [totalRow] = await db
+        .select({ c: sql<number>`count(*)::int` })
+        .from(schema.exercises);
+      const [withMediaRow] = await db
+        .select({ c: sql<number>`count(*)::int` })
+        .from(schema.exercises)
+        .where(and(ne(schema.exercises.mediaFile, ''), sql`${schema.exercises.mediaFile} IS NOT NULL`));
+
+      const totalExercises = Number(totalRow?.c ?? 0);
+      const withMedia = Number(withMediaRow?.c ?? 0);
+      const filesInStorage = await countStorageFiles('public/uploads/exercises/');
+
+      res.json({
+        totalExercises,
+        withMedia,
+        missingMedia: Math.max(0, totalExercises - withMedia),
+        filesInStorage,
+      });
+    } catch (error) {
+      console.error('Error computing exercise media stats:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

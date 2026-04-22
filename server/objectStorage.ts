@@ -130,6 +130,23 @@ export async function streamVideoFromStorage(
 }
 
 /**
+ * Count objects under a given prefix in the public bucket. Used by admin
+ * stats endpoints to show the actual number of files in storage. Returns 0
+ * on any failure rather than throwing — callers treat it as a coverage hint.
+ */
+export async function countStorageFiles(prefix: string): Promise<number> {
+  try {
+    const bucketName = getBucketName();
+    const bucket = objectStorageClient.bucket(bucketName);
+    const [files] = await bucket.getFiles({ prefix });
+    return files.length;
+  } catch (e) {
+    console.warn("[ObjectStorage] countStorageFiles failed:", (e as Error).message);
+    return 0;
+  }
+}
+
+/**
  * Returns true if the given string is a GCS-backed URL or key (not a local path, YouTube, Vimeo, etc.)
  */
 export function isStorageUrl(url: string | null | undefined): boolean {
