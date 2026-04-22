@@ -1758,22 +1758,45 @@ export default function Fitness() {
     // Working budget = total - 15 min (or total - 5 min for Stretching only).
     const isStretchingOnly = workoutStyle === 'stretching';
     const totalSec = durationMin * 60;
-    const openingStretchSec = isStretchingOnly ? 0 : 5 * 60;
-    const mainWarmupSec     = isStretchingOnly ? 0 : 5 * 60;
-    const cooldownSec       = 5 * 60;
-    const mandatorySec      = openingStretchSec + mainWarmupSec + cooldownSec;
-    const workingSec        = Math.max(60, totalSec - mandatorySec);
 
-    // One stretch hold = 30s hold + 10s transition (per spec). Used to
-    // convert mandatory block seconds into a number of stretches the
-    // player will actually run.
-    const SEC_PER_STRETCH = STRETCH_HOLD + STRETCH_TRANSITION;
-    const openingStretchCount = Math.round(openingStretchSec / SEC_PER_STRETCH);
-    const mainWarmupCount     = Math.round(mainWarmupSec     / SEC_PER_STRETCH);
-    const cooldownCount       = Math.round(cooldownSec       / SEC_PER_STRETCH);
-    // Combined pre-workout count (opening stretch + main warm-up). Kept as
-    // a single number so the existing warm-up emission stays simple.
-    const warmupCount         = openingStretchCount + mainWarmupCount;
+    // Session structure (spec) — three header blocks before the main
+    // workout, plus a cooldown block at the end. All transitions inside
+    // these blocks are 0s ("no rest between") per spec; only the main
+    // stretching session keeps the 10s transition.
+    //   1) OPENING STRETCH — 4-6 dynamic stretches, 20-30s each
+    //   2) WARM-UP         — 2-3 light cardio movements, 30-60s each
+    //   3) MAIN WORKOUT    — sets/reps/rest from the spec tables
+    //   4) COOLDOWN STRETCH — 4-6 static stretches, hold per level
+    //                         (Beg 30, Int 40, Adv 50-60)
+    const OPENING_STRETCH_HOLD   = 25;   // 20-30s midpoint, dynamic
+    const OPENING_TRANSITION     = 0;    // no rest between dynamic stretches
+    const WARMUP_CARDIO_HOLD     = 45;   // 30-60s midpoint, light cardio
+    const WARMUP_TRANSITION      = 0;    // no rest between cardio movements
+    const COOLDOWN_HOLD_BY_LEVEL: Record<Level, number> = {
+      Beginner: 30, Intermediate: 40, Advanced: 55, Tabata: 55,
+    };
+    const COOLDOWN_HOLD          = COOLDOWN_HOLD_BY_LEVEL[levelKey];
+    const COOLDOWN_TRANSITION    = 0;    // hold longer; no rest between
+
+    // Block sizes per spec (count, not duration). Stretching-only
+    // sessions skip the warmup/cooldown blocks (the budget is the holds
+    // themselves).
+    const openingStretchCount = isStretchingOnly ? 0 : 5;     // spec 4-6
+    const mainWarmupCount     = isStretchingOnly ? 0 : 3;     // spec 2-3
+    const cooldownCount       = isStretchingOnly ? 0 : 5;     // spec 4-6
+    const mandatorySec =
+      openingStretchCount * (OPENING_STRETCH_HOLD + OPENING_TRANSITION) +
+      mainWarmupCount     * (WARMUP_CARDIO_HOLD   + WARMUP_TRANSITION) +
+      cooldownCount       * (COOLDOWN_HOLD        + COOLDOWN_TRANSITION);
+    const workingSec = Math.max(60, totalSec - mandatorySec);
+
+    // Combined pre-workout count (opening stretch + warm-up cardio).
+    // Used by the safety-net trim to know which leading slots are
+    // mandatory header blocks vs main-workout exercises.
+    const warmupCount = openingStretchCount + mainWarmupCount;
+    // Time-per-slot proxy used by the safety-net trim for header/footer
+    // slots (they always emit the same per-block hold + transition).
+    const SEC_PER_STRETCH = COOLDOWN_HOLD + COOLDOWN_TRANSITION;
 
     // Per-set seconds — single source of truth used both to size the budget
     // and to compute the final session time so the player actually hits the
@@ -1807,38 +1830,97 @@ export default function Fitness() {
                            :                           STANDARD_AVG_SETS[levelKey];
     const exercisesPerDay  = Math.max(1, Math.ceil(totalWorkingSets / setsPerExercise));
 
-    // Helper: prepend the opening stretch + main warm-up block (~10 min for
-    // non-stretching sessions) at the start of a day, biased toward today's
-    // body parts.
-    const emitWarmup = (parts: string[], dayExercises: PlanExercise[]) => {
-      if (warmupCount === 0 || stretchPool.length === 0) return;
+    // Per-level light-cardio name patterns for the WARM-UP block (spec:
+    // "light cardio or low-intensity version of first exercise").
+    // Falls back to whatever cardioPool was provided, then to a generic
+    // bodyweight-cardio name match within the main exercises pool.
+    const WARMUP_CARDIO_NAMES_BY_LEVEL: Record<Level, string[]> = {
+      Beginner:     ['walking', 'march', 'jumping jack', 'bodyweight squat', 'air squat'],
+      Intermediate: ['jog', 'dynamic lunge', 'arm swing', 'arm circle', 'leg swing', 'high knee'],
+      Advanced:     ['jump rope', 'high knee', 'mobility', 'burpee', 'a-skip'],
+      Tabata:       ['jump rope', 'high knee', 'mobility', 'burpee'],
+    };
+    const buildWarmupCardioPool = (): APIExercise[] => {
+      const matches: APIExercise[] = [];
+      const seen = new Set<string>();
+      const wantNames = WARMUP_CARDIO_NAMES_BY_LEVEL[levelKey];
+      // 1) Prefer light-cardio name matches from the main exercise pool
+      //    so movements come from real DB rows with media.
+      for (const ex of exercises) {
+        const n = (ex.name || '').toLowerCase();
+        if (wantNames.some(p => n.includes(p)) && !seen.has(ex.id)) {
+          seen.add(ex.id);
+          matches.push(ex);
+        }
+      }
+      // 2) Then fall back to whatever cardioPool was provided.
+      for (const ex of cardioPool) {
+        if (!seen.has(ex.id)) { seen.add(ex.id); matches.push(ex); }
+      }
+      return matches;
+    };
+    const warmupCardioPool = buildWarmupCardioPool();
+
+    // Helper: prepend the OPENING STRETCH block (4-6 dynamic stretches,
+    // 20-30s each, no rest between). Biased toward today's body parts.
+    const emitOpeningStretch = (parts: string[], dayExercises: PlanExercise[]) => {
+      if (openingStretchCount === 0 || stretchPool.length === 0) return;
       const usedWarm = new Set<string>();
       let added = 0;
       for (const bp of parts) {
-        if (added >= warmupCount) break;
-        const matches = stretchPool.filter(s => s.bodyPart.toLowerCase() === bp.toLowerCase() && !usedWarm.has(s.id));
-        const fresh = matches.filter(s => !usedAcrossProgram.has(s.id));
-        const source = fresh.length > 0 ? fresh : matches;
+        if (added >= openingStretchCount) break;
+        const bpMatch = stretchPool.filter(s => s.bodyPart.toLowerCase() === bp.toLowerCase() && !usedWarm.has(s.id));
+        const fresh = bpMatch.filter(s => !usedAcrossProgram.has(s.id));
+        const source = fresh.length > 0 ? fresh : bpMatch;
         const pick = shuffleArray(source).slice(0, 1);
         pick.forEach(s => {
           usedWarm.add(s.id);
-          dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: STRETCH_HOLD, restSec: STRETCH_TRANSITION });
+          dayExercises.push({
+            exercise: s, sets: 1, reps: null,
+            durationSec: OPENING_STRETCH_HOLD, restSec: OPENING_TRANSITION,
+          });
           added++;
         });
       }
-      while (added < warmupCount) {
+      while (added < openingStretchCount) {
         const remaining = stretchPool.filter(s => !usedWarm.has(s.id));
         if (remaining.length === 0) break;
         const s = shuffleArray(remaining)[0];
         usedWarm.add(s.id);
-        dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: STRETCH_HOLD, restSec: STRETCH_TRANSITION });
+        dayExercises.push({
+          exercise: s, sets: 1, reps: null,
+          durationSec: OPENING_STRETCH_HOLD, restSec: OPENING_TRANSITION,
+        });
         added++;
       }
     };
 
-    // Helper: append the cooldown stretch block (~5 min) to the end of a
-    // day, biased toward today's body parts and avoiding duplicates already
-    // used in this day's warmup or main work.
+    // Helper: prepend the WARM-UP block (2-3 light cardio movements,
+    // 30-60s each, no rest between). Falls back to extra opening
+    // stretches if no cardio movement is available.
+    const emitWarmupCardio = (dayExercises: PlanExercise[]) => {
+      if (mainWarmupCount === 0) return;
+      const usedWarm = new Set<string>();
+      let added = 0;
+      const pool = warmupCardioPool.length > 0 ? warmupCardioPool : stretchPool;
+      const fresh = pool.filter(e => !usedAcrossProgram.has(e.id));
+      const source = fresh.length > 0 ? fresh : pool;
+      for (const ex of shuffleArray(source)) {
+        if (added >= mainWarmupCount) break;
+        if (usedWarm.has(ex.id)) continue;
+        usedWarm.add(ex.id);
+        dayExercises.push({
+          exercise: ex, sets: 1, reps: null,
+          durationSec: WARMUP_CARDIO_HOLD, restSec: WARMUP_TRANSITION,
+        });
+        added++;
+      }
+    };
+
+    // Helper: append the COOLDOWN STRETCH block (4-6 static stretches
+    // held per level: Beg 30s, Int 40s, Adv 50-60s; no rest between).
+    // Biased toward today's body parts and avoiding duplicates already
+    // used earlier in the day.
     const emitCooldown = (parts: string[], dayExercises: PlanExercise[]) => {
       if (cooldownCount === 0 || stretchPool.length === 0) return;
       const usedCool = new Set<string>();
@@ -1846,13 +1928,16 @@ export default function Fitness() {
       let added = 0;
       for (const bp of parts) {
         if (added >= cooldownCount) break;
-        const matches = stretchPool.filter(s => s.bodyPart.toLowerCase() === bp.toLowerCase() && !usedCool.has(s.id));
-        const fresh = matches.filter(s => !usedAcrossProgram.has(s.id));
-        const source = fresh.length > 0 ? fresh : matches;
+        const bpMatch = stretchPool.filter(s => s.bodyPart.toLowerCase() === bp.toLowerCase() && !usedCool.has(s.id));
+        const fresh = bpMatch.filter(s => !usedAcrossProgram.has(s.id));
+        const source = fresh.length > 0 ? fresh : bpMatch;
         const pick = shuffleArray(source).slice(0, 1);
         pick.forEach(s => {
           usedCool.add(s.id);
-          dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: STRETCH_HOLD, restSec: STRETCH_TRANSITION });
+          dayExercises.push({
+            exercise: s, sets: 1, reps: null,
+            durationSec: COOLDOWN_HOLD, restSec: COOLDOWN_TRANSITION,
+          });
           added++;
         });
       }
@@ -1861,9 +1946,19 @@ export default function Fitness() {
         if (remaining.length === 0) break;
         const s = shuffleArray(remaining)[0];
         usedCool.add(s.id);
-        dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: STRETCH_HOLD, restSec: STRETCH_TRANSITION });
+        dayExercises.push({
+          exercise: s, sets: 1, reps: null,
+          durationSec: COOLDOWN_HOLD, restSec: COOLDOWN_TRANSITION,
+        });
         added++;
       }
+    };
+
+    // Helper: classify an exercise for main-block ordering. Stretching
+    // sessions skip this; HIIT keeps the pick order. Standard sessions
+    // sort compound → isolation/bodyweight → core per spec.
+    const ORDER_RANK: Record<ExerciseType, number> = {
+      compound: 0, isolation: 1, bodyweight: 1, core: 2,
     };
 
     // Build 4 distinct weeks. Each week varies its exercises (week-over-week
@@ -1877,53 +1972,15 @@ export default function Fitness() {
       // Use the first available equipment as the preferred rotation
       const equipmentRotation = availableEquipment[0] || '';
       
-      // Track cardio cadence for standard-cardio style: every other workout day
-      let workoutDayIndex = 0;
-      
       for (let d = 0; d < bodyPartSchedule.length; d++) {
         const dayPlan = bodyPartSchedule[d];
-        const isCardioDay = workoutStyle === 'standard-cardio' && (workoutDayIndex % 2 === 1) && cardioPool.length > 0;
         const dayExercises: PlanExercise[] = [];
 
-        // Cardio day: one continuous cardio block sized to the working
-        // budget, sandwiched by the same opening + warm-up and cooldown
-        // stretch blocks as a normal day so total time still hits the user's
-        // selected duration.
-        if (isCardioDay) {
-          const usedCardio = new Set<string>();
-          const picked = pickRandomByBodyPart(
-            cardioPool.map(c => ({ ...c, bodyPart: 'full body' })),
-            'full body',
-            1,
-            usedCardio,
-            undefined,
-            usedAcrossProgram
-          );
-          let cardioEx = picked[0];
-          if (!cardioEx) cardioEx = shuffleArray(cardioPool)[0];
-          // Same opening stretch + warm-up block as a normal day so the
-          // cardio session still hits the user's selected total duration.
-          emitWarmup(dayPlan.parts, dayExercises);
-          if (cardioEx) {
-            dayExercises.push({
-              exercise: cardioEx,
-              sets: 1,
-              reps: null,
-              durationSec: workingSec,
-              restSec: 0,
-            });
-          }
-          emitCooldown(dayPlan.parts, dayExercises);
-          week.push({
-            name: `Cardio`,
-            exercises: dayExercises,
-          });
-          workoutDayIndex++;
-          continue;
-        }
-
-        // Pre-workout opening stretch + main warm-up block (~10 min)
-        emitWarmup(dayPlan.parts, dayExercises);
+        // Header blocks per spec — opening stretch (5 min) then warm-up
+        // (5 min). Both skipped for stretching-only sessions, where the
+        // budget IS the holds.
+        emitOpeningStretch(dayPlan.parts, dayExercises);
+        emitWarmupCardio(dayExercises);
 
         // Main work block
         if (workoutStyle === 'stretching') {
@@ -1962,11 +2019,12 @@ export default function Fitness() {
           // Standard or HIIT - pick from exercises pool by body parts (skip stretches)
           const workPool = exercises.filter(e => !e.name.toLowerCase().includes('stretch'));
           const exercisesPerBodyPart = Math.ceil(exercisesPerDay / dayPlan.parts.length);
-          // Tracks whether the day's "primary compound" slot has been
-          // assigned (Advanced only). The first compound emitted in the
-          // day gets the strength block (5 x 4-6); subsequent compounds
-          // fall back to the secondary band from STANDARD_SETS_TABLE.
-          let primaryCompoundUsed = false;
+          // Build the MAIN block in a temporary array so we can sort it
+          // (compound → isolation/bodyweight → core per spec) and then
+          // splice in cardio movements every 3rd slot for Standard with
+          // Cardio sessions, before pushing to the day.
+          type MainEntry = PlanExercise & { __exType?: ExerciseType };
+          const mainBlock: MainEntry[] = [];
           for (const bodyPart of dayPlan.parts) {
             const picked = pickRandomByBodyPart(
               workPool,
@@ -1978,7 +2036,7 @@ export default function Fitness() {
             );
             picked.forEach(ex => {
               if (workoutStyle === 'hiit') {
-                dayExercises.push({
+                mainBlock.push({
                   exercise: ex,
                   sets: hiitRounds,
                   reps: null,
@@ -1987,29 +2045,74 @@ export default function Fitness() {
                 });
               } else {
                 // Standard: sets/reps + rest are per (level, exercise
-                // type) per spec. For Advanced, the first compound of
-                // the day is upgraded to the primary strength block.
+                // type) per spec. Tag with __exType so we can sort the
+                // main block compound→isolation→core after picking.
                 const exType = classifyStandardExercise(ex);
-                let spec = setsTable[exType];
-                if (level === 'Advanced' && exType === 'compound' && !primaryCompoundUsed) {
-                  spec = ADVANCED_PRIMARY_COMPOUND;
-                  primaryCompoundUsed = true;
-                }
-                const [repMin, repMax] = spec.repRange;
-                const reps = repMin + Math.floor(Math.random() * Math.max(1, (repMax - repMin + 1)));
-                dayExercises.push({
+                mainBlock.push({
                   exercise: ex,
-                  sets: spec.sets,
-                  reps,
+                  sets: 0, // placeholder, filled in after sorting
+                  reps: 0,
                   restSec: STANDARD_REST_TABLE[level][exType],
+                  __exType: exType,
                 });
               }
             });
           }
 
-          // Trim warmup + main to a reasonable cap (warmup + exercisesPerDay)
-          const cap = warmupCount + exercisesPerDay;
-          while (dayExercises.length > cap) dayExercises.pop();
+          // Cap the main block at the budgeted exercise count.
+          while (mainBlock.length > exercisesPerDay) mainBlock.pop();
+
+          // For Standard styles, sort main block compound → isolation /
+          // bodyweight → core per spec, then resolve sets/reps with the
+          // primary-compound override applied to the first compound.
+          if (workoutStyle !== 'hiit') {
+            mainBlock.sort((a, b) =>
+              ORDER_RANK[a.__exType ?? 'compound'] - ORDER_RANK[b.__exType ?? 'compound']
+            );
+            let primaryCompoundUsed = false;
+            for (const entry of mainBlock) {
+              const exType = entry.__exType ?? 'compound';
+              let spec = setsTable[exType];
+              if (level === 'Advanced' && exType === 'compound' && !primaryCompoundUsed) {
+                spec = ADVANCED_PRIMARY_COMPOUND;
+                primaryCompoundUsed = true;
+              }
+              const [repMin, repMax] = spec.repRange;
+              entry.sets = spec.sets;
+              entry.reps = repMin + Math.floor(Math.random() * Math.max(1, (repMax - repMin + 1)));
+            }
+          }
+
+          // Standard with Cardio: insert one cardio movement (30-60s,
+          // sets=1, no rest) between every 3rd strength exercise. Uses
+          // HIIT-flag exercises from the cardio pool per spec; falls
+          // back gracefully if no cardio is available.
+          if (workoutStyle === 'standard-cardio' && cardioPool.length > 0) {
+            const cardioShuffled = shuffleArray(cardioPool);
+            const interleaved: MainEntry[] = [];
+            let cardioIdx = 0;
+            mainBlock.forEach((entry, i) => {
+              interleaved.push(entry);
+              // After every 3rd strength exercise (1-indexed), drop in a
+              // cardio movement, but skip if it would land at the very
+              // end of the main block.
+              if ((i + 1) % 3 === 0 && i < mainBlock.length - 1 && cardioIdx < cardioShuffled.length) {
+                const cEx = cardioShuffled[cardioIdx++];
+                interleaved.push({
+                  exercise: cEx,
+                  sets: 1,
+                  reps: null,
+                  durationSec: 45,   // 30-60s midpoint per spec
+                  restSec: 0,
+                });
+              }
+            });
+            mainBlock.length = 0;
+            mainBlock.push(...interleaved);
+          }
+
+          // Strip the temporary __exType tag and push to the day.
+          mainBlock.forEach(({ __exType, ...pe }) => dayExercises.push(pe));
         }
 
         // NOTE: post-emission set redistribution has been removed. With
@@ -2049,10 +2152,10 @@ export default function Fitness() {
           }
           return pe.sets * perSetSec;
         };
-        const slotTimeSec = (pe: PlanExercise, idx: number, len: number): number => {
-          const isWarmup   = idx < warmupCount;
-          const isCooldown = idx >= len - cooldownCount;
-          if (isWarmup || isCooldown) return SEC_PER_STRETCH;
+        const slotTimeSec = (pe: PlanExercise, _idx: number, _len: number): number => {
+          // Every slot now stores its own durationSec + restSec, including
+          // the three header blocks (opening stretch 25s, warm-up cardio
+          // 45s, cooldown per level), so a single proxy works everywhere.
           return exerciseTimeSec(pe);
         };
         let total = dayExercises.reduce((sum, pe, idx) => sum + slotTimeSec(pe, idx, dayExercises.length), 0);
@@ -2068,7 +2171,6 @@ export default function Fitness() {
           name: dayLabel,
           exercises: dayExercises,
         });
-        workoutDayIndex++;
       }
       
       weeks.push(week);
