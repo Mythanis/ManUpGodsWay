@@ -5348,6 +5348,25 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   // the written-instructions modal opens.
   const [paused, setPaused] = useState(false);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
+
+  // Fetch the canonical instructions text from the `exercises` table when
+  // the user opens the instructions modal. The plan-exercise row only has
+  // free-form `notes`; the rich step-by-step "instructions" column lives
+  // on the underlying exercise. Enabled lazily so we don't make this
+  // request until the modal is actually opened.
+  const exerciseDbId = exercises[exerciseIdx]?.exerciseId;
+  const { data: exerciseDetails, isLoading: instructionsLoading } = useQuery<{
+    id: number;
+    name: string;
+    instructions: string;
+    shortInstructions?: string | null;
+    bodyPart?: string;
+    equipment?: string;
+    level?: string;
+  }>({
+    queryKey: ['/api/exercises/by-id', exerciseDbId],
+    enabled: instructionsOpen && !!exerciseDbId,
+  });
   // Adaptive-difficulty feedback state. Once the user picks a feeling
   // we POST it to the feedback endpoint and then close the player.
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
@@ -6122,8 +6141,12 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
               Written instructions · workout paused while open
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 text-sm" data-testid="text-instructions-body">
-            {currentExercise?.notes && currentExercise.notes.trim().length > 0 ? (
+          <div className="space-y-3 text-sm max-h-[50vh] overflow-y-auto" data-testid="text-instructions-body">
+            {instructionsLoading ? (
+              <p className="text-white/60 italic">Loading instructions…</p>
+            ) : exerciseDetails?.instructions && exerciseDetails.instructions.trim().length > 0 ? (
+              <p className="whitespace-pre-line text-white/90">{exerciseDetails.instructions}</p>
+            ) : currentExercise?.notes && currentExercise.notes.trim().length > 0 ? (
               <p className="whitespace-pre-line text-white/90">{currentExercise.notes}</p>
             ) : (
               <p className="text-white/60 italic">
