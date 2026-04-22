@@ -1615,6 +1615,11 @@ export default function Fitness() {
   interface DayPlan {
     name: string;
     exercises: PlanExercise[];
+    // Spec intensity progression across the week. 'light' applies a
+    // -1 set reduction and a -20% weight/intensity hint; 'moderate'
+    // keeps full reps with up to a -1 set reduction (we keep full
+    // sets); 'heavy' uses the full sets/reps from the level rules.
+    intensity?: 'heavy' | 'moderate' | 'light';
   }
 
   interface WeeklyPlan {
@@ -1824,6 +1829,24 @@ export default function Fitness() {
     };
     const days = Math.max(1, Math.min(6, workoutDaysPerWeek));
     const bodyPartSchedule = ROTATIONS[days].map(key => SPLITS[key]);
+
+    // Intensity progression across the week per spec.
+    //   1 day:  full effort
+    //   2 days: full / full
+    //   3 days: heavy / light / heavy
+    //   4 days: heavy / moderate / heavy / light
+    //   5 days: heavy / moderate / heavy / light / moderate
+    //   6 days: heavy / moderate / heavy / moderate / heavy / light
+    type Intensity = 'heavy' | 'moderate' | 'light';
+    const INTENSITY_BY_DAYS: Record<number, Intensity[]> = {
+      1: ['heavy'],
+      2: ['heavy', 'heavy'],
+      3: ['heavy', 'light', 'heavy'],
+      4: ['heavy', 'moderate', 'heavy', 'light'],
+      5: ['heavy', 'moderate', 'heavy', 'light', 'moderate'],
+      6: ['heavy', 'moderate', 'heavy', 'moderate', 'heavy', 'light'],
+    };
+    const intensityByDay = INTENSITY_BY_DAYS[days];
 
     // Per-session same-muscle-group cap per spec:
     //   Beginner: 2, Intermediate: 3, Advanced: 4
@@ -2121,6 +2144,7 @@ export default function Fitness() {
       for (let d = 0; d < bodyPartSchedule.length; d++) {
         const dayPlan = bodyPartSchedule[d];
         const dayExercises: PlanExercise[] = [];
+        const dayIntensity: Intensity = intensityByDay[d] ?? 'heavy';
 
         // Header blocks per spec — opening stretch (5 min) then warm-up
         // (5 min). Both skipped for stretching-only sessions, where the
@@ -2299,7 +2323,13 @@ export default function Fitness() {
                 primaryCompoundUsed = true;
               }
               const [repMin, repMax] = spec.repRange;
-              entry.sets = spec.sets;
+              let sets = spec.sets;
+              // Spec intensity progression — only reduce sets on Light
+              // days (-1, floor 1). Moderate keeps full sets (the spec
+              // allows -0 or -1; we choose -0 so the user still hits
+              // the level-rule volume). Heavy is full sets unchanged.
+              if (dayIntensity === 'light') sets = Math.max(1, sets - 1);
+              entry.sets = sets;
               entry.reps = repMin + Math.floor(Math.random() * Math.max(1, (repMax - repMin + 1)));
             }
           }
@@ -2391,6 +2421,7 @@ export default function Fitness() {
         week.push({
           name: dayLabel,
           exercises: dayExercises,
+          intensity: dayIntensity,
         });
       }
       
