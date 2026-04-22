@@ -171,6 +171,17 @@ export default function FitnessManagement() {
   const mediaInputRef = useRef<HTMLInputElement>(null);
   const [deleteExConfirm, setDeleteExConfirm] = useState<Exercise | null>(null);
 
+  // Bulk media import state
+  const bulkInputRef = useRef<HTMLInputElement>(null);
+  const [bulkUploading, setBulkUploading] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
+  const [bulkResult, setBulkResult] = useState<{
+    totals: { uploaded: number; unmatched: number; failed: number; received: number };
+    matched: Array<{ filename: string; exerciseName: string }>;
+    unmatched: string[];
+    failed: Array<{ filename: string; error: string }>;
+  } | null>(null);
+
   // Debounce exercise search (300 ms) and reset page on new search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -299,6 +310,41 @@ export default function FitnessManagement() {
       }
     },
     [selectedEx, queryClient, toast]
+  );
+
+  const handleBulkMediaUpload = useCallback(
+    async (files: FileList) => {
+      if (files.length === 0) return;
+      setBulkUploading(true);
+      setBulkProgress({ done: 0, total: files.length });
+      setBulkResult(null);
+      try {
+        const form = new FormData();
+        for (let i = 0; i < files.length; i++) form.append("files", files[i]);
+        const res = await fetch("/api/admin/exercises/bulk-media", {
+          method: "POST",
+          credentials: "include",
+          body: form,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || "Bulk upload failed");
+        }
+        const data = await res.json();
+        setBulkResult(data);
+        queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
+        toast({
+          title: "Bulk Import Complete",
+          description: `Uploaded ${data.totals.uploaded}/${data.totals.received} files. ${data.totals.unmatched} unmatched, ${data.totals.failed} failed.`,
+        });
+      } catch (err: any) {
+        toast({ title: "Bulk Upload Failed", description: err.message || "Could not upload files", variant: "destructive" });
+      } finally {
+        setBulkUploading(false);
+        setBulkProgress(null);
+      }
+    },
+    [queryClient, toast]
   );
 
   const isMediaPreviewable = (url: string) =>
@@ -648,6 +694,34 @@ export default function FitnessManagement() {
             </Button>
             <Button
               variant="outline"
+              onClick={() => bulkInputRef.current?.click()}
+              disabled={bulkUploading}
+              className="border-blue-500 text-blue-600 hover:bg-blue-50"
+              data-testid="button-bulk-import-media"
+            >
+              {bulkUploading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2" />
+                  Uploading{bulkProgress ? ` ${bulkProgress.total} files…` : "…"}
+                </>
+              ) : (
+                <><ImageIcon className="w-4 h-4 mr-2" />Bulk Import Media</>
+              )}
+            </Button>
+            <input
+              ref={bulkInputRef}
+              type="file"
+              multiple
+              accept="image/*,.gif,video/mp4,video/webm,video/quicktime"
+              className="hidden"
+              onChange={(e) => {
+                const fl = e.target.files;
+                if (fl && fl.length > 0) handleBulkMediaUpload(fl);
+                e.target.value = "";
+              }}
+            />
+            <Button
+              variant="outline"
               className="border-red-500 text-red-600 hover:bg-red-50"
               onClick={() => { setClearInput(""); setShowClearConfirm(true); }}
               data-testid="button-clear-exercises"
@@ -656,6 +730,12 @@ export default function FitnessManagement() {
               Clear Exercise Database
             </Button>
           </div>
+
+          <p className="text-xs text-muted-foreground mt-3">
+            <strong>Bulk Import:</strong> Select many image/GIF/MP4 files. Each file's name must match
+            an existing exercise's media file (e.g. <code className="font-mono bg-muted px-1 rounded">0001_push-up.gif</code>).
+            Matched files are uploaded to storage and replace the exercise's media.
+          </p>
         </CardContent>
       </Card>
 
@@ -1005,12 +1085,21 @@ export default function FitnessManagement() {
               {exForm.mediaFile ? (
                 <div className="space-y-2">
                   {isMediaPreviewable(exForm.mediaFile) ? (
-                    <img
-                      src={exForm.mediaFile}
-                      alt="exercise media"
-                      className="h-40 object-contain rounded border bg-muted/20"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                    />
+                    /\.(mp4|webm|mov)(\?|$)/i.test(exForm.mediaFile) ? (
+                      <video
+                        src={exForm.mediaFile}
+                        className="h-40 rounded border bg-muted/20"
+                        controls
+                        muted
+                      />
+                    ) : (
+                      <img
+                        src={exForm.mediaFile}
+                        alt="exercise media"
+                        className="h-40 object-contain rounded border bg-muted/20"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                    )
                   ) : (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 rounded p-2">
                       <ImageIcon className="w-4 h-4" />

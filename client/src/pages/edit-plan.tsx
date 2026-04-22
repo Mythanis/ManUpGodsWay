@@ -669,11 +669,22 @@ export default function EditPlan() {
                     <div key={exId} className="p-4 border border-black/20 rounded-lg flex items-start justify-between">
                       <div className="flex items-start gap-4 flex-1">
                         {mediaUrl && (
-                          <img 
-                            src={mediaUrl} 
-                            alt={exercise.name}
-                            className="w-16 h-16 object-cover rounded"
-                          />
+                          /\.(mp4|webm|mov)(\?|$)/i.test(mediaUrl) ? (
+                            <video
+                              src={mediaUrl}
+                              className="w-16 h-16 object-cover rounded"
+                              muted
+                              loop
+                              autoPlay
+                              playsInline
+                            />
+                          ) : (
+                            <img
+                              src={mediaUrl}
+                              alt={exercise.name}
+                              className="w-16 h-16 object-cover rounded"
+                            />
+                          )
                         )}
                         <div className="flex-1">
                           <h4 className="font-medium capitalize mb-1">

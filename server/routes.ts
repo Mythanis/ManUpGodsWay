@@ -286,16 +286,21 @@ const documentUpload = multer({
   }
 });
 
-// Configure multer for exercise media uploads (images/gifs) — memory storage → Object Storage
+// Allowed mime types for exercise media (single & bulk)
+const EXERCISE_MEDIA_MIMES = [
+  'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
+  'video/mp4', 'video/quicktime', 'video/webm',
+];
+
+// Configure multer for exercise media uploads (images/gifs/video) — memory storage → Object Storage
 const exerciseMediaUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 15 * 1024 * 1024 }, // 15 MB
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB (videos can be larger than gifs)
   fileFilter: function (req, file, cb) {
-    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-    if (allowed.includes(file.mimetype)) {
+    if (EXERCISE_MEDIA_MIMES.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only image/GIF files are allowed for exercise media'));
+      cb(new Error('Only image, GIF, or MP4/WebM video files are allowed for exercise media'));
     }
   },
 });
@@ -10191,6 +10196,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Internal server error' });
     }
   });
+
+  // Bulk import media files — match each uploaded file by its filename to
+  // the exercise whose `mediaFile` column equals that name (e.g. "0001_push-up.gif").
+  // Matched files are uploaded to public object storage and the exercise's
+  // `mediaFile` column is updated to the new storage URL.
+  app.post(
+    '/api/admin/exercises/bulk-media',
+    isAuthenticated,
+    requireAdmin,
+    exerciseMediaUpload.array('files', 500),
+    async (req: any, res) => {
+      try {
+        const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+        if (files.length === 0) return res.status(400).json({ message: 'No files uploaded' });
+
+        const matched: Array<{ filename: string; exerciseId: number; exerciseName: string; url: string }> = [];
+        const unmatched: string[] = [];
+        const failed: Array<{ filename: string; error: string }> = [];
+
+        for (const file of files) {
+          const filename = file.originalname;
+          try {
+            // Match exercise where stored mediaFile equals the uploaded basename
+            const [exercise] = await db
+              .select()
+              .from(schema.exercises)
+              .where(eq(schema.exercises.mediaFile, filename));
+
+            if (!exercise) {
+              unmatched.push(filename);
+              continue;
+            }
+
+            // Upload to object storage under a stable key per exercise
+            const ext = filename.split('.').pop()?.toLowerCase() || 'bin';
+            const key = `exercises/${exercise.id}-${Date.now()}.${ext}`;
+            const newUrl = await uploadPublicFile(file.buffer, key, file.mimetype);
+
+            // If a previous storage-backed file existed, remove it
+            if (exercise.mediaFile && isStorageUrl(exercise.mediaFile)) {
+              await deleteStorageFile(exercise.mediaFile).catch(() => {});
+            }
+
+            await db
+              .update(schema.exercises)
+              .set({ mediaFile: newUrl, updatedAt: new Date() })
+              .where(eq(schema.exercises.id, exercise.id));
+
+            matched.push({ filename, exerciseId: exercise.id, exerciseName: exercise.name, url: newUrl });
+          } catch (err: any) {
+            console.error(`Bulk media upload failed for ${filename}:`, err);
+            failed.push({ filename, error: err?.message || 'Upload failed' });
+          }
+        }
+
+        res.json({
+          message: 'Bulk media import complete',
+          totals: { uploaded: matched.length, unmatched: unmatched.length, failed: failed.length, received: files.length },
+          matched,
+          unmatched,
+          failed,
+        });
+      } catch (error) {
+        console.error('Error during bulk media import:', error);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+  );
 
   // ── End admin exercise management ─────────────────────────────────────
 

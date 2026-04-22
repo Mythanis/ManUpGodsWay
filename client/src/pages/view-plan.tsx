@@ -375,12 +375,24 @@ export default function ViewPlan() {
                         {/* Exercise Image/GIF */}
                         <div className="flex-shrink-0">
                           {exercise.imageUrl ? (
-                            <img
-                              src={exercise.imageUrl}
-                              alt={exercise.exerciseName}
-                              className="w-20 h-20 rounded-lg object-cover border border-ministry-charcoal"
-                              data-testid={`img-exercise-${exercise.exerciseId}`}
-                            />
+                            /\.(mp4|webm|mov)(\?|$)/i.test(exercise.imageUrl) ? (
+                              <video
+                                src={exercise.imageUrl}
+                                className="w-20 h-20 rounded-lg object-cover border border-ministry-charcoal"
+                                muted
+                                loop
+                                autoPlay
+                                playsInline
+                                data-testid={`video-exercise-${exercise.exerciseId}`}
+                              />
+                            ) : (
+                              <img
+                                src={exercise.imageUrl}
+                                alt={exercise.exerciseName}
+                                className="w-20 h-20 rounded-lg object-cover border border-ministry-charcoal"
+                                data-testid={`img-exercise-${exercise.exerciseId}`}
+                              />
+                            )
                           ) : (
                             <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center border border-ministry-charcoal">
                               <Dumbbell className="w-8 h-8 text-muted-foreground" />
