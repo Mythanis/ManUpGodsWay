@@ -1697,9 +1697,17 @@ export default function Fitness() {
     // resulting pool is too small (see expandPoolIfNeeded). Callers can
     // also pass `levelsOverride` to fetch a specific set of levels
     // directly.
+    // Normalize every level value to the DB's canonical capitalization
+    // ("Intermediate", not "intermediate"). The exercises table uses a
+    // case-sensitive equality match, so any lowercase value silently
+    // returns zero rows. This applies to both the default selectedLevel
+    // path AND the levelsOverride path (callers pass raw lowercase
+    // values from the level <Select>).
+    const canonicalizeLevel = (raw: string) =>
+      raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
     const levelsToInclude: string[] = levelsOverride && levelsOverride.length > 0
-      ? levelsOverride
-      : [selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1).toLowerCase()];
+      ? levelsOverride.map(canonicalizeLevel)
+      : [canonicalizeLevel(selectedLevel)];
 
     const levelParam = levelsToInclude.join(',');
     
