@@ -1630,11 +1630,14 @@ export default function Fitness() {
     const warmupCount         = openingStretchCount + mainWarmupCount;
 
     // Per-set seconds — single source of truth used both to size the budget
-    // and to compute final session time. For HIIT/Tabata we use the actual
-    // emitted work + rest per set so playback time matches the budget.
+    // and to compute the final session time so the player actually hits the
+    // requested duration. For HIIT/Tabata this is the real emitted
+    // work + rest per set (Tabata's 20s+10s protocol is 30s/set, which
+    // diverges from the spec's "~1 min/set" hint but preserves the classic
+    // protocol the user explicitly opted into via the Tabata level option).
     let perSetSec: number;
     if (workoutStyle === 'hiit') {
-      perSetSec = hiitWork + hiitRest;        // Tabata 30s, Adv HIIT 40s, Int 50s, Beg 60s
+      perSetSec = hiitWork + hiitRest;        // Tabata 30s, Adv 40s, Int 50s, Beg 60s
     } else if (isStretchingOnly) {
       perSetSec = 45;                          // 30s hold + 15s transition
     } else {
@@ -1838,17 +1841,23 @@ export default function Fitness() {
           while (dayExercises.length > cap) dayExercises.pop();
         }
 
-        // Distribute the budgeted totalWorkingSets exactly across the main
-        // exercises that were just emitted. This is the post-emission pass
-        // that turns "13 sets across 5 exercises" into 3+3+3+2+2 instead of
-        // dropping the remainder via floor division.
-        const mainStart = warmupCount;
-        const mainCount = dayExercises.length - mainStart;
-        if (mainCount > 0) {
-          const baseSets  = Math.max(1, Math.floor(totalWorkingSets / mainCount));
-          const extraSets = Math.max(0, totalWorkingSets - baseSets * mainCount);
-          for (let i = 0; i < mainCount; i++) {
-            dayExercises[mainStart + i].sets = baseSets + (i < extraSets ? 1 : 0);
+        // For STANDARD (rep-based) sessions only, distribute the budgeted
+        // totalWorkingSets exactly across the main exercises. This turns
+        // "13 sets across 5 exercises" into 3+3+3+2+2 instead of dropping
+        // the remainder via floor division. HIIT/Tabata rounds and stretch
+        // sets are protocol constants and are NOT mutated here — for those
+        // styles, exercise count is sized so emitted sets stay close to the
+        // budget (the safety-net trim below handles any over-fill).
+        const isStandardStyle = !isStretchingOnly && workoutStyle !== 'hiit';
+        if (isStandardStyle) {
+          const mainStart = warmupCount;
+          const mainCount = dayExercises.length - mainStart;
+          if (mainCount > 0) {
+            const baseSets  = Math.max(1, Math.floor(totalWorkingSets / mainCount));
+            const extraSets = Math.max(0, totalWorkingSets - baseSets * mainCount);
+            for (let i = 0; i < mainCount; i++) {
+              dayExercises[mainStart + i].sets = baseSets + (i < extraSets ? 1 : 0);
+            }
           }
         }
 
