@@ -10352,7 +10352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Delete every storage-backed media file referenced by exercises and
   // clear the mediaFile column. Leaves the exercise rows themselves intact.
-  app.delete('/api/admin/exercises/all-media', isAuthenticated, requireAdmin, async (req: any, res) => {
+  app.delete('/api/admin/exercise-media/clear-all', isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
       const rows = await db.select().from(schema.exercises);
       let deleted = 0;

@@ -233,7 +233,7 @@ export default function FitnessManagement() {
   });
 
   const clearAllMediaMutation = useMutation({
-    mutationFn: async () => apiRequest("DELETE", "/api/admin/exercises/all-media"),
+    mutationFn: async () => apiRequest("DELETE", "/api/admin/exercise-media/clear-all"),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
       setShowClearMediaConfirm(false);
