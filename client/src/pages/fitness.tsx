@@ -1949,6 +1949,11 @@ export default function Fitness() {
     };
     const COOLDOWN_HOLD          = COOLDOWN_HOLD_BY_LEVEL[levelKey];
     const COOLDOWN_TRANSITION    = 10;   // 10s buffer between cooldown stretches
+    // 10s preview shown by the workout player before EACH main-workout
+    // exercise's first set (mp4 + name + 3-2-1 countdown beeps). We budget
+    // it once per main-workout exercise so the requested duration matches
+    // the actual on-screen session time.
+    const MAIN_EXERCISE_PREVIEW  = 10;
 
     // Block sizes per spec (count, not duration).
     // Standard / HIIT: opening stretch (5) + warm-up cardio (3) + cooldown (5).
@@ -1962,11 +1967,28 @@ export default function Fitness() {
     const openingStretchCount = isStretchingOnly ? 0 : 5;     // spec 4-6
     const mainWarmupCount     = isStretchingOnly ? 0 : 3;     // spec 2-3
     const cooldownCount       = isStretchingOnly ? 0 : 5;     // spec 4-6
+    // Reserve 10s per main-workout exercise for the inter-exercise
+    // preview the player shows (mp4 + name + 3-2-1 countdown beeps).
+    // Sized to the upper bound of the spec-table exercise counts at each
+    // duration so the budget always covers the actual emitted plan;
+    // anything not used by previews falls back into the working budget
+    // implicitly via the trim pass.
+    const PREVIEW_BUDGET_BY_DUR: Record<number, number> = {
+      30: 6, 45: 7, 60: 9, 90: 12,
+    };
+    const _previewDurKey = ([30, 45, 60, 90] as const).reduce(
+      (best, d) => Math.abs(d - durationMin) < Math.abs(best - durationMin) ? d : best,
+      30 as 30 | 45 | 60 | 90,
+    );
+    const mainPreviewSec = isStretchingOnly
+      ? 0
+      : PREVIEW_BUDGET_BY_DUR[_previewDurKey] * MAIN_EXERCISE_PREVIEW;
     const mandatorySec =
       openingStretchCount * (OPENING_STRETCH_HOLD + OPENING_TRANSITION) +
       mainWarmupCount     * (WARMUP_CARDIO_HOLD   + WARMUP_TRANSITION) +
       cooldownCount       * (COOLDOWN_HOLD        + COOLDOWN_TRANSITION) +
-      STRETCHING_LIGHT_MOVEMENT_COUNT * STRETCHING_LIGHT_MOVEMENT_HOLD;
+      STRETCHING_LIGHT_MOVEMENT_COUNT * STRETCHING_LIGHT_MOVEMENT_HOLD +
+      mainPreviewSec;
     const workingSec = Math.max(60, totalSec - mandatorySec);
 
     // Combined pre-workout count (opening stretch + warm-up cardio).
