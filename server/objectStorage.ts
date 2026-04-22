@@ -190,7 +190,8 @@ export function isStorageUrl(url: string | null | undefined): boolean {
  */
 export async function streamPublicFileFromStorage(
   objectName: string,
-  res: Response
+  res: Response,
+  rangeHeader?: string
 ): Promise<void> {
   const bucketName = getBucketName();
   const bucket = objectStorageClient.bucket(bucketName);
@@ -204,13 +205,68 @@ export async function streamPublicFileFromStorage(
 
   const [metadata] = await file.getMetadata();
   const contentType = (metadata.contentType as string) || "application/octet-stream";
-  const fileSize = metadata.size as string;
+  const totalSize = Number(metadata.size);
 
-  res.set({
+  // Parse a Range header like "bytes=0-1023" or "bytes=500-". Required for
+  // <video>/<audio> playback in Safari/iOS — without HTTP 206 responses the
+  // browser treats the file as unseekable and refuses to play.
+  let start = 0;
+  let end = totalSize - 1;
+  let isPartial = false;
+
+  if (rangeHeader && /^bytes=/.test(rangeHeader) && Number.isFinite(totalSize) && totalSize > 0) {
+    const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader.trim());
+    if (match) {
+      const startStr = match[1];
+      const endStr = match[2];
+      if (startStr === "" && endStr !== "") {
+        // Suffix range: last N bytes
+        const suffix = Number(endStr);
+        start = Math.max(0, totalSize - suffix);
+        end = totalSize - 1;
+      } else if (startStr !== "") {
+        start = Number(startStr);
+        end = endStr !== "" ? Number(endStr) : totalSize - 1;
+      }
+      if (
+        Number.isFinite(start) &&
+        Number.isFinite(end) &&
+        start >= 0 &&
+        end < totalSize &&
+        start <= end
+      ) {
+        isPartial = true;
+      } else {
+        // Unsatisfiable range
+        res.status(416).set({
+          "Content-Range": `bytes */${totalSize}`,
+          "Accept-Ranges": "bytes",
+        });
+        res.end();
+        return;
+      }
+    }
+  }
+
+  const baseHeaders: Record<string, string> = {
     "Content-Type": contentType,
-    "Content-Length": fileSize,
+    "Accept-Ranges": "bytes",
     "Cache-Control": "public, max-age=31536000, immutable",
-  });
+  };
 
-  file.createReadStream().pipe(res);
+  if (isPartial) {
+    const chunkSize = end - start + 1;
+    res.status(206).set({
+      ...baseHeaders,
+      "Content-Range": `bytes ${start}-${end}/${totalSize}`,
+      "Content-Length": String(chunkSize),
+    });
+    file.createReadStream({ start, end }).pipe(res);
+  } else {
+    res.status(200).set({
+      ...baseHeaders,
+      "Content-Length": String(totalSize),
+    });
+    file.createReadStream().pipe(res);
+  }
 }

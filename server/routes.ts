@@ -412,7 +412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const filePath = req.params[0] as string;
       if (!filePath) return res.status(400).json({ message: "No file path specified" });
       const objectName = `public/uploads/${filePath}`;
-      await streamPublicFileFromStorage(objectName, res);
+      await streamPublicFileFromStorage(objectName, res, req.headers.range);
     } catch (error) {
       console.error("[MediaProxy] Error serving public file:", error);
       if (!res.headersSent) res.status(500).json({ message: "Failed to serve file" });
