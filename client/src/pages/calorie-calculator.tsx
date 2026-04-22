@@ -116,8 +116,6 @@ export default function CalorieCalculator() {
   const [step, setStep] = useState<Step>("disclaimer");
   const [acknowledged, setAcknowledged] = useState(false);
   const [contra, setContra] = useState({
-    pregnant: false,
-    breastfeeding: false,
     under18: false,
     eatingDisorder: false,
     medical: false,
@@ -237,8 +235,6 @@ export default function CalorieCalculator() {
             <div className="space-y-2 pt-1">
               {([
                 ["under18", "I am under 18 years old"],
-                ["pregnant", "I am pregnant"],
-                ["breastfeeding", "I am breastfeeding"],
                 ["eatingDisorder", "I have a history of an eating disorder"],
                 ["medical", "I have a medical condition (diabetes, kidney, liver, heart, thyroid) or take medication affecting appetite/metabolism"],
               ] as const).map(([key, label]) => (
