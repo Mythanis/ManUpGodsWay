@@ -11443,6 +11443,228 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // -----------------------------------------------------------------
+  // Manual difficulty overrides
+  // -----------------------------------------------------------------
+  // The user pulls the "Fine-tune your workout difficulty" sliders
+  // (rest ±5s, intensity ±2 reps, volume ±1 set). We apply the deltas
+  // to every exercise in the plan immediately, log each change with
+  // direction='manual' so the audit trail can distinguish manual vs
+  // automatic adjustments, and explicitly do NOT touch the streak
+  // counter — manual tweaks coexist with the automatic engine.
+  app.post('/api/fitness-plans/:planId/manual-override', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) return res.status(404).json({ message: 'Fitness plan not found' });
+      if (plan.userId !== user.id) return res.status(403).json({ message: 'Access denied' });
+
+      const restDeltaRaw = Number(req.body?.restDelta ?? 0);
+      const repsDeltaRaw = Number(req.body?.repsDelta ?? 0);
+      const setsDeltaRaw = Number(req.body?.setsDelta ?? 0);
+      const workoutType = (req.body?.workoutType ?? 'standard').toString();
+
+      // Clamp + snap inputs. UI uses 5-sec steps for rest, 2-rep steps
+      // for intensity, 1-set steps for volume.
+      const restDelta = Math.max(-60, Math.min(60, Math.round(restDeltaRaw / 5) * 5));
+      const repsDelta = Math.max(-6, Math.min(6, Math.round(repsDeltaRaw / 2) * 2));
+      const setsDelta = Math.max(-3, Math.min(3, Math.round(setsDeltaRaw)));
+
+      if (restDelta === 0 && repsDelta === 0 && setsDelta === 0) {
+        return res.status(400).json({ message: 'No changes — pick a slider value' });
+      }
+
+      const exercises = await storage.getFitnessPlanExercises(plan.id);
+      const changes: Array<{
+        planExerciseId: string;
+        exerciseName: string;
+        field: 'restTime' | 'reps' | 'sets';
+        before: string;
+        after: string;
+      }> = [];
+
+      // Helper: add a delta to a reps string. "10"→"12", "10-12"→"12-14".
+      // Time-based reps ("30 seconds", "30s", "1 minute") are left alone
+      // because intensity-by-reps is meaningless for them.
+      const adjustReps = (current: string, delta: number): string | null => {
+        const trimmed = (current || '').trim();
+        if (!trimmed) return null;
+        if (/[a-zA-Z]/.test(trimmed)) return null; // time-based
+        const range = trimmed.match(/^(\d+)\s*-\s*(\d+)$/);
+        if (range) {
+          const lo = Math.max(1, parseInt(range[1], 10) + delta);
+          const hi = Math.max(lo, parseInt(range[2], 10) + delta);
+          return `${lo}-${hi}`;
+        }
+        const num = trimmed.match(/^\d+$/);
+        if (num) {
+          const v = Math.max(1, parseInt(trimmed, 10) + delta);
+          return String(v);
+        }
+        return null;
+      };
+
+      for (const ex of exercises) {
+        const updates: Partial<{ restTime: number; reps: string; sets: number }> = {};
+
+        if (restDelta !== 0 && typeof ex.restTime === 'number') {
+          const next = Math.max(10, Math.min(300, ex.restTime + restDelta));
+          if (next !== ex.restTime) {
+            updates.restTime = next;
+            changes.push({
+              planExerciseId: ex.id,
+              exerciseName: ex.exerciseName,
+              field: 'restTime',
+              before: String(ex.restTime),
+              after: String(next),
+            });
+          }
+        }
+
+        if (repsDelta !== 0 && ex.reps != null) {
+          const nextReps = adjustReps(String(ex.reps), repsDelta);
+          if (nextReps && nextReps !== String(ex.reps)) {
+            updates.reps = nextReps;
+            changes.push({
+              planExerciseId: ex.id,
+              exerciseName: ex.exerciseName,
+              field: 'reps',
+              before: String(ex.reps),
+              after: nextReps,
+            });
+          }
+        }
+
+        if (setsDelta !== 0 && typeof ex.sets === 'number') {
+          const next = Math.max(1, Math.min(10, ex.sets + setsDelta));
+          if (next !== ex.sets) {
+            updates.sets = next;
+            changes.push({
+              planExerciseId: ex.id,
+              exerciseName: ex.exerciseName,
+              field: 'sets',
+              before: String(ex.sets),
+              after: String(next),
+            });
+          }
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await storage.updatePlanExercise(ex.id, updates);
+        }
+      }
+
+      // Persist to the audit log with direction='manual'. leverId 0
+      // is reserved for manual entries so they can be filtered easily
+      // and never collide with automatic levers (1–6).
+      let batchId: string | null = null;
+      if (changes.length > 0) {
+        batchId = await logAdjustmentBatch(
+          {
+            planId: plan.id,
+            userId: user.id,
+            workoutType,
+            leverId: 0,
+            // Cast — schema column is constrained to easier|harder in
+            // TS but the underlying varchar accepts 'manual' and we
+            // distinguish it via leverId=0 elsewhere.
+            direction: 'manual' as any,
+          },
+          changes.map(c => ({
+            planExerciseId: c.planExerciseId,
+            exerciseName: c.exerciseName,
+            field: c.field,
+            before: c.before,
+            after: c.after,
+          })) as any,
+        );
+      }
+
+      console.log(
+        `[manualOverride] user=${user.id} plan=${plan.id} restDelta=${restDelta} repsDelta=${repsDelta} setsDelta=${setsDelta} changes=${changes.length} batch=${batchId ?? 'none'}`,
+      );
+
+      res.json({
+        ok: true,
+        applied: changes.length > 0,
+        batchId,
+        restDelta,
+        repsDelta,
+        setsDelta,
+        changes,
+      });
+    } catch (error) {
+      console.error('Error applying manual override:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // "Reset to default for my level" — rewinds every un-rolled-back
+  // adjustment (manual or automatic) back to the original baselines.
+  // Re-uses the full-rollback engine with a distinct reason so it shows
+  // up clearly in the audit history.
+  app.post('/api/fitness-plans/:planId/reset-defaults', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) return res.status(404).json({ message: 'Fitness plan not found' });
+      if (plan.userId !== user.id) return res.status(403).json({ message: 'Access denied' });
+
+      const result = await fullRollback({ planId: plan.id, reason: 'reset_to_default' });
+      console.log(`[resetDefaults] user=${user.id} plan=${plan.id} entries=${result.entries} batches=${result.batches}`);
+      res.json({ ok: true, ...result });
+    } catch (error) {
+      console.error('Error resetting to defaults:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Adjustment history — read-only audit feed for the "See my
+  // adjustment history" link. Returns newest first, capped at 50, with
+  // a `source` discriminator (manual vs automatic) so the UI can render
+  // them differently.
+  app.get('/api/fitness-plans/:planId/adjustment-history', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) return res.status(404).json({ message: 'Fitness plan not found' });
+      if (plan.userId !== user.id) return res.status(403).json({ message: 'Access denied' });
+
+      const rows = await dbForLever6
+        .select()
+        .from(workoutAdjustmentLog)
+        .where(eqForLever6(workoutAdjustmentLog.planId, plan.id))
+        .orderBy(desc(workoutAdjustmentLog.appliedAt))
+        .limit(50);
+
+      const history = rows.map(r => ({
+        id: r.id,
+        appliedAt: r.appliedAt,
+        source: r.leverId === 0 ? 'manual' : 'automatic',
+        leverId: r.leverId,
+        direction: r.direction,
+        field: r.field,
+        exerciseName: r.exerciseName,
+        before: r.beforeVal,
+        after: r.afterVal,
+        batchId: r.batchId,
+        rolledBackAt: r.rolledBackAt,
+        rollbackReason: r.rollbackReason,
+      }));
+
+      res.json({ history });
+    } catch (error) {
+      console.error('Error loading adjustment history:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Unmark exercise as complete
   app.delete('/api/fitness-plans/:planId/exercises/:exerciseId/complete', isAuthenticated, async (req: any, res) => {
     try {

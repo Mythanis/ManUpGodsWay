@@ -55,7 +55,11 @@ import {
   Utensils,
   Flame,
   PlusCircle,
+  SlidersHorizontal,
+  History,
+  RotateCcw,
 } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import { format, isToday, isPast, isFuture } from "date-fns";
 import { Link } from "wouter";
 import seanMcManusPhoto from "@assets/531400631_10229732604879918_951068179454150284_n_1766855745199.jpeg";
@@ -232,6 +236,31 @@ export default function Fitness() {
   // Plan-detail dialog (today's exercises preview)
   const [detailPlan, setDetailPlan] = useState<FitnessPlan | null>(null);
   const [detailExercises, setDetailExercises] = useState<FitnessPlanExercise[]>([]);
+
+  // Manual override / fine-tune dialog state. The sliders work in
+  // deltas (rest ±5s, intensity ±2 reps, volume ±1 set) and are sent
+  // to /manual-override which applies them immediately. The history
+  // dialog reads /adjustment-history.
+  const [tunePlan, setTunePlan] = useState<FitnessPlan | null>(null);
+  const [restDelta, setRestDelta] = useState(0);
+  const [repsDelta, setRepsDelta] = useState(0);
+  const [setsDelta, setSetsDelta] = useState(0);
+  const [tuneSubmitting, setTuneSubmitting] = useState(false);
+  const [historyPlan, setHistoryPlan] = useState<FitnessPlan | null>(null);
+  const [historyRows, setHistoryRows] = useState<Array<{
+    id: string;
+    appliedAt: string;
+    source: 'manual' | 'automatic';
+    leverId: number;
+    direction: string;
+    field: string;
+    exerciseName: string | null;
+    before: string | null;
+    after: string | null;
+    rolledBackAt: string | null;
+    rollbackReason: string | null;
+  }>>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   
   // Pre-built Plans state
   const [selectedLevel, setSelectedLevel] = useState<string>('');
@@ -4965,6 +4994,264 @@ export default function Fitness() {
             <Play className="w-5 h-5 mr-2 fill-black" />
             Start Workout
           </Button>
+          {/* Manual override entry point — opens the Fine-tune dialog
+              and seeds it with this plan. Hidden until a plan is loaded. */}
+          {detailPlan && (
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <Button
+                onClick={() => {
+                  setRestDelta(0);
+                  setRepsDelta(0);
+                  setSetsDelta(0);
+                  setTunePlan(detailPlan);
+                }}
+                variant="outline"
+                size="sm"
+                className="flex-1 font-black uppercase tracking-wide text-xs"
+                data-testid="button-open-finetune"
+              >
+                <SlidersHorizontal className="w-4 h-4 mr-2" />
+                Fine-tune difficulty
+              </Button>
+              <Button
+                onClick={async () => {
+                  if (!detailPlan) return;
+                  setHistoryPlan(detailPlan);
+                  setHistoryLoading(true);
+                  try {
+                    const res = await apiRequest('GET', `/api/fitness-plans/${detailPlan.id}/adjustment-history`);
+                    const data = await res.json();
+                    setHistoryRows(data?.history ?? []);
+                  } catch {
+                    setHistoryRows([]);
+                  } finally {
+                    setHistoryLoading(false);
+                  }
+                }}
+                variant="ghost"
+                size="sm"
+                className="text-xs underline"
+                data-testid="button-open-history"
+              >
+                <History className="w-4 h-4 mr-1" />
+                History
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Fine-tune your workout difficulty (Manual Override) */}
+      <Dialog open={!!tunePlan} onOpenChange={(open) => { if (!open) setTunePlan(null); }}>
+        <DialogContent className="bg-zinc-950 border-2 border-[#FCD000] text-white sm:max-w-md" data-testid="dialog-finetune">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black uppercase">Fine-tune your workout difficulty</DialogTitle>
+            <DialogDescription className="text-white/60">
+              Manual tweaks apply to your next session. They won't disturb the streak counter and are logged separately from automatic adjustments.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {/* Rest time slider — 5-second increments, ±60s range */}
+            <div data-testid="slider-rest-row">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-black uppercase tracking-widest text-[#FCD000]">Rest time</label>
+                <span className="text-xs font-bold tabular-nums text-white/80" data-testid="text-rest-delta">
+                  {restDelta > 0 ? `+${restDelta}` : restDelta}s
+                </span>
+              </div>
+              <Slider
+                value={[restDelta]}
+                onValueChange={(v) => setRestDelta(v[0] ?? 0)}
+                min={-60}
+                max={60}
+                step={5}
+                data-testid="slider-rest"
+              />
+              <div className="flex justify-between text-[10px] text-white/40 mt-1 uppercase">
+                <span>shorter</span>
+                <span>longer</span>
+              </div>
+            </div>
+
+            {/* Intensity slider — ±2 reps per click */}
+            <div data-testid="slider-reps-row">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-black uppercase tracking-widest text-[#FCD000]">Intensity (reps)</label>
+                <span className="text-xs font-bold tabular-nums text-white/80" data-testid="text-reps-delta">
+                  {repsDelta > 0 ? `+${repsDelta}` : repsDelta}
+                </span>
+              </div>
+              <Slider
+                value={[repsDelta]}
+                onValueChange={(v) => setRepsDelta(v[0] ?? 0)}
+                min={-6}
+                max={6}
+                step={2}
+                data-testid="slider-reps"
+              />
+              <div className="flex justify-between text-[10px] text-white/40 mt-1 uppercase">
+                <span>lighter</span>
+                <span>heavier</span>
+              </div>
+            </div>
+
+            {/* Volume slider — ±1 set per click */}
+            <div data-testid="slider-sets-row">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-black uppercase tracking-widest text-[#FCD000]">Volume (sets)</label>
+                <span className="text-xs font-bold tabular-nums text-white/80" data-testid="text-sets-delta">
+                  {setsDelta > 0 ? `+${setsDelta}` : setsDelta}
+                </span>
+              </div>
+              <Slider
+                value={[setsDelta]}
+                onValueChange={(v) => setSetsDelta(v[0] ?? 0)}
+                min={-3}
+                max={3}
+                step={1}
+                data-testid="slider-sets"
+              />
+              <div className="flex justify-between text-[10px] text-white/40 mt-1 uppercase">
+                <span>less</span>
+                <span>more</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Button
+              disabled={tuneSubmitting || (restDelta === 0 && repsDelta === 0 && setsDelta === 0)}
+              onClick={async () => {
+                if (!tunePlan) return;
+                setTuneSubmitting(true);
+                try {
+                  const res = await apiRequest('POST', `/api/fitness-plans/${tunePlan.id}/manual-override`, {
+                    restDelta, repsDelta, setsDelta,
+                  });
+                  const data: any = await res.json();
+                  toast({
+                    title: 'Tuned',
+                    description: `${data?.changes?.length ?? 0} exercise${(data?.changes?.length ?? 0) === 1 ? '' : 's'} updated. Applies next session.`,
+                  });
+                  queryClient.invalidateQueries({ queryKey: ['api', 'fitness-plans'] });
+                  setTunePlan(null);
+                } catch (err) {
+                  const message = err instanceof Error ? err.message : 'Failed to apply';
+                  toast({ title: 'Could not apply', description: message, variant: 'destructive' });
+                } finally {
+                  setTuneSubmitting(false);
+                }
+              }}
+              className="bg-[#FCD000] text-black font-black uppercase border-2 border-black"
+              data-testid="button-apply-finetune"
+            >
+              Apply to next session
+            </Button>
+            <Button
+              disabled={tuneSubmitting}
+              variant="outline"
+              onClick={async () => {
+                if (!tunePlan) return;
+                setTuneSubmitting(true);
+                try {
+                  const res = await apiRequest('POST', `/api/fitness-plans/${tunePlan.id}/reset-defaults`);
+                  const data: any = await res.json();
+                  toast({
+                    title: 'Reset',
+                    description: `Restored ${data?.entries ?? 0} change${(data?.entries ?? 0) === 1 ? '' : 's'} back to defaults for your level.`,
+                  });
+                  queryClient.invalidateQueries({ queryKey: ['api', 'fitness-plans'] });
+                  setTunePlan(null);
+                } catch (err) {
+                  const message = err instanceof Error ? err.message : 'Failed to reset';
+                  toast({ title: 'Could not reset', description: message, variant: 'destructive' });
+                } finally {
+                  setTuneSubmitting(false);
+                }
+              }}
+              className="font-black uppercase tracking-wide text-xs"
+              data-testid="button-reset-defaults"
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reset to default for my level
+            </Button>
+            <button
+              onClick={async () => {
+                if (!tunePlan) return;
+                setHistoryPlan(tunePlan);
+                setHistoryLoading(true);
+                setTunePlan(null);
+                try {
+                  const res = await apiRequest('GET', `/api/fitness-plans/${tunePlan.id}/adjustment-history`);
+                  const data = await res.json();
+                  setHistoryRows(data?.history ?? []);
+                } catch {
+                  setHistoryRows([]);
+                } finally {
+                  setHistoryLoading(false);
+                }
+              }}
+              className="text-xs text-white/60 underline mt-1"
+              data-testid="link-see-history"
+            >
+              See my adjustment history
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Adjustment history — read-only audit feed. Manual entries
+          are tagged in yellow, automatic ones in white. */}
+      <Dialog open={!!historyPlan} onOpenChange={(open) => { if (!open) { setHistoryPlan(null); setHistoryRows([]); } }}>
+        <DialogContent className="bg-zinc-950 border-2 border-[#FCD000] text-white sm:max-w-lg max-h-[80vh] overflow-y-auto" data-testid="dialog-history">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black uppercase">Adjustment history</DialogTitle>
+            <DialogDescription className="text-white/60">
+              Most recent first. Manual entries are highlighted; everything else is from the automatic system.
+            </DialogDescription>
+          </DialogHeader>
+          {historyLoading ? (
+            <p className="text-white/60 text-sm py-6 text-center">Loading…</p>
+          ) : historyRows.length === 0 ? (
+            <p className="text-white/60 text-sm py-6 text-center" data-testid="text-history-empty">
+              No adjustments yet. Once you give workout feedback or fine-tune your settings, the history will appear here.
+            </p>
+          ) : (
+            <ul className="space-y-2" data-testid="list-history">
+              {historyRows.map((row) => {
+                const ts = row.appliedAt ? new Date(row.appliedAt) : null;
+                const dateLabel = ts ? format(ts, 'MMM d, h:mm a') : '';
+                const rolledBack = !!row.rolledBackAt;
+                return (
+                  <li
+                    key={row.id}
+                    className={`p-3 border-2 rounded-sm ${row.source === 'manual' ? 'border-[#FCD000]/60 bg-[#FCD000]/5' : 'border-white/15 bg-white/5'} ${rolledBack ? 'opacity-50' : ''}`}
+                    data-testid={`row-history-${row.id}`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`text-[10px] uppercase font-black tracking-widest ${row.source === 'manual' ? 'text-[#FCD000]' : 'text-white/70'}`}>
+                        {row.source === 'manual' ? 'Manual' : `Lever ${row.leverId} · ${row.direction}`}
+                      </span>
+                      <span className="text-[10px] text-white/50 tabular-nums">{dateLabel}</span>
+                    </div>
+                    <p className="text-sm text-white/90">
+                      <span className="font-bold">{row.exerciseName ?? '—'}</span>{' '}
+                      <span className="text-white/60">{row.field}:</span>{' '}
+                      <span className="tabular-nums">{row.before ?? '∅'}</span>
+                      {' → '}
+                      <span className="tabular-nums">{row.after ?? '∅'}</span>
+                    </p>
+                    {rolledBack && (
+                      <p className="text-[10px] text-white/40 mt-1 uppercase">
+                        Rolled back ({row.rollbackReason ?? 'unknown'})
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </DialogContent>
       </Dialog>
 
