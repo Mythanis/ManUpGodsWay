@@ -217,6 +217,9 @@ export default function Fitness() {
   const [playerOpen, setPlayerOpen] = useState(false);
   const [playerPlan, setPlayerPlan] = useState<FitnessPlan | null>(null);
   const [playerExercises, setPlayerExercises] = useState<FitnessPlanExercise[]>([]);
+  // Plan-detail dialog (today's exercises preview)
+  const [detailPlan, setDetailPlan] = useState<FitnessPlan | null>(null);
+  const [detailExercises, setDetailExercises] = useState<FitnessPlanExercise[]>([]);
   
   // Pre-built Plans state
   const [selectedLevel, setSelectedLevel] = useState<string>('');
@@ -504,12 +507,14 @@ export default function Fitness() {
     const currentWeek = getCurrentWeek(plan, plan.exercises);
     const sortedAllExercises = (plan.exercises || []).slice().sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
     
-    // Detect whether this plan has explicit weekNumber metadata
-    const hasWeekMeta = sortedAllExercises.some(e => (e as any).weekNumber);
+    // Detect whether this plan has explicit weekNumber metadata.
+    // weekNumber defaults to 1 in DB, so treat presence of any value > 1
+    // (or any non-null assignment) as evidence of week metadata.
+    const hasWeekMeta = sortedAllExercises.some(e => e.weekNumber != null && e.weekNumber > 1);
     
     let candidate: FitnessPlanExercise[];
     if (hasWeekMeta) {
-      candidate = sortedAllExercises.filter(e => ((e as any).weekNumber || 1) === currentWeek);
+      candidate = sortedAllExercises.filter(e => (e.weekNumber ?? 1) === currentWeek);
     } else {
       candidate = sortedAllExercises.filter((exercise, index) =>
         getExerciseWeek(sortedAllExercises, index) === currentWeek
@@ -1505,14 +1510,22 @@ export default function Fitness() {
     bodyPart: string, 
     count: number, 
     usedIds: Set<string>,
-    preferredEquipment?: string[]
+    preferredEquipment?: string[],
+    avoidIds?: Set<string>
   ): APIExercise[] {
-    // Filter by body part and exclude already used exercises
-    let filtered = allExercises.filter(
+    // Body-part filter, excluding within-week used
+    const baseByPart = allExercises.filter(
       e => e.bodyPart.toLowerCase() === bodyPart.toLowerCase() && !usedIds.has(e.id)
     );
+
+    // Try to exclude program-level used (cross-week diversity) first.
+    // If that pool is too small, fall back to allowing repeats.
+    let filtered = avoidIds && avoidIds.size > 0
+      ? baseByPart.filter(e => !avoidIds.has(e.id))
+      : baseByPart;
+    if (filtered.length < count) filtered = baseByPart;
     
-    // If preferred equipment specified, prioritize those
+    // Prefer requested equipment when available
     if (preferredEquipment && preferredEquipment.length > 0) {
       const withPreferredEquipment = filtered.filter(e => 
         preferredEquipment.includes(e.equipment.toLowerCase())
@@ -1522,13 +1535,9 @@ export default function Fitness() {
       }
     }
     
-    // Shuffle and pick
     const shuffled = shuffleArray(filtered);
     const picked = shuffled.slice(0, Math.min(count, shuffled.length));
-    
-    // Mark as used
     picked.forEach(ex => usedIds.add(ex.id));
-    
     return picked;
   }
 
@@ -1619,7 +1628,9 @@ export default function Fitness() {
             cardioPool.map(c => ({ ...c, bodyPart: 'full body' })),
             'full body',
             1,
-            usedCardio
+            usedCardio,
+            undefined,
+            usedAcrossProgram
           );
           // If body-part filter missed (cardio bodyPart varies), fall back to first random
           let cardioEx = picked[0];
@@ -1647,7 +1658,10 @@ export default function Fitness() {
           for (const bp of dayPlan.parts) {
             if (added >= warmupCount) break;
             const matches = stretchPool.filter(s => s.bodyPart.toLowerCase() === bp.toLowerCase() && !usedWarm.has(s.id));
-            const pick = shuffleArray(matches).slice(0, 1);
+            // Prefer stretches not yet used across program; fall back if exhausted
+            const fresh = matches.filter(s => !usedAcrossProgram.has(s.id));
+            const source = fresh.length > 0 ? fresh : matches;
+            const pick = shuffleArray(source).slice(0, 1);
             pick.forEach(s => {
               usedWarm.add(s.id);
               dayExercises.push({
@@ -1681,7 +1695,7 @@ export default function Fitness() {
           const target = exercisesPerDay;
           const perPart = Math.ceil(target / dayPlan.parts.length);
           for (const bp of dayPlan.parts) {
-            const picked = pickRandomByBodyPart(stretchPool, bp, perPart, usedExercisesThisWeek);
+            const picked = pickRandomByBodyPart(stretchPool, bp, perPart, usedExercisesThisWeek, undefined, usedAcrossProgram);
             picked.forEach(s => {
               dayExercises.push({
                 exercise: s,
@@ -1714,7 +1728,8 @@ export default function Fitness() {
               bodyPart,
               exercisesPerBodyPart,
               usedExercisesThisWeek,
-              [equipmentRotation]
+              [equipmentRotation],
+              usedAcrossProgram
             );
             picked.forEach(ex => {
               if (workoutStyle === 'hiit') {
@@ -2303,14 +2318,16 @@ export default function Fitness() {
                 <div className="space-y-4">
                   {todaysWorkouts.map(({ plan, exercises }) => {
                     const currentWeek = getCurrentWeek(plan, plan.exercises || []);
-                    const estMin = exercises.reduce((sum, ex) => {
-                      const sets = ex.sets || 3;
-                      const dur = (ex as any).duration || 0;
-                      const rest = (ex as any).restTime || 60;
-                      const work = dur > 0 ? dur : 30;
+                    const estSec = exercises.reduce((sum, ex) => {
+                      const sets = ex.sets ?? 3;
+                      const rest = ex.restTime ?? 60;
+                      // Time-based reps look like "30s"; otherwise assume ~30s of working time per set
+                      const repsStr = String(ex.reps ?? '');
+                      const timeMatch = repsStr.match(/^(\d+)s$/);
+                      const work = timeMatch ? parseInt(timeMatch[1], 10) : 30;
                       return sum + sets * (work + rest);
                     }, 0);
-                    const estimatedMinutes = Math.max(1, Math.round(estMin / 60));
+                    const estimatedMinutes = Math.max(1, Math.round(estSec / 60));
                     return (
                       <div
                         key={plan.id}
@@ -2332,30 +2349,52 @@ export default function Fitness() {
                           </div>
                         </div>
 
-                        <div className="space-y-1 mb-4 max-h-32 overflow-y-auto">
-                          {exercises.map((ex, i) => (
-                            <div key={ex.id} className="flex items-center gap-2 text-sm text-white/90">
-                              <span className="text-[#FCD000] font-black w-5">{i + 1}.</span>
-                              <span className="flex-1 truncate">{ex.exerciseName}</span>
-                              <span className="text-xs text-zinc-400 font-bold">
-                                {ex.sets}×{ex.reps}
-                              </span>
-                            </div>
-                          ))}
+                        <div className="space-y-1 mb-4 max-h-40 overflow-y-auto">
+                          {exercises.map((ex, i) => {
+                            const weekday = (ex.daysOfWeek && ex.daysOfWeek[0]) || getCurrentDayOfWeek();
+                            return (
+                              <div key={ex.id} className="flex items-center gap-2 text-sm text-white/90">
+                                <span className="text-[#FCD000] font-black w-5">{i + 1}.</span>
+                                <span className="flex-1 truncate">{ex.exerciseName}</span>
+                                <span
+                                  className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-[#FCD000]/15 text-[#FCD000] border border-[#FCD000]/40"
+                                  data-testid={`badge-weekday-${ex.id}`}
+                                >
+                                  {weekday.slice(0, 3)}
+                                </span>
+                                <span className="text-xs text-zinc-400 font-bold tabular-nums">
+                                  {ex.sets}×{ex.reps}
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
 
-                        <Button
-                          onClick={() => {
-                            setPlayerPlan(plan);
-                            setPlayerExercises(exercises);
-                            setPlayerOpen(true);
-                          }}
-                          className="w-full bg-[#FCD000] hover:bg-[#FCD000]/90 text-black font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                          data-testid={`button-start-workout-${plan.id}`}
-                        >
-                          <Play className="w-5 h-5 mr-2 fill-black" />
-                          Start Workout
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => {
+                              setDetailPlan(plan);
+                              setDetailExercises(exercises);
+                            }}
+                            variant="outline"
+                            className="flex-1 border-2 border-[#FCD000]/60 text-[#FCD000] hover:bg-[#FCD000]/10 font-black uppercase tracking-wide"
+                            data-testid={`button-view-plan-${plan.id}`}
+                          >
+                            View Details
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setPlayerPlan(plan);
+                              setPlayerExercises(exercises);
+                              setPlayerOpen(true);
+                            }}
+                            className="flex-1 bg-[#FCD000] hover:bg-[#FCD000]/90 text-black font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                            data-testid={`button-start-workout-${plan.id}`}
+                          >
+                            <Play className="w-5 h-5 mr-2 fill-black" />
+                            Start
+                          </Button>
+                        </div>
                       </div>
                     );
                   })}
@@ -4120,6 +4159,65 @@ export default function Fitness() {
         </DialogContent>
       </Dialog>
 
+      {/* Plan Detail Dialog — today's exercises preview with Start Workout */}
+      <Dialog open={!!detailPlan} onOpenChange={(open) => { if (!open) { setDetailPlan(null); setDetailExercises([]); } }}>
+        <DialogContent className="max-w-md bg-zinc-950 border-2 border-[#FCD000] text-white">
+          <DialogHeader>
+            <DialogTitle className="text-[#FCD000] font-black uppercase tracking-tight">
+              {detailPlan?.name}
+            </DialogTitle>
+            {detailPlan && (
+              <p className="text-xs font-bold text-white/60 uppercase tracking-wider">
+                Week {getCurrentWeek(detailPlan, detailPlan.exercises || [])} of 4 • Today's session • {detailExercises.length} exercise{detailExercises.length === 1 ? '' : 's'}
+              </p>
+            )}
+          </DialogHeader>
+          <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
+            {detailExercises.map((ex, i) => {
+              const weekday = (ex.daysOfWeek && ex.daysOfWeek[0]) || getCurrentDayOfWeek();
+              return (
+                <div
+                  key={ex.id}
+                  className="flex items-center gap-3 bg-black/40 border border-zinc-800 rounded-sm p-3"
+                  data-testid={`detail-exercise-${ex.id}`}
+                >
+                  <span className="text-[#FCD000] font-black text-sm w-5 shrink-0">{i + 1}.</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-white text-sm truncate">{ex.exerciseName}</p>
+                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider truncate">
+                      {ex.bodyPart || ex.targetMuscle || 'Workout'} • {ex.equipment || 'bodyweight'}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-[#FCD000]/15 text-[#FCD000] border border-[#FCD000]/40">
+                      {weekday.slice(0, 3)}
+                    </span>
+                    <span className="text-xs text-[#FCD000] font-black tabular-nums">
+                      {ex.sets}×{ex.reps}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <Button
+            onClick={() => {
+              if (!detailPlan) return;
+              setPlayerPlan(detailPlan);
+              setPlayerExercises(detailExercises);
+              setDetailPlan(null);
+              setDetailExercises([]);
+              setPlayerOpen(true);
+            }}
+            className="w-full bg-[#FCD000] hover:bg-[#FCD000]/90 text-black font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+            data-testid="button-start-from-detail"
+          >
+            <Play className="w-5 h-5 mr-2 fill-black" />
+            Start Workout
+          </Button>
+        </DialogContent>
+      </Dialog>
+
       {/* Guided Workout Player */}
       {playerOpen && playerPlan && (
         <WorkoutPlayer
@@ -4166,19 +4264,24 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   const currentExercise = exercises[exerciseIdx];
-  const totalSets = currentExercise?.sets || 3;
-  const restSeconds = (currentExercise as any)?.restTime || 60;
-  const isTimeBased = typeof currentExercise?.reps === 'string'
-    && currentExercise.reps.endsWith('s');
-  const workSeconds = isTimeBased
-    ? parseInt((currentExercise.reps as string).replace(/[^0-9]/g, '')) || 30
-    : 30; // for rep-based, give 30s suggested working window
+  const totalSets = currentExercise?.sets ?? 3;
+  const restSeconds = currentExercise?.restTime ?? 60;
+  const repsString = String(currentExercise?.reps ?? '');
+  const timeBasedMatch = repsString.match(/^(\d+)s$/);
+  const isTimeBased = !!timeBasedMatch;
+  const workSeconds = isTimeBased ? parseInt(timeBasedMatch![1], 10) || 30 : 30;
 
-  // Initialize Web Audio context lazily
+  // Detect URL extension for media rendering
+  const mediaUrl = currentExercise?.imageUrl || '';
+  const isVideo = /\.(mp4|webm|mov)$/i.test(mediaUrl);
+
+  // Initialize Web Audio context lazily (typed, no `any`)
   const beep = (frequency: number, duration: number = 150) => {
     try {
       if (!audioCtxRef.current) {
-        const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+        type WebkitWindow = Window & { webkitAudioContext?: typeof AudioContext };
+        const w = window as WebkitWindow;
+        const Ctx: typeof AudioContext | undefined = w.AudioContext ?? w.webkitAudioContext;
         if (!Ctx) return;
         audioCtxRef.current = new Ctx();
       }
@@ -4253,10 +4356,17 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
       setSecondsLeft(workSeconds);
     } else if (phase === 'rest') {
       beep(660, 250);
-      setExerciseIdx(i => i + 1);
+      // Move directly into the next exercise's first work set — only the
+      // initial start-of-workout uses the 5-second countdown.
+      const nextIdx = exerciseIdx + 1;
+      const nextExercise = exercises[nextIdx];
+      const nextRepsString = String(nextExercise?.reps ?? '');
+      const nextMatch = nextRepsString.match(/^(\d+)s$/);
+      const nextWork = nextMatch ? parseInt(nextMatch[1], 10) || 30 : 30;
+      setExerciseIdx(nextIdx);
       setSetIdx(0);
-      setPhase('countdown');
-      setSecondsLeft(5);
+      setPhase('work');
+      setSecondsLeft(nextWork);
     }
   };
 
@@ -4330,13 +4440,25 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
               {!isTimeBased && phase === 'work' && currentExercise?.reps && ` • ${currentExercise.reps} reps`}
             </p>
 
-            {currentExercise?.imageUrl && (
+            {mediaUrl && (
               <div className="w-48 h-48 md:w-64 md:h-64 bg-white rounded-sm border-2 border-[#FCD000] overflow-hidden mb-6">
-                <img
-                  src={currentExercise.imageUrl}
-                  alt={currentExercise.exerciseName}
-                  className="w-full h-full object-contain"
-                />
+                {isVideo ? (
+                  <video
+                    src={mediaUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-contain"
+                    data-testid="video-current-exercise"
+                  />
+                ) : (
+                  <img
+                    src={mediaUrl}
+                    alt={currentExercise?.exerciseName ?? ''}
+                    className="w-full h-full object-contain"
+                  />
+                )}
               </div>
             )}
 
