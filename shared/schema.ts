@@ -531,6 +531,7 @@ export const fitnessPlanExercises = pgTable("fitness_plan_exercises", {
   restTime: integer("rest_time").default(60), // Rest time in seconds
   notes: text("notes"), // Additional exercise notes
   daysOfWeek: text("days_of_week").array(), // Array of days: ['monday', 'tuesday', etc.]
+  weekNumber: integer("week_number").default(1), // Which training week (1-4) this exercise belongs to
   orderIndex: integer("order_index").notNull().default(0), // Order within the plan
   createdAt: timestamp("created_at").defaultNow(),
 });
