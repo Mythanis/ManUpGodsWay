@@ -53,7 +53,8 @@ import {
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
 import { strictWriteLimiter } from "./rateLimiter";
-import { uploadPublicFile, uploadPrivateFile, deleteStorageFile, streamVideoFromStorage, streamPublicFileFromStorage, isStorageUrl, countStorageFiles } from "./objectStorage";
+import { uploadPublicFile, uploadPublicFileFromPath, uploadPrivateFile, deleteStorageFile, streamVideoFromStorage, streamPublicFileFromStorage, isStorageUrl, countStorageFiles } from "./objectStorage";
+import os from "os";
 import { 
   savePushSubscription, 
   removePushSubscription, 
@@ -335,10 +336,39 @@ const EXERCISE_MEDIA_MIMES = [
   'video/mp4', 'video/quicktime', 'video/webm',
 ];
 
-// Configure multer for exercise media uploads (images/gifs/video) — memory storage → Object Storage
+// Configure multer for single exercise media uploads (memory storage — one file at a time, safe).
 const exerciseMediaUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB (videos can be larger than gifs)
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
+  fileFilter: function (req, file, cb) {
+    if (EXERCISE_MEDIA_MIMES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image, GIF, or MP4/WebM video files are allowed for exercise media'));
+    }
+  },
+});
+
+// Temp directory for bulk media uploads. Created once at module load; the OS
+// cleans it between reboots and we delete each file immediately after upload.
+const BULK_MEDIA_TMP_DIR = path.join(os.tmpdir(), 'exercise-bulk-media');
+if (!fs.existsSync(BULK_MEDIA_TMP_DIR)) {
+  fs.mkdirSync(BULK_MEDIA_TMP_DIR, { recursive: true });
+}
+
+// Configure multer for BULK exercise media imports — disk storage so that
+// thousands of large files are written to disk one by one instead of all
+// being held in RAM simultaneously. Each temp file is deleted after its
+// upload to GCS completes (or fails).
+const exerciseBulkMediaUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, BULK_MEDIA_TMP_DIR),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || '.bin';
+      cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+    },
+  }),
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB per file
   fileFilter: function (req, file, cb) {
     if (EXERCISE_MEDIA_MIMES.includes(file.mimetype)) {
       cb(null, true);
@@ -10321,9 +10351,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     requireAdmin,
     (req: any, res: any, next: any) => {
-      // Wrap multer so we return a clean 400 instead of a generic 500 when a
-      // user uploads more files than the cap or hits the per-file size limit.
-      exerciseMediaUpload.array('files', 5000)(req, res, (err: any) => {
+      // Use disk-based multer — files land on disk one at a time rather than
+      // all being held in RAM, so large batches (1,700+ files) can't OOM the server.
+      exerciseBulkMediaUpload.array('files', 5000)(req, res, (err: any) => {
         if (!err) return next();
         if (err && err.code === 'LIMIT_UNEXPECTED_FILE') {
           return res.status(400).json({
@@ -10340,61 +10370,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     },
     async (req: any, res) => {
-      try {
-        const files = (req.files as Express.Multer.File[] | undefined) ?? [];
-        if (files.length === 0) return res.status(400).json({ message: 'No files uploaded' });
+      const files = (req.files as Express.Multer.File[] | undefined) ?? [];
 
-        const matched: Array<{ filename: string; exerciseId: number; exerciseName: string; url: string }> = [];
-        const unmatched: string[] = [];
-        const failed: Array<{ filename: string; error: string }> = [];
+      // Helper: delete a temp file without throwing. Called in finally blocks.
+      const cleanupTmp = (filePath: string) =>
+        fs.promises.unlink(filePath).catch(() => {});
 
-        for (const file of files) {
-          const filename = file.originalname;
-          try {
-            // Match exercise where stored mediaFile equals the uploaded basename
-            const [exercise] = await db
-              .select()
-              .from(schema.exercises)
-              .where(eq(schema.exercises.mediaFile, filename));
-
-            if (!exercise) {
-              unmatched.push(filename);
-              continue;
-            }
-
-            // Upload to object storage under a stable key per exercise
-            const ext = filename.split('.').pop()?.toLowerCase() || 'bin';
-            const key = `exercises/${exercise.id}-${Date.now()}.${ext}`;
-            const newUrl = await uploadPublicFile(file.buffer, key, file.mimetype);
-
-            // If a previous storage-backed file existed, remove it
-            if (exercise.mediaFile && isStorageUrl(exercise.mediaFile)) {
-              await deleteStorageFile(exercise.mediaFile).catch(() => {});
-            }
-
-            await db
-              .update(schema.exercises)
-              .set({ mediaFile: newUrl, updatedAt: new Date() })
-              .where(eq(schema.exercises.id, exercise.id));
-
-            matched.push({ filename, exerciseId: exercise.id, exerciseName: exercise.name, url: newUrl });
-          } catch (err: any) {
-            console.error(`Bulk media upload failed for ${filename}:`, err);
-            failed.push({ filename, error: err?.message || 'Upload failed' });
-          }
-        }
-
-        res.json({
-          message: 'Bulk media import complete',
-          totals: { uploaded: matched.length, unmatched: unmatched.length, failed: failed.length, received: files.length },
-          matched,
-          unmatched,
-          failed,
-        });
-      } catch (error) {
-        console.error('Error during bulk media import:', error);
-        res.status(500).json({ message: 'Internal server error' });
+      // If multer left files on disk but we fail before processing, clean them all.
+      if (files.length === 0) {
+        return res.status(400).json({ message: 'No files uploaded' });
       }
+
+      const matched: Array<{ filename: string; exerciseId: number; exerciseName: string; url: string }> = [];
+      const unmatched: string[] = [];
+      const failed: Array<{ filename: string; error: string }> = [];
+
+      let totalBytes = 0;
+      for (const file of files) {
+        totalBytes += file.size ?? 0;
+      }
+      if (totalBytes > 10 * 1024 * 1024 * 1024) {
+        console.warn(`[BulkMedia] Large batch: ${(totalBytes / 1e9).toFixed(2)} GB across ${files.length} files`);
+      }
+
+      for (const file of files) {
+        const filename = file.originalname;
+        const tmpPath = file.path; // disk-storage path
+        try {
+          // Match exercise where stored mediaFile equals the uploaded basename
+          const [exercise] = await db
+            .select()
+            .from(schema.exercises)
+            .where(eq(schema.exercises.mediaFile, filename));
+
+          if (!exercise) {
+            unmatched.push(filename);
+            await cleanupTmp(tmpPath);
+            continue;
+          }
+
+          // Stream from disk → GCS (never loads full bytes into RAM)
+          const ext = filename.split('.').pop()?.toLowerCase() || 'bin';
+          const key = `exercises/${exercise.id}-${Date.now()}.${ext}`;
+          const newUrl = await uploadPublicFileFromPath(tmpPath, key, file.mimetype);
+
+          // Remove any previously stored file for this exercise
+          if (exercise.mediaFile && isStorageUrl(exercise.mediaFile)) {
+            await deleteStorageFile(exercise.mediaFile).catch(() => {});
+          }
+
+          await db
+            .update(schema.exercises)
+            .set({ mediaFile: newUrl, updatedAt: new Date() })
+            .where(eq(schema.exercises.id, exercise.id));
+
+          matched.push({ filename, exerciseId: exercise.id, exerciseName: exercise.name, url: newUrl });
+        } catch (err: any) {
+          console.error(`Bulk media upload failed for ${filename}:`, err);
+          failed.push({ filename, error: err?.message || 'Upload failed' });
+        } finally {
+          await cleanupTmp(tmpPath);
+        }
+      }
+
+      res.json({
+        message: 'Bulk media import complete',
+        totals: { uploaded: matched.length, unmatched: unmatched.length, failed: failed.length, received: files.length },
+        matched,
+        unmatched,
+        failed,
+      });
     }
   );
 

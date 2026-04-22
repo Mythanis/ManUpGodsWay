@@ -1,5 +1,6 @@
 import { objectStorageClient } from "./replit_integrations/object_storage/objectStorage";
 import type { Response } from "express";
+import fs from "fs";
 
 function getBucketName(): string {
   const paths = (process.env.PUBLIC_OBJECT_SEARCH_PATHS || "").split(",").map((p) => p.trim()).filter(Boolean);
@@ -29,6 +30,35 @@ export async function uploadPublicFile(buffer: Buffer, key: string, mimeType: st
   });
 
   // Return a backend proxy URL — GCS direct URLs require auth (uniform bucket-level ACL).
+  return `/api/media/public/uploads/${key}`;
+}
+
+/**
+ * Upload a file from a local disk path to the PUBLIC part of Object Storage.
+ * Streams the file directly from disk — never holds the full contents in RAM.
+ * Used by the bulk exercise‑media import so thousands of files can be processed
+ * sequentially without OOM‑killing the process.
+ * Returns the same backend proxy URL as uploadPublicFile.
+ */
+export async function uploadPublicFileFromPath(filePath: string, key: string, mimeType: string): Promise<string> {
+  const bucketName = getBucketName();
+  const bucket = objectStorageClient.bucket(bucketName);
+  const objectName = `public/uploads/${key}`;
+  const file = bucket.file(objectName);
+
+  await new Promise<void>((resolve, reject) => {
+    const readStream = fs.createReadStream(filePath);
+    const writeStream = file.createWriteStream({
+      contentType: mimeType,
+      resumable: false,
+      metadata: { cacheControl: "public, max-age=31536000" },
+    });
+    readStream.on("error", reject);
+    writeStream.on("error", reject);
+    writeStream.on("finish", resolve);
+    readStream.pipe(writeStream);
+  });
+
   return `/api/media/public/uploads/${key}`;
 }
 
