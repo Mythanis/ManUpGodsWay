@@ -1353,7 +1353,7 @@ export default function Fitness() {
           const bodyweightExercises = await getExercisesForEquipment(bodyweightEquipment, level);
           if (bodyweightExercises.length >= 5) {
             console.log('Falling back to bodyweight exercises');
-            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced", 'bodyweight', workoutDays.length, workoutStyle, parseInt(duration), stretchPool, cardioPool);
+            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced"|"Tabata", 'bodyweight', workoutDays.length, workoutStyle, parseInt(duration), stretchPool, cardioPool);
             const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay, workoutDays);
             return [preBuiltPlan];
           }
@@ -1376,7 +1376,7 @@ export default function Fitness() {
 
       const weeklyPlan = generateDynamicPlan(
         exercises, 
-        level as "Beginner"|"Intermediate"|"Advanced", 
+        level as "Beginner"|"Intermediate"|"Advanced"|"Tabata", 
         equipmentLabel,
         workoutDays.length, // Use actual number of workout days selected
         workoutStyle,
@@ -1555,7 +1555,7 @@ export default function Fitness() {
 
   function generateDynamicPlan(
     exercises: APIExercise[], 
-    level: "Beginner"|"Intermediate"|"Advanced", 
+    level: "Beginner"|"Intermediate"|"Advanced"|"Tabata", 
     equipment: string,
     workoutDaysPerWeek: number = 3,
     workoutStyle: string = 'standard-no-cardio',
@@ -1578,10 +1578,15 @@ export default function Fitness() {
     const avgReps = (stdConfig.repRange[0] + stdConfig.repRange[1]) / 2;
     const stdPerExSec = stdConfig.sets * (avgReps * 3 + stdConfig.restSec);
 
-    // HIIT time-based config — fixed at 3 rounds, rest by level
-    const hiitRest = level === "Beginner" ? 30 : level === "Intermediate" ? 20 : 10;
-    const hiitRounds = 3;
-    const hiitPerExSec = hiitRounds * (30 + hiitRest);
+    // HIIT time-based config — Tabata is the classic 20s work / 10s rest x 8
+    // rounds protocol. Other levels run 30s work with rest scaled by level.
+    const isTabata = level === "Tabata";
+    const hiitWork = isTabata ? 20 : 30;
+    const hiitRest = isTabata
+      ? 10
+      : level === "Beginner" ? 30 : level === "Intermediate" ? 20 : 10;
+    const hiitRounds = isTabata ? 8 : 3;
+    const hiitPerExSec = hiitRounds * (hiitWork + hiitRest);
 
     // Stretching config — fixed at 3 sets of 30s hold
     const stretchSets = 3;
@@ -1749,7 +1754,7 @@ export default function Fitness() {
                   exercise: ex,
                   sets: hiitRounds,
                   reps: null,
-                  durationSec: 30,
+                  durationSec: hiitWork,
                 });
               } else {
                 dayExercises.push({
@@ -2713,25 +2718,20 @@ export default function Fitness() {
 
               <div className="bg-zinc-900 divide-y divide-zinc-700">
 
-                {/* 1. Fitness Level */}
-                <div className="px-4 py-4">
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Fitness Level</p>
-                  <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                    <SelectTrigger className="w-full bg-black border-zinc-600 text-white" data-testid="select-fitness-level">
-                      <SelectValue placeholder="Select level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">Beginner</SelectItem>
-                      <SelectItem value="intermediate">Intermediate</SelectItem>
-                      <SelectItem value="advanced">Advanced</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* 1b. Workout Style */}
+                {/* 1. Workout Style */}
                 <div className="px-4 py-4">
                   <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Workout Style</p>
-                  <Select value={selectedWorkoutStyle} onValueChange={setSelectedWorkoutStyle}>
+                  <Select
+                    value={selectedWorkoutStyle}
+                    onValueChange={(value) => {
+                      setSelectedWorkoutStyle(value);
+                      // If switching away from HIIT while Tabata is selected,
+                      // reset level to avoid an invalid selection.
+                      if (value !== 'hiit' && selectedLevel === 'tabata') {
+                        setSelectedLevel('');
+                      }
+                    }}
+                  >
                     <SelectTrigger className="w-full bg-black border-zinc-600 text-white" data-testid="select-workout-style">
                       <SelectValue placeholder="Select style" />
                     </SelectTrigger>
@@ -2746,11 +2746,29 @@ export default function Fitness() {
                     <p className="text-[10px] text-zinc-400 mt-2 italic">Stretching defaults to Bodyweight equipment.</p>
                   )}
                   {selectedWorkoutStyle === 'hiit' && (
-                    <p className="text-[10px] text-zinc-400 mt-2 italic">HIIT uses 30-second work intervals with rest by level (Beginner 30s / Intermediate 20s / Advanced 10s).</p>
+                    <p className="text-[10px] text-zinc-400 mt-2 italic">HIIT uses 30-second work intervals with rest by level (Beginner 30s / Intermediate 20s / Advanced 10s / Tabata 10s with 20s work).</p>
                   )}
                   {selectedWorkoutStyle === 'standard-cardio' && (
                     <p className="text-[10px] text-zinc-400 mt-2 italic">Cardio sessions are scheduled every other workout day.</p>
                   )}
+                </div>
+
+                {/* 2. Fitness Level */}
+                <div className="px-4 py-4">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Fitness Level</p>
+                  <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                    <SelectTrigger className="w-full bg-black border-zinc-600 text-white" data-testid="select-fitness-level">
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="beginner">Beginner</SelectItem>
+                      <SelectItem value="intermediate">Intermediate</SelectItem>
+                      <SelectItem value="advanced">Advanced</SelectItem>
+                      {selectedWorkoutStyle === 'hiit' && (
+                        <SelectItem value="tabata" data-testid="option-level-tabata">Tabata (Advanced)</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* 2. Available Equipment */}
