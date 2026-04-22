@@ -1629,17 +1629,14 @@ export default function Fitness() {
     // a single number so the existing warm-up emission stays simple.
     const warmupCount         = openingStretchCount + mainWarmupCount;
 
-    // Per-set time estimates from the spec (seconds of work + rest per set).
-    //   Beginner:     ~2.0   min/set
-    //   Intermediate: ~2.25  min/set
-    //   Advanced:     ~2.75  min/set
-    //   HIIT (+Tabata): ~1.0 min/set
-    //   Stretch hold:   ~0.75 min/hold
+    // Per-set seconds — single source of truth used both to size the budget
+    // and to compute final session time. For HIIT/Tabata we use the actual
+    // emitted work + rest per set so playback time matches the budget.
     let perSetSec: number;
     if (workoutStyle === 'hiit') {
-      perSetSec = 60;
+      perSetSec = hiitWork + hiitRest;        // Tabata 30s, Adv HIIT 40s, Int 50s, Beg 60s
     } else if (isStretchingOnly) {
-      perSetSec = 45;
+      perSetSec = 45;                          // 30s hold + 15s transition
     } else {
       perSetSec = level === 'Beginner'    ? 120
                 : level === 'Intermediate' ? 135
