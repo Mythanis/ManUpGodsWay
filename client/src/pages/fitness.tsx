@@ -1794,7 +1794,6 @@ export default function Fitness() {
     const STRETCHING_LIGHT_MOVEMENT_COUNT = isStretchingOnly
       ? Math.round(STRETCHING_LIGHT_MOVEMENT_SEC / STRETCHING_LIGHT_MOVEMENT_HOLD)
       : 0;
-    const STRETCHING_FINAL_REST_SEC = 2 * 60;         // 2 min savasana
     const openingStretchCount = isStretchingOnly ? 0 : 5;     // spec 4-6
     const mainWarmupCount     = isStretchingOnly ? 0 : 3;     // spec 2-3
     const cooldownCount       = isStretchingOnly ? 0 : 5;     // spec 4-6
@@ -1802,8 +1801,7 @@ export default function Fitness() {
       openingStretchCount * (OPENING_STRETCH_HOLD + OPENING_TRANSITION) +
       mainWarmupCount     * (WARMUP_CARDIO_HOLD   + WARMUP_TRANSITION) +
       cooldownCount       * (COOLDOWN_HOLD        + COOLDOWN_TRANSITION) +
-      STRETCHING_LIGHT_MOVEMENT_COUNT * STRETCHING_LIGHT_MOVEMENT_HOLD +
-      (isStretchingOnly ? STRETCHING_FINAL_REST_SEC : 0);
+      STRETCHING_LIGHT_MOVEMENT_COUNT * STRETCHING_LIGHT_MOVEMENT_HOLD;
     const workingSec = Math.max(60, totalSec - mandatorySec);
 
     // Combined pre-workout count (opening stretch + warm-up cardio).
@@ -2070,25 +2068,6 @@ export default function Fitness() {
           }
           mainStretches.sort((a, b) => orderRank(a.exercise.bodyPart) - orderRank(b.exercise.bodyPart));
           mainStretches.forEach(pe => dayExercises.push(pe));
-
-          // 3) Final rest (2 min savasana / seated breathing). Use a
-          //    relaxation-flavoured stretch if one is available; else
-          //    fall back to any unused stretch held for 2 min.
-          const restNames = ['savasana', 'corpse', 'child', "child's pose", 'relax', 'breathing'];
-          const restCandidates = stretchPool.filter(s => {
-            const n = (s.name || '').toLowerCase();
-            return restNames.some(p => n.includes(p));
-          });
-          const restPool = restCandidates.length > 0 ? restCandidates : stretchPool;
-          const usedIds = new Set<string>(dayExercises.map(e => e.exercise.id));
-          const restPick = shuffleArray(restPool.filter(s => !usedIds.has(s.id)))[0]
-                         || shuffleArray(restPool)[0];
-          if (restPick) {
-            dayExercises.push({
-              exercise: restPick, sets: 1, reps: null,
-              durationSec: STRETCHING_FINAL_REST_SEC, restSec: 0,
-            });
-          }
         } else {
           // Standard or HIIT - pick from exercises pool by body parts (skip stretches).
           // HIIT sessions per spec: only exercises tagged HIIT=Yes in the
