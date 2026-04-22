@@ -1938,14 +1938,14 @@ export default function Fitness() {
     //   4) COOLDOWN STRETCH — 4-6 static stretches, hold per level
     //                         (Beg 30, Int 40, Adv 50-60)
     const OPENING_STRETCH_HOLD   = 25;   // 20-30s midpoint, dynamic
-    const OPENING_TRANSITION     = 0;    // no rest between dynamic stretches
+    const OPENING_TRANSITION     = 5;    // 5s buffer between dynamic stretches
     const WARMUP_CARDIO_HOLD     = 45;   // 30-60s midpoint, light cardio
-    const WARMUP_TRANSITION      = 0;    // no rest between cardio movements
+    const WARMUP_TRANSITION      = 5;    // 5s buffer between cardio movements
     const COOLDOWN_HOLD_BY_LEVEL: Record<Level, number> = {
       Beginner: 30, Intermediate: 40, Advanced: 55, Tabata: 55,
     };
     const COOLDOWN_HOLD          = COOLDOWN_HOLD_BY_LEVEL[levelKey];
-    const COOLDOWN_TRANSITION    = 0;    // hold longer; no rest between
+    const COOLDOWN_TRANSITION    = 5;    // 5s buffer between cooldown stretches
 
     // Block sizes per spec (count, not duration).
     // Standard / HIIT: opening stretch (5) + warm-up cardio (3) + cooldown (5).
@@ -5528,11 +5528,23 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
 
   const currentExercise = exercises[exerciseIdx];
   const totalSets = currentExercise?.sets ?? 3;
-  const restSeconds = currentExercise?.restTime ?? 60;
   const repsString = String(currentExercise?.reps ?? '');
   const timeBasedMatch = repsString.match(/^(\d+)s$/);
   const isTimeBased = !!timeBasedMatch;
   const workSeconds = isTimeBased ? parseInt(timeBasedMatch![1], 10) || 30 : 30;
+  // A "transition" exercise is a 1-set time-based block (stretch / warm-up
+  // cardio / cooldown). Per spec, the buffer between these is a flat 5s
+  // regardless of any stale restTime persisted on older plans (where a
+  // legacy default 60s or post-rollback 65s may have stuck around).
+  const isTransitionExercise = (() => {
+    if (!currentExercise) return false;
+    if (!isTimeBased || totalSets !== 1) return false;
+    const haystack = `${currentExercise.exerciseName ?? ''} ${currentExercise.notes ?? ''}`.toLowerCase();
+    return /stretch|warm[\s-]?up|cool[\s-]?down|mobility/.test(haystack);
+  })();
+  const restSeconds = isTransitionExercise
+    ? 5
+    : (currentExercise?.restTime ?? 60);
 
   // Detect URL extension for media rendering. Fall back to the legacy
   // `exerciseGifUrl` alias for older plan rows that predate the imageUrl column.
@@ -5608,12 +5620,21 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
           beep(880, 600);
           setPhase('done');
         } else {
-          // Move to next exercise with a rest break
+          // Inter-exercise transition: advance to the next exercise
+          // immediately so the 5-second 'rest' phase doubles as a
+          // preview of the upcoming movement (mp4 + name + countdown
+          // beeps on 3-2-1). This is the "5s preview before each
+          // exercise's FIRST appearance" per spec.
+          const nextIdx = exerciseIdx + 1;
+          setExerciseIdx(nextIdx);
+          setSetIdx(0);
           setPhase('rest');
-          setSecondsLeft(restSeconds);
+          setSecondsLeft(5);
         }
       } else {
-        // Rest between sets
+        // Rest between sets of THIS exercise — uses the per-exercise
+        // restTime from the plan (or the 5s flat buffer for stretch
+        // / warm-up / cooldown blocks via isTransitionExercise above).
         setPhase('set-rest');
         setSecondsLeft(restSeconds);
       }
@@ -5624,17 +5645,10 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
       setSecondsLeft(workSeconds);
     } else if (phase === 'rest') {
       beep(660, 250);
-      // Move directly into the next exercise's first work set — only the
-      // initial start-of-workout uses the 5-second countdown.
-      const nextIdx = exerciseIdx + 1;
-      const nextExercise = exercises[nextIdx];
-      const nextRepsString = String(nextExercise?.reps ?? '');
-      const nextMatch = nextRepsString.match(/^(\d+)s$/);
-      const nextWork = nextMatch ? parseInt(nextMatch[1], 10) || 30 : 30;
-      setExerciseIdx(nextIdx);
-      setSetIdx(0);
+      // exerciseIdx + setIdx were already advanced when we entered the
+      // preview, so just kick off the new exercise's first work set.
       setPhase('work');
-      setSecondsLeft(nextWork);
+      setSecondsLeft(workSeconds);
     }
   };
 

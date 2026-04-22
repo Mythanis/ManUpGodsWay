@@ -63,7 +63,7 @@ export async function logAdjustmentBatch(
     direction: ctx.direction,
     batchId,
     field: c.field,
-    planExerciseId: c.exerciseId ?? null,
+    planExerciseId: (c as any).exerciseId ?? (c as any).planExerciseId ?? null,
     exerciseName: c.exerciseName ?? null,
     beforeVal: c.before == null ? null : String(c.before),
     afterVal: c.after == null ? null : String(c.after),
