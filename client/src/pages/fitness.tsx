@@ -5034,6 +5034,8 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
     feeling: 'too_hard' | 'just_right' | 'too_easy';
     streak: number;
     level: 'none' | 'minor' | 'full' | 'escalate';
+    direction: 'easier' | 'harder' | null;
+    lever: { id: number; name: string; description: string; requiresConfirmation: boolean } | null;
   } | null>(null);
 
   // Derive a coarse workoutType label from the plan name. The streak counter
@@ -5060,6 +5062,8 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
         feeling,
         streak: typeof data?.streak === 'number' ? data.streak : 1,
         level: data?.level ?? 'none',
+        direction: data?.direction ?? null,
+        lever: data?.lever ?? null,
       });
       setFeedbackDone(true);
     } catch (err) {
@@ -5075,23 +5079,20 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   // user's feedback this session — shown after they submit.
   const feedbackMessage = ((): string => {
     if (!feedbackResult) return '';
-    const { feeling, streak, level } = feedbackResult;
+    const { feeling, streak, lever } = feedbackResult;
     if (feeling === 'just_right') {
       return streak >= 2
         ? `Logged. You've felt this way ${streak} sessions in a row — your plan is dialed in.`
         : `Logged. We'll keep this workout where it is.`;
     }
     const direction = feeling === 'too_hard' ? 'easier' : 'harder';
-    if (level === 'none') {
+    if (!lever) {
       return `Logged. One session isn't enough to change anything yet — if you feel the same way next time, we'll start nudging this workout ${direction}.`;
     }
-    if (level === 'minor') {
-      return `Two sessions in a row felt this way — we'll apply a minor tweak to make this workout ${direction} next time.`;
+    if (lever.requiresConfirmation) {
+      return `${streak} sessions in a row felt this way. We'd like to change your training level to make this workout ${direction} — this is bigger than a normal tweak so we'll ask you to confirm before applying it.`;
     }
-    if (level === 'full') {
-      return `Three sessions in a row felt this way — we'll apply a full adjustment to make this workout ${direction} next time.`;
-    }
-    return `${streak} sessions in a row felt this way — escalating beyond a normal adjustment. Consider revisiting your level/equipment in plan settings.`;
+    return `${streak} sessions in a row felt this way — next time we'll adjust ${lever.name.toLowerCase()} to make this workout ${direction}.`;
   })();
   const audioCtxRef = useRef<AudioContext | null>(null);
 
@@ -5299,16 +5300,15 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
               </>
             ) : (
               <>
-                {feedbackResult && feedbackResult.level !== 'none' && feedbackResult.feeling !== 'just_right' && (
+                {feedbackResult?.lever && (
                   <div
                     className={`mb-4 px-3 py-1 rounded-sm border-2 border-black font-black uppercase tracking-widest text-xs ${
-                      feedbackResult.level === 'escalate' ? 'bg-red-400 text-black' : 'bg-[#FCD000] text-black'
+                      feedbackResult.lever.requiresConfirmation ? 'bg-red-400 text-black' : 'bg-[#FCD000] text-black'
                     }`}
-                    data-testid="text-feedback-level"
+                    data-testid="text-feedback-lever"
                   >
-                    {feedbackResult.level === 'minor' && 'Minor adjustment queued'}
-                    {feedbackResult.level === 'full' && 'Full adjustment queued'}
-                    {feedbackResult.level === 'escalate' && 'Escalation flagged'}
+                    Lever {feedbackResult.lever.id}: {feedbackResult.lever.name}
+                    {feedbackResult.lever.requiresConfirmation && ' · Needs confirmation'}
                   </div>
                 )}
                 <p className="text-white/80 mb-6 max-w-md" data-testid="text-feedback-message">

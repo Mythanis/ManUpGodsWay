@@ -63,6 +63,7 @@ import {
   sendPushNotification,
   sendPushToAllUsers
 } from "./pushNotificationService";
+import { selectLeverForStreak } from "./fitness-adjustment-levers";
 import Parser from 'rss-parser';
 import { sendFeedbackEmail, sendHelpRequestEmail } from './emailService';
 
@@ -10999,11 +11000,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         else if (streak === 2) level = 'minor';
       }
 
+      // Pick which adjustment lever should fire for this streak. Levers
+      // run from least disruptive (1: rest) to most disruptive (6: level
+      // change). 'just_right' never triggers a lever per spec.
+      const lever = feeling === 'just_right' ? null : selectLeverForStreak(streak);
+      const direction = feeling === 'too_hard' ? 'easier' : feeling === 'too_easy' ? 'harder' : null;
+
       console.log(
-        `[workoutFeedback] user=${user.id} type=${workoutType} feeling=${feeling} streak=${streak} level=${level}`,
+        `[workoutFeedback] user=${user.id} type=${workoutType} feeling=${feeling} streak=${streak} level=${level} lever=${lever?.id ?? 'none'} direction=${direction ?? 'none'}`,
       );
 
-      res.json({ ...row, streak, level });
+      res.json({
+        ...row,
+        streak,
+        level,
+        direction,
+        lever: lever
+          ? {
+              id: lever.id,
+              name: lever.name,
+              description: lever.description,
+              requiresConfirmation: lever.requiresConfirmation,
+            }
+          : null,
+      });
     } catch (error) {
       console.error('Error recording workout feedback:', error);
       res.status(500).json({ message: 'Internal server error' });
