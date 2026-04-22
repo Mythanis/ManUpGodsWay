@@ -10170,20 +10170,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get unique equipment types
-  // Fetch a single exercise by id (ExerciseDB integer id). Used by the
-  // workout player's "Instructions" modal to pull the canonical
-  // instructions text out of the exercises table on demand.
-  app.get('/api/exercises/by-id/:id', async (req: any, res) => {
+  // Fetch a single exercise by name (case-insensitive). Used by the
+  // workout player's "Instructions" modal — plan rows store synthetic
+  // "prebuilt-..." ids rather than the canonical exercises.id, so we
+  // resolve by name to pull the rich instructions text.
+  app.get('/api/exercises/by-name/:name', async (req: any, res) => {
     try {
-      const idNum = parseInt(req.params.id, 10);
-      if (Number.isNaN(idNum)) {
-        return res.status(400).json({ message: 'Invalid exercise id' });
-      }
-      const [row] = await db.select().from(schema.exercises).where(eq(schema.exercises.id, idNum)).limit(1);
+      const name = decodeURIComponent(req.params.name || '').trim();
+      if (!name) return res.status(400).json({ message: 'Exercise name required' });
+      const [row] = await db.select().from(schema.exercises)
+        .where(sql`LOWER(${schema.exercises.name}) = LOWER(${name})`)
+        .limit(1);
       if (!row) return res.status(404).json({ message: 'Exercise not found' });
       res.json(row);
     } catch (error) {
-      console.error('Error fetching exercise by id:', error);
+      console.error('Error fetching exercise by name:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

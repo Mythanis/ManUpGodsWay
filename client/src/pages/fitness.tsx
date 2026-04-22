@@ -5354,7 +5354,7 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   // free-form `notes`; the rich step-by-step "instructions" column lives
   // on the underlying exercise. Enabled lazily so we don't make this
   // request until the modal is actually opened.
-  const exerciseDbId = exercises[exerciseIdx]?.exerciseId;
+  const exerciseLookupName = exercises[exerciseIdx]?.exerciseName;
   const { data: exerciseDetails, isLoading: instructionsLoading } = useQuery<{
     id: number;
     name: string;
@@ -5364,8 +5364,8 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
     equipment?: string;
     level?: string;
   }>({
-    queryKey: ['/api/exercises/by-id', exerciseDbId],
-    enabled: instructionsOpen && !!exerciseDbId,
+    queryKey: ['/api/exercises/by-name', exerciseLookupName],
+    enabled: instructionsOpen && !!exerciseLookupName,
   });
   // Adaptive-difficulty feedback state. Once the user picks a feeling
   // we POST it to the feedback endpoint and then close the player.
@@ -6137,32 +6137,18 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
             <DialogTitle className="text-[#FCD000] font-black uppercase tracking-wide">
               {currentExercise?.exerciseName}
             </DialogTitle>
-            <DialogDescription className="text-white/60">
-              Written instructions · workout paused while open
+            <DialogDescription className="sr-only">
+              Written instructions for this exercise
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 text-sm max-h-[50vh] overflow-y-auto" data-testid="text-instructions-body">
+          <div className="text-sm max-h-[55vh] overflow-y-auto" data-testid="text-instructions-body">
             {instructionsLoading ? (
               <p className="text-white/60 italic">Loading instructions…</p>
             ) : exerciseDetails?.instructions && exerciseDetails.instructions.trim().length > 0 ? (
               <p className="whitespace-pre-line text-white/90">{exerciseDetails.instructions}</p>
-            ) : currentExercise?.notes && currentExercise.notes.trim().length > 0 ? (
-              <p className="whitespace-pre-line text-white/90">{currentExercise.notes}</p>
             ) : (
               <p className="text-white/60 italic">
-                No written instructions are saved for this exercise. Watch the demo video and follow the same form, controlling the movement through its full range.
-              </p>
-            )}
-            {currentExercise?.equipment && (
-              <p className="text-white/70">
-                <span className="font-black uppercase text-xs tracking-widest text-[#FCD000]">Equipment: </span>
-                {currentExercise.equipment}
-              </p>
-            )}
-            {currentExercise?.reps && (
-              <p className="text-white/70">
-                <span className="font-black uppercase text-xs tracking-widest text-[#FCD000]">Target: </span>
-                {totalSets} × {currentExercise.reps}{isTimeBased ? '' : ' reps'}
+                No written instructions are saved for this exercise.
               </p>
             )}
           </div>
