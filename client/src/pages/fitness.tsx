@@ -58,6 +58,9 @@ import {
   SlidersHorizontal,
   History,
   RotateCcw,
+  Pause,
+  ChevronLeft,
+  FileText,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { format, isToday, isPast, isFuture } from "date-fns";
@@ -1938,14 +1941,14 @@ export default function Fitness() {
     //   4) COOLDOWN STRETCH — 4-6 static stretches, hold per level
     //                         (Beg 30, Int 40, Adv 50-60)
     const OPENING_STRETCH_HOLD   = 25;   // 20-30s midpoint, dynamic
-    const OPENING_TRANSITION     = 5;    // 5s buffer between dynamic stretches
+    const OPENING_TRANSITION     = 10;   // 10s buffer between dynamic stretches
     const WARMUP_CARDIO_HOLD     = 45;   // 30-60s midpoint, light cardio
-    const WARMUP_TRANSITION      = 5;    // 5s buffer between cardio movements
+    const WARMUP_TRANSITION      = 10;   // 10s buffer between cardio movements
     const COOLDOWN_HOLD_BY_LEVEL: Record<Level, number> = {
       Beginner: 30, Intermediate: 40, Advanced: 55, Tabata: 55,
     };
     const COOLDOWN_HOLD          = COOLDOWN_HOLD_BY_LEVEL[levelKey];
-    const COOLDOWN_TRANSITION    = 5;    // 5s buffer between cooldown stretches
+    const COOLDOWN_TRANSITION    = 10;   // 10s buffer between cooldown stretches
 
     // Block sizes per spec (count, not duration).
     // Standard / HIIT: opening stretch (5) + warm-up cardio (3) + cooldown (5).
@@ -5340,6 +5343,11 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   const [setIdx, setSetIdx] = useState(0); // 0-based current set
   const [phase, setPhase] = useState<PlayerPhase>('countdown');
   const [secondsLeft, setSecondsLeft] = useState(5);
+  // Pause flag — when true the tick interval is a no-op so timers
+  // freeze in place. Toggled by the pause button and forced on whenever
+  // the written-instructions modal opens.
+  const [paused, setPaused] = useState(false);
+  const [instructionsOpen, setInstructionsOpen] = useState(false);
   // Adaptive-difficulty feedback state. Once the user picks a feeling
   // we POST it to the feedback endpoint and then close the player.
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
@@ -5543,8 +5551,12 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
     return /stretch|warm[\s-]?up|cool[\s-]?down|mobility/.test(haystack);
   })();
   const restSeconds = isTransitionExercise
-    ? 5
+    ? 10
     : (currentExercise?.restTime ?? 60);
+  // Buffer shown between exercises (the "preview" rest with the next
+  // movement's video + 3-2-1 countdown beeps). Bumped from 5s to 10s
+  // per spec so users have time to read the upcoming exercise's name.
+  const PREVIEW_SECONDS = 10;
 
   // Detect URL extension for media rendering. Fall back to the legacy
   // `exerciseGifUrl` alias for older plan rows that predate the imageUrl column.
@@ -5582,6 +5594,7 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   // Tick timer
   useEffect(() => {
     if (phase === 'done') return;
+    if (paused) return; // Frozen — pause button or instructions modal open
     const id = setInterval(() => {
       setSecondsLeft(s => {
         if (s <= 1) {
@@ -5629,7 +5642,7 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
           setExerciseIdx(nextIdx);
           setSetIdx(0);
           setPhase('rest');
-          setSecondsLeft(5);
+          setSecondsLeft(PREVIEW_SECONDS);
         }
       } else {
         // Rest between sets of THIS exercise — uses the per-exercise
@@ -5655,6 +5668,32 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   const skip = () => {
     setSecondsLeft(0);
     setTimeout(() => advancePhase(), 0);
+  };
+
+  // Restart the previous exercise from its 10-second preview. If we're
+  // already on the first exercise, just restart it from countdown.
+  const previous = () => {
+    if (exerciseIdx === 0) {
+      setSetIdx(0);
+      setPhase('countdown');
+      setSecondsLeft(5);
+      return;
+    }
+    setExerciseIdx(i => i - 1);
+    setSetIdx(0);
+    setPhase('rest'); // 'rest' phase = preview of the (now previous) exercise
+    setSecondsLeft(PREVIEW_SECONDS);
+  };
+
+  // Open written instructions for the current exercise. Forces pause
+  // so the timer doesn't tick away while the user is reading.
+  const openInstructions = () => {
+    setPaused(true);
+    setInstructionsOpen(true);
+  };
+  const closeInstructions = () => {
+    setInstructionsOpen(false);
+    // Leave `paused` true on close — the user can hit Resume when ready.
   };
 
   const phaseLabel: Record<PlayerPhase, string> = {
@@ -6007,7 +6046,43 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
             </div>
             <p className="text-white/50 text-sm uppercase tracking-widest font-bold mb-8">seconds</p>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap justify-center gap-3 max-w-2xl">
+              <Button
+                onClick={previous}
+                variant="outline"
+                className="border-2 border-white/40 text-white hover:bg-white/10 font-black uppercase"
+                data-testid="button-previous-exercise"
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Previous
+              </Button>
+              <Button
+                onClick={() => setPaused(p => !p)}
+                variant="outline"
+                className="border-2 border-white/40 text-white hover:bg-white/10 font-black uppercase"
+                data-testid="button-pause-workout"
+              >
+                {paused ? (
+                  <>
+                    <Play className="w-4 h-4 mr-1" />
+                    Resume
+                  </>
+                ) : (
+                  <>
+                    <Pause className="w-4 h-4 mr-1" />
+                    Pause
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={openInstructions}
+                variant="outline"
+                className="border-2 border-white/40 text-white hover:bg-white/10 font-black uppercase"
+                data-testid="button-instructions"
+              >
+                <FileText className="w-4 h-4 mr-1" />
+                Instructions
+              </Button>
               <Button
                 onClick={skip}
                 variant="outline"
@@ -6025,9 +6100,72 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
                 End Workout
               </Button>
             </div>
+            {paused && (
+              <p className="mt-4 text-amber-300 text-xs uppercase font-black tracking-widest" data-testid="text-paused-indicator">
+                Paused
+              </p>
+            )}
           </>
         )}
       </div>
+
+      {/* Written instructions modal — opens paused so the timer freezes
+          while the user reads. Falls back to a friendly message when the
+          plan exercise has no notes saved. */}
+      <Dialog open={instructionsOpen} onOpenChange={(open) => (open ? openInstructions() : closeInstructions())}>
+        <DialogContent className="bg-zinc-900 border-2 border-[#FCD000] text-white max-w-lg" data-testid="dialog-instructions">
+          <DialogHeader>
+            <DialogTitle className="text-[#FCD000] font-black uppercase tracking-wide">
+              {currentExercise?.exerciseName}
+            </DialogTitle>
+            <DialogDescription className="text-white/60">
+              Written instructions · workout paused while open
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm" data-testid="text-instructions-body">
+            {currentExercise?.notes && currentExercise.notes.trim().length > 0 ? (
+              <p className="whitespace-pre-line text-white/90">{currentExercise.notes}</p>
+            ) : (
+              <p className="text-white/60 italic">
+                No written instructions are saved for this exercise. Watch the demo video and follow the same form, controlling the movement through its full range.
+              </p>
+            )}
+            {currentExercise?.equipment && (
+              <p className="text-white/70">
+                <span className="font-black uppercase text-xs tracking-widest text-[#FCD000]">Equipment: </span>
+                {currentExercise.equipment}
+              </p>
+            )}
+            {currentExercise?.reps && (
+              <p className="text-white/70">
+                <span className="font-black uppercase text-xs tracking-widest text-[#FCD000]">Target: </span>
+                {totalSets} × {currentExercise.reps}{isTimeBased ? '' : ' reps'}
+              </p>
+            )}
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Button
+              onClick={() => {
+                closeInstructions();
+                setPaused(false);
+              }}
+              className="bg-[#FCD000] text-black font-black uppercase border-2 border-black flex-1"
+              data-testid="button-instructions-resume"
+            >
+              <Play className="w-4 h-4 mr-1" />
+              Resume Workout
+            </Button>
+            <Button
+              onClick={closeInstructions}
+              variant="ghost"
+              className="text-white/70 flex-1"
+              data-testid="button-instructions-keep-paused"
+            >
+              Close (stay paused)
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Progress bar */}
       <div className="h-2 bg-zinc-900">
