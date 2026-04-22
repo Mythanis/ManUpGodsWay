@@ -9969,10 +9969,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: 'JSON file must contain an array of exercises.' });
         }
 
-        // Validate required fields up front so we don't half-import
-        for (const ex of exercises) {
+        // Validate required fields up front so we don't half-import.
+        // `id` is optional — entries without one get auto-assigned below.
+        for (let i = 0; i < exercises.length; i++) {
+          const ex = exercises[i];
           if (
-            typeof ex?.id !== 'number' ||
             typeof ex?.name !== 'string' ||
             typeof ex?.body_part !== 'string' ||
             typeof ex?.equipment !== 'string' ||
@@ -9981,8 +9982,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
             typeof ex?.media_file !== 'string'
           ) {
             return res.status(400).json({
-              message: `Invalid exercise entry (missing or wrong-typed required field). First bad row id: ${ex?.id ?? '(none)'}`,
+              message: `Invalid exercise entry at index ${i} (missing or wrong-typed required field). Name: ${ex?.name ?? '(none)'}`,
             });
+          }
+          if (ex.id != null && typeof ex.id !== 'number') {
+            return res.status(400).json({
+              message: `Invalid exercise entry at index ${i}: \`id\` must be a number when provided.`,
+            });
+          }
+        }
+
+        // Auto-assign IDs to entries missing one, using the first available
+        // positive integer not already taken by another entry in the file.
+        const usedIds = new Set<number>();
+        for (const ex of exercises) {
+          if (typeof ex.id === 'number') usedIds.add(ex.id);
+        }
+        let nextId = 1;
+        for (const ex of exercises) {
+          if (typeof ex.id !== 'number') {
+            while (usedIds.has(nextId)) nextId++;
+            ex.id = nextId;
+            usedIds.add(nextId);
+            nextId++;
           }
         }
 
