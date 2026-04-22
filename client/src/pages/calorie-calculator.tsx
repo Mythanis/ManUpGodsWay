@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Flame, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
@@ -126,11 +126,12 @@ export default function CalorieCalculator() {
   const [form, setForm] = useState<FormState>(DEFAULTS);
   const [initialized, setInitialized] = useState(false);
 
-  if (!isLoading && !initialized) {
+  useEffect(() => {
+    if (isLoading || initialized) return;
     setForm(formStateFromProfile(existingProfile));
     if (existingProfile) setAcknowledged(true);
     setInitialized(true);
-  }
+  }, [isLoading, existingProfile, initialized]);
 
   const metric = useMemo(() => toMetric(form), [form]);
 
