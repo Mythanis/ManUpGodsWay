@@ -41,6 +41,7 @@ import {
   fitnessPlanReminders,
   exerciseCompletions,
   workoutFeedback,
+  workoutStreakResets,
   events,
   eventTiers,
   eventRegistrations,
@@ -211,7 +212,7 @@ import {
   type VatmebopCheck,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne } from "drizzle-orm";
+import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne, gt } from "drizzle-orm";
 import { getNextMidnightInTimezone } from "./drip-utils";
 
 export interface IStorage {
@@ -631,6 +632,7 @@ export interface IStorage {
   unmarkExerciseComplete(userId: string, exerciseId: string): Promise<void>;
   recordWorkoutFeedback(userId: string, planId: string, workoutType: string, feeling: 'too_hard' | 'just_right' | 'too_easy'): Promise<WorkoutFeedback>;
   getRecentWorkoutFeedback(userId: string, workoutType: string, limit?: number): Promise<WorkoutFeedback[]>;
+  resetWorkoutStreaks(userId: string, reason?: string, workoutTypes?: string[]): Promise<void>;
   getExerciseCompletions(userId: string, planId: string): Promise<ExerciseCompletion[]>;
 
   // Food intake operations
@@ -6530,15 +6532,47 @@ export class DatabaseStorage implements IStorage {
     workoutType: string,
     limit: number = 10,
   ): Promise<WorkoutFeedback[]> {
+    // Honor any streak-reset markers — feedback older than the most
+    // recent reset for this (user, workoutType) is excluded so a manual
+    // level change starts the streak counter from scratch.
+    const [latestReset] = await db
+      .select()
+      .from(workoutStreakResets)
+      .where(and(
+        eq(workoutStreakResets.userId, userId),
+        eq(workoutStreakResets.workoutType, workoutType),
+      ))
+      .orderBy(desc(workoutStreakResets.resetAt))
+      .limit(1);
+
+    const baseConditions = [
+      eq(workoutFeedback.userId, userId),
+      eq(workoutFeedback.workoutType, workoutType),
+    ];
+    if (latestReset?.resetAt) {
+      baseConditions.push(gt(workoutFeedback.createdAt, latestReset.resetAt));
+    }
+
     return await db
       .select()
       .from(workoutFeedback)
-      .where(and(
-        eq(workoutFeedback.userId, userId),
-        eq(workoutFeedback.workoutType, workoutType),
-      ))
+      .where(and(...baseConditions))
       .orderBy(desc(workoutFeedback.createdAt))
       .limit(limit);
+  }
+
+  // Insert a streak-reset marker. Called when the plan's level changes
+  // (manually or via Lever 6) — wipes the effective streak counter for
+  // every workout type for that user without deleting historical data.
+  async resetWorkoutStreaks(
+    userId: string,
+    reason: string = 'manual_level_change',
+    workoutTypes: string[] = ['standard', 'standard-cardio', 'hiit', 'stretching'],
+  ): Promise<void> {
+    if (workoutTypes.length === 0) return;
+    await db.insert(workoutStreakResets).values(
+      workoutTypes.map(wt => ({ userId, workoutType: wt, reason })),
+    );
   }
 
   async unmarkExerciseComplete(userId: string, exerciseId: string): Promise<void> {

@@ -587,6 +587,19 @@ export const insertWorkoutFeedbackSchema = createInsertSchema(workoutFeedback, {
 export type WorkoutFeedback = typeof workoutFeedback.$inferSelect;
 export type InsertWorkoutFeedback = z.infer<typeof insertWorkoutFeedbackSchema>;
 
+// Streak reset markers — one row per (user, workoutType) reset event.
+// Inserted whenever the plan's level changes (manually or via Lever 6
+// confirmation), so subsequent streak calculations only count feedback
+// rows newer than the most recent reset for that workout type.
+export const workoutStreakResets = pgTable("workout_streak_resets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  workoutType: varchar("workout_type", { length: 24 }).notNull(),
+  reason: varchar("reason", { length: 32 }).notNull().default('manual_level_change'),
+  resetAt: timestamp("reset_at").defaultNow().notNull(),
+});
+export type WorkoutStreakReset = typeof workoutStreakResets.$inferSelect;
+
 export const insertTestimonySchema = createInsertSchema(testimonies).omit({
   id: true,
   createdAt: true,

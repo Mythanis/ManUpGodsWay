@@ -10622,6 +10622,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const updateData = insertFitnessPlanSchema.partial().parse(req.body);
       const plan = await storage.updateFitnessPlan(req.params.id, updateData);
+
+      // If the user manually changed the plan's difficulty, wipe the
+      // streak counter for ALL workout types per spec ("If the user
+      // manually changes their level, reset all streaks and levers
+      // to 0"). Also clear any active Lever-6 cooldowns since the level
+      // landscape has changed.
+      const oldLevel = (existingPlan.difficulty || '').toLowerCase();
+      const newLevel = (plan?.difficulty || '').toLowerCase();
+      if (newLevel && oldLevel !== newLevel) {
+        await storage.resetWorkoutStreaks(user.id, 'manual_level_change');
+        await dbForLever6
+          .update(fitnessPlansForLever6)
+          .set({ levelDecisionCooldownUntil: null, levelDecisionSkipSessions: 0 })
+          .where(eqForLever6(fitnessPlansForLever6.id, plan.id));
+        console.log(`[streakReset] user=${user.id} plan=${plan.id} reason=manual_level_change ${oldLevel}→${newLevel}`);
+      }
+
       res.json(plan);
     } catch (error) {
       console.error('Error updating fitness plan:', error);
@@ -11147,12 +11164,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .set({ levelDecisionSkipSessions: 3 })
             .where(eqForLever6(fitnessPlansForLever6.id, plan.id));
         }
-        // "Yes" → reset cooldowns / counters since the level changed.
+        // "Yes" → reset cooldowns / counters and wipe the streak counter
+        // for every workout type since the level just changed.
         if (decision === 'yes') {
           await dbForLever6
             .update(fitnessPlansForLever6)
             .set({ levelDecisionCooldownUntil: null, levelDecisionSkipSessions: 0 })
             .where(eqForLever6(fitnessPlansForLever6.id, plan.id));
+          await storage.resetWorkoutStreaks(user.id, 'lever6_level_up');
         }
       } else {
         result = await applyLever6Decision({
@@ -11162,6 +11181,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           workoutType: workoutType as TooHardWorkoutType,
           sessionMinutes: plan.estimatedDuration ?? 60,
         });
+        // Mirror the streak reset for the too-hard Lever 6 yes path.
+        if (decision === 'yes') {
+          await storage.resetWorkoutStreaks(user.id, 'lever6_level_down');
+        }
       }
 
       console.log(
