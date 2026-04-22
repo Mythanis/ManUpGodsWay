@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -152,6 +152,7 @@ export default function FitnessManagement() {
 
   // ── Exercise management state ──────────────────────────────────────────
   const [exSearch, setExSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [exPage, setExPage] = useState(0);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [clearInput, setClearInput] = useState("");
@@ -170,15 +171,24 @@ export default function FitnessManagement() {
   const mediaInputRef = useRef<HTMLInputElement>(null);
   const [deleteExConfirm, setDeleteExConfirm] = useState<Exercise | null>(null);
 
+  // Debounce exercise search (300 ms) and reset page on new search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(exSearch);
+      setExPage(0);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [exSearch]);
+
   // ── Exercise query ─────────────────────────────────────────────────────
   const { data: exercises = [], isLoading: exLoading } = useQuery<Exercise[]>({
-    queryKey: ["/api/exercises", exSearch, exPage],
+    queryKey: ["/api/exercises", debouncedSearch, exPage],
     queryFn: async () => {
       const params = new URLSearchParams({
         limit: String(EX_PAGE_SIZE),
         offset: String(exPage * EX_PAGE_SIZE),
       });
-      if (exSearch.trim()) params.set("search", exSearch.trim());
+      if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
       const res = await fetch(`/api/exercises?${params}`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch exercises");
       return res.json();
@@ -670,7 +680,7 @@ export default function FitnessManagement() {
               className="pl-9"
               placeholder="Search exercises by name…"
               value={exSearch}
-              onChange={(e) => { setExSearch(e.target.value); setExPage(0); }}
+              onChange={(e) => setExSearch(e.target.value)}
             />
           </div>
 
