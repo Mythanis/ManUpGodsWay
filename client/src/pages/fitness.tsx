@@ -2418,6 +2418,85 @@ export default function Fitness() {
           if (removed) total -= exerciseTimeSec(removed);
         }
 
+        // === Spec validation checklist ===
+        // Verifies the constructed session against every required
+        // invariant before it gets pushed onto the week. Failures are
+        // logged with a clear prefix so they're easy to spot during QA;
+        // we don't hard-throw because the safety-net trim above can
+        // legitimately reduce a session below ideal counts when the
+        // user picked an unusually short duration. The checks still
+        // catch real generator bugs (e.g. wrong block ordering, HIIT
+        // pool leak, count-table over-cap).
+        const issues: string[] = [];
+        // Header counts.
+        const headOpening = dayExercises.slice(0, openingStretchCount);
+        const headWarmup  = dayExercises.slice(openingStretchCount, openingStretchCount + mainWarmupCount);
+        const tailCooldown = dayExercises.slice(dayExercises.length - cooldownCount);
+        if (!isStretchingOnly) {
+          if (headOpening.length < 4) issues.push(`opening stretch < 4 (got ${headOpening.length})`);
+          if (headWarmup.length < 1)  issues.push(`warm-up missing (got ${headWarmup.length})`);
+          if (tailCooldown.length < 4) issues.push(`cooldown stretch < 4 (got ${tailCooldown.length})`);
+        }
+        // Total estimated time within budget.
+        if (total > totalSec) issues.push(`estimated time ${total}s > budget ${totalSec}s`);
+        // Main-block exercise count vs spec cap.
+        const mainCount = dayExercises.length - (isStretchingOnly ? 0 : openingStretchCount + mainWarmupCount + cooldownCount);
+        if (workoutStyle !== 'hiit' && !isStretchingOnly) {
+          // Standard: mainCount should not exceed the spec cap
+          // (exercisesPerDay is already clamped to the table max).
+          if (mainCount > exercisesPerDay) issues.push(`main count ${mainCount} > cap ${exercisesPerDay}`);
+        }
+        // HIIT: only HIIT=Yes exercises in the main circuit; expanded
+        // length should be circuit × rounds.
+        if (workoutStyle === 'hiit') {
+          const main = dayExercises.slice(openingStretchCount + mainWarmupCount, dayExercises.length - cooldownCount);
+          const nonHiit = main.filter(pe => (pe.exercise.hiit || 'No') !== 'Yes');
+          // Tolerate the "fallback when <4 HIIT-tagged available" case.
+          if (nonHiit.length > 0 && main.some(pe => (pe.exercise.hiit || 'No') === 'Yes')) {
+            issues.push(`HIIT main contains ${nonHiit.length} non-HIIT-tagged exercise(s)`);
+          }
+        }
+        // Stretching: only stretch-tagged exercises in the main session.
+        if (isStretchingOnly) {
+          const mainStretchEntries = dayExercises.slice(STRETCHING_LIGHT_MOVEMENT_COUNT);
+          const nonStretch = mainStretchEntries.filter(pe => {
+            const flagged = (pe.exercise.stretching || 'No') === 'Yes';
+            const named   = pe.exercise.name.toLowerCase().includes('stretch');
+            return !(flagged || named);
+          });
+          if (nonStretch.length > 0) issues.push(`stretching main contains ${nonStretch.length} non-stretch exercise(s)`);
+        }
+        // Compound-before-isolation, core-last in the standard main block.
+        if (workoutStyle !== 'hiit' && !isStretchingOnly) {
+          const main = dayExercises.slice(openingStretchCount + mainWarmupCount, dayExercises.length - cooldownCount);
+          const types = main.map(pe => classifyStandardExercise(pe.exercise));
+          const lastCompoundIdx = types.lastIndexOf('compound');
+          const firstIsolationIdx = types.findIndex(t => t === 'isolation' || t === 'bodyweight');
+          if (lastCompoundIdx !== -1 && firstIsolationIdx !== -1 && lastCompoundIdx > firstIsolationIdx) {
+            issues.push('compound appears after isolation in main block');
+          }
+          const coreIdxs = types.map((t, i) => t === 'core' ? i : -1).filter(i => i !== -1);
+          const nonCoreAfterCore = coreIdxs.length > 0
+            ? types.slice(coreIdxs[0]).some(t => t !== 'core')
+            : false;
+          if (nonCoreAfterCore) issues.push('non-core exercise appears after a core exercise in main block');
+        }
+        // No consecutive day with same primary muscle group.
+        if (week.length > 0) {
+          const prevDay = week[week.length - 1];
+          const prevParts = new Set((bodyPartSchedule[d - 1]?.parts ?? []).map(p => p.toLowerCase()));
+          const curParts = (dayPlan.parts ?? []).map(p => p.toLowerCase());
+          const overlap = curParts.filter(p => prevParts.has(p));
+          if (overlap.length > 0) {
+            issues.push(`shares primary muscle group(s) with previous day: ${overlap.join(', ')}`);
+          }
+          void prevDay;
+        }
+
+        if (issues.length > 0) {
+          console.warn(`[validateSession] ${dayLabel}:`, issues);
+        }
+
         week.push({
           name: dayLabel,
           exercises: dayExercises,
