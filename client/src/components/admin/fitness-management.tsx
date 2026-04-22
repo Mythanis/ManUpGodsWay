@@ -160,6 +160,8 @@ export default function FitnessManagement() {
   const [exPage, setExPage] = useState(0);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [clearInput, setClearInput] = useState("");
+  const [showClearMediaConfirm, setShowClearMediaConfirm] = useState(false);
+  const [clearMediaInput, setClearMediaInput] = useState("");
   const [showExEdit, setShowExEdit] = useState(false);
   const [selectedEx, setSelectedEx] = useState<Exercise | null>(null);
   const [exForm, setExForm] = useState<ExerciseEditForm>({
@@ -227,6 +229,24 @@ export default function FitnessManagement() {
     },
     onError: (err: any) => {
       toast({ title: "Error", description: err.message || "Failed to clear database", variant: "destructive" });
+    },
+  });
+
+  const clearAllMediaMutation = useMutation({
+    mutationFn: async () => apiRequest("DELETE", "/api/admin/exercises/all-media"),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
+      setShowClearMediaConfirm(false);
+      setClearMediaInput("");
+      toast({
+        title: "Media Files Deleted",
+        description:
+          data?.message ||
+          `Deleted ${data?.deleted ?? 0} file(s) from storage and cleared ${data?.cleared ?? 0} exercise media reference(s).`,
+      });
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message || "Failed to delete media files", variant: "destructive" });
     },
   });
 
@@ -751,6 +771,15 @@ export default function FitnessManagement() {
             />
             <Button
               variant="outline"
+              className="border-orange-500 text-orange-600 hover:bg-orange-50"
+              onClick={() => { setClearMediaInput(""); setShowClearMediaConfirm(true); }}
+              data-testid="button-clear-exercise-media"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete All Media Files
+            </Button>
+            <Button
+              variant="outline"
               className="border-red-500 text-red-600 hover:bg-red-50"
               onClick={() => { setClearInput(""); setShowClearConfirm(true); }}
               data-testid="button-clear-exercises"
@@ -1061,6 +1090,42 @@ export default function FitnessManagement() {
               data-testid="button-confirm-clear"
             >
               {clearAllMutation.isPending ? "Clearing…" : "Clear Everything"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Clear All Media Confirm Dialog */}
+      <Dialog open={showClearMediaConfirm} onOpenChange={(o) => { if (!o) { setShowClearMediaConfirm(false); setClearMediaInput(""); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-orange-600">
+              <AlertTriangle className="w-5 h-5" />
+              Delete All Exercise Media
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              This will <strong>permanently delete every uploaded image, GIF, and video</strong> attached to any exercise from cloud storage, and clear the media reference on every exercise. The exercises themselves stay; only their media is removed. This cannot be undone.
+            </p>
+            <p className="text-sm font-medium">Type <span className="font-mono bg-orange-50 text-orange-700 px-1 rounded">DELETE MEDIA</span> to confirm:</p>
+            <Input
+              value={clearMediaInput}
+              onChange={(e) => setClearMediaInput(e.target.value)}
+              placeholder="DELETE MEDIA"
+              className="font-mono"
+              data-testid="input-clear-media-confirm"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowClearMediaConfirm(false); setClearMediaInput(""); }}>Cancel</Button>
+            <Button
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+              disabled={clearMediaInput !== "DELETE MEDIA" || clearAllMediaMutation.isPending}
+              onClick={() => clearAllMediaMutation.mutate()}
+              data-testid="button-confirm-clear-media"
+            >
+              {clearAllMediaMutation.isPending ? "Deleting…" : "Delete All Media"}
             </Button>
           </DialogFooter>
         </DialogContent>

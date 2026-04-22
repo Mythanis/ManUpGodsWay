@@ -10350,6 +10350,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // Delete every storage-backed media file referenced by exercises and
+  // clear the mediaFile column. Leaves the exercise rows themselves intact.
+  app.delete('/api/admin/exercises/all-media', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const rows = await db.select().from(schema.exercises);
+      let deleted = 0;
+      let failed = 0;
+      let cleared = 0;
+
+      for (const row of rows) {
+        if (row.mediaFile && isStorageUrl(row.mediaFile)) {
+          try {
+            await deleteStorageFile(row.mediaFile);
+            deleted++;
+          } catch (err) {
+            console.warn(`Failed to delete media for exercise ${row.id}:`, err);
+            failed++;
+          }
+        }
+        if (row.mediaFile && row.mediaFile !== '') {
+          cleared++;
+        }
+      }
+
+      await db
+        .update(schema.exercises)
+        .set({ mediaFile: '', updatedAt: new Date() });
+
+      res.json({
+        message: `Deleted ${deleted} media file(s) from storage and cleared ${cleared} exercise media reference(s).`,
+        deleted,
+        cleared,
+        failed,
+        total: rows.length,
+      });
+    } catch (error) {
+      console.error('Error deleting all exercise media:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // ── End admin exercise management ─────────────────────────────────────
 
   // Fitness plans routes
