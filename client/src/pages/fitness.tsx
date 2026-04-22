@@ -1416,6 +1416,11 @@ export default function Fitness() {
     equipment: string;
     targetMuscles: string[];
     gifUrl?: string;
+    // "Yes" / "No" tags from the exercises table. Used to filter the
+    // HIIT circuit pool (HIIT = Yes only per spec) and the stretching
+    // pool (Stretching = Yes only).
+    hiit?: string;
+    stretching?: string;
   }
 
   interface PlanExercise {
@@ -1620,7 +1625,9 @@ export default function Fitness() {
             bodyPart: ex.bodyPart || 'unknown',
             equipment: ex.equipment || equipment,
             targetMuscles: ex.bodyPart ? [ex.bodyPart] : [],
-            gifUrl: ex.mediaFile || ''
+            gifUrl: ex.mediaFile || '',
+            hiit: ex.hiit ?? 'No',
+            stretching: ex.stretching ?? 'No',
           }));
           
           allExercises = allExercises.concat(mapped);
@@ -2016,8 +2023,16 @@ export default function Fitness() {
             });
           }
         } else {
-          // Standard or HIIT - pick from exercises pool by body parts (skip stretches)
-          const workPool = exercises.filter(e => !e.name.toLowerCase().includes('stretch'));
+          // Standard or HIIT - pick from exercises pool by body parts (skip stretches).
+          // HIIT sessions per spec: only exercises tagged HIIT=Yes in the
+          // DB are eligible for the circuit. Falls back to the full pool
+          // if no HIIT-tagged exercises were fetched (e.g. equipment
+          // selection produced none) so the session still generates.
+          let workPool = exercises.filter(e => !e.name.toLowerCase().includes('stretch'));
+          if (workoutStyle === 'hiit') {
+            const hiitOnly = workPool.filter(e => (e.hiit || 'No') === 'Yes');
+            if (hiitOnly.length >= 4) workPool = hiitOnly;
+          }
           const exercisesPerBodyPart = Math.ceil(exercisesPerDay / dayPlan.parts.length);
           // Build the MAIN block in a temporary array so we can sort it
           // (compound → isolation/bodyweight → core per spec) and then
@@ -2036,9 +2051,15 @@ export default function Fitness() {
             );
             picked.forEach(ex => {
               if (workoutStyle === 'hiit') {
+                // Circuit definition: emit each exercise with sets=1.
+                // The circuit is then cycled hiitRounds times below so
+                // the player runs ex1→ex2→...→exN→ex1→... per spec
+                // ("cycle through circuit exercises, complete all
+                // rounds; do not repeat same exercise within same
+                // round").
                 mainBlock.push({
                   exercise: ex,
-                  sets: hiitRounds,
+                  sets: 1,
                   reps: null,
                   durationSec: hiitWork,
                   restSec: hiitRest,
@@ -2061,6 +2082,21 @@ export default function Fitness() {
 
           // Cap the main block at the budgeted exercise count.
           while (mainBlock.length > exercisesPerDay) mainBlock.pop();
+
+          // HIIT: expand the circuit definition (each exercise once,
+          // sets=1) into round-robin order — ex1, ex2, ..., exN, ex1,
+          // ex2, ..., exN — repeated hiitRounds times. The player then
+          // simply walks the list and naturally cycles through rounds
+          // without repeating an exercise within the same round.
+          if (workoutStyle === 'hiit' && mainBlock.length > 0) {
+            const circuit = [...mainBlock];
+            mainBlock.length = 0;
+            for (let r = 0; r < hiitRounds; r++) {
+              for (const slot of circuit) {
+                mainBlock.push({ ...slot });
+              }
+            }
+          }
 
           // For Standard styles, sort main block compound → isolation /
           // bodyweight → core per spec, then resolve sets/reps with the
