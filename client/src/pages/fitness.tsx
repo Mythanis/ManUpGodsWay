@@ -226,7 +226,14 @@ export default function Fitness() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  const initialTab = (() => {
+    if (typeof window === 'undefined') return 'workout';
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get('tab');
+    return t && ['workout', 'community', 'planner', 'intake'].includes(t) ? t : 'workout';
+  })();
+  const [activeFitnessTab, setActiveFitnessTab] = useState<string>(initialTab);
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
   const { user: authUser } = useAuth();
   const { isTourActive } = useTour();
@@ -1963,7 +1970,11 @@ export default function Fitness() {
         )}
 
         {/* Tab Navigation */}
-        <Tabs defaultValue="workout" className="w-full">
+        <Tabs
+          value={activeFitnessTab}
+          onValueChange={setActiveFitnessTab}
+          className="w-full"
+        >
           <TabsList className="grid grid-cols-4 w-full h-auto p-2 bg-transparent gap-2 border-2 border-[#FCD000] rounded-sm">
             <TabsTrigger value="workout" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Dumbbell className="w-5 h-5" />

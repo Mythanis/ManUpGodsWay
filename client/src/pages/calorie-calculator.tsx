@@ -115,6 +115,14 @@ export default function CalorieCalculator() {
 
   const [step, setStep] = useState<Step>("disclaimer");
   const [acknowledged, setAcknowledged] = useState(false);
+  const [contra, setContra] = useState({
+    pregnant: false,
+    breastfeeding: false,
+    under18: false,
+    eatingDisorder: false,
+    medical: false,
+  });
+  const isContraindicated = Object.values(contra).some(Boolean);
   const [form, setForm] = useState<FormState>(DEFAULTS);
   const [initialized, setInitialized] = useState(false);
 
@@ -165,7 +173,7 @@ export default function CalorieCalculator() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/nutrition-profile"] });
       toast({ title: "Saved", description: "Your daily calorie target has been saved." });
-      setLocation("/fitness");
+      setLocation("/fitness?tab=intake");
     },
     onError: (err: any) => {
       toast({ title: "Error", description: err?.message || "Failed to save", variant: "destructive" });
@@ -220,32 +228,57 @@ export default function CalorieCalculator() {
                 <h2 className="font-black uppercase tracking-wide text-base">Before You Begin</h2>
                 <p className="text-white/70 text-sm mt-2">
                   This calculator gives an estimate using the Mifflin–St Jeor equation and standard activity multipliers.
-                  It is <strong>not medical advice</strong>. Talk to a doctor or registered dietitian before changing your diet,
-                  especially if any of the following apply to you.
+                  It is <strong>not medical advice</strong>. Check any of the following that apply to you:
                 </p>
-                <ul className="text-white/60 text-sm mt-3 list-disc list-inside space-y-1">
-                  <li>Under 18 years old</li>
-                  <li>Pregnant or breastfeeding</li>
-                  <li>History of an eating disorder</li>
-                  <li>Diabetes, kidney, liver, heart, or thyroid condition</li>
-                  <li>Currently taking medication that affects appetite or metabolism</li>
-                </ul>
               </div>
             </div>
-            <label className="flex items-start gap-3 cursor-pointer pt-2">
+
+            <div className="space-y-2 pt-1">
+              {([
+                ["under18", "I am under 18 years old"],
+                ["pregnant", "I am pregnant"],
+                ["breastfeeding", "I am breastfeeding"],
+                ["eatingDisorder", "I have a history of an eating disorder"],
+                ["medical", "I have a medical condition (diabetes, kidney, liver, heart, thyroid) or take medication affecting appetite/metabolism"],
+              ] as const).map(([key, label]) => (
+                <label key={key} className="flex items-start gap-3 cursor-pointer">
+                  <Checkbox
+                    checked={contra[key]}
+                    onCheckedChange={(v) => setContra({ ...contra, [key]: !!v })}
+                    data-testid={`checkbox-contra-${key}`}
+                    className="mt-1"
+                  />
+                  <span className="text-sm text-white/80">{label}</span>
+                </label>
+              ))}
+            </div>
+
+            {isContraindicated && (
+              <div className="bg-red-900/30 border-2 border-red-500/40 rounded-sm p-3 flex items-start gap-2" data-testid="warning-contraindicated">
+                <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                <p className="text-red-100 text-xs">
+                  Please talk to a doctor or registered dietitian before using a calorie target.
+                  This calculator is not appropriate for your situation.
+                </p>
+              </div>
+            )}
+
+            <label className="flex items-start gap-3 cursor-pointer pt-2 border-t border-white/10">
               <Checkbox
                 checked={acknowledged}
                 onCheckedChange={(v) => setAcknowledged(!!v)}
+                disabled={isContraindicated}
                 data-testid="checkbox-acknowledge"
                 className="mt-1"
               />
-              <span className="text-sm text-white/80">
-                I am 18 or older, none of the above apply to me, and I understand this is an estimate, not medical advice.
+              <span className={`text-sm ${isContraindicated ? "text-white/30" : "text-white/80"}`}>
+                I understand this is an estimate, not medical advice.
               </span>
             </label>
+
             <Button
               onClick={next}
-              disabled={!acknowledged}
+              disabled={!acknowledged || isContraindicated}
               className="w-full bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black"
               data-testid="button-next-disclaimer"
             >
