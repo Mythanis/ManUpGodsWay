@@ -5019,8 +5019,7 @@ export default function Fitness() {
                   setHistoryPlan(detailPlan);
                   setHistoryLoading(true);
                   try {
-                    const res = await apiRequest('GET', `/api/fitness-plans/${detailPlan.id}/adjustment-history`);
-                    const data = await res.json();
+                    const data = await apiRequest('GET', `/api/fitness-plans/${detailPlan.id}/adjustment-history`);
                     setHistoryRows(data?.history ?? []);
                   } catch {
                     setHistoryRows([]);
@@ -5126,10 +5125,9 @@ export default function Fitness() {
                 if (!tunePlan) return;
                 setTuneSubmitting(true);
                 try {
-                  const res = await apiRequest('POST', `/api/fitness-plans/${tunePlan.id}/manual-override`, {
+                  const data: any = await apiRequest('POST', `/api/fitness-plans/${tunePlan.id}/manual-override`, {
                     restDelta, repsDelta, setsDelta,
                   });
-                  const data: any = await res.json();
                   toast({
                     title: 'Tuned',
                     description: `${data?.changes?.length ?? 0} exercise${(data?.changes?.length ?? 0) === 1 ? '' : 's'} updated. Applies next session.`,
@@ -5155,8 +5153,7 @@ export default function Fitness() {
                 if (!tunePlan) return;
                 setTuneSubmitting(true);
                 try {
-                  const res = await apiRequest('POST', `/api/fitness-plans/${tunePlan.id}/reset-defaults`);
-                  const data: any = await res.json();
+                  const data: any = await apiRequest('POST', `/api/fitness-plans/${tunePlan.id}/reset-defaults`);
                   toast({
                     title: 'Reset',
                     description: `Restored ${data?.entries ?? 0} change${(data?.entries ?? 0) === 1 ? '' : 's'} back to defaults for your level.`,
@@ -5183,8 +5180,7 @@ export default function Fitness() {
                 setHistoryLoading(true);
                 setTunePlan(null);
                 try {
-                  const res = await apiRequest('GET', `/api/fitness-plans/${tunePlan.id}/adjustment-history`);
-                  const data = await res.json();
+                  const data = await apiRequest('GET', `/api/fitness-plans/${tunePlan.id}/adjustment-history`);
                   setHistoryRows(data?.history ?? []);
                 } catch {
                   setHistoryRows([]);
