@@ -510,6 +510,11 @@ export const fitnessPlans = pgTable("fitness_plans", {
   difficulty: varchar("difficulty").default("beginner"), // beginner, intermediate, advanced
   estimatedDuration: integer("estimated_duration").default(60), // in minutes
   isPublic: boolean("is_public").default(false),
+  // Lever 6 cooldown tracking. After a "no" decision we suppress the
+  // level-change prompt until this date; after a "later" / "not yet"
+  // decision we suppress for this many remaining sessions.
+  levelDecisionCooldownUntil: timestamp("level_decision_cooldown_until"),
+  levelDecisionSkipSessions: integer("level_decision_skip_sessions").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

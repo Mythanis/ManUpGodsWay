@@ -71,6 +71,13 @@ import {
   type WorkoutType as TooHardWorkoutType,
   type LeverId as TooHardLeverId,
 } from "./fitness-too-hard-adjustments";
+import {
+  applyTooEasyLever,
+  applyLever6Decision as applyTooEasyLever6Decision,
+} from "./fitness-too-easy-adjustments";
+import { db as dbForLever6 } from "./db";
+import { fitnessPlans as fitnessPlansForLever6 } from "@shared/schema";
+import { eq as eqForLever6 } from "drizzle-orm";
 import Parser from 'rss-parser';
 import { sendFeedbackEmail, sendHelpRequestEmail } from './emailService';
 
@@ -11013,21 +11020,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const lever = feeling === 'just_right' ? null : selectLeverForStreak(streak);
       const direction = feeling === 'too_hard' ? 'easier' : feeling === 'too_easy' ? 'harder' : null;
 
-      // Auto-apply the lever for "too hard" feedback (Levers 1–5).
-      // Lever 6 returns a confirmation prompt instead — the client
-      // posts the user's choice to /api/fitness-plans/:planId/level-decision.
-      // "too easy" rules will be implemented when that spec arrives.
+      // Auto-apply the lever for "too hard" / "too easy" feedback
+      // (Levers 1–5). Lever 6 normally returns a confirmation prompt
+      // instead — the client posts the user's choice to
+      // /api/fitness-plans/:planId/level-decision. Lever 6 may also be
+      // suppressed by an active cooldown (see below), in which case it
+      // is downgraded to Lever 5.
       let adjustment: Awaited<ReturnType<typeof applyTooHardLever>> | null = null;
-      if (lever && feeling === 'too_hard') {
+      let leverIdToFire: TooHardLeverId | null = (lever?.id as TooHardLeverId) ?? null;
+      let suppressedLever6 = false;
+
+      // Lever-6 cooldown logic (only relevant for too_easy per spec —
+      // too_hard does not yet define a date cooldown). If a cooldown is
+      // active OR remaining skip-sessions > 0, downgrade Lever 6 → 5.
+      if (feeling === 'too_easy' && leverIdToFire === 6) {
+        const now = new Date();
+        const cooldownActive = plan.levelDecisionCooldownUntil && new Date(plan.levelDecisionCooldownUntil) > now;
+        const skipsLeft = plan.levelDecisionSkipSessions ?? 0;
+        if (cooldownActive || skipsLeft > 0) {
+          leverIdToFire = 5;
+          suppressedLever6 = true;
+        }
+      }
+
+      // Decrement remaining skip-sessions on every too_easy feedback so
+      // the prompt eventually returns. Don't go below 0.
+      if (feeling === 'too_easy' && (plan.levelDecisionSkipSessions ?? 0) > 0) {
+        await dbForLever6
+          .update(fitnessPlansForLever6)
+          .set({ levelDecisionSkipSessions: Math.max(0, (plan.levelDecisionSkipSessions ?? 0) - 1) })
+          .where(eqForLever6(fitnessPlansForLever6.id, plan.id));
+      }
+
+      if (leverIdToFire) {
         const planLevel = ((plan.difficulty || 'beginner').toLowerCase()) as TooHardLevel;
         if (planLevel === 'beginner' || planLevel === 'intermediate' || planLevel === 'advanced') {
-          adjustment = await applyTooHardLever({
-            planId: plan.id,
-            leverId: lever.id as TooHardLeverId,
-            level: planLevel,
-            workoutType: workoutType as TooHardWorkoutType,
-            sessionMinutes: plan.estimatedDuration ?? 60,
-          });
+          if (feeling === 'too_hard') {
+            adjustment = await applyTooHardLever({
+              planId: plan.id,
+              leverId: leverIdToFire,
+              level: planLevel,
+              workoutType: workoutType as TooHardWorkoutType,
+              sessionMinutes: plan.estimatedDuration ?? 60,
+            });
+          } else if (feeling === 'too_easy') {
+            adjustment = await applyTooEasyLever({
+              planId: plan.id,
+              leverId: leverIdToFire,
+              level: planLevel,
+              workoutType: workoutType as TooHardWorkoutType,
+              sessionMinutes: plan.estimatedDuration ?? 60,
+            }) as any;
+          }
         }
       }
 
@@ -11049,6 +11093,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           : null,
         adjustment,
+        suppressedLever6,
       });
     } catch (error) {
       console.error('Error recording workout feedback:', error);
@@ -11069,6 +11114,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const decision = req.body?.decision;
       const workoutType = req.body?.workoutType ?? 'standard';
+      // Direction tells us whether the prompt was the "too hard" Lever 6
+      // (lower the level) or the "too easy" Lever 6 (raise the level).
+      // Defaults to 'easier' for backwards-compat with the original UI.
+      const direction = req.body?.direction === 'harder' ? 'harder' : 'easier';
       if (!['yes', 'no', 'later'].includes(decision)) {
         return res.status(400).json({ message: 'Invalid decision' });
       }
@@ -11081,16 +11130,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Plan level is invalid' });
       }
 
-      const result = await applyLever6Decision({
-        planId: plan.id,
-        decision,
-        currentLevel: planLevel,
-        workoutType: workoutType as TooHardWorkoutType,
-        sessionMinutes: plan.estimatedDuration ?? 60,
-      });
+      let result: any;
+      if (direction === 'harder') {
+        result = await applyTooEasyLever6Decision({
+          planId: plan.id,
+          decision,
+          currentLevel: planLevel,
+          workoutType: workoutType as TooHardWorkoutType,
+          sessionMinutes: plan.estimatedDuration ?? 60,
+        });
+        // "Not yet" → ask again in 3 sessions. Persist the counter so the
+        // feedback route can suppress + decrement it.
+        if (decision === 'later') {
+          await dbForLever6
+            .update(fitnessPlansForLever6)
+            .set({ levelDecisionSkipSessions: 3 })
+            .where(eqForLever6(fitnessPlansForLever6.id, plan.id));
+        }
+        // "Yes" → reset cooldowns / counters since the level changed.
+        if (decision === 'yes') {
+          await dbForLever6
+            .update(fitnessPlansForLever6)
+            .set({ levelDecisionCooldownUntil: null, levelDecisionSkipSessions: 0 })
+            .where(eqForLever6(fitnessPlansForLever6.id, plan.id));
+        }
+      } else {
+        result = await applyLever6Decision({
+          planId: plan.id,
+          decision,
+          currentLevel: planLevel,
+          workoutType: workoutType as TooHardWorkoutType,
+          sessionMinutes: plan.estimatedDuration ?? 60,
+        });
+      }
 
       console.log(
-        `[lever6] user=${user.id} plan=${plan.id} decision=${decision} applied=${result.applied} changes=${result.changes.length}`,
+        `[lever6] user=${user.id} plan=${plan.id} direction=${direction} decision=${decision} applied=${result.applied} changes=${result.changes.length}`,
       );
 
       res.json(result);

@@ -5069,13 +5069,23 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
     if (lever6Submitting || lever6Decided) return;
     setLever6Submitting(true);
     try {
+      // Direction tells the server whether this is the "too hard" Lever 6
+      // (lower the level) or the "too easy" Lever 6 (raise the level).
+      const direction = feedbackResult?.feeling === 'too_easy' ? 'harder' : 'easier';
       await apiRequest('POST', `/api/fitness-plans/${plan.id}/level-decision`, {
         decision,
         workoutType,
+        direction,
       });
       setLever6Decided(true);
+      const isTooEasy = feedbackResult?.feeling === 'too_easy';
       toast({
-        title: decision === 'yes' ? 'Level updated' : decision === 'no' ? 'Level kept' : 'We\'ll ask again next session',
+        title:
+          decision === 'yes'
+            ? 'Level updated'
+            : decision === 'no'
+              ? isTooEasy ? "We'll keep this level for the next 2 weeks" : 'Level kept'
+              : isTooEasy ? "We'll apply lighter tweaks and check back in 3 sessions" : "We'll ask again next session",
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to record decision';
