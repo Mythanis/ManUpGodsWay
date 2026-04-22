@@ -4252,7 +4252,8 @@ export default function Fitness() {
             // exerciseId. Surface errors via toast so failures aren't silent.
             apiRequest('POST', `/api/fitness-plans/${playerPlan.id}/exercises/${rowId}/complete`)
               .then(() => {
-                queryClient.invalidateQueries({ queryKey: ['/api/fitness-plans'] });
+                // Match the canonical key used elsewhere in this file
+                queryClient.invalidateQueries({ queryKey: ['api', 'fitness-plans'] });
               })
               .catch((err: unknown) => {
                 const message = err instanceof Error ? err.message : 'Failed to record completion';
@@ -4302,8 +4303,9 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   const isTimeBased = !!timeBasedMatch;
   const workSeconds = isTimeBased ? parseInt(timeBasedMatch![1], 10) || 30 : 30;
 
-  // Detect URL extension for media rendering
-  const mediaUrl = currentExercise?.imageUrl || '';
+  // Detect URL extension for media rendering. Fall back to the legacy
+  // `exerciseGifUrl` alias for older plan rows that predate the imageUrl column.
+  const mediaUrl = currentExercise?.imageUrl || currentExercise?.exerciseGifUrl || '';
   const isVideo = /\.(mp4|webm|mov)$/i.test(mediaUrl);
 
   // Initialize Web Audio context lazily (typed, no `any`)
@@ -4328,7 +4330,10 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + duration / 1000);
-    } catch {}
+    } catch (err) {
+      // Audio is non-critical; log for diagnostics rather than swallowing.
+      console.warn('[WorkoutPlayer] beep failed:', err);
+    }
   };
 
   // Tick timer
