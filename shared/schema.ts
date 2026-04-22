@@ -600,6 +600,31 @@ export const workoutStreakResets = pgTable("workout_streak_resets", {
 });
 export type WorkoutStreakReset = typeof workoutStreakResets.$inferSelect;
 
+// Per-change adjustment audit log. One row per individual change made
+// by a lever (set tweak, rep tweak, swap, add, remove). Grouped by
+// `batchId` so rollbacks can revert one whole lever application atomically.
+// `snapshot` carries the original row's JSON for "remove" entries so a
+// deleted exercise can be restored.
+export const workoutAdjustmentLog = pgTable("workout_adjustment_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  planId: varchar("plan_id").notNull().references(() => fitnessPlans.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  workoutType: varchar("workout_type", { length: 24 }).notNull(),
+  leverId: integer("lever_id").notNull(),
+  direction: varchar("direction", { length: 8 }).notNull(), // 'easier' | 'harder'
+  batchId: varchar("batch_id").notNull(),
+  field: varchar("field", { length: 16 }).notNull(), // restTime|reps|sets|swap|add|remove
+  planExerciseId: varchar("plan_exercise_id"),
+  exerciseName: varchar("exercise_name"),
+  beforeVal: text("before_val"),
+  afterVal: text("after_val"),
+  snapshot: jsonb("snapshot"),
+  appliedAt: timestamp("applied_at").defaultNow().notNull(),
+  rolledBackAt: timestamp("rolled_back_at"),
+  rollbackReason: varchar("rollback_reason", { length: 32 }),
+});
+export type WorkoutAdjustmentLogRow = typeof workoutAdjustmentLog.$inferSelect;
+
 export const insertTestimonySchema = createInsertSchema(testimonies).omit({
   id: true,
   createdAt: true,

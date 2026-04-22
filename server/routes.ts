@@ -75,6 +75,12 @@ import {
   applyTooEasyLever,
   applyLever6Decision as applyTooEasyLever6Decision,
 } from "./fitness-too-easy-adjustments";
+import {
+  logAdjustmentBatch,
+  partialUndoLastBatch,
+  restoreFieldBaselines,
+  fullRollback,
+} from "./fitness-rollback";
 import { db as dbForLever6 } from "./db";
 import { fitnessPlans as fitnessPlansForLever6 } from "@shared/schema";
 import { eq as eqForLever6 } from "drizzle-orm";
@@ -11092,8 +11098,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Persist every change the lever made into the per-change audit
+      // log so rollbacks (below + manual) can reverse them precisely.
+      if (adjustment && adjustment.applied && adjustment.changes.length > 0 && lever) {
+        await logAdjustmentBatch(
+          {
+            planId: plan.id,
+            userId: user.id,
+            workoutType,
+            leverId: lever.id,
+            direction: feeling === 'too_hard' ? 'easier' : 'harder',
+          },
+          adjustment.changes,
+        );
+      }
+
+      // Rollback Rules — if the user reports "just right" after a series
+      // of "too hard" adjustments, partially unwind:
+      //   2 in a row → undo only the most recent lever batch.
+      //   3 in a row → restore each touched field to its original
+      //                baseline; keep swaps so the user keeps any new
+      //                exercises they liked.
+      // Cap at 3 — anything beyond just preserves the current state.
+      let rollback: any = null;
+      if (feeling === 'just_right' && (streak === 2 || streak === 3)) {
+        if (streak === 2) {
+          rollback = await partialUndoLastBatch({
+            planId: plan.id,
+            workoutType,
+            direction: 'easier',
+            reason: 'just_right_streak_2',
+          });
+        } else {
+          rollback = await restoreFieldBaselines({
+            planId: plan.id,
+            workoutType,
+            direction: 'easier',
+            reason: 'just_right_streak_3',
+          });
+        }
+      }
+
       console.log(
-        `[workoutFeedback] user=${user.id} type=${workoutType} feeling=${feeling} streak=${streak} level=${level} lever=${lever?.id ?? 'none'} direction=${direction ?? 'none'} applied=${adjustment?.applied ?? false} changes=${adjustment?.changes.length ?? 0}`,
+        `[workoutFeedback] user=${user.id} type=${workoutType} feeling=${feeling} streak=${streak} level=${level} lever=${lever?.id ?? 'none'} direction=${direction ?? 'none'} applied=${adjustment?.applied ?? false} changes=${adjustment?.changes.length ?? 0} rollback=${rollback ? 'yes' : 'no'}`,
       );
 
       res.json({
@@ -11111,6 +11158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : null,
         adjustment,
         suppressedLever6,
+        rollback,
       });
     } catch (error) {
       console.error('Error recording workout feedback:', error);
@@ -11194,6 +11242,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       console.error('Error applying level decision:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Full rollback — user-initiated only. Reverses every un-rolled-back
+  // adjustment for the plan: restores removed exercises, undoes swaps,
+  // resets rest/reps/sets to their original baselines. Logged.
+  app.post('/api/fitness-plans/:planId/rollback', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) return res.status(404).json({ message: 'Fitness plan not found' });
+      if (plan.userId !== user.id) return res.status(403).json({ message: 'Access denied' });
+
+      const reason = (req.body?.reason || 'user_requested').toString().slice(0, 32);
+      const result = await fullRollback({ planId: plan.id, reason });
+
+      console.log(
+        `[fullRollback] user=${user.id} plan=${plan.id} reason=${reason} entries=${result.entries} batches=${result.batches}`,
+      );
+
+      res.json({ ok: true, ...result });
+    } catch (error) {
+      console.error('Error performing full rollback:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

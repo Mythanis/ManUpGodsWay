@@ -5050,7 +5050,10 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
         targetLevel: 'beginner' | 'intermediate' | null;
       };
     } | null;
+    rollback?: { batchId: string; leverId: number; entries: number } | null;
   } | null>(null);
+  const [rollbackConfirmOpen, setRollbackConfirmOpen] = useState(false);
+  const [fullRollbackSubmitting, setFullRollbackSubmitting] = useState(false);
   const [lever6Submitting, setLever6Submitting] = useState(false);
   const [lever6Decided, setLever6Decided] = useState(false);
 
@@ -5359,6 +5362,21 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
                   </div>
                 )}
 
+                {/* Rollback notice — when 2 or 3 just-right in a row
+                    triggered an automatic partial unwind. */}
+                {feedbackResult?.rollback && (
+                  <div className="w-full max-w-md mb-4 bg-emerald-900/40 border-2 border-emerald-500 rounded-sm p-3 text-left" data-testid="notice-rollback">
+                    <div className="text-xs uppercase font-black text-emerald-300 tracking-widest mb-1">
+                      We eased off
+                    </div>
+                    <p className="text-sm text-white/90">
+                      {feedbackResult.streak === 2
+                        ? 'You felt good two sessions in a row — undid the most recent tweak so this workout matches that feeling.'
+                        : 'Three good sessions in a row — restored your earlier baselines while keeping any swapped exercises you\'ve been doing.'}
+                    </p>
+                  </div>
+                )}
+
                 {/* List of concrete changes the system applied this round */}
                 {feedbackResult?.adjustment?.applied && feedbackResult.adjustment.changes.length > 0 && (
                   <div className="w-full max-w-md mb-4 bg-white/5 border-2 border-white/20 rounded-sm p-3 text-left" data-testid="list-adjustment-changes">
@@ -5426,13 +5444,65 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
                     </div>
                   </div>
                 ) : (
-                  <Button
-                    onClick={onClose}
-                    className="bg-[#FCD000] text-black font-black uppercase px-8 py-6 text-lg border-2 border-black"
-                    data-testid="button-finish-workout"
-                  >
-                    Finish
-                  </Button>
+                  <div className="flex flex-col items-center gap-3">
+                    <Button
+                      onClick={onClose}
+                      className="bg-[#FCD000] text-black font-black uppercase px-8 py-6 text-lg border-2 border-black"
+                      data-testid="button-finish-workout"
+                    >
+                      Finish
+                    </Button>
+                    {/* User-initiated full rollback. Only surfaced when
+                        adjustments exist for this plan, gated behind a
+                        confirmation prompt per spec. */}
+                    {!rollbackConfirmOpen ? (
+                      <button
+                        onClick={() => setRollbackConfirmOpen(true)}
+                        className="text-white/50 underline text-xs"
+                        data-testid="button-open-rollback"
+                      >
+                        Restore my original plan
+                      </button>
+                    ) : (
+                      <div className="w-full max-w-md bg-zinc-900 border-2 border-white/30 rounded-sm p-3 text-left mt-2" data-testid="prompt-full-rollback">
+                        <p className="text-sm text-white/90 mb-3">
+                          Would you like to go back to your original plan settings?
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            disabled={fullRollbackSubmitting}
+                            onClick={async () => {
+                              setFullRollbackSubmitting(true);
+                              try {
+                                await apiRequest('POST', `/api/fitness-plans/${plan.id}/rollback`, { reason: 'user_requested' });
+                                toast({ title: 'Plan restored', description: 'Your workout is back to its original settings.' });
+                                setRollbackConfirmOpen(false);
+                                onClose();
+                              } catch (err) {
+                                const message = err instanceof Error ? err.message : 'Failed to restore plan';
+                                toast({ title: 'Could not restore', description: message, variant: 'destructive' });
+                              } finally {
+                                setFullRollbackSubmitting(false);
+                              }
+                            }}
+                            className="bg-[#FCD000] text-black font-black uppercase border-2 border-black flex-1"
+                            data-testid="button-confirm-rollback"
+                          >
+                            Yes, restore
+                          </Button>
+                          <Button
+                            disabled={fullRollbackSubmitting}
+                            onClick={() => setRollbackConfirmOpen(false)}
+                            variant="ghost"
+                            className="text-white/70 flex-1"
+                            data-testid="button-cancel-rollback"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </>
             )}

@@ -26,6 +26,8 @@ export interface LeverChange {
   before?: string | number | null;
   after?: string | number | null;
   newExerciseName?: string;
+  // Full row snapshot — set for "remove" so rollback can re-insert.
+  snapshot?: any;
 }
 
 export interface ApplyResult {
@@ -463,6 +465,14 @@ export async function applyTooHardLever(params: {
   if (leverId === 5) {
     const { changes, removeIds } = applyLever5(planExercises, sessionMinutes);
     if (removeIds.length > 0) {
+      // Attach a full snapshot to each "remove" change BEFORE deleting,
+      // so rollback can re-insert the exact row.
+      for (const c of changes) {
+        if (c.field === 'remove') {
+          const snap = planExercises.find(e => e.id === c.exerciseId);
+          if (snap) c.snapshot = snap;
+        }
+      }
       await db.delete(fitnessPlanExercises).where(inArray(fitnessPlanExercises.id, removeIds));
     }
     return { leverId, applied: changes.length > 0, changes };
