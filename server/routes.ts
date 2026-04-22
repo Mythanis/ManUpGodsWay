@@ -10159,6 +10159,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const exercises = await query;
+      if (exercises.length === 0 && (equipment || level)) {
+        console.warn('[/api/exercises] 0 results for query:', { equipment, level, bodyPart, hiit, stretching });
+      }
       res.json(exercises);
     } catch (error) {
       console.error('Error fetching exercises:', error);
