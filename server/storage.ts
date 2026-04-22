@@ -40,6 +40,7 @@ import {
   fitnessPlanExercises,
   fitnessPlanReminders,
   exerciseCompletions,
+  workoutFeedback,
   events,
   eventTiers,
   eventRegistrations,
@@ -145,6 +146,7 @@ import {
   type InsertFitnessPlanReminder,
   type ExerciseCompletion,
   type InsertExerciseCompletion,
+  type WorkoutFeedback,
   type Event,
   type InsertEvent,
   type EventTier,
@@ -627,6 +629,7 @@ export interface IStorage {
   // Exercise completion operations for weekly progression
   markExerciseComplete(userId: string, planId: string, exerciseId: string): Promise<ExerciseCompletion>;
   unmarkExerciseComplete(userId: string, exerciseId: string): Promise<void>;
+  recordWorkoutFeedback(userId: string, planId: string, feeling: 'too_hard' | 'just_right' | 'too_easy'): Promise<WorkoutFeedback>;
   getExerciseCompletions(userId: string, planId: string): Promise<ExerciseCompletion[]>;
 
   // Food intake operations
@@ -6506,6 +6509,18 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return completion;
+  }
+
+  async recordWorkoutFeedback(
+    userId: string,
+    planId: string,
+    feeling: 'too_hard' | 'just_right' | 'too_easy',
+  ): Promise<WorkoutFeedback> {
+    const [row] = await db
+      .insert(workoutFeedback)
+      .values({ userId, planId, feeling })
+      .returning();
+    return row;
   }
 
   async unmarkExerciseComplete(userId: string, exerciseId: string): Promise<void> {

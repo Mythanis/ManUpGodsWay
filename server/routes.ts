@@ -10949,6 +10949,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Record post-workout feedback ("How did that feel?")
+  app.post('/api/fitness-plans/:planId/feedback', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) return res.status(404).json({ message: 'Fitness plan not found' });
+      if (plan.userId !== user.id) return res.status(403).json({ message: 'Access denied' });
+
+      const feeling = req.body?.feeling;
+      if (!['too_hard', 'just_right', 'too_easy'].includes(feeling)) {
+        return res.status(400).json({ message: 'Invalid feeling value' });
+      }
+
+      const row = await storage.recordWorkoutFeedback(user.id, req.params.planId, feeling);
+      res.json(row);
+    } catch (error) {
+      console.error('Error recording workout feedback:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Unmark exercise as complete
   app.delete('/api/fitness-plans/:planId/exercises/:exerciseId/complete', isAuthenticated, async (req: any, res) => {
     try {

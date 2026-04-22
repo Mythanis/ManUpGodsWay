@@ -5021,10 +5021,29 @@ interface WorkoutPlayerProps {
 type PlayerPhase = 'countdown' | 'work' | 'rest' | 'set-rest' | 'done';
 
 function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: WorkoutPlayerProps) {
+  const { toast } = useToast();
   const [exerciseIdx, setExerciseIdx] = useState(0);
   const [setIdx, setSetIdx] = useState(0); // 0-based current set
   const [phase, setPhase] = useState<PlayerPhase>('countdown');
   const [secondsLeft, setSecondsLeft] = useState(5);
+  // Adaptive-difficulty feedback state. Once the user picks a feeling
+  // we POST it to the feedback endpoint and then close the player.
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const [feedbackDone, setFeedbackDone] = useState(false);
+  const submitFeedback = async (feeling: 'too_hard' | 'just_right' | 'too_easy') => {
+    if (feedbackSubmitting || feedbackDone) return;
+    setFeedbackSubmitting(true);
+    try {
+      await apiRequest('POST', `/api/fitness-plans/${plan.id}/feedback`, { feeling });
+      setFeedbackDone(true);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to record feedback';
+      console.error('[WorkoutPlayer] feedback failed:', err);
+      toast({ title: 'Feedback not saved', description: message, variant: 'destructive' });
+    } finally {
+      setFeedbackSubmitting(false);
+    }
+  };
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   const currentExercise = exercises[exerciseIdx];
@@ -5187,14 +5206,60 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
           <>
             <div className="text-6xl mb-4">🏆</div>
             <h2 className="text-4xl font-black text-[#FCD000] uppercase mb-2">Workout Complete</h2>
-            <p className="text-white/70 mb-8">Great work. All {exercises.length} exercises done.</p>
-            <Button
-              onClick={onClose}
-              className="bg-[#FCD000] text-black font-black uppercase px-8 py-6 text-lg border-2 border-black"
-              data-testid="button-finish-workout"
-            >
-              Finish
-            </Button>
+            <p className="text-white/70 mb-6">Great work. All {exercises.length} exercises done.</p>
+
+            {!feedbackDone ? (
+              <>
+                <h3 className="text-2xl font-black text-white uppercase mb-6">How did that feel?</h3>
+                <div className="flex flex-col gap-3 w-full max-w-md mb-6">
+                  <Button
+                    onClick={() => submitFeedback('too_hard')}
+                    disabled={feedbackSubmitting}
+                    className="bg-white text-black font-bold py-6 text-base border-2 border-black hover:bg-white/90 justify-start"
+                    data-testid="button-feedback-too-hard"
+                  >
+                    <span className="text-2xl mr-3">😤</span>
+                    <span className="text-left"><span className="font-black uppercase">Too hard</span> — I couldn't finish or was exhausted</span>
+                  </Button>
+                  <Button
+                    onClick={() => submitFeedback('just_right')}
+                    disabled={feedbackSubmitting}
+                    className="bg-white text-black font-bold py-6 text-base border-2 border-black hover:bg-white/90 justify-start"
+                    data-testid="button-feedback-just-right"
+                  >
+                    <span className="text-2xl mr-3">💪</span>
+                    <span className="text-left"><span className="font-black uppercase">Just right</span> — challenging but manageable</span>
+                  </Button>
+                  <Button
+                    onClick={() => submitFeedback('too_easy')}
+                    disabled={feedbackSubmitting}
+                    className="bg-white text-black font-bold py-6 text-base border-2 border-black hover:bg-white/90 justify-start"
+                    data-testid="button-feedback-too-easy"
+                  >
+                    <span className="text-2xl mr-3">😴</span>
+                    <span className="text-left"><span className="font-black uppercase">Too easy</span> — I could have done more</span>
+                  </Button>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="text-white/60 underline text-sm"
+                  data-testid="button-skip-feedback"
+                >
+                  Skip
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-white/70 mb-6">Thanks — we'll use this to tune your next session.</p>
+                <Button
+                  onClick={onClose}
+                  className="bg-[#FCD000] text-black font-black uppercase px-8 py-6 text-lg border-2 border-black"
+                  data-testid="button-finish-workout"
+                >
+                  Finish
+                </Button>
+              </>
+            )}
           </>
         ) : (
           <>

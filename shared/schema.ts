@@ -559,6 +559,25 @@ export const exerciseCompletions = pgTable("exercise_completions", {
   unique().on(table.userId, table.exerciseId), // Prevent duplicate completions
 ]);
 
+// Workout-feedback table — stores the user's "How did that feel?"
+// answer at the end of each completed session. The adaptive-difficulty
+// system reads from this to decide whether to dial future sessions up
+// or down. "just_right" is logged but triggers no adjustment.
+export const workoutFeedback = pgTable("workout_feedback", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  planId: varchar("plan_id").notNull().references(() => fitnessPlans.id, { onDelete: 'cascade' }),
+  feeling: varchar("feeling", { length: 16 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertWorkoutFeedbackSchema = createInsertSchema(workoutFeedback, {
+  feeling: z.enum(['too_hard', 'just_right', 'too_easy']),
+}).omit({ id: true, createdAt: true });
+
+export type WorkoutFeedback = typeof workoutFeedback.$inferSelect;
+export type InsertWorkoutFeedback = z.infer<typeof insertWorkoutFeedbackSchema>;
+
 export const insertTestimonySchema = createInsertSchema(testimonies).omit({
   id: true,
   createdAt: true,
