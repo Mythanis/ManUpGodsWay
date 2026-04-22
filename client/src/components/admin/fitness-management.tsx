@@ -366,25 +366,55 @@ export default function FitnessManagement() {
       setBulkUploading(true);
       setBulkProgress({ done: 0, total: files.length });
       setBulkResult(null);
+
+      // Split the file list into batches of ~50 so the user sees the counter
+      // tick upward instead of waiting on one giant 20-minute request. Each
+      // batch is uploaded sequentially against the same bulk-media endpoint.
+      const BATCH_SIZE = 50;
+      const allFiles: File[] = [];
+      for (let i = 0; i < files.length; i++) allFiles.push(files[i]);
+
+      const aggregated = {
+        totals: { uploaded: 0, unmatched: 0, failed: 0, received: 0 },
+        matched: [] as any[],
+        unmatched: [] as string[],
+        failed: [] as Array<{ filename: string; error: string }>,
+      };
+
       try {
-        const form = new FormData();
-        for (let i = 0; i < files.length; i++) form.append("files", files[i]);
-        const res = await fetch("/api/admin/exercises/bulk-media", {
-          method: "POST",
-          credentials: "include",
-          body: form,
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.message || "Bulk upload failed");
+        for (let start = 0; start < allFiles.length; start += BATCH_SIZE) {
+          const batch = allFiles.slice(start, start + BATCH_SIZE);
+          const form = new FormData();
+          for (const f of batch) form.append("files", f);
+
+          const res = await fetch("/api/admin/exercises/bulk-media", {
+            method: "POST",
+            credentials: "include",
+            body: form,
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || "Bulk upload failed");
+          }
+          const data = await res.json();
+
+          aggregated.totals.uploaded += data.totals?.uploaded ?? 0;
+          aggregated.totals.unmatched += data.totals?.unmatched ?? 0;
+          aggregated.totals.failed += data.totals?.failed ?? 0;
+          aggregated.totals.received += data.totals?.received ?? batch.length;
+          if (Array.isArray(data.matched)) aggregated.matched.push(...data.matched);
+          if (Array.isArray(data.unmatched)) aggregated.unmatched.push(...data.unmatched);
+          if (Array.isArray(data.failed)) aggregated.failed.push(...data.failed);
+
+          setBulkProgress({ done: Math.min(start + batch.length, allFiles.length), total: allFiles.length });
+          setBulkResult({ ...aggregated });
         }
-        const data = await res.json();
-        setBulkResult(data);
+
         queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
-      invalidateMediaStats();
+        invalidateMediaStats();
         toast({
           title: "Bulk Import Complete",
-          description: `Uploaded ${data.totals.uploaded}/${data.totals.received} files. ${data.totals.unmatched} unmatched, ${data.totals.failed} failed.`,
+          description: `Uploaded ${aggregated.totals.uploaded}/${aggregated.totals.received} files. ${aggregated.totals.unmatched} unmatched, ${aggregated.totals.failed} failed.`,
         });
       } catch (err: any) {
         toast({ title: "Bulk Upload Failed", description: err.message || "Could not upload files", variant: "destructive" });
@@ -807,7 +837,9 @@ export default function FitnessManagement() {
               {bulkUploading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2" />
-                  Uploading{bulkProgress ? ` ${bulkProgress.total} files…` : "…"}
+                  {bulkProgress
+                    ? `Uploading ${bulkProgress.done.toLocaleString()} / ${bulkProgress.total.toLocaleString()} (${Math.round((bulkProgress.done / Math.max(bulkProgress.total, 1)) * 100)}%)`
+                    : "Uploading…"}
                 </>
               ) : (
                 <><ImageIcon className="w-4 h-4 mr-2" />Bulk Import Media</>
