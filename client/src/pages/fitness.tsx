@@ -1530,19 +1530,24 @@ export default function Fitness() {
     // Get all unique equipment types from the exercises
     const availableEquipment = Array.from(new Set(exercises.map(e => e.equipment.toLowerCase())));
     
-    // Standard rep-based config
+    // Standard rep-based config — fixed at 3 sets across all levels
+    const stdSets = 3;
     let stdConfig;
-    if (level === "Beginner") stdConfig = { sets: 3, restSec: 60, repRange: [10,12], perExSec: 280 };
-    else if (level === "Intermediate") stdConfig = { sets: 4, restSec: 45, repRange: [10,15], perExSec: 325 };
-    else stdConfig = { sets: 5, restSec: 30, repRange: [12,20], perExSec: 390 };
+    if (level === "Beginner") stdConfig = { sets: stdSets, restSec: 60, repRange: [10,12] };
+    else if (level === "Intermediate") stdConfig = { sets: stdSets, restSec: 45, repRange: [10,15] };
+    else stdConfig = { sets: stdSets, restSec: 30, repRange: [12,20] };
+    // ~3 sec per rep avg work + rest between sets
+    const avgReps = (stdConfig.repRange[0] + stdConfig.repRange[1]) / 2;
+    const stdPerExSec = stdConfig.sets * (avgReps * 3 + stdConfig.restSec);
 
-    // HIIT time-based config (work=30s, rest by level)
+    // HIIT time-based config — fixed at 3 rounds, rest by level
     const hiitRest = level === "Beginner" ? 30 : level === "Intermediate" ? 20 : 10;
-    const hiitRounds = level === "Beginner" ? 4 : level === "Intermediate" ? 5 : 6;
+    const hiitRounds = 3;
     const hiitPerExSec = hiitRounds * (30 + hiitRest);
 
-    // Stretching config
-    const stretchPerExSec = 90; // 2x 30s hold + transitions
+    // Stretching config — fixed at 3 sets of 30s hold
+    const stretchSets = 3;
+    const stretchPerExSec = stretchSets * (30 + 15);
 
     // Body part groupings designed to make sense (push/pull, lower split)
     const allBodyPartSchedules = [
@@ -1561,21 +1566,24 @@ export default function Fitness() {
     const totalSec = durationMin * 60;
     const workSec = Math.max(60, totalSec - warmupSec);
 
+    // Number of work exercises per day so total session time fits the selected duration
     let exercisesPerDay: number;
     if (workoutStyle === 'hiit') {
-      exercisesPerDay = Math.max(4, Math.floor(workSec / hiitPerExSec));
+      exercisesPerDay = Math.max(1, Math.floor(workSec / hiitPerExSec));
     } else if (workoutStyle === 'stretching') {
-      exercisesPerDay = Math.max(6, Math.floor(totalSec / stretchPerExSec));
+      exercisesPerDay = Math.max(1, Math.floor(totalSec / stretchPerExSec));
     } else {
-      exercisesPerDay = Math.max(4, Math.floor(workSec / stdConfig.perExSec));
+      exercisesPerDay = Math.max(1, Math.floor(workSec / stdPerExSec));
     }
 
-    for (let w = 0; w < 4; w++) {
+    // Build a single weekly template once. All 4 weeks reuse the same exercises
+    // so each weekday has a fixed, predictable workout.
+    {
       const week: DayPlan[] = [];
       const usedExercisesThisWeek = new Set<string>();
       
-      // Rotate equipment focus each week to ensure all equipment is used
-      const equipmentRotation = availableEquipment[(w % availableEquipment.length)] || '';
+      // Use the first available equipment as the preferred rotation
+      const equipmentRotation = availableEquipment[0] || '';
       
       // Track cardio cadence for standard-cardio style: every other workout day
       let workoutDayIndex = 0;
@@ -1606,7 +1614,7 @@ export default function Fitness() {
             });
           }
           week.push({
-            name: `Cardio ‒ Week ${w+1}`,
+            name: `Cardio`,
             exercises: dayExercises,
           });
           workoutDayIndex++;
@@ -1713,14 +1721,31 @@ export default function Fitness() {
         }
 
         const dayLabel = workoutStyle === 'stretching' ? `${dayPlan.name} Stretch` : dayPlan.name;
+
+        // Final time-cap pass: trim trailing exercises so total session time
+        // does not exceed the user's selected duration.
+        const exerciseTimeSec = (pe: PlanExercise): number => {
+          if (pe.reps == null && (pe.durationSec ?? 0) > 0) {
+            const restPer = pe.sets > 1 ? hiitRest : 0;
+            return pe.sets * ((pe.durationSec ?? 0) + restPer);
+          }
+          return stdConfig.sets * (avgReps * 3 + stdConfig.restSec);
+        };
+        let total = dayExercises.reduce((sum, pe, idx) => sum + (idx < warmupCount ? 30 : exerciseTimeSec(pe)), 0);
+        while (total > totalSec && dayExercises.length > warmupCount + 1) {
+          const removed = dayExercises.pop();
+          if (removed) total -= exerciseTimeSec(removed);
+        }
+
         week.push({
-          name: `${dayLabel} ‒ Week ${w+1}`,
+          name: dayLabel,
           exercises: dayExercises,
         });
         workoutDayIndex++;
       }
       
-      weeks.push(week);
+      // Same exercises every week for a predictable, repeatable program
+      for (let w = 0; w < 4; w++) weeks.push(week);
     }
     
     // Stash style metadata via the equipment label (no schema change needed)
