@@ -1431,7 +1431,7 @@ export default function Fitness() {
   }
 
   interface WeeklyPlan {
-    level: "Beginner" | "Intermediate" | "Advanced";
+    level: "Beginner" | "Intermediate" | "Advanced" | "Tabata";
     equipment: string;
     weeks: DayPlan[][];
   }
@@ -1603,21 +1603,86 @@ export default function Fitness() {
     ];
     const bodyPartSchedule = allBodyPartSchedules.slice(0, workoutDaysPerWeek);
 
-    // Compute per-day exercise count so total time fits selected duration
-    const warmupCount = (workoutStyle === 'standard-cardio' || workoutStyle === 'standard-no-cardio' || workoutStyle === 'hiit') ? 4 : 0;
-    const warmupSec = warmupCount * 60; // ~1 min per stretch hold
+    // === Time budget formula (per spec) ===
+    // Every session reserves fixed mandatory blocks, then allocates the
+    // remaining "working" time to working sets at level/style-appropriate
+    // per-set durations.
+    //   Opening stretch: 5 min (non-stretching only)
+    //   Main warm-up:    5 min (non-stretching only)
+    //   Cooldown:        5 min (all session types)
+    // Working budget = total - 15 min (or total - 5 min for Stretching only).
+    const isStretchingOnly = workoutStyle === 'stretching';
     const totalSec = durationMin * 60;
-    const workSec = Math.max(60, totalSec - warmupSec);
+    const openingStretchSec = isStretchingOnly ? 0 : 5 * 60;
+    const mainWarmupSec     = isStretchingOnly ? 0 : 5 * 60;
+    const cooldownSec       = 5 * 60;
+    const mandatorySec      = openingStretchSec + mainWarmupSec + cooldownSec;
+    const workingSec        = Math.max(60, totalSec - mandatorySec);
 
-    // Number of work exercises per day so total session time fits the selected duration
-    let exercisesPerDay: number;
+    // One stretch hold ~ 60s incl. transition. Used to convert mandatory
+    // block seconds into a number of stretches the player will actually run.
+    const SEC_PER_STRETCH = 60;
+    const openingStretchCount = Math.round(openingStretchSec / SEC_PER_STRETCH);
+    const mainWarmupCount     = Math.round(mainWarmupSec     / SEC_PER_STRETCH);
+    const cooldownCount       = Math.round(cooldownSec       / SEC_PER_STRETCH);
+    // Combined pre-workout count (opening stretch + main warm-up). Kept as
+    // a single number so the existing warm-up emission stays simple.
+    const warmupCount         = openingStretchCount + mainWarmupCount;
+
+    // Per-set time estimates from the spec (seconds of work + rest per set).
+    //   Beginner:     ~2.0   min/set
+    //   Intermediate: ~2.25  min/set
+    //   Advanced:     ~2.75  min/set
+    //   HIIT (+Tabata): ~1.0 min/set
+    //   Stretch hold:   ~0.75 min/hold
+    let perSetSec: number;
     if (workoutStyle === 'hiit') {
-      exercisesPerDay = Math.max(1, Math.floor(workSec / hiitPerExSec));
-    } else if (workoutStyle === 'stretching') {
-      exercisesPerDay = Math.max(1, Math.floor(totalSec / stretchPerExSec));
+      perSetSec = 60;
+    } else if (isStretchingOnly) {
+      perSetSec = 45;
     } else {
-      exercisesPerDay = Math.max(1, Math.floor(workSec / stdPerExSec));
+      perSetSec = level === 'Beginner'    ? 120
+                : level === 'Intermediate' ? 135
+                :                            165;
     }
+
+    // Total working sets that fit the working budget, then converted to a
+    // per-day exercise count using the per-style sets-per-exercise constant.
+    const totalWorkingSets = Math.max(1, Math.floor(workingSec / perSetSec));
+    const setsPerExercise  = workoutStyle === 'hiit' ? hiitRounds
+                           : isStretchingOnly        ? 2
+                           :                           stdConfig.sets;
+    const exercisesPerDay  = Math.max(1, Math.floor(totalWorkingSets / setsPerExercise));
+
+    // Helper: append the cooldown stretch block (~5 min) to the end of a
+    // day, biased toward today's body parts and avoiding duplicates already
+    // used in this day's warmup or main work.
+    const emitCooldown = (parts: string[], dayExercises: PlanExercise[]) => {
+      if (cooldownCount === 0 || stretchPool.length === 0) return;
+      const usedCool = new Set<string>();
+      dayExercises.forEach(e => usedCool.add(e.exercise.id));
+      let added = 0;
+      for (const bp of parts) {
+        if (added >= cooldownCount) break;
+        const matches = stretchPool.filter(s => s.bodyPart.toLowerCase() === bp.toLowerCase() && !usedCool.has(s.id));
+        const fresh = matches.filter(s => !usedAcrossProgram.has(s.id));
+        const source = fresh.length > 0 ? fresh : matches;
+        const pick = shuffleArray(source).slice(0, 1);
+        pick.forEach(s => {
+          usedCool.add(s.id);
+          dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: SEC_PER_STRETCH });
+          added++;
+        });
+      }
+      while (added < cooldownCount) {
+        const remaining = stretchPool.filter(s => !usedCool.has(s.id));
+        if (remaining.length === 0) break;
+        const s = shuffleArray(remaining)[0];
+        usedCool.add(s.id);
+        dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: SEC_PER_STRETCH });
+        added++;
+      }
+    };
 
     // Build 4 distinct weeks. Each week varies its exercises (week-over-week
     // variation) while keeping the same body-part schedule per weekday so the
@@ -1638,7 +1703,10 @@ export default function Fitness() {
         const isCardioDay = workoutStyle === 'standard-cardio' && (workoutDayIndex % 2 === 1) && cardioPool.length > 0;
         const dayExercises: PlanExercise[] = [];
 
-        // Cardio day: one continuous cardio block for the full duration
+        // Cardio day: one continuous cardio block sized to the working
+        // budget, sandwiched by the same opening + warm-up and cooldown
+        // stretch blocks as a normal day so total time still hits the user's
+        // selected duration.
         if (isCardioDay) {
           const usedCardio = new Set<string>();
           const picked = pickRandomByBodyPart(
@@ -1649,7 +1717,6 @@ export default function Fitness() {
             undefined,
             usedAcrossProgram
           );
-          // If body-part filter missed (cardio bodyPart varies), fall back to first random
           let cardioEx = picked[0];
           if (!cardioEx) cardioEx = shuffleArray(cardioPool)[0];
           if (cardioEx) {
@@ -1657,9 +1724,10 @@ export default function Fitness() {
               exercise: cardioEx,
               sets: 1,
               reps: null,
-              durationSec: durationMin * 60,
+              durationSec: workingSec,
             });
           }
+          emitCooldown(dayPlan.parts, dayExercises);
           week.push({
             name: `Cardio`,
             exercises: dayExercises,
@@ -1685,7 +1753,7 @@ export default function Fitness() {
                 exercise: s,
                 sets: 1,
                 reps: null,
-                durationSec: 30,
+                durationSec: SEC_PER_STRETCH,
               });
               added++;
             });
@@ -1700,7 +1768,7 @@ export default function Fitness() {
               exercise: s,
               sets: 1,
               reps: null,
-              durationSec: 30,
+              durationSec: SEC_PER_STRETCH,
             });
             added++;
           }
@@ -1722,6 +1790,8 @@ export default function Fitness() {
               });
             });
           }
+          // Trim to the budgeted exercise count.
+          while (dayExercises.length > target) dayExercises.pop();
           // Fill remainder with any stretches if not enough
           while (dayExercises.length < target) {
             const remaining = stretchPool.filter(s => !usedExercisesThisWeek.has(s.id));
@@ -1771,10 +1841,17 @@ export default function Fitness() {
           while (dayExercises.length > cap) dayExercises.pop();
         }
 
+        // Append the cooldown stretch block (~5 min) to every day. For pure
+        // stretching sessions the budget already excluded the cooldown, so
+        // these extra holds bring total time back up to the selected duration.
+        emitCooldown(dayPlan.parts, dayExercises);
+
         const dayLabel = workoutStyle === 'stretching' ? `${dayPlan.name} Stretch` : dayPlan.name;
 
-        // Final time-cap pass: trim trailing exercises so total session time
-        // does not exceed the user's selected duration.
+        // Final time-cap safety net: trim trailing main exercises (never the
+        // cooldown block) so total session time does not exceed the user's
+        // selected duration. Indices [warmupCount, length - cooldownCount) are
+        // the main work block; we only pop from there.
         const exerciseTimeSec = (pe: PlanExercise): number => {
           if (pe.reps == null && (pe.durationSec ?? 0) > 0) {
             const restPer = pe.sets > 1 ? hiitRest : 0;
@@ -1782,9 +1859,18 @@ export default function Fitness() {
           }
           return stdConfig.sets * (avgReps * 3 + stdConfig.restSec);
         };
-        let total = dayExercises.reduce((sum, pe, idx) => sum + (idx < warmupCount ? 30 : exerciseTimeSec(pe)), 0);
-        while (total > totalSec && dayExercises.length > warmupCount + 1) {
-          const removed = dayExercises.pop();
+        const slotTimeSec = (pe: PlanExercise, idx: number, len: number): number => {
+          const isWarmup   = idx < warmupCount;
+          const isCooldown = idx >= len - cooldownCount;
+          if (isWarmup || isCooldown) return SEC_PER_STRETCH;
+          return exerciseTimeSec(pe);
+        };
+        let total = dayExercises.reduce((sum, pe, idx) => sum + slotTimeSec(pe, idx, dayExercises.length), 0);
+        while (total > totalSec && dayExercises.length > warmupCount + cooldownCount + 1) {
+          // Remove the last main-block exercise (the one immediately before
+          // the cooldown block) to preserve the cooldown.
+          const removeIdx = dayExercises.length - cooldownCount - 1;
+          const [removed] = dayExercises.splice(removeIdx, 1);
           if (removed) total -= exerciseTimeSec(removed);
         }
 
