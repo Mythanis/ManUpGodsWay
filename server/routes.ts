@@ -10355,13 +10355,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // all being held in RAM, so large batches (1,700+ files) can't OOM the server.
       exerciseBulkMediaUpload.array('files', 5000)(req, res, (err: any) => {
         if (!err) return next();
-        if (err && err.code === 'LIMIT_UNEXPECTED_FILE') {
+        // On any multer error, clean up whatever temp files were already written
+        // before returning the error so we don't leave disk debris behind.
+        const writtenFiles = (req.files as Express.Multer.File[] | undefined) ?? [];
+        for (const f of writtenFiles) {
+          if (f.path) fs.promises.unlink(f.path).catch(() => {});
+        }
+        if (err.code === 'LIMIT_UNEXPECTED_FILE') {
           return res.status(400).json({
             message:
               'Too many files in one upload (limit 5000). Split your media into smaller batches and import each batch separately.',
           });
         }
-        if (err && err.code === 'LIMIT_FILE_SIZE') {
+        if (err.code === 'LIMIT_FILE_SIZE') {
           return res.status(400).json({
             message: `One or more files exceed the 50 MB per-file limit (${err.field || 'unknown field'}).`,
           });
