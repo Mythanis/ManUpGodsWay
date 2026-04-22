@@ -1744,16 +1744,44 @@ export default function Fitness() {
     const STRETCH_HOLD = STRETCH_HOLD_BY_LEVEL[levelKey];
     const stretchSets = STRETCH_SETS_BY_LEVEL[levelKey];
 
-    // Body part groupings designed to make sense (push/pull, lower split)
-    const allBodyPartSchedules = [
-      { name: 'Chest & Biceps', parts: ['chest', 'biceps'] },
-      { name: 'Back & Triceps', parts: ['back', 'lats', 'triceps'] },
-      { name: 'Calves & Thighs', parts: ['quads', 'calves', 'hamstrings'] },
-      { name: 'Shoulders & Core', parts: ['shoulders', 'core', 'abs'] },
-      { name: 'Glutes & Lower Back', parts: ['glutes', 'lower back', 'hamstrings'] },
-      { name: 'Forearms & Full Body', parts: ['forearms', 'full body', 'obliques'] },
-    ];
-    const bodyPartSchedule = allBodyPartSchedules.slice(0, workoutDaysPerWeek);
+    // Weekly muscle-group rotation per spec. Splits are chosen so the
+    // same primary muscle group is never trained on consecutive days.
+    //   1 day:  Full Body
+    //   2 days: Full Body A / Full Body B
+    //   3 days: Full Body A / B / C
+    //   4 days: Upper / Lower / Upper / Lower
+    //   5 days: Push / Pull / Legs / Upper / Lower
+    //   6 days: Push / Pull / Legs / Push / Pull / Legs
+    //   7+:     clamps at the 6-day rotation
+    const SPLITS: Record<string, { name: string; parts: string[] }> = {
+      FullA:  { name: 'Full Body A', parts: ['chest', 'back', 'quads', 'shoulders'] },
+      FullB:  { name: 'Full Body B', parts: ['hamstrings', 'lats', 'biceps', 'triceps'] },
+      FullC:  { name: 'Full Body C', parts: ['glutes', 'calves', 'shoulders', 'core'] },
+      Upper:  { name: 'Upper Body',  parts: ['chest', 'back', 'lats', 'shoulders', 'biceps', 'triceps', 'forearms'] },
+      Lower:  { name: 'Lower Body',  parts: ['quads', 'hamstrings', 'glutes', 'calves', 'lower back'] },
+      Push:   { name: 'Push',        parts: ['chest', 'shoulders', 'triceps'] },
+      Pull:   { name: 'Pull',        parts: ['back', 'lats', 'biceps', 'forearms', 'traps'] },
+      Legs:   { name: 'Legs',        parts: ['quads', 'hamstrings', 'glutes', 'calves'] },
+    };
+    const ROTATIONS: Record<number, string[]> = {
+      1: ['FullA'],
+      2: ['FullA', 'FullB'],
+      3: ['FullA', 'FullB', 'FullC'],
+      4: ['Upper', 'Lower', 'Upper', 'Lower'],
+      5: ['Push', 'Pull', 'Legs', 'Upper', 'Lower'],
+      6: ['Push', 'Pull', 'Legs', 'Push', 'Pull', 'Legs'],
+    };
+    const days = Math.max(1, Math.min(6, workoutDaysPerWeek));
+    const bodyPartSchedule = ROTATIONS[days].map(key => SPLITS[key]);
+
+    // Per-session same-muscle-group cap per spec:
+    //   Beginner: 2, Intermediate: 3, Advanced: 4
+    // Tabata reuses the Advanced cap. Counts the number of exercises
+    // tagged to the same primary bodyPart within a single session.
+    const SAME_MUSCLE_CAP_BY_LEVEL: Record<Level, number> = {
+      Beginner: 2, Intermediate: 3, Advanced: 4, Tabata: 4,
+    };
+    const sameMuscleCap = SAME_MUSCLE_CAP_BY_LEVEL[levelKey];
 
     // === Time budget formula (per spec) ===
     // Every session reserves fixed mandatory blocks, then allocates the
@@ -2132,7 +2160,13 @@ export default function Fitness() {
             const hiitOnly = workPool.filter(e => (e.hiit || 'No') === 'Yes');
             if (hiitOnly.length >= 4) workPool = hiitOnly;
           }
-          const exercisesPerBodyPart = Math.ceil(exercisesPerDay / dayPlan.parts.length);
+          // Cap per body part = min(spec same-muscle cap, even share).
+          // Spec: Beginner ≤2, Intermediate ≤3, Advanced ≤4 exercises
+          // for the same primary muscle group within a single session.
+          const exercisesPerBodyPart = Math.min(
+            sameMuscleCap,
+            Math.max(1, Math.ceil(exercisesPerDay / dayPlan.parts.length)),
+          );
           // Build the MAIN block in a temporary array so we can sort it
           // (compound → isolation/bodyweight → core per spec) and then
           // splice in cardio movements every 3rd slot for Standard with
