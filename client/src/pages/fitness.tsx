@@ -214,6 +214,7 @@ export default function Fitness() {
   
   // Pre-built Plans state
   const [selectedLevel, setSelectedLevel] = useState<string>('');
+  const [selectedWorkoutStyle, setSelectedWorkoutStyle] = useState<string>('');
   const [selectedPlanEquipment, setSelectedPlanEquipment] = useState<string[]>([]);
   const [selectedStartDay, setSelectedStartDay] = useState<string>('');
   const [selectedWorkoutDuration, setSelectedWorkoutDuration] = useState<string>('');
@@ -402,7 +403,7 @@ export default function Fitness() {
 
   // Effect to generate plans when filters change
   useEffect(() => {
-    if (selectedLevel && selectedPlanEquipment.length > 0 && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedDays.length > 0) {
+    if (selectedLevel && selectedWorkoutStyle && selectedPlanEquipment.length > 0 && selectedStartDay && selectedWorkoutDuration && selectedFrequency && selectedDays.length > 0) {
       // Validate that selected days match frequency
       const frequencyNum = parseInt(selectedFrequency);
       if (selectedDays.length !== frequencyNum) {
@@ -420,7 +421,8 @@ export default function Fitness() {
         selectedStartDay, 
         selectedWorkoutDuration, 
         selectedFrequency,
-        selectedDays
+        selectedDays,
+        selectedWorkoutStyle
       )
         .then(plans => {
           if (plans.length === 0) {
@@ -441,7 +443,7 @@ export default function Fitness() {
       setGeneratedPlans([]);
       setPlanGenerationError('');
     }
-  }, [selectedLevel, selectedPlanEquipment, selectedStartDay, selectedWorkoutDuration, selectedFrequency, selectedDays]);
+  }, [selectedLevel, selectedWorkoutStyle, selectedPlanEquipment, selectedStartDay, selectedWorkoutDuration, selectedFrequency, selectedDays]);
 
   // Clear selected days when frequency changes
   useEffect(() => {
@@ -630,6 +632,16 @@ export default function Fitness() {
   
   // Use all body parts from database (no filtering needed)
   const usedMuscles = allMuscles;
+
+  // Auto-default equipment to Bodyweight when Stretching style is selected
+  useEffect(() => {
+    if (selectedWorkoutStyle === 'stretching' && (equipments as string[]).length > 0) {
+      const bw = (equipments as string[]).find((e: string) => e.toLowerCase() === 'bodyweight');
+      if (bw && !(selectedPlanEquipment.length === 1 && selectedPlanEquipment[0] === bw)) {
+        setSelectedPlanEquipment([bw]);
+      }
+    }
+  }, [selectedWorkoutStyle]);
 
   // Fetch equipment for filtering from local database
   const { data: equipments = [] } = useQuery({
@@ -1254,23 +1266,60 @@ export default function Fitness() {
     startDay: string, 
     duration: string, 
     frequency: string,
-    workoutDays: string[]
+    workoutDays: string[],
+    workoutStyle: string = 'standard-no-cardio'
   ): Promise<PreBuiltPlan[]> => {
     try {
-      console.log('Generating plans with params:', { level, equipmentList, startDay, duration, frequency, workoutDays });
+      console.log('Generating plans with params:', { level, equipmentList, startDay, duration, frequency, workoutDays, workoutStyle });
       
       const exercises = await getExercisesForEquipment(equipmentList, level);
       console.log(`Found ${exercises.length} exercises for equipment: ${equipmentList.join(', ')} at ${level} level`);
+
+      // Always fetch a Bodyweight pool for stretches (filter pre-workout warmups)
+      // and a Cardio pool when needed, regardless of selected equipment
+      const bodyweightEquipment = ['Bodyweight', 'bodyweight'];
+      let bodyweightPool: APIExercise[] = exercises.filter(e => e.equipment.toLowerCase() === 'bodyweight');
+      if (bodyweightPool.length < 20) {
+        try {
+          const extra = await getExercisesForEquipment(bodyweightEquipment, level);
+          const seen = new Set(bodyweightPool.map(e => e.id));
+          extra.forEach(e => { if (!seen.has(e.id)) bodyweightPool.push(e); });
+        } catch {}
+      }
+      const stretchPool = bodyweightPool.filter(e => e.name.toLowerCase().includes('stretch'));
+
+      let cardioPool: APIExercise[] = [];
+      if (workoutStyle === 'standard-cardio') {
+        const cardioEquipment = ['Treadmill','Stationary Bike','Rowing Machine','Elliptical Machine','Assault Bike','Jump Rope','Stepmill','Battle Ropes','Ski Ergometer','Rebounder'];
+        try {
+          cardioPool = await getExercisesForEquipment(cardioEquipment, level);
+        } catch (e) {
+          console.warn('Failed to fetch cardio pool', e);
+        }
+        // Bodyweight cardio fallback by name match
+        const cardioNamePatterns = ['burpee','mountain climber','jumping jack','high knee','jump rope','jump squat','sprint','running','jog'];
+        bodyweightPool.forEach(e => {
+          const n = e.name.toLowerCase();
+          if (cardioNamePatterns.some(p => n.includes(p)) && !cardioPool.some(c => c.id === e.id)) {
+            cardioPool.push(e);
+          }
+        });
+      }
       
-      if (exercises.length < 5) {
+      if (workoutStyle === 'stretching') {
+        if (stretchPool.length < 5) {
+          console.warn('Not enough stretches available');
+          return [];
+        }
+      } else if (exercises.length < 5) {
         console.warn(`Not enough exercises for equipment: ${equipmentList.join(', ')}. Found: ${exercises.length}`);
         // Fallback to bodyweight exercises if selected equipment has too few
-        if (!equipmentList.includes('bodyweight')) {
+        if (!equipmentList.some(eq => eq.toLowerCase() === 'bodyweight')) {
           console.log('Attempting fallback to bodyweight exercises...');
-          const bodyweightExercises = await getExercisesForEquipment(['bodyweight'], level);
+          const bodyweightExercises = await getExercisesForEquipment(bodyweightEquipment, level);
           if (bodyweightExercises.length >= 5) {
             console.log('Falling back to bodyweight exercises');
-            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced", 'bodyweight', workoutDays.length);
+            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced", 'bodyweight', workoutDays.length, workoutStyle, parseInt(duration), stretchPool, cardioPool);
             const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay, workoutDays);
             return [preBuiltPlan];
           }
@@ -1295,13 +1344,22 @@ export default function Fitness() {
         exercises, 
         level as "Beginner"|"Intermediate"|"Advanced", 
         equipmentLabel,
-        workoutDays.length // Use actual number of workout days selected
+        workoutDays.length, // Use actual number of workout days selected
+        workoutStyle,
+        parseInt(duration),
+        stretchPool,
+        cardioPool
       );
       const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay, workoutDays);
       
       // Customize plan based on additional parameters
-      preBuiltPlan.name = `${levelDisplay} ${equipmentDisplay} Program (${duration} min)`;
-      preBuiltPlan.description = `${levelDisplay}-level program using ${equipmentDisplay}, ${frequency} days per week, ${duration} minutes per session.`;
+      const styleLabel =
+        workoutStyle === 'standard-cardio' ? 'Standard + Cardio' :
+        workoutStyle === 'standard-no-cardio' ? 'Standard' :
+        workoutStyle === 'hiit' ? 'HIIT' :
+        workoutStyle === 'stretching' ? 'Stretching' : '';
+      preBuiltPlan.name = `${levelDisplay} ${styleLabel} ${equipmentDisplay} Program (${duration} min)`;
+      preBuiltPlan.description = `${levelDisplay}-level ${styleLabel.toLowerCase()} program using ${equipmentDisplay}, ${frequency} days per week, ${duration} minutes per session.`;
       preBuiltPlan.workoutsPerWeek = parseInt(frequency);
       
       // Use the user's selected workout days for the schedule
@@ -1461,72 +1519,211 @@ export default function Fitness() {
     exercises: APIExercise[], 
     level: "Beginner"|"Intermediate"|"Advanced", 
     equipment: string,
-    workoutDaysPerWeek: number = 3
+    workoutDaysPerWeek: number = 3,
+    workoutStyle: string = 'standard-no-cardio',
+    durationMin: number = 45,
+    stretchPool: APIExercise[] = [],
+    cardioPool: APIExercise[] = []
   ): WeeklyPlan {
     const weeks: DayPlan[][] = [];
     
     // Get all unique equipment types from the exercises
-    const availableEquipment = [...new Set(exercises.map(e => e.equipment.toLowerCase()))];
+    const availableEquipment = Array.from(new Set(exercises.map(e => e.equipment.toLowerCase())));
     
-    let config;
-    if (level === "Beginner") config = { sets: 3, restSec: 60, repRange: [10,12], exercisesPerDay: 4 };
-    else if (level === "Intermediate") config = { sets: 4, restSec: 45, repRange: [10,15], exercisesPerDay: 5 };
-    else config = { sets: 5, restSec: 30, repRange: [12,20], exercisesPerDay: 6 };
-    
-    // Define body part groups - each day focuses on 1-2 body parts
+    // Standard rep-based config
+    let stdConfig;
+    if (level === "Beginner") stdConfig = { sets: 3, restSec: 60, repRange: [10,12], perExSec: 280 };
+    else if (level === "Intermediate") stdConfig = { sets: 4, restSec: 45, repRange: [10,15], perExSec: 325 };
+    else stdConfig = { sets: 5, restSec: 30, repRange: [12,20], perExSec: 390 };
+
+    // HIIT time-based config (work=30s, rest by level)
+    const hiitRest = level === "Beginner" ? 30 : level === "Intermediate" ? 20 : 10;
+    const hiitRounds = level === "Beginner" ? 4 : level === "Intermediate" ? 5 : 6;
+    const hiitPerExSec = hiitRounds * (30 + hiitRest);
+
+    // Stretching config
+    const stretchPerExSec = 90; // 2x 30s hold + transitions
+
+    // Body part groupings designed to make sense (push/pull, lower split)
     const allBodyPartSchedules = [
-      { name: 'Chest & Triceps', parts: ['chest', 'triceps'] },
-      { name: 'Back & Biceps', parts: ['back', 'biceps'] },
-      { name: 'Legs & Glutes', parts: ['legs', 'glutes', 'calves'] },
-      { name: 'Shoulders & Core', parts: ['shoulders', 'core'] },
-      { name: 'Full Body', parts: ['chest', 'back', 'legs', 'shoulders'] }
+      { name: 'Chest & Biceps', parts: ['chest', 'biceps'] },
+      { name: 'Back & Triceps', parts: ['back', 'lats', 'triceps'] },
+      { name: 'Calves & Thighs', parts: ['quads', 'calves', 'hamstrings'] },
+      { name: 'Shoulders & Core', parts: ['shoulders', 'core', 'abs'] },
+      { name: 'Glutes & Lower Back', parts: ['glutes', 'lower back', 'hamstrings'] },
+      { name: 'Forearms & Full Body', parts: ['forearms', 'full body', 'obliques'] },
     ];
-    
-    // Use only the number of days selected by user
     const bodyPartSchedule = allBodyPartSchedules.slice(0, workoutDaysPerWeek);
-    
+
+    // Compute per-day exercise count so total time fits selected duration
+    const warmupCount = (workoutStyle === 'standard-cardio' || workoutStyle === 'standard-no-cardio' || workoutStyle === 'hiit') ? 4 : 0;
+    const warmupSec = warmupCount * 60; // ~1 min per stretch hold
+    const totalSec = durationMin * 60;
+    const workSec = Math.max(60, totalSec - warmupSec);
+
+    let exercisesPerDay: number;
+    if (workoutStyle === 'hiit') {
+      exercisesPerDay = Math.max(4, Math.floor(workSec / hiitPerExSec));
+    } else if (workoutStyle === 'stretching') {
+      exercisesPerDay = Math.max(6, Math.floor(totalSec / stretchPerExSec));
+    } else {
+      exercisesPerDay = Math.max(4, Math.floor(workSec / stdConfig.perExSec));
+    }
+
     for (let w = 0; w < 4; w++) {
       const week: DayPlan[] = [];
       const usedExercisesThisWeek = new Set<string>();
       
       // Rotate equipment focus each week to ensure all equipment is used
-      const equipmentRotation = availableEquipment[(w % availableEquipment.length)];
+      const equipmentRotation = availableEquipment[(w % availableEquipment.length)] || '';
+      
+      // Track cardio cadence for standard-cardio style: every other workout day
+      let workoutDayIndex = 0;
       
       for (let d = 0; d < bodyPartSchedule.length; d++) {
         const dayPlan = bodyPartSchedule[d];
+        const isCardioDay = workoutStyle === 'standard-cardio' && (workoutDayIndex % 2 === 1) && cardioPool.length > 0;
         const dayExercises: PlanExercise[] = [];
-        
-        // Distribute exercises across the body parts for this day
-        const exercisesPerBodyPart = Math.ceil(config.exercisesPerDay / dayPlan.parts.length);
-        
-        for (const bodyPart of dayPlan.parts) {
+
+        // Cardio day: one continuous cardio block for the full duration
+        if (isCardioDay) {
+          const usedCardio = new Set<string>();
           const picked = pickRandomByBodyPart(
-            exercises, 
-            bodyPart, 
-            exercisesPerBodyPart,
-            usedExercisesThisWeek,
-            [equipmentRotation] // Prefer current week's equipment
+            cardioPool.map(c => ({ ...c, bodyPart: 'full body' })),
+            'full body',
+            1,
+            usedCardio
           );
-          
-          picked.forEach(ex => {
+          // If body-part filter missed (cardio bodyPart varies), fall back to first random
+          let cardioEx = picked[0];
+          if (!cardioEx) cardioEx = shuffleArray(cardioPool)[0];
+          if (cardioEx) {
             dayExercises.push({
-              exercise: ex,
-              sets: config.sets,
-              reps: config.repRange[0] + Math.floor(Math.random() * (config.repRange[1] - config.repRange[0]))
+              exercise: cardioEx,
+              sets: 1,
+              reps: null,
+              durationSec: durationMin * 60,
             });
+          }
+          week.push({
+            name: `Cardio ‒ Week ${w+1}`,
+            exercises: dayExercises,
           });
+          workoutDayIndex++;
+          continue;
         }
-        
-        // Limit to configured exercises per day
+
+        // Pre-workout warmup stretches targeting today's body parts
+        if (warmupCount > 0 && stretchPool.length > 0) {
+          const usedWarm = new Set<string>();
+          let added = 0;
+          for (const bp of dayPlan.parts) {
+            if (added >= warmupCount) break;
+            const matches = stretchPool.filter(s => s.bodyPart.toLowerCase() === bp.toLowerCase() && !usedWarm.has(s.id));
+            const pick = shuffleArray(matches).slice(0, 1);
+            pick.forEach(s => {
+              usedWarm.add(s.id);
+              dayExercises.push({
+                exercise: s,
+                sets: 1,
+                reps: null,
+                durationSec: 30,
+              });
+              added++;
+            });
+          }
+          // Fill remaining warmup slots with any stretches
+          while (added < warmupCount) {
+            const remaining = stretchPool.filter(s => !usedWarm.has(s.id));
+            if (remaining.length === 0) break;
+            const s = shuffleArray(remaining)[0];
+            usedWarm.add(s.id);
+            dayExercises.push({
+              exercise: s,
+              sets: 1,
+              reps: null,
+              durationSec: 30,
+            });
+            added++;
+          }
+        }
+
+        // Main work block
+        if (workoutStyle === 'stretching') {
+          // Pure stretching session - pick stretches for body parts
+          const target = exercisesPerDay;
+          const perPart = Math.ceil(target / dayPlan.parts.length);
+          for (const bp of dayPlan.parts) {
+            const picked = pickRandomByBodyPart(stretchPool, bp, perPart, usedExercisesThisWeek);
+            picked.forEach(s => {
+              dayExercises.push({
+                exercise: s,
+                sets: 2,
+                reps: null,
+                durationSec: 30,
+              });
+            });
+          }
+          // Fill remainder with any stretches if not enough
+          while (dayExercises.length < target) {
+            const remaining = stretchPool.filter(s => !usedExercisesThisWeek.has(s.id));
+            if (remaining.length === 0) break;
+            const s = shuffleArray(remaining)[0];
+            usedExercisesThisWeek.add(s.id);
+            dayExercises.push({
+              exercise: s,
+              sets: 2,
+              reps: null,
+              durationSec: 30,
+            });
+          }
+        } else {
+          // Standard or HIIT - pick from exercises pool by body parts (skip stretches)
+          const workPool = exercises.filter(e => !e.name.toLowerCase().includes('stretch'));
+          const exercisesPerBodyPart = Math.ceil(exercisesPerDay / dayPlan.parts.length);
+          for (const bodyPart of dayPlan.parts) {
+            const picked = pickRandomByBodyPart(
+              workPool,
+              bodyPart,
+              exercisesPerBodyPart,
+              usedExercisesThisWeek,
+              [equipmentRotation]
+            );
+            picked.forEach(ex => {
+              if (workoutStyle === 'hiit') {
+                dayExercises.push({
+                  exercise: ex,
+                  sets: hiitRounds,
+                  reps: null,
+                  durationSec: 30,
+                });
+              } else {
+                dayExercises.push({
+                  exercise: ex,
+                  sets: stdConfig.sets,
+                  reps: stdConfig.repRange[0] + Math.floor(Math.random() * (stdConfig.repRange[1] - stdConfig.repRange[0])),
+                });
+              }
+            });
+          }
+
+          // Trim warmup + main to a reasonable cap (warmup + exercisesPerDay)
+          const cap = warmupCount + exercisesPerDay;
+          while (dayExercises.length > cap) dayExercises.pop();
+        }
+
+        const dayLabel = workoutStyle === 'stretching' ? `${dayPlan.name} Stretch` : dayPlan.name;
         week.push({
-          name: `${dayPlan.name} ‒ Week ${w+1}`,
-          exercises: dayExercises.slice(0, config.exercisesPerDay)
+          name: `${dayLabel} ‒ Week ${w+1}`,
+          exercises: dayExercises,
         });
+        workoutDayIndex++;
       }
       
       weeks.push(week);
     }
     
+    // Stash style metadata via the equipment label (no schema change needed)
     return { level, equipment, weeks };
   }
 
@@ -1542,13 +1739,19 @@ export default function Fitness() {
     weeklyPlan.weeks.forEach((week, weekIndex) => {
       week.forEach((day, dayIndex) => {
         day.exercises.forEach((planExercise) => {
-          const restTime = weeklyPlan.level === "Beginner" ? "60-90s" : 
-                          weeklyPlan.level === "Intermediate" ? "45-60s" : "30-45s";
-          
+          const isTimeBased = planExercise.reps == null && (planExercise.durationSec ?? 0) > 0;
+          // For time-based exercises, derive rest from durationSec context; otherwise use level-based rest.
+          const restTime = isTimeBased
+            ? (weeklyPlan.level === "Beginner" ? "30s" :
+               weeklyPlan.level === "Intermediate" ? "20s" : "10s")
+            : (weeklyPlan.level === "Beginner" ? "60-90s" :
+               weeklyPlan.level === "Intermediate" ? "45-60s" : "30-45s");
+
           allExercises.push({
             name: planExercise.exercise.name,
             sets: planExercise.sets,
-            reps: planExercise.reps || 12,
+            reps: planExercise.reps ?? 0,
+            duration: planExercise.durationSec,
             rest: restTime,
             day: `Week${weekIndex + 1}-${day.name}`,
             bodyPart: planExercise.exercise.bodyPart,
@@ -1596,6 +1799,14 @@ export default function Fitness() {
         const trainingDay = getExerciseTrainingDay(i, preBuiltPlan.startDay, preBuiltPlan.schedule);
         
         // Create exercise entry directly with comprehensive data
+        const isTimeBased = (!exercise.reps || exercise.reps === 0) && !!exercise.duration;
+        const repsValue = isTimeBased
+          ? `${exercise.duration}s`
+          : String(exercise.reps);
+        const minutesValue = isTimeBased && exercise.duration
+          ? Math.max(1, Math.round((exercise.duration * exercise.sets) / 60))
+          : exercise.duration;
+
         const exerciseData = {
           exerciseId: `prebuilt-${Date.now()}-${i}`,
           exerciseName: exercise.name,
@@ -1604,8 +1815,8 @@ export default function Fitness() {
           bodyPart: exercise.bodyPart,
           equipment: exercise.equipment.join(', '),
           sets: exercise.sets,
-          reps: String(exercise.reps), // Convert to string regardless of type
-          minutes: exercise.duration,
+          reps: repsValue,
+          minutes: minutesValue,
           restTime: parseInt(exercise.rest.replace(/[^0-9]/g, '')) || 60,
           notes: `${exercise.rest} rest - Training Day: ${exercise.day}`,
           daysOfWeek: [trainingDay], // Properly distribute across selected days
@@ -2435,6 +2646,31 @@ export default function Fitness() {
                       <SelectItem value="advanced">Advanced</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* 1b. Workout Style */}
+                <div className="px-4 py-4">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Workout Style</p>
+                  <Select value={selectedWorkoutStyle} onValueChange={setSelectedWorkoutStyle}>
+                    <SelectTrigger className="w-full bg-black border-zinc-600 text-white" data-testid="select-workout-style">
+                      <SelectValue placeholder="Select style" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard-cardio">Standard Workout (with Cardio)</SelectItem>
+                      <SelectItem value="standard-no-cardio">Standard Workout (no Cardio)</SelectItem>
+                      <SelectItem value="hiit">HIIT (Time-Based)</SelectItem>
+                      <SelectItem value="stretching">Stretching</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {selectedWorkoutStyle === 'stretching' && (
+                    <p className="text-[10px] text-zinc-400 mt-2 italic">Stretching defaults to Bodyweight equipment.</p>
+                  )}
+                  {selectedWorkoutStyle === 'hiit' && (
+                    <p className="text-[10px] text-zinc-400 mt-2 italic">HIIT uses 30-second work intervals with rest by level (Beginner 30s / Intermediate 20s / Advanced 10s).</p>
+                  )}
+                  {selectedWorkoutStyle === 'standard-cardio' && (
+                    <p className="text-[10px] text-zinc-400 mt-2 italic">Cardio sessions are scheduled every other workout day.</p>
+                  )}
                 </div>
 
                 {/* 2. Available Equipment */}
