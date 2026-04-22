@@ -5051,11 +5051,20 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
       };
     } | null;
     rollback?: { batchId: string; leverId: number; entries: number } | null;
+    mixedFeedback?: { question: string; confirmText: string; declineText: string } | null;
+    partial?: boolean;
+    completionPct?: number;
   } | null>(null);
   const [rollbackConfirmOpen, setRollbackConfirmOpen] = useState(false);
   const [fullRollbackSubmitting, setFullRollbackSubmitting] = useState(false);
   const [lever6Submitting, setLever6Submitting] = useState(false);
   const [lever6Decided, setLever6Decided] = useState(false);
+  const [mixedSubmitting, setMixedSubmitting] = useState(false);
+  const [mixedResolved, setMixedResolved] = useState(false);
+  // Tracks the exercise index when the user bailed out of the workout
+  // early (so we can compute completionPct as a partial). null means
+  // the session reached its natural end.
+  const [earlyEndIdx, setEarlyEndIdx] = useState<number | null>(null);
 
   // Derive a coarse workoutType label from the plan name. The streak counter
   // is scoped per (user, workoutType) so the Confirmation Rule only fires
@@ -5102,9 +5111,18 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
     if (feedbackSubmitting || feedbackDone) return;
     setFeedbackSubmitting(true);
     try {
+      // Compute completion fraction. A natural finish (no early-end
+      // marker) is 1.0; bailing out partway through computes from the
+      // exercise index where the user stopped.
+      const totalExercises = Math.max(1, exercises.length);
+      const completionPct = earlyEndIdx === null
+        ? 1
+        : Math.max(0, Math.min(1, earlyEndIdx / totalExercises));
+
       const res = await apiRequest('POST', `/api/fitness-plans/${plan.id}/feedback`, {
         feeling,
         workoutType,
+        completionPct,
       });
       const data: any = await res.json().catch(() => ({}));
       setFeedbackResult({
@@ -5114,14 +5132,62 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
         direction: data?.direction ?? null,
         lever: data?.lever ?? null,
         adjustment: data?.adjustment ?? null,
+        rollback: data?.rollback ?? null,
+        mixedFeedback: data?.mixedFeedback ?? null,
+        partial: data?.partial ?? false,
+        completionPct: data?.completionPct ?? completionPct,
       });
       setFeedbackDone(true);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to record feedback';
-      console.error('[WorkoutPlayer] feedback failed:', err);
-      toast({ title: 'Feedback not saved', description: message, variant: 'destructive' });
+      // Server returns 400 incomplete_too_easy when the user picks
+      // "too easy" but didn't finish the session. Surface the spec's
+      // exact message and leave the prompt open so they can pick again.
+      const raw = err instanceof Error ? err.message : 'Failed to record feedback';
+      const incomplete = /incomplete_too_easy|Finish the full session/i.test(raw);
+      if (incomplete) {
+        toast({
+          title: 'Almost there',
+          description: 'Finish the full session before we adjust — you might surprise yourself!',
+        });
+      } else {
+        console.error('[WorkoutPlayer] feedback failed:', err);
+        toast({ title: 'Feedback not saved', description: raw, variant: 'destructive' });
+      }
     } finally {
       setFeedbackSubmitting(false);
+    }
+  };
+
+  // User accepted/declined the alternating-feedback prompt. Yes inserts
+  // a streak-reset marker so the alternation is forgotten and current
+  // settings are preserved. No closes the player so the user can change
+  // difficulty manually via the plan settings UI.
+  const submitMixedDecision = async (happy: boolean) => {
+    if (mixedSubmitting || mixedResolved) return;
+    setMixedSubmitting(true);
+    try {
+      await apiRequest('POST', `/api/fitness-plans/${plan.id}/feedback/mixed-resolved`, {
+        happy,
+        workoutType,
+      });
+      setMixedResolved(true);
+      if (happy) {
+        toast({
+          title: 'Got it',
+          description: 'Sticking with your current difficulty — fresh start on the streak counter.',
+        });
+      } else {
+        toast({
+          title: 'Open your plan',
+          description: 'Adjust difficulty from your plan settings and we\'ll re-tune from there.',
+        });
+        onClose();
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save';
+      toast({ title: 'Could not save', description: message, variant: 'destructive' });
+    } finally {
+      setMixedSubmitting(false);
     }
   };
 
@@ -5289,15 +5355,35 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
             Exercise {exerciseIdx + 1} of {exercises.length}
           </p>
         </div>
-        <Button
-          onClick={onClose}
-          variant="ghost"
-          size="sm"
-          className="text-white hover:bg-white/10"
-          data-testid="button-close-player"
-        >
-          <X className="w-6 h-6" />
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* End-early affordance — exposes the feedback prompt mid-workout
+              so a partial-completion rating gets recorded and weighted at
+              0.5 by the streak engine. Hidden once we're already on the
+              feedback / done screen. */}
+          {phase !== 'done' && exerciseIdx > 0 && (
+            <Button
+              onClick={() => {
+                setEarlyEndIdx(exerciseIdx);
+                setPhase('done');
+              }}
+              variant="ghost"
+              size="sm"
+              className="text-white/70 hover:bg-white/10 text-xs uppercase font-black tracking-widest"
+              data-testid="button-end-early"
+            >
+              End & rate
+            </Button>
+          )}
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/10"
+            data-testid="button-close-player"
+          >
+            <X className="w-6 h-6" />
+          </Button>
+        </div>
       </div>
 
       {/* Body */}
@@ -5359,6 +5445,52 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
                   >
                     Lever {feedbackResult.lever.id}: {feedbackResult.lever.name}
                     {feedbackResult.lever.requiresConfirmation && ' · Needs confirmation'}
+                  </div>
+                )}
+
+                {/* Partial-completion acknowledgement. Shown for too_hard
+                    feedback where the user ended early — counted but at
+                    half weight toward the streak. */}
+                {feedbackResult?.partial && feedbackResult.feeling === 'too_hard' && (
+                  <div className="w-full max-w-md mb-4 bg-amber-900/30 border-2 border-amber-500 rounded-sm p-3 text-left" data-testid="notice-partial">
+                    <div className="text-xs uppercase font-black text-amber-300 tracking-widest mb-1">
+                      Partial session
+                    </div>
+                    <p className="text-sm text-white/90">
+                      Counted as a partial — it weighs half toward the streak so the system isn't too quick to ease off based on one short session.
+                    </p>
+                  </div>
+                )}
+
+                {/* Alternating-feedback prompt. Suppresses every lever
+                    until the user resolves it. */}
+                {feedbackResult?.mixedFeedback && !mixedResolved && (
+                  <div className="w-full max-w-md mb-4 bg-zinc-900 border-2 border-white/40 rounded-sm p-4 text-left" data-testid="prompt-mixed-feedback">
+                    <div className="text-xs uppercase font-black text-white tracking-widest mb-2">
+                      Mixed signals
+                    </div>
+                    <p className="text-sm text-white/90 mb-4">
+                      {feedbackResult.mixedFeedback.question}
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        onClick={() => submitMixedDecision(true)}
+                        disabled={mixedSubmitting}
+                        className="bg-[#FCD000] text-black font-black uppercase border-2 border-black"
+                        data-testid="button-mixed-happy"
+                      >
+                        {feedbackResult.mixedFeedback.confirmText}
+                      </Button>
+                      <Button
+                        onClick={() => submitMixedDecision(false)}
+                        disabled={mixedSubmitting}
+                        variant="ghost"
+                        className="text-white/80"
+                        data-testid="button-mixed-adjust"
+                      >
+                        {feedbackResult.mixedFeedback.declineText}
+                      </Button>
+                    </div>
                   </div>
                 )}
 

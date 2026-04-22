@@ -630,7 +630,7 @@ export interface IStorage {
   // Exercise completion operations for weekly progression
   markExerciseComplete(userId: string, planId: string, exerciseId: string): Promise<ExerciseCompletion>;
   unmarkExerciseComplete(userId: string, exerciseId: string): Promise<void>;
-  recordWorkoutFeedback(userId: string, planId: string, workoutType: string, feeling: 'too_hard' | 'just_right' | 'too_easy'): Promise<WorkoutFeedback>;
+  recordWorkoutFeedback(userId: string, planId: string, workoutType: string, feeling: 'too_hard' | 'just_right' | 'too_easy', completionPct?: number): Promise<WorkoutFeedback>;
   getRecentWorkoutFeedback(userId: string, workoutType: string, limit?: number): Promise<WorkoutFeedback[]>;
   resetWorkoutStreaks(userId: string, reason?: string, workoutTypes?: string[]): Promise<void>;
   getExerciseCompletions(userId: string, planId: string): Promise<ExerciseCompletion[]>;
@@ -6519,10 +6519,14 @@ export class DatabaseStorage implements IStorage {
     planId: string,
     workoutType: string,
     feeling: 'too_hard' | 'just_right' | 'too_easy',
+    completionPct: number = 1,
   ): Promise<WorkoutFeedback> {
+    const safe = Number.isFinite(completionPct)
+      ? Math.max(0, Math.min(1, completionPct))
+      : 1;
     const [row] = await db
       .insert(workoutFeedback)
-      .values({ userId, planId, workoutType, feeling })
+      .values({ userId, planId, workoutType, feeling, completionPct: safe })
       .returning();
     return row;
   }

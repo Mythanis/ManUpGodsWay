@@ -10645,7 +10645,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`[streakReset] user=${user.id} plan=${plan.id} reason=manual_level_change ${oldLevel}→${newLevel}`);
       }
 
-      res.json(plan);
+      // Mid-plan equipment / duration changes — preserve every lever
+      // adjustment (do NOT reset streak counter), then reshape the plan
+      // to fit the new constraints.
+      const sideEffects: { equipmentChange?: any; durationChange?: any } = {};
+
+      // -- Equipment change --------------------------------------------------
+      // Filter out exercises whose equipment is no longer in the new
+      // selection. Per spec: re-run exercise selection with new equipment
+      // filter. Full re-selection (pulling brand-new exercises) requires
+      // the plan generator; here we surgically remove the now-invalid
+      // ones and surface a count so the UI can prompt the user to add
+      // replacements if the session got too short.
+      const oldEquipment = (existingPlan.equipment || '').toString();
+      const newEquipment = (plan?.equipment || '').toString();
+      if (newEquipment && oldEquipment !== newEquipment) {
+        const allowed = new Set(
+          newEquipment.split(',').map(e => e.trim().toLowerCase()).filter(Boolean),
+        );
+        if (allowed.size > 0) {
+          const exercises = await storage.getFitnessPlanExercises(plan.id);
+          const orphaned = exercises.filter(ex => {
+            const eq = (ex.equipment || '').trim().toLowerCase();
+            // body weight / no equipment is always allowed; otherwise
+            // exercise must use one of the new equipment selections.
+            if (!eq || eq === 'body weight' || eq === 'bodyweight' || eq === 'none') return false;
+            return !allowed.has(eq);
+          });
+          for (const ex of orphaned) {
+            await storage.removePlanExercise(ex.id);
+          }
+          sideEffects.equipmentChange = {
+            removedCount: orphaned.length,
+            removedNames: orphaned.slice(0, 5).map(e => e.exerciseName),
+            remainingCount: exercises.length - orphaned.length,
+          };
+          console.log(`[planUpdate] user=${user.id} plan=${plan.id} equipment ${oldEquipment}→${newEquipment} removed=${orphaned.length}`);
+        }
+      }
+
+      // -- Duration change ---------------------------------------------------
+      // Scale every exercise's set count proportionally to the new time
+      // budget so existing lever adjustments to reps/rest are preserved
+      // and the session naturally fits the new duration. Min 1 set per
+      // exercise so nothing disappears entirely.
+      const oldDuration = existingPlan.estimatedDuration ?? 60;
+      const newDuration = plan?.estimatedDuration ?? oldDuration;
+      if (newDuration && oldDuration && newDuration !== oldDuration) {
+        const ratio = newDuration / oldDuration;
+        const exercises = await storage.getFitnessPlanExercises(plan.id);
+        let scaled = 0;
+        for (const ex of exercises) {
+          const oldSets = ex.sets ?? 3;
+          const newSets = Math.max(1, Math.round(oldSets * ratio));
+          if (newSets !== oldSets) {
+            await storage.updatePlanExercise(ex.id, { sets: newSets });
+            scaled += 1;
+          }
+        }
+        sideEffects.durationChange = {
+          oldDuration,
+          newDuration,
+          ratio: Math.round(ratio * 100) / 100,
+          exercisesAdjusted: scaled,
+        };
+        console.log(`[planUpdate] user=${user.id} plan=${plan.id} duration ${oldDuration}→${newDuration}min ratio=${ratio.toFixed(2)} scaled=${scaled}`);
+      }
+
+      res.json({ ...plan, sideEffects: Object.keys(sideEffects).length ? sideEffects : undefined });
     } catch (error) {
       console.error('Error updating fitness plan:', error);
       if (error instanceof z.ZodError) {
@@ -11010,6 +11077,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const feeling = req.body?.feeling;
       const workoutType = req.body?.workoutType ?? 'standard';
+      // completionPct (0..1) — fraction of the session the user actually
+      // finished. Defaults to 1.0 when the client doesn't send it (treats
+      // legacy callers as fully-completed sessions).
+      let completionPct = typeof req.body?.completionPct === 'number'
+        ? req.body.completionPct
+        : 1;
+      if (!Number.isFinite(completionPct)) completionPct = 1;
+      completionPct = Math.max(0, Math.min(1, completionPct));
+      const isPartial = completionPct < 1;
+
       if (!['too_hard', 'just_right', 'too_easy'].includes(feeling)) {
         return res.status(400).json({ message: 'Invalid feeling value' });
       }
@@ -11017,21 +11094,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid workoutType' });
       }
 
-      const row = await storage.recordWorkoutFeedback(user.id, req.params.planId, workoutType, feeling);
+      // Edge case: "too easy" + incomplete session is rejected outright.
+      // Spec: don't insert the feedback; surface the friendly message.
+      if (feeling === 'too_easy' && isPartial) {
+        return res.status(400).json({
+          code: 'incomplete_too_easy',
+          message: 'Finish the full session before we adjust — you might surprise yourself!',
+        });
+      }
+
+      const row = await storage.recordWorkoutFeedback(
+        user.id,
+        req.params.planId,
+        workoutType,
+        feeling,
+        completionPct,
+      );
 
       // Walk the most recent feedback rows for this (user, workoutType) and
-      // count how many in a row carry the same feeling as the one just saved.
+      // accumulate a *weighted* streak. Same-feeling rows weight 1.0 normally
+      // and 0.5 when the session was partially completed (too_hard only —
+      // too_easy partials never reach this code per the rejection above).
       // The freshest row is the one we just inserted, so the streak is at
-      // least 1.
+      // least the just-inserted row's weight.
       const recent = await storage.getRecentWorkoutFeedback(user.id, workoutType, 10);
-      let streak = 0;
+      const weightOf = (r: { feeling: string; completionPct: number | null }) => {
+        const pct = r.completionPct ?? 1;
+        if (r.feeling === 'too_hard' && pct < 1) return 0.5;
+        return 1;
+      };
+      let weightedStreak = 0;
       for (const r of recent) {
-        if (r.feeling === feeling) streak += 1;
+        if (r.feeling === feeling) weightedStreak += weightOf(r);
         else break;
+      }
+      // Streak as exposed to lever selection / UI is the floored weighted
+      // total — so a 0.5 + 0.5 + 1.0 sequence is treated like a streak of 2.
+      const streak = Math.floor(weightedStreak);
+
+      // Edge case: alternating too_hard / too_easy feedback. After 4
+      // strictly-alternating sessions (no just_right interleaved), suppress
+      // every lever and ask the user whether they're happy with the
+      // current difficulty. Detection runs on the freshest 4 rows after
+      // the most recent reset marker.
+      let mixedFeedback = false;
+      if (feeling !== 'just_right' && recent.length >= 4) {
+        const last4 = recent.slice(0, 4);
+        const allHardOrEasy = last4.every(r => r.feeling === 'too_hard' || r.feeling === 'too_easy');
+        const strictlyAlternating =
+          allHardOrEasy &&
+          last4[0].feeling !== last4[1].feeling &&
+          last4[1].feeling !== last4[2].feeling &&
+          last4[2].feeling !== last4[3].feeling;
+        if (strictlyAlternating) mixedFeedback = true;
       }
 
       let level: 'none' | 'minor' | 'full' | 'escalate' = 'none';
-      if (feeling !== 'just_right') {
+      if (feeling !== 'just_right' && !mixedFeedback) {
         if (streak >= 4) level = 'escalate';
         else if (streak === 3) level = 'full';
         else if (streak === 2) level = 'minor';
@@ -11039,8 +11158,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Pick which adjustment lever should fire for this streak. Levers
       // run from least disruptive (1: rest) to most disruptive (6: level
-      // change). 'just_right' never triggers a lever per spec.
-      const lever = feeling === 'just_right' ? null : selectLeverForStreak(streak);
+      // change). 'just_right' never triggers a lever per spec, and an
+      // alternating pattern suppresses lever changes entirely until the
+      // user resolves the prompt.
+      const lever = feeling === 'just_right' || mixedFeedback
+        ? null
+        : selectLeverForStreak(streak);
       const direction = feeling === 'too_hard' ? 'easier' : feeling === 'too_easy' ? 'harder' : null;
 
       // Auto-apply the lever for "too hard" / "too easy" feedback
@@ -11146,6 +11269,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         ...row,
         streak,
+        weightedStreak,
+        completionPct,
+        partial: isPartial,
         level,
         direction,
         lever: lever
@@ -11159,6 +11285,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         adjustment,
         suppressedLever6,
         rollback,
+        // When set, the client should suppress any adjustment summary and
+        // instead show the alternating-feedback resolution prompt below.
+        mixedFeedback: mixedFeedback
+          ? {
+              question: 'Your feedback has been mixed — are you happy with the current difficulty?',
+              confirmText: "Yes, I'm happy",
+              declineText: 'No, let me adjust',
+            }
+          : null,
       });
     } catch (error) {
       console.error('Error recording workout feedback:', error);
@@ -11268,6 +11403,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ ok: true, ...result });
     } catch (error) {
       console.error('Error performing full rollback:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Resolution for the alternating-feedback prompt. The client posts the
+  // user's answer to "are you happy with the current difficulty?". A
+  // "yes" inserts a streak-reset marker for this workoutType so the
+  // alternation is forgotten and current settings are preserved. A
+  // "no" returns ok and the client opens the manual difficulty UI; we
+  // do nothing server-side because the level change itself happens via
+  // PUT /api/fitness-plans/:id and that already wipes streaks.
+  app.post('/api/fitness-plans/:planId/feedback/mixed-resolved', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) return res.status(404).json({ message: 'Fitness plan not found' });
+      if (plan.userId !== user.id) return res.status(403).json({ message: 'Access denied' });
+
+      const happy = req.body?.happy === true;
+      const workoutType = (req.body?.workoutType ?? 'standard').toString();
+      if (!['standard', 'standard-cardio', 'hiit', 'stretching'].includes(workoutType)) {
+        return res.status(400).json({ message: 'Invalid workoutType' });
+      }
+
+      if (happy) {
+        await storage.resetWorkoutStreaks(user.id, 'mixed_feedback_accepted', [workoutType]);
+        console.log(`[mixedFeedback] user=${user.id} type=${workoutType} resolved=happy streakReset=yes`);
+      } else {
+        console.log(`[mixedFeedback] user=${user.id} type=${workoutType} resolved=adjust`);
+      }
+
+      res.json({ ok: true, happy });
+    } catch (error) {
+      console.error('Error resolving mixed feedback:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

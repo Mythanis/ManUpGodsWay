@@ -576,12 +576,18 @@ export const workoutFeedback = pgTable("workout_feedback", {
   // the consecutive-feedback streak (Confirmation Rule).
   workoutType: varchar("workout_type", { length: 24 }).notNull().default('standard'),
   feeling: varchar("feeling", { length: 16 }).notNull(),
+  // 0..1 fraction of the session the user actually finished. 1.0 means
+  // the full session. Anything <1.0 is treated as a "partial completion"
+  // by the streak engine (too_hard partials weight 0.5; too_easy
+  // partials are rejected outright per spec).
+  completionPct: real("completion_pct").notNull().default(1),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertWorkoutFeedbackSchema = createInsertSchema(workoutFeedback, {
   feeling: z.enum(['too_hard', 'just_right', 'too_easy']),
   workoutType: z.enum(['standard', 'standard-cardio', 'hiit', 'stretching']),
+  completionPct: z.number().min(0).max(1).optional(),
 }).omit({ id: true, createdAt: true });
 
 export type WorkoutFeedback = typeof workoutFeedback.$inferSelect;
