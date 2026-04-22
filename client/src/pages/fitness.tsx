@@ -1429,14 +1429,29 @@ export default function Fitness() {
     restSec?: number;
   }
 
-  // Classify a standard exercise as compound / isolation / bodyweight so
-  // the rest-period table can be applied per spec. Equipment "body weight"
-  // wins unless the name clearly indicates a compound lift; otherwise the
-  // exercise name is matched against compound/isolation keywords.
-  type ExerciseType = 'compound' | 'isolation' | 'bodyweight';
+  // Classify a standard exercise as compound / isolation / bodyweight /
+  // core so both the rest-period and sets/reps tables can be applied per
+  // spec. Core is detected first (planks, crunches, leg raises, etc.) so
+  // an "ab wheel rollout" doesn't get tagged as bodyweight or isolation.
+  // Equipment "body weight" wins next unless the name clearly indicates a
+  // compound lift; otherwise the name is matched against compound /
+  // isolation keywords with compound winning ties (more generous rest).
+  type ExerciseType = 'compound' | 'isolation' | 'bodyweight' | 'core';
+  type Level = 'Beginner' | 'Intermediate' | 'Advanced' | 'Tabata';
   function classifyStandardExercise(ex: APIExercise): ExerciseType {
     const name = (ex.name || '').toLowerCase();
     const equip = (ex.equipment || '').toLowerCase();
+    const bodyPart = (ex.bodyPart || '').toLowerCase();
+    const coreKeywords = [
+      'plank', 'crunch', 'sit-up', 'situp', 'sit up', 'leg raise',
+      'dead bug', 'hollow body', 'mountain climber', 'russian twist',
+      'wood chop', 'side bend', 'ab wheel', 'ab roll', 'flutter kick',
+      'bicycle', 'v-up', 'v up',
+    ];
+    const isCore = coreKeywords.some(k => name.includes(k))
+      || bodyPart === 'core' || bodyPart === 'abs' || bodyPart === 'waist'
+      || bodyPart === 'obliques';
+    if (isCore) return 'core';
     const compoundKeywords = [
       'squat', 'deadlift', 'bench press', 'overhead press',
       'shoulder press', 'military press', 'push press', 'row',
@@ -1450,36 +1465,98 @@ export default function Fitness() {
     ];
     const isCompound = compoundKeywords.some(k => name.includes(k));
     if (isCompound) return 'compound';
-    // Per spec, bodyweight is its own equipment-based column distinct from
-    // compound/isolation. When no compound match was found, prefer the
-    // equipment signal before falling back to isolation keyword matching.
     if (equip.includes('body weight') || equip === 'bodyweight') return 'bodyweight';
     const isIsolation = isolationKeywords.some(k => name.includes(k));
     if (isIsolation) return 'isolation';
-    // Default to compound when ambiguous so rest is generous, not too short.
     return 'compound';
   }
 
   // Spec rest-period table (seconds) keyed by (level, exercise type) for
-  // Standard / Standard with Cardio sessions. Values are the midpoint of
-  // each spec range, or the exact value when the spec gives a single
-  // number. Beg/Int are the standard rest bands; "Tabata" reuses Adv as
-  // a sane fallback (Tabata is HIIT-only and wouldn't normally hit this
-  // table, but keep the type safe).
-  const STANDARD_REST_TABLE: Record<'Beginner' | 'Intermediate' | 'Advanced' | 'Tabata', Record<ExerciseType, number>> = {
-    Beginner:     { compound: 82, isolation: 52, bodyweight: 52 },
-    Intermediate: { compound: 67, isolation: 52, bodyweight: 60 },
-    Advanced:     { compound: 105, isolation: 52, bodyweight: 67 },
-    Tabata:       { compound: 105, isolation: 52, bodyweight: 67 },
+  // Standard / Standard with Cardio sessions. Midpoints of each spec
+  // range. Core reuses the isolation rest band per spec (45-60s).
+  const STANDARD_REST_TABLE: Record<Level, Record<ExerciseType, number>> = {
+    Beginner:     { compound: 82,  isolation: 52, bodyweight: 52, core: 52 },
+    Intermediate: { compound: 67,  isolation: 52, bodyweight: 60, core: 52 },
+    Advanced:     { compound: 105, isolation: 52, bodyweight: 67, core: 52 },
+    Tabata:       { compound: 105, isolation: 52, bodyweight: 67, core: 52 },
   };
-  // Per-level average rest used to size the budget (the actual emitted
-  // rest still varies per exercise). Mean of the three exercise-type
-  // values for that level.
-  const STANDARD_AVG_REST: Record<'Beginner' | 'Intermediate' | 'Advanced' | 'Tabata', number> = {
-    Beginner:     Math.round((82 + 52 + 52) / 3),     // 62
-    Intermediate: Math.round((67 + 52 + 60) / 3),     // 60
-    Advanced:     Math.round((105 + 52 + 67) / 3),    // 75
-    Tabata:       Math.round((105 + 52 + 67) / 3),    // 75
+  // Per-level average rest used as a budget proxy (actual emitted rest
+  // varies per exercise via the table above).
+  const STANDARD_AVG_REST: Record<Level, number> = {
+    Beginner:     Math.round((82 + 52 + 52 + 52) / 4),     // 60
+    Intermediate: Math.round((67 + 52 + 60 + 52) / 4),     // 58
+    Advanced:     Math.round((105 + 52 + 67 + 52) / 4),    // 69
+    Tabata:       Math.round((105 + 52 + 67 + 52) / 4),    // 69
+  };
+
+  // Spec sets / reps table keyed by (level, exercise type). Sets use the
+  // upper-mid of each spec range so users get meaningful volume; reps
+  // use the spec range and are randomised at emission time. For Advanced,
+  // the FIRST compound emitted in a day is treated as the "primary" lift
+  // (heavier strength block: 5 sets x 4-6 reps); subsequent compounds
+  // fall back to the secondary band. Core uses the rep range (the
+  // hold-time variant is captured in plank-style names via durationSec
+  // emission, which is out of scope for this lookup).
+  type SetsRepsSpec = { sets: number; repRange: [number, number] };
+  const STANDARD_SETS_TABLE: Record<Level, Record<ExerciseType, SetsRepsSpec>> = {
+    Beginner: {
+      compound:   { sets: 3, repRange: [8, 10] },
+      isolation:  { sets: 3, repRange: [10, 12] },
+      bodyweight: { sets: 3, repRange: [10, 12] },
+      core:       { sets: 3, repRange: [10, 15] },
+    },
+    Intermediate: {
+      compound:   { sets: 4, repRange: [8, 12] },
+      isolation:  { sets: 3, repRange: [10, 15] },
+      bodyweight: { sets: 3, repRange: [10, 15] },
+      core:       { sets: 3, repRange: [12, 15] },
+    },
+    Advanced: {
+      compound:   { sets: 4, repRange: [6, 10] },   // secondary
+      isolation:  { sets: 4, repRange: [10, 15] },
+      bodyweight: { sets: 4, repRange: [10, 15] },
+      core:       { sets: 4, repRange: [10, 15] },
+    },
+    Tabata: {
+      compound:   { sets: 4, repRange: [6, 10] },
+      isolation:  { sets: 4, repRange: [10, 15] },
+      bodyweight: { sets: 4, repRange: [10, 15] },
+      core:       { sets: 4, repRange: [10, 15] },
+    },
+  };
+  // Advanced "primary compound" override — applied to the first compound
+  // emitted per Advanced day for a strength-focused block.
+  const ADVANCED_PRIMARY_COMPOUND: SetsRepsSpec = { sets: 5, repRange: [4, 6] };
+
+  // Per-level avg sets used to size exercise count from totalWorkingSets.
+  const STANDARD_AVG_SETS: Record<Level, number> = {
+    Beginner:     3,
+    Intermediate: 3,    // 4/3/3/3 → 3.25, round down for tighter fit
+    Advanced:     4,    // 4/4/4/4 (primary compound is rare per day)
+    Tabata:       4,
+  };
+
+  // HIIT rounds (sets per exercise) per spec.
+  const HIIT_ROUNDS_BY_LEVEL: Record<Level, number> = {
+    Beginner:     4,    // 3-4 rounds → upper bound
+    Intermediate: 5,
+    Advanced:     6,    // 5-6 rounds
+    Tabata:       8,    // classic protocol
+  };
+
+  // Stretching: holds (sets) and hold duration (seconds) per level per
+  // spec. Beg 1-2 holds @ 25-30s, Int 2 @ 40-45s, Adv 2-3 @ 50-60s.
+  const STRETCH_SETS_BY_LEVEL: Record<Level, number> = {
+    Beginner:     2,
+    Intermediate: 2,
+    Advanced:     3,
+    Tabata:       3,
+  };
+  const STRETCH_HOLD_BY_LEVEL: Record<Level, number> = {
+    Beginner:     28,   // 25-30 midpoint
+    Intermediate: 42,   // 40-45 midpoint
+    Advanced:     55,   // 50-60 midpoint
+    Tabata:       55,
   };
 
   interface DayPlan {
@@ -1625,20 +1702,23 @@ export default function Fitness() {
     // Get all unique equipment types from the exercises
     const availableEquipment = Array.from(new Set(exercises.map(e => e.equipment.toLowerCase())));
     
-    // Standard rep-based config — fixed at 3 sets across all levels.
-    // Per-set rest is now resolved per exercise from STANDARD_REST_TABLE
-    // based on (level, classified type), so no flat restSec lives here.
-    const stdSets = 3;
-    let stdConfig;
-    if (level === "Beginner") stdConfig = { sets: stdSets, repRange: [10,12] };
-    else if (level === "Intermediate") stdConfig = { sets: stdSets, repRange: [10,15] };
-    else stdConfig = { sets: stdSets, repRange: [12,20] };
-    const avgReps = (stdConfig.repRange[0] + stdConfig.repRange[1]) / 2;
+    // Standard rep-based config — sets/reps are now per (level, exercise
+    // type) via STANDARD_SETS_TABLE; rest is per (level, type) via
+    // STANDARD_REST_TABLE. avgReps below is a per-level mean used only
+    // as a budget proxy; actual reps vary per emitted exercise.
+    const levelKey: Level = level;
+    const setsTable = STANDARD_SETS_TABLE[levelKey];
+    const avgReps = (() => {
+      // Mean of midpoints across the four exercise types for this level.
+      const types: ExerciseType[] = ['compound', 'isolation', 'bodyweight', 'core'];
+      const mids = types.map(t => (setsTable[t].repRange[0] + setsTable[t].repRange[1]) / 2);
+      return mids.reduce((a, b) => a + b, 0) / mids.length;
+    })();
 
     // HIIT time-based config (per spec):
-    //   Beginner     30s work / 30s rest
-    //   Intermediate 40s work / 20s rest
-    //   Advanced     45s work / 15s rest
+    //   Beginner     30s work / 30s rest, 4 rounds
+    //   Intermediate 40s work / 20s rest, 5 rounds
+    //   Advanced     45s work / 15s rest, 6 rounds
     //   Tabata       20s work / 10s rest x 8 rounds (Advanced-only protocol)
     const isTabata = level === "Tabata";
     const hiitWork = isTabata ? 20
@@ -1649,12 +1729,13 @@ export default function Fitness() {
                    : level === "Beginner" ? 30
                    : level === "Intermediate" ? 20
                    : 15;
-    const hiitRounds = isTabata ? 8 : 3;
+    const hiitRounds = HIIT_ROUNDS_BY_LEVEL[levelKey];
 
-    // Stretching config — fixed at 3 sets of 30s hold + 10s transition.
-    const stretchSets = 3;
+    // Stretching config — sets and hold duration per level per spec.
+    // Transition between every hold is fixed at 10s.
     const STRETCH_TRANSITION = 10;
-    const STRETCH_HOLD = 30;
+    const STRETCH_HOLD = STRETCH_HOLD_BY_LEVEL[levelKey];
+    const stretchSets = STRETCH_SETS_BY_LEVEL[levelKey];
 
     // Body part groupings designed to make sense (push/pull, lower split)
     const allBodyPartSchedules = [
@@ -1723,7 +1804,7 @@ export default function Fitness() {
     const totalWorkingSets = Math.max(1, Math.floor(workingSec / perSetSec));
     const setsPerExercise  = workoutStyle === 'hiit' ? hiitRounds
                            : isStretchingOnly        ? stretchSets
-                           :                           stdConfig.sets;
+                           :                           STANDARD_AVG_SETS[levelKey];
     const exercisesPerDay  = Math.max(1, Math.ceil(totalWorkingSets / setsPerExercise));
 
     // Helper: prepend the opening stretch + main warm-up block (~10 min for
@@ -1881,6 +1962,11 @@ export default function Fitness() {
           // Standard or HIIT - pick from exercises pool by body parts (skip stretches)
           const workPool = exercises.filter(e => !e.name.toLowerCase().includes('stretch'));
           const exercisesPerBodyPart = Math.ceil(exercisesPerDay / dayPlan.parts.length);
+          // Tracks whether the day's "primary compound" slot has been
+          // assigned (Advanced only). The first compound emitted in the
+          // day gets the strength block (5 x 4-6); subsequent compounds
+          // fall back to the secondary band from STANDARD_SETS_TABLE.
+          let primaryCompoundUsed = false;
           for (const bodyPart of dayPlan.parts) {
             const picked = pickRandomByBodyPart(
               workPool,
@@ -1900,12 +1986,21 @@ export default function Fitness() {
                   restSec: hiitRest,
                 });
               } else {
-                // Standard: rest is per (level, exercise type) per spec.
+                // Standard: sets/reps + rest are per (level, exercise
+                // type) per spec. For Advanced, the first compound of
+                // the day is upgraded to the primary strength block.
                 const exType = classifyStandardExercise(ex);
+                let spec = setsTable[exType];
+                if (level === 'Advanced' && exType === 'compound' && !primaryCompoundUsed) {
+                  spec = ADVANCED_PRIMARY_COMPOUND;
+                  primaryCompoundUsed = true;
+                }
+                const [repMin, repMax] = spec.repRange;
+                const reps = repMin + Math.floor(Math.random() * Math.max(1, (repMax - repMin + 1)));
                 dayExercises.push({
                   exercise: ex,
-                  sets: stdConfig.sets,
-                  reps: stdConfig.repRange[0] + Math.floor(Math.random() * (stdConfig.repRange[1] - stdConfig.repRange[0])),
+                  sets: spec.sets,
+                  reps,
                   restSec: STANDARD_REST_TABLE[level][exType],
                 });
               }
@@ -1917,25 +2012,12 @@ export default function Fitness() {
           while (dayExercises.length > cap) dayExercises.pop();
         }
 
-        // For STANDARD (rep-based) sessions only, distribute the budgeted
-        // totalWorkingSets exactly across the main exercises. This turns
-        // "13 sets across 5 exercises" into 3+3+3+2+2 instead of dropping
-        // the remainder via floor division. HIIT/Tabata rounds and stretch
-        // sets are protocol constants and are NOT mutated here — for those
-        // styles, exercise count is sized so emitted sets stay close to the
-        // budget (the safety-net trim below handles any over-fill).
-        const isStandardStyle = !isStretchingOnly && workoutStyle !== 'hiit';
-        if (isStandardStyle) {
-          const mainStart = warmupCount;
-          const mainCount = dayExercises.length - mainStart;
-          if (mainCount > 0) {
-            const baseSets  = Math.max(1, Math.floor(totalWorkingSets / mainCount));
-            const extraSets = Math.max(0, totalWorkingSets - baseSets * mainCount);
-            for (let i = 0; i < mainCount; i++) {
-              dayExercises[mainStart + i].sets = baseSets + (i < extraSets ? 1 : 0);
-            }
-          }
-        }
+        // NOTE: post-emission set redistribution has been removed. With
+        // the new spec, sets-per-exercise is fixed by (level, exercise
+        // type) via STANDARD_SETS_TABLE (plus the Advanced primary-
+        // compound override). Mutating sets here would override the
+        // spec. The exercise count is still sized from totalWorkingSets,
+        // and the safety-net trim below handles any time over-fill.
 
         // Append the cooldown stretch block (~5 min) to every day. For pure
         // stretching sessions the budget already excluded the cooldown, so
