@@ -65,6 +65,29 @@ import {
 import Parser from 'rss-parser';
 import { sendFeedbackEmail, sendHelpRequestEmail } from './emailService';
 
+// Pull a media filename out of an exercise JSON entry, accepting any of the
+// common key spellings. Strips whitespace and returns "" when nothing usable
+// is present so the column always holds a string.
+function pickMediaFileName(ex: any): string {
+  const candidates = [
+    ex?.media_file,
+    ex?.mediaFile,
+    ex?.media,
+    ex?.image,
+    ex?.image_file,
+    ex?.imageFile,
+    ex?.video,
+    ex?.video_file,
+    ex?.videoFile,
+    ex?.gif,
+    ex?.filename,
+  ];
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim() !== '') return c.trim();
+  }
+  return '';
+}
+
 // Role checking helper functions
 function isAdmin(user: any): boolean {
   return user && (user.role === 'admin' || user.role === 'owner');
@@ -9932,7 +9955,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           equipment: exercise.equipment,
           level: exercise.level,
           instructions: exercise.instructions,
-          mediaFile: exercise.media_file,
+          mediaFile: pickMediaFileName(exercise),
           shortInstructions: exercise.short_instructions ?? null,
           hiit: exercise.hiit ?? "No",
           stretching: exercise.stretching ?? "No",
@@ -9971,6 +9994,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Validate required fields up front so we don't half-import.
         // `id` is optional — entries without one get auto-assigned below.
+        // `media_file` is optional — accepts media_file / mediaFile / image /
+        // video / media keys; missing media just means it can be added later
+        // via Bulk Import Media or per-row upload.
         for (let i = 0; i < exercises.length; i++) {
           const ex = exercises[i];
           if (
@@ -9978,8 +10004,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             typeof ex?.body_part !== 'string' ||
             typeof ex?.equipment !== 'string' ||
             typeof ex?.level !== 'string' ||
-            typeof ex?.instructions !== 'string' ||
-            typeof ex?.media_file !== 'string'
+            typeof ex?.instructions !== 'string'
           ) {
             return res.status(400).json({
               message: `Invalid exercise entry at index ${i} (missing or wrong-typed required field). Name: ${ex?.name ?? '(none)'}`,
@@ -10010,7 +10035,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         await db.delete(schema.exercises); // Clear existing exercises
 
+        let withMedia = 0;
         for (const exercise of exercises) {
+          const mediaFile = pickMediaFileName(exercise);
+          if (mediaFile) withMedia++;
           await db.insert(schema.exercises).values({
             id: exercise.id,
             name: exercise.name,
@@ -10018,7 +10046,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             equipment: exercise.equipment,
             level: exercise.level,
             instructions: exercise.instructions,
-            mediaFile: exercise.media_file,
+            mediaFile,
             shortInstructions: exercise.short_instructions ?? null,
             hiit: exercise.hiit ?? "No",
             stretching: exercise.stretching ?? "No",
@@ -10026,8 +10054,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         res.json({
-          message: `Imported ${exercises.length} exercises from ${req.file.originalname}`,
+          message: `Imported ${exercises.length} exercises from ${req.file.originalname} (${withMedia} with media filename, ${exercises.length - withMedia} without).`,
           count: exercises.length,
+          withMedia,
+          missingMedia: exercises.length - withMedia,
           fileName: req.file.originalname,
         });
       } catch (error) {
