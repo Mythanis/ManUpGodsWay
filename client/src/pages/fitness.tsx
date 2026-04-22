@@ -122,16 +122,28 @@ interface FitnessPlanExercise {
   planId: string;
   exerciseId: string;
   exerciseName: string;
-  exerciseGifUrl: string;
-  imageUrl?: string; // Fallback property for exercise images
-  exerciseTarget: string;
-  exerciseBodyPart: string;
-  exerciseEquipment: string;
+  // Image / media URL as stored in fitness_plan_exercises.image_url
+  imageUrl?: string;
+  // Legacy/aliased media field used by some pre-existing card renderers
+  exerciseGifUrl?: string;
+  // Aliases used in pre-existing UI markup
+  exerciseTarget?: string;
+  exerciseBodyPart?: string;
+  exerciseEquipment?: string;
+  // Real DB columns
+  bodyPart?: string;
+  targetMuscle?: string;
+  equipment?: string;
   sets?: number;
-  reps?: number;
+  // Reps may be a number ("10"), range ("10-12"), or time-based ("30s")
+  reps?: string | number;
   duration?: number;
+  minutes?: number;
+  weight?: string;
+  restTime?: number;
   notes?: string;
   daysOfWeek?: string[];
+  weekNumber?: number;
   orderIndex: number;
 }
 
@@ -2336,6 +2348,12 @@ export default function Fitness() {
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div>
+                            <p
+                              className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em] mb-1"
+                              data-testid={`text-today-date-${plan.id}`}
+                            >
+                              {format(new Date(), 'EEEE • MMM d')}
+                            </p>
                             <h3 className="text-lg font-black text-white uppercase tracking-tight" data-testid={`text-plan-name-${plan.id}`}>
                               {plan.name}
                             </h3>
@@ -4228,13 +4246,26 @@ export default function Fitness() {
             setPlayerPlan(null);
             setPlayerExercises([]);
           }}
-          onExerciseComplete={(exerciseId) => {
-            // Mark complete via API + local state
-            apiRequest('POST', `/api/fitness-plans/${playerPlan.id}/exercises/${exerciseId}/complete`)
-              .catch(() => {});
+          onExerciseComplete={(rowId) => {
+            // The completion endpoint expects the fitness_plan_exercises row id
+            // (FK to exercise_completions.exercise_id), NOT the external ExerciseDB
+            // exerciseId. Surface errors via toast so failures aren't silent.
+            apiRequest('POST', `/api/fitness-plans/${playerPlan.id}/exercises/${rowId}/complete`)
+              .then(() => {
+                queryClient.invalidateQueries({ queryKey: ['/api/fitness-plans'] });
+              })
+              .catch((err: unknown) => {
+                const message = err instanceof Error ? err.message : 'Failed to record completion';
+                console.error('[WorkoutPlayer] complete failed:', err);
+                toast({
+                  title: 'Completion not saved',
+                  description: message,
+                  variant: 'destructive',
+                });
+              });
             setCompletedExercises(prev => {
               const next = new Set(prev);
-              next.add(exerciseId);
+              next.add(rowId);
               return next;
             });
           }}
@@ -4333,7 +4364,8 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
       if (isLastSet) {
         // Finished all sets of this exercise
         if (currentExercise?.exerciseId) {
-          onExerciseComplete(currentExercise.exerciseId);
+          // Pass the row id so the completion FK lookup succeeds
+          onExerciseComplete(currentExercise.id);
         }
         const isLastExercise = exerciseIdx + 1 >= exercises.length;
         if (isLastExercise) {
