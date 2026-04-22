@@ -476,7 +476,16 @@ export default function Fitness() {
       )
         .then(plans => {
           if (plans.length === 0) {
-            setPlanGenerationError(`Unable to generate plans for ${selectedPlanEquipment.join(', ')}. Try selecting different equipment types like "body weight" or "dumbbell".`);
+            console.error('[Plan generation failed] Inputs:', {
+              level: selectedLevel,
+              equipment: selectedPlanEquipment,
+              startDay: selectedStartDay,
+              duration: selectedWorkoutDuration,
+              frequency: selectedFrequency,
+              days: selectedDays,
+              workoutStyle: selectedWorkoutStyle,
+            });
+            setPlanGenerationError(`Unable to generate plans for ${selectedPlanEquipment.join(', ')} at ${selectedLevel || '(no level selected)'} level. Try a different equipment + level combination, or include "Bodyweight".`);
           } else {
             setPlanGenerationError('');
           }
