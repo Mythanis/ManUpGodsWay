@@ -2783,6 +2783,41 @@ export const insertFoodIntakeEntrySchema = createInsertSchema(foodIntakeEntries)
 export type FoodIntakeEntry = typeof foodIntakeEntries.$inferSelect;
 export type InsertFoodIntakeEntry = z.infer<typeof insertFoodIntakeEntrySchema>;
 
+// ─── Nutrition Profile (calorie target) ───────────────────────────────────────
+
+export const sexEnum = pgEnum("nutrition_sex", ["male", "female"]);
+export const activityLevelEnum = pgEnum("nutrition_activity_level", [
+  "sedentary", "light", "moderate", "very", "extra",
+]);
+export const goalTypeEnum = pgEnum("nutrition_goal_type", ["lose", "maintain", "gain"]);
+
+export const nutritionProfiles = pgTable("nutrition_profiles", {
+  userId: varchar("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  sex: sexEnum("sex").notNull(),
+  ageYears: integer("age_years").notNull(),
+  heightCm: real("height_cm").notNull(),
+  weightKg: real("weight_kg").notNull(),
+  goalWeightKg: real("goal_weight_kg").notNull(),
+  goalType: goalTypeEnum("goal_type").notNull(),
+  timelineWeeks: integer("timeline_weeks").notNull(),
+  activityLevel: activityLevelEnum("activity_level").notNull(),
+  weightUnit: varchar("weight_unit", { length: 4 }).notNull().default("lb"),
+  heightUnit: varchar("height_unit", { length: 4 }).notNull().default("in"),
+  bmr: real("bmr").notNull(),
+  maintenanceKcal: integer("maintenance_kcal").notNull(),
+  targetKcal: integer("target_kcal").notNull(),
+  floorApplied: boolean("floor_applied").notNull().default(false),
+  effectiveTimelineWeeks: integer("effective_timeline_weeks").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertNutritionProfileSchema = createInsertSchema(nutritionProfiles).omit({
+  updatedAt: true,
+});
+
+export type NutritionProfile = typeof nutritionProfiles.$inferSelect;
+export type InsertNutritionProfile = z.infer<typeof insertNutritionProfileSchema>;
+
 // ─── VATMEBOP Accountability Chart ────────────────────────────────────────────
 // One row per (user, year, week). Each discipline column stores 0=blank,
 // 1=failed-but-repented, 2=accomplished.

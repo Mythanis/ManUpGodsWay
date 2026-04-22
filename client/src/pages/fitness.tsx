@@ -798,6 +798,11 @@ export default function Fitness() {
     },
   });
 
+  const { data: nutritionProfile } = useQuery<any>({
+    queryKey: ['/api/nutrition-profile'],
+    enabled: hasMembership,
+  });
+
   const totalIntakeCalories = intakeEntries.reduce((sum: number, e: any) => sum + (e.totalCalories || 0), 0);
 
   const intakeByMeal: Record<string, any[]> = {};
@@ -3289,6 +3294,91 @@ export default function Fitness() {
                 </button>
               ))}
             </div>
+
+            {/* Recommended Daily Calorie Intake card */}
+            {(() => {
+              if (!nutritionProfile) {
+                return (
+                  <div
+                    className="liquid-black border-2 border-[#FCD000]/40 rounded-sm px-4 py-4"
+                    data-testid="card-calorie-recommendation-empty"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Flame className="w-6 h-6 text-[#FCD000] shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <h3 className="text-white font-black uppercase tracking-wide text-sm">Recommended Daily Calorie Intake</h3>
+                        <p className="text-white/60 text-xs mt-1">
+                          Find out how many calories you should eat each day based on your goal.
+                        </p>
+                        <Button
+                          onClick={() => setLocation('/calorie-calculator')}
+                          size="sm"
+                          className="mt-3 bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black"
+                          data-testid="button-open-calorie-calculator"
+                        >
+                          Calculate My Target
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              const target = nutritionProfile.targetKcal as number;
+              const consumedToday = intakePeriod === 'day' ? totalIntakeCalories : 0;
+              const pct = intakePeriod === 'day' ? Math.min(100, Math.round((consumedToday / target) * 100)) : null;
+              const remaining = intakePeriod === 'day' ? target - consumedToday : null;
+              const goalLabel =
+                nutritionProfile.goalType === 'lose' ? 'Fat Loss' :
+                nutritionProfile.goalType === 'gain' ? 'Muscle Gain' : 'Maintenance';
+              return (
+                <div
+                  className="liquid-black border-2 border-[#FCD000]/40 rounded-sm px-4 py-3"
+                  data-testid="card-calorie-recommendation"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Flame className="w-5 h-5 text-[#FCD000]" />
+                      <div>
+                        <div className="text-white font-black uppercase tracking-wide text-sm">Daily Target</div>
+                        <div className="text-white/40 text-[10px] font-bold uppercase tracking-wider">{goalLabel}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[#FCD000] font-black text-2xl tabular-nums" data-testid="text-calorie-target">
+                        {target.toLocaleString()}
+                      </span>
+                      <span className="text-white/40 text-xs font-bold ml-1">kcal</span>
+                    </div>
+                  </div>
+                  {intakePeriod === 'day' && pct !== null && remaining !== null && (
+                    <>
+                      <div className="mt-3 h-2 w-full rounded-sm bg-white/10 overflow-hidden">
+                        <div
+                          className="h-full bg-[#FCD000] transition-all"
+                          style={{ width: `${pct}%` }}
+                          data-testid="bar-calorie-progress"
+                        />
+                      </div>
+                      <div className="flex justify-between mt-1.5 text-[10px] font-bold uppercase tracking-wide">
+                        <span className="text-white/60">{consumedToday.toLocaleString()} eaten</span>
+                        <span className={remaining < 0 ? 'text-red-400' : 'text-white/60'}>
+                          {remaining < 0 ? `${Math.abs(remaining).toLocaleString()} over` : `${remaining.toLocaleString()} left`}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  <div className="flex justify-end mt-2">
+                    <button
+                      onClick={() => setLocation('/calorie-calculator')}
+                      className="text-[10px] font-black uppercase tracking-wide text-[#FCD000] hover:underline"
+                      data-testid="button-update-calorie-target"
+                    >
+                      Update
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Calorie total banner */}
             <div className="flex items-center justify-between liquid-black border-2 border-[#FCD000]/40 rounded-sm px-4 py-3">

@@ -15936,6 +15936,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── Nutrition Profile (calorie target) ──────────────────────────────────────
+
+  app.get('/api/nutrition-profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profile = await storage.getNutritionProfile(userId);
+      res.json(profile ?? null);
+    } catch (error) {
+      console.error('[NutritionProfile] GET error', error);
+      res.status(500).json({ message: 'Failed to fetch nutrition profile' });
+    }
+  });
+
+  const nutritionProfileInputSchema = z.object({
+    sex: z.enum(['male', 'female']),
+    ageYears: z.number().int().min(18).max(120),
+    heightCm: z.number().min(50).max(280),
+    weightKg: z.number().min(25).max(400),
+    goalWeightKg: z.number().min(25).max(400),
+    goalType: z.enum(['lose', 'maintain', 'gain']),
+    timelineWeeks: z.number().int().min(1).max(260),
+    activityLevel: z.enum(['sedentary', 'light', 'moderate', 'very', 'extra']),
+    weightUnit: z.enum(['lb', 'kg']).default('lb'),
+    heightUnit: z.enum(['in', 'cm']).default('in'),
+    acknowledgement: z.literal(true),
+  });
+
+  app.put('/api/nutrition-profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const parsed = nutritionProfileInputSchema.parse(req.body);
+      const { computeTarget } = await import('@shared/calorie-math');
+      const result = computeTarget({
+        sex: parsed.sex,
+        ageYears: parsed.ageYears,
+        heightCm: parsed.heightCm,
+        weightKg: parsed.weightKg,
+        goalWeightKg: parsed.goalWeightKg,
+        goalType: parsed.goalType,
+        timelineWeeks: parsed.timelineWeeks,
+        activity: parsed.activityLevel,
+      });
+      const saved = await storage.upsertNutritionProfile({
+        userId,
+        sex: parsed.sex,
+        ageYears: parsed.ageYears,
+        heightCm: parsed.heightCm,
+        weightKg: parsed.weightKg,
+        goalWeightKg: parsed.goalWeightKg,
+        goalType: parsed.goalType,
+        timelineWeeks: parsed.timelineWeeks,
+        activityLevel: parsed.activityLevel,
+        weightUnit: parsed.weightUnit,
+        heightUnit: parsed.heightUnit,
+        bmr: result.bmr,
+        maintenanceKcal: Math.round(result.maintenanceKcal),
+        targetKcal: result.targetKcal,
+        floorApplied: result.floorApplied,
+        effectiveTimelineWeeks: result.effectiveTimelineWeeks,
+      });
+      res.json(saved);
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ message: error.errors[0].message });
+      console.error('[NutritionProfile] PUT error', error);
+      res.status(500).json({ message: 'Failed to save nutrition profile' });
+    }
+  });
+
   // ─── VATMEBOP Accountability Chart ───────────────────────────────────────────
 
   // GET /api/vatmebop?year=YYYY — all rows for the authenticated user for that year

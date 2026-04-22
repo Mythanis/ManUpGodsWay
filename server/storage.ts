@@ -202,6 +202,9 @@ import {
   foodIntakeEntries,
   type FoodIntakeEntry,
   type InsertFoodIntakeEntry,
+  nutritionProfiles,
+  type NutritionProfile,
+  type InsertNutritionProfile,
   vatmebopChecks,
   type VatmebopCheck,
 } from "@shared/schema";
@@ -7802,6 +7805,29 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(foodIntakeEntries)
       .where(and(eq(foodIntakeEntries.id, id), eq(foodIntakeEntries.userId, userId)));
+  }
+
+  // ─── Nutrition Profile ─────────────────────────────────────────────────────
+
+  async getNutritionProfile(userId: string): Promise<NutritionProfile | undefined> {
+    const [row] = await db
+      .select()
+      .from(nutritionProfiles)
+      .where(eq(nutritionProfiles.userId, userId));
+    return row;
+  }
+
+  async upsertNutritionProfile(profile: InsertNutritionProfile): Promise<NutritionProfile> {
+    const { userId, ...rest } = profile;
+    const [row] = await db
+      .insert(nutritionProfiles)
+      .values({ ...profile, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: nutritionProfiles.userId,
+        set: { ...rest, updatedAt: new Date() },
+      })
+      .returning();
+    return row;
   }
 
   // ─── VATMEBOP Accountability Chart ─────────────────────────────────────────

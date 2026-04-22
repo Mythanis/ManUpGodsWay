@@ -16,6 +16,7 @@ import Videos from "@/pages/videos";
 import Podcasts from "@/pages/podcasts";
 import Challenges from "@/pages/challenges";
 import Fitness from "@/pages/fitness";
+import CalorieCalculator from "@/pages/calorie-calculator";
 import CreatePlan from "@/pages/create-plan";
 import EditPlan from "@/pages/edit-plan";
 import ViewPlan from "@/pages/view-plan";
@@ -240,6 +241,7 @@ function Router() {
               <Route path="/podcasts" component={PodcastsGuarded} />
               <Route path="/challenges" component={Challenges} />
               <Route path="/fitness" component={Fitness} />
+              <Route path="/calorie-calculator" component={CalorieCalculator} />
               <Route path="/fitness/plans/:planId" component={ViewPlan} />
               <Route path="/create-plan" component={CreatePlan} />
               <Route path="/edit-plan/:planId" component={EditPlan} />
