@@ -5611,7 +5611,7 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
     }, 1000);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, exerciseIdx, setIdx]);
+  }, [phase, exerciseIdx, setIdx, paused]);
 
   const advancePhase = () => {
     if (phase === 'countdown') {
@@ -6113,7 +6113,7 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
           while the user reads. Falls back to a friendly message when the
           plan exercise has no notes saved. */}
       <Dialog open={instructionsOpen} onOpenChange={(open) => (open ? openInstructions() : closeInstructions())}>
-        <DialogContent className="bg-zinc-900 border-2 border-[#FCD000] text-white max-w-lg" data-testid="dialog-instructions">
+        <DialogContent className="bg-zinc-900 border-2 border-[#FCD000] text-white max-w-lg z-[200]" data-testid="dialog-instructions">
           <DialogHeader>
             <DialogTitle className="text-[#FCD000] font-black uppercase tracking-wide">
               {currentExercise?.exerciseName}
