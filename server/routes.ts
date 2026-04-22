@@ -285,6 +285,20 @@ const documentUpload = multer({
   }
 });
 
+// Configure multer for exercise media uploads (images/gifs) — memory storage → Object Storage
+const exerciseMediaUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15 MB
+  fileFilter: function (req, file, cb) {
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image/GIF files are allowed for exercise media'));
+    }
+  },
+});
+
 // Configure multer for community media uploads (images, videos, gifs) — memory storage → Object Storage
 const communityMediaUpload = multer({
   storage: multer.memoryStorage(),
@@ -10015,6 +10029,157 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Internal server error' });
     }
   });
+
+  // ── Admin exercise management ─────────────────────────────────────────
+
+  // Clear entire exercise database + all dependent user data
+  app.delete('/api/admin/exercises/clear-all', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      // Delete in FK-dependency order so constraints don't block
+      const reminders = await db.delete(schema.fitnessPlanReminders).returning();
+      const planExercises = await db.delete(schema.fitnessPlanExercises).returning();
+      const plans = await db.delete(schema.fitnessPlans).returning();
+      const favorites = await db.delete(schema.favoriteExercises).returning();
+      const exercises = await db.delete(schema.exercises).returning();
+
+      res.json({
+        message: 'Exercise database cleared',
+        deleted: {
+          reminders: reminders.length,
+          planExercises: planExercises.length,
+          plans: plans.length,
+          favorites: favorites.length,
+          exercises: exercises.length,
+        },
+      });
+    } catch (error) {
+      console.error('Error clearing exercise database:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Update a single exercise (partial)
+  app.patch('/api/admin/exercises/:id', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: 'Invalid exercise id' });
+
+      const allowed = ['name', 'bodyPart', 'equipment', 'level', 'instructions', 'shortInstructions', 'mediaFile'];
+      const updateData: Record<string, unknown> = { updatedAt: new Date() };
+      for (const key of allowed) {
+        if (req.body[key] !== undefined) updateData[key] = req.body[key];
+      }
+
+      const [updated] = await db
+        .update(schema.exercises)
+        .set(updateData)
+        .where(eq(schema.exercises.id, id))
+        .returning();
+
+      if (!updated) return res.status(404).json({ message: 'Exercise not found' });
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating exercise:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Delete a single exercise + clean up favorites and plan exercises that reference it
+  app.delete('/api/admin/exercises/:id', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: 'Invalid exercise id' });
+
+      const idStr = String(id);
+
+      // Remove from favorites and plan exercises (stored as varchar)
+      await db.delete(schema.favoriteExercises).where(eq(schema.favoriteExercises.exerciseId, idStr));
+      await db.delete(schema.fitnessPlanExercises).where(eq(schema.fitnessPlanExercises.exerciseId, idStr));
+
+      const [deleted] = await db
+        .delete(schema.exercises)
+        .where(eq(schema.exercises.id, id))
+        .returning();
+
+      if (!deleted) return res.status(404).json({ message: 'Exercise not found' });
+
+      // Delete media file from object storage if it's a storage URL
+      if (deleted.mediaFile && isStorageUrl(deleted.mediaFile)) {
+        await deleteStorageFile(deleted.mediaFile);
+      }
+
+      res.json({ message: 'Exercise deleted', id });
+    } catch (error) {
+      console.error('Error deleting exercise:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Upload new media file for an exercise (replaces existing)
+  app.post(
+    '/api/admin/exercises/:id/media',
+    isAuthenticated,
+    requireAdmin,
+    exerciseMediaUpload.single('media'),
+    async (req: any, res) => {
+      try {
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) return res.status(400).json({ message: 'Invalid exercise id' });
+        if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+
+        const [existing] = await db.select().from(schema.exercises).where(eq(schema.exercises.id, id));
+        if (!existing) return res.status(404).json({ message: 'Exercise not found' });
+
+        const ext = req.file.originalname.split('.').pop()?.toLowerCase() || 'gif';
+        const key = `exercises/${id}-${Date.now()}.${ext}`;
+        const newUrl = await uploadPublicFile(req.file.buffer, key, req.file.mimetype);
+
+        // Delete old file if it's in object storage
+        if (existing.mediaFile && isStorageUrl(existing.mediaFile)) {
+          await deleteStorageFile(existing.mediaFile);
+        }
+
+        const [updated] = await db
+          .update(schema.exercises)
+          .set({ mediaFile: newUrl, updatedAt: new Date() })
+          .where(eq(schema.exercises.id, id))
+          .returning();
+
+        res.json(updated);
+      } catch (error) {
+        console.error('Error uploading exercise media:', error);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+  );
+
+  // Remove media file from an exercise (sets mediaFile to empty string)
+  app.delete('/api/admin/exercises/:id/media', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: 'Invalid exercise id' });
+
+      const [existing] = await db.select().from(schema.exercises).where(eq(schema.exercises.id, id));
+      if (!existing) return res.status(404).json({ message: 'Exercise not found' });
+
+      if (existing.mediaFile && isStorageUrl(existing.mediaFile)) {
+        await deleteStorageFile(existing.mediaFile);
+      }
+
+      const [updated] = await db
+        .update(schema.exercises)
+        .set({ mediaFile: '', updatedAt: new Date() })
+        .where(eq(schema.exercises.id, id))
+        .returning();
+
+      res.json(updated);
+    } catch (error) {
+      console.error('Error removing exercise media:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // ── End admin exercise management ─────────────────────────────────────
 
   // Fitness plans routes
   // Get user's fitness plans
