@@ -1646,13 +1646,16 @@ export default function Fitness() {
                 :                            165;
     }
 
-    // Total working sets that fit the working budget, then converted to a
-    // per-day exercise count using the per-style sets-per-exercise constant.
+    // Total working sets that fit the working budget. We then ceil-divide
+    // by the per-style sets-per-exercise constant to get the number of
+    // distinct exercises, and a post-emission pass distributes any
+    // remainder sets across them (e.g. 13 sets across ceil(13/3)=5
+    // exercises => 3+3+3+2+2 = 13) so totalWorkingSets is hit exactly.
     const totalWorkingSets = Math.max(1, Math.floor(workingSec / perSetSec));
     const setsPerExercise  = workoutStyle === 'hiit' ? hiitRounds
                            : isStretchingOnly        ? stretchSets
                            :                           stdConfig.sets;
-    const exercisesPerDay  = Math.max(1, Math.floor(totalWorkingSets / setsPerExercise));
+    const exercisesPerDay  = Math.max(1, Math.ceil(totalWorkingSets / setsPerExercise));
 
     // Helper: prepend the opening stretch + main warm-up block (~10 min for
     // non-stretching sessions) at the start of a day, biased toward today's
@@ -1838,6 +1841,20 @@ export default function Fitness() {
           while (dayExercises.length > cap) dayExercises.pop();
         }
 
+        // Distribute the budgeted totalWorkingSets exactly across the main
+        // exercises that were just emitted. This is the post-emission pass
+        // that turns "13 sets across 5 exercises" into 3+3+3+2+2 instead of
+        // dropping the remainder via floor division.
+        const mainStart = warmupCount;
+        const mainCount = dayExercises.length - mainStart;
+        if (mainCount > 0) {
+          const baseSets  = Math.max(1, Math.floor(totalWorkingSets / mainCount));
+          const extraSets = Math.max(0, totalWorkingSets - baseSets * mainCount);
+          for (let i = 0; i < mainCount; i++) {
+            dayExercises[mainStart + i].sets = baseSets + (i < extraSets ? 1 : 0);
+          }
+        }
+
         // Append the cooldown stretch block (~5 min) to every day. For pure
         // stretching sessions the budget already excluded the cooldown, so
         // these extra holds bring total time back up to the selected duration.
@@ -1845,16 +1862,24 @@ export default function Fitness() {
 
         const dayLabel = workoutStyle === 'stretching' ? `${dayPlan.name} Stretch` : dayPlan.name;
 
-        // Final time-cap safety net: trim trailing main exercises (never the
-        // cooldown block) so total session time does not exceed the user's
-        // selected duration. Indices [warmupCount, length - cooldownCount) are
-        // the main work block; we only pop from there.
+        // Final time-cap safety net: trim main-block exercises only (never
+        // the cooldown block) so total session time does not exceed the
+        // user's selected duration. Uses the same unified per-set timing
+        // model as the budget so the safety net rarely triggers.
         const exerciseTimeSec = (pe: PlanExercise): number => {
+          // Time-based exercises (HIIT/Tabata work, stretches, cardio).
           if (pe.reps == null && (pe.durationSec ?? 0) > 0) {
-            const restPer = pe.sets > 1 ? hiitRest : 0;
+            if (pe.sets <= 1) return pe.durationSec ?? 0;
+            // Rest between sets: 15s transition for stretches, hiitRest for
+            // HIIT/Tabata work. Discriminated by whether this is a stretching
+            // session — warmup/cooldown stretches always have sets=1 and hit
+            // the early return above.
+            const restPer = isStretchingOnly ? 15 : hiitRest;
             return pe.sets * ((pe.durationSec ?? 0) + restPer);
           }
-          return stdConfig.sets * (avgReps * 3 + stdConfig.restSec);
+          // Rep-based standard exercise: use the same per-set seconds the
+          // budget was computed with.
+          return pe.sets * perSetSec;
         };
         const slotTimeSec = (pe: PlanExercise, idx: number, len: number): number => {
           const isWarmup   = idx < warmupCount;
