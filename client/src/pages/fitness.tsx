@@ -1423,7 +1423,61 @@ export default function Fitness() {
     sets: number;
     reps: number | null;
     durationSec?: number;
+    // Rest in seconds between sets of THIS exercise. Resolved from the
+    // (level, exercise-type) rest table for standard work, the HIIT
+    // rest interval for HIIT/Tabata, or 10s transition for stretches.
+    restSec?: number;
   }
+
+  // Classify a standard exercise as compound / isolation / bodyweight so
+  // the rest-period table can be applied per spec. Equipment "body weight"
+  // wins unless the name clearly indicates a compound lift; otherwise the
+  // exercise name is matched against compound/isolation keywords.
+  type ExerciseType = 'compound' | 'isolation' | 'bodyweight';
+  function classifyStandardExercise(ex: APIExercise): ExerciseType {
+    const name = (ex.name || '').toLowerCase();
+    const equip = (ex.equipment || '').toLowerCase();
+    const compoundKeywords = [
+      'squat', 'deadlift', 'bench press', 'overhead press',
+      'shoulder press', 'military press', 'push press', 'row',
+      'clean', 'snatch', 'lunge', 'pull-up', 'pull up', 'pullup',
+      'chin-up', 'chin up', 'chinup', 'dip', 'thrust', 'thruster',
+    ];
+    const isolationKeywords = [
+      'curl', 'extension', 'raise', 'fly', 'flye', 'kickback',
+      'shrug', 'pulldown', 'pushdown', 'lateral', 'rear delt',
+      'concentration', 'preacher', 'reverse fly',
+    ];
+    const isCompound = compoundKeywords.some(k => name.includes(k));
+    if (isCompound) return 'compound';
+    const isIsolation = isolationKeywords.some(k => name.includes(k));
+    if (isIsolation) return 'isolation';
+    if (equip.includes('body weight') || equip === 'bodyweight') return 'bodyweight';
+    // Default to compound when ambiguous so rest is generous, not too short.
+    return 'compound';
+  }
+
+  // Spec rest-period table (seconds) keyed by (level, exercise type) for
+  // Standard / Standard with Cardio sessions. Values are the midpoint of
+  // each spec range, or the exact value when the spec gives a single
+  // number. Beg/Int are the standard rest bands; "Tabata" reuses Adv as
+  // a sane fallback (Tabata is HIIT-only and wouldn't normally hit this
+  // table, but keep the type safe).
+  const STANDARD_REST_TABLE: Record<'Beginner' | 'Intermediate' | 'Advanced' | 'Tabata', Record<ExerciseType, number>> = {
+    Beginner:     { compound: 82, isolation: 52, bodyweight: 52 },
+    Intermediate: { compound: 67, isolation: 52, bodyweight: 60 },
+    Advanced:     { compound: 105, isolation: 52, bodyweight: 67 },
+    Tabata:       { compound: 105, isolation: 52, bodyweight: 67 },
+  };
+  // Per-level average rest used to size the budget (the actual emitted
+  // rest still varies per exercise). Mean of the three exercise-type
+  // values for that level.
+  const STANDARD_AVG_REST: Record<'Beginner' | 'Intermediate' | 'Advanced' | 'Tabata', number> = {
+    Beginner:     Math.round((82 + 52 + 52) / 3),     // 62
+    Intermediate: Math.round((67 + 52 + 60) / 3),     // 60
+    Advanced:     Math.round((105 + 52 + 67) / 3),    // 75
+    Tabata:       Math.round((105 + 52 + 67) / 3),    // 75
+  };
 
   interface DayPlan {
     name: string;
@@ -1568,29 +1622,36 @@ export default function Fitness() {
     // Get all unique equipment types from the exercises
     const availableEquipment = Array.from(new Set(exercises.map(e => e.equipment.toLowerCase())));
     
-    // Standard rep-based config — fixed at 3 sets across all levels
+    // Standard rep-based config — fixed at 3 sets across all levels.
+    // Per-set rest is now resolved per exercise from STANDARD_REST_TABLE
+    // based on (level, classified type), so no flat restSec lives here.
     const stdSets = 3;
     let stdConfig;
-    if (level === "Beginner") stdConfig = { sets: stdSets, restSec: 60, repRange: [10,12] };
-    else if (level === "Intermediate") stdConfig = { sets: stdSets, restSec: 45, repRange: [10,15] };
-    else stdConfig = { sets: stdSets, restSec: 30, repRange: [12,20] };
-    // ~3 sec per rep avg work + rest between sets
+    if (level === "Beginner") stdConfig = { sets: stdSets, repRange: [10,12] };
+    else if (level === "Intermediate") stdConfig = { sets: stdSets, repRange: [10,15] };
+    else stdConfig = { sets: stdSets, repRange: [12,20] };
     const avgReps = (stdConfig.repRange[0] + stdConfig.repRange[1]) / 2;
-    const stdPerExSec = stdConfig.sets * (avgReps * 3 + stdConfig.restSec);
 
-    // HIIT time-based config — Tabata is the classic 20s work / 10s rest x 8
-    // rounds protocol. Other levels run 30s work with rest scaled by level.
+    // HIIT time-based config (per spec):
+    //   Beginner     30s work / 30s rest
+    //   Intermediate 40s work / 20s rest
+    //   Advanced     45s work / 15s rest
+    //   Tabata       20s work / 10s rest x 8 rounds (Advanced-only protocol)
     const isTabata = level === "Tabata";
-    const hiitWork = isTabata ? 20 : 30;
-    const hiitRest = isTabata
-      ? 10
-      : level === "Beginner" ? 30 : level === "Intermediate" ? 20 : 10;
+    const hiitWork = isTabata ? 20
+                   : level === "Beginner" ? 30
+                   : level === "Intermediate" ? 40
+                   : 45;
+    const hiitRest = isTabata ? 10
+                   : level === "Beginner" ? 30
+                   : level === "Intermediate" ? 20
+                   : 15;
     const hiitRounds = isTabata ? 8 : 3;
-    const hiitPerExSec = hiitRounds * (hiitWork + hiitRest);
 
-    // Stretching config — fixed at 3 sets of 30s hold
+    // Stretching config — fixed at 3 sets of 30s hold + 10s transition.
     const stretchSets = 3;
-    const stretchPerExSec = stretchSets * (30 + 15);
+    const STRETCH_TRANSITION = 10;
+    const STRETCH_HOLD = 30;
 
     // Body part groupings designed to make sense (push/pull, lower split)
     const allBodyPartSchedules = [
@@ -1619,9 +1680,10 @@ export default function Fitness() {
     const mandatorySec      = openingStretchSec + mainWarmupSec + cooldownSec;
     const workingSec        = Math.max(60, totalSec - mandatorySec);
 
-    // One stretch hold ~ 60s incl. transition. Used to convert mandatory
-    // block seconds into a number of stretches the player will actually run.
-    const SEC_PER_STRETCH = 60;
+    // One stretch hold = 30s hold + 10s transition (per spec). Used to
+    // convert mandatory block seconds into a number of stretches the
+    // player will actually run.
+    const SEC_PER_STRETCH = STRETCH_HOLD + STRETCH_TRANSITION;
     const openingStretchCount = Math.round(openingStretchSec / SEC_PER_STRETCH);
     const mainWarmupCount     = Math.round(mainWarmupSec     / SEC_PER_STRETCH);
     const cooldownCount       = Math.round(cooldownSec       / SEC_PER_STRETCH);
@@ -1637,13 +1699,17 @@ export default function Fitness() {
     // protocol the user explicitly opted into via the Tabata level option).
     let perSetSec: number;
     if (workoutStyle === 'hiit') {
-      perSetSec = hiitWork + hiitRest;        // Tabata 30s, Adv 40s, Int 50s, Beg 60s
+      // Per-spec HIIT totals: Beg 60, Int 60, Adv 60, Tabata 30.
+      perSetSec = hiitWork + hiitRest;
     } else if (isStretchingOnly) {
-      perSetSec = 45;                          // 30s hold + 15s transition
+      // 30s hold + 10s transition per spec.
+      perSetSec = STRETCH_HOLD + STRETCH_TRANSITION;
     } else {
-      perSetSec = level === 'Beginner'    ? 120
-                : level === 'Intermediate' ? 135
-                :                            165;
+      // Standard: ~3 sec per rep avg work + per-level avg rest from
+      // STANDARD_AVG_REST. Actual rest still varies per emitted exercise
+      // (compound/isolation/bodyweight) — this is the budget proxy only.
+      const workSec = avgReps * 3;
+      perSetSec = Math.round(workSec + STANDARD_AVG_REST[level]);
     }
 
     // Total working sets that fit the working budget. We then ceil-divide
@@ -1672,7 +1738,7 @@ export default function Fitness() {
         const pick = shuffleArray(source).slice(0, 1);
         pick.forEach(s => {
           usedWarm.add(s.id);
-          dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: SEC_PER_STRETCH });
+          dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: STRETCH_HOLD, restSec: STRETCH_TRANSITION });
           added++;
         });
       }
@@ -1681,7 +1747,7 @@ export default function Fitness() {
         if (remaining.length === 0) break;
         const s = shuffleArray(remaining)[0];
         usedWarm.add(s.id);
-        dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: SEC_PER_STRETCH });
+        dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: STRETCH_HOLD, restSec: STRETCH_TRANSITION });
         added++;
       }
     };
@@ -1702,7 +1768,7 @@ export default function Fitness() {
         const pick = shuffleArray(source).slice(0, 1);
         pick.forEach(s => {
           usedCool.add(s.id);
-          dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: SEC_PER_STRETCH });
+          dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: STRETCH_HOLD, restSec: STRETCH_TRANSITION });
           added++;
         });
       }
@@ -1711,7 +1777,7 @@ export default function Fitness() {
         if (remaining.length === 0) break;
         const s = shuffleArray(remaining)[0];
         usedCool.add(s.id);
-        dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: SEC_PER_STRETCH });
+        dayExercises.push({ exercise: s, sets: 1, reps: null, durationSec: STRETCH_HOLD, restSec: STRETCH_TRANSITION });
         added++;
       }
     };
@@ -1760,6 +1826,7 @@ export default function Fitness() {
               sets: 1,
               reps: null,
               durationSec: workingSec,
+              restSec: 0,
             });
           }
           emitCooldown(dayPlan.parts, dayExercises);
@@ -1786,7 +1853,8 @@ export default function Fitness() {
                 exercise: s,
                 sets: stretchSets,
                 reps: null,
-                durationSec: 30,
+                durationSec: STRETCH_HOLD,
+                restSec: STRETCH_TRANSITION,
               });
             });
           }
@@ -1802,7 +1870,8 @@ export default function Fitness() {
               exercise: s,
               sets: stretchSets,
               reps: null,
-              durationSec: 30,
+              durationSec: STRETCH_HOLD,
+              restSec: STRETCH_TRANSITION,
             });
           }
         } else {
@@ -1825,12 +1894,16 @@ export default function Fitness() {
                   sets: hiitRounds,
                   reps: null,
                   durationSec: hiitWork,
+                  restSec: hiitRest,
                 });
               } else {
+                // Standard: rest is per (level, exercise type) per spec.
+                const exType = classifyStandardExercise(ex);
                 dayExercises.push({
                   exercise: ex,
                   sets: stdConfig.sets,
                   reps: stdConfig.repRange[0] + Math.floor(Math.random() * (stdConfig.repRange[1] - stdConfig.repRange[0])),
+                  restSec: STANDARD_REST_TABLE[level][exType],
                 });
               }
             });
@@ -1876,15 +1949,19 @@ export default function Fitness() {
           // Time-based exercises (HIIT/Tabata work, stretches, cardio).
           if (pe.reps == null && (pe.durationSec ?? 0) > 0) {
             if (pe.sets <= 1) return pe.durationSec ?? 0;
-            // Rest between sets: 15s transition for stretches, hiitRest for
-            // HIIT/Tabata work. Discriminated by whether this is a stretching
-            // session — warmup/cooldown stretches always have sets=1 and hit
-            // the early return above.
-            const restPer = isStretchingOnly ? 15 : hiitRest;
+            // Use this exercise's own restSec (10s transitions for
+            // stretches, hiitRest for HIIT/Tabata) — falls back to
+            // hiitRest for legacy items missing the field.
+            const restPer = pe.restSec ?? hiitRest;
             return pe.sets * ((pe.durationSec ?? 0) + restPer);
           }
-          // Rep-based standard exercise: use the same per-set seconds the
-          // budget was computed with.
+          // Rep-based standard exercise: working time + this exercise's
+          // own restSec from the spec table. Falls back to the budget
+          // proxy when restSec is missing.
+          if (pe.restSec != null) {
+            const workSec = avgReps * 3;
+            return pe.sets * (workSec + pe.restSec);
+          }
           return pe.sets * perSetSec;
         };
         const slotTimeSec = (pe: PlanExercise, idx: number, len: number): number => {
@@ -1933,13 +2010,12 @@ export default function Fitness() {
         // Map this body-part day to the user's selected weekday for that slot
         const assignedDay = (workoutDays[dayIndex] || workoutDays[0] || 'monday').toLowerCase();
         day.exercises.forEach((planExercise) => {
-          const isTimeBased = planExercise.reps == null && (planExercise.durationSec ?? 0) > 0;
-          // For time-based exercises, derive rest from durationSec context; otherwise use level-based rest.
-          const restTime = isTimeBased
-            ? (weeklyPlan.level === "Beginner" ? "30s" :
-               weeklyPlan.level === "Intermediate" ? "20s" : "10s")
-            : (weeklyPlan.level === "Beginner" ? "60-90s" :
-               weeklyPlan.level === "Intermediate" ? "45-60s" : "30-45s");
+          // Per-exercise rest is now resolved at emission time (HIIT rest,
+          // standard rest table by exercise type, or 10s stretch
+          // transition) and stored on planExercise.restSec. Persist it as
+          // a "<sec>s" string so the existing PreBuiltExercise.rest
+          // contract still parses cleanly downstream.
+          const restTime = `${planExercise.restSec ?? 60}s`;
 
           allExercises.push({
             name: planExercise.exercise.name,
