@@ -1839,10 +1839,63 @@ export default function Fitness() {
     // remainder sets across them (e.g. 13 sets across ceil(13/3)=5
     // exercises => 3+3+3+2+2 = 13) so totalWorkingSets is hit exactly.
     const totalWorkingSets = Math.max(1, Math.floor(workingSec / perSetSec));
-    const setsPerExercise  = workoutStyle === 'hiit' ? hiitRounds
-                           : isStretchingOnly        ? stretchSets
-                           :                           STANDARD_AVG_SETS[levelKey];
-    const exercisesPerDay  = Math.max(1, Math.ceil(totalWorkingSets / setsPerExercise));
+    const setsPerExerciseRaw = workoutStyle === 'hiit' ? hiitRounds
+                             : isStretchingOnly        ? stretchSets
+                             :                           STANDARD_AVG_SETS[levelKey];
+    const exercisesPerDayRaw = Math.max(1, Math.ceil(totalWorkingSets / setsPerExerciseRaw));
+
+    // === Hard exercise-count cap per spec ===
+    // The spec ships an exact (duration × type × level) lookup table
+    // that the budget calc must never exceed. Standard/stretching use a
+    // {min, max} range — we cap at max and only raise to min if the
+    // budget came in under it. HIIT is fully prescriptive: both the
+    // circuit size and the number of rounds are spec-defined and
+    // override the budget-derived values entirely.
+    type SpecRange = { min: number; max: number };
+    type SpecHiit  = { circuit: number; rounds: number };
+    const STD_TABLE: Record<number, Record<'Beginner'|'Intermediate'|'Advanced', SpecRange>> = {
+      30: { Beginner: { min: 4, max: 5 }, Intermediate: { min: 4, max: 5 }, Advanced: { min: 5, max: 6 } },
+      45: { Beginner: { min: 5, max: 6 }, Intermediate: { min: 6, max: 7 }, Advanced: { min: 6, max: 7 } },
+      60: { Beginner: { min: 6, max: 7 }, Intermediate: { min: 7, max: 8 }, Advanced: { min: 8, max: 9 } },
+      90: { Beginner: { min: 8, max: 9 }, Intermediate: { min: 9, max: 11 }, Advanced: { min: 10, max: 12 } },
+    };
+    const HIIT_TABLE: Record<number, Record<'Beginner'|'Intermediate'|'Advanced', SpecHiit>> = {
+      30: { Beginner: { circuit: 5, rounds: 3 }, Intermediate: { circuit: 5, rounds: 3 }, Advanced: { circuit: 5, rounds: 4 } },
+      45: { Beginner: { circuit: 5, rounds: 4 }, Intermediate: { circuit: 6, rounds: 4 }, Advanced: { circuit: 6, rounds: 4 } },
+      60: { Beginner: { circuit: 6, rounds: 4 }, Intermediate: { circuit: 6, rounds: 5 }, Advanced: { circuit: 6, rounds: 5 } },
+      90: { Beginner: { circuit: 6, rounds: 5 }, Intermediate: { circuit: 6, rounds: 6 }, Advanced: { circuit: 6, rounds: 7 } },
+    };
+    const STRETCH_TABLE: Record<number, SpecRange> = {
+      30: { min: 10, max: 12 },
+      45: { min: 14, max: 16 },
+      60: { min: 18, max: 20 },
+      90: { min: 25, max: 28 },
+    };
+    // Pick nearest spec-table duration so non-table inputs (e.g. 75 min)
+    // still get sensible caps.
+    const SPEC_DURS = [30, 45, 60, 90] as const;
+    const nearestDur = SPEC_DURS.reduce((best, d) =>
+      Math.abs(d - durationMin) < Math.abs(best - durationMin) ? d : best
+    , SPEC_DURS[0]);
+    // Tabata's level key isn't in the spec table — treat it as Advanced
+    // for cap-lookup purposes.
+    const tableLevel: 'Beginner'|'Intermediate'|'Advanced' =
+      level === 'Tabata' ? 'Advanced' : level;
+
+    let exercisesPerDay = exercisesPerDayRaw;
+    let setsPerExercise = setsPerExerciseRaw;
+    if (workoutStyle === 'hiit') {
+      // HIIT is fully prescriptive: override both circuit size and rounds.
+      const spec = HIIT_TABLE[nearestDur][tableLevel];
+      exercisesPerDay = spec.circuit;
+      setsPerExercise = spec.rounds;
+    } else if (isStretchingOnly) {
+      const range = STRETCH_TABLE[nearestDur];
+      exercisesPerDay = Math.min(range.max, Math.max(range.min, exercisesPerDayRaw));
+    } else {
+      const range = STD_TABLE[nearestDur][tableLevel];
+      exercisesPerDay = Math.min(range.max, Math.max(range.min, exercisesPerDayRaw));
+    }
 
     // Per-level light-cardio name patterns for the WARM-UP block (spec:
     // "light cardio or low-intensity version of first exercise").
@@ -2131,13 +2184,14 @@ export default function Fitness() {
 
           // HIIT: expand the circuit definition (each exercise once,
           // sets=1) into round-robin order — ex1, ex2, ..., exN, ex1,
-          // ex2, ..., exN — repeated hiitRounds times. The player then
-          // simply walks the list and naturally cycles through rounds
-          // without repeating an exercise within the same round.
+          // ex2, ..., exN — repeated `setsPerExercise` times (= the
+          // spec-table number of rounds). The player then simply walks
+          // the list and naturally cycles through rounds without
+          // repeating an exercise within the same round.
           if (workoutStyle === 'hiit' && mainBlock.length > 0) {
             const circuit = [...mainBlock];
             mainBlock.length = 0;
-            for (let r = 0; r < hiitRounds; r++) {
+            for (let r = 0; r < setsPerExercise; r++) {
               for (const slot of circuit) {
                 mainBlock.push({ ...slot });
               }
