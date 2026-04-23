@@ -214,6 +214,12 @@ import {
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne, gt } from "drizzle-orm";
 import { getNextMidnightInTimezone } from "./drip-utils";
+import {
+  DEFAULT_TIMEZONE,
+  getDateStringInTimezone,
+  getStartOfDayInTimezone,
+  getStartOfNextDayInTimezone,
+} from "./timezone-utils";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -287,9 +293,9 @@ export interface IStorage {
   
   // Progress operations
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
-  updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
+  updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>, userLocalDate?: Date, userTimezone?: string): Promise<UserProgress>;
   fixUserStudyProgress(userId: string): Promise<{ fixedCount: number; checkedCount: number }>;
-  updateUserStreak(userId: string, userLocalDate?: Date): Promise<void>;
+  updateUserStreak(userId: string, userLocalDate?: Date, userTimezone?: string): Promise<void>;
   getWeeklyStudyCompletions(userId: string): Promise<number>;
   markStudyStarted(userId: string, studyId: string): Promise<void>;
 
@@ -1399,7 +1405,7 @@ export class DatabaseStorage implements IStorage {
       .where(and(...conditions));
   }
 
-  async markLessonComplete(userId: string, lessonId: string, answers?: Record<string, string>): Promise<UserLessonProgress> {
+  async markLessonComplete(userId: string, lessonId: string, answers?: Record<string, string>, userTimezone?: string): Promise<UserLessonProgress> {
     // First, get the lesson to find its studyId
     const [lesson] = await db
       .select()
@@ -1542,10 +1548,10 @@ export class DatabaseStorage implements IStorage {
     // Update user's streak when they complete a lesson
     // Note: updateUserStreak has a guard clause that prevents multiple updates per day,
     // so this is safe to call even if the user completes multiple lessons in one day
-    await this.updateUserStreak(userId, now);
+    await this.updateUserStreak(userId, now, userTimezone);
     
     // Track daily activity for totalActiveDays (never resets) - use same date as streak
-    await this.trackStudyActivityDay(userId, now);
+    await this.trackStudyActivityDay(userId, now, userTimezone);
 
     return result;
   }
@@ -1969,12 +1975,12 @@ export class DatabaseStorage implements IStorage {
     return enrichedProgress;
   }
 
-  async updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>, userLocalDate?: Date): Promise<UserProgress> {
+  async updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>, userLocalDate?: Date, userTimezone?: string): Promise<UserProgress> {
     // Update user streak when they make progress
-    await this.updateUserStreak(userId, userLocalDate);
+    await this.updateUserStreak(userId, userLocalDate, userTimezone);
     
     // Track daily activity for totalActiveDays (never resets) - use same local date as streak
-    await this.trackStudyActivityDay(userId, userLocalDate);
+    await this.trackStudyActivityDay(userId, userLocalDate, userTimezone);
     
     const existing = await db
       .select()
@@ -2115,10 +2121,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Track study activity for a new day - increments totalActiveDays once per calendar day
-  async trackStudyActivityDay(userId: string, userLocalDate?: Date): Promise<void> {
-    // Use user's local date if provided, otherwise fall back to server date
+  async trackStudyActivityDay(userId: string, userLocalDate?: Date, userTimezone?: string): Promise<void> {
+    // Anchor "today" to the user's timezone (default America/Chicago) so the
+    // YYYY-MM-DD comparison rolls at the user's local midnight, not UTC.
+    const tz = userTimezone || DEFAULT_TIMEZONE;
     const dateToUse = userLocalDate || new Date();
-    const today = dateToUse.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const today = getDateStringInTimezone(dateToUse, tz);
     
     const [user] = await db
       .select({ lastStudyActivityDate: users.lastStudyActivityDate, totalActiveDays: users.totalActiveDays })
@@ -2743,10 +2751,10 @@ export class DatabaseStorage implements IStorage {
 
   // Devotional operations
   async getTodaysDevotional(): Promise<Devotional | undefined> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // Anchor "today" to the ministry's home timezone (CST/CDT), not the
+    // container's UTC clock — otherwise devotionals rotate at 7pm local.
+    const today = getStartOfDayInTimezone(DEFAULT_TIMEZONE);
+    const tomorrow = getStartOfNextDayInTimezone(DEFAULT_TIMEZONE);
 
     // First try to get a devotional with today's exact date
     const [todayDevotional] = await db
@@ -2770,8 +2778,9 @@ export class DatabaseStorage implements IStorage {
 
     if (allDevotionals.length === 0) return undefined;
 
-    // Use a fixed epoch (Jan 1, 2026) to calculate a stable day index
-    const epoch = new Date('2026-01-01T00:00:00Z').getTime();
+    // Use a fixed epoch (Jan 1, 2026 CST) to calculate a stable day index
+    // that also advances at midnight CST.
+    const epoch = getStartOfDayInTimezone(DEFAULT_TIMEZONE, new Date('2026-01-01T12:00:00Z')).getTime();
     const dayIndex = Math.floor((today.getTime() - epoch) / (1000 * 60 * 60 * 24));
     const index = ((dayIndex % allDevotionals.length) + allDevotionals.length) % allDevotionals.length;
 
@@ -2873,14 +2882,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableDevotionalsWithoutNotifications(): Promise<Devotional[]> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
+    // "Today" anchored to ministry timezone so the every-15-min cron only
+    // fires the new-devotional push once we've actually crossed midnight CST.
+    const tomorrow = getStartOfNextDayInTimezone(DEFAULT_TIMEZONE);
+
     return await db
       .select()
       .from(devotionals)
       .where(and(
-        sql`${devotionals.date} <= ${today}`,
+        sql`${devotionals.date} < ${tomorrow}`,
         eq(devotionals.notificationsSent, false)
       ));
   }
@@ -2893,13 +2903,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Streak operations
-  async updateUserStreak(userId: string, userLocalDate?: Date): Promise<void> {
-    // Use user's local date for streak calculation
+  async updateUserStreak(userId: string, userLocalDate?: Date, userTimezone?: string): Promise<void> {
+    // All comparisons are done as YYYY-MM-DD in the user's timezone (defaults
+    // to America/Chicago, the ministry's home TZ — never the container's UTC).
+    const tz = userTimezone || DEFAULT_TIMEZONE;
     const localToday = userLocalDate || new Date();
-    
+
     // Create date strings in YYYY-MM-DD format for reliable comparison
     // This avoids timezone conversion issues by only comparing date parts
-    const todayDateString = `${localToday.getFullYear()}-${String(localToday.getMonth() + 1).padStart(2, '0')}-${String(localToday.getDate()).padStart(2, '0')}`;
+    const todayDateString = getDateStringInTimezone(localToday, tz);
     
     console.log('=== STREAK UPDATE ===');
     console.log('User:', userId);
@@ -2917,10 +2929,9 @@ export class DatabaseStorage implements IStorage {
     console.log('Last active (database):', user.lastActiveDate);
     
     if (user.lastActiveDate) {
-      // Convert stored date to local date string for comparison
+      // Convert stored date to user-TZ date string for comparison
       const lastActiveDate = new Date(user.lastActiveDate);
-      // Use the local timezone to get the correct date components
-      const lastActiveDateString = `${lastActiveDate.getFullYear()}-${String(lastActiveDate.getMonth() + 1).padStart(2, '0')}-${String(lastActiveDate.getDate()).padStart(2, '0')}`;
+      const lastActiveDateString = getDateStringInTimezone(lastActiveDate, tz);
       
       console.log('Last active date string:', lastActiveDateString);
       console.log('Comparing dates:');
@@ -2935,10 +2946,9 @@ export class DatabaseStorage implements IStorage {
         return;
       }
       
-      // Calculate yesterday's date string
-      const yesterdayDate = new Date(localToday);
-      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-      const yesterdayDateString = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
+      // Calculate yesterday's date string in the user's timezone
+      const yesterdayDate = new Date(localToday.getTime() - 24 * 60 * 60 * 1000);
+      const yesterdayDateString = getDateStringInTimezone(yesterdayDate, tz);
       
       console.log('Yesterday date string:', yesterdayDateString);
       console.log('Was active yesterday?', lastActiveDateString === yesterdayDateString);

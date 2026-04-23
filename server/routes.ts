@@ -2661,12 +2661,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { studyId } = req.params;
       const progressData = req.body;
       
-      // Extract user's local date if provided
+      // Extract user's local date and timezone if provided
       const userLocalDate = progressData.userLocalDate ? new Date(progressData.userLocalDate) : undefined;
-      // Remove userLocalDate from progressData before passing to storage
-      const { userLocalDate: _, ...cleanProgressData } = progressData;
-      
-      const progress = await storage.updateProgress(userId, studyId, cleanProgressData, userLocalDate);
+      const userTimezone = typeof progressData.timezone === 'string' ? progressData.timezone : undefined;
+      // Remove transport-only fields before passing to storage
+      const { userLocalDate: _ulDate, timezone: _tz, ...cleanProgressData } = progressData;
+
+      const progress = await storage.updateProgress(userId, studyId, cleanProgressData, userLocalDate, userTimezone);
       res.json(progress);
     } catch (error) {
       console.error("Error updating progress:", error);
@@ -3809,7 +3810,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingProgress = await storage.getUserLessonProgress(userId);
       const wasAlreadyComplete = existingProgress.some(p => p.lessonId === lessonId && p.isCompleted);
 
-      const progress = await storage.markLessonComplete(userId, lessonId, answers);
+      const progress = await storage.markLessonComplete(userId, lessonId, answers, lessonTimezone);
       
       // Award rations for lesson completion (only if first time completing)
       let rationResult = null;
