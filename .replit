@@ -53,5 +53,5 @@ VAPID_PUBLIC_KEY = "BDzMYMTTzv3gVSmxEB2C6NzKAX2s95vFSJyWCa-Lyp6uVZFt8Q9dQTtvnMMl
 VITE_VAPID_PUBLIC_KEY = "BDzMYMTTzv3gVSmxEB2C6NzKAX2s95vFSJyWCa-Lyp6uVZFt8Q9dQTtvnMMlT3GN7AXIWwRGaaP0Z3Sbu6ptx_o"
 
 [postMerge]
-path = ""
-timeoutMs = 0
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
