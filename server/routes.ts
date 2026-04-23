@@ -16946,6 +16946,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/admin/exercise-instruction-reviews/:id/edit', isAuthenticated, requireAdmin, async (req: any, res: any) => {
+    try {
+      const id = Number(req.params.id);
+      const instructions = typeof req.body?.instructions === 'string' ? req.body.instructions.trim() : '';
+      if (!instructions) {
+        return res.status(400).json({ message: 'Instructions cannot be empty' });
+      }
+
+      const [review] = await db
+        .select()
+        .from(schema.exerciseInstructionReviews)
+        .where(eq(schema.exerciseInstructionReviews.id, id));
+      if (!review) return res.status(404).json({ message: 'Review not found' });
+
+      await db
+        .update(schema.exercises)
+        .set({ instructions })
+        .where(eq(schema.exercises.id, review.exerciseId));
+
+      await db
+        .update(schema.exerciseInstructionReviews)
+        .set({ newInstructions: instructions, status: 'approved', needsReview: true })
+        .where(eq(schema.exerciseInstructionReviews.id, id));
+
+      res.json({ message: 'Instructions updated', exerciseId: review.exerciseId, instructions });
+    } catch (err: any) {
+      console.error('[exercise-instruction-reviews] edit error:', err.message);
+      res.status(500).json({ message: err.message });
+    }
+  });
+
   app.post('/api/admin/exercise-instruction-reviews/:id/requeue', isAuthenticated, requireAdmin, async (req: any, res: any) => {
     try {
       const id = Number(req.params.id);

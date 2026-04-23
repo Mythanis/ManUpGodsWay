@@ -5,7 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CheckCircle, RotateCcw, RefreshCw, ChevronLeft, ChevronRight, Search, AlertTriangle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { CheckCircle, RotateCcw, RefreshCw, ChevronLeft, ChevronRight, Search, AlertTriangle, Pencil, Save, X } from "lucide-react";
 
 type View = "corrections" | "matched" | "rejected";
 
@@ -183,6 +184,8 @@ export default function ExerciseInstructionReviews() {
   const [page, setPage] = useState(0);
   const [keptIds, setKeptIds] = useState<Set<number>>(new Set());
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState<string>("");
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -233,6 +236,24 @@ export default function ExerciseInstructionReviews() {
       toast({
         title: "Revert Failed",
         description: err.message || "Could not revert instructions",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const editMutation = useMutation({
+    mutationFn: ({ id, instructions }: { id: number; instructions: string }) =>
+      apiRequest("POST", `/api/admin/exercise-instruction-reviews/${id}/edit`, { instructions }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/exercise-instruction-reviews"] });
+      toast({ title: "Instructions Saved", description: "Your edited instructions are now live for this exercise." });
+      setEditingId(null);
+      setEditDraft("");
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Save Failed",
+        description: err.message || "Could not save instructions",
         variant: "destructive",
       });
     },
@@ -330,9 +351,11 @@ export default function ExerciseInstructionReviews() {
       <div className="space-y-3">
         {visibleRows.map((row) => {
           const isExpanded = expandedId === row.id;
+          const isEditing = editingId === row.id;
           const isBusy =
             (revertMutation.isPending && revertMutation.variables === row.id) ||
-            (requeueMutation.isPending && requeueMutation.variables === row.id);
+            (requeueMutation.isPending && requeueMutation.variables === row.id) ||
+            (editMutation.isPending && editMutation.variables?.id === row.id);
 
           return (
             <Card key={row.id} className={`border-2 ${isBusy ? "opacity-60" : ""}`}>
@@ -366,6 +389,22 @@ export default function ExerciseInstructionReviews() {
                         >
                           <CheckCircle className="h-3 w-3 mr-1 text-green-600" />
                           Keep
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-xs border-2 border-blue-600 text-blue-700 hover:bg-blue-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const seed = row.currentInstructions ?? row.newInstructions ?? row.oldInstructions ?? "";
+                            setEditingId(row.id);
+                            setEditDraft(seed);
+                            setExpandedId(row.id);
+                          }}
+                          disabled={isBusy}
+                        >
+                          <Pencil className="h-3 w-3 mr-1" />
+                          Edit
                         </Button>
                         <Button
                           size="sm"
@@ -405,7 +444,58 @@ export default function ExerciseInstructionReviews() {
                 <CardContent className="pt-0">
                   <VideoPlayer mediaFile={row.mediaFile} />
 
-                  {view === "corrections" && row.newInstructions && (
+                  {view === "corrections" && isEditing && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-blue-700">
+                        Edit Instructions
+                      </p>
+                      <Textarea
+                        value={editDraft}
+                        onChange={(e) => setEditDraft(e.target.value)}
+                        rows={8}
+                        className="text-xs leading-relaxed font-normal border-2 border-blue-300 focus-visible:ring-blue-400"
+                        placeholder="Type the corrected instructions…"
+                        disabled={editMutation.isPending}
+                      />
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-xs border-2 border-gray-400 hover:bg-gray-100"
+                          onClick={() => {
+                            setEditingId(null);
+                            setEditDraft("");
+                          }}
+                          disabled={editMutation.isPending}
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="h-7 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-700"
+                          onClick={() => {
+                            const trimmed = editDraft.trim();
+                            if (!trimmed) {
+                              toast({
+                                title: "Cannot Save",
+                                description: "Instructions cannot be empty.",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            editMutation.mutate({ id: row.id, instructions: trimmed });
+                          }}
+                          disabled={editMutation.isPending || !editDraft.trim()}
+                        >
+                          <Save className="h-3 w-3 mr-1" />
+                          {editMutation.isPending ? "Saving…" : "Save"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {view === "corrections" && !isEditing && row.newInstructions && (
                     <InstructionDiff old={row.oldInstructions} updated={row.newInstructions} />
                   )}
 
