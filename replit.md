@@ -133,3 +133,46 @@ The script:
 
 ## After confirmed success
 Remove `scripts/seed-prod.ts` and `scripts/seed-data.json` (or keep for audit).
+
+# Exercise Instruction Audit
+
+A one-off review script lives at `scripts/audit-exercise-instructions.ts`.
+It walks every row in `exercises`, extracts begin/middle/end frames from the
+demo MP4 with ffmpeg, and asks Claude `claude-sonnet-4-20250514` whether the
+written instructions match what the video actually shows.
+
+Results land in the `exercise_instruction_reviews` table — never directly in
+the live `exercises` table. A human approves before any update.
+
+```bash
+# Test a tiny batch first (no confirm prompt for small runs)
+npx tsx scripts/audit-exercise-instructions.ts --limit 3
+
+# Specific IDs
+npx tsx scripts/audit-exercise-instructions.ts --ids 2,5,10
+
+# Full 1,674-exercise run (real Claude API spend — prompts to confirm)
+npx tsx scripts/audit-exercise-instructions.ts --confirm
+
+# Re-process rows that were already reviewed
+npx tsx scripts/audit-exercise-instructions.ts --limit 5 --force
+```
+
+Inspect flagged rows:
+```sql
+SELECT id, exercise_id, exercise_name, new_instructions
+FROM exercise_instruction_reviews
+WHERE needs_review = true AND status = 'pending'
+ORDER BY exercise_id;
+```
+
+Approve a corrected instruction:
+```sql
+UPDATE exercises SET instructions = r.new_instructions
+FROM exercise_instruction_reviews r
+WHERE exercises.id = r.exercise_id AND r.id = <review_id>;
+
+UPDATE exercise_instruction_reviews SET status = 'approved' WHERE id = <review_id>;
+```
+
+Requires `ANTHROPIC_API_KEY` (already configured as a Replit secret).
