@@ -438,6 +438,9 @@ export default function CalorieCalculator() {
         {step === "activity" && (
           <div className="liquid-black border-2 border-[#FCD000]/40 rounded-sm p-5 space-y-4" data-testid="step-activity">
             <h2 className="font-black uppercase tracking-wide text-base">Activity Level</h2>
+            <p className="text-white/50 text-[11px] leading-relaxed -mt-2" data-testid="text-activity-hint">
+              Choose based on what you will be doing, for example if you plan to start working out with this app 3 days a week choose Lightly Active or Moderately. This is to ensure calorie intake is not to low based on your planned activity level.
+            </p>
             <RadioGroup
               value={form.activity}
               onValueChange={(v) => setForm({ ...form, activity: v as ActivityLevel })}
