@@ -603,7 +603,9 @@ export const workoutStreakResets = pgTable("workout_streak_resets", {
   workoutType: varchar("workout_type", { length: 24 }).notNull(),
   reason: varchar("reason", { length: 32 }).notNull().default('manual_level_change'),
   resetAt: timestamp("reset_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("idx_streak_resets_user_type").on(table.userId, table.workoutType, table.resetAt),
+]);
 export type WorkoutStreakReset = typeof workoutStreakResets.$inferSelect;
 
 // Per-change adjustment audit log. One row per individual change made
@@ -628,7 +630,9 @@ export const workoutAdjustmentLog = pgTable("workout_adjustment_log", {
   appliedAt: timestamp("applied_at").defaultNow().notNull(),
   rolledBackAt: timestamp("rolled_back_at"),
   rollbackReason: varchar("rollback_reason", { length: 32 }),
-});
+}, (table) => [
+  index("idx_adj_log_plan_dir").on(table.planId, table.workoutType, table.direction, table.appliedAt),
+]);
 export type WorkoutAdjustmentLogRow = typeof workoutAdjustmentLog.$inferSelect;
 
 export const insertTestimonySchema = createInsertSchema(testimonies).omit({
