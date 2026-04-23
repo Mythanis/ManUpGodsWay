@@ -476,38 +476,31 @@ export default function CalorieCalculator() {
 
         {step === "result" && computed && (
           <div className="space-y-4" data-testid="step-result">
-            <div className="liquid-black border-2 border-[#FCD000] rounded-sm p-5 text-center">
-              <div className="text-white/60 text-xs font-black uppercase tracking-wider">Recommended Daily Intake</div>
-              <div className="text-[#FCD000] font-black text-5xl tabular-nums mt-2" data-testid="text-result-target">
-                {computed.targetKcal.toLocaleString()}
-              </div>
-              <div className="text-white/60 text-sm font-bold uppercase mt-1">kcal / day</div>
-              <div className="text-white/40 text-[11px] font-bold uppercase mt-2 tracking-wider">
-                {GOAL_LABELS[form.goalType]}
-              </div>
-            </div>
-
-            <div className="liquid-black border-2 border-white/20 rounded-sm p-4 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-white/60">BMR</span>
-                <span className="font-bold tabular-nums">{Math.round(computed.bmr).toLocaleString()} kcal</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/60">TDEE (maintenance)</span>
-                <span className="font-bold tabular-nums">{Math.round(computed.maintenanceKcal).toLocaleString()} kcal</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/60">Activity multiplier</span>
-                <span className="font-bold tabular-nums">×{ACTIVITY_MULTIPLIERS[form.activity]}</span>
-              </div>
-              {form.goalType !== "maintain" && (
-                <div className="flex justify-between">
-                  <span className="text-white/60">Goal adjustment</span>
-                  <span className="font-bold tabular-nums">
-                    {form.goalType === "lose" ? "−500" : "+250"} kcal
-                  </span>
+            <div className="liquid-black border-2 border-[#FCD000] rounded-sm p-6 text-center space-y-5">
+              <div>
+                <div className="text-white/60 text-xs font-black uppercase tracking-wider">Your Daily Calorie Target</div>
+                <div className="text-[#FCD000] font-black text-5xl tabular-nums mt-2 leading-none" data-testid="text-result-target">
+                  {computed.targetKcal.toLocaleString()}
                 </div>
-              )}
+                <div className="text-white/60 text-sm font-bold uppercase mt-1">calories</div>
+                <div className="text-white/40 text-[11px] font-bold uppercase mt-2 tracking-wider">
+                  {GOAL_LABELS[form.goalType]}
+                </div>
+              </div>
+
+              <div className="border-t border-white/10 pt-4">
+                <div className="text-white/70 font-black text-2xl tabular-nums leading-none" data-testid="text-result-tdee">
+                  {Math.round(computed.maintenanceKcal).toLocaleString()}
+                </div>
+                <div className="text-white/50 text-[11px] mt-1">calories your body burns daily (TDEE)</div>
+              </div>
+
+              <div>
+                <div className="text-white/60 font-bold text-lg tabular-nums leading-none" data-testid="text-result-bmr">
+                  {Math.round(computed.bmr).toLocaleString()}
+                </div>
+                <div className="text-white/40 text-[10px] mt-1">calories burned at complete rest (BMR)</div>
+              </div>
             </div>
 
             {computed.floorApplied && (
@@ -520,11 +513,21 @@ export default function CalorieCalculator() {
               </div>
             )}
 
-            <div className="bg-zinc-900 border-2 border-white/10 rounded-sm p-3 flex items-start gap-2">
-              <CheckCircle2 className="w-5 h-5 text-[#FCD000] shrink-0 mt-0.5" />
-              <p className="text-white/70 text-xs">
-                This is a starting estimate. Adjust by ±100–200 kcal after 2–3 weeks based on real-world progress.
+            <div className="bg-zinc-900 border-2 border-white/10 rounded-sm p-3 space-y-2">
+              <p className="text-white/60 text-[11px] leading-relaxed">
+                This is an estimate based on the Mifflin-St Jeor formula, accurate within ~10% for most people.
+                Track your weight over 2 weeks and adjust by 100–200 calories if needed.
               </p>
+              {form.goalType === "lose" && (
+                <p className="text-white/60 text-[11px] leading-relaxed" data-testid="text-result-lose-note">
+                  A 500 calorie daily deficit equals approximately 1 lb of fat loss per week.
+                </p>
+              )}
+              {form.goalType === "gain" && (
+                <p className="text-white/60 text-[11px] leading-relaxed" data-testid="text-result-gain-note">
+                  A 250 calorie daily surplus minimizes fat gain while supporting muscle growth.
+                </p>
+              )}
             </div>
 
             <Button
