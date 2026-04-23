@@ -11,7 +11,7 @@ import path from "path";
 import os from "os";
 import { db } from "./db";
 import { exercises, exerciseInstructionReviews } from "../shared/schema";
-import { eq, isNull, or } from "drizzle-orm";
+import { eq, isNull, or, and } from "drizzle-orm";
 
 const MODEL = "claude-sonnet-4-20250514";
 const CONCURRENCY = 6;
@@ -238,6 +238,23 @@ async function processOne(
   } finally {
     cleanupDirs([mp4TmpDir, frameTmpDir ?? ""].filter(Boolean));
   }
+}
+
+export async function auditSingleExercise(exerciseId: number): Promise<{ result: string; exerciseName: string }> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
+
+  const rows = await db
+    .select({ id: exercises.id, name: exercises.name, instructions: exercises.instructions, mediaFile: exercises.mediaFile })
+    .from(exercises)
+    .where(eq(exercises.id, exerciseId));
+
+  if (!rows.length) throw new Error(`Exercise #${exerciseId} not found`);
+
+  const ex = rows[0];
+  const client = new Anthropic({ apiKey });
+  const result = await processOne(client, ex, true);
+  return { result, exerciseName: ex.name };
 }
 
 export async function startAuditJob(force = false): Promise<void> {

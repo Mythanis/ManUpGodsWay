@@ -1,12 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CheckCircle, RotateCcw, RefreshCw, ChevronLeft, ChevronRight, Search, Play, AlertTriangle } from "lucide-react";
+import { CheckCircle, RotateCcw, RefreshCw, ChevronLeft, ChevronRight, Search, AlertTriangle } from "lucide-react";
 
 type View = "corrections" | "matched" | "rejected";
 
@@ -40,24 +39,104 @@ const VIEW_LABELS: Record<View, string> = {
 };
 
 const VIEW_DESCRIPTIONS: Record<View, string> = {
-  corrections: "Claude flagged these instructions as mismatched and applied a correction. Review each one — click Revert to restore the original, or Keep to accept the AI's change.",
-  matched: "Claude confirmed these instructions already matched the demo video. No changes were applied.",
-  rejected: "These exercises could not be audited — either the video file path is invalid, or the request hit the API rate limit. Click Re-queue to have them picked up on the next audit run.",
+  corrections:
+    "Claude flagged these instructions as mismatched and applied a correction. Review each one — click Revert to restore the original, or Keep to accept the AI's change.",
+  matched:
+    "Claude confirmed these instructions already matched the demo video. No changes were applied.",
+  rejected:
+    "These exercises could not be audited — either the video file path is invalid, or the request hit the API rate limit. Click Re-queue to re-audit immediately.",
 };
 
+// ── Word-level LCS diff ──────────────────────────────────────────────────────
+
+type DiffToken = { text: string; type: "same" | "added" | "removed" };
+
+function computeWordDiff(a: string, b: string): DiffToken[] {
+  const aTokens = a.split(/(\s+)/);
+  const bTokens = b.split(/(\s+)/);
+  const m = aTokens.length;
+  const n = bTokens.length;
+
+  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] =
+        aTokens[i - 1] === bTokens[j - 1]
+          ? dp[i - 1][j - 1] + 1
+          : Math.max(dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+
+  const result: DiffToken[] = [];
+  let i = m;
+  let j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && aTokens[i - 1] === bTokens[j - 1]) {
+      result.unshift({ text: aTokens[i - 1], type: "same" });
+      i--;
+      j--;
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      result.unshift({ text: bTokens[j - 1], type: "added" });
+      j--;
+    } else {
+      result.unshift({ text: aTokens[i - 1], type: "removed" });
+      i--;
+    }
+  }
+  return result;
+}
+
 function InstructionDiff({ old: oldText, updated }: { old: string; updated: string }) {
+  const tokens = computeWordDiff(oldText, updated);
+
+  const oldView = tokens
+    .filter((t) => t.type !== "added")
+    .map((t, idx) => (
+      <span
+        key={idx}
+        className={
+          t.type === "removed"
+            ? "bg-red-200 text-red-800 rounded px-0.5"
+            : "text-gray-700"
+        }
+      >
+        {t.text}
+      </span>
+    ));
+
+  const newView = tokens
+    .filter((t) => t.type !== "removed")
+    .map((t, idx) => (
+      <span
+        key={idx}
+        className={
+          t.type === "added"
+            ? "bg-green-200 text-green-800 rounded px-0.5"
+            : "text-gray-800"
+        }
+      >
+        {t.text}
+      </span>
+    ));
+
   return (
     <div className="grid grid-cols-2 gap-3 mt-3">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">Original</p>
-        <div className="bg-gray-50 border border-gray-200 rounded p-2.5 text-xs text-gray-700 leading-relaxed min-h-[60px]">
-          {oldText}
+        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">
+          Original{" "}
+          <span className="normal-case font-normal text-red-500">(removed words highlighted)</span>
+        </p>
+        <div className="bg-gray-50 border border-gray-200 rounded p-2.5 text-xs leading-relaxed min-h-[60px]">
+          {oldView}
         </div>
       </div>
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-wide text-amber-600 mb-1">AI Correction</p>
-        <div className="bg-amber-50 border border-amber-300 rounded p-2.5 text-xs text-gray-800 leading-relaxed min-h-[60px]">
-          {updated}
+        <p className="text-[10px] font-bold uppercase tracking-wide text-amber-600 mb-1">
+          AI Correction{" "}
+          <span className="normal-case font-normal text-green-600">(added words highlighted)</span>
+        </p>
+        <div className="bg-amber-50 border border-amber-300 rounded p-2.5 text-xs leading-relaxed min-h-[60px]">
+          {newView}
         </div>
       </div>
     </div>
@@ -67,14 +146,18 @@ function InstructionDiff({ old: oldText, updated }: { old: string; updated: stri
 function VideoPlayer({ mediaFile }: { mediaFile: string | null }) {
   const isPlayable =
     !!mediaFile &&
-    (mediaFile.startsWith("/api/media/") || mediaFile.startsWith("http") || mediaFile.startsWith("/"));
+    (mediaFile.startsWith("/api/media/") ||
+      mediaFile.startsWith("http") ||
+      mediaFile.startsWith("/"));
 
   if (!isPlayable) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-2">
         <AlertTriangle className="h-3.5 w-3.5" />
         <span>No valid video path</span>
-        {mediaFile && <span className="font-mono truncate max-w-[200px]">{mediaFile}</span>}
+        {mediaFile && (
+          <span className="font-mono truncate max-w-[200px]">{mediaFile}</span>
+        )}
       </div>
     );
   }
@@ -101,11 +184,13 @@ export default function ExerciseInstructionReviews() {
   const [keptIds, setKeptIds] = useState<Set<number>>(new Set());
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleSearchChange = (value: string) => {
     setSearch(value);
     setPage(0);
-    const t = setTimeout(() => setDebouncedSearch(value), 300);
-    return () => clearTimeout(t);
+    if (debounceTimer.current !== null) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => setDebouncedSearch(value), 300);
   };
 
   const handleViewChange = (v: View) => {
@@ -128,32 +213,47 @@ export default function ExerciseInstructionReviews() {
         offset: String(page * PAGE_SIZE),
       });
       if (debouncedSearch) params.set("search", debouncedSearch);
-      const res = await fetch(`/api/admin/exercise-instruction-reviews?${params}`, { credentials: "include" });
+      const res = await fetch(`/api/admin/exercise-instruction-reviews?${params}`, {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Failed to load reviews");
       return res.json();
     },
   });
 
   const revertMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("POST", `/api/admin/exercise-instruction-reviews/${id}/revert`),
-    onSuccess: (_data, id) => {
+    mutationFn: (id: number) =>
+      apiRequest("POST", `/api/admin/exercise-instruction-reviews/${id}/revert`),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/exercise-instruction-reviews"] });
       toast({ title: "Instructions Reverted", description: "Original instructions restored." });
       setExpandedId(null);
     },
     onError: (err: any) => {
-      toast({ title: "Revert Failed", description: err.message || "Could not revert instructions", variant: "destructive" });
+      toast({
+        title: "Revert Failed",
+        description: err.message || "Could not revert instructions",
+        variant: "destructive",
+      });
     },
   });
 
   const requeueMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("POST", `/api/admin/exercise-instruction-reviews/${id}/requeue`),
+    mutationFn: (id: number) =>
+      apiRequest("POST", `/api/admin/exercise-instruction-reviews/${id}/requeue`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/exercise-instruction-reviews"] });
-      toast({ title: "Exercise Re-queued", description: "It will be picked up on the next audit run." });
+      toast({
+        title: "Exercise Re-queued",
+        description: "The AI audit is running for this exercise in the background.",
+      });
     },
     onError: (err: any) => {
-      toast({ title: "Re-queue Failed", description: err.message || "Could not re-queue exercise", variant: "destructive" });
+      toast({
+        title: "Re-queue Failed",
+        description: err.message || "Could not re-queue exercise",
+        variant: "destructive",
+      });
     },
   });
 
@@ -166,8 +266,6 @@ export default function ExerciseInstructionReviews() {
   const total = data?.total ?? 0;
   const visibleRows = view === "corrections" ? rows.filter((r) => !keptIds.has(r.id)) : rows;
   const totalPages = Math.ceil(total / PAGE_SIZE);
-
-  const viewCounts: Partial<Record<View, number>> = {};
 
   return (
     <div className="space-y-4">
@@ -206,7 +304,9 @@ export default function ExerciseInstructionReviews() {
         <p className="text-xs text-gray-500">
           {total.toLocaleString()} exercise{total !== 1 ? "s" : ""}
           {search ? ` matching "${search}"` : ""}
-          {view === "corrections" && keptIds.size > 0 ? ` · ${keptIds.size} kept this session` : ""}
+          {view === "corrections" && keptIds.size > 0
+            ? ` · ${keptIds.size} kept this session`
+            : ""}
         </p>
       )}
 
@@ -220,7 +320,9 @@ export default function ExerciseInstructionReviews() {
       {/* Empty state */}
       {!isLoading && visibleRows.length === 0 && (
         <div className="text-center py-12 text-sm text-gray-400 italic">
-          {search ? "No exercises match your search" : `No ${VIEW_LABELS[view].toLowerCase()} rows`}
+          {search
+            ? "No exercises match your search"
+            : `No ${VIEW_LABELS[view].toLowerCase()} rows`}
         </div>
       )}
 
@@ -256,7 +358,10 @@ export default function ExerciseInstructionReviews() {
                           size="sm"
                           variant="outline"
                           className="h-7 px-2 text-xs border-2 border-black hover:bg-gray-100"
-                          onClick={(e) => { e.stopPropagation(); handleKeep(row.id); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleKeep(row.id);
+                          }}
                           disabled={isBusy}
                         >
                           <CheckCircle className="h-3 w-3 mr-1 text-green-600" />
@@ -265,7 +370,10 @@ export default function ExerciseInstructionReviews() {
                         <Button
                           size="sm"
                           className="h-7 px-2 text-xs bg-red-600 hover:bg-red-700 text-white border-2 border-red-700"
-                          onClick={(e) => { e.stopPropagation(); revertMutation.mutate(row.id); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            revertMutation.mutate(row.id);
+                          }}
                           disabled={isBusy}
                         >
                           <RotateCcw className="h-3 w-3 mr-1" />
@@ -278,7 +386,10 @@ export default function ExerciseInstructionReviews() {
                         size="sm"
                         variant="outline"
                         className="h-7 px-2 text-xs border-2 border-black hover:bg-gray-100"
-                        onClick={(e) => { e.stopPropagation(); requeueMutation.mutate(row.id); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          requeueMutation.mutate(row.id);
+                        }}
                         disabled={isBusy}
                       >
                         <RefreshCw className="h-3 w-3 mr-1" />
@@ -300,7 +411,9 @@ export default function ExerciseInstructionReviews() {
 
                   {view === "matched" && (
                     <div className="mt-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">Instructions</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">
+                        Instructions
+                      </p>
                       <div className="bg-green-50 border border-green-200 rounded p-2.5 text-xs text-gray-700 leading-relaxed">
                         {row.oldInstructions}
                       </div>
@@ -310,14 +423,18 @@ export default function ExerciseInstructionReviews() {
                   {view === "rejected" && (
                     <div className="mt-3 space-y-2">
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">Current Instructions</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">
+                          Current Instructions
+                        </p>
                         <div className="bg-gray-50 border border-gray-200 rounded p-2.5 text-xs text-gray-700 leading-relaxed">
                           {row.currentInstructions || row.oldInstructions}
                         </div>
                       </div>
                       {row.rawModelResponse && (
                         <div>
-                          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">Rejection Reason</p>
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">
+                            Rejection Reason
+                          </p>
                           <div className="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-700 font-mono break-words">
                             {row.rawModelResponse}
                           </div>

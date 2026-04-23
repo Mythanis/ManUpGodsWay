@@ -13,7 +13,7 @@ import { createRequire } from 'module';
 const execAsync = promisify(exec);
 const require = createRequire(import.meta.url);
 import { storage } from "./storage";
-import { startAuditJob, getAuditJobStatus, isAuditJobRunning } from "./exerciseAuditJob";
+import { startAuditJob, getAuditJobStatus, isAuditJobRunning, auditSingleExercise } from "./exerciseAuditJob";
 import { getNextMidnightInTimezone } from "./drip-utils";
 import { safeTimezone } from "./timezone-utils";
 import { warGroupsService } from "./warGroupsService";
@@ -16844,24 +16844,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = Math.min(Number(req.query.limit) || 25, 100);
       const offset = Number(req.query.offset) || 0;
       const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+
+      // Support explicit params (status, needsReview) OR the convenience `view` shorthand
+      const statusParam = typeof req.query.status === 'string' ? req.query.status : undefined;
+      const needsReviewParam = req.query.needsReview !== undefined
+        ? req.query.needsReview === 'true' || req.query.needsReview === '1'
+        : undefined;
       const view = typeof req.query.view === 'string' ? req.query.view : 'corrections';
 
       const conditions: any[] = [];
       if (search) {
         conditions.push(ilike(schema.exerciseInstructionReviews.exerciseName, `%${search}%`));
       }
-      if (view === 'corrections') {
-        conditions.push(
-          and(
-            eq(schema.exerciseInstructionReviews.needsReview, true),
-            isNotNull(schema.exerciseInstructionReviews.newInstructions),
-            eq(schema.exerciseInstructionReviews.status, 'approved')
-          )
-        );
-      } else if (view === 'matched') {
-        conditions.push(eq(schema.exerciseInstructionReviews.needsReview, false));
-      } else if (view === 'rejected') {
-        conditions.push(eq(schema.exerciseInstructionReviews.status, 'rejected'));
+
+      if (statusParam !== undefined || needsReviewParam !== undefined) {
+        // Explicit param mode — caller specifies exactly what they want
+        if (statusParam !== undefined) {
+          conditions.push(eq(schema.exerciseInstructionReviews.status, statusParam));
+        }
+        if (needsReviewParam !== undefined) {
+          conditions.push(eq(schema.exerciseInstructionReviews.needsReview, needsReviewParam));
+          if (needsReviewParam) {
+            // Only include rows that actually have a new instruction (real corrections)
+            conditions.push(isNotNull(schema.exerciseInstructionReviews.newInstructions));
+          }
+        }
+      } else {
+        // Convenience view shorthand (used by the admin UI)
+        if (view === 'corrections') {
+          conditions.push(
+            and(
+              eq(schema.exerciseInstructionReviews.needsReview, true),
+              isNotNull(schema.exerciseInstructionReviews.newInstructions),
+              eq(schema.exerciseInstructionReviews.status, 'approved')
+            )
+          );
+        } else if (view === 'matched') {
+          conditions.push(eq(schema.exerciseInstructionReviews.needsReview, false));
+        } else if (view === 'rejected') {
+          conditions.push(eq(schema.exerciseInstructionReviews.status, 'rejected'));
+        }
       }
 
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -16933,11 +16955,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(schema.exerciseInstructionReviews.id, id));
       if (!review) return res.status(404).json({ message: 'Review not found' });
 
+      // Delete the existing review row so the audit won't skip it
       await db
         .delete(schema.exerciseInstructionReviews)
         .where(eq(schema.exerciseInstructionReviews.id, id));
 
-      res.json({ message: 'Exercise removed from review queue — re-run the audit to process it', exerciseId: review.exerciseId });
+      // Immediately re-audit this single exercise (runs in background, non-blocking)
+      auditSingleExercise(review.exerciseId)
+        .then(({ result, exerciseName }) => {
+          console.log(`[exercise-audit] Re-queue complete for #${review.exerciseId} "${exerciseName}": ${result}`);
+        })
+        .catch((err: any) => {
+          console.error(`[exercise-audit] Re-queue error for #${review.exerciseId}:`, err.message);
+        });
+
+      res.json({
+        message: 'Exercise re-queued — AI audit is running for this exercise in the background',
+        exerciseId: review.exerciseId,
+      });
     } catch (err: any) {
       console.error('[exercise-instruction-reviews] requeue error:', err.message);
       res.status(500).json({ message: err.message });
