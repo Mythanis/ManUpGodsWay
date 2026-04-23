@@ -40,6 +40,9 @@ interface Exercise {
   target?: string;
   bodyPart?: string;
   equipment?: string;
+  // Sidedness from the exercises table. Determines whether reps default
+  // uses "per side" phrasing. Set on the DB row; may be absent on old data.
+  sidedness?: 'bilateral' | 'unilateral' | 'alternating';
 }
 
 interface FavoriteExercise {
@@ -229,8 +232,7 @@ export default function CreatePlan() {
       // Open configuration modal
       setCurrentExercise(exercise);
       setTempSets(3);
-      const sid = (exercise as any).sidedness as string | undefined;
-      setTempReps(sid === 'unilateral' || sid === 'alternating' ? '10 per side' : '10');
+      setTempReps(exercise.sidedness === 'unilateral' || exercise.sidedness === 'alternating' ? '10 per side' : '10');
       setTempMinutes(undefined);
       setTempDaysOfWeek([]);
       setTempNotes('');

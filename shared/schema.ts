@@ -538,6 +538,9 @@ export const fitnessPlanExercises = pgTable("fitness_plan_exercises", {
   daysOfWeek: text("days_of_week").array(), // Array of days: ['monday', 'tuesday', etc.]
   weekNumber: integer("week_number").default(1), // Which training week (1-4) this exercise belongs to
   orderIndex: integer("order_index").notNull().default(0), // Order within the plan
+  // Copied from exercises.sidedness at insert time so the runner never
+  // needs a secondary lookup to decide whether to split the set in two.
+  sidedness: varchar("sidedness").default("bilateral").$type<'bilateral' | 'unilateral' | 'alternating'>(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -1959,7 +1962,8 @@ export const exercises = pgTable("exercises", {
   //               Two consecutive countdowns per set: right side → reposition rest → left side.
   // alternating — sides alternate within the same set (alt dumbbell curl, alt lunge).
   //               One countdown, reps shown as per-side count.
-  sidedness: varchar("sidedness").notNull().default("bilateral"),
+  // DB check constraint (exercises_sidedness_check) enforces valid values.
+  sidedness: varchar("sidedness").notNull().default("bilateral").$type<'bilateral' | 'unilateral' | 'alternating'>(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

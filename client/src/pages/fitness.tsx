@@ -5432,9 +5432,14 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
     sidedness?: string;
   }>({
     queryKey: ['/api/exercises/by-name', exerciseLookupName],
-    enabled: !!exerciseLookupName,
+    // Only fetch when the instructions modal is opened; sidedness is read
+    // directly from the plan exercise row (currentExercise.sidedness) so
+    // the phase state machine is always deterministic without async waits.
+    enabled: instructionsOpen && !!exerciseLookupName,
   });
-  const isUnilateral = exerciseDetails?.sidedness === 'unilateral';
+  // Prefer the plan-exercise row value (populated by the server at insert
+  // time). Older rows without sidedness default to 'bilateral'.
+  const isUnilateral = (currentExercise?.sidedness ?? 'bilateral') === 'unilateral';
   // Adaptive-difficulty feedback state. Once the user picks a feeling
   // we POST it to the feedback endpoint and then close the player.
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);

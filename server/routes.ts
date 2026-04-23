@@ -10741,6 +10741,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let scaled = 0;
         for (const ex of exercises) {
           const oldSets = ex.sets ?? 3;
+          // Proportional scaling: newSets = oldSets * ratio.
+          // This is equally correct for unilateral exercises: each unilateral
+          // set already takes 2× the work time (right-side countdown +
+          // reposition rest + left-side countdown), so the duration ratio
+          // applies uniformly regardless of sidedness.
           const newSets = Math.max(1, Math.round(oldSets * ratio));
           if (newSets !== oldSets) {
             await storage.updatePlanExercise(ex.id, { sets: newSets });
@@ -10837,11 +10842,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Access denied' });
       }
       
-      const exerciseData = insertFitnessPlanExerciseSchema.parse({
+      const parsed = insertFitnessPlanExerciseSchema.parse({
         ...req.body,
         planId: req.params.planId
       });
-      
+
+      // Resolve sidedness from the exercises table so the workout runner
+      // gets it directly from plan-exercise rows (no secondary async lookup).
+      // Also normalise the reps default to "10 per side" for one-sided moves.
+      let resolvedSidedness: 'bilateral' | 'unilateral' | 'alternating' =
+        (parsed.sidedness as 'bilateral' | 'unilateral' | 'alternating') ?? 'bilateral';
+
+      const exIdNum = parseInt(parsed.exerciseId, 10);
+      if (!isNaN(exIdNum)) {
+        const [dbEx] = await db
+          .select({ sidedness: schema.exercises.sidedness })
+          .from(schema.exercises)
+          .where(eq(schema.exercises.id, exIdNum))
+          .limit(1);
+        if (dbEx) resolvedSidedness = dbEx.sidedness;
+      } else if (parsed.exerciseName) {
+        // Fall back to name-based lookup for non-numeric exercise IDs.
+        const [dbEx] = await db
+          .select({ sidedness: schema.exercises.sidedness })
+          .from(schema.exercises)
+          .where(sql`LOWER(${schema.exercises.name}) = LOWER(${parsed.exerciseName})`)
+          .limit(1);
+        if (dbEx) resolvedSidedness = dbEx.sidedness;
+      }
+
+      // Upgrade the bare "10" default to "10 per side" for one-sided exercises.
+      const currentReps = parsed.reps ?? '';
+      const needsPerSide =
+        (resolvedSidedness === 'unilateral' || resolvedSidedness === 'alternating') &&
+        (currentReps === '10' || currentReps === '');
+
+      const exerciseData = {
+        ...parsed,
+        sidedness: resolvedSidedness,
+        reps: needsPerSide ? '10 per side' : parsed.reps,
+      };
+
       const exercise = await storage.addExerciseToPlan(exerciseData);
       res.status(201).json(exercise);
     } catch (error) {
