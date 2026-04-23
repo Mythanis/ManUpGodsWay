@@ -143,24 +143,27 @@ app.use((req, res, next) => {
     // Start the subscription conversion nudge service
     conversionNudgeService.start();
 
-    // Auto-start exercise instruction audit if exercises haven't been fully audited yet.
-    // The job writes to exercise_instruction_reviews; once all exercises are covered the
-    // check will find reviewed >= total and skip quietly on subsequent restarts.
-    (async () => {
-      try {
-        if (isAuditJobRunning()) return;
-        const [{ total }] = await db.select({ total: sqlExpr<number>`COUNT(*)` }).from(exercises);
-        const [{ reviewed }] = await db.select({ reviewed: sqlExpr<number>`COUNT(*)` }).from(exerciseInstructionReviews);
-        const remaining = Number(total) - Number(reviewed);
-        if (remaining > 0) {
-          log(`[exercise-audit] ${remaining} exercises unreviewed — starting audit job`);
-          await startAuditJob(false);
-        } else {
-          log('[exercise-audit] All exercises already reviewed — skipping auto-start');
+    // Exercise instruction audit auto-start is opt-in.
+    // Set EXERCISE_AUDIT_AUTO_START=true to trigger the Claude-based audit job
+    // automatically when unreviewed exercises exist. Off by default to avoid
+    // unexpected API spend on every server restart.
+    if (process.env.EXERCISE_AUDIT_AUTO_START === 'true') {
+      (async () => {
+        try {
+          if (isAuditJobRunning()) return;
+          const [{ total }] = await db.select({ total: sqlExpr<number>`COUNT(*)` }).from(exercises);
+          const [{ reviewed }] = await db.select({ reviewed: sqlExpr<number>`COUNT(*)` }).from(exerciseInstructionReviews);
+          const remaining = Number(total) - Number(reviewed);
+          if (remaining > 0) {
+            log(`[exercise-audit] ${remaining} exercises unreviewed — starting audit job`);
+            await startAuditJob(false);
+          } else {
+            log('[exercise-audit] All exercises already reviewed — skipping auto-start');
+          }
+        } catch (err: any) {
+          log(`[exercise-audit] Auto-start failed: ${err.message}`);
         }
-      } catch (err: any) {
-        log(`[exercise-audit] Auto-start failed: ${err.message}`);
-      }
-    })();
+      })();
+    }
   });
 })();

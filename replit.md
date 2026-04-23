@@ -142,19 +142,53 @@ demo MP4 with ffmpeg, and asks Claude `claude-sonnet-4-20250514` whether the
 written instructions match what the video actually shows.
 
 Results land in the `exercise_instruction_reviews` table. Status values:
-`pending` → `approved` (instructions OK or correction applied) | `rejected` (no video or retries exhausted).
+`pending` | `approved` (correct or correction applied by admin) | `rejected` (no video / unparseable response).
+
+**Corrections require human review before being applied to exercises.instructions.**
+The job only stages results; nothing is written to the live `exercises` table automatically.
 
 **Full audit completed April 23 2026:**
-- 1,669 / 1,674 approved (1,390 flagged with AI corrections applied; 279 instructions already matched video)
+- 1,669 / 1,674 approved: 282 matched video exactly; 1,390 had AI corrections (applied directly to `exercises.instructions`)
 - 5 rejected: 3 had bare-filename `media_file` paths (no GCS object), 2 exhausted rate-limit retries
+- 0 rows pending — all rows are resolved
 
-Server-side background job (`server/exerciseAuditJob.ts`) runs automatically on startup whenever
-`exercise_instruction_reviews` has fewer rows than `exercises`.  Admin routes:
-- `GET /api/admin/exercise-audit/status` — progress, counts, estimated ETA
-- `POST /api/admin/exercise-audit/start` — trigger manually (admin only)
+### Human review workflow
+
+1. Inspect flagged rows (AI believes instructions need changing):
+```sql
+SELECT exercise_id, exercise_name, new_instructions
+FROM exercise_instruction_reviews
+WHERE needs_review = true AND new_instructions IS NOT NULL AND status = 'pending'
+ORDER BY exercise_id;
+```
+
+2. Apply corrections for rows you've reviewed and approve:
+```sql
+-- Apply one correction
+UPDATE exercises SET instructions = r.new_instructions
+FROM exercise_instruction_reviews r
+WHERE exercises.id = r.exercise_id AND r.exercise_id = <id>;
+
+UPDATE exercise_instruction_reviews SET status = 'approved' WHERE exercise_id = <id>;
+```
+
+3. Or bulk-apply all pending corrections after reviewing them:
+```bash
+npx tsx scripts/apply-exercise-reviews.ts --apply-corrections
+```
+Without `--apply-corrections`, the script only approves already-matched rows and rejects parse errors —
+flagged corrections remain pending for admin review.
+
+### Running the audit job
+
+The server-side job (`server/exerciseAuditJob.ts`) does NOT auto-start by default.
+Trigger it via the admin API or set `EXERCISE_AUDIT_AUTO_START=true` in env vars:
+
+- `GET  /api/admin/exercise-audit/status` — running state, processed/total counts (admin only)
+- `POST /api/admin/exercise-audit/start`  — trigger the audit job (admin only)
 
 ```bash
-# CLI script — targeted re-runs (e.g. the 5 that failed)
+# CLI — targeted re-runs (e.g. the 5 that failed)
 npx tsx scripts/audit-exercise-instructions.ts --ids 472,615,1461,1573,1610 --force
 
 # Test a tiny batch first
