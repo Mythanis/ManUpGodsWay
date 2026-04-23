@@ -33,6 +33,8 @@ import {
   X,
   AlertTriangle,
   ImageIcon,
+  UserX,
+  Wrench,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -754,6 +756,9 @@ export default function FitnessManagement() {
 
   return (
     <div className="space-y-6">
+
+      {/* ── Page Visibility Controls ───────────────────────────────────── */}
+      <FitnessPageControls />
 
       {/* ── Exercise Database Controls ─────────────────────────────────── */}
       <Card>
@@ -1555,4 +1560,93 @@ export default function FitnessManagement() {
 
     </div>
   );
+}
+
+// ── Fitness Page Visibility Controls ─────────────────────────────────────
+// Two admin-only toggles that affect what regular users see on /fitness:
+//   • Hide Fitness Coach — removes the Coach button from the header.
+//     The Pillar button stays in the same flex row, which auto-centers it.
+//   • Maintenance Mode — replaces the entire fitness page with a simple
+//     "currently under Maintenance" message for non-admins.
+function FitnessPageControls() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: settings, isLoading } = useQuery<{
+    fitnessCoachHidden?: boolean;
+    fitnessMaintenanceMode?: boolean;
+  }>({
+    queryKey: ['/api/system-settings'],
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (patch: { fitnessCoachHidden?: boolean; fitnessMaintenanceMode?: boolean }) =>
+      apiRequest('PUT', '/api/system-settings', patch),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/system-settings'] });
+      toast({ title: 'Updated', description: 'Fitness page settings saved.' });
+    },
+    onError: (err: any) => {
+      toast({
+        title: 'Update failed',
+        description: err?.message || 'Could not save settings.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const coachHidden = !!settings?.fitnessCoachHidden;
+  const maintenance = !!settings?.fitnessMaintenanceMode;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Settings2Icon /> Fitness Page Controls
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="text-sm text-muted-foreground">Loading…</div>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              type="button"
+              variant={coachHidden ? 'default' : 'outline'}
+              disabled={updateMutation.isPending}
+              onClick={() => updateMutation.mutate({ fitnessCoachHidden: !coachHidden })}
+              data-testid="button-toggle-fitness-coach"
+              className="flex-1"
+            >
+              <UserX className="w-4 h-4 mr-2" />
+              {coachHidden ? 'Show Fitness Coach' : 'Hide Fitness Coach'}
+            </Button>
+            <Button
+              type="button"
+              variant={maintenance ? 'default' : 'outline'}
+              disabled={updateMutation.isPending}
+              onClick={() => updateMutation.mutate({ fitnessMaintenanceMode: !maintenance })}
+              data-testid="button-toggle-fitness-maintenance"
+              className="flex-1"
+            >
+              <Wrench className="w-4 h-4 mr-2" />
+              {maintenance ? 'Disable Maintenance Mode' : 'Enable Maintenance Mode'}
+            </Button>
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground mt-3">
+          {maintenance
+            ? 'Maintenance mode is ON — regular users see a maintenance message instead of the Fitness page. Admins still have full access.'
+            : coachHidden
+              ? 'The Fitness Coach button is hidden. The Fitness Pillar button is centered in its place.'
+              : 'Both the Fitness Pillar and Fitness Coach buttons are visible to users.'}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Tiny inline icon — avoids pulling another lucide import if Settings is not handy.
+function Settings2Icon() {
+  return <Wrench className="w-5 h-5" />;
 }

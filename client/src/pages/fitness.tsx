@@ -224,6 +224,15 @@ export default function Fitness() {
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [selectedPlanForView, setSelectedPlanForView] = useState<FitnessPlan | null>(null);
   
+  // System settings — admin can hide the Fitness Coach button or put the
+  // whole page into maintenance mode (admins still see the page normally).
+  const { data: systemSettings } = useQuery<{
+    fitnessCoachHidden?: boolean;
+    fitnessMaintenanceMode?: boolean;
+  }>({ queryKey: ['/api/system-settings'] });
+  const fitnessCoachHidden = !!systemSettings?.fitnessCoachHidden;
+  const fitnessMaintenanceMode = !!systemSettings?.fitnessMaintenanceMode;
+
   // Fitness Pillar dialog state
   const [showFitnessPillarDialog, setShowFitnessPillarDialog] = useState(false);
   
@@ -2811,6 +2820,36 @@ export default function Fitness() {
     );
   }
 
+  // Maintenance mode — admins still see the full page so they can keep working,
+  // but everyone else sees a simple "currently under Maintenance" message.
+  if (fitnessMaintenanceMode && (authUser as any)?.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-black pb-20">
+        <div className="liquid-header px-4 pt-6 pb-6 border-b-4 border-[#FCD000]">
+          <BackButton />
+          <div className="text-center">
+            <h1 className="text-3xl font-black text-white mb-2 uppercase tracking-wide relative z-10">
+              Fitness Center
+            </h1>
+          </div>
+        </div>
+        <div className="px-4 pt-12 flex items-center justify-center" data-testid="fitness-maintenance-screen">
+          <div className="w-full max-w-md bg-[#FCD000] border-4 border-black rounded-sm shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-8 text-center">
+            <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-black flex items-center justify-center">
+              <Settings className="w-7 h-7 text-[#FCD000]" />
+            </div>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-black mb-2">
+              Fitness Page Currently Under Maintenance
+            </h2>
+            <p className="text-black/80 font-semibold text-sm">
+              We're making improvements. Please check back soon.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black pb-20">
       {/* Header with liquid effect */}
@@ -2832,14 +2871,16 @@ export default function Fitness() {
               <Info className="w-5 h-5 mr-2" />
               Fitness Pillar
             </button>
-            <button
-              onClick={() => setShowFitnessCoachDialog(true)}
-              className="liquid-black px-6 py-3 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-[#FCD000] font-black uppercase text-sm flex items-center"
-              data-testid="button-fitness-coach"
-            >
-              <User className="w-5 h-5 mr-2" />
-              Fitness Coach
-            </button>
+            {!fitnessCoachHidden && (
+              <button
+                onClick={() => setShowFitnessCoachDialog(true)}
+                className="liquid-black px-6 py-3 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-[#FCD000] font-black uppercase text-sm flex items-center"
+                data-testid="button-fitness-coach"
+              >
+                <User className="w-5 h-5 mr-2" />
+                Fitness Coach
+              </button>
+            )}
           </div>
         </div>
       </div>

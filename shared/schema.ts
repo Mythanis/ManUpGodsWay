@@ -1411,6 +1411,8 @@ export const systemSettings = pgTable("system_settings", {
   warGroupsVideoUrl: text("war_groups_video_url"),
   warGroupsVideoTitle: text("war_groups_video_title").default("Welcome to War Groups"),
   warGroupsCalendlyUrl: text("war_groups_calendly_url"),
+  fitnessCoachHidden: boolean("fitness_coach_hidden").default(false),
+  fitnessMaintenanceMode: boolean("fitness_maintenance_mode").default(false),
   updatedBy: varchar("updated_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
