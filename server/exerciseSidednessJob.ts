@@ -1,7 +1,10 @@
 /**
- * Server-side helper for re-classifying a single exercise via Claude.
- * Called from the requeue route so admins can retry rejected sidedness verdicts
- * without touching the terminal.
+ * Shared sidedness-classification helpers used by:
+ *   - The admin requeue route (re-classify a single rejected exercise from the UI)
+ *   - The batch script scripts/classify-exercise-sidedness.ts (classify all exercises)
+ *
+ * Keeping the prompt and parser in one place ensures the two code paths can never
+ * silently diverge.
  */
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -9,11 +12,11 @@ import { db } from "./db";
 import { exercises, exerciseSidednessReviews } from "../shared/schema";
 import { eq } from "drizzle-orm";
 
-const MODEL = "claude-sonnet-4-20250514";
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 2000;
+export const MODEL = "claude-sonnet-4-20250514";
+export const MAX_RETRIES = 3;
+export const RETRY_DELAY_MS = 2000;
 
-const SYSTEM_PROMPT = `You are a biomechanics expert classifying gym exercises by sidedness.
+export const SYSTEM_PROMPT = `You are a biomechanics expert classifying gym exercises by sidedness.
 
 For each exercise you must return ONLY a JSON object with these exact keys:
   "sidedness": one of "bilateral", "unilateral", or "alternating"
@@ -31,16 +34,16 @@ Definitions:
 
 Return ONLY valid JSON. No markdown fences, no extra text.`;
 
-type SidednessValue = "bilateral" | "unilateral" | "alternating";
+export type SidednessValue = "bilateral" | "unilateral" | "alternating";
 
-interface ClaudeVerdict {
+export interface ClaudeVerdict {
   sidedness: SidednessValue;
   reasoning: string;
   confidence: "high" | "low";
   rawResponse: string;
 }
 
-async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+export async function withRetry<T>(fn: () => Promise<T>, label?: string): Promise<T> {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       return await fn();
@@ -49,13 +52,20 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
       const isTransient =
         err?.status === 429 || err?.status >= 500 || err?.code === "ECONNRESET";
       if (!isTransient) throw err;
-      await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * attempt));
+      const wait = RETRY_DELAY_MS * attempt;
+      if (label) console.warn(`  [retry ${attempt}/${MAX_RETRIES}] ${label} — waiting ${wait}ms`);
+      await new Promise((r) => setTimeout(r, wait));
     }
   }
   throw new Error("unreachable");
 }
 
-async function callClaude(
+/**
+ * Call Claude and parse the JSON verdict.
+ * Does NOT apply rate-limiting — callers that need pacing (e.g. the batch
+ * script) should acquire a token from their own rate-limiter before calling.
+ */
+export async function callClaude(
   client: Anthropic,
   ex: { name: string; instructions: string; bodyPart: string; equipment: string }
 ): Promise<ClaudeVerdict> {
@@ -97,7 +107,12 @@ async function callClaude(
 
     return { sidedness, reasoning, confidence, rawResponse };
   } catch {
-    return { sidedness: "bilateral", reasoning: "Parse error; defaulted to bilateral.", confidence: "low", rawResponse };
+    return {
+      sidedness: "bilateral",
+      reasoning: "Parse error; defaulted to bilateral.",
+      confidence: "low",
+      rawResponse,
+    };
   }
 }
 
@@ -105,6 +120,9 @@ async function callClaude(
  * Re-classify a single exercise by its review row ID.
  * Fetches the exercise from DB, calls Claude, and updates the review row with
  * the fresh verdict while resetting status to 'pending'.
+ *
+ * Throws if the exercise row is missing (review existence should be checked by
+ * the caller before calling this to distinguish 404 from 500).
  */
 export async function reclassifyExerciseSidedness(
   reviewId: number

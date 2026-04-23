@@ -17183,6 +17183,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) return res.status(400).json({ message: 'Invalid review id' });
 
+      // Pre-check existence so callers get a 404 rather than a generic 500
+      const [existing] = await db
+        .select({ id: schema.exerciseSidednessReviews.id })
+        .from(schema.exerciseSidednessReviews)
+        .where(eq(schema.exerciseSidednessReviews.id, id))
+        .limit(1);
+      if (!existing) return res.status(404).json({ message: `Sidedness review #${id} not found` });
+
       const { exerciseName, verdict } = await reclassifyExerciseSidedness(id);
 
       console.log(`[sidedness-reviews] requeue #${id} "${exerciseName}": ${verdict.sidedness} (${verdict.confidence})`);

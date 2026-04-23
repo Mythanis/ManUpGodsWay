@@ -31,11 +31,17 @@ import { db } from "../server/db";
 import { exercises, exerciseSidednessReviews } from "../shared/schema";
 import { eq, inArray, notInArray, or } from "drizzle-orm";
 import readline from "readline";
+import {
+  MODEL,
+  MAX_RETRIES,
+  RETRY_DELAY_MS,
+  callClaude,
+  withRetry,
+  type SidednessValue,
+  type ClaudeVerdict,
+} from "../server/exerciseSidednessJob";
 
-const MODEL = "claude-sonnet-4-20250514";
 const CONCURRENCY = 5;
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 2000;
 
 // ── Rate limiter ──────────────────────────────────────────────────────────────
 // Claude's tier-1 limit is 50 req/min for claude-sonnet-4-20250514.
@@ -77,33 +83,6 @@ class TokenBucket {
 
 const rateLimiter = new TokenBucket(RATE_LIMIT_PER_MIN);
 
-const SYSTEM_PROMPT = `You are a biomechanics expert classifying gym exercises by sidedness.
-
-For each exercise you must return ONLY a JSON object with these exact keys:
-  "sidedness": one of "bilateral", "unilateral", or "alternating"
-  "reasoning": a single sentence (≤20 words) explaining your choice
-  "confidence": "high" if clear-cut, "low" if ambiguous
-
-Definitions:
-  bilateral   — both sides work simultaneously (squat, bench press, pull-up, push-up)
-  unilateral  — one side completes its full set before switching (single-leg RDL,
-                single-arm row, split squat — any exercise where you REPOSITION
-                between sides)
-  alternating — sides alternate within the same set (alternating dumbbell curl,
-                alternating lunge, alternating leg raise — the word "alternating"
-                or "alternate" in the name is a strong signal)
-
-Return ONLY valid JSON. No markdown fences, no extra text.`;
-
-type SidednessValue = 'bilateral' | 'unilateral' | 'alternating';
-
-interface ClaudeVerdict {
-  sidedness: SidednessValue;
-  reasoning: string;
-  confidence: 'high' | 'low';
-  rawResponse: string;
-}
-
 function parseArgs() {
   const args = process.argv.slice(2);
   const opts = {
@@ -130,71 +109,14 @@ function parseArgs() {
   return opts;
 }
 
-async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      return await fn();
-    } catch (err: any) {
-      if (attempt === MAX_RETRIES) throw err;
-      const isTransient =
-        err?.status === 429 || err?.status >= 500 || err?.code === "ECONNRESET";
-      if (!isTransient) throw err;
-      const wait = RETRY_DELAY_MS * attempt;
-      console.warn(`  [retry ${attempt}/${MAX_RETRIES}] ${label} — waiting ${wait}ms`);
-      await new Promise((r) => setTimeout(r, wait));
-    }
-  }
-  throw new Error("unreachable");
-}
-
+/** Acquire a rate-limit token then delegate to the shared callClaude helper. */
 async function classify(
   client: Anthropic,
   ex: { id: number; name: string; instructions: string; bodyPart: string; equipment: string }
 ): Promise<ClaudeVerdict> {
-  const userContent = [
-    `Exercise name: ${ex.name}`,
-    `Body part: ${ex.bodyPart}`,
-    `Equipment: ${ex.equipment}`,
-    `Instructions: ${ex.instructions}`,
-  ].join("\n");
-
   // Acquire a rate-limit token before every API call to stay under 50 req/min
   await rateLimiter.acquire();
-
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 256,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: userContent }],
-  });
-
-  const rawResponse =
-    response.content
-      .filter((b) => b.type === "text")
-      .map((b) => (b as Anthropic.TextBlock).text)
-      .join("") || "";
-
-  try {
-    const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("no JSON found");
-    const parsed = JSON.parse(jsonMatch[0]);
-
-    const valid: SidednessValue[] = ["bilateral", "unilateral", "alternating"];
-    const sidedness: SidednessValue = valid.includes(parsed.sidedness)
-      ? parsed.sidedness
-      : "bilateral";
-    const confidence: 'high' | 'low' = parsed.confidence === "low" ? "low" : "high";
-    const reasoning = typeof parsed.reasoning === "string" ? parsed.reasoning.trim() : "No reason provided.";
-
-    return { sidedness, reasoning, confidence, rawResponse };
-  } catch {
-    return {
-      sidedness: "bilateral",
-      reasoning: "Could not parse Claude response — defaulted to bilateral.",
-      confidence: "low",
-      rawResponse,
-    };
-  }
+  return callClaude(client, ex);
 }
 
 async function processExercise(
