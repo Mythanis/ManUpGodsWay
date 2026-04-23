@@ -71,6 +71,7 @@ function parseArgs() {
     ids: [] as number[],
     force: false,
     confirm: false,
+    concurrency: 0,
     systemPrompt: null as string | null,
     systemPromptFile: null as string | null,
   };
@@ -84,6 +85,8 @@ function parseArgs() {
       opts.force = true;
     } else if (args[i] === "--confirm") {
       opts.confirm = true;
+    } else if (args[i] === "--concurrency" && args[i + 1]) {
+      opts.concurrency = parseInt(args[++i], 10);
     } else if (args[i] === "--system-prompt" && args[i + 1]) {
       opts.systemPrompt = args[++i];
     } else if (args[i] === "--system-prompt-file" && args[i + 1]) {
@@ -456,7 +459,8 @@ async function main() {
   }
 
   const queue = [...batch];
-  const workers = Array.from({ length: Math.min(CONCURRENCY, total) }, () => worker(queue));
+  const concurrencyLimit = opts.concurrency > 0 ? opts.concurrency : CONCURRENCY;
+  const workers = Array.from({ length: Math.min(concurrencyLimit, total) }, () => worker(queue));
   await Promise.all(workers);
 
   const matched = done - flagged - skipped - errors;

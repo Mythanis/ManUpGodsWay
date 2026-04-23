@@ -13,6 +13,7 @@ import { createRequire } from 'module';
 const execAsync = promisify(exec);
 const require = createRequire(import.meta.url);
 import { storage } from "./storage";
+import { startAuditJob, getAuditJobStatus, isAuditJobRunning } from "./exerciseAuditJob";
 import { getNextMidnightInTimezone } from "./drip-utils";
 import { safeTimezone } from "./timezone-utils";
 import { warGroupsService } from "./warGroupsService";
@@ -16811,6 +16812,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('[VATMEBOP] POST error', error);
       res.status(500).json({ message: 'Failed to save VATMEBOP check' });
     }
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Exercise instruction audit (admin only)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  app.post('/api/admin/exercise-audit/start', isAuthenticated, requireAdmin, async (_req: any, res: any) => {
+    try {
+      if (isAuditJobRunning()) {
+        return res.status(409).json({ message: 'Audit job is already running' });
+      }
+      await startAuditJob(false);
+      res.json({ message: 'Audit job started', status: getAuditJobStatus() });
+    } catch (err: any) {
+      console.error('[exercise-audit] start error:', err.message);
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.get('/api/admin/exercise-audit/status', isAuthenticated, requireAdmin, async (_req: any, res: any) => {
+    res.json(getAuditJobStatus());
   });
 
   // ─────────────────────────────────────────────────────────────────────────────

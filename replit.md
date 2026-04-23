@@ -141,38 +141,27 @@ It walks every row in `exercises`, extracts begin/middle/end frames from the
 demo MP4 with ffmpeg, and asks Claude `claude-sonnet-4-20250514` whether the
 written instructions match what the video actually shows.
 
-Results land in the `exercise_instruction_reviews` table — never directly in
-the live `exercises` table. A human approves before any update.
+Results land in the `exercise_instruction_reviews` table. Status values:
+`pending` → `approved` (instructions OK or correction applied) | `rejected` (no video or retries exhausted).
+
+**Full audit completed April 23 2026:**
+- 1,669 / 1,674 approved (1,390 flagged with AI corrections applied; 279 instructions already matched video)
+- 5 rejected: 3 had bare-filename `media_file` paths (no GCS object), 2 exhausted rate-limit retries
+
+Server-side background job (`server/exerciseAuditJob.ts`) runs automatically on startup whenever
+`exercise_instruction_reviews` has fewer rows than `exercises`.  Admin routes:
+- `GET /api/admin/exercise-audit/status` — progress, counts, estimated ETA
+- `POST /api/admin/exercise-audit/start` — trigger manually (admin only)
 
 ```bash
-# Test a tiny batch first (no confirm prompt for small runs)
+# CLI script — targeted re-runs (e.g. the 5 that failed)
+npx tsx scripts/audit-exercise-instructions.ts --ids 472,615,1461,1573,1610 --force
+
+# Test a tiny batch first
 npx tsx scripts/audit-exercise-instructions.ts --limit 3
 
-# Specific IDs
-npx tsx scripts/audit-exercise-instructions.ts --ids 2,5,10
-
-# Full 1,674-exercise run (real Claude API spend — prompts to confirm)
+# Full run (prompts for confirmation before spending tokens)
 npx tsx scripts/audit-exercise-instructions.ts --confirm
-
-# Re-process rows that were already reviewed
-npx tsx scripts/audit-exercise-instructions.ts --limit 5 --force
-```
-
-Inspect flagged rows:
-```sql
-SELECT id, exercise_id, exercise_name, new_instructions
-FROM exercise_instruction_reviews
-WHERE needs_review = true AND status = 'pending'
-ORDER BY exercise_id;
-```
-
-Approve a corrected instruction:
-```sql
-UPDATE exercises SET instructions = r.new_instructions
-FROM exercise_instruction_reviews r
-WHERE exercises.id = r.exercise_id AND r.id = <review_id>;
-
-UPDATE exercise_instruction_reviews SET status = 'approved' WHERE id = <review_id>;
 ```
 
 Requires `ANTHROPIC_API_KEY` (already configured as a Replit secret).

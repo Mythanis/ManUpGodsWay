@@ -9,6 +9,10 @@ import { challengeNotificationService } from "./challengeNotificationService";
 import { prayerReminderService } from "./prayerReminderService";
 import { dailyReminderService } from "./dailyReminderService";
 import { conversionNudgeService } from "./conversionNudgeService";
+import { startAuditJob, isAuditJobRunning } from "./exerciseAuditJob";
+import { db } from "./db";
+import { exercises, exerciseInstructionReviews } from "../shared/schema";
+import { sql as sqlExpr } from "drizzle-orm";
 import { stripeWebhookHandler } from "./stripeWebhook";
 import { generalLimiter } from "./rateLimiter";
 
@@ -138,5 +142,25 @@ app.use((req, res, next) => {
     
     // Start the subscription conversion nudge service
     conversionNudgeService.start();
+
+    // Auto-start exercise instruction audit if exercises haven't been fully audited yet.
+    // The job writes to exercise_instruction_reviews; once all exercises are covered the
+    // check will find reviewed >= total and skip quietly on subsequent restarts.
+    (async () => {
+      try {
+        if (isAuditJobRunning()) return;
+        const [{ total }] = await db.select({ total: sqlExpr<number>`COUNT(*)` }).from(exercises);
+        const [{ reviewed }] = await db.select({ reviewed: sqlExpr<number>`COUNT(*)` }).from(exerciseInstructionReviews);
+        const remaining = Number(total) - Number(reviewed);
+        if (remaining > 0) {
+          log(`[exercise-audit] ${remaining} exercises unreviewed — starting audit job`);
+          await startAuditJob(false);
+        } else {
+          log('[exercise-audit] All exercises already reviewed — skipping auto-start');
+        }
+      } catch (err: any) {
+        log(`[exercise-audit] Auto-start failed: ${err.message}`);
+      }
+    })();
   });
 })();
