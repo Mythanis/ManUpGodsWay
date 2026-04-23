@@ -229,7 +229,8 @@ export default function CreatePlan() {
       // Open configuration modal
       setCurrentExercise(exercise);
       setTempSets(3);
-      setTempReps('10');
+      const sid = (exercise as any).sidedness as string | undefined;
+      setTempReps(sid === 'unilateral' || sid === 'alternating' ? '10 per side' : '10');
       setTempMinutes(undefined);
       setTempDaysOfWeek([]);
       setTempNotes('');

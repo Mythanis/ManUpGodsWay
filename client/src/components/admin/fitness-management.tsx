@@ -51,6 +51,7 @@ interface Exercise {
   mediaFile: string;
   hiit: string;
   stretching: string;
+  sidedness: string;
 }
 
 interface ExerciseEditForm {
@@ -63,6 +64,7 @@ interface ExerciseEditForm {
   mediaFile: string;
   hiit: string;
   stretching: string;
+  sidedness: string;
 }
 
 interface FitnessChallenge {
@@ -176,6 +178,7 @@ export default function FitnessManagement() {
     mediaFile: "",
     hiit: "No",
     stretching: "No",
+    sidedness: "bilateral",
   });
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const mediaInputRef = useRef<HTMLInputElement>(null);
@@ -322,6 +325,7 @@ export default function FitnessManagement() {
       mediaFile: ex.mediaFile,
       hiit: ex.hiit ?? "No",
       stretching: ex.stretching ?? "No",
+      sidedness: ex.sidedness ?? "bilateral",
     });
     setShowExEdit(true);
   };
@@ -1273,6 +1277,17 @@ export default function FitnessManagement() {
                   <SelectContent>
                     <SelectItem value="No">No</SelectItem>
                     <SelectItem value="Yes">Yes</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ex-sidedness">Sidedness</Label>
+                <Select value={exForm.sidedness} onValueChange={(v) => setExForm((f) => ({ ...f, sidedness: v }))}>
+                  <SelectTrigger id="ex-sidedness"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bilateral">Bilateral (both sides together)</SelectItem>
+                    <SelectItem value="unilateral">Unilateral (one side, reposition between)</SelectItem>
+                    <SelectItem value="alternating">Alternating (sides interleave within set)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -1953,6 +1953,13 @@ export const exercises = pgTable("exercises", {
   shortInstructions: text("short_instructions"),
   hiit: varchar("hiit").notNull().default("No"),        // "Yes" | "No"
   stretching: varchar("stretching").notNull().default("No"), // "Yes" | "No"
+  // Whether the exercise works one side at a time.
+  // bilateral   — both sides together (squat, bench press). One countdown per set.
+  // unilateral  — one side, repositioning needed (single-leg RDL, single-arm row).
+  //               Two consecutive countdowns per set: right side → reposition rest → left side.
+  // alternating — sides alternate within the same set (alt dumbbell curl, alt lunge).
+  //               One countdown, reps shown as per-side count.
+  sidedness: varchar("sidedness").notNull().default("bilateral"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

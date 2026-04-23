@@ -5398,7 +5398,7 @@ interface WorkoutPlayerProps {
   onExerciseComplete: (exerciseId: string) => void;
 }
 
-type PlayerPhase = 'countdown' | 'work' | 'rest' | 'set-rest' | 'done';
+type PlayerPhase = 'countdown' | 'work' | 'rest' | 'set-rest' | 'side-switch' | 'done';
 
 function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: WorkoutPlayerProps) {
   const { toast } = useToast();
@@ -5406,6 +5406,9 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   const [setIdx, setSetIdx] = useState(0); // 0-based current set
   const [phase, setPhase] = useState<PlayerPhase>('countdown');
   const [secondsLeft, setSecondsLeft] = useState(5);
+  // For unilateral exercises: tracks which side is currently working.
+  // Resets to 'right' at the start of every new set / exercise.
+  const [currentSide, setCurrentSide] = useState<'right' | 'left'>('right');
   // Pause flag — when true the tick interval is a no-op so timers
   // freeze in place. Toggled by the pause button and forced on whenever
   // the written-instructions modal opens.
@@ -5426,10 +5429,12 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
     bodyPart?: string;
     equipment?: string;
     level?: string;
+    sidedness?: string;
   }>({
     queryKey: ['/api/exercises/by-name', exerciseLookupName],
-    enabled: instructionsOpen && !!exerciseLookupName,
+    enabled: !!exerciseLookupName,
   });
+  const isUnilateral = exerciseDetails?.sidedness === 'unilateral';
   // Adaptive-difficulty feedback state. Once the user picks a feeling
   // we POST it to the feedback endpoint and then close the player.
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
@@ -5698,10 +5703,23 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   const advancePhase = () => {
     if (phase === 'countdown') {
       beep(660, 250);
+      setCurrentSide('right');
       setPhase('work');
       setSecondsLeft(workSeconds);
     } else if (phase === 'work') {
       beep(440, 300);
+      // Unilateral: after right side → enter side-switch (reposition rest)
+      if (isUnilateral && currentSide === 'right') {
+        setCurrentSide('left');
+        setPhase('side-switch');
+        setSecondsLeft(10);
+        return;
+      }
+      // For unilateral exercises that just finished the left side,
+      // reset side state before the set-rest / next-exercise transition.
+      if (isUnilateral && currentSide === 'left') {
+        setCurrentSide('right');
+      }
       // Mark set done
       const isLastSet = setIdx + 1 >= totalSets;
       if (isLastSet) {
@@ -5716,13 +5734,12 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
           setPhase('done');
         } else {
           // Inter-exercise transition: advance to the next exercise
-          // immediately so the 5-second 'rest' phase doubles as a
-          // preview of the upcoming movement (mp4 + name + countdown
-          // beeps on 3-2-1). This is the "5s preview before each
-          // exercise's FIRST appearance" per spec.
+          // immediately so the 'rest' phase doubles as a preview of the
+          // upcoming movement (mp4 + name + countdown beeps on 3-2-1).
           const nextIdx = exerciseIdx + 1;
           setExerciseIdx(nextIdx);
           setSetIdx(0);
+          setCurrentSide('right');
           setPhase('rest');
           setSecondsLeft(PREVIEW_SECONDS);
         }
@@ -5733,15 +5750,22 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
         setPhase('set-rest');
         setSecondsLeft(restSeconds);
       }
+    } else if (phase === 'side-switch') {
+      beep(660, 250);
+      // Back to work for the left side
+      setPhase('work');
+      setSecondsLeft(workSeconds);
     } else if (phase === 'set-rest') {
       beep(660, 250);
       setSetIdx(s => s + 1);
+      setCurrentSide('right');
       setPhase('work');
       setSecondsLeft(workSeconds);
     } else if (phase === 'rest') {
       beep(660, 250);
       // exerciseIdx + setIdx were already advanced when we entered the
       // preview, so just kick off the new exercise's first work set.
+      setCurrentSide('right');
       setPhase('work');
       setSecondsLeft(workSeconds);
     }
@@ -5755,6 +5779,7 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   // Restart the previous exercise from its 10-second preview. If we're
   // already on the first exercise, just restart it from countdown.
   const previous = () => {
+    setCurrentSide('right');
     if (exerciseIdx === 0) {
       setSetIdx(0);
       setPhase('countdown');
@@ -5778,10 +5803,19 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
     // Leave `paused` true on close — the user can hit Resume when ready.
   };
 
+  const workLabel = (() => {
+    if (isUnilateral) {
+      const sideText = currentSide === 'right' ? 'Right Side' : 'Left Side';
+      return isTimeBased ? `Work — ${sideText}` : `Perform Set — ${sideText}`;
+    }
+    return isTimeBased ? 'Work' : 'Perform Set';
+  })();
+
   const phaseLabel: Record<PlayerPhase, string> = {
     countdown: 'Get Ready',
-    work: isTimeBased ? 'Work' : 'Perform Set',
+    work: workLabel,
     'set-rest': 'Rest',
+    'side-switch': 'Switch Sides',
     rest: 'Next Exercise',
     done: 'Workout Complete'
   };
@@ -5790,6 +5824,7 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
     countdown: 'bg-amber-500',
     work: 'bg-emerald-500',
     'set-rest': 'bg-sky-500',
+    'side-switch': 'bg-violet-500',
     rest: 'bg-sky-500',
     done: 'bg-[#FCD000]'
   };
