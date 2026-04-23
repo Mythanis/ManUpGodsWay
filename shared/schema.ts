@@ -1965,7 +1965,7 @@ export type InsertExercise = z.infer<typeof insertExerciseSchema>;
 // Each row is one Claude review of one exercise. Never modified by the live app.
 export const exerciseInstructionReviews = pgTable("exercise_instruction_reviews", {
   id: serial("id").primaryKey(),
-  exerciseId: integer("exercise_id").notNull(),
+  exerciseId: integer("exercise_id").notNull().unique(),
   exerciseName: varchar("exercise_name").notNull(),
   oldInstructions: text("old_instructions").notNull(),
   newInstructions: text("new_instructions"),          // null when match: true

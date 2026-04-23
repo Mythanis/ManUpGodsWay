@@ -51,9 +51,9 @@ import { exercises, exerciseInstructionReviews } from "../shared/schema";
 import { eq, inArray } from "drizzle-orm";
 import readline from "readline";
 
-const DEFAULT_SYSTEM_PROMPT = `You are a fitness expert reviewing exercise instruction accuracy. 
-You will be shown a frame from an exercise demonstration video.
-Compare it to the written instructions provided.
+const DEFAULT_SYSTEM_PROMPT = `You are a fitness expert reviewing exercise instruction accuracy.
+You will be shown three frames captured from an exercise demonstration video — one near the beginning, one near the middle, and one near the end.
+Compare what the frames show to the written instructions provided.
 If they match: respond with {"match": true}
 If they don't match: respond with {"match": false, "corrected_instructions": "..."}
 Base corrected instructions only on what you can see in the video frame.
