@@ -3754,7 +3754,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const lessonIndexForDrip = sortedForDrip.findIndex((l: any) => l.id === lessonId);
       const [thisLessonProg] = await storage.getLessonProgressForLessons(userId, [lessonId]);
       const dripBypassed = !!thisLessonProg?.dripBypassed;
-      const lessonTimezone = (req.body.timezone as string) || 'America/New_York';
+      const lessonTimezone = (req.body.timezone as string) || 'America/Chicago';
 
       if (!dripBypassed) {
         if (lessonIndexForDrip === 0) {

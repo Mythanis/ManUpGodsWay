@@ -37,18 +37,37 @@ function getTimezoneOffsetMinutes(timezone: string, at: Date): number {
   return sign * (parseInt(m[2], 10) * 60 + parseInt(m[3], 10));
 }
 
-// Returns a UTC Date instant equal to 00:00:00 of "today" in the given timezone.
-// e.g. at any moment on 2026-04-23 in America/Chicago (CDT, -05:00),
-// returns the Date for 2026-04-23T05:00:00Z.
-export function getStartOfDayInTimezone(timezone: string = DEFAULT_TIMEZONE, ref: Date = new Date()): Date {
-  const ymd = getDateStringInTimezone(ref, timezone);
+// Returns the UTC Date instant equal to 00:00:00 (local time) for the given
+// YYYY-MM-DD in the given timezone. DST-safe: the offset is resolved at the
+// candidate midnight, so spring-forward / fall-back days compute correctly.
+export function getStartOfDayForYmdInTimezone(ymd: string, timezone: string = DEFAULT_TIMEZONE): Date {
   const utcMidnight = new Date(`${ymd}T00:00:00Z`);
   const offsetMin = getTimezoneOffsetMinutes(timezone, utcMidnight);
   return new Date(utcMidnight.getTime() - offsetMin * 60 * 1000);
 }
 
-// Returns a UTC Date one day after getStartOfDayInTimezone(...).
+// Returns a UTC Date instant equal to 00:00:00 of "today" in the given timezone.
+// e.g. at any moment on 2026-04-23 in America/Chicago (CDT, -05:00),
+// returns the Date for 2026-04-23T05:00:00Z.
+export function getStartOfDayInTimezone(timezone: string = DEFAULT_TIMEZONE, ref: Date = new Date()): Date {
+  return getStartOfDayForYmdInTimezone(getDateStringInTimezone(ref, timezone), timezone);
+}
+
+// DST-safe calendar-day arithmetic on a YYYY-MM-DD string.
+// Adds `days` (can be negative) and returns the resulting YYYY-MM-DD.
+export function addDaysToYmd(ymd: string, days: number): string {
+  const [y, m, d] = ymd.split('-').map(Number);
+  // UTC math used purely for calendar arithmetic — no DST involved here.
+  const dt = new Date(Date.UTC(y, m - 1, d + days));
+  const yy = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getUTCDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
+}
+
+// Returns the UTC Date instant equal to 00:00:00 of the day AFTER "today" in
+// the given timezone. DST-safe — uses calendar-day arithmetic, not +24h.
 export function getStartOfNextDayInTimezone(timezone: string = DEFAULT_TIMEZONE, ref: Date = new Date()): Date {
-  const start = getStartOfDayInTimezone(timezone, ref);
-  return new Date(start.getTime() + 24 * 60 * 60 * 1000);
+  const todayYmd = getDateStringInTimezone(ref, timezone);
+  return getStartOfDayForYmdInTimezone(addDaysToYmd(todayYmd, 1), timezone);
 }

@@ -216,6 +216,7 @@ import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNu
 import { getNextMidnightInTimezone } from "./drip-utils";
 import {
   DEFAULT_TIMEZONE,
+  addDaysToYmd,
   getDateStringInTimezone,
   getStartOfDayInTimezone,
   getStartOfNextDayInTimezone,
@@ -259,7 +260,7 @@ export interface IStorage {
   // Lesson progress operations
   getUserLessonProgress(userId: string, studyId?: string): Promise<UserLessonProgress[]>;
   getLessonProgressForLessons(userId: string, lessonIds: string[]): Promise<UserLessonProgress[]>;
-  markLessonComplete(userId: string, lessonId: string, answers?: Record<string, string>): Promise<UserLessonProgress>;
+  markLessonComplete(userId: string, lessonId: string, answers?: Record<string, string>, userTimezone?: string): Promise<UserLessonProgress>;
   saveLessonNotes(userId: string, lessonId: string, notes: string): Promise<UserLessonProgress>;
   
   // Purchase operations
@@ -2946,9 +2947,8 @@ export class DatabaseStorage implements IStorage {
         return;
       }
       
-      // Calculate yesterday's date string in the user's timezone
-      const yesterdayDate = new Date(localToday.getTime() - 24 * 60 * 60 * 1000);
-      const yesterdayDateString = getDateStringInTimezone(yesterdayDate, tz);
+      // DST-safe: derive yesterday from today's calendar date, not -24h ms.
+      const yesterdayDateString = addDaysToYmd(todayDateString, -1);
       
       console.log('Yesterday date string:', yesterdayDateString);
       console.log('Was active yesterday?', lastActiveDateString === yesterdayDateString);
