@@ -17144,15 +17144,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(1);
       if (!review) return res.status(404).json({ message: 'Review not found' });
 
-      await db
-        .update(schema.exercises)
-        .set({ sidedness: chosenSidedness, updatedAt: new Date() })
-        .where(eq(schema.exercises.id, review.exerciseId));
+      await db.transaction(async (tx) => {
+        await tx
+          .update(schema.exercises)
+          .set({ sidedness: chosenSidedness, updatedAt: new Date() })
+          .where(eq(schema.exercises.id, review.exerciseId));
 
-      await db
-        .update(schema.exerciseSidednessReviews)
-        .set({ status: 'approved', approvedSidedness: chosenSidedness, reviewedAt: new Date() })
-        .where(eq(schema.exerciseSidednessReviews.id, id));
+        await tx
+          .update(schema.exerciseSidednessReviews)
+          .set({ status: 'approved', approvedSidedness: chosenSidedness, reviewedAt: new Date() })
+          .where(eq(schema.exerciseSidednessReviews.id, id));
+      });
 
       res.json({ ok: true });
     } catch (err: any) {
@@ -17177,10 +17179,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/exercise-sidedness-reviews/bulk-approve', isAuthenticated, requireAdmin, async (req: any, res: any) => {
     try {
-      const { confidence, search } = req.body as { confidence?: string; search?: string };
+      // confidenceFilter defaults to "high" so the safe workflow is: bulk-approve
+      // only high-confidence rows automatically; low-confidence rows require individual
+      // review. Pass "all" to override and approve every pending row.
+      const { confidenceFilter = 'high', search } = req.body as {
+        confidenceFilter?: 'high' | 'low' | 'all';
+        search?: string;
+      };
 
       const conditions = [eq(schema.exerciseSidednessReviews.status, 'pending')];
-      if (confidence) conditions.push(eq(schema.exerciseSidednessReviews.confidence, confidence));
+      if (confidenceFilter !== 'all') {
+        conditions.push(eq(schema.exerciseSidednessReviews.confidence, confidenceFilter));
+      }
       if (search) conditions.push(ilike(schema.exerciseSidednessReviews.exerciseName, `%${search}%`));
       const whereClause = and(...conditions);
 
@@ -17197,14 +17207,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const r of pending) {
         const sidedness = parseSidedness(r.proposedSidedness);
         if (!sidedness) continue;
-        await db
-          .update(schema.exercises)
-          .set({ sidedness, updatedAt: new Date() })
-          .where(eq(schema.exercises.id, r.exerciseId));
-        await db
-          .update(schema.exerciseSidednessReviews)
-          .set({ status: 'approved', approvedSidedness: sidedness, reviewedAt: new Date() })
-          .where(eq(schema.exerciseSidednessReviews.id, r.id));
+        await db.transaction(async (tx) => {
+          await tx
+            .update(schema.exercises)
+            .set({ sidedness, updatedAt: new Date() })
+            .where(eq(schema.exercises.id, r.exerciseId));
+          await tx
+            .update(schema.exerciseSidednessReviews)
+            .set({ status: 'approved', approvedSidedness: sidedness, reviewedAt: new Date() })
+            .where(eq(schema.exerciseSidednessReviews.id, r.id));
+        });
         approved++;
       }
 

@@ -177,9 +177,9 @@ export default function ExerciseSidednessReviews() {
   });
 
   const bulkApproveMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: ({ confidenceFilter }: { confidenceFilter: "high" | "all" }) =>
       apiRequest("POST", "/api/admin/exercise-sidedness-reviews/bulk-approve", {
-        confidence: lowConfidenceOnly ? "low" : undefined,
+        confidenceFilter,
         search: debouncedSearch || undefined,
       }),
     onSuccess: (res: any) => {
@@ -249,19 +249,34 @@ export default function ExerciseSidednessReviews() {
         </button>
 
         {status === "pending" && total > 0 && (
-          <Button
-            size="sm"
-            className="h-9 text-xs bg-green-700 hover:bg-green-800 text-white"
-            onClick={() => {
-              if (window.confirm(`Approve all ${total.toLocaleString()} pending rows using Claude's proposed value? This writes to exercises.sidedness.`)) {
-                bulkApproveMutation.mutate();
-              }
-            }}
-            disabled={bulkApproveMutation.isPending}
-          >
-            <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
-            {bulkApproveMutation.isPending ? "Approving…" : `Bulk approve ${total.toLocaleString()}`}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              className="h-9 text-xs bg-green-700 hover:bg-green-800 text-white"
+              onClick={() => {
+                if (window.confirm(`Bulk-approve high-confidence rows${debouncedSearch ? ` matching "${debouncedSearch}"` : ""}? This writes Claude's proposed value to exercises.sidedness. Ambiguous rows are skipped and need individual review.`)) {
+                  bulkApproveMutation.mutate({ confidenceFilter: "high" });
+                }
+              }}
+              disabled={bulkApproveMutation.isPending}
+            >
+              <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+              {bulkApproveMutation.isPending ? "Approving…" : "Bulk approve (high confidence)"}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 text-xs border-2 border-green-700 text-green-800 hover:bg-green-50"
+              onClick={() => {
+                if (window.confirm(`⚠️ Approve ALL ${total.toLocaleString()} pending rows including ambiguous ones? This writes Claude's proposed value to every pending exercise — including low-confidence rows. Proceed?`)) {
+                  bulkApproveMutation.mutate({ confidenceFilter: "all" });
+                }
+              }}
+              disabled={bulkApproveMutation.isPending}
+            >
+              Approve all (incl. ambiguous)
+            </Button>
+          </div>
         )}
       </div>
 

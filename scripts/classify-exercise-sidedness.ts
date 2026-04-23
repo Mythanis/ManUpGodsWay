@@ -37,6 +37,46 @@ const CONCURRENCY = 5;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
 
+// ── Rate limiter ──────────────────────────────────────────────────────────────
+// Claude's tier-1 limit is 50 req/min for claude-sonnet-4-20250514.
+// We cap ourselves at 45/min (10% buffer) using a simple token bucket so the
+// concurrent workers don't pile up 429s, especially on a full 1,674-exercise run.
+const RATE_LIMIT_PER_MIN = 45;
+
+class TokenBucket {
+  private tokens: number;
+  private lastRefill: number;
+  private readonly refillRatePerMs: number;
+  private readonly max: number;
+
+  constructor(perMinute: number) {
+    this.max = perMinute;
+    this.tokens = perMinute;
+    this.lastRefill = Date.now();
+    this.refillRatePerMs = perMinute / 60_000;
+  }
+
+  async acquire(): Promise<void> {
+    const now = Date.now();
+    const elapsed = now - this.lastRefill;
+    this.tokens = Math.min(this.max, this.tokens + elapsed * this.refillRatePerMs);
+    this.lastRefill = now;
+
+    if (this.tokens >= 1) {
+      this.tokens--;
+      return;
+    }
+
+    // Wait until we have at least one token
+    const waitMs = Math.ceil((1 - this.tokens) / this.refillRatePerMs);
+    await new Promise((r) => setTimeout(r, waitMs));
+    this.tokens = 0;
+    this.lastRefill = Date.now();
+  }
+}
+
+const rateLimiter = new TokenBucket(RATE_LIMIT_PER_MIN);
+
 const SYSTEM_PROMPT = `You are a biomechanics expert classifying gym exercises by sidedness.
 
 For each exercise you must return ONLY a JSON object with these exact keys:
@@ -117,6 +157,9 @@ async function classify(
     `Equipment: ${ex.equipment}`,
     `Instructions: ${ex.instructions}`,
   ].join("\n");
+
+  // Acquire a rate-limit token before every API call to stay under 50 req/min
+  await rateLimiter.acquire();
 
   const response = await client.messages.create({
     model: MODEL,
