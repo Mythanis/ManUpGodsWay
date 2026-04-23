@@ -152,6 +152,10 @@ interface FitnessPlanExercise {
   daysOfWeek?: string[];
   weekNumber?: number;
   orderIndex: number;
+  // Copied from exercises.sidedness at plan-exercise insert time.
+  // Drives the unilateral two-countdown-per-set logic in WorkoutPlayer.
+  // Null/undefined on legacy rows → treated as 'bilateral'.
+  sidedness?: 'bilateral' | 'unilateral' | 'alternating' | null;
 }
 
 interface PreBuiltPlan {
@@ -5437,9 +5441,6 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
     // the phase state machine is always deterministic without async waits.
     enabled: instructionsOpen && !!exerciseLookupName,
   });
-  // Prefer the plan-exercise row value (populated by the server at insert
-  // time). Older rows without sidedness default to 'bilateral'.
-  const isUnilateral = (currentExercise?.sidedness ?? 'bilateral') === 'unilateral';
   // Adaptive-difficulty feedback state. Once the user picks a feeling
   // we POST it to the feedback endpoint and then close the player.
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
@@ -5627,6 +5628,10 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   const currentExercise = exercises[exerciseIdx];
+  // Read sidedness from the plan-exercise row (populated by the server at
+  // insert time). Synchronous — no async lookup needed. Old rows without the
+  // column default to 'bilateral' (null ?? 'bilateral').
+  const isUnilateral = (currentExercise?.sidedness ?? 'bilateral') === 'unilateral';
   const totalSets = currentExercise?.sets ?? 3;
   const repsString = String(currentExercise?.reps ?? '');
   const timeBasedMatch = repsString.match(/^(\d+)s$/);
