@@ -14,6 +14,7 @@ const execAsync = promisify(exec);
 const require = createRequire(import.meta.url);
 import { storage } from "./storage";
 import { getNextMidnightInTimezone } from "./drip-utils";
+import { safeTimezone } from "./timezone-utils";
 import { warGroupsService } from "./warGroupsService";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
@@ -2663,7 +2664,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Extract user's local date and timezone if provided
       const userLocalDate = progressData.userLocalDate ? new Date(progressData.userLocalDate) : undefined;
-      const userTimezone = typeof progressData.timezone === 'string' ? progressData.timezone : undefined;
+      const userTimezone = progressData.timezone ? safeTimezone(progressData.timezone) : undefined;
       // Remove transport-only fields before passing to storage
       const { userLocalDate: _ulDate, timezone: _tz, ...cleanProgressData } = progressData;
 
@@ -3754,7 +3755,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const lessonIndexForDrip = sortedForDrip.findIndex((l: any) => l.id === lessonId);
       const [thisLessonProg] = await storage.getLessonProgressForLessons(userId, [lessonId]);
       const dripBypassed = !!thisLessonProg?.dripBypassed;
-      const lessonTimezone = (req.body.timezone as string) || 'America/Chicago';
+      const lessonTimezone = safeTimezone(req.body.timezone);
 
       if (!dripBypassed) {
         if (lessonIndexForDrip === 0) {

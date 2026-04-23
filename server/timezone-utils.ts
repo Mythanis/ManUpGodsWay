@@ -4,6 +4,20 @@
 
 export const DEFAULT_TIMEZONE = 'America/Chicago';
 
+// Returns the input IANA timezone if it's valid; otherwise returns
+// DEFAULT_TIMEZONE. Use this at API boundaries where the timezone string
+// comes from an untrusted client — a malformed value would otherwise throw
+// from `Intl.DateTimeFormat` deeper in the call stack.
+export function safeTimezone(tz: unknown): string {
+  if (typeof tz !== 'string' || !tz) return DEFAULT_TIMEZONE;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: tz });
+    return tz;
+  } catch {
+    return DEFAULT_TIMEZONE;
+  }
+}
+
 // Returns the date components ({year, month, day}) for a Date in a given IANA timezone.
 function getYmdParts(date: Date, timezone: string): { year: number; month: number; day: number } {
   const fmt = new Intl.DateTimeFormat('en-US', {
