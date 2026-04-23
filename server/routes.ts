@@ -5911,7 +5911,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Mark a single lesson complete and update parent study progress if all lessons done
+  // Backfill `user_progress` for studies whose lessons are all marked
+  // complete but whose study row never flipped to 'completed'. Used to
+  // heal historical data from before the auto-flip logic was reliable.
+  app.post('/api/admin/users/:id/fix-studies', isAuthenticated, async (req: any, res) => {
+    try {
+      const adminUser = await storage.getUser(req.user.claims.sub);
+      if (!adminUser || !isAdmin(adminUser)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const { id: targetUserId } = req.params;
+      const result = await storage.fixUserStudyProgress(targetUserId);
+      res.json({ success: true, ...result });
+    } catch (error) {
+      console.error("Error fixing user study progress:", error);
+      res.status(500).json({ message: "Failed to fix studies" });
+    }
+  });
+
   app.post('/api/admin/users/:id/lessons/:lessonId/complete', isAuthenticated, async (req: any, res) => {
     try {
       const adminUser = await storage.getUser(req.user.claims.sub);
@@ -5944,12 +5961,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userId: targetUserId, studyId: lesson.studyId,
             completedAt: allDone ? now : null,
             status: allDone ? 'completed' : 'in_progress',
+            isCompleted: allDone,
           })
           .onConflictDoUpdate({
             target: [schema.userProgress.userId, schema.userProgress.studyId],
             set: {
               completedAt: allDone ? now : null,
               status: allDone ? 'completed' : 'in_progress',
+              isCompleted: allDone,
             },
           });
       }

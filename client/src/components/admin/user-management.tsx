@@ -204,6 +204,32 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
     },
   });
 
+  // "Fix Studies" — backfills user_progress rows whose lessons are all
+  // marked complete but whose status/is_completed/completed_at never got
+  // updated (legacy data from before the auto-flip code was reliable).
+  const fixStudies = useMutation({
+    mutationFn: async (userId: string): Promise<{ fixedCount: number; checkedCount: number }> => {
+      return await apiRequest('POST', `/api/admin/users/${userId}/fix-studies`);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users", selectedUser?.id, "study-progress"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Studies fixed",
+        description: data.fixedCount > 0
+          ? `Repaired ${data.fixedCount} of ${data.checkedCount} studies (set completed_at to yesterday).`
+          : `All ${data.checkedCount} studies were already in sync — nothing to fix.`,
+      });
+    },
+    onError: (e: any) => {
+      toast({
+        title: "Error",
+        description: e?.message || "Failed to fix studies.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const setFitnessAccess = useMutation({
     mutationFn: async ({ userId, hasAccess }: { userId: string; hasAccess: boolean }) => {
       await apiRequest('PUT', `/api/admin/users/${userId}/fitness-access`, { hasAccess });
@@ -835,15 +861,28 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
 
               {/* ── Study Progress ── */}
               <div className="border rounded-lg overflow-hidden">
-                <button
-                  className="w-full flex items-center justify-between p-3 text-left hover:bg-muted/30 transition-colors"
-                  onClick={() => setShowStudyProgress(prev => !prev)}
-                >
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-                    <BookOpen className="w-3 h-3 text-ministry-gold" /> Study Progress
-                  </p>
-                  <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${showStudyProgress ? 'rotate-180' : ''}`} />
-                </button>
+                <div className="w-full flex items-center justify-between p-3 hover:bg-muted/30 transition-colors gap-2">
+                  <button
+                    className="flex-1 flex items-center justify-between text-left"
+                    onClick={() => setShowStudyProgress(prev => !prev)}
+                  >
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                      <BookOpen className="w-3 h-3 text-ministry-gold" /> Study Progress
+                    </p>
+                    <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ml-2 ${showStudyProgress ? 'rotate-180' : ''}`} />
+                  </button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs flex-shrink-0"
+                    data-testid="button-fix-studies"
+                    disabled={fixStudies.isPending}
+                    onClick={(e) => { e.stopPropagation(); fixStudies.mutate(selectedUser.id); }}
+                    title="Reconcile user_progress (status / is_completed / completed_at) with the user's lesson completions. Sets completed_at to yesterday so they can continue today."
+                  >
+                    {fixStudies.isPending ? "Fixing…" : "Fix Studies"}
+                  </Button>
+                </div>
                 {showStudyProgress && (
                   <div className="border-t p-3 space-y-3">
                     {studyProgressLoading ? (

@@ -288,6 +288,7 @@ export interface IStorage {
   // Progress operations
   getUserProgress(userId: string, studyId?: string): Promise<UserProgress[]>;
   updateProgress(userId: string, studyId: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
+  fixUserStudyProgress(userId: string): Promise<{ fixedCount: number; checkedCount: number }>;
   updateUserStreak(userId: string, userLocalDate?: Date): Promise<void>;
   getWeeklyStudyCompletions(userId: string): Promise<number>;
   markStudyStarted(userId: string, studyId: string): Promise<void>;
@@ -1488,40 +1489,53 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Auto-complete the study if every lesson in it is now complete.
-    // Only flips to 'completed' once; idempotent if already completed.
-    if (!existingStudyProgress || existingStudyProgress.status !== 'completed') {
-      const studyLessonRows = await db
-        .select({ id: studyLessons.id })
-        .from(studyLessons)
-        .where(eq(studyLessons.studyId, lesson.studyId));
+    // We ALWAYS recompute (no early-out) so historical rows that drifted
+    // out of sync — e.g. from older code that didn't flip status, or from
+    // the admin force-complete endpoint that didn't set isCompleted — get
+    // healed the next time any lesson in the study is touched.
+    const studyLessonRows = await db
+      .select({ id: studyLessons.id })
+      .from(studyLessons)
+      .where(eq(studyLessons.studyId, lesson.studyId));
 
-      const totalLessons = studyLessonRows.length;
-      if (totalLessons > 0) {
-        const lessonIds = studyLessonRows.map(l => l.id);
-        const completedRows = await db
-          .select({ id: userLessonProgress.lessonId })
-          .from(userLessonProgress)
-          .where(and(
-            eq(userLessonProgress.userId, userId),
-            eq(userLessonProgress.isCompleted, true),
-            inArray(userLessonProgress.lessonId, lessonIds)
-          ));
+    const totalLessons = studyLessonRows.length;
+    if (totalLessons > 0) {
+      const lessonIds = studyLessonRows.map(l => l.id);
+      const completedRows = await db
+        .select({ id: userLessonProgress.lessonId })
+        .from(userLessonProgress)
+        .where(and(
+          eq(userLessonProgress.userId, userId),
+          eq(userLessonProgress.isCompleted, true),
+          inArray(userLessonProgress.lessonId, lessonIds)
+        ));
 
-        const completedCount = new Set(completedRows.map(r => r.id)).size;
-        if (completedCount >= totalLessons) {
-          await db
-            .update(userProgress)
-            .set({
+      const completedCount = new Set(completedRows.map(r => r.id)).size;
+      if (completedCount >= totalLessons) {
+        // Idempotent upsert — guarantees status / isCompleted / completedAt
+        // are all set together, regardless of whether the row existed before.
+        // Preserve the original completedAt if one is already set so the
+        // public profile doesn't keep "shifting" the completion date forward.
+        const preservedCompletedAt = existingStudyProgress?.completedAt ?? now;
+        await db
+          .insert(userProgress)
+          .values({
+            userId,
+            studyId: lesson.studyId,
+            status: 'completed',
+            isCompleted: true,
+            completedAt: preservedCompletedAt,
+            lastAccessedAt: now,
+          })
+          .onConflictDoUpdate({
+            target: [userProgress.userId, userProgress.studyId],
+            set: {
               status: 'completed',
               isCompleted: true,
-              completedAt: now,
-            })
-            .where(and(
-              eq(userProgress.userId, userId),
-              eq(userProgress.studyId, lesson.studyId),
-              ne(userProgress.status, 'completed')
-            ));
-        }
+              completedAt: preservedCompletedAt,
+              lastAccessedAt: now,
+            },
+          });
       }
     }
 
@@ -2007,7 +2021,99 @@ export class DatabaseStorage implements IStorage {
       return newProgress;
     }
   }
-  
+
+  // Backfill `user_progress` rows by reading `user_lesson_progress`.
+  // For every study where the user has completed lessons, recompute whether
+  // *all* lessons are now done. If so, ensure the parent `user_progress`
+  // row reflects (status='completed', isCompleted=true, completedAt=set).
+  //
+  // The completedAt is set to YESTERDAY at noon (server time) so that the
+  // user can still complete TODAY's next-study-in-series lesson without
+  // running into the 24-hr drip gate (which uses completedAt + next midnight).
+  async fixUserStudyProgress(userId: string): Promise<{ fixedCount: number; checkedCount: number }> {
+    // Yesterday at noon — gives the drip gate plenty of margin.
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(12, 0, 0, 0);
+
+    // Find every study this user has any completed lesson in.
+    const studyIdRows = await db
+      .selectDistinct({ studyId: studyLessons.studyId })
+      .from(studyLessons)
+      .innerJoin(userLessonProgress, eq(userLessonProgress.lessonId, studyLessons.id))
+      .where(and(
+        eq(userLessonProgress.userId, userId),
+        eq(userLessonProgress.isCompleted, true),
+      ));
+
+    let fixedCount = 0;
+    const checkedCount = studyIdRows.length;
+
+    for (const { studyId } of studyIdRows) {
+      const allLessonRows = await db
+        .select({ id: studyLessons.id })
+        .from(studyLessons)
+        .where(eq(studyLessons.studyId, studyId));
+      const total = allLessonRows.length;
+      if (total === 0) continue;
+
+      const lessonIds = allLessonRows.map(l => l.id);
+      const completedRows = await db
+        .select({ id: userLessonProgress.lessonId })
+        .from(userLessonProgress)
+        .where(and(
+          eq(userLessonProgress.userId, userId),
+          eq(userLessonProgress.isCompleted, true),
+          inArray(userLessonProgress.lessonId, lessonIds),
+        ));
+      const completedCount = new Set(completedRows.map(r => r.id)).size;
+      if (completedCount < total) continue; // not actually complete — skip
+
+      const [existing] = await db
+        .select()
+        .from(userProgress)
+        .where(and(
+          eq(userProgress.userId, userId),
+          eq(userProgress.studyId, studyId),
+        ));
+
+      const needsFix =
+        !existing ||
+        existing.status !== 'completed' ||
+        existing.isCompleted !== true ||
+        !existing.completedAt;
+
+      if (!needsFix) continue;
+
+      // Preserve any existing completedAt timestamp; only invent yesterday
+      // when none has ever been recorded.
+      const completedAt = existing?.completedAt ?? yesterday;
+
+      await db
+        .insert(userProgress)
+        .values({
+          userId,
+          studyId,
+          status: 'completed',
+          isCompleted: true,
+          completedAt,
+          lastAccessedAt: existing?.lastAccessedAt ?? yesterday,
+        })
+        .onConflictDoUpdate({
+          target: [userProgress.userId, userProgress.studyId],
+          set: {
+            status: 'completed',
+            isCompleted: true,
+            completedAt,
+          },
+        });
+
+      fixedCount++;
+    }
+
+    return { fixedCount, checkedCount };
+  }
+
   // Track study activity for a new day - increments totalActiveDays once per calendar day
   async trackStudyActivityDay(userId: string, userLocalDate?: Date): Promise<void> {
     // Use user's local date if provided, otherwise fall back to server date
