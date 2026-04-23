@@ -220,6 +220,7 @@ import {
   getDateStringInTimezone,
   getStartOfDayInTimezone,
   getStartOfNextDayInTimezone,
+  getYmdAsUtcMidnight,
 } from "./timezone-utils";
 
 export interface IStorage {
@@ -2752,18 +2753,22 @@ export class DatabaseStorage implements IStorage {
 
   // Devotional operations
   async getTodaysDevotional(): Promise<Devotional | undefined> {
-    // Anchor "today" to the ministry's home timezone (CST/CDT), not the
-    // container's UTC clock — otherwise devotionals rotate at 7pm local.
-    const today = getStartOfDayInTimezone(DEFAULT_TIMEZONE);
-    const tomorrow = getStartOfNextDayInTimezone(DEFAULT_TIMEZONE);
+    // Devotionals are stored as UTC-midnight "date labels" (admin UI inserts
+    // `new Date(data.date + 'T00:00:00Z')`). To roll over at midnight CST/CDT
+    // (not midnight UTC, which is 7pm local), we compute today's YYYY-MM-DD
+    // in the ministry's timezone and compare against the matching UTC labels.
+    const todayYmd = getDateStringInTimezone(new Date(), DEFAULT_TIMEZONE);
+    const tomorrowYmd = addDaysToYmd(todayYmd, 1);
+    const todayLabel = getYmdAsUtcMidnight(todayYmd);
+    const tomorrowLabel = getYmdAsUtcMidnight(tomorrowYmd);
 
     // First try to get a devotional with today's exact date
     const [todayDevotional] = await db
       .select()
       .from(devotionals)
       .where(and(
-        sql`${devotionals.date} >= ${today}`,
-        sql`${devotionals.date} < ${tomorrow}`
+        sql`${devotionals.date} >= ${todayLabel}`,
+        sql`${devotionals.date} < ${tomorrowLabel}`
       ))
       .limit(1);
 
@@ -2779,10 +2784,12 @@ export class DatabaseStorage implements IStorage {
 
     if (allDevotionals.length === 0) return undefined;
 
-    // Use a fixed epoch (Jan 1, 2026 CST) to calculate a stable day index
-    // that also advances at midnight CST.
-    const epoch = getStartOfDayInTimezone(DEFAULT_TIMEZONE, new Date('2026-01-01T12:00:00Z')).getTime();
-    const dayIndex = Math.floor((today.getTime() - epoch) / (1000 * 60 * 60 * 24));
+    // Use a fixed epoch (Jan 1, 2026) as a UTC-midnight date label and compute
+    // the day index from today's CST-anchored UTC-midnight label. Both are
+    // UTC-midnight Dates 24h apart per calendar day, so dayIndex advances at
+    // midnight CST (not midnight UTC).
+    const epoch = getYmdAsUtcMidnight('2026-01-01').getTime();
+    const dayIndex = Math.floor((todayLabel.getTime() - epoch) / (1000 * 60 * 60 * 24));
     const index = ((dayIndex % allDevotionals.length) + allDevotionals.length) % allDevotionals.length;
 
     return allDevotionals[index];
@@ -2883,15 +2890,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableDevotionalsWithoutNotifications(): Promise<Devotional[]> {
-    // "Today" anchored to ministry timezone so the every-15-min cron only
-    // fires the new-devotional push once we've actually crossed midnight CST.
-    const tomorrow = getStartOfNextDayInTimezone(DEFAULT_TIMEZONE);
+    // Devotionals are stored as UTC-midnight date labels. We want a row to
+    // become "available" only once we've crossed midnight CST/CDT for that
+    // label — so compare against tomorrow's CST date converted back to its
+    // UTC-midnight label. (At 11:30pm CST the row is excluded; at 12:05am
+    // CST the next day, it's included.)
+    const todayYmdCst = getDateStringInTimezone(new Date(), DEFAULT_TIMEZONE);
+    const tomorrowLabel = getYmdAsUtcMidnight(addDaysToYmd(todayYmdCst, 1));
 
     return await db
       .select()
       .from(devotionals)
       .where(and(
-        sql`${devotionals.date} < ${tomorrow}`,
+        sql`${devotionals.date} < ${tomorrowLabel}`,
         eq(devotionals.notificationsSent, false)
       ));
   }

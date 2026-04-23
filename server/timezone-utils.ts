@@ -53,6 +53,14 @@ export function getStartOfDayInTimezone(timezone: string = DEFAULT_TIMEZONE, ref
   return getStartOfDayForYmdInTimezone(getDateStringInTimezone(ref, timezone), timezone);
 }
 
+// Returns a Date representing midnight UTC for the given YYYY-MM-DD.
+// Use this when the DB column stores dates as "date labels" at UTC midnight
+// (e.g. devotionals.date created via `new Date('2026-04-23T00:00:00Z')`),
+// rather than as actual local-midnight instants.
+export function getYmdAsUtcMidnight(ymd: string): Date {
+  return new Date(`${ymd}T00:00:00Z`);
+}
+
 // DST-safe calendar-day arithmetic on a YYYY-MM-DD string.
 // Adds `days` (can be negative) and returns the resulting YYYY-MM-DD.
 export function addDaysToYmd(ymd: string, days: number): string {
