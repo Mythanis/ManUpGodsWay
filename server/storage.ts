@@ -1881,6 +1881,10 @@ export class DatabaseStorage implements IStorage {
         studyId: userProgress.studyId,
         currentDay: userProgress.currentDay,
         status: userProgress.status,
+        // Include isCompleted so the profile/account page can count
+        // completed studies — the frontend filters on `p.isCompleted`
+        // and without this field every record looked unfinished.
+        isCompleted: userProgress.isCompleted,
         documentScrollPosition: userProgress.documentScrollPosition,
         lastAccessedAt: userProgress.lastAccessedAt,
         completedAt: userProgress.completedAt,

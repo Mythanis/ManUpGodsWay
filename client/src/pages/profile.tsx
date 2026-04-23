@@ -127,6 +127,51 @@ export default function Profile() {
     retry: false,
   });
 
+  // Pull the back-counted forum-post total (discussions + replies) for
+  // this user. The endpoint already aggregates both tables on the server,
+  // so existing posts/replies created before today are included.
+  const { data: userProfileStats } = useQuery<{
+    studiesCompleted: number;
+    daysActive: number;
+    forumPosts: number;
+  }>({
+    queryKey: ["/api/users", (user as any)?.id, "profile"],
+    enabled: !!(user as any)?.id,
+    retry: false,
+  });
+
+  // Consecutive-days streak — mirrors the home page's "track progress"
+  // counter so both screens always read the same number. Sourced from the
+  // shared `appOpens` localStorage key the home page maintains; we
+  // *don't* re-record today's open here so this page is purely a
+  // read-out of the home page's count.
+  const [appOpenStreak, setAppOpenStreak] = useState(0);
+  useEffect(() => {
+    const calc = () => {
+      try {
+        const raw = localStorage.getItem('appOpens');
+        const opens: string[] = raw ? JSON.parse(raw) : [];
+        const sorted = opens
+          .map(s => new Date(s))
+          .filter(d => !isNaN(d.getTime()))
+          .sort((a, b) => b.getTime() - a.getTime());
+        let streak = 0;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        for (const d of sorted) {
+          d.setHours(0, 0, 0, 0);
+          const diff = Math.floor((today.getTime() - d.getTime()) / 86400000);
+          if (diff === streak) streak++;
+          else break;
+        }
+        setAppOpenStreak(streak);
+      } catch {
+        setAppOpenStreak(0);
+      }
+    };
+    calc();
+  }, []);
+
   const { data: rations } = useQuery<{
     balance: number;
     rank: string;
@@ -341,13 +386,13 @@ export default function Profile() {
             </div>
             <div className="text-center bg-black/20 py-3 px-2 border-2 border-ministry-gold-exact">
               <p className="text-2xl font-black" data-testid="text-streak-days">
-                {user?.streakDays || 0}
+                {appOpenStreak}
               </p>
-              <p className="text-xs text-ministry-gold-exact font-bold uppercase tracking-wide">Days</p>
+              <p className="text-[10px] leading-tight text-ministry-gold-exact font-bold uppercase tracking-wide">Consecutive<br/>Days Streak</p>
             </div>
             <div className="text-center bg-black/20 py-3 px-2 border-2 border-ministry-gold-exact">
               <p className="text-2xl font-black" data-testid="text-forum-posts">
-                0
+                {userProfileStats?.forumPosts ?? 0}
               </p>
               <p className="text-xs text-ministry-gold-exact font-bold uppercase tracking-wide">Posts</p>
             </div>
