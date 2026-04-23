@@ -17054,6 +17054,151 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // Exercise Sidedness Reviews — admin queue for AI-proposed sidedness classifications
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  app.get('/api/admin/exercise-sidedness-reviews', isAuthenticated, requireAdmin, async (req: any, res: any) => {
+    try {
+      const limit = Math.min(Math.max(1, Number(req.query.limit) || 30), 200);
+      const offset = Math.max(0, Number(req.query.offset) || 0);
+      const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+      const statusFilter = typeof req.query.status === 'string' ? req.query.status : 'pending';
+      const confidenceFilter = typeof req.query.confidence === 'string' ? req.query.confidence : undefined;
+
+      const conditions: any[] = [eq(schema.exerciseSidednessReviews.status, statusFilter)];
+      if (search) conditions.push(ilike(schema.exerciseSidednessReviews.exerciseName, `%${search}%`));
+      if (confidenceFilter) conditions.push(eq(schema.exerciseSidednessReviews.confidence, confidenceFilter));
+
+      const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
+
+      const rows = await db
+        .select({
+          id: schema.exerciseSidednessReviews.id,
+          exerciseId: schema.exerciseSidednessReviews.exerciseId,
+          exerciseName: schema.exerciseSidednessReviews.exerciseName,
+          proposedSidedness: schema.exerciseSidednessReviews.proposedSidedness,
+          reasoning: schema.exerciseSidednessReviews.reasoning,
+          confidence: schema.exerciseSidednessReviews.confidence,
+          status: schema.exerciseSidednessReviews.status,
+          approvedSidedness: schema.exerciseSidednessReviews.approvedSidedness,
+          reviewedAt: schema.exerciseSidednessReviews.reviewedAt,
+          processedAt: schema.exerciseSidednessReviews.processedAt,
+          currentSidedness: schema.exercises.sidedness,
+        })
+        .from(schema.exerciseSidednessReviews)
+        .leftJoin(schema.exercises, eq(schema.exerciseSidednessReviews.exerciseId, schema.exercises.id))
+        .where(whereClause)
+        .orderBy(asc(schema.exerciseSidednessReviews.exerciseId))
+        .limit(limit)
+        .offset(offset);
+
+      const [{ total }] = await db
+        .select({ total: count() })
+        .from(schema.exerciseSidednessReviews)
+        .where(whereClause);
+
+      // Counts per status for tab badges
+      const statusCounts = await db
+        .select({ status: schema.exerciseSidednessReviews.status, cnt: count() })
+        .from(schema.exerciseSidednessReviews)
+        .groupBy(schema.exerciseSidednessReviews.status);
+
+      const counts: Record<string, number> = { pending: 0, approved: 0, rejected: 0 };
+      for (const row of statusCounts) counts[row.status] = Number(row.cnt);
+
+      res.json({ rows, total: Number(total), limit, offset, counts });
+    } catch (err: any) {
+      console.error('[sidedness-reviews] list error:', err.message);
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post('/api/admin/exercise-sidedness-reviews/:id/approve', isAuthenticated, requireAdmin, async (req: any, res: any) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const { sidedness } = req.body;
+      const valid = ['bilateral', 'unilateral', 'alternating'];
+      if (!valid.includes(sidedness)) return res.status(400).json({ message: 'Invalid sidedness value' });
+
+      const [review] = await db
+        .select()
+        .from(schema.exerciseSidednessReviews)
+        .where(eq(schema.exerciseSidednessReviews.id, id))
+        .limit(1);
+      if (!review) return res.status(404).json({ message: 'Review not found' });
+
+      // Write to exercises table
+      await db
+        .update(schema.exercises)
+        .set({ sidedness: sidedness as any, updatedAt: new Date() })
+        .where(eq(schema.exercises.id, review.exerciseId));
+
+      // Mark review approved
+      await db
+        .update(schema.exerciseSidednessReviews)
+        .set({ status: 'approved', approvedSidedness: sidedness as any, reviewedAt: new Date() })
+        .where(eq(schema.exerciseSidednessReviews.id, id));
+
+      res.json({ ok: true });
+    } catch (err: any) {
+      console.error('[sidedness-reviews] approve error:', err.message);
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post('/api/admin/exercise-sidedness-reviews/:id/reject', isAuthenticated, requireAdmin, async (req: any, res: any) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      await db
+        .update(schema.exerciseSidednessReviews)
+        .set({ status: 'rejected', reviewedAt: new Date() })
+        .where(eq(schema.exerciseSidednessReviews.id, id));
+      res.json({ ok: true });
+    } catch (err: any) {
+      console.error('[sidedness-reviews] reject error:', err.message);
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post('/api/admin/exercise-sidedness-reviews/bulk-approve', isAuthenticated, requireAdmin, async (req: any, res: any) => {
+    try {
+      const { confidence, search } = req.body as { confidence?: string; search?: string };
+
+      const conditions: any[] = [eq(schema.exerciseSidednessReviews.status, 'pending')];
+      if (confidence) conditions.push(eq(schema.exerciseSidednessReviews.confidence, confidence));
+      if (search) conditions.push(ilike(schema.exerciseSidednessReviews.exerciseName, `%${search}%`));
+      const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
+
+      const pending = await db
+        .select({
+          id: schema.exerciseSidednessReviews.id,
+          exerciseId: schema.exerciseSidednessReviews.exerciseId,
+          proposedSidedness: schema.exerciseSidednessReviews.proposedSidedness,
+        })
+        .from(schema.exerciseSidednessReviews)
+        .where(whereClause);
+
+      let approved = 0;
+      for (const r of pending) {
+        await db
+          .update(schema.exercises)
+          .set({ sidedness: r.proposedSidedness as any, updatedAt: new Date() })
+          .where(eq(schema.exercises.id, r.exerciseId));
+        await db
+          .update(schema.exerciseSidednessReviews)
+          .set({ status: 'approved', approvedSidedness: r.proposedSidedness as any, reviewedAt: new Date() })
+          .where(eq(schema.exerciseSidednessReviews.id, r.id));
+        approved++;
+      }
+
+      res.json({ ok: true, approved });
+    } catch (err: any) {
+      console.error('[sidedness-reviews] bulk-approve error:', err.message);
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
 
   return httpServer;
 }

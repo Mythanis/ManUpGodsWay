@@ -35,8 +35,9 @@ import StoreManagement from "@/components/admin/store-management";
 import ManUpLinksManagement from "@/components/admin/man-up-links-management";
 import FlagManagement from "@/components/admin/flag-management";
 import ExerciseInstructionReviews from "@/components/admin/exercise-instruction-reviews";
+import ExerciseSidednessReviews from "@/components/admin/exercise-sidedness-reviews";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio, FileText, Coins, ShoppingBag, ExternalLink, Flag, ClipboardCheck } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio, FileText, Coins, ShoppingBag, ExternalLink, Flag, ClipboardCheck, Layers } from "lucide-react";
 
 interface Study {
   id: string;
@@ -82,6 +83,7 @@ const adminTabs = [
   { id: "users", label: "Users", icon: Users },
   { id: "flags", label: "Flags", icon: Flag },
   { id: "instruction-reviews", label: "Instruction Reviews", icon: ClipboardCheck },
+  { id: "sidedness-reviews", label: "Sidedness Reviews", icon: Layers },
 ];
 
 export default function Admin() {
@@ -885,6 +887,18 @@ export default function Admin() {
                 AI-reviewed exercise instructions from the Claude audit. 1,390 corrections were applied automatically — review them here and revert any that look wrong.
               </p>
               <ExerciseInstructionReviews />
+            </div>
+          )}
+
+          {activeTab === "sidedness-reviews" && (
+            <div>
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-1">Exercise Sidedness Reviews</h2>
+              <p className="text-xs text-gray-500 mb-4">
+                Claude-proposed bilateral / unilateral / alternating classifications for every exercise.
+                Approve each verdict to write it to the live exercise library, or override the value before approving.
+                Run <code className="bg-gray-100 px-1 rounded text-[11px]">npx tsx scripts/classify-exercise-sidedness.ts --confirm</code> from the shell to populate the queue.
+              </p>
+              <ExerciseSidednessReviews />
             </div>
           )}
           </div>

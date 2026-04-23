@@ -1998,6 +1998,36 @@ export const insertExerciseInstructionReviewSchema = createInsertSchema(exercise
 export type ExerciseInstructionReview = typeof exerciseInstructionReviews.$inferSelect;
 export type InsertExerciseInstructionReview = z.infer<typeof insertExerciseInstructionReviewSchema>;
 
+// Exercise sidedness classification reviews — populated by scripts/classify-exercise-sidedness.ts
+// Each row is one Claude sidedness verdict for one exercise. Admin approves/rejects in the UI.
+export const exerciseSidednessReviews = pgTable("exercise_sidedness_reviews", {
+  id: serial("id").primaryKey(),
+  exerciseId: integer("exercise_id").notNull().unique(),
+  exerciseName: varchar("exercise_name").notNull(),
+  // Claude's proposed value — what gets written to exercises.sidedness on approval
+  proposedSidedness: varchar("proposed_sidedness").notNull().$type<'bilateral' | 'unilateral' | 'alternating'>(),
+  // Claude's one-sentence reason
+  reasoning: text("reasoning").notNull(),
+  // 'high' for clear-cut exercises, 'low' for ambiguous ones (admin should double-check)
+  confidence: varchar("confidence").notNull().default("high").$type<'high' | 'low'>(),
+  rawModelResponse: text("raw_model_response"),
+  // pending → awaiting admin action | approved → written to exercises table | rejected → skipped
+  status: varchar("status").notNull().default("pending"),
+  // The value admin ultimately chose (may differ from proposedSidedness after a change-and-approve)
+  approvedSidedness: varchar("approved_sidedness").$type<'bilateral' | 'unilateral' | 'alternating'>(),
+  reviewedAt: timestamp("reviewed_at"),
+  processedAt: timestamp("processed_at").defaultNow(),
+});
+
+export const insertExerciseSidednessReviewSchema = createInsertSchema(exerciseSidednessReviews).omit({
+  id: true,
+  reviewedAt: true,
+  processedAt: true,
+});
+
+export type ExerciseSidednessReview = typeof exerciseSidednessReviews.$inferSelect;
+export type InsertExerciseSidednessReview = z.infer<typeof insertExerciseSidednessReviewSchema>;
+
 // Subscription settings - single row config for the one-tier subscription model
 export const subscriptionSettings = pgTable("subscription_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
