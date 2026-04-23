@@ -16711,12 +16711,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const nutritionProfileInputSchema = z.object({
     sex: z.enum(['male', 'female']),
-    ageYears: z.number().int().min(18).max(120),
+    ageYears: z.number().int().min(13).max(99),
     heightCm: z.number().min(50).max(280),
     weightKg: z.number().min(25).max(400),
-    goalWeightKg: z.number().min(25).max(400),
+    goalWeightKg: z.number().min(25).max(400).optional(),
     goalType: z.enum(['lose', 'maintain', 'gain']),
-    timelineWeeks: z.number().int().min(1).max(260),
+    timelineWeeks: z.number().int().min(1).max(260).optional(),
     activityLevel: z.enum(['sedentary', 'light', 'moderate', 'very', 'extra']),
     weightUnit: z.enum(['lb', 'kg']).default('lb'),
     heightUnit: z.enum(['in', 'cm']).default('in'),
@@ -16733,20 +16733,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ageYears: parsed.ageYears,
         heightCm: parsed.heightCm,
         weightKg: parsed.weightKg,
-        goalWeightKg: parsed.goalWeightKg,
         goalType: parsed.goalType,
-        timelineWeeks: parsed.timelineWeeks,
         activity: parsed.activityLevel,
       });
+      // The new simplified flow no longer asks for goal weight or timeline.
+      // The DB columns are still NOT NULL for back-compat, so default them.
+      const goalWeightKg = parsed.goalWeightKg ?? parsed.weightKg;
+      const timelineWeeks = parsed.timelineWeeks ?? 12;
       const saved = await storage.upsertNutritionProfile({
         userId,
         sex: parsed.sex,
         ageYears: parsed.ageYears,
         heightCm: parsed.heightCm,
         weightKg: parsed.weightKg,
-        goalWeightKg: parsed.goalWeightKg,
+        goalWeightKg,
         goalType: parsed.goalType,
-        timelineWeeks: parsed.timelineWeeks,
+        timelineWeeks,
         activityLevel: parsed.activityLevel,
         weightUnit: parsed.weightUnit,
         heightUnit: parsed.heightUnit,
@@ -16754,7 +16756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maintenanceKcal: Math.round(result.maintenanceKcal),
         targetKcal: result.targetKcal,
         floorApplied: result.floorApplied,
-        effectiveTimelineWeeks: result.effectiveTimelineWeeks,
+        effectiveTimelineWeeks: timelineWeeks,
       });
       res.json(saved);
     } catch (error) {

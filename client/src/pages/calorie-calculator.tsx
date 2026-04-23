@@ -12,9 +12,12 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   ACTIVITY_LABELS,
+  ACTIVITY_DESCRIPTIONS,
+  ACTIVITY_MULTIPLIERS,
+  GOAL_LABELS,
+  GOAL_DESCRIPTIONS,
   computeTarget,
   feetInToCm,
-  inToCm,
   lbToKg,
   kgToLb,
   cmToIn,
@@ -23,7 +26,7 @@ import {
   type GoalType,
 } from "@shared/calorie-math";
 
-type Step = "disclaimer" | "basics" | "activity" | "goal" | "result";
+type Step = "disclaimer" | "basics" | "goal" | "activity" | "result";
 
 interface FormState {
   sex: Sex;
@@ -36,8 +39,6 @@ interface FormState {
   heightCm: string;
   activity: ActivityLevel;
   goalType: GoalType;
-  goalWeight: string;
-  timelineWeeks: string;
 }
 
 const DEFAULTS: FormState = {
@@ -51,16 +52,16 @@ const DEFAULTS: FormState = {
   heightCm: "",
   activity: "moderate",
   goalType: "lose",
-  goalWeight: "",
-  timelineWeeks: "12",
 };
+
+const GOAL_ORDER: GoalType[] = ["lose", "maintain", "gain"];
+const ACTIVITY_ORDER: ActivityLevel[] = ["sedentary", "light", "moderate", "very", "extra"];
 
 function formStateFromProfile(p: any): FormState {
   if (!p) return DEFAULTS;
   const weightUnit = (p.weightUnit as "lb" | "kg") ?? "lb";
   const heightUnit = (p.heightUnit as "in" | "cm") ?? "in";
   const weight = weightUnit === "kg" ? p.weightKg : kgToLb(p.weightKg);
-  const goalWeight = weightUnit === "kg" ? p.goalWeightKg : kgToLb(p.goalWeightKg);
   let heightFeet = "", heightInches = "", heightCm = "";
   if (heightUnit === "cm") {
     heightCm = String(Math.round(p.heightCm));
@@ -80,18 +81,13 @@ function formStateFromProfile(p: any): FormState {
     heightCm,
     activity: p.activityLevel,
     goalType: p.goalType,
-    goalWeight: String(Math.round(goalWeight * 10) / 10),
-    timelineWeeks: String(p.timelineWeeks),
   };
 }
 
-function toMetric(form: FormState): { weightKg: number; heightCm: number; goalWeightKg: number } | null {
+function toMetric(form: FormState): { weightKg: number; heightCm: number } | null {
   const w = parseFloat(form.weight);
-  const gw = parseFloat(form.goalWeight || form.weight);
   if (!isFinite(w) || w <= 0) return null;
-  if (!isFinite(gw) || gw <= 0) return null;
   const weightKg = form.weightUnit === "kg" ? w : lbToKg(w);
-  const goalWeightKg = form.weightUnit === "kg" ? gw : lbToKg(gw);
 
   let heightCm: number;
   if (form.heightUnit === "cm") {
@@ -105,7 +101,7 @@ function toMetric(form: FormState): { weightKg: number; heightCm: number; goalWe
     if (!isFinite(inch) || inch < 0) return null;
     heightCm = feetInToCm(ft, inch);
   }
-  return { weightKg, heightCm, goalWeightKg };
+  return { weightKg, heightCm };
 }
 
 export default function CalorieCalculator() {
@@ -116,7 +112,7 @@ export default function CalorieCalculator() {
   const [step, setStep] = useState<Step>("disclaimer");
   const [acknowledged, setAcknowledged] = useState(false);
   const [contra, setContra] = useState({
-    under18: false,
+    under13: false,
     eatingDisorder: false,
     medical: false,
   });
@@ -136,16 +132,13 @@ export default function CalorieCalculator() {
   const computed = useMemo(() => {
     if (!metric) return null;
     const ageNum = parseInt(form.age, 10);
-    const weeks = parseInt(form.timelineWeeks, 10) || 1;
-    if (!isFinite(ageNum) || ageNum < 18) return null;
+    if (!isFinite(ageNum) || ageNum < 13 || ageNum > 99) return null;
     return computeTarget({
       sex: form.sex,
       ageYears: ageNum,
       heightCm: metric.heightCm,
       weightKg: metric.weightKg,
-      goalWeightKg: metric.goalWeightKg,
       goalType: form.goalType,
-      timelineWeeks: weeks,
       activity: form.activity,
     });
   }, [metric, form]);
@@ -154,15 +147,12 @@ export default function CalorieCalculator() {
     mutationFn: async () => {
       if (!metric || !computed) throw new Error("Missing inputs");
       const ageNum = parseInt(form.age, 10);
-      const weeks = parseInt(form.timelineWeeks, 10) || 1;
       return await apiRequest("PUT", "/api/nutrition-profile", {
         sex: form.sex,
         ageYears: ageNum,
         heightCm: metric.heightCm,
         weightKg: metric.weightKg,
-        goalWeightKg: metric.goalWeightKg,
         goalType: form.goalType,
-        timelineWeeks: weeks,
         activityLevel: form.activity,
         weightUnit: form.weightUnit,
         heightUnit: form.heightUnit,
@@ -181,24 +171,23 @@ export default function CalorieCalculator() {
 
   function next() {
     if (step === "disclaimer") setStep("basics");
-    else if (step === "basics") setStep("activity");
-    else if (step === "activity") setStep("goal");
-    else if (step === "goal") setStep("result");
+    else if (step === "basics") setStep("goal");
+    else if (step === "goal") setStep("activity");
+    else if (step === "activity") setStep("result");
   }
   function back() {
-    if (step === "result") setStep("goal");
-    else if (step === "goal") setStep("activity");
-    else if (step === "activity") setStep("basics");
+    if (step === "result") setStep("activity");
+    else if (step === "activity") setStep("goal");
+    else if (step === "goal") setStep("basics");
     else if (step === "basics") setStep("disclaimer");
     else setLocation("/fitness");
   }
 
+  const ageNum = parseInt(form.age, 10);
+  const ageValid = isFinite(ageNum) && ageNum >= 13 && ageNum <= 99;
   const basicsValid =
-    form.sex && form.age && parseInt(form.age, 10) >= 18 && metric &&
+    form.sex && ageValid && metric &&
     (form.heightUnit === "cm" ? !!form.heightCm : !!form.heightFeet);
-  const goalValid =
-    form.goalType === "maintain" ||
-    (form.goalWeight && parseFloat(form.goalWeight) > 0 && parseInt(form.timelineWeeks, 10) > 0);
 
   return (
     <div className="min-h-screen bg-black text-white p-4 pb-24" data-testid="page-calorie-calculator">
@@ -234,7 +223,7 @@ export default function CalorieCalculator() {
 
             <div className="space-y-2 pt-1">
               {([
-                ["under18", "I am under 18 years old"],
+                ["under13", "I am under 13 years old"],
                 ["eatingDisorder", "I have a history of an eating disorder"],
                 ["medical", "I have a medical condition (diabetes, kidney, liver, heart, thyroid) or take medication affecting appetite/metabolism"],
               ] as const).map(([key, label]) => (
@@ -289,19 +278,20 @@ export default function CalorieCalculator() {
             <h2 className="font-black uppercase tracking-wide text-base">Your Basics</h2>
 
             <div>
-              <Label className="text-white/80 text-xs font-bold uppercase">Sex</Label>
-              <RadioGroup
-                value={form.sex}
-                onValueChange={(v) => setForm({ ...form, sex: v as Sex })}
-                className="grid grid-cols-2 gap-2 mt-2"
-              >
+              <Label className="text-white/80 text-xs font-bold uppercase">Biological Sex</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
                 {(["male", "female"] as const).map((s) => (
-                  <label key={s} className={`flex items-center justify-center gap-2 py-3 rounded-sm border-2 cursor-pointer ${form.sex === s ? "bg-[#FCD000] text-black border-black" : "border-white/20 text-white/70"}`}>
-                    <RadioGroupItem value={s} className="sr-only" data-testid={`radio-sex-${s}`} />
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setForm({ ...form, sex: s })}
+                    className={`flex items-center justify-center py-3 rounded-sm border-2 ${form.sex === s ? "bg-[#FCD000] text-black border-black" : "border-white/20 text-white/70 hover:border-white/40"}`}
+                    data-testid={`button-sex-${s}`}
+                  >
                     <span className="font-black uppercase text-sm">{s}</span>
-                  </label>
+                  </button>
                 ))}
-              </RadioGroup>
+              </div>
             </div>
 
             <div>
@@ -310,34 +300,23 @@ export default function CalorieCalculator() {
                 id="age"
                 type="number"
                 inputMode="numeric"
+                min={13}
+                max={99}
+                step={1}
                 value={form.age}
-                onChange={(e) => setForm({ ...form, age: e.target.value })}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  // Strip decimal portion to keep age as a whole number
+                  const cleaned = v.replace(/[^\d]/g, "");
+                  setForm({ ...form, age: cleaned });
+                }}
+                placeholder="13–99"
                 className="mt-1 bg-black border-white/20 text-white"
                 data-testid="input-age"
               />
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center">
-                <Label className="text-white/80 text-xs font-bold uppercase">Current Weight</Label>
-                <Select value={form.weightUnit} onValueChange={(v) => setForm({ ...form, weightUnit: v as "lb" | "kg" })}>
-                  <SelectTrigger className="w-20 h-8 bg-black border-white/20 text-white text-xs" data-testid="select-weight-unit">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="lb">lb</SelectItem>
-                    <SelectItem value="kg">kg</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Input
-                type="number"
-                inputMode="decimal"
-                value={form.weight}
-                onChange={(e) => setForm({ ...form, weight: e.target.value })}
-                className="mt-1 bg-black border-white/20 text-white"
-                data-testid="input-weight"
-              />
+              {form.age && !ageValid && (
+                <p className="text-red-400 text-[11px] mt-1">Age must be a whole number between 13 and 99.</p>
+              )}
             </div>
 
             <div>
@@ -387,11 +366,69 @@ export default function CalorieCalculator() {
               )}
             </div>
 
+            <div>
+              <div className="flex justify-between items-center">
+                <Label className="text-white/80 text-xs font-bold uppercase">Current Weight</Label>
+                <Select value={form.weightUnit} onValueChange={(v) => setForm({ ...form, weightUnit: v as "lb" | "kg" })}>
+                  <SelectTrigger className="w-20 h-8 bg-black border-white/20 text-white text-xs" data-testid="select-weight-unit">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lb">lbs</SelectItem>
+                    <SelectItem value="kg">kg</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Input
+                type="number"
+                inputMode="decimal"
+                value={form.weight}
+                onChange={(e) => setForm({ ...form, weight: e.target.value })}
+                className="mt-1 bg-black border-white/20 text-white"
+                data-testid="input-weight"
+              />
+            </div>
+
             <Button
               onClick={next}
               disabled={!basicsValid}
               className="w-full bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black"
               data-testid="button-next-basics"
+            >
+              Continue <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        )}
+
+        {step === "goal" && (
+          <div className="liquid-black border-2 border-[#FCD000]/40 rounded-sm p-5 space-y-4" data-testid="step-goal">
+            <h2 className="font-black uppercase tracking-wide text-base">Your Goal</h2>
+            <RadioGroup
+              value={form.goalType}
+              onValueChange={(v) => setForm({ ...form, goalType: v as GoalType })}
+              className="space-y-2"
+            >
+              {GOAL_ORDER.map((g) => {
+                const selected = form.goalType === g;
+                return (
+                  <label
+                    key={g}
+                    className={`flex items-start gap-3 p-4 rounded-sm border-2 cursor-pointer transition-colors ${selected ? "bg-[#FCD000]/20 border-[#FCD000]" : "border-white/20 hover:border-white/40"}`}
+                    data-testid={`card-goal-${g}`}
+                  >
+                    <RadioGroupItem value={g} className="mt-1" data-testid={`radio-goal-${g}`} />
+                    <div className="flex-1">
+                      <div className="font-black uppercase text-sm tracking-wide">{GOAL_LABELS[g]}</div>
+                      <div className="text-white/60 text-xs mt-0.5">{GOAL_DESCRIPTIONS[g]}</div>
+                    </div>
+                  </label>
+                );
+              })}
+            </RadioGroup>
+            <Button
+              onClick={next}
+              className="w-full bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black"
+              data-testid="button-next-goal"
             >
               Continue <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -406,87 +443,31 @@ export default function CalorieCalculator() {
               onValueChange={(v) => setForm({ ...form, activity: v as ActivityLevel })}
               className="space-y-2"
             >
-              {(Object.keys(ACTIVITY_LABELS) as ActivityLevel[]).map((a) => (
-                <label
-                  key={a}
-                  className={`flex items-center gap-3 p-3 rounded-sm border-2 cursor-pointer ${form.activity === a ? "bg-[#FCD000]/20 border-[#FCD000]" : "border-white/20"}`}
-                >
-                  <RadioGroupItem value={a} data-testid={`radio-activity-${a}`} />
-                  <span className="text-sm">{ACTIVITY_LABELS[a]}</span>
-                </label>
-              ))}
+              {ACTIVITY_ORDER.map((a) => {
+                const selected = form.activity === a;
+                return (
+                  <label
+                    key={a}
+                    className={`flex items-start gap-3 p-4 rounded-sm border-2 cursor-pointer transition-colors ${selected ? "bg-[#FCD000]/20 border-[#FCD000]" : "border-white/20 hover:border-white/40"}`}
+                    data-testid={`card-activity-${a}`}
+                  >
+                    <RadioGroupItem value={a} className="mt-1" data-testid={`radio-activity-${a}`} />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-black uppercase text-sm tracking-wide">{ACTIVITY_LABELS[a]}</span>
+                        <span className="text-[#FCD000] font-black text-xs tabular-nums">×{ACTIVITY_MULTIPLIERS[a]}</span>
+                      </div>
+                      <div className="text-white/60 text-xs mt-0.5">{ACTIVITY_DESCRIPTIONS[a]}</div>
+                    </div>
+                  </label>
+                );
+              })}
             </RadioGroup>
             <Button
               onClick={next}
+              disabled={!computed}
               className="w-full bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black"
               data-testid="button-next-activity"
-            >
-              Continue <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-        )}
-
-        {step === "goal" && (
-          <div className="liquid-black border-2 border-[#FCD000]/40 rounded-sm p-5 space-y-5" data-testid="step-goal">
-            <h2 className="font-black uppercase tracking-wide text-base">Your Goal</h2>
-
-            <div>
-              <Label className="text-white/80 text-xs font-bold uppercase">Goal</Label>
-              <RadioGroup
-                value={form.goalType}
-                onValueChange={(v) => setForm({ ...form, goalType: v as GoalType })}
-                className="grid grid-cols-3 gap-2 mt-2"
-              >
-                {(["lose", "maintain", "gain"] as const).map((g) => (
-                  <label key={g} className={`flex flex-col items-center justify-center py-3 rounded-sm border-2 cursor-pointer text-center ${form.goalType === g ? "bg-[#FCD000] text-black border-black" : "border-white/20 text-white/70"}`}>
-                    <RadioGroupItem value={g} className="sr-only" data-testid={`radio-goal-${g}`} />
-                    <span className="font-black uppercase text-xs">
-                      {g === "lose" ? "Lose Fat" : g === "gain" ? "Build Muscle" : "Maintain"}
-                    </span>
-                  </label>
-                ))}
-              </RadioGroup>
-            </div>
-
-            {form.goalType !== "maintain" && (
-              <>
-                <div>
-                  <Label className="text-white/80 text-xs font-bold uppercase">
-                    Goal Weight ({form.weightUnit})
-                  </Label>
-                  <Input
-                    type="number"
-                    inputMode="decimal"
-                    value={form.goalWeight}
-                    onChange={(e) => setForm({ ...form, goalWeight: e.target.value })}
-                    className="mt-1 bg-black border-white/20 text-white"
-                    data-testid="input-goal-weight"
-                  />
-                </div>
-                <div>
-                  <Label className="text-white/80 text-xs font-bold uppercase">Timeline (weeks)</Label>
-                  <Input
-                    type="number"
-                    inputMode="numeric"
-                    value={form.timelineWeeks}
-                    onChange={(e) => setForm({ ...form, timelineWeeks: e.target.value })}
-                    className="mt-1 bg-black border-white/20 text-white"
-                    data-testid="input-timeline-weeks"
-                  />
-                  <p className="text-white/40 text-[11px] mt-1">
-                    {form.goalType === "lose"
-                      ? "Safe fat-loss range is roughly 0.25%–1% of body weight per week."
-                      : "Safe muscle-gain range is roughly 0.1%–0.25% of body weight per week."}
-                  </p>
-                </div>
-              </>
-            )}
-
-            <Button
-              onClick={next}
-              disabled={!goalValid || !computed}
-              className="w-full bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black"
-              data-testid="button-next-goal"
             >
               See My Target <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -501,6 +482,9 @@ export default function CalorieCalculator() {
                 {computed.targetKcal.toLocaleString()}
               </div>
               <div className="text-white/60 text-sm font-bold uppercase mt-1">kcal / day</div>
+              <div className="text-white/40 text-[11px] font-bold uppercase mt-2 tracking-wider">
+                {GOAL_LABELS[form.goalType]}
+              </div>
             </div>
 
             <div className="liquid-black border-2 border-white/20 rounded-sm p-4 space-y-2 text-sm">
@@ -509,22 +493,20 @@ export default function CalorieCalculator() {
                 <span className="font-bold tabular-nums">{Math.round(computed.bmr).toLocaleString()} kcal</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/60">Maintenance</span>
+                <span className="text-white/60">TDEE (maintenance)</span>
                 <span className="font-bold tabular-nums">{Math.round(computed.maintenanceKcal).toLocaleString()} kcal</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-white/60">Activity multiplier</span>
+                <span className="font-bold tabular-nums">×{ACTIVITY_MULTIPLIERS[form.activity]}</span>
+              </div>
               {form.goalType !== "maintain" && (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Weekly change</span>
-                    <span className="font-bold tabular-nums">
-                      {form.goalType === "lose" ? "−" : "+"}{computed.weeklyChangeLb.toFixed(2)} lb
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Effective timeline</span>
-                    <span className="font-bold tabular-nums">{computed.effectiveTimelineWeeks} weeks</span>
-                  </div>
-                </>
+                <div className="flex justify-between">
+                  <span className="text-white/60">Goal adjustment</span>
+                  <span className="font-bold tabular-nums">
+                    {form.goalType === "lose" ? "−500" : "+250"} kcal
+                  </span>
+                </div>
               )}
             </div>
 
@@ -532,9 +514,8 @@ export default function CalorieCalculator() {
               <div className="bg-yellow-900/30 border-2 border-yellow-500/40 rounded-sm p-3 flex items-start gap-2">
                 <AlertTriangle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
                 <p className="text-yellow-100 text-xs">
-                  Your goal pace would push calories below the minimum safe floor
-                  ({form.sex === "male" ? "1,500" : "1,200"} kcal). Your target was raised to that floor and the timeline
-                  was extended automatically.
+                  Your calculated target fell below the minimum safe floor
+                  ({form.sex === "male" ? "1,500" : "1,200"} kcal). It has been raised to that floor.
                 </p>
               </div>
             )}
