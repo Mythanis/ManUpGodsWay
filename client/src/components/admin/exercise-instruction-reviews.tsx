@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckCircle, RotateCcw, RefreshCw, ChevronLeft, ChevronRight, Search, AlertTriangle } from "lucide-react";
 
-type View = "corrections" | "matched" | "rejected" | "reverted";
+type View = "corrections" | "matched" | "rejected";
 
 interface ReviewRow {
   id: number;
@@ -35,8 +35,7 @@ const PAGE_SIZE = 25;
 const VIEW_LABELS: Record<View, string> = {
   corrections: "AI Corrections Applied",
   matched: "Already Matched",
-  rejected: "Audit Failures",
-  reverted: "Manually Reverted",
+  rejected: "Rejected / Failed",
 };
 
 const VIEW_DESCRIPTIONS: Record<View, string> = {
@@ -45,9 +44,7 @@ const VIEW_DESCRIPTIONS: Record<View, string> = {
   matched:
     "Claude confirmed these instructions already matched the demo video. No changes were applied.",
   rejected:
-    "These exercises could not be audited — either the video file path is invalid, or the request hit the API rate limit. Click Re-queue to re-audit immediately.",
-  reverted:
-    "An admin reverted these AI corrections and restored the original instructions. Click Re-queue to have Claude re-audit the exercise if you want a second opinion.",
+    "These exercises could not be audited (invalid video path, rate limit, or admin reverted the AI correction). Click Re-queue to re-audit immediately.",
 };
 
 // ── Word-level LCS diff ──────────────────────────────────────────────────────
@@ -274,7 +271,7 @@ export default function ExerciseInstructionReviews() {
     <div className="space-y-4">
       {/* View tabs */}
       <div className="flex gap-2 flex-wrap">
-        {(["corrections", "matched", "rejected", "reverted"] as View[]).map((v) => (
+        {(["corrections", "matched", "rejected"] as View[]).map((v) => (
           <button
             key={v}
             onClick={() => handleViewChange(v)}
@@ -384,7 +381,7 @@ export default function ExerciseInstructionReviews() {
                         </Button>
                       </>
                     )}
-                    {(view === "rejected" || view === "reverted") && (
+                    {view === "rejected" && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -420,15 +417,6 @@ export default function ExerciseInstructionReviews() {
                       <div className="bg-green-50 border border-green-200 rounded p-2.5 text-xs text-gray-700 leading-relaxed">
                         {row.oldInstructions}
                       </div>
-                    </div>
-                  )}
-
-                  {view === "reverted" && row.newInstructions && (
-                    <div className="mt-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">
-                        What the AI changed (then an admin reverted)
-                      </p>
-                      <InstructionDiff old={row.oldInstructions} updated={row.newInstructions} />
                     </div>
                   )}
 

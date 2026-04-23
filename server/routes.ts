@@ -16883,8 +16883,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           conditions.push(eq(schema.exerciseInstructionReviews.needsReview, false));
         } else if (view === 'rejected') {
           conditions.push(eq(schema.exerciseInstructionReviews.status, 'rejected'));
-        } else if (view === 'reverted') {
-          conditions.push(eq(schema.exerciseInstructionReviews.status, 'reverted'));
         }
       }
 
@@ -16938,7 +16936,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(schema.exercises.id, review.exerciseId));
       await db
         .update(schema.exerciseInstructionReviews)
-        .set({ status: 'reverted' })
+        .set({ status: 'rejected' })
         .where(eq(schema.exerciseInstructionReviews.id, id));
 
       res.json({ message: 'Instructions reverted to original', exerciseId: review.exerciseId });
