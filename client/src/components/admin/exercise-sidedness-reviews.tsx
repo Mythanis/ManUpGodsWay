@@ -170,10 +170,24 @@ export default function ExerciseSidednessReviews() {
       apiRequest("POST", `/api/admin/exercise-sidedness-reviews/${id}/reject`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/exercise-sidedness-reviews"] });
-      toast({ title: "Rejected", description: "Review marked as rejected. Re-run the classifier script to re-queue." });
+      toast({ title: "Rejected", description: "Review marked as rejected." });
     },
     onError: (err: any) =>
       toast({ title: "Reject failed", description: err.message, variant: "destructive" }),
+  });
+
+  const requeueMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiRequest("POST", `/api/admin/exercise-sidedness-reviews/${id}/requeue`),
+    onSuccess: (res: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/exercise-sidedness-reviews"] });
+      toast({
+        title: "Re-classified",
+        description: `"${res?.exerciseName}" verdict: ${res?.verdict?.sidedness ?? "?"} (${res?.verdict?.confidence ?? "?"} confidence). Moved back to Pending.`,
+      });
+    },
+    onError: (err: any) =>
+      toast({ title: "Re-classify failed", description: err.message, variant: "destructive" }),
   });
 
   const bulkApproveMutation = useMutation({
@@ -333,7 +347,8 @@ export default function ExerciseSidednessReviews() {
           const isExpanded = expandedId === row.id;
           const isBusy =
             (approveMutation.isPending && (approveMutation.variables as any)?.id === row.id) ||
-            (rejectMutation.isPending && rejectMutation.variables === row.id);
+            (rejectMutation.isPending && rejectMutation.variables === row.id) ||
+            (requeueMutation.isPending && requeueMutation.variables === row.id);
 
           return (
             <Card key={row.id} className={`border ${isBusy ? "opacity-60" : ""}`}>
@@ -428,9 +443,22 @@ export default function ExerciseSidednessReviews() {
 
                   {/* Rejected view */}
                   {status === "rejected" && (
-                    <div className="flex items-center gap-2 text-xs text-red-600 font-semibold shrink-0">
-                      <XCircle className="h-3.5 w-3.5" />
-                      Rejected — re-run classifier script to re-queue
+                    <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-1.5 text-xs text-red-600 font-semibold">
+                        <XCircle className="h-3.5 w-3.5" />
+                        Rejected
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 text-xs border-2 border-blue-500 text-blue-700 hover:bg-blue-50"
+                        onClick={() => requeueMutation.mutate(row.id)}
+                        disabled={requeueMutation.isPending && requeueMutation.variables === row.id}
+                      >
+                        {requeueMutation.isPending && requeueMutation.variables === row.id
+                          ? "Re-classifying…"
+                          : "Re-classify"}
+                      </Button>
                     </div>
                   )}
                 </div>

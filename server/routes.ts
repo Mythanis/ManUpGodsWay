@@ -14,6 +14,7 @@ const execAsync = promisify(exec);
 const require = createRequire(import.meta.url);
 import { storage } from "./storage";
 import { startAuditJob, getAuditJobStatus, isAuditJobRunning, auditSingleExercise } from "./exerciseAuditJob";
+import { reclassifyExerciseSidedness } from "./exerciseSidednessJob";
 import { getNextMidnightInTimezone } from "./drip-utils";
 import { safeTimezone } from "./timezone-utils";
 import { warGroupsService } from "./warGroupsService";
@@ -17173,6 +17174,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ ok: true });
     } catch (err: any) {
       console.error('[sidedness-reviews] reject error:', err.message);
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post('/api/admin/exercise-sidedness-reviews/:id/requeue', isAuthenticated, requireAdmin, async (req: any, res: any) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: 'Invalid review id' });
+
+      const { exerciseName, verdict } = await reclassifyExerciseSidedness(id);
+
+      console.log(`[sidedness-reviews] requeue #${id} "${exerciseName}": ${verdict.sidedness} (${verdict.confidence})`);
+      res.json({ ok: true, exerciseName, verdict });
+    } catch (err: any) {
+      console.error('[sidedness-reviews] requeue error:', err.message);
       res.status(500).json({ message: err.message });
     }
   });
