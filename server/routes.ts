@@ -16841,8 +16841,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/exercise-instruction-reviews', isAuthenticated, requireAdmin, async (req: any, res: any) => {
     try {
-      const limit = Math.min(Number(req.query.limit) || 25, 100);
-      const offset = Number(req.query.offset) || 0;
+      const limit = Math.min(Math.max(1, Number(req.query.limit) || 25), 100);
+      const offset = Math.max(0, Number(req.query.offset) || 0);
       const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
 
       // Support explicit params (status, needsReview) OR the convenience `view` shorthand
@@ -16883,6 +16883,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           conditions.push(eq(schema.exerciseInstructionReviews.needsReview, false));
         } else if (view === 'rejected') {
           conditions.push(eq(schema.exerciseInstructionReviews.status, 'rejected'));
+        } else if (view === 'reverted') {
+          conditions.push(eq(schema.exerciseInstructionReviews.status, 'reverted'));
         }
       }
 
@@ -16936,7 +16938,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(schema.exercises.id, review.exerciseId));
       await db
         .update(schema.exerciseInstructionReviews)
-        .set({ status: 'rejected' })
+        .set({ status: 'reverted' })
         .where(eq(schema.exerciseInstructionReviews.id, id));
 
       res.json({ message: 'Instructions reverted to original', exerciseId: review.exerciseId });
