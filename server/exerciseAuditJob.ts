@@ -19,11 +19,11 @@ const MAX_RETRIES = 4;
 const BASE_RETRY_MS = 5000;
 
 const SYSTEM_PROMPT = `You are a fitness expert reviewing exercise instruction accuracy.
-You will be shown a frame captured from the middle of an exercise demonstration video.
-Compare what the frame shows to the written instructions provided.
+You will be shown three frames captured from an exercise demonstration video — one near the beginning, one near the middle, and one near the end.
+Compare what the frames show to the written instructions provided.
 If they match: respond with {"match": true}
 If they don't match: respond with {"match": false, "corrected_instructions": "..."}
-Base corrected instructions only on what you can see in the video frame.
+Base corrected instructions only on what you can see in the video frames.
 Keep instructions to 2-3 concise steps.`;
 
 export interface AuditJobStatus {
@@ -116,16 +116,22 @@ function getVideoDuration(mp4Path: string): number {
 function extractFrames(mp4Path: string): { tmpDir: string; frames: string[] } {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "audit-frames-"));
   const duration = getVideoDuration(mp4Path);
-  const midPoint = duration * 0.5;
+  const timestamps = [
+    Math.max(0.1, duration * 0.05),
+    duration * 0.5,
+    Math.max(0, duration - 1),
+  ];
   const frames: string[] = [];
-  const outPath = path.join(tmpDir, "frame0.jpg");
-  try {
-    execFileSync("ffmpeg", ["-ss", String(midPoint), "-i", mp4Path, "-frames:v", "1", "-q:v", "5", "-vf", "scale=480:-1", "-y", outPath], {
-      timeout: 30000,
-      stdio: "ignore",
-    });
-    if (fs.existsSync(outPath)) frames.push(outPath);
-  } catch {}
+  for (let i = 0; i < timestamps.length; i++) {
+    const outPath = path.join(tmpDir, `frame${i}.jpg`);
+    try {
+      execFileSync("ffmpeg", ["-ss", String(timestamps[i]), "-i", mp4Path, "-frames:v", "1", "-q:v", "5", "-vf", "scale=480:-1", "-y", outPath], {
+        timeout: 30000,
+        stdio: "ignore",
+      });
+      if (fs.existsSync(outPath)) frames.push(outPath);
+    } catch {}
+  }
   return { tmpDir, frames };
 }
 
