@@ -6,7 +6,8 @@
  *
  * HOW TO RUN
  * ----------
- *   # Dry-run / test (no confirm prompt needed, no rows written):
+ *   # Test on a small batch (still writes review rows; small runs skip the
+ *   # confirm prompt):
  *   npx tsx scripts/audit-exercise-instructions.ts --limit 3
  *
  *   # Run on specific exercise IDs:
@@ -17,6 +18,11 @@
  *
  *   # Re-process already-reviewed exercises:
  *   npx tsx scripts/audit-exercise-instructions.ts --limit 5 --force
+ *
+ *   # Override the system prompt sent to Claude:
+ *   npx tsx scripts/audit-exercise-instructions.ts --limit 3 --system-prompt "..."
+ *   npx tsx scripts/audit-exercise-instructions.ts --limit 3 --system-prompt-file ./prompt.txt
+ *   AUDIT_SYSTEM_PROMPT="..." npx tsx scripts/audit-exercise-instructions.ts --limit 3
  *
  * REVIEWING FLAGGED ROWS
  * ----------------------
@@ -45,7 +51,7 @@ import { exercises, exerciseInstructionReviews } from "../shared/schema";
 import { eq, inArray } from "drizzle-orm";
 import readline from "readline";
 
-const SYSTEM_PROMPT = `You are a fitness expert reviewing exercise instruction accuracy. 
+const DEFAULT_SYSTEM_PROMPT = `You are a fitness expert reviewing exercise instruction accuracy. 
 You will be shown a frame from an exercise demonstration video.
 Compare it to the written instructions provided.
 If they match: respond with {"match": true}
@@ -65,6 +71,8 @@ function parseArgs() {
     ids: [] as number[],
     force: false,
     confirm: false,
+    systemPrompt: null as string | null,
+    systemPromptFile: null as string | null,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -76,9 +84,22 @@ function parseArgs() {
       opts.force = true;
     } else if (args[i] === "--confirm") {
       opts.confirm = true;
+    } else if (args[i] === "--system-prompt" && args[i + 1]) {
+      opts.systemPrompt = args[++i];
+    } else if (args[i] === "--system-prompt-file" && args[i + 1]) {
+      opts.systemPromptFile = args[++i];
     }
   }
   return opts;
+}
+
+function resolveSystemPrompt(opts: ReturnType<typeof parseArgs>): string {
+  if (opts.systemPrompt) return opts.systemPrompt;
+  if (opts.systemPromptFile) {
+    return fs.readFileSync(opts.systemPromptFile, "utf8").trim();
+  }
+  if (process.env.AUDIT_SYSTEM_PROMPT) return process.env.AUDIT_SYSTEM_PROMPT;
+  return DEFAULT_SYSTEM_PROMPT;
 }
 
 function getBucketName(): string {
@@ -196,6 +217,7 @@ interface ClaudeVerdict {
 
 async function reviewWithClaude(
   client: Anthropic,
+  systemPrompt: string,
   exerciseName: string,
   instructions: string,
   framePaths: string[]
@@ -217,7 +239,7 @@ async function reviewWithClaude(
   const response = await client.messages.create({
     model: MODEL,
     max_tokens: 512,
-    system: SYSTEM_PROMPT,
+    system: systemPrompt,
     messages: [
       {
         role: "user",
@@ -266,6 +288,7 @@ async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
 
 async function processExercise(
   client: Anthropic,
+  systemPrompt: string,
   ex: { id: number; name: string; instructions: string; mediaFile: string },
   force: boolean
 ): Promise<"skipped" | "ok" | "flagged" | "error"> {
@@ -303,7 +326,7 @@ async function processExercise(
     }
 
     const verdict = await withRetry(
-      () => reviewWithClaude(client, ex.name, ex.instructions, frames),
+      () => reviewWithClaude(client, systemPrompt, ex.name, ex.instructions, frames),
       ex.name
     );
 
@@ -317,7 +340,7 @@ async function processExercise(
       exerciseId: ex.id,
       exerciseName: ex.name,
       oldInstructions: ex.instructions,
-      newInstructions: verdict.correctedInstructions,
+      newInstructions: verdict.match ? null : verdict.correctedInstructions,
       needsReview: !verdict.match,
       rawModelResponse: verdict.rawResponse,
       status: "pending",
@@ -351,6 +374,14 @@ async function main() {
   }
 
   const opts = parseArgs();
+  const systemPrompt = resolveSystemPrompt(opts);
+  const promptSource = opts.systemPrompt
+    ? "--system-prompt flag"
+    : opts.systemPromptFile
+    ? `--system-prompt-file ${opts.systemPromptFile}`
+    : process.env.AUDIT_SYSTEM_PROMPT
+    ? "AUDIT_SYSTEM_PROMPT env var"
+    : "default";
   const client = new Anthropic({ apiKey });
 
   let allExercises: { id: number; name: string; instructions: string; mediaFile: string }[];
@@ -386,6 +417,7 @@ async function main() {
   console.log(`    Total   : ${total} exercises`);
   console.log(`    Requests: ~${total} (3 frames per exercise, 1 Claude call each)`);
   console.log(`    Force   : ${opts.force ? "yes (will overwrite existing reviews)" : "no"}`);
+  console.log(`    Prompt  : ${promptSource}`);
   console.log();
 
   if (isFull && !opts.confirm) {
@@ -412,7 +444,7 @@ async function main() {
         `\r[${done}/${total}] ${ex.name.slice(0, 40).padEnd(40)} | ✅ ${done - flagged - skipped - errors}  ⚠️  ${flagged}  ⏭  ${skipped}  ❌ ${errors}`
       );
 
-      const result = await processExercise(client, ex, opts.force).catch((err) => {
+      const result = await processExercise(client, systemPrompt, ex, opts.force).catch((err) => {
         console.error(`\n  [error] #${ex.id} ${ex.name}:`, err.message);
         return "error" as const;
       });
