@@ -1957,12 +1957,19 @@ export class DatabaseStorage implements IStorage {
           requiredTier: record.studyRequiredTier,
         } : null;
         
+        // Derive isCompleted from lesson counts when the DB flag is stale
+        // (e.g. old studies completed before the auto-complete logic existed).
+        const derivedIsCompleted =
+          record.isCompleted ||
+          (totalLessons > 0 && completedLessons >= totalLessons);
+
         return {
           id: record.id,
           userId: record.userId,
           studyId: record.studyId,
           currentDay: record.currentDay,
-          status: record.status,
+          status: derivedIsCompleted ? 'completed' : (record.status ?? 'in_progress'),
+          isCompleted: derivedIsCompleted,
           documentScrollPosition: record.documentScrollPosition,
           lastAccessedAt: record.lastAccessedAt,
           completedAt: record.completedAt,
@@ -2117,6 +2124,22 @@ export class DatabaseStorage implements IStorage {
         });
 
       fixedCount++;
+    }
+
+    // If any studies were healed, recompute and persist the accurate totalStudiesCompleted
+    // counter so it stays in sync for future reads.
+    if (fixedCount > 0) {
+      const [{ correctedCount }] = await db
+        .select({ correctedCount: count() })
+        .from(userProgress)
+        .where(and(
+          eq(userProgress.userId, userId),
+          eq(userProgress.isCompleted, true),
+        ));
+      await db
+        .update(users)
+        .set({ totalStudiesCompleted: Number(correctedCount) })
+        .where(eq(users.id, userId));
     }
 
     return { fixedCount, checkedCount };
@@ -4619,8 +4642,20 @@ export class DatabaseStorage implements IStorage {
     const user = await this.getUser(userId);
     if (!user) return undefined;
 
-    // Use persistent counters from user profile (never reset)
-    const studiesCompleted = user.totalStudiesCompleted || 0;
+    // Heal any stale userProgress rows (e.g. all lessons done but isCompleted=false).
+    // This also updates totalStudiesCompleted if it was out of sync.
+    await this.fixUserStudyProgress(userId);
+
+    // Count from the source-of-truth table (after the heal pass above)
+    // so the number is always accurate regardless of the persistent counter.
+    const [{ studiesCompleted: studiesCompletedRaw }] = await db
+      .select({ studiesCompleted: count() })
+      .from(userProgress)
+      .where(and(
+        eq(userProgress.userId, userId),
+        eq(userProgress.isCompleted, true),
+      ));
+    const studiesCompleted = Number(studiesCompletedRaw);
     const daysActive = user.totalActiveDays || 0;
 
     // Calculate forum posts (discussions + replies)
