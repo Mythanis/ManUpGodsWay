@@ -155,6 +155,8 @@
     },
     "@esbuild-kit/core-utils": {
       "esbuild": ">=0.25.0"
-    }
+    },
+    "uuid": ">=14.0.0",
+    "fast-xml-parser": ">=5.7.0"
   }
 }
