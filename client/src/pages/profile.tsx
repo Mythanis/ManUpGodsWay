@@ -380,7 +380,7 @@ export default function Profile() {
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="text-center bg-black/20 py-3 px-2 border-2 border-ministry-gold-exact">
               <p className="text-2xl font-black" data-testid="text-completed-count">
-                {completedStudies.length}
+                {userProfileStats?.studiesCompleted ?? completedStudies.length}
               </p>
               <p className="text-xs text-ministry-gold-exact font-bold uppercase tracking-wide">Studies</p>
             </div>
