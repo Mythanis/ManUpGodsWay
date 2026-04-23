@@ -1961,6 +1961,28 @@ export const insertExerciseSchema = createInsertSchema(exercises).omit({
 export type Exercise = typeof exercises.$inferSelect;
 export type InsertExercise = z.infer<typeof insertExerciseSchema>;
 
+// Exercise instruction audit reviews — populated by scripts/audit-exercise-instructions.ts
+// Each row is one Claude review of one exercise. Never modified by the live app.
+export const exerciseInstructionReviews = pgTable("exercise_instruction_reviews", {
+  id: serial("id").primaryKey(),
+  exerciseId: integer("exercise_id").notNull(),
+  exerciseName: varchar("exercise_name").notNull(),
+  oldInstructions: text("old_instructions").notNull(),
+  newInstructions: text("new_instructions"),          // null when match: true
+  needsReview: boolean("needs_review").notNull().default(false),
+  rawModelResponse: text("raw_model_response"),       // full JSON string from Claude
+  status: varchar("status").notNull().default("pending"), // pending | approved | rejected
+  processedAt: timestamp("processed_at").defaultNow(),
+});
+
+export const insertExerciseInstructionReviewSchema = createInsertSchema(exerciseInstructionReviews).omit({
+  id: true,
+  processedAt: true,
+});
+
+export type ExerciseInstructionReview = typeof exerciseInstructionReviews.$inferSelect;
+export type InsertExerciseInstructionReview = z.infer<typeof insertExerciseInstructionReviewSchema>;
+
 // Subscription settings - single row config for the one-tier subscription model
 export const subscriptionSettings = pgTable("subscription_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
