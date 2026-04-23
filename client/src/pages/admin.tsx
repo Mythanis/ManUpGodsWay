@@ -34,8 +34,9 @@ import RationsManagement from "@/components/admin/rations-management";
 import StoreManagement from "@/components/admin/store-management";
 import ManUpLinksManagement from "@/components/admin/man-up-links-management";
 import FlagManagement from "@/components/admin/flag-management";
+import ExerciseInstructionReviews from "@/components/admin/exercise-instruction-reviews";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio, FileText, Coins, ShoppingBag, ExternalLink, Flag } from "lucide-react";
+import { Plus, Video, Bell, Activity, Calendar, Users, Book, Edit, Trash2, Eye, EyeOff, Star, Image, Settings, Headphones, Trophy, Dumbbell, DollarSign, ImagePlus, ChevronLeft, ChevronRight, Shield, Radio, FileText, Coins, ShoppingBag, ExternalLink, Flag, ClipboardCheck } from "lucide-react";
 
 interface Study {
   id: string;
@@ -80,6 +81,7 @@ const adminTabs = [
   { id: "settings", label: "Settings", icon: Settings },
   { id: "users", label: "Users", icon: Users },
   { id: "flags", label: "Flags", icon: Flag },
+  { id: "instruction-reviews", label: "Instruction Reviews", icon: ClipboardCheck },
 ];
 
 export default function Admin() {
@@ -873,6 +875,16 @@ export default function Admin() {
             <div>
               <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Flagged Content</h2>
               <FlagManagement />
+            </div>
+          )}
+
+          {activeTab === "instruction-reviews" && (
+            <div>
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-1">Exercise Instruction Reviews</h2>
+              <p className="text-xs text-gray-500 mb-4">
+                AI-reviewed exercise instructions from the Claude audit. 1,390 corrections were applied automatically — review them here and revert any that look wrong.
+              </p>
+              <ExerciseInstructionReviews />
             </div>
           )}
           </div>

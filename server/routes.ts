@@ -20,7 +20,7 @@ import { warGroupsService } from "./warGroupsService";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
 import * as schema from "@shared/schema";
-import { eq, and, sql, desc, asc, gt, gte, ne, count, or, isNull, inArray } from "drizzle-orm";
+import { eq, and, sql, desc, asc, gt, gte, ne, count, or, isNull, inArray, ilike, isNotNull } from "drizzle-orm";
 import { 
   insertStudySchema, 
   insertStudySeriesSchema,
@@ -16833,6 +16833,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/exercise-audit/status', isAuthenticated, requireAdmin, async (_req: any, res: any) => {
     res.json(getAuditJobStatus());
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Exercise instruction reviews (admin only)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  app.get('/api/admin/exercise-instruction-reviews', isAuthenticated, requireAdmin, async (req: any, res: any) => {
+    try {
+      const limit = Math.min(Number(req.query.limit) || 25, 100);
+      const offset = Number(req.query.offset) || 0;
+      const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+      const view = typeof req.query.view === 'string' ? req.query.view : 'corrections';
+
+      const conditions: any[] = [];
+      if (search) {
+        conditions.push(ilike(schema.exerciseInstructionReviews.exerciseName, `%${search}%`));
+      }
+      if (view === 'corrections') {
+        conditions.push(
+          and(
+            eq(schema.exerciseInstructionReviews.needsReview, true),
+            isNotNull(schema.exerciseInstructionReviews.newInstructions),
+            eq(schema.exerciseInstructionReviews.status, 'approved')
+          )
+        );
+      } else if (view === 'matched') {
+        conditions.push(eq(schema.exerciseInstructionReviews.needsReview, false));
+      } else if (view === 'rejected') {
+        conditions.push(eq(schema.exerciseInstructionReviews.status, 'rejected'));
+      }
+
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+      const rows = await db
+        .select({
+          id: schema.exerciseInstructionReviews.id,
+          exerciseId: schema.exerciseInstructionReviews.exerciseId,
+          exerciseName: schema.exerciseInstructionReviews.exerciseName,
+          oldInstructions: schema.exerciseInstructionReviews.oldInstructions,
+          newInstructions: schema.exerciseInstructionReviews.newInstructions,
+          needsReview: schema.exerciseInstructionReviews.needsReview,
+          status: schema.exerciseInstructionReviews.status,
+          processedAt: schema.exerciseInstructionReviews.processedAt,
+          rawModelResponse: schema.exerciseInstructionReviews.rawModelResponse,
+          mediaFile: schema.exercises.mediaFile,
+          currentInstructions: schema.exercises.instructions,
+        })
+        .from(schema.exerciseInstructionReviews)
+        .leftJoin(schema.exercises, eq(schema.exerciseInstructionReviews.exerciseId, schema.exercises.id))
+        .where(whereClause)
+        .orderBy(asc(schema.exerciseInstructionReviews.exerciseId))
+        .limit(limit)
+        .offset(offset);
+
+      const [{ total }] = await db
+        .select({ total: count() })
+        .from(schema.exerciseInstructionReviews)
+        .where(whereClause);
+
+      res.json({ rows, total: Number(total), limit, offset });
+    } catch (err: any) {
+      console.error('[exercise-instruction-reviews] list error:', err.message);
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post('/api/admin/exercise-instruction-reviews/:id/revert', isAuthenticated, requireAdmin, async (req: any, res: any) => {
+    try {
+      const id = Number(req.params.id);
+      const [review] = await db
+        .select()
+        .from(schema.exerciseInstructionReviews)
+        .where(eq(schema.exerciseInstructionReviews.id, id));
+      if (!review) return res.status(404).json({ message: 'Review not found' });
+
+      await db
+        .update(schema.exercises)
+        .set({ instructions: review.oldInstructions })
+        .where(eq(schema.exercises.id, review.exerciseId));
+      await db
+        .update(schema.exerciseInstructionReviews)
+        .set({ status: 'rejected' })
+        .where(eq(schema.exerciseInstructionReviews.id, id));
+
+      res.json({ message: 'Instructions reverted to original', exerciseId: review.exerciseId });
+    } catch (err: any) {
+      console.error('[exercise-instruction-reviews] revert error:', err.message);
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post('/api/admin/exercise-instruction-reviews/:id/requeue', isAuthenticated, requireAdmin, async (req: any, res: any) => {
+    try {
+      const id = Number(req.params.id);
+      const [review] = await db
+        .select()
+        .from(schema.exerciseInstructionReviews)
+        .where(eq(schema.exerciseInstructionReviews.id, id));
+      if (!review) return res.status(404).json({ message: 'Review not found' });
+
+      await db
+        .delete(schema.exerciseInstructionReviews)
+        .where(eq(schema.exerciseInstructionReviews.id, id));
+
+      res.json({ message: 'Exercise removed from review queue — re-run the audit to process it', exerciseId: review.exerciseId });
+    } catch (err: any) {
+      console.error('[exercise-instruction-reviews] requeue error:', err.message);
+      res.status(500).json({ message: err.message });
+    }
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
