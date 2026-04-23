@@ -29,7 +29,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { db } from "../server/db";
 import { exercises, exerciseSidednessReviews } from "../shared/schema";
-import { eq, inArray, notInArray } from "drizzle-orm";
+import { eq, inArray, notInArray, or } from "drizzle-orm";
 import readline from "readline";
 
 const MODEL = "claude-sonnet-4-20250514";
@@ -165,7 +165,8 @@ async function processExercise(
       .from(exerciseSidednessReviews)
       .where(eq(exerciseSidednessReviews.exerciseId, ex.id))
       .limit(1);
-    if (existing.length > 0) return "skipped";
+    // Skip pending/approved rows — only re-classify exercises the admin has rejected
+    if (existing.length > 0 && existing[0].status !== "rejected") return "skipped";
   }
 
   const verdict = await withRetry(() => classify(client, ex), ex.name);
@@ -224,11 +225,17 @@ async function main() {
       .from(exercises)
       .where(inArray(exercises.id, opts.ids));
   } else if (!opts.force) {
-    // Only process exercises without any review row
-    const reviewed = await db
+    // Exclude exercises that already have a pending or approved review.
+    // Rejected rows are intentionally included so the admin can re-run the
+    // script to get a fresh classification for anything they rejected.
+    const skipReviews = await db
       .select({ exerciseId: exerciseSidednessReviews.exerciseId })
-      .from(exerciseSidednessReviews);
-    const reviewedIds = reviewed.map((r) => r.exerciseId);
+      .from(exerciseSidednessReviews)
+      .where(or(
+        eq(exerciseSidednessReviews.status, "pending"),
+        eq(exerciseSidednessReviews.status, "approved"),
+      ));
+    const skipIds = skipReviews.map((r) => r.exerciseId);
 
     allExercises = await db
       .select({
@@ -239,7 +246,7 @@ async function main() {
         equipment: exercises.equipment,
       })
       .from(exercises)
-      .where(reviewedIds.length > 0 ? notInArray(exercises.id, reviewedIds) : undefined)
+      .where(skipIds.length > 0 ? notInArray(exercises.id, skipIds) : undefined)
       .orderBy(exercises.id);
   } else {
     allExercises = await db
