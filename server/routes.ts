@@ -12015,6 +12015,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         category: category || 'encouragement',
       }).returning();
       res.json(post);
+
+      // Fan-out: notify the poster's brothers who have fitnessCommunityNotifications enabled
+      try {
+        const poster = await storage.getUser(userId);
+        const brothers = await storage.getUserBrothers(userId);
+        for (const brother of brothers) {
+          try {
+            const prefs = await storage.getNotificationPreferences(brother.id);
+            if (prefs && prefs.fitnessCommunityNotifications === false) continue;
+            await storage.createNotificationWithPreferences({
+              userId: brother.id,
+              type: 'fitness',
+              title: 'New Fitness Post',
+              message: `${poster?.firstName || 'A brother'} shared something in the Fitness Community.`,
+              relatedId: post.id,
+            });
+          } catch {}
+        }
+      } catch {}
     } catch (error) {
       console.error('Error creating fitness community post:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -12224,6 +12243,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Edit a fitness post comment (owner only)
+  app.patch('/api/fitness/community/comments/:id', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+    try {
+      const user = req.fitnessUser;
+      const { content } = req.body;
+      if (!content || !content.trim()) {
+        return res.status(400).json({ message: 'Content is required' });
+      }
+      const [comment] = await db
+        .select()
+        .from(schema.fitnessPostComments)
+        .where(eq(schema.fitnessPostComments.id, req.params.id))
+        .limit(1);
+      if (!comment) return res.status(404).json({ message: 'Comment not found' });
+      if (comment.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      const [updated] = await db
+        .update(schema.fitnessPostComments)
+        .set({ content: content.trim() })
+        .where(eq(schema.fitnessPostComments.id, req.params.id))
+        .returning();
+      res.json(updated);
+    } catch (error) {
+      console.error('Error editing fitness post comment:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // ─── Meal Reminders ─────────────────────────────────────────────────────────
 
   app.get('/api/meal-reminders', isAuthenticated, async (req: any, res) => {
@@ -12246,6 +12294,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(reminder);
     } catch (error) {
       console.error('Error adding meal reminder:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.patch('/api/meal-reminders/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { time, label } = req.body;
+      if (!time) return res.status(400).json({ message: 'time is required' });
+      const reminder = await storage.updateMealReminder(req.params.id, userId, { time, label });
+      if (!reminder) return res.status(404).json({ message: 'Reminder not found' });
+      res.json(reminder);
+    } catch (error) {
+      console.error('Error updating meal reminder:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

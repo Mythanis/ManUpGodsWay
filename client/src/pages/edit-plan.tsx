@@ -1175,9 +1175,6 @@ export default function EditPlan() {
         onAllowed={() => {
           setReminders(prev => [...prev, { dayOfWeek: 'monday', time: '09:00' }]);
         }}
-        onDeclined={() => {
-          setReminders(prev => [...prev, { dayOfWeek: 'monday', time: '09:00' }]);
-        }}
       />
       </div>
     </div>

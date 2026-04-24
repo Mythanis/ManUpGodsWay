@@ -661,6 +661,7 @@ export interface IStorage {
   getMealReminders(userId: string): Promise<MealReminder[]>;
   getAllActiveMealReminders(): Promise<MealReminder[]>;
   addMealReminder(reminder: InsertMealReminder): Promise<MealReminder>;
+  updateMealReminder(id: string, userId: string, updates: { time?: string; label?: string }): Promise<MealReminder | undefined>;
   deleteMealReminder(id: string, userId: string): Promise<void>;
   markMealReminderSent(id: string): Promise<void>;
 
@@ -8120,6 +8121,15 @@ export class DatabaseStorage implements IStorage {
   async addMealReminder(reminder: InsertMealReminder): Promise<MealReminder> {
     const [row] = await db.insert(mealReminders).values(reminder).returning();
     return row;
+  }
+
+  async updateMealReminder(id: string, userId: string, updates: { time?: string; label?: string }): Promise<MealReminder | undefined> {
+    const [row] = await db
+      .update(mealReminders)
+      .set({ ...(updates.time !== undefined && { time: updates.time }), ...(updates.label !== undefined && { label: updates.label }) })
+      .where(and(eq(mealReminders.id, id), eq(mealReminders.userId, userId)))
+      .returning();
+    return row ?? undefined;
   }
 
   async deleteMealReminder(id: string, userId: string): Promise<void> {

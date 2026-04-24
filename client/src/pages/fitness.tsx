@@ -67,6 +67,7 @@ import {
   Copy,
   Check,
   Salad,
+  Pencil,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { format, isToday, isPast, isFuture } from "date-fns";
@@ -225,7 +226,7 @@ function CommentsSection({
   commentText: string;
   setCommentText: (t: string) => void;
 }) {
-  const { data: comments = [], isLoading } = useQuery<any[]>({
+  const { data: comments = [], isLoading, refetch } = useQuery<any[]>({
     queryKey: ['/api/fitness/community/posts', postId, 'comments'],
     queryFn: async () => {
       const res = await fetch(`/api/fitness/community/posts/${postId}/comments`, { credentials: 'include' });
@@ -236,6 +237,109 @@ function CommentsSection({
 
   const myId = (authUser as any)?.id || (authUser as any)?.claims?.sub;
 
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
+
+  // Reply state
+  const [replyToId, setReplyToId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+
+  const editCommentMutation = useMutation({
+    mutationFn: async ({ id, content }: { id: string; content: string }) => {
+      const res = await apiRequest('PATCH', `/api/fitness/community/comments/${id}`, { content });
+      return res.json();
+    },
+    onSuccess: () => {
+      setEditingId(null);
+      setEditText('');
+      refetch();
+    },
+  });
+
+  const replyMutation = useMutation({
+    mutationFn: async ({ content, parentCommentId }: { content: string; parentCommentId: string }) => {
+      const res = await apiRequest('POST', `/api/fitness/community/posts/${postId}/comments`, { content, parentCommentId });
+      return res.json();
+    },
+    onSuccess: () => {
+      setReplyToId(null);
+      setReplyText('');
+      refetch();
+    },
+  });
+
+  // Build tree: top-level comments + their replies
+  const topLevel = comments.filter((c: any) => !c.parentCommentId);
+  const repliesMap: Record<string, any[]> = {};
+  comments.filter((c: any) => c.parentCommentId).forEach((c: any) => {
+    if (!repliesMap[c.parentCommentId]) repliesMap[c.parentCommentId] = [];
+    repliesMap[c.parentCommentId].push(c);
+  });
+
+  const renderComment = (c: any, isReply = false) => (
+    <div key={c.id} className={`flex items-start gap-2 ${isReply ? 'ml-8 mt-1' : ''}`}>
+      {c.authorProfilePicture ? (
+        <img src={c.authorProfilePicture} alt="" className="w-6 h-6 rounded-full object-cover border border-zinc-700 flex-shrink-0" />
+      ) : (
+        <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
+          <User className="w-3 h-3 text-zinc-500" />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-1 flex-wrap">
+          <span className="text-white text-xs font-black">{c.authorName}</span>
+          <span className="text-zinc-600 text-[10px]">{new Date(c.createdAt).toLocaleDateString()}</span>
+        </div>
+        {editingId === c.id ? (
+          <div className="flex gap-1 mt-1">
+            <input
+              type="text"
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              autoFocus
+              className="flex-1 bg-zinc-800 border border-zinc-600 rounded-sm text-white text-xs px-2 py-1 focus:outline-none"
+            />
+            <button
+              onClick={() => editCommentMutation.mutate({ id: c.id, content: editText })}
+              disabled={!editText.trim() || editCommentMutation.isPending}
+              className="text-[#FCD000] text-xs font-black disabled:opacity-50"
+            >Save</button>
+            <button onClick={() => setEditingId(null)} className="text-zinc-500 text-xs">Cancel</button>
+          </div>
+        ) : (
+          <p className="text-zinc-300 text-xs break-words">{c.content}</p>
+        )}
+        {!isReply && editingId !== c.id && (
+          <button
+            onClick={() => { setReplyToId(replyToId === c.id ? null : c.id); setReplyText(''); }}
+            className="text-zinc-500 hover:text-zinc-300 text-[10px] mt-0.5"
+          >
+            Reply
+          </button>
+        )}
+      </div>
+      {c.userId === myId && editingId !== c.id && (
+        <div className="flex gap-1 flex-shrink-0">
+          <button
+            onClick={() => { setEditingId(c.id); setEditText(c.content); }}
+            className="text-zinc-600 hover:text-zinc-300"
+            title="Edit"
+          >
+            <Pencil className="w-3 h-3" />
+          </button>
+          <button
+            onClick={() => deleteCommentMutation.mutate(c.id)}
+            className="text-zinc-600 hover:text-red-400"
+            title="Delete"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="border-t border-zinc-700 bg-zinc-950 px-4 py-3 space-y-3">
       {isLoading ? (
@@ -244,35 +348,42 @@ function CommentsSection({
         <p className="text-zinc-500 text-xs">No comments yet. Be the first!</p>
       ) : (
         <div className="space-y-2">
-          {comments.map((c: any) => (
-            <div key={c.id} className="flex items-start gap-2">
-              {c.authorProfilePicture ? (
-                <img src={c.authorProfilePicture} alt="" className="w-6 h-6 rounded-full object-cover border border-zinc-700 flex-shrink-0" />
-              ) : (
-                <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
-                  <User className="w-3 h-3 text-zinc-500" />
+          {topLevel.map((c: any) => (
+            <div key={c.id}>
+              {renderComment(c)}
+              {/* Replies */}
+              {(repliesMap[c.id] || []).map((r: any) => renderComment(r, true))}
+              {/* Reply input */}
+              {replyToId === c.id && (
+                <div className="flex gap-1 ml-8 mt-1">
+                  <input
+                    type="text"
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && replyText.trim()) {
+                        replyMutation.mutate({ content: replyText.trim(), parentCommentId: c.id });
+                      }
+                    }}
+                    placeholder={`Reply to ${c.authorName}…`}
+                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-sm text-white text-xs px-2 py-1 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
+                  />
+                  <button
+                    onClick={() => replyMutation.mutate({ content: replyText.trim(), parentCommentId: c.id })}
+                    disabled={!replyText.trim() || replyMutation.isPending}
+                    className="bg-[#FCD000] text-black font-black text-xs px-2 py-1 rounded-sm disabled:opacity-50"
+                  >
+                    <Send className="w-3 h-3" />
+                  </button>
+                  <button onClick={() => setReplyToId(null)} className="text-zinc-500 text-xs px-1">✕</button>
                 </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-white text-xs font-black">{c.authorName}</span>
-                  <span className="text-zinc-600 text-[10px]">{new Date(c.createdAt).toLocaleDateString()}</span>
-                </div>
-                <p className="text-zinc-300 text-xs break-words">{c.content}</p>
-              </div>
-              {c.userId === myId && (
-                <button
-                  onClick={() => deleteCommentMutation.mutate(c.id)}
-                  className="text-zinc-600 hover:text-red-400 flex-shrink-0"
-                >
-                  <X className="w-3 h-3" />
-                </button>
               )}
             </div>
           ))}
         </div>
       )}
-      {/* Add comment input */}
+      {/* Add top-level comment input */}
       <div className="flex gap-2">
         <input
           type="text"
@@ -564,6 +675,21 @@ export default function Fitness() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/meal-reminders'] });
+    },
+  });
+
+  const [editingMealId, setEditingMealId] = useState<string | null>(null);
+  const [editMealTime, setEditMealTime] = useState('');
+  const [editMealLabel, setEditMealLabel] = useState('');
+
+  const updateMealReminderMutation = useMutation({
+    mutationFn: async ({ id, time, label }: { id: string; time: string; label: string }) => {
+      return await apiRequest('PATCH', `/api/meal-reminders/${id}`, { time, label });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/meal-reminders'] });
+      setEditingMealId(null);
+      toast({ title: 'Reminder updated' });
     },
   });
 
@@ -4853,26 +4979,62 @@ export default function Fitness() {
               ) : (
                 <div className="divide-y divide-zinc-700/50">
                   {mealReminders.map((r: any) => (
-                    <div key={r.id} className="flex items-center px-4 py-2.5 gap-3">
-                      <Bell className="w-4 h-4 text-[#FCD000]/70 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-black">
-                          {(() => {
-                            const [hh, mm] = r.time.split(':');
-                            const h = parseInt(hh, 10);
-                            const suffix = h >= 12 ? 'PM' : 'AM';
-                            const h12 = h % 12 === 0 ? 12 : h % 12;
-                            return `${h12}:${mm} ${suffix}`;
-                          })()}
-                        </p>
-                        {r.label && <p className="text-zinc-500 text-[10px]">{r.label}</p>}
-                      </div>
-                      <button
-                        onClick={() => deleteMealReminderMutation.mutate(r.id)}
-                        className="text-zinc-600 hover:text-red-400 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <div key={r.id}>
+                      {editingMealId === r.id ? (
+                        <div className="px-4 py-3 space-y-2 bg-zinc-900/50">
+                          <div className="flex gap-2">
+                            <input
+                              type="time"
+                              value={editMealTime}
+                              onChange={(e) => setEditMealTime(e.target.value)}
+                              className="w-32 bg-zinc-800 border border-zinc-600 rounded-sm text-white text-sm px-2 py-1 focus:outline-none"
+                            />
+                            <input
+                              type="text"
+                              value={editMealLabel}
+                              onChange={(e) => setEditMealLabel(e.target.value)}
+                              placeholder="Label (optional)"
+                              className="flex-1 bg-zinc-800 border border-zinc-600 rounded-sm text-white text-sm px-2 py-1 placeholder:text-zinc-600 focus:outline-none"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => updateMealReminderMutation.mutate({ id: r.id, time: editMealTime, label: editMealLabel })}
+                              disabled={!editMealTime || updateMealReminderMutation.isPending}
+                              className="bg-[#FCD000] text-black font-black text-xs px-3 py-1 rounded-sm disabled:opacity-50"
+                            >Save</button>
+                            <button onClick={() => setEditingMealId(null)} className="bg-zinc-700 text-white text-xs px-3 py-1 rounded-sm">Cancel</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center px-4 py-2.5 gap-3">
+                          <Bell className="w-4 h-4 text-[#FCD000]/70 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm font-black">
+                              {(() => {
+                                const [hh, mm] = r.time.split(':');
+                                const h = parseInt(hh, 10);
+                                const suffix = h >= 12 ? 'PM' : 'AM';
+                                const h12 = h % 12 === 0 ? 12 : h % 12;
+                                return `${h12}:${mm} ${suffix}`;
+                              })()}
+                            </p>
+                            {r.label && <p className="text-zinc-500 text-[10px]">{r.label}</p>}
+                          </div>
+                          <button
+                            onClick={() => { setEditingMealId(r.id); setEditMealTime(r.time); setEditMealLabel(r.label || ''); }}
+                            className="text-zinc-600 hover:text-zinc-300 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => deleteMealReminderMutation.mutate(r.id)}
+                            className="text-zinc-600 hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -5790,12 +5952,6 @@ export default function Fitness() {
         onOpenChange={setShowMealPushConsent}
         reason="Enable push notifications to get meal reminder alerts even when the app is closed."
         onAllowed={() => {
-          if (pendingMealReminder) {
-            addMealReminderMutation.mutate(pendingMealReminder);
-            setPendingMealReminder(null);
-          }
-        }}
-        onDeclined={() => {
           if (pendingMealReminder) {
             addMealReminderMutation.mutate(pendingMealReminder);
             setPendingMealReminder(null);

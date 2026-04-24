@@ -14,10 +14,8 @@ import { usePushNotifications } from "@/hooks/use-push-notifications";
 interface PushConsentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Called after the user allows (or was already subscribed) */
+  /** Called only after push is successfully enabled (or was already enabled) */
   onAllowed: () => void;
-  /** Called when user clicks "Not Now" */
-  onDeclined?: () => void;
   /** Context-specific reason text shown to the user */
   reason?: string;
 }
@@ -26,11 +24,11 @@ export function PushConsentDialog({
   open,
   onOpenChange,
   onAllowed,
-  onDeclined,
   reason = "You'll receive push notifications so you never miss your scheduled activities.",
 }: PushConsentDialogProps) {
   const { subscribe, isSubscribed } = usePushNotifications();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleAllow = async () => {
     if (isSubscribed) {
@@ -39,19 +37,20 @@ export function PushConsentDialog({
       return;
     }
     setLoading(true);
+    setError(null);
     try {
       await subscribe();
+      onAllowed();
+      onOpenChange(false);
     } catch {
-      // subscription may fail if browser blocks — still let user continue
+      setError("Could not enable notifications. Please check your browser settings and try again.");
     } finally {
       setLoading(false);
     }
-    onAllowed();
-    onOpenChange(false);
   };
 
   const handleDecline = () => {
-    onDeclined?.();
+    // Do NOT save reminders — just close
     onOpenChange(false);
   };
 
@@ -65,6 +64,9 @@ export function PushConsentDialog({
           </div>
           <DialogDescription className="pt-1">{reason}</DialogDescription>
         </DialogHeader>
+        {error && (
+          <p className="text-sm text-red-500 px-1">{error}</p>
+        )}
         <DialogFooter className="flex gap-2 sm:flex-row-reverse">
           <Button onClick={handleAllow} disabled={loading}>
             {loading ? "Enabling…" : "Allow"}
