@@ -51,7 +51,8 @@ import {
   insertWarGroupSchema,
   insertWarGroupMemberSchema,
   insertFitnessPostSchema,
-  insertExerciseSchema
+  insertExerciseSchema,
+  insertHealthMetricSchema
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -12309,6 +12310,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updated);
     } catch (error) {
       console.error('Error editing fitness post comment:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // ─── Health Metrics ─────────────────────────────────────────────────────────
+
+  const VALID_METRIC_TYPES = ['steps', 'heart_rate', 'sleep', 'weight'] as const;
+
+  app.get('/api/health-metrics', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+    try {
+      const userId = req.fitnessUser.id;
+      const type = req.query.type as string;
+      if (!VALID_METRIC_TYPES.includes(type as any)) {
+        return res.status(400).json({ message: 'Invalid metric type' });
+      }
+      const entries = await storage.getHealthMetrics(userId, type);
+      res.json(entries);
+    } catch (error) {
+      console.error('Error fetching health metrics:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/health-metrics', isAuthenticated, requireFitnessAccess, strictWriteLimiter, async (req: any, res) => {
+    try {
+      const userId = req.fitnessUser.id;
+      const parsed = insertHealthMetricSchema.safeParse({ ...req.body, userId });
+      if (!parsed.success) {
+        return res.status(400).json({ message: 'Invalid data', errors: parsed.error.errors });
+      }
+      if (!VALID_METRIC_TYPES.includes(parsed.data.metricType as any)) {
+        return res.status(400).json({ message: 'Invalid metric type' });
+      }
+      const entry = await storage.createHealthMetric(parsed.data);
+      res.json(entry);
+    } catch (error) {
+      console.error('Error creating health metric:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/health-metrics/:id', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+    try {
+      const userId = req.fitnessUser.id;
+      await storage.deleteHealthMetric(req.params.id, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting health metric:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

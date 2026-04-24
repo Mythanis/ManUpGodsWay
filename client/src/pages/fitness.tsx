@@ -68,6 +68,9 @@ import {
   Check,
   Salad,
   Pencil,
+  Moon,
+  Scale,
+  Footprints,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { format, isToday, isPast, isFuture } from "date-fns";
@@ -526,7 +529,7 @@ export default function Fitness() {
     if (typeof window === 'undefined') return 'workout';
     const params = new URLSearchParams(window.location.search);
     const t = params.get('tab');
-    return t && ['workout', 'community', 'planner', 'intake', 'nutrition', 'exercises', 'favorites', 'pre-built-plans', 'my-plans'].includes(t) ? t : 'workout';
+    return t && ['workout', 'community', 'planner', 'intake', 'nutrition', 'exercises', 'favorites', 'pre-built-plans', 'my-plans', 'health'].includes(t) ? t : 'workout';
   })();
   const [activeFitnessTab, setActiveFitnessTab] = useState<string>(initialTab);
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
@@ -561,6 +564,13 @@ export default function Fitness() {
   const [newMealLabel, setNewMealLabel] = useState('');
   const [showMealPushConsent, setShowMealPushConsent] = useState(false);
   const [pendingMealReminder, setPendingMealReminder] = useState<{ time: string; label: string } | null>(null);
+
+  // Health metrics state
+  const [healthOpenForm, setHealthOpenForm] = useState<'steps' | 'heart_rate' | 'sleep' | 'weight' | null>(null);
+  const [healthStepsForm, setHealthStepsForm] = useState({ date: new Date().toISOString().split('T')[0], steps: '', calories: '' });
+  const [healthHrForm, setHealthHrForm] = useState({ date: new Date().toISOString().split('T')[0], resting: '', active: '' });
+  const [healthSleepForm, setHealthSleepForm] = useState({ date: new Date().toISOString().split('T')[0], hours: '', quality: '' });
+  const [healthWeightForm, setHealthWeightForm] = useState({ date: new Date().toISOString().split('T')[0], weight: '', bodyFat: '', chest: '', waist: '', hips: '', neck: '' });
 
   // Community comments state
   const [expandedCommentPost, setExpandedCommentPost] = useState<string | null>(null);
@@ -709,6 +719,47 @@ export default function Fitness() {
       queryClient.invalidateQueries({ queryKey: ['/api/meal-reminders'] });
       setEditingMealId(null);
       toast({ title: 'Reminder updated' });
+    },
+  });
+
+  // Health metrics queries
+  const { data: stepsMetrics = [] } = useQuery<any[]>({
+    queryKey: ['/api/health-metrics?type=steps'],
+    enabled: hasMembership,
+  });
+  const { data: hrMetrics = [] } = useQuery<any[]>({
+    queryKey: ['/api/health-metrics?type=heart_rate'],
+    enabled: hasMembership,
+  });
+  const { data: sleepMetrics = [] } = useQuery<any[]>({
+    queryKey: ['/api/health-metrics?type=sleep'],
+    enabled: hasMembership,
+  });
+  const { data: weightMetrics = [] } = useQuery<any[]>({
+    queryKey: ['/api/health-metrics?type=weight'],
+    enabled: hasMembership,
+  });
+
+  const createHealthMetricMutation = useMutation({
+    mutationFn: async (data: any) => apiRequest('POST', '/api/health-metrics', data),
+    onSuccess: (_res, vars) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/health-metrics?type=${vars.metricType}`] });
+      setHealthOpenForm(null);
+      toast({ title: 'Entry logged', description: 'Your health metric has been saved.' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Error', description: err.message || 'Failed to save', variant: 'destructive' });
+    },
+  });
+
+  const deleteHealthMetricMutation = useMutation({
+    mutationFn: async ({ id, metricType }: { id: string; metricType: string }) =>
+      apiRequest('DELETE', `/api/health-metrics/${id}`),
+    onSuccess: (_res, vars) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/health-metrics?type=${vars.metricType}`] });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Error', description: err.message || 'Failed to delete', variant: 'destructive' });
     },
   });
 
@@ -3472,7 +3523,7 @@ export default function Fitness() {
           onValueChange={setActiveFitnessTab}
           className="w-full"
         >
-          <TabsList className="grid grid-cols-4 w-full h-auto p-2 bg-transparent gap-2 border-2 border-[#FCD000] rounded-sm">
+          <TabsList className="grid grid-cols-3 w-full h-auto p-2 bg-transparent gap-2 border-2 border-[#FCD000] rounded-sm">
             <TabsTrigger value="workout" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Dumbbell className="w-5 h-5" />
               Workout
@@ -3504,6 +3555,10 @@ export default function Fitness() {
             <TabsTrigger value="intake" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Utensils className="w-5 h-5" />
               Intake
+            </TabsTrigger>
+            <TabsTrigger value="health" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+              <Activity className="w-5 h-5" />
+              Health
             </TabsTrigger>
           </TabsList>
 
@@ -5303,6 +5358,439 @@ export default function Fitness() {
                 })}
               </div>
             )}
+          </TabsContent>
+
+          {/* Health Tab */}
+          <TabsContent value="health" className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center mb-2 liquid-black p-4 rounded-sm border-2 border-black overflow-hidden">
+              <Activity className="w-6 h-6 text-[#FCD000] mr-2 relative z-10" />
+              <h2 className="text-xl font-black text-white uppercase tracking-wide relative z-10">Health Tracker</h2>
+              <span className="ml-auto text-xs text-white/40 font-bold relative z-10">7-Day History</span>
+            </div>
+
+            {/* Steps & Calories Card */}
+            <Card className="bg-zinc-900 border-2 border-black rounded-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-white font-black uppercase tracking-wide text-sm">
+                  <Footprints className="w-5 h-5 text-[#FCD000]" />
+                  Steps &amp; Calories
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="ml-auto border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                    onClick={() => setHealthOpenForm(healthOpenForm === 'steps' ? null : 'steps')}
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Log
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {healthOpenForm === 'steps' && (
+                  <div className="bg-black border border-[#FCD000]/30 rounded-sm p-3 space-y-2">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Date</label>
+                        <Input
+                          type="date"
+                          value={healthStepsForm.date}
+                          onChange={e => setHealthStepsForm(f => ({ ...f, date: e.target.value }))}
+                          className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Steps</label>
+                        <Input
+                          type="number"
+                          placeholder="8000"
+                          value={healthStepsForm.steps}
+                          onChange={e => setHealthStepsForm(f => ({ ...f, steps: e.target.value }))}
+                          className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Calories</label>
+                        <Input
+                          type="number"
+                          placeholder="400"
+                          value={healthStepsForm.calories}
+                          onChange={e => setHealthStepsForm(f => ({ ...f, calories: e.target.value }))}
+                          className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthOpenForm(null)}>Cancel</Button>
+                      <Button
+                        size="sm"
+                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        disabled={!healthStepsForm.steps || createHealthMetricMutation.isPending}
+                        onClick={() => {
+                          createHealthMetricMutation.mutate({
+                            metricType: 'steps',
+                            date: healthStepsForm.date,
+                            primaryValue: parseFloat(healthStepsForm.steps),
+                            secondaryValue: healthStepsForm.calories ? parseFloat(healthStepsForm.calories) : null,
+                          });
+                          setHealthStepsForm(f => ({ ...f, steps: '', calories: '' }));
+                        }}
+                      >Save</Button>
+                    </div>
+                  </div>
+                )}
+                {stepsMetrics.length === 0 ? (
+                  <p className="text-white/30 text-xs text-center py-4">No entries yet. Log your first steps!</p>
+                ) : (
+                  <div className="space-y-1">
+                    <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
+                      <span>Date</span><span className="text-right">Steps</span><span className="text-right">Calories</span><span></span>
+                    </div>
+                    {stepsMetrics.map((m: any) => (
+                      <div key={m.id} className="grid grid-cols-4 items-center px-2 py-1.5 hover:bg-zinc-800/40 rounded-sm">
+                        <span className="text-white/60 text-xs">{m.date}</span>
+                        <span className="text-right text-white font-bold text-xs">{m.primaryValue?.toLocaleString()}</span>
+                        <span className="text-right text-white/60 text-xs">{m.secondaryValue ? `${m.secondaryValue} kcal` : '—'}</span>
+                        <div className="flex justify-end">
+                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-white/20 hover:text-red-400"
+                            onClick={() => deleteHealthMetricMutation.mutate({ id: m.id, metricType: 'steps' })}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Heart Rate Card */}
+            <Card className="bg-zinc-900 border-2 border-black rounded-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-white font-black uppercase tracking-wide text-sm">
+                  <Heart className="w-5 h-5 text-[#FCD000]" />
+                  Heart Rate
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="ml-auto border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                    onClick={() => setHealthOpenForm(healthOpenForm === 'heart_rate' ? null : 'heart_rate')}
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Log
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {healthOpenForm === 'heart_rate' && (
+                  <div className="bg-black border border-[#FCD000]/30 rounded-sm p-3 space-y-2">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Date</label>
+                        <Input
+                          type="date"
+                          value={healthHrForm.date}
+                          onChange={e => setHealthHrForm(f => ({ ...f, date: e.target.value }))}
+                          className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Resting BPM</label>
+                        <Input
+                          type="number"
+                          placeholder="65"
+                          value={healthHrForm.resting}
+                          onChange={e => setHealthHrForm(f => ({ ...f, resting: e.target.value }))}
+                          className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Active BPM</label>
+                        <Input
+                          type="number"
+                          placeholder="140"
+                          value={healthHrForm.active}
+                          onChange={e => setHealthHrForm(f => ({ ...f, active: e.target.value }))}
+                          className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthOpenForm(null)}>Cancel</Button>
+                      <Button
+                        size="sm"
+                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        disabled={!healthHrForm.resting || createHealthMetricMutation.isPending}
+                        onClick={() => {
+                          createHealthMetricMutation.mutate({
+                            metricType: 'heart_rate',
+                            date: healthHrForm.date,
+                            primaryValue: parseFloat(healthHrForm.resting),
+                            secondaryValue: healthHrForm.active ? parseFloat(healthHrForm.active) : null,
+                          });
+                          setHealthHrForm(f => ({ ...f, resting: '', active: '' }));
+                        }}
+                      >Save</Button>
+                    </div>
+                  </div>
+                )}
+                {hrMetrics.length === 0 ? (
+                  <p className="text-white/30 text-xs text-center py-4">No entries yet. Log your first heart rate reading!</p>
+                ) : (
+                  <div className="space-y-1">
+                    <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
+                      <span>Date</span><span className="text-right">Resting</span><span className="text-right">Active</span><span></span>
+                    </div>
+                    {hrMetrics.map((m: any) => (
+                      <div key={m.id} className="grid grid-cols-4 items-center px-2 py-1.5 hover:bg-zinc-800/40 rounded-sm">
+                        <span className="text-white/60 text-xs">{m.date}</span>
+                        <span className="text-right text-white font-bold text-xs">{m.primaryValue} <span className="text-white/40 text-[10px]">bpm</span></span>
+                        <span className="text-right text-white/60 text-xs">{m.secondaryValue ? `${m.secondaryValue} bpm` : '—'}</span>
+                        <div className="flex justify-end">
+                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-white/20 hover:text-red-400"
+                            onClick={() => deleteHealthMetricMutation.mutate({ id: m.id, metricType: 'heart_rate' })}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Sleep Card */}
+            <Card className="bg-zinc-900 border-2 border-black rounded-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-white font-black uppercase tracking-wide text-sm">
+                  <Moon className="w-5 h-5 text-[#FCD000]" />
+                  Sleep
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="ml-auto border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                    onClick={() => setHealthOpenForm(healthOpenForm === 'sleep' ? null : 'sleep')}
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Log
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {healthOpenForm === 'sleep' && (
+                  <div className="bg-black border border-[#FCD000]/30 rounded-sm p-3 space-y-2">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Date</label>
+                        <Input
+                          type="date"
+                          value={healthSleepForm.date}
+                          onChange={e => setHealthSleepForm(f => ({ ...f, date: e.target.value }))}
+                          className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Hours Slept</label>
+                        <Input
+                          type="number"
+                          step="0.5"
+                          placeholder="7.5"
+                          value={healthSleepForm.hours}
+                          onChange={e => setHealthSleepForm(f => ({ ...f, hours: e.target.value }))}
+                          className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Quality (1–10)</label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="10"
+                          placeholder="8"
+                          value={healthSleepForm.quality}
+                          onChange={e => setHealthSleepForm(f => ({ ...f, quality: e.target.value }))}
+                          className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthOpenForm(null)}>Cancel</Button>
+                      <Button
+                        size="sm"
+                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        disabled={!healthSleepForm.hours || createHealthMetricMutation.isPending}
+                        onClick={() => {
+                          createHealthMetricMutation.mutate({
+                            metricType: 'sleep',
+                            date: healthSleepForm.date,
+                            primaryValue: parseFloat(healthSleepForm.hours),
+                            secondaryValue: healthSleepForm.quality ? parseFloat(healthSleepForm.quality) : null,
+                          });
+                          setHealthSleepForm(f => ({ ...f, hours: '', quality: '' }));
+                        }}
+                      >Save</Button>
+                    </div>
+                  </div>
+                )}
+                {sleepMetrics.length === 0 ? (
+                  <p className="text-white/30 text-xs text-center py-4">No entries yet. Log your first sleep session!</p>
+                ) : (
+                  <div className="space-y-1">
+                    <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
+                      <span>Date</span><span className="text-right">Hours</span><span className="text-right">Quality</span><span></span>
+                    </div>
+                    {sleepMetrics.map((m: any) => (
+                      <div key={m.id} className="grid grid-cols-4 items-center px-2 py-1.5 hover:bg-zinc-800/40 rounded-sm">
+                        <span className="text-white/60 text-xs">{m.date}</span>
+                        <span className="text-right text-white font-bold text-xs">{m.primaryValue} <span className="text-white/40 text-[10px]">hr</span></span>
+                        <span className="text-right text-white/60 text-xs">{m.secondaryValue ? `${m.secondaryValue}/10` : '—'}</span>
+                        <div className="flex justify-end">
+                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-white/20 hover:text-red-400"
+                            onClick={() => deleteHealthMetricMutation.mutate({ id: m.id, metricType: 'sleep' })}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Weight & Body Measurements Card */}
+            <Card className="bg-zinc-900 border-2 border-black rounded-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-white font-black uppercase tracking-wide text-sm">
+                  <Scale className="w-5 h-5 text-[#FCD000]" />
+                  Weight &amp; Measurements
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="ml-auto border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                    onClick={() => setHealthOpenForm(healthOpenForm === 'weight' ? null : 'weight')}
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Log
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {healthOpenForm === 'weight' && (
+                  <div className="bg-black border border-[#FCD000]/30 rounded-sm p-3 space-y-2">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Date</label>
+                        <Input
+                          type="date"
+                          value={healthWeightForm.date}
+                          onChange={e => setHealthWeightForm(f => ({ ...f, date: e.target.value }))}
+                          className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Weight (lbs)</label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          placeholder="185.0"
+                          value={healthWeightForm.weight}
+                          onChange={e => setHealthWeightForm(f => ({ ...f, weight: e.target.value }))}
+                          className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Body Fat %</label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          placeholder="18.0"
+                          value={healthWeightForm.bodyFat}
+                          onChange={e => setHealthWeightForm(f => ({ ...f, bodyFat: e.target.value }))}
+                          className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-white/40 text-[10px] uppercase font-bold">Body Measurements (inches, optional)</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {(['chest', 'waist', 'hips', 'neck'] as const).map(key => (
+                        <div key={key}>
+                          <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">{key}</label>
+                          <Input
+                            type="number"
+                            step="0.25"
+                            placeholder="—"
+                            value={healthWeightForm[key]}
+                            onChange={e => setHealthWeightForm(f => ({ ...f, [key]: e.target.value }))}
+                            className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthOpenForm(null)}>Cancel</Button>
+                      <Button
+                        size="sm"
+                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        disabled={!healthWeightForm.weight || createHealthMetricMutation.isPending}
+                        onClick={() => {
+                          const measurements: any = {};
+                          if (healthWeightForm.chest) measurements.chest = parseFloat(healthWeightForm.chest);
+                          if (healthWeightForm.waist) measurements.waist = parseFloat(healthWeightForm.waist);
+                          if (healthWeightForm.hips) measurements.hips = parseFloat(healthWeightForm.hips);
+                          if (healthWeightForm.neck) measurements.neck = parseFloat(healthWeightForm.neck);
+                          createHealthMetricMutation.mutate({
+                            metricType: 'weight',
+                            date: healthWeightForm.date,
+                            primaryValue: parseFloat(healthWeightForm.weight),
+                            secondaryValue: healthWeightForm.bodyFat ? parseFloat(healthWeightForm.bodyFat) : null,
+                            notes: Object.keys(measurements).length > 0 ? JSON.stringify(measurements) : null,
+                          });
+                          setHealthWeightForm(f => ({ ...f, weight: '', bodyFat: '', chest: '', waist: '', hips: '', neck: '' }));
+                        }}
+                      >Save</Button>
+                    </div>
+                  </div>
+                )}
+                {weightMetrics.length === 0 ? (
+                  <p className="text-white/30 text-xs text-center py-4">No entries yet. Log your first weigh-in!</p>
+                ) : (
+                  <div className="space-y-1">
+                    <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
+                      <span>Date</span><span className="text-right">Weight</span><span className="text-right">Body Fat</span><span></span>
+                    </div>
+                    {weightMetrics.map((m: any) => {
+                      let measurements: any = {};
+                      try { if (m.notes) measurements = JSON.parse(m.notes); } catch {}
+                      const hasMeasurements = Object.keys(measurements).length > 0;
+                      return (
+                        <div key={m.id}>
+                          <div className="grid grid-cols-4 items-center px-2 py-1.5 hover:bg-zinc-800/40 rounded-sm">
+                            <span className="text-white/60 text-xs">{m.date}</span>
+                            <span className="text-right text-white font-bold text-xs">{m.primaryValue} <span className="text-white/40 text-[10px]">lbs</span></span>
+                            <span className="text-right text-white/60 text-xs">{m.secondaryValue ? `${m.secondaryValue}%` : '—'}</span>
+                            <div className="flex justify-end">
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-white/20 hover:text-red-400"
+                                onClick={() => deleteHealthMetricMutation.mutate({ id: m.id, metricType: 'weight' })}>
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          {hasMeasurements && (
+                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 px-2 pb-1.5">
+                              {(['chest', 'waist', 'hips', 'neck'] as const).filter(k => measurements[k]).map(k => (
+                                <span key={k} className="text-white/30 text-[10px]">
+                                  {k}: <span className="text-white/50">{measurements[k]}"</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
         </Tabs>

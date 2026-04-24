@@ -3039,6 +3039,27 @@ export type VatmebopCheck = typeof vatmebopChecks.$inferSelect;
 export const insertVatmebopCheckSchema = createInsertSchema(vatmebopChecks).omit({ id: true });
 export type InsertVatmebopCheck = z.infer<typeof insertVatmebopCheckSchema>;
 
+// ─── Health Metrics ───────────────────────────────────────────────────────────
+
+export const healthMetrics = pgTable("health_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  date: varchar("date", { length: 10 }).notNull(), // "YYYY-MM-DD"
+  metricType: varchar("metric_type", { length: 20 }).notNull(), // steps | heart_rate | sleep | weight
+  primaryValue: real("primary_value").notNull(),
+  secondaryValue: real("secondary_value"),
+  notes: text("notes"), // JSON string for extra fields (e.g. body measurements)
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertHealthMetricSchema = createInsertSchema(healthMetrics).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type HealthMetric = typeof healthMetrics.$inferSelect;
+export type InsertHealthMetric = z.infer<typeof insertHealthMetricSchema>;
+
 // ─── Stripe Test Subscription (Owner testing tool) ────────────────────────────
 
 export const stripeTestSubscriptions = pgTable("stripe_test_subscriptions", {

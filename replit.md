@@ -33,7 +33,7 @@ The system supports a single subscription model with configurable trials. Admins
 - **War Room**: Dedicated prayer request space with real-time updates.
 - **Under Fire**: Accountability system for requesting and providing support.
 - **War Groups**: Licensed discipleship groups with city-based discovery, map view (OpenStreetMap), and private discussion boards.
-- **Fitness Integration**: Local exercise database, fitness community feed, and Stripe-integrated access control.
+- **Fitness Integration**: Local exercise database, fitness community feed, Stripe-integrated access control, and a Health tab for manually logging Steps & Calories, Heart Rate, Sleep, and Weight & Body Measurements (7-day history per metric, stored in `health_metrics` table).
 - **Live Streaming (Mux)**: In-app live streaming with RTMP credentials, simulcasting, webhook-based status updates, and recording management.
 - **Event Ticketing**: In-app paid event ticket processing via Stripe PaymentIntent, with multi-tier support, registration tracking, CSV export, and confirmation emails via Resend.
 - **Gamification**: "Rations" and "ranks" system for completing missions, with anti-abuse measures and grace bonuses.

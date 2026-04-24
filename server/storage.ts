@@ -217,6 +217,9 @@ import {
   type FitnessPostComment,
   type InsertFitnessPostComment,
   fitnessPostOhMes,
+  healthMetrics,
+  type HealthMetric,
+  type InsertHealthMetric,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne, gt } from "drizzle-orm";
@@ -664,6 +667,11 @@ export interface IStorage {
   updateMealReminder(id: string, userId: string, updates: { time?: string; label?: string }): Promise<MealReminder | undefined>;
   deleteMealReminder(id: string, userId: string): Promise<void>;
   markMealReminderSent(id: string): Promise<void>;
+
+  // Health metric operations
+  getHealthMetrics(userId: string, metricType: string, limit?: number): Promise<HealthMetric[]>;
+  createHealthMetric(data: InsertHealthMetric): Promise<HealthMetric>;
+  deleteHealthMetric(id: string, userId: string): Promise<void>;
 
   // VATMEBOP accountability chart
   getVatmebopChart(userId: string, year: number): Promise<VatmebopCheck[]>;
@@ -8149,6 +8157,26 @@ export class DatabaseStorage implements IStorage {
       .update(mealReminders)
       .set({ lastSent: new Date() })
       .where(eq(mealReminders.id, id));
+  }
+
+  async getHealthMetrics(userId: string, metricType: string, limit = 7): Promise<HealthMetric[]> {
+    return db
+      .select()
+      .from(healthMetrics)
+      .where(and(eq(healthMetrics.userId, userId), eq(healthMetrics.metricType, metricType)))
+      .orderBy(desc(healthMetrics.createdAt))
+      .limit(limit);
+  }
+
+  async createHealthMetric(data: InsertHealthMetric): Promise<HealthMetric> {
+    const [row] = await db.insert(healthMetrics).values(data).returning();
+    return row;
+  }
+
+  async deleteHealthMetric(id: string, userId: string): Promise<void> {
+    await db
+      .delete(healthMetrics)
+      .where(and(eq(healthMetrics.id, id), eq(healthMetrics.userId, userId)));
   }
 
   async upsertVatmebopCheck(
