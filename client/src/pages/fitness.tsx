@@ -7176,11 +7176,9 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   // Every other (standard) exercise gets a flat 30s break between sets
   // and exercises; transitions keep the short 10s buffer.
   const isHiitExercise = isTimeBased && !isTransitionExercise;
-  const restSeconds = isTransitionExercise
-    ? 10
-    : isHiitExercise
-      ? (currentExercise?.restTime ?? 60)
-      : 30;
+  const restSeconds = isHiitExercise
+    ? (currentExercise?.restTime ?? 60)
+    : 30;
   // Buffer shown between exercises (the "preview" rest with the next
   // movement's video + 3-2-1 countdown beeps). Bumped from 5s to 10s
   // per spec so users have time to read the upcoming exercise's name.
