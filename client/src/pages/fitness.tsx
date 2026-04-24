@@ -1009,7 +1009,9 @@ export default function Fitness() {
   const addFavoriteMutation = useMutation({
     mutationFn: async (exercise: Exercise) => {
       return apiRequest('POST', '/api/favorite-exercises', {
-        exerciseId: exercise.exerciseId || exercise.id,
+        // Coerce to string — DB exercises return `id` as a number, but the
+        // favorite-exercises schema requires exerciseId as a string.
+        exerciseId: String(exercise.exerciseId ?? exercise.id ?? ''),
         exerciseName: exercise.name,
         exerciseGifUrl: exercise.gifUrl,
         exerciseTarget: exercise.targetMuscles?.[0] || exercise.target || '',
