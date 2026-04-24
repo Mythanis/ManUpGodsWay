@@ -187,8 +187,8 @@ export default function ExerciseSidednessReviews() {
   });
 
   const requeueMutation = useMutation({
-    mutationFn: (id: number) =>
-      apiRequest("POST", `/api/admin/exercise-sidedness-reviews/${id}/requeue`),
+    mutationFn: ({ id, useOpus = false }: { id: number; useOpus?: boolean }) =>
+      apiRequest("POST", `/api/admin/exercise-sidedness-reviews/${id}/requeue`, { useOpus }),
     onSuccess: (res: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/exercise-sidedness-reviews"] });
       toast({
@@ -374,7 +374,7 @@ export default function ExerciseSidednessReviews() {
           const isBusy =
             (approveMutation.isPending && (approveMutation.variables as any)?.id === row.id) ||
             (rejectMutation.isPending && rejectMutation.variables === row.id) ||
-            (requeueMutation.isPending && requeueMutation.variables === row.id);
+            (requeueMutation.isPending && requeueMutation.variables?.id === row.id);
 
           return (
             <Card key={row.id} className={`border ${isBusy ? "opacity-60" : ""}`}>
@@ -484,12 +484,23 @@ export default function ExerciseSidednessReviews() {
                         size="sm"
                         variant="outline"
                         className="h-7 px-2 text-xs border-2 border-blue-500 text-blue-700 hover:bg-blue-50"
-                        onClick={() => requeueMutation.mutate(row.id)}
-                        disabled={requeueMutation.isPending && requeueMutation.variables === row.id}
+                        onClick={() => requeueMutation.mutate({ id: row.id })}
+                        disabled={requeueMutation.isPending && requeueMutation.variables?.id === row.id}
                       >
-                        {requeueMutation.isPending && requeueMutation.variables === row.id
+                        {requeueMutation.isPending && requeueMutation.variables?.id === row.id && !requeueMutation.variables?.useOpus
                           ? "Re-classifying…"
-                          : "Re-classify"}
+                          : "Re-classify (Sonnet)"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 text-xs border-2 border-purple-500 text-purple-700 hover:bg-purple-50"
+                        onClick={() => requeueMutation.mutate({ id: row.id, useOpus: true })}
+                        disabled={requeueMutation.isPending && requeueMutation.variables?.id === row.id}
+                      >
+                        {requeueMutation.isPending && requeueMutation.variables?.id === row.id && requeueMutation.variables?.useOpus
+                          ? "Re-classifying…"
+                          : "Re-classify (Opus)"}
                       </Button>
                     </div>
                   )}

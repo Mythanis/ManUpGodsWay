@@ -314,36 +314,54 @@ async function processExercise(
       ex.name
     );
 
-    // Upsert sidedness review row
-    await db
-      .delete(exerciseSidednessReviews)
-      .where(eq(exerciseSidednessReviews.exerciseId, ex.id));
+    // Upsert sidedness review row — preserve approved rows unless --force
+    const [existingSide] = await db
+      .select({ status: exerciseSidednessReviews.status })
+      .from(exerciseSidednessReviews)
+      .where(eq(exerciseSidednessReviews.exerciseId, ex.id))
+      .limit(1);
 
-    await db.insert(exerciseSidednessReviews).values({
-      exerciseId: ex.id,
-      exerciseName: ex.name,
-      proposedSidedness: verdict.sidedness,
-      reasoning: verdict.sidednessReasoning,
-      confidence: verdict.sidednessConfidence,
-      rawModelResponse: verdict.rawResponse,
-      status: "pending",
-    });
+    if (!force && existingSide?.status === "approved") {
+      // Keep the approved verdict; only refresh instruction review
+    } else {
+      await db
+        .delete(exerciseSidednessReviews)
+        .where(eq(exerciseSidednessReviews.exerciseId, ex.id));
+      await db.insert(exerciseSidednessReviews).values({
+        exerciseId: ex.id,
+        exerciseName: ex.name,
+        proposedSidedness: verdict.sidedness,
+        reasoning: verdict.sidednessReasoning,
+        confidence: verdict.sidednessConfidence,
+        rawModelResponse: verdict.rawResponse,
+        status: "pending",
+      });
+    }
 
-    // Upsert instruction review row
-    await db
-      .delete(exerciseInstructionReviews)
-      .where(eq(exerciseInstructionReviews.exerciseId, ex.id));
+    // Upsert instruction review row — preserve approved rows unless --force
+    const [existingInstr] = await db
+      .select({ status: exerciseInstructionReviews.status })
+      .from(exerciseInstructionReviews)
+      .where(eq(exerciseInstructionReviews.exerciseId, ex.id))
+      .limit(1);
 
-    await db.insert(exerciseInstructionReviews).values({
-      exerciseId: ex.id,
-      exerciseName: ex.name,
-      oldInstructions: ex.instructions,
-      newInstructions: verdict.instructionsMatch ? null : verdict.correctedInstructions,
-      needsReview: !verdict.instructionsMatch,
-      confidence: verdict.instructionsConfidence,
-      rawModelResponse: verdict.rawResponse,
-      status: "pending",
-    });
+    if (!force && existingInstr?.status === "approved") {
+      // Keep the approved instruction correction; don't overwrite
+    } else {
+      await db
+        .delete(exerciseInstructionReviews)
+        .where(eq(exerciseInstructionReviews.exerciseId, ex.id));
+      await db.insert(exerciseInstructionReviews).values({
+        exerciseId: ex.id,
+        exerciseName: ex.name,
+        oldInstructions: ex.instructions,
+        newInstructions: verdict.instructionsMatch ? null : verdict.correctedInstructions,
+        needsReview: !verdict.instructionsMatch,
+        confidence: verdict.instructionsConfidence,
+        rawModelResponse: verdict.rawResponse,
+        status: "pending",
+      });
+    }
 
     return "ok";
   } finally {
