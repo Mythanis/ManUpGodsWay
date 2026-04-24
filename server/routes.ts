@@ -12316,13 +12316,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ─── Health Metrics ─────────────────────────────────────────────────────────
 
-  const VALID_METRIC_TYPES = ['steps', 'heart_rate', 'sleep', 'weight'] as const;
+  type MetricType = 'steps' | 'heart_rate' | 'sleep' | 'weight';
+  const VALID_METRIC_TYPES: readonly MetricType[] = ['steps', 'heart_rate', 'sleep', 'weight'] as const;
 
   app.get('/api/health-metrics', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
     try {
       const userId = req.fitnessUser.id;
       const type = req.query.type as string;
-      if (!VALID_METRIC_TYPES.includes(type as any)) {
+      if (!VALID_METRIC_TYPES.includes(type as MetricType)) {
         return res.status(400).json({ message: 'Invalid metric type' });
       }
       const entries = await storage.getHealthMetrics(userId, type);
@@ -12340,8 +12341,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!parsed.success) {
         return res.status(400).json({ message: 'Invalid data', errors: parsed.error.errors });
       }
-      if (!VALID_METRIC_TYPES.includes(parsed.data.metricType as any)) {
+      if (!VALID_METRIC_TYPES.includes(parsed.data.metricType as MetricType)) {
         return res.status(400).json({ message: 'Invalid metric type' });
+      }
+      if (
+        parsed.data.metricType === 'sleep' &&
+        parsed.data.secondaryValue !== undefined &&
+        parsed.data.secondaryValue !== null &&
+        (parsed.data.secondaryValue < 1 || parsed.data.secondaryValue > 5)
+      ) {
+        return res.status(400).json({ message: 'Sleep quality must be between 1 and 5' });
       }
       const entry = await storage.createHealthMetric(parsed.data);
       res.json(entry);

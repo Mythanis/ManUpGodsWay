@@ -79,6 +79,7 @@ import seanMcManusPhoto from "@assets/531400631_10229732604879918_95106817945415
 import { PushConsentDialog } from "@/components/push-consent-dialog";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import type { HealthMetric } from "@shared/schema";
 
 interface FitnessChallenge {
   id: string;
@@ -723,42 +724,50 @@ export default function Fitness() {
   });
 
   // Health metrics queries
-  const { data: stepsMetrics = [] } = useQuery<any[]>({
+  const { data: stepsMetrics = [] } = useQuery<HealthMetric[]>({
     queryKey: ['/api/health-metrics?type=steps'],
     enabled: hasMembership,
   });
-  const { data: hrMetrics = [] } = useQuery<any[]>({
+  const { data: hrMetrics = [] } = useQuery<HealthMetric[]>({
     queryKey: ['/api/health-metrics?type=heart_rate'],
     enabled: hasMembership,
   });
-  const { data: sleepMetrics = [] } = useQuery<any[]>({
+  const { data: sleepMetrics = [] } = useQuery<HealthMetric[]>({
     queryKey: ['/api/health-metrics?type=sleep'],
     enabled: hasMembership,
   });
-  const { data: weightMetrics = [] } = useQuery<any[]>({
+  const { data: weightMetrics = [] } = useQuery<HealthMetric[]>({
     queryKey: ['/api/health-metrics?type=weight'],
     enabled: hasMembership,
   });
 
+  type CreateHealthPayload = {
+    metricType: string;
+    date: string;
+    primaryValue: number;
+    secondaryValue?: number | null;
+    notes?: string | null;
+  };
+
   const createHealthMetricMutation = useMutation({
-    mutationFn: async (data: any) => apiRequest('POST', '/api/health-metrics', data),
+    mutationFn: async (data: CreateHealthPayload) => apiRequest('POST', '/api/health-metrics', data),
     onSuccess: (_res, vars) => {
       queryClient.invalidateQueries({ queryKey: [`/api/health-metrics?type=${vars.metricType}`] });
       setHealthOpenForm(null);
       toast({ title: 'Entry logged', description: 'Your health metric has been saved.' });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast({ title: 'Error', description: err.message || 'Failed to save', variant: 'destructive' });
     },
   });
 
   const deleteHealthMetricMutation = useMutation({
-    mutationFn: async ({ id, metricType }: { id: string; metricType: string }) =>
+    mutationFn: async ({ id }: { id: string; metricType: string }) =>
       apiRequest('DELETE', `/api/health-metrics/${id}`),
     onSuccess: (_res, vars) => {
       queryClient.invalidateQueries({ queryKey: [`/api/health-metrics?type=${vars.metricType}`] });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast({ title: 'Error', description: err.message || 'Failed to delete', variant: 'destructive' });
     },
   });
@@ -5375,6 +5384,11 @@ export default function Fitness() {
                 <CardTitle className="flex items-center gap-2 text-white font-black uppercase tracking-wide text-sm">
                   <Footprints className="w-5 h-5 text-[#FCD000]" />
                   Steps &amp; Calories
+                  {stepsMetrics[0] && (
+                    <span className="ml-1 text-white/40 font-normal normal-case tracking-normal text-[10px]">
+                      {stepsMetrics[0].primaryValue?.toLocaleString()} steps{stepsMetrics[0].secondaryValue ? ` · ${stepsMetrics[0].secondaryValue} kcal` : ''}
+                    </span>
+                  )}
                   <Button
                     size="sm"
                     variant="outline"
@@ -5446,7 +5460,7 @@ export default function Fitness() {
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Steps</span><span className="text-right">Calories</span><span></span>
                     </div>
-                    {stepsMetrics.map((m: any) => (
+                    {stepsMetrics.map((m) => (
                       <div key={m.id} className="grid grid-cols-4 items-center px-2 py-1.5 hover:bg-zinc-800/40 rounded-sm">
                         <span className="text-white/60 text-xs">{m.date}</span>
                         <span className="text-right text-white font-bold text-xs">{m.primaryValue?.toLocaleString()}</span>
@@ -5470,6 +5484,11 @@ export default function Fitness() {
                 <CardTitle className="flex items-center gap-2 text-white font-black uppercase tracking-wide text-sm">
                   <Heart className="w-5 h-5 text-[#FCD000]" />
                   Heart Rate
+                  {hrMetrics[0] && (
+                    <span className="ml-1 text-white/40 font-normal normal-case tracking-normal text-[10px]">
+                      {hrMetrics[0].primaryValue} bpm resting{hrMetrics[0].secondaryValue ? ` · ${hrMetrics[0].secondaryValue} bpm active` : ''}
+                    </span>
+                  )}
                   <Button
                     size="sm"
                     variant="outline"
@@ -5541,7 +5560,7 @@ export default function Fitness() {
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Resting</span><span className="text-right">Active</span><span></span>
                     </div>
-                    {hrMetrics.map((m: any) => (
+                    {hrMetrics.map((m) => (
                       <div key={m.id} className="grid grid-cols-4 items-center px-2 py-1.5 hover:bg-zinc-800/40 rounded-sm">
                         <span className="text-white/60 text-xs">{m.date}</span>
                         <span className="text-right text-white font-bold text-xs">{m.primaryValue} <span className="text-white/40 text-[10px]">bpm</span></span>
@@ -5565,6 +5584,11 @@ export default function Fitness() {
                 <CardTitle className="flex items-center gap-2 text-white font-black uppercase tracking-wide text-sm">
                   <Moon className="w-5 h-5 text-[#FCD000]" />
                   Sleep
+                  {sleepMetrics[0] && (
+                    <span className="ml-1 text-white/40 font-normal normal-case tracking-normal text-[10px]">
+                      {sleepMetrics[0].primaryValue} hr{sleepMetrics[0].secondaryValue ? ` · quality ${sleepMetrics[0].secondaryValue}/5` : ''}
+                    </span>
+                  )}
                   <Button
                     size="sm"
                     variant="outline"
@@ -5601,12 +5625,12 @@ export default function Fitness() {
                         />
                       </div>
                       <div>
-                        <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Quality (1–10)</label>
+                        <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Quality (1–5)</label>
                         <Input
                           type="number"
                           min="1"
-                          max="10"
-                          placeholder="8"
+                          max="5"
+                          placeholder="4"
                           value={healthSleepForm.quality}
                           onChange={e => setHealthSleepForm(f => ({ ...f, quality: e.target.value }))}
                           className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm"
@@ -5639,11 +5663,11 @@ export default function Fitness() {
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Hours</span><span className="text-right">Quality</span><span></span>
                     </div>
-                    {sleepMetrics.map((m: any) => (
+                    {sleepMetrics.map((m) => (
                       <div key={m.id} className="grid grid-cols-4 items-center px-2 py-1.5 hover:bg-zinc-800/40 rounded-sm">
                         <span className="text-white/60 text-xs">{m.date}</span>
                         <span className="text-right text-white font-bold text-xs">{m.primaryValue} <span className="text-white/40 text-[10px]">hr</span></span>
-                        <span className="text-right text-white/60 text-xs">{m.secondaryValue ? `${m.secondaryValue}/10` : '—'}</span>
+                        <span className="text-right text-white/60 text-xs">{m.secondaryValue ? `${m.secondaryValue}/5` : '—'}</span>
                         <div className="flex justify-end">
                           <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-white/20 hover:text-red-400"
                             onClick={() => deleteHealthMetricMutation.mutate({ id: m.id, metricType: 'sleep' })}>
@@ -5663,6 +5687,11 @@ export default function Fitness() {
                 <CardTitle className="flex items-center gap-2 text-white font-black uppercase tracking-wide text-sm">
                   <Scale className="w-5 h-5 text-[#FCD000]" />
                   Weight &amp; Measurements
+                  {weightMetrics[0] && (
+                    <span className="ml-1 text-white/40 font-normal normal-case tracking-normal text-[10px]">
+                      {weightMetrics[0].primaryValue} lbs{weightMetrics[0].secondaryValue ? ` · ${weightMetrics[0].secondaryValue}% BF` : ''}
+                    </span>
+                  )}
                   <Button
                     size="sm"
                     variant="outline"
@@ -5758,8 +5787,8 @@ export default function Fitness() {
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Weight</span><span className="text-right">Body Fat</span><span></span>
                     </div>
-                    {weightMetrics.map((m: any) => {
-                      let measurements: any = {};
+                    {weightMetrics.map((m) => {
+                      let measurements: Record<string, number> = {};
                       try { if (m.notes) measurements = JSON.parse(m.notes); } catch {}
                       const hasMeasurements = Object.keys(measurements).length > 0;
                       return (
