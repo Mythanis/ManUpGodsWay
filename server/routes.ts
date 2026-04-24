@@ -52,7 +52,8 @@ import {
   insertWarGroupMemberSchema,
   insertFitnessPostSchema,
   insertExerciseSchema,
-  insertHealthMetricSchema
+  insertHealthMetricSchema,
+  type HealthMetricType
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -12316,14 +12317,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ─── Health Metrics ─────────────────────────────────────────────────────────
 
-  type MetricType = 'steps' | 'heart_rate' | 'sleep' | 'weight';
-  const VALID_METRIC_TYPES: readonly MetricType[] = ['steps', 'heart_rate', 'sleep', 'weight'] as const;
+  const VALID_METRIC_TYPES: readonly HealthMetricType[] = ['steps', 'heart_rate', 'sleep', 'weight'] as const;
 
   app.get('/api/health-metrics', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
     try {
       const userId = req.fitnessUser.id;
       const type = req.query.type as string;
-      if (!VALID_METRIC_TYPES.includes(type as MetricType)) {
+      if (!VALID_METRIC_TYPES.includes(type as HealthMetricType)) {
         return res.status(400).json({ message: 'Invalid metric type' });
       }
       const entries = await storage.getHealthMetrics(userId, type);
@@ -12341,7 +12341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!parsed.success) {
         return res.status(400).json({ message: 'Invalid data', errors: parsed.error.errors });
       }
-      if (!VALID_METRIC_TYPES.includes(parsed.data.metricType as MetricType)) {
+      if (!VALID_METRIC_TYPES.includes(parsed.data.metricType as HealthMetricType)) {
         return res.status(400).json({ message: 'Invalid metric type' });
       }
       if (

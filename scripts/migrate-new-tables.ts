@@ -32,7 +32,8 @@ async function migrate() {
       id varchar PRIMARY KEY DEFAULT gen_random_uuid(),
       user_id varchar NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       date varchar(10) NOT NULL,
-      metric_type varchar(20) NOT NULL,
+      metric_type varchar(20) NOT NULL
+        CHECK (metric_type IN ('steps', 'heart_rate', 'sleep', 'weight')),
       primary_value real NOT NULL,
       secondary_value real,
       notes text,

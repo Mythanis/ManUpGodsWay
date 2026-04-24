@@ -3041,11 +3041,14 @@ export type InsertVatmebopCheck = z.infer<typeof insertVatmebopCheckSchema>;
 
 // ─── Health Metrics ───────────────────────────────────────────────────────────
 
+export const healthMetricTypeEnum = pgEnum("health_metric_type", ["steps", "heart_rate", "sleep", "weight"]);
+export type HealthMetricType = (typeof healthMetricTypeEnum.enumValues)[number];
+
 export const healthMetrics = pgTable("health_metrics", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   date: varchar("date", { length: 10 }).notNull(), // "YYYY-MM-DD"
-  metricType: varchar("metric_type", { length: 20 }).notNull(), // steps | heart_rate | sleep | weight
+  metricType: varchar("metric_type", { length: 20 }).notNull().$type<HealthMetricType>(), // enum enforced via CHECK constraint
   primaryValue: real("primary_value").notNull(),
   secondaryValue: real("secondary_value"),
   notes: text("notes"), // JSON string for extra fields (e.g. body measurements)

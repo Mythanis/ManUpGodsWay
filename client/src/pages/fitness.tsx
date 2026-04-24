@@ -79,7 +79,7 @@ import seanMcManusPhoto from "@assets/531400631_10229732604879918_95106817945415
 import { PushConsentDialog } from "@/components/push-consent-dialog";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { HealthMetric } from "@shared/schema";
+import type { HealthMetric, HealthMetricType } from "@shared/schema";
 
 interface FitnessChallenge {
   id: string;
@@ -742,7 +742,7 @@ export default function Fitness() {
   });
 
   type CreateHealthPayload = {
-    metricType: string;
+    metricType: HealthMetricType;
     date: string;
     primaryValue: number;
     secondaryValue?: number | null;
@@ -5762,7 +5762,7 @@ export default function Fitness() {
                         className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
                         disabled={!healthWeightForm.weight || createHealthMetricMutation.isPending}
                         onClick={() => {
-                          const measurements: any = {};
+                          const measurements: Partial<Record<'chest' | 'waist' | 'hips' | 'neck', number>> = {};
                           if (healthWeightForm.chest) measurements.chest = parseFloat(healthWeightForm.chest);
                           if (healthWeightForm.waist) measurements.waist = parseFloat(healthWeightForm.waist);
                           if (healthWeightForm.hips) measurements.hips = parseFloat(healthWeightForm.hips);
