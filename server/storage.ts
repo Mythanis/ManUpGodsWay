@@ -671,7 +671,7 @@ export interface IStorage {
   // Health metric operations
   getHealthMetrics(userId: string, metricType: string, limit?: number): Promise<HealthMetric[]>;
   createHealthMetric(data: InsertHealthMetric): Promise<HealthMetric>;
-  deleteHealthMetric(id: string, userId: string): Promise<void>;
+  deleteHealthMetric(id: string, userId: string): Promise<boolean>;
 
   // VATMEBOP accountability chart
   getVatmebopChart(userId: string, year: number): Promise<VatmebopCheck[]>;
@@ -8164,7 +8164,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(healthMetrics)
       .where(and(eq(healthMetrics.userId, userId), eq(healthMetrics.metricType, metricType)))
-      .orderBy(desc(healthMetrics.createdAt))
+      .orderBy(desc(healthMetrics.date), desc(healthMetrics.createdAt))
       .limit(limit);
   }
 
@@ -8173,10 +8173,12 @@ export class DatabaseStorage implements IStorage {
     return row;
   }
 
-  async deleteHealthMetric(id: string, userId: string): Promise<void> {
-    await db
+  async deleteHealthMetric(id: string, userId: string): Promise<boolean> {
+    const deleted = await db
       .delete(healthMetrics)
-      .where(and(eq(healthMetrics.id, id), eq(healthMetrics.userId, userId)));
+      .where(and(eq(healthMetrics.id, id), eq(healthMetrics.userId, userId)))
+      .returning({ id: healthMetrics.id });
+    return deleted.length > 0;
   }
 
   async upsertVatmebopCheck(

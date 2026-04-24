@@ -12363,7 +12363,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/health-metrics/:id', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
     try {
       const userId = req.fitnessUser.id;
-      await storage.deleteHealthMetric(req.params.id, userId);
+      const deleted = await storage.deleteHealthMetric(req.params.id, userId);
+      if (!deleted) return res.status(404).json({ message: 'Health metric not found' });
       res.json({ success: true });
     } catch (error) {
       console.error('Error deleting health metric:', error);
