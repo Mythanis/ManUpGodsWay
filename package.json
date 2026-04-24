@@ -150,9 +150,6 @@
     "@babel/helpers": ">=7.26.10",
     "follow-redirects": ">=1.16.0",
     "@tootallnate/once": ">=3.0.0",
-    "vite": {
-      "esbuild": ">=0.25.0"
-    },
     "@esbuild-kit/core-utils": {
       "esbuild": ">=0.25.0"
     },
