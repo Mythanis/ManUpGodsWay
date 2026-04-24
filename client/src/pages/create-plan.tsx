@@ -317,18 +317,17 @@ export default function CreatePlan() {
         return exerciseData;
       });
 
-      // POST exercises in parallel batches for speed and reliability
-      const BATCH_SIZE = 10;
-      for (let i = 0; i < exercisePayloads.length; i += BATCH_SIZE) {
-        const batch = exercisePayloads.slice(i, i + BATCH_SIZE);
-        await Promise.all(
-          batch.map(payload =>
-            apiRequest('POST', `/api/fitness-plans/${plan.id}/exercises`, payload)
-          )
+      // Send all exercises in a single bulk request to avoid hitting the
+      // per-IP rate limiter on large plans.
+      if (exercisePayloads.length > 0) {
+        await apiRequest(
+          'POST',
+          `/api/fitness-plans/${plan.id}/exercises/bulk`,
+          { exercises: exercisePayloads }
         );
       }
 
-      // Add reminders in parallel
+      // Add reminders in parallel (typically very few, so well under limit)
       if (reminders.length > 0) {
         await Promise.all(
           reminders.map(reminder =>

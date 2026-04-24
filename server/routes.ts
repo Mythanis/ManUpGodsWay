@@ -10826,6 +10826,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add exercise to fitness plan
+  // Bulk-insert variant. Accepts { exercises: [...] } and inserts them in
+  // a single DB write. This avoids hitting the per-IP rate limiter when a
+  // user creates a 100+ exercise pre-built plan, which would otherwise fire
+  // 100+ separate POSTs.
+  app.post('/api/fitness-plans/:planId/exercises/bulk', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const plan = await storage.getFitnessPlan(req.params.planId);
+      if (!plan) {
+        return res.status(404).json({ message: 'Fitness plan not found' });
+      }
+      if (plan.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      const incoming = Array.isArray(req.body?.exercises) ? req.body.exercises : null;
+      if (!incoming) {
+        return res.status(400).json({ message: 'Expected { exercises: [...] }' });
+      }
+      if (incoming.length === 0) {
+        return res.status(201).json([]);
+      }
+      if (incoming.length > 500) {
+        return res.status(400).json({ message: 'Too many exercises in one request (max 500)' });
+      }
+
+      const parsedList = incoming.map((row: any) =>
+        insertFitnessPlanExerciseSchema.parse({ ...row, planId: req.params.planId })
+      );
+
+      // Resolve sidedness for all exercises in one query, keyed by numeric id
+      // when the exerciseId parses as an int, otherwise by lowercased name.
+      const numericIds: number[] = [];
+      const namesToLookup: string[] = [];
+      for (const p of parsedList) {
+        const n = parseInt(p.exerciseId, 10);
+        if (!Number.isNaN(n)) numericIds.push(n);
+        else if (p.exerciseName) namesToLookup.push(p.exerciseName.toLowerCase());
+      }
+
+      const sidednessById = new Map<number, 'bilateral' | 'unilateral' | 'alternating'>();
+      const sidednessByName = new Map<string, 'bilateral' | 'unilateral' | 'alternating'>();
+
+      if (numericIds.length > 0) {
+        const rows = await db
+          .select({ id: schema.exercises.id, sidedness: schema.exercises.sidedness })
+          .from(schema.exercises)
+          .where(inArray(schema.exercises.id, numericIds));
+        rows.forEach(r => sidednessById.set(r.id, r.sidedness));
+      }
+      if (namesToLookup.length > 0) {
+        const rows = await db
+          .select({ name: schema.exercises.name, sidedness: schema.exercises.sidedness })
+          .from(schema.exercises)
+          .where(sql`LOWER(${schema.exercises.name}) IN ${namesToLookup}`);
+        rows.forEach(r => sidednessByName.set(r.name.toLowerCase(), r.sidedness));
+      }
+
+      const toInsert = parsedList.map(p => {
+        const n = parseInt(p.exerciseId, 10);
+        let sidedness: 'bilateral' | 'unilateral' | 'alternating' =
+          (p.sidedness as 'bilateral' | 'unilateral' | 'alternating') ?? 'bilateral';
+        if (!Number.isNaN(n) && sidednessById.has(n)) {
+          sidedness = sidednessById.get(n)!;
+        } else if (p.exerciseName && sidednessByName.has(p.exerciseName.toLowerCase())) {
+          sidedness = sidednessByName.get(p.exerciseName.toLowerCase())!;
+        }
+        const currentReps = p.reps ?? '';
+        const needsPerSide =
+          (sidedness === 'unilateral' || sidedness === 'alternating') &&
+          (currentReps === '10' || currentReps === '');
+        return {
+          ...p,
+          sidedness,
+          reps: needsPerSide ? '10 per side' : p.reps,
+        };
+      });
+
+      const inserted = await storage.addExercisesToPlan(toInsert);
+      res.status(201).json(inserted);
+    } catch (error) {
+      console.error('Error bulk-adding exercises to plan:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid exercise data", errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   app.post('/api/fitness-plans/:planId/exercises', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);

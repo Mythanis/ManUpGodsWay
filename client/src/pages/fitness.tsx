@@ -2716,16 +2716,14 @@ export default function Fitness() {
         };
       });
 
-      // POST exercises in parallel batches to avoid sequential timeouts.
-      // Batches of 10 keep the server happy while finishing ~10x faster
-      // than the previous one-at-a-time loop.
-      const BATCH_SIZE = 10;
-      for (let i = 0; i < exercisePayloads.length; i += BATCH_SIZE) {
-        const batch = exercisePayloads.slice(i, i + BATCH_SIZE);
-        await Promise.all(
-          batch.map(payload =>
-            apiRequest('POST', `/api/fitness-plans/${planResponse.id}/exercises`, payload)
-          )
+      // Send all exercises in a single bulk request. This avoids hitting
+      // the per-IP rate limiter (200 req/min) when a plan has 100+
+      // exercises and is also one DB write instead of N.
+      if (exercisePayloads.length > 0) {
+        await apiRequest(
+          'POST',
+          `/api/fitness-plans/${planResponse.id}/exercises/bulk`,
+          { exercises: exercisePayloads }
         );
       }
 

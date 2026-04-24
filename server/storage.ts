@@ -622,6 +622,7 @@ export interface IStorage {
   // Fitness plan exercises operations
   getFitnessPlanExercises(planId: string): Promise<FitnessPlanExercise[]>;
   addExerciseToPlan(exercise: InsertFitnessPlanExercise): Promise<FitnessPlanExercise>;
+  addExercisesToPlan(exercises: InsertFitnessPlanExercise[]): Promise<FitnessPlanExercise[]>;
   updatePlanExercise(id: string, updates: Partial<InsertFitnessPlanExercise>): Promise<FitnessPlanExercise>;
   removePlanExercise(id: string): Promise<void>;
   reorderPlanExercises(planId: string, exerciseOrders: { id: string; orderIndex: number }[]): Promise<void>;
@@ -6519,6 +6520,14 @@ export class DatabaseStorage implements IStorage {
       .values(exercise)
       .returning();
     return planExercise;
+  }
+
+  async addExercisesToPlan(exercises: InsertFitnessPlanExercise[]): Promise<FitnessPlanExercise[]> {
+    if (exercises.length === 0) return [];
+    return await db
+      .insert(fitnessPlanExercises)
+      .values(exercises)
+      .returning();
   }
 
   async updatePlanExercise(id: string, updates: Partial<InsertFitnessPlanExercise>): Promise<FitnessPlanExercise> {
