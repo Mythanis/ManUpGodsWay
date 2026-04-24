@@ -6926,6 +6926,10 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   // is shown on top of the exercise media. The user explicitly taps it
   // to start the very first countdown so they have time to get set up.
   const [awaitingStart, setAwaitingStart] = useState(true);
+  // Pacing mode: 'timed' = current behavior (timer auto-advances through
+  // sets/rest); 'manual' = work timer is frozen and user advances to
+  // the next exercise via on-screen arrows beside the media.
+  const [pacingMode, setPacingMode] = useState<'timed' | 'manual'>('timed');
   const begin = () => setAwaitingStart(false);
   const togglePause = () => {
     // Tapping the media / timer before the workout starts also begins it.
@@ -7286,6 +7290,10 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     if (phase === 'done') return;
     if (awaitingStart) return; // Pre-start gate — waiting for user to tap Begin
     if (paused) return; // Frozen — pause button or instructions modal open
+    // Manual mode: freeze the work / side-switch timer so the user can
+    // advance via the on-screen arrows. Countdown / rest still tick so
+    // the prep buffer and between-exercise rest still flow naturally.
+    if (pacingMode === 'manual' && (phase === 'work' || phase === 'side-switch')) return;
     const id = setInterval(() => {
       setSecondsLeft(s => {
         if (s <= 1) {
@@ -7302,7 +7310,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     }, 1000);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, exerciseIdx, setIdx, paused, awaitingStart]);
+  }, [phase, exerciseIdx, setIdx, paused, awaitingStart, pacingMode]);
 
   const advancePhase = () => {
     if (phase === 'countdown') {
@@ -7380,6 +7388,24 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     setTimeout(() => advancePhase(), 0);
   };
 
+  // Manual-mode "next" — jumps straight to the next exercise's first
+  // working set, skipping any remaining sets and rest of the current
+  // one. If we're on the last exercise, mark the session done.
+  const nextExercise = () => {
+    setCurrentSide('right');
+    if (exerciseIdx >= exercises.length - 1) {
+      setPhase('done');
+      setSecondsLeft(0);
+      return;
+    }
+    setExerciseIdx(i => i + 1);
+    setSetIdx(0);
+    setPhase('work');
+    // Pre-seed working seconds so the on-screen timer reads sensibly
+    // even though the tick is frozen in manual mode.
+    setSecondsLeft(workSeconds);
+  };
+
   // Restart the previous exercise from its 10-second preview. If we're
   // already on the first exercise, just restart it from countdown.
   const previous = () => {
@@ -7444,6 +7470,38 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Pacing-mode toggle — radio-style pill that lets the user
+              choose between the auto-advancing timer or fully manual
+              advance via the on-screen arrows beside the media. */}
+          {phase !== 'done' && (
+            <div
+              role="radiogroup"
+              aria-label="Workout pacing mode"
+              className="inline-flex bg-zinc-900 border-2 border-white/20 rounded-sm overflow-hidden"
+              data-testid="toggle-pacing-mode"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={pacingMode === 'timed'}
+                onClick={() => setPacingMode('timed')}
+                className={`px-2 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${pacingMode === 'timed' ? 'bg-[#FCD000] text-black' : 'text-white/60 hover:bg-white/10'}`}
+                data-testid="button-mode-timed"
+              >
+                Timed
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={pacingMode === 'manual'}
+                onClick={() => setPacingMode('manual')}
+                className={`px-2 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${pacingMode === 'manual' ? 'bg-[#FCD000] text-black' : 'text-white/60 hover:bg-white/10'}`}
+                data-testid="button-mode-manual"
+              >
+                Manual
+              </button>
+            </div>
+          )}
           {/* End-early affordance — exposes the feedback prompt mid-workout
               so a partial-completion rating gets recorded and weighted at
               0.5 by the streak engine. Hidden once we're already on the
@@ -7742,13 +7800,28 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
             </p>
 
             {mediaUrl && (
+              <div className="relative flex items-center gap-2 md:gap-4 mb-6">
+                {/* Manual-mode previous-exercise arrow. Hidden on the
+                    very first exercise since previous() would just
+                    restart the same one. */}
+                {pacingMode === 'manual' && !awaitingStart && exerciseIdx > 0 && (
+                  <button
+                    type="button"
+                    onClick={previous}
+                    aria-label="Previous exercise"
+                    className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#FCD000] text-black border-2 border-black flex items-center justify-center shadow-lg hover:bg-[#FCD000]/90 active:scale-95 transition"
+                    data-testid="button-manual-prev"
+                  >
+                    <ChevronLeft className="w-6 h-6 md:w-7 md:h-7" />
+                  </button>
+                )}
               <div
                 role="button"
                 tabIndex={0}
                 onClick={togglePause}
                 onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); togglePause(); } }}
                 aria-label={awaitingStart ? 'Begin workout' : (paused ? 'Resume workout' : 'Pause workout')}
-                className="relative w-48 h-48 md:w-64 md:h-64 bg-white rounded-sm border-2 border-[#FCD000] overflow-hidden mb-6 cursor-pointer select-none"
+                className="relative w-48 h-48 md:w-64 md:h-64 bg-white rounded-sm border-2 border-[#FCD000] overflow-hidden cursor-pointer select-none"
                 data-testid="media-tap-to-pause"
               >
                 {isVideo ? (
@@ -7777,6 +7850,21 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                       Begin
                     </div>
                   </div>
+                )}
+              </div>
+                {/* Manual-mode next-exercise arrow. Visible once the
+                    workout has begun; on the last exercise it ends the
+                    session (jumps to the feedback screen). */}
+                {pacingMode === 'manual' && !awaitingStart && (
+                  <button
+                    type="button"
+                    onClick={nextExercise}
+                    aria-label={exerciseIdx >= exercises.length - 1 ? 'Finish workout' : 'Next exercise'}
+                    className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#FCD000] text-black border-2 border-black flex items-center justify-center shadow-lg hover:bg-[#FCD000]/90 active:scale-95 transition"
+                    data-testid="button-manual-next"
+                  >
+                    <ChevronRight className="w-6 h-6 md:w-7 md:h-7" />
+                  </button>
                 )}
               </div>
             )}
