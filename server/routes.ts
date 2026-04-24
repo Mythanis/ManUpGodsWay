@@ -12079,6 +12079,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await db.update(schema.fitnessPosts)
           .set({ likes: sql`${schema.fitnessPosts.likes} + 1` })
           .where(eq(schema.fitnessPosts.id, postId));
+        // Send notification to post author (if not self)
+        const [post] = await db.select().from(schema.fitnessPosts).where(eq(schema.fitnessPosts.id, postId)).limit(1);
+        if (post && post.userId !== userId) {
+          try {
+            await storage.createNotificationWithPreferences({
+              userId: post.userId,
+              type: 'fitness_community',
+              title: 'Amen! 🙏',
+              message: 'Someone Amened your fitness post.',
+              relatedId: postId,
+            });
+          } catch (e) {
+            console.error('[FitnessCommunity] Failed to notify post author on like:', e);
+          }
+        }
         return res.json({ liked: true });
       }
     } catch (error) {
