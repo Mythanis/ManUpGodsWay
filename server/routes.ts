@@ -17152,6 +17152,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .where(eq(schema.exercises.id, review.exerciseId));
 
         await tx
+          .update(schema.fitnessPlanExercises)
+          .set({ sidedness: chosenSidedness })
+          .where(eq(schema.fitnessPlanExercises.exerciseId, review.exerciseId.toString()));
+
+        await tx
           .update(schema.exerciseSidednessReviews)
           .set({ status: 'approved', approvedSidedness: chosenSidedness, reviewedAt: new Date() })
           .where(eq(schema.exerciseSidednessReviews.id, id));
@@ -17236,6 +17241,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .update(schema.exercises)
             .set({ sidedness, updatedAt: new Date() })
             .where(eq(schema.exercises.id, r.exerciseId));
+          await tx
+            .update(schema.fitnessPlanExercises)
+            .set({ sidedness })
+            .where(eq(schema.fitnessPlanExercises.exerciseId, r.exerciseId.toString()));
           await tx
             .update(schema.exerciseSidednessReviews)
             .set({ status: 'approved', approvedSidedness: sidedness, reviewedAt: new Date() })
