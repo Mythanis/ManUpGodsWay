@@ -3654,7 +3654,7 @@ export default function Fitness() {
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    {equipments.map((equipment: string) => {
+                    {[...equipments].sort((a: string, b: string) => a.localeCompare(b)).map((equipment: string) => {
                       const formatLabel = (eq: string) =>
                         eq.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                       const checked = selectedPlanEquipment.includes(equipment);
