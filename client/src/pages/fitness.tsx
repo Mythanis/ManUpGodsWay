@@ -3588,6 +3588,17 @@ export default function Fitness() {
                       if (value !== 'hiit' && selectedLevel === 'tabata') {
                         setSelectedLevel('');
                       }
+                      // Stretching has no fitness-level distinction in our
+                      // exercise library (Advanced bodyweight stretches don't
+                      // exist), so auto-pick Beginner pacing internally and
+                      // hide the question. If switching away from stretching,
+                      // clear the auto-pick so the user makes an explicit
+                      // choice for the new style.
+                      if (value === 'stretching') {
+                        setSelectedLevel('beginner');
+                      } else if (selectedWorkoutStyle === 'stretching' && selectedLevel === 'beginner') {
+                        setSelectedLevel('');
+                      }
                     }}
                   >
                     <SelectTrigger className="w-full bg-black border-zinc-600 text-white" data-testid="select-workout-style">
@@ -3611,23 +3622,26 @@ export default function Fitness() {
                   )}
                 </div>
 
-                {/* 2. Fitness Level */}
-                <div className="px-4 py-4">
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Fitness Level</p>
-                  <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                    <SelectTrigger className="w-full bg-black border-zinc-600 text-white" data-testid="select-fitness-level">
-                      <SelectValue placeholder="Select level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">Beginner</SelectItem>
-                      <SelectItem value="intermediate">Intermediate</SelectItem>
-                      <SelectItem value="advanced">Advanced</SelectItem>
-                      {selectedWorkoutStyle === 'hiit' && (
-                        <SelectItem value="tabata" data-testid="option-level-tabata">Tabata (Advanced)</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* 2. Fitness Level — hidden for Stretching since stretches
+                    don't differ by level in our exercise library. */}
+                {selectedWorkoutStyle !== 'stretching' && (
+                  <div className="px-4 py-4">
+                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Fitness Level</p>
+                    <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                      <SelectTrigger className="w-full bg-black border-zinc-600 text-white" data-testid="select-fitness-level">
+                        <SelectValue placeholder="Select level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                        {selectedWorkoutStyle === 'hiit' && (
+                          <SelectItem value="tabata" data-testid="option-level-tabata">Tabata (Advanced)</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 {/* 2. Available Equipment */}
                 <div className="px-4 py-4">
@@ -3878,10 +3892,12 @@ export default function Fitness() {
                     Fill out all the fields above to generate personalized workout plans tailored to your needs:
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-black max-w-md mx-auto">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${selectedLevel ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                      <span>Fitness Level</span>
-                    </div>
+                    {selectedWorkoutStyle !== 'stretching' && (
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${selectedLevel ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                        <span>Fitness Level</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${selectedPlanEquipment.length > 0 ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                       <span>Available Equipment</span>
