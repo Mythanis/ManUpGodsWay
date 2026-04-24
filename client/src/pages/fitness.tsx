@@ -543,6 +543,7 @@ export default function Fitness() {
     return t && ['workout', 'community', 'planner', 'intake', 'nutrition', 'exercises', 'favorites', 'pre-built-plans', 'my-plans', 'health'].includes(t) ? t : 'workout';
   })();
   const [activeFitnessTab, setActiveFitnessTab] = useState<string>(initialTab);
+  const tabsListRef = useRef<HTMLDivElement>(null);
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
   const { user: authUser } = useAuth();
   const { isTourActive } = useTour();
@@ -904,6 +905,15 @@ export default function Fitness() {
       window.history.replaceState({}, '', '/fitness');
     }
   }, []);
+
+  // Scroll active fitness tab into view when tab changes
+  useEffect(() => {
+    if (!tabsListRef.current) return;
+    const activeBtn = tabsListRef.current.querySelector<HTMLButtonElement>(`[data-state="active"]`);
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, [activeFitnessTab]);
 
   // Effect to generate plans when filters change
   useEffect(() => {
@@ -3585,40 +3595,40 @@ export default function Fitness() {
           onValueChange={setActiveFitnessTab}
           className="w-full"
         >
-          <TabsList className="grid grid-cols-3 w-full h-auto p-2 bg-transparent gap-2 border-2 border-[#FCD000] rounded-sm">
-            <TabsTrigger value="workout" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+          <TabsList ref={tabsListRef} className="flex flex-row overflow-x-auto scrollbar-hide w-full h-auto p-2 bg-transparent gap-2 border-2 border-[#FCD000] rounded-sm">
+            <TabsTrigger value="workout" className="flex flex-col flex-shrink-0 items-center gap-1.5 py-3 px-2 min-w-[80px] rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Dumbbell className="w-5 h-5" />
               Workout
             </TabsTrigger>
-            <TabsTrigger value="community" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="community" className="flex flex-col flex-shrink-0 items-center gap-1.5 py-3 px-2 min-w-[80px] rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Users className="w-5 h-5" />
               Community
             </TabsTrigger>
-            <TabsTrigger value="exercises" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="exercises" className="flex flex-col flex-shrink-0 items-center gap-1.5 py-3 px-2 min-w-[80px] rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Search className="w-5 h-5" />
               Exercises
             </TabsTrigger>
-            <TabsTrigger value="favorites" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="favorites" className="flex flex-col flex-shrink-0 items-center gap-1.5 py-3 px-2 min-w-[80px] rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Heart className="w-5 h-5" />
               Favorites
             </TabsTrigger>
-            <TabsTrigger value="pre-built-plans" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="pre-built-plans" className="flex flex-col flex-shrink-0 items-center gap-1.5 py-3 px-2 min-w-[80px] rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <BookOpen className="w-5 h-5" />
               Plans
             </TabsTrigger>
-            <TabsTrigger value="my-plans" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="my-plans" className="flex flex-col flex-shrink-0 items-center gap-1.5 py-3 px-2 min-w-[80px] rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <List className="w-5 h-5" />
               My Plans
             </TabsTrigger>
-            <TabsTrigger value="nutrition" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="nutrition" className="flex flex-col flex-shrink-0 items-center gap-1.5 py-3 px-2 min-w-[80px] rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Apple className="w-5 h-5" />
               Nutrition
             </TabsTrigger>
-            <TabsTrigger value="intake" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="intake" className="flex flex-col flex-shrink-0 items-center gap-1.5 py-3 px-2 min-w-[80px] rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Utensils className="w-5 h-5" />
               Intake
             </TabsTrigger>
-            <TabsTrigger value="health" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="health" className="flex flex-col flex-shrink-0 items-center gap-1.5 py-3 px-2 min-w-[80px] rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Activity className="w-5 h-5" />
               Health
             </TabsTrigger>
