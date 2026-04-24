@@ -20,11 +20,13 @@ import {
   CheckSquare,
   Calendar,
   Bell,
-  Timer
+  Timer,
+  Repeat
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation, Link } from "wouter";
 import { BackButton } from "@/components/BackButton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface Exercise {
   exerciseId: string;
@@ -132,6 +134,11 @@ export default function EditPlan() {
   const [tempMinutes, setTempMinutes] = useState<number | undefined>();
   const [tempDaysOfWeek, setTempDaysOfWeek] = useState<string[]>([]);
   const [tempNotes, setTempNotes] = useState('');
+
+  // Swap exercise modal
+  const [swapTargetIndex, setSwapTargetIndex] = useState<number | null>(null);
+  const [swapBodyPart, setSwapBodyPart] = useState<string>('');
+  const [swapEquipment, setSwapEquipment] = useState<string>('');
 
   // Fetch existing plan data
   const { data: existingPlan, isLoading: planLoading } = useQuery({
@@ -353,6 +360,83 @@ export default function EditPlan() {
     setSelectedExercises(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Open the swap dialog for a given exercise row, preloading filters
+  // from that exercise's own body part + equipment so the candidate list
+  // matches what the user already chose.
+  const handleOpenSwap = (index: number) => {
+    const target = selectedExercises[index];
+    if (!target) return;
+    const ex: any = target.exercise;
+    // Keep original casing — the /api/exercises endpoint matches body_part /
+    // equipment with exact equality and the DB stores them capitalized
+    // (e.g., "Shoulders", "Bodyweight").
+    const bp = (ex.bodyParts?.[0] || ex.bodyPart || '').toString();
+    const eq = (ex.equipments?.[0] || ex.equipment || '').toString();
+    setSwapBodyPart(bp);
+    setSwapEquipment(eq);
+    setSwapTargetIndex(index);
+  };
+
+  // Replace the exercise at swapTargetIndex while preserving sets / reps /
+  // minutes / days / notes, then close the dialog.
+  const handleSwapExercise = (newExercise: any) => {
+    if (swapTargetIndex === null) return;
+    setSelectedExercises(prev => prev.map((sel, i) => {
+      if (i !== swapTargetIndex) return sel;
+      return {
+        ...sel,
+        exercise: {
+          exerciseId: String(newExercise.id ?? newExercise.exerciseId ?? ''),
+          name: newExercise.name,
+          gifUrl: newExercise.mediaFile || newExercise.gifUrl || '',
+          targetMuscles: newExercise.targetMuscles || [newExercise.target || ''],
+          bodyParts: newExercise.bodyParts || [newExercise.bodyPart || ''],
+          equipments: newExercise.equipments || [newExercise.equipment || ''],
+          secondaryMuscles: newExercise.secondaryMuscles || [],
+          instructions: newExercise.instructions
+            ? (Array.isArray(newExercise.instructions) ? newExercise.instructions : [newExercise.instructions])
+            : [],
+          id: String(newExercise.id ?? newExercise.exerciseId ?? ''),
+          target: newExercise.target || newExercise.targetMuscles?.[0] || '',
+          bodyPart: newExercise.bodyPart || newExercise.bodyParts?.[0] || '',
+          equipment: newExercise.equipment || newExercise.equipments?.[0] || '',
+        },
+      };
+    }));
+    setSwapTargetIndex(null);
+    toast({ title: 'Exercise swapped', description: newExercise.name });
+  };
+
+  // Fetch candidate replacements for the swap dialog. Filters by body
+  // part + equipment of the exercise being swapped.
+  const { data: swapCandidates = [], isLoading: swapCandidatesLoading } = useQuery<any[]>({
+    queryKey: ['swap-candidates', swapBodyPart, swapEquipment],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (swapBodyPart) params.set('bodyPart', swapBodyPart);
+      if (swapEquipment) params.set('equipment', swapEquipment);
+      params.set('limit', '500');
+      const res = await fetch(`/api/exercises?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch swap candidates');
+      return res.json();
+    },
+    enabled: swapTargetIndex !== null,
+    staleTime: 60_000,
+  });
+
+  // Partition candidates: favorites first (matched by exerciseId), then
+  // the rest. Exclude the exercise currently in this slot.
+  const currentSwapExercise = swapTargetIndex !== null ? selectedExercises[swapTargetIndex]?.exercise : null;
+  const currentSwapId = currentSwapExercise
+    ? String((currentSwapExercise as any).exerciseId ?? (currentSwapExercise as any).id ?? '')
+    : '';
+  const favoriteIdSet = new Set(
+    (favoriteExercises as FavoriteExercise[]).map(f => String(f.exerciseId))
+  );
+  const filteredSwapCandidates = swapCandidates.filter(c => String(c.id) !== currentSwapId);
+  const favoriteCandidates = filteredSwapCandidates.filter(c => favoriteIdSet.has(String(c.id)));
+  const otherCandidates = filteredSwapCandidates.filter(c => !favoriteIdSet.has(String(c.id)));
+
   // Handle form submission
   const handleUpdatePlan = () => {
     if (!planName.trim()) {
@@ -540,19 +624,31 @@ export default function EditPlan() {
                   .filter((selected) => getExerciseWeek(selectedExercises, selected.originalIndex) === getCurrentWeek(selectedExercises))
                   .map((selected) => (
                   <div key={selected.originalIndex} className="p-4 border border-black/20 rounded-lg">
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-start justify-between mb-2 gap-2">
                       <h4 className="font-medium text-lg capitalize">
                         {selected.exercise.name.replace(/_/g, ' ')}
                       </h4>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleRemoveExercise(selected.originalIndex)}
-                        className="border-red-300 text-red-600 hover:bg-red-50"
-                        data-testid={`button-remove-exercise-${selected.originalIndex}`}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleOpenSwap(selected.originalIndex)}
+                          className="border-black/40 text-black hover:bg-black/5"
+                          data-testid={`button-swap-exercise-${selected.originalIndex}`}
+                        >
+                          <Repeat className="h-4 w-4 mr-1" />
+                          Swap
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRemoveExercise(selected.originalIndex)}
+                          className="border-red-300 text-red-600 hover:bg-red-50"
+                          data-testid={`button-remove-exercise-${selected.originalIndex}`}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                     
                     <div className="flex flex-wrap gap-2 text-sm text-black mb-2">
@@ -774,6 +870,104 @@ export default function EditPlan() {
             </CardContent>
           </Card>
       </div>
+
+      {/* Swap Exercise Dialog */}
+      <Dialog
+        open={swapTargetIndex !== null}
+        onOpenChange={(open) => { if (!open) setSwapTargetIndex(null); }}
+      >
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-ministry-charcoal border border-ministry-gold/30 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-ministry-gold flex items-center gap-2">
+              <Repeat className="w-5 h-5" />
+              Swap Exercise
+            </DialogTitle>
+            <DialogDescription className="text-white/70">
+              {currentSwapExercise && (
+                <>
+                  Replacing <span className="capitalize font-medium text-white">
+                    {currentSwapExercise.name?.replace(/_/g, ' ')}
+                  </span>
+                  {(swapBodyPart || swapEquipment) && (
+                    <span className="block mt-1 text-xs">
+                      Showing exercises that target{' '}
+                      <span className="capitalize font-medium">{swapBodyPart || 'any body part'}</span>
+                      {' using '}
+                      <span className="capitalize font-medium">{swapEquipment || 'any equipment'}</span>.
+                    </span>
+                  )}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          {swapCandidatesLoading ? (
+            <div className="py-8 text-center text-white/70">Loading exercises...</div>
+          ) : filteredSwapCandidates.length === 0 ? (
+            <div className="py-8 text-center text-white/70">
+              No other exercises match this body part and equipment.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {favoriteCandidates.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-ministry-gold uppercase tracking-wide mb-2 flex items-center gap-2">
+                    <Heart className="w-4 h-4 fill-ministry-gold" />
+                    Favorites ({favoriteCandidates.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {favoriteCandidates.map((ex) => (
+                      <button
+                        key={`fav-${ex.id}`}
+                        onClick={() => handleSwapExercise(ex)}
+                        className="w-full text-left p-3 rounded-lg border border-ministry-gold/40 bg-ministry-gold/10 hover:bg-ministry-gold/20 transition-colors flex items-center justify-between gap-3"
+                        data-testid={`button-swap-candidate-${ex.id}`}
+                      >
+                        <div className="min-w-0">
+                          <div className="font-medium capitalize truncate flex items-center gap-2">
+                            <Heart className="w-3.5 h-3.5 fill-ministry-gold text-ministry-gold shrink-0" />
+                            {ex.name}
+                          </div>
+                          <div className="text-xs text-white/60 capitalize mt-0.5">
+                            {ex.bodyPart} · {ex.equipment} · {ex.level}
+                          </div>
+                        </div>
+                        <Repeat className="w-4 h-4 text-ministry-gold shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {otherCandidates.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wide mb-2">
+                    {favoriteCandidates.length > 0 ? 'Other Exercises' : 'Matching Exercises'} ({otherCandidates.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {otherCandidates.map((ex) => (
+                      <button
+                        key={ex.id}
+                        onClick={() => handleSwapExercise(ex)}
+                        className="w-full text-left p-3 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-between gap-3"
+                        data-testid={`button-swap-candidate-${ex.id}`}
+                      >
+                        <div className="min-w-0">
+                          <div className="font-medium capitalize truncate">{ex.name}</div>
+                          <div className="text-xs text-white/60 capitalize mt-0.5">
+                            {ex.bodyPart} · {ex.equipment} · {ex.level}
+                          </div>
+                        </div>
+                        <Repeat className="w-4 h-4 text-white/60 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Exercise Configuration Modal */}
       {showExerciseConfig && currentExercise && (
