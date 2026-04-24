@@ -6913,7 +6913,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   const [exerciseIdx, setExerciseIdx] = useState(0);
   const [setIdx, setSetIdx] = useState(0); // 0-based current set
   const [phase, setPhase] = useState<PlayerPhase>('countdown');
-  const [secondsLeft, setSecondsLeft] = useState(5);
+  const [secondsLeft, setSecondsLeft] = useState(10);
   // For unilateral exercises: tracks which side is currently working.
   // Resets to 'right' at the start of every new set / exercise.
   const [currentSide, setCurrentSide] = useState<'right' | 'left'>('right');
@@ -7171,9 +7171,16 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     const haystack = `${currentExercise.exerciseName ?? ''} ${currentExercise.notes ?? ''}`.toLowerCase();
     return /stretch|warm[\s-]?up|cool[\s-]?down|mobility/.test(haystack);
   })();
+  // HIIT exercises are time-based ("30s" reps) but not 1-set transitions.
+  // Per spec their rest stays as-prescribed (30/20/10s by level, etc.).
+  // Every other (standard) exercise gets a flat 30s break between sets
+  // and exercises; transitions keep the short 10s buffer.
+  const isHiitExercise = isTimeBased && !isTransitionExercise;
   const restSeconds = isTransitionExercise
     ? 10
-    : (currentExercise?.restTime ?? 60);
+    : isHiitExercise
+      ? (currentExercise?.restTime ?? 60)
+      : 30;
   // Buffer shown between exercises (the "preview" rest with the next
   // movement's video + 3-2-1 countdown beeps). Bumped from 5s to 10s
   // per spec so users have time to read the upcoming exercise's name.
@@ -7382,7 +7389,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     if (exerciseIdx === 0) {
       setSetIdx(0);
       setPhase('countdown');
-      setSecondsLeft(5);
+      setSecondsLeft(10);
       return;
     }
     setExerciseIdx(i => i - 1);
