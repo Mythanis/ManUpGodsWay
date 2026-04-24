@@ -74,6 +74,16 @@ import {
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { format, isToday, isPast, isFuture } from "date-fns";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
 import { Link } from "wouter";
 import seanMcManusPhoto from "@assets/531400631_10229732604879918_951068179454150284_n_1766855745199.jpeg";
 import { PushConsentDialog } from "@/components/push-consent-dialog";
@@ -5478,6 +5488,17 @@ export default function Fitness() {
                 {stepsMetrics.length === 0 ? (
                   <p className="text-white/30 text-xs text-center py-4">No entries yet. Log your first steps!</p>
                 ) : (
+                  <div className="space-y-3">
+                    <div className="h-20 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={[...stepsMetrics].reverse().slice(-7).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
+                          <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
+                          <YAxis tick={false} axisLine={false} tickLine={false} />
+                          <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [v?.toLocaleString(), 'Steps']} />
+                          <Bar dataKey="value" fill="#FCD000" radius={[2, 2, 0, 0]} maxBarSize={24} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   <div className="space-y-1">
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Steps</span><span className="text-right">Calories</span><span></span>
@@ -5495,6 +5516,7 @@ export default function Fitness() {
                         </div>
                       </div>
                     ))}
+                  </div>
                   </div>
                 )}
               </CardContent>
@@ -5578,6 +5600,17 @@ export default function Fitness() {
                 {hrMetrics.length === 0 ? (
                   <p className="text-white/30 text-xs text-center py-4">No entries yet. Log your first heart rate reading!</p>
                 ) : (
+                  <div className="space-y-3">
+                    <div className="h-20 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={[...hrMetrics].reverse().slice(-7).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
+                          <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
+                          <YAxis tick={false} axisLine={false} tickLine={false} />
+                          <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} bpm`, 'Resting HR']} />
+                          <Line dataKey="value" stroke="#FCD000" strokeWidth={2} dot={{ fill: '#FCD000', r: 3 }} activeDot={{ r: 4 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
                   <div className="space-y-1">
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Resting</span><span className="text-right">Active</span><span></span>
@@ -5595,6 +5628,7 @@ export default function Fitness() {
                         </div>
                       </div>
                     ))}
+                  </div>
                   </div>
                 )}
               </CardContent>
@@ -5681,6 +5715,17 @@ export default function Fitness() {
                 {sleepMetrics.length === 0 ? (
                   <p className="text-white/30 text-xs text-center py-4">No entries yet. Log your first sleep session!</p>
                 ) : (
+                  <div className="space-y-3">
+                    <div className="h-20 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={[...sleepMetrics].reverse().slice(-7).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
+                          <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
+                          <YAxis tick={false} axisLine={false} tickLine={false} />
+                          <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} hr`, 'Sleep']} />
+                          <Bar dataKey="value" fill="#FCD000" radius={[2, 2, 0, 0]} maxBarSize={24} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   <div className="space-y-1">
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Hours</span><span className="text-right">Quality</span><span></span>
@@ -5698,6 +5743,7 @@ export default function Fitness() {
                         </div>
                       </div>
                     ))}
+                  </div>
                   </div>
                 )}
               </CardContent>
@@ -5805,6 +5851,17 @@ export default function Fitness() {
                 {weightMetrics.length === 0 ? (
                   <p className="text-white/30 text-xs text-center py-4">No entries yet. Log your first weigh-in!</p>
                 ) : (
+                  <div className="space-y-3">
+                    <div className="h-20 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={[...weightMetrics].reverse().slice(-7).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
+                          <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
+                          <YAxis tick={false} axisLine={false} tickLine={false} />
+                          <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} lbs`, 'Weight']} />
+                          <Line dataKey="value" stroke="#FCD000" strokeWidth={2} dot={{ fill: '#FCD000', r: 3 }} activeDot={{ r: 4 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
                   <div className="space-y-1">
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Weight</span><span className="text-right">Body Fat</span><span></span>
@@ -5838,6 +5895,7 @@ export default function Fitness() {
                         </div>
                       );
                     })}
+                  </div>
                   </div>
                 )}
               </CardContent>
