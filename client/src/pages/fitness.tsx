@@ -6922,7 +6922,16 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   // exercise media or timer, and forced on whenever the written-
   // instructions or adjust modals open.
   const [paused, setPaused] = useState(false);
-  const togglePause = () => setPaused(p => !p);
+  // Pre-start gate: when true, the timer is frozen and a Begin overlay
+  // is shown on top of the exercise media. The user explicitly taps it
+  // to start the very first countdown so they have time to get set up.
+  const [awaitingStart, setAwaitingStart] = useState(true);
+  const begin = () => setAwaitingStart(false);
+  const togglePause = () => {
+    // Tapping the media / timer before the workout starts also begins it.
+    if (awaitingStart) { begin(); return; }
+    setPaused(p => !p);
+  };
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   // Adjust-exercise dialog state. Lets the user tweak sets / reps /
   // rest period mid-workout without leaving the player. Pauses the
@@ -7270,6 +7279,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   // Tick timer
   useEffect(() => {
     if (phase === 'done') return;
+    if (awaitingStart) return; // Pre-start gate — waiting for user to tap Begin
     if (paused) return; // Frozen — pause button or instructions modal open
     const id = setInterval(() => {
       setSecondsLeft(s => {
@@ -7732,8 +7742,8 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 tabIndex={0}
                 onClick={togglePause}
                 onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); togglePause(); } }}
-                aria-label={paused ? 'Resume workout' : 'Pause workout'}
-                className="w-48 h-48 md:w-64 md:h-64 bg-white rounded-sm border-2 border-[#FCD000] overflow-hidden mb-6 cursor-pointer select-none"
+                aria-label={awaitingStart ? 'Begin workout' : (paused ? 'Resume workout' : 'Pause workout')}
+                className="relative w-48 h-48 md:w-64 md:h-64 bg-white rounded-sm border-2 border-[#FCD000] overflow-hidden mb-6 cursor-pointer select-none"
                 data-testid="media-tap-to-pause"
               >
                 {isVideo ? (
@@ -7756,6 +7766,26 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                     className="w-full h-full object-contain pointer-events-none"
                   />
                 )}
+                {awaitingStart && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm pointer-events-none">
+                    <div className="px-6 py-3 bg-[#FCD000] text-black font-black uppercase tracking-widest text-lg border-2 border-black rounded-sm shadow-lg" data-testid="overlay-begin-label">
+                      Begin
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {!mediaUrl && awaitingStart && (
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={begin}
+                onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); begin(); } }}
+                aria-label="Begin workout"
+                className="w-48 h-48 md:w-64 md:h-64 mb-6 flex items-center justify-center bg-[#FCD000] text-black font-black uppercase tracking-widest text-2xl border-2 border-black rounded-sm cursor-pointer select-none"
+                data-testid="button-begin-no-media"
+              >
+                Begin
               </div>
             )}
 
