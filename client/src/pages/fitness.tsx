@@ -6903,8 +6903,13 @@ interface WorkoutPlayerProps {
 
 type PlayerPhase = 'countdown' | 'work' | 'rest' | 'set-rest' | 'side-switch' | 'done';
 
-function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: WorkoutPlayerProps) {
+function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseComplete }: WorkoutPlayerProps) {
   const { toast } = useToast();
+  // Local mutable copy of the plan exercises so mid-workout adjustments
+  // (sets / reps / rest) are reflected immediately without waiting for
+  // a parent refetch. Synced if the parent ever passes a new prop.
+  const [exercises, setExercises] = useState<FitnessPlanExercise[]>(initialExercises);
+  useEffect(() => { setExercises(initialExercises); }, [initialExercises]);
   const [exerciseIdx, setExerciseIdx] = useState(0);
   const [setIdx, setSetIdx] = useState(0); // 0-based current set
   const [phase, setPhase] = useState<PlayerPhase>('countdown');
@@ -6913,10 +6918,21 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   // Resets to 'right' at the start of every new set / exercise.
   const [currentSide, setCurrentSide] = useState<'right' | 'left'>('right');
   // Pause flag — when true the tick interval is a no-op so timers
-  // freeze in place. Toggled by the pause button and forced on whenever
-  // the written-instructions modal opens.
+  // freeze in place. Toggled by the pause button, by tapping the
+  // exercise media or timer, and forced on whenever the written-
+  // instructions or adjust modals open.
   const [paused, setPaused] = useState(false);
+  const togglePause = () => setPaused(p => !p);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
+  // Adjust-exercise dialog state. Lets the user tweak sets / reps /
+  // rest period mid-workout without leaving the player. Pauses the
+  // timer while open and restores the previous pause state on close.
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const [adjustSets, setAdjustSets] = useState('');
+  const [adjustReps, setAdjustReps] = useState('');
+  const [adjustRest, setAdjustRest] = useState('');
+  const [adjustSubmitting, setAdjustSubmitting] = useState(false);
+  const [pausedBeforeAdjust, setPausedBeforeAdjust] = useState(false);
 
   // Fetch the canonical instructions text from the `exercises` table when
   // the user opens the instructions modal. The plan-exercise row only has
@@ -7153,6 +7169,50 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
   // movement's video + 3-2-1 countdown beeps). Bumped from 5s to 10s
   // per spec so users have time to read the upcoming exercise's name.
   const PREVIEW_SECONDS = 10;
+
+  // Adjust dialog handlers — open prefills inputs from current values and
+  // pauses the timer; save persists via PUT and updates local state so the
+  // change takes effect on the next set / rest without a refetch.
+  const queryClient = useQueryClient();
+  const openAdjust = () => {
+    if (!currentExercise) return;
+    setAdjustSets(String(currentExercise.sets ?? 3));
+    setAdjustReps(String(currentExercise.reps ?? '10'));
+    setAdjustRest(String(currentExercise.restTime ?? 60));
+    setPausedBeforeAdjust(paused);
+    setPaused(true);
+    setAdjustOpen(true);
+  };
+  const closeAdjust = () => {
+    setAdjustOpen(false);
+    setPaused(pausedBeforeAdjust);
+  };
+  const saveAdjust = async () => {
+    if (!currentExercise) return;
+    const setsNum = Math.max(1, Math.min(20, parseInt(adjustSets, 10) || 1));
+    const restNum = Math.max(0, Math.min(600, parseInt(adjustRest, 10) || 0));
+    const repsStr = adjustReps.trim() || '10';
+    setAdjustSubmitting(true);
+    try {
+      const updatedRow = await apiRequest('PUT', `/api/fitness-plan-exercises/${currentExercise.id}`, {
+        sets: setsNum,
+        reps: repsStr,
+        restTime: restNum,
+      });
+      setExercises(prev => prev.map((ex, i) => i === exerciseIdx ? { ...ex, ...updatedRow } : ex));
+      // Refresh any cached plan-detail views in the parent so changes
+      // are visible after the workout ends too.
+      queryClient.invalidateQueries({ queryKey: ['/api/fitness-plans'] });
+      toast({ title: 'Updated', description: 'Workout adjustments saved.' });
+      setAdjustOpen(false);
+      setPaused(pausedBeforeAdjust);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save';
+      toast({ title: 'Could not save', description: message, variant: 'destructive' });
+    } finally {
+      setAdjustSubmitting(false);
+    }
+  };
 
   // Detect URL extension for media rendering. Fall back to the legacy
   // `exerciseGifUrl` alias for older plan rows that predate the imageUrl column.
@@ -7647,7 +7707,15 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
             </p>
 
             {mediaUrl && (
-              <div className="w-48 h-48 md:w-64 md:h-64 bg-white rounded-sm border-2 border-[#FCD000] overflow-hidden mb-6">
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={togglePause}
+                onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); togglePause(); } }}
+                aria-label={paused ? 'Resume workout' : 'Pause workout'}
+                className="w-48 h-48 md:w-64 md:h-64 bg-white rounded-sm border-2 border-[#FCD000] overflow-hidden mb-6 cursor-pointer select-none"
+                data-testid="media-tap-to-pause"
+              >
                 {isVideo ? (
                   <video
                     key={mediaUrl}
@@ -7657,7 +7725,7 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
                     muted
                     playsInline
                     preload="auto"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain pointer-events-none"
                     data-testid="video-current-exercise"
                   />
                 ) : (
@@ -7665,16 +7733,27 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
                     key={mediaUrl}
                     src={mediaUrl}
                     alt={currentExercise?.exerciseName ?? ''}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain pointer-events-none"
                   />
                 )}
               </div>
             )}
 
-            <div className="text-8xl md:text-9xl font-black text-[#FCD000] tabular-nums mb-2" data-testid="text-timer">
-              {secondsLeft}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={togglePause}
+              onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); togglePause(); } }}
+              aria-label={paused ? 'Resume workout' : 'Pause workout'}
+              className="cursor-pointer select-none"
+              data-testid="timer-tap-to-pause"
+            >
+              <div className="text-8xl md:text-9xl font-black text-[#FCD000] tabular-nums mb-2" data-testid="text-timer">
+                {secondsLeft}
+              </div>
+              <p className="text-white/50 text-sm uppercase tracking-widest font-bold mb-2">seconds</p>
+              <p className="text-white/30 text-[10px] uppercase tracking-widest font-bold mb-6">Tap to {paused ? 'resume' : 'pause'}</p>
             </div>
-            <p className="text-white/50 text-sm uppercase tracking-widest font-bold mb-8">seconds</p>
 
             <div className="flex flex-wrap justify-center gap-3 max-w-2xl">
               <Button
@@ -7712,6 +7791,15 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
               >
                 <FileText className="w-4 h-4 mr-1" />
                 Instructions
+              </Button>
+              <Button
+                onClick={openAdjust}
+                variant="outline"
+                className="border-2 border-white/40 text-white hover:bg-white/10 font-black uppercase"
+                data-testid="button-adjust-exercise"
+              >
+                <SlidersHorizontal className="w-4 h-4 mr-1" />
+                Adjust
               </Button>
               <Button
                 onClick={skip}
@@ -7784,6 +7872,85 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
             >
               Close (stay paused)
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Adjust exercise modal — opens paused so timers freeze while
+          the user tweaks sets / reps / rest period. Saves immediately
+          via PUT and updates the local exercise list so the new values
+          take effect on the next set / rest. */}
+      <Dialog open={adjustOpen} onOpenChange={(open) => { if (!open) closeAdjust(); }}>
+        <DialogContent className="bg-zinc-900 border-2 border-[#FCD000] text-white max-w-md w-[92vw] z-[200]" data-testid="dialog-adjust-exercise">
+          <DialogHeader>
+            <DialogTitle className="text-[#FCD000] font-black uppercase tracking-wide">
+              Adjust Exercise
+            </DialogTitle>
+            <DialogDescription className="text-white/60 text-sm">
+              {currentExercise?.exerciseName} — changes save instantly and apply to the next set.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs font-black uppercase tracking-widest text-white/70 mb-2 block">Sets</label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={adjustSets}
+                  onChange={(e) => setAdjustSets(e.target.value)}
+                  className="bg-zinc-800 border-2 border-white/20 text-white"
+                  data-testid="input-adjust-sets"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-black uppercase tracking-widest text-white/70 mb-2 block">Reps</label>
+                <Input
+                  type="text"
+                  value={adjustReps}
+                  onChange={(e) => setAdjustReps(e.target.value)}
+                  placeholder="10 or 8-12 or 30s"
+                  className="bg-zinc-800 border-2 border-white/20 text-white"
+                  data-testid="input-adjust-reps"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-black uppercase tracking-widest text-white/70 mb-2 block">Rest (s)</label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="600"
+                  step="5"
+                  value={adjustRest}
+                  onChange={(e) => setAdjustRest(e.target.value)}
+                  className="bg-zinc-800 border-2 border-white/20 text-white"
+                  data-testid="input-adjust-rest"
+                />
+              </div>
+            </div>
+            <p className="text-white/40 text-xs">
+              Tip: enter reps as a number ("10"), a range ("8-12"), or seconds for a hold ("30s").
+            </p>
+            <div className="flex gap-2 pt-2">
+              <Button
+                onClick={saveAdjust}
+                disabled={adjustSubmitting}
+                className="bg-[#FCD000] text-black font-black uppercase border-2 border-black flex-1 hover:bg-[#FCD000]/90"
+                data-testid="button-adjust-save"
+              >
+                {adjustSubmitting ? 'Saving…' : 'Save'}
+              </Button>
+              <Button
+                onClick={closeAdjust}
+                disabled={adjustSubmitting}
+                variant="ghost"
+                className="text-white/70 flex-1"
+                data-testid="button-adjust-cancel"
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
