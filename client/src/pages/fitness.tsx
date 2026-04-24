@@ -2737,6 +2737,12 @@ export default function Fitness() {
         title: "Plan Created!",
         description: "Your pre-built workout plan has been added to My Plans.",
       });
+      // Close any open preview dialog and send the user back to the
+      // Workout tab at the top of the page so they don't accidentally
+      // create the same plan again.
+      setSelectedPlanForPreview(null);
+      setActiveFitnessTab('workout');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     onError: (error: any) => {
       const detail = error?.message || error?.toString?.() || 'Unknown error';
