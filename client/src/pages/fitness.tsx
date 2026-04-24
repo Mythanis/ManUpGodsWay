@@ -2738,10 +2738,11 @@ export default function Fitness() {
         description: "Your pre-built workout plan has been added to My Plans.",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      const detail = error?.message || error?.toString?.() || 'Unknown error';
       toast({
         title: "Error",
-        description: "Failed to create plan. Please try again.",
+        description: `Failed to create plan: ${detail}`,
         variant: "destructive",
       });
       console.error('Plan creation error:', error);
