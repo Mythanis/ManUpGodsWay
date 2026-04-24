@@ -6927,9 +6927,22 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   // to start the very first countdown so they have time to get set up.
   const [awaitingStart, setAwaitingStart] = useState(true);
   // Pacing mode: 'timed' = current behavior (timer auto-advances through
-  // sets/rest); 'manual' = work timer is frozen and user advances to
-  // the next exercise via on-screen arrows beside the media.
-  const [pacingMode, setPacingMode] = useState<'timed' | 'manual'>('timed');
+  // sets/rest); 'manual' = countdowns still tick but the workout never
+  // auto-advances when they hit 0 — the user steps through every phase
+  // with the on-screen arrows. Persisted in localStorage so it sticks.
+  const PACING_STORAGE_KEY = 'workoutPacingMode';
+  const [pacingMode, setPacingMode] = useState<'timed' | 'manual'>(() => {
+    if (typeof window === 'undefined') return 'timed';
+    try {
+      const stored = window.localStorage.getItem(PACING_STORAGE_KEY);
+      return stored === 'manual' ? 'manual' : 'timed';
+    } catch {
+      return 'timed';
+    }
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem(PACING_STORAGE_KEY, pacingMode); } catch { /* ignore */ }
+  }, [pacingMode]);
   const begin = () => setAwaitingStart(false);
   const togglePause = () => {
     // Tapping the media / timer before the workout starts also begins it.
@@ -7290,15 +7303,19 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     if (phase === 'done') return;
     if (awaitingStart) return; // Pre-start gate — waiting for user to tap Begin
     if (paused) return; // Frozen — pause button or instructions modal open
-    // Manual mode: freeze the work / side-switch timer so the user can
-    // advance via the on-screen arrows. Countdown / rest still tick so
-    // the prep buffer and between-exercise rest still flow naturally.
-    if (pacingMode === 'manual' && (phase === 'work' || phase === 'side-switch')) return;
+    // In manual mode, once the timer parks at 0 there's nothing left to
+    // tick — bail to avoid pointless 1Hz wake-ups.
+    if (pacingMode === 'manual' && secondsLeft === 0 && phase !== 'countdown') return;
     const id = setInterval(() => {
       setSecondsLeft(s => {
         if (s <= 1) {
-          // Phase complete — schedule transition on next tick
-          setTimeout(() => advancePhase(), 0);
+          // Phase complete. In manual mode every phase except the
+          // pre-workout prep countdown parks at 0 and waits for the
+          // user to tap the next arrow.
+          const shouldAutoAdvance = pacingMode === 'timed' || phase === 'countdown';
+          if (shouldAutoAdvance) {
+            setTimeout(() => advancePhase(), 0);
+          }
           return 0;
         }
         // Beep on 3,2,1 countdown warning during any phase
@@ -7388,22 +7405,13 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     setTimeout(() => advancePhase(), 0);
   };
 
-  // Manual-mode "next" — jumps straight to the next exercise's first
-  // working set, skipping any remaining sets and rest of the current
-  // one. If we're on the last exercise, mark the session done.
-  const nextExercise = () => {
-    setCurrentSide('right');
-    if (exerciseIdx >= exercises.length - 1) {
-      setPhase('done');
-      setSecondsLeft(0);
-      return;
-    }
-    setExerciseIdx(i => i + 1);
-    setSetIdx(0);
-    setPhase('work');
-    // Pre-seed working seconds so the on-screen timer reads sensibly
-    // even though the tick is frozen in manual mode.
-    setSecondsLeft(workSeconds);
+  // Manual-mode "next" — advances one phase at a time so the user
+  // still passes through every set, rest, and upcoming-exercise
+  // preview. Identical to skip() but kept as a named helper for the
+  // arrow button so the intent stays readable at the call site.
+  const nextManual = () => {
+    setSecondsLeft(0);
+    setTimeout(() => advancePhase(), 0);
   };
 
   // Restart the previous exercise from its 10-second preview. If we're
@@ -7858,8 +7866,8 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 {pacingMode === 'manual' && !awaitingStart && (
                   <button
                     type="button"
-                    onClick={nextExercise}
-                    aria-label={exerciseIdx >= exercises.length - 1 ? 'Finish workout' : 'Next exercise'}
+                    onClick={nextManual}
+                    aria-label="Next phase"
                     className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#FCD000] text-black border-2 border-black flex items-center justify-center shadow-lg hover:bg-[#FCD000]/90 active:scale-95 transition"
                     data-testid="button-manual-next"
                   >
