@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   index,
+  uniqueIndex,
   jsonb,
   pgTable,
   timestamp,
@@ -3063,6 +3064,26 @@ export const insertHealthMetricSchema = createInsertSchema(healthMetrics).omit({
 
 export type HealthMetric = typeof healthMetrics.$inferSelect;
 export type InsertHealthMetric = z.infer<typeof insertHealthMetricSchema>;
+
+// ─── Health Goals ─────────────────────────────────────────────────────────────
+
+export const healthGoals = pgTable("health_goals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  metricType: varchar("metric_type", { length: 20 }).notNull().$type<HealthMetricType>(),
+  targetValue: real("target_value").notNull(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  uniqueUserMetric: uniqueIndex("health_goals_user_metric_idx").on(table.userId, table.metricType),
+}));
+
+export const insertHealthGoalSchema = createInsertSchema(healthGoals).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type HealthGoal = typeof healthGoals.$inferSelect;
+export type InsertHealthGoal = z.infer<typeof insertHealthGoalSchema>;
 
 // ─── Stripe Test Subscription (Owner testing tool) ────────────────────────────
 

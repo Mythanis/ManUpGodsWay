@@ -89,7 +89,7 @@ import seanMcManusPhoto from "@assets/531400631_10229732604879918_95106817945415
 import { PushConsentDialog } from "@/components/push-consent-dialog";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { HealthMetric, HealthMetricType } from "@shared/schema";
+import type { HealthMetric, HealthMetricType, HealthGoal } from "@shared/schema";
 
 interface FitnessChallenge {
   id: string;
@@ -583,6 +583,8 @@ export default function Fitness() {
   const [healthHrForm, setHealthHrForm] = useState({ date: new Date().toISOString().split('T')[0], resting: '', active: '' });
   const [healthSleepForm, setHealthSleepForm] = useState({ date: new Date().toISOString().split('T')[0], hours: '', quality: '' });
   const [healthWeightForm, setHealthWeightForm] = useState({ date: new Date().toISOString().split('T')[0], weight: '', bodyFat: '', chest: '', waist: '', hips: '', neck: '' });
+  const [healthGoalFormOpen, setHealthGoalFormOpen] = useState<'steps' | 'heart_rate' | 'sleep' | 'weight' | null>(null);
+  const [healthGoalInputs, setHealthGoalInputs] = useState({ steps: '', heart_rate: '', sleep: '', weight: '' });
 
   // Community comments state
   const [expandedCommentPost, setExpandedCommentPost] = useState<string | null>(null);
@@ -752,6 +754,44 @@ export default function Fitness() {
   const { data: weightMetrics = [] } = useQuery<HealthMetric[]>({
     queryKey: ['/api/health-metrics?type=weight'],
     enabled: hasMembership,
+  });
+
+  // Health goals query
+  const { data: healthGoalsData = [] } = useQuery<HealthGoal[]>({
+    queryKey: ['/api/health-goals'],
+    enabled: hasMembership,
+  });
+
+  const getHealthGoal = (metricType: string) =>
+    healthGoalsData.find(g => g.metricType === metricType);
+
+  const getWeeklyHits = (metrics: HealthMetric[], condition: (m: HealthMetric) => boolean) => {
+    const today = new Date();
+    const window7 = new Set<string>();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      window7.add(d.toISOString().split('T')[0]);
+    }
+    const byDate = new Map<string, HealthMetric>();
+    metrics.forEach(m => { if (!byDate.has(m.date)) byDate.set(m.date, m); });
+    let hits = 0;
+    byDate.forEach((m, date) => { if (window7.has(date) && condition(m)) hits++; });
+    return { hits, total: 7 };
+  };
+
+  const upsertHealthGoalMutation = useMutation({
+    mutationFn: async ({ type, targetValue }: { type: string; targetValue: number }) =>
+      apiRequest('PUT', `/api/health-goals/${type}`, { targetValue }),
+    onSuccess: (_res, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/health-goals'] });
+      setHealthGoalFormOpen(null);
+      setHealthGoalInputs(prev => ({ ...prev, [vars.type]: '' }));
+      toast({ title: 'Goal saved', description: 'Your health goal has been updated.' });
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Error', description: err.message || 'Failed to save goal', variant: 'destructive' });
+    },
   });
 
   type CreateHealthPayload = {
@@ -5421,18 +5461,70 @@ export default function Fitness() {
                       {stepsMetrics[0].primaryValue?.toLocaleString()} steps{stepsMetrics[0].secondaryValue ? ` · ${stepsMetrics[0].secondaryValue} kcal` : ''}
                     </span>
                   )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="ml-auto border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
-                    onClick={() => setHealthOpenForm(healthOpenForm === 'steps' ? null : 'steps')}
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Log
-                  </Button>
+                  <div className="ml-auto flex gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-zinc-600 text-white/50 hover:bg-zinc-700 hover:text-white font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                      onClick={() => { setHealthGoalFormOpen(healthGoalFormOpen === 'steps' ? null : 'steps'); setHealthOpenForm(null); }}
+                    >
+                      <Target className="w-3 h-3 mr-1" />
+                      Goal
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                      onClick={() => { setHealthOpenForm(healthOpenForm === 'steps' ? null : 'steps'); setHealthGoalFormOpen(null); }}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Log
+                    </Button>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                {healthGoalFormOpen === 'steps' && (
+                  <div className="bg-black border border-zinc-700 rounded-sm p-3 space-y-2">
+                    <p className="text-white/60 text-[10px] uppercase font-bold">Daily Step Goal</p>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        placeholder={getHealthGoal('steps') ? String(getHealthGoal('steps')!.targetValue) : '10000'}
+                        value={healthGoalInputs.steps}
+                        onChange={e => setHealthGoalInputs(prev => ({ ...prev, steps: e.target.value }))}
+                        className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm flex-1"
+                      />
+                      <span className="text-white/40 text-xs">steps/day</span>
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthGoalFormOpen(null)}>Cancel</Button>
+                      <Button
+                        size="sm"
+                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        disabled={!healthGoalInputs.steps || upsertHealthGoalMutation.isPending}
+                        onClick={() => upsertHealthGoalMutation.mutate({ type: 'steps', targetValue: parseFloat(healthGoalInputs.steps) })}
+                      >Save Goal</Button>
+                    </div>
+                  </div>
+                )}
+                {(() => {
+                  const goal = getHealthGoal('steps');
+                  if (!goal) return null;
+                  const { hits } = getWeeklyHits(stepsMetrics, m => m.primaryValue >= goal.targetValue);
+                  const pct = (hits / 7) * 100;
+                  return (
+                    <div className="bg-black/40 border border-zinc-800 rounded-sm px-3 py-2 space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/50 text-[10px] uppercase font-bold">Goal: {goal.targetValue.toLocaleString()} steps/day</span>
+                        <span className="text-[10px] font-black text-[#FCD000]">{hits}/7 days this week</span>
+                      </div>
+                      <div className="w-full bg-zinc-800 rounded-full h-1.5">
+                        <div className="bg-[#FCD000] h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })()}
                 {healthOpenForm === 'steps' && (
                   <div className="bg-black border border-[#FCD000]/30 rounded-sm p-3 space-y-2">
                     <div className="grid grid-cols-3 gap-2">
@@ -5503,7 +5595,7 @@ export default function Fitness() {
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Steps</span><span className="text-right">Calories</span><span></span>
                     </div>
-                    {stepsMetrics.map((m) => (
+                    {stepsMetrics.slice(0, 7).map((m) => (
                       <div key={m.id} className="grid grid-cols-4 items-center px-2 py-1.5 hover:bg-zinc-800/40 rounded-sm">
                         <span className="text-white/60 text-xs">{m.date}</span>
                         <span className="text-right text-white font-bold text-xs">{m.primaryValue?.toLocaleString()}</span>
@@ -5533,18 +5625,70 @@ export default function Fitness() {
                       {hrMetrics[0].primaryValue} bpm resting{hrMetrics[0].secondaryValue ? ` · ${hrMetrics[0].secondaryValue} bpm active` : ''}
                     </span>
                   )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="ml-auto border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
-                    onClick={() => setHealthOpenForm(healthOpenForm === 'heart_rate' ? null : 'heart_rate')}
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Log
-                  </Button>
+                  <div className="ml-auto flex gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-zinc-600 text-white/50 hover:bg-zinc-700 hover:text-white font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                      onClick={() => { setHealthGoalFormOpen(healthGoalFormOpen === 'heart_rate' ? null : 'heart_rate'); setHealthOpenForm(null); }}
+                    >
+                      <Target className="w-3 h-3 mr-1" />
+                      Goal
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                      onClick={() => { setHealthOpenForm(healthOpenForm === 'heart_rate' ? null : 'heart_rate'); setHealthGoalFormOpen(null); }}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Log
+                    </Button>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                {healthGoalFormOpen === 'heart_rate' && (
+                  <div className="bg-black border border-zinc-700 rounded-sm p-3 space-y-2">
+                    <p className="text-white/60 text-[10px] uppercase font-bold">Resting BPM Goal (target or below)</p>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        placeholder={getHealthGoal('heart_rate') ? String(getHealthGoal('heart_rate')!.targetValue) : '65'}
+                        value={healthGoalInputs.heart_rate}
+                        onChange={e => setHealthGoalInputs(prev => ({ ...prev, heart_rate: e.target.value }))}
+                        className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm flex-1"
+                      />
+                      <span className="text-white/40 text-xs">bpm</span>
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthGoalFormOpen(null)}>Cancel</Button>
+                      <Button
+                        size="sm"
+                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        disabled={!healthGoalInputs.heart_rate || upsertHealthGoalMutation.isPending}
+                        onClick={() => upsertHealthGoalMutation.mutate({ type: 'heart_rate', targetValue: parseFloat(healthGoalInputs.heart_rate) })}
+                      >Save Goal</Button>
+                    </div>
+                  </div>
+                )}
+                {(() => {
+                  const goal = getHealthGoal('heart_rate');
+                  if (!goal) return null;
+                  const { hits } = getWeeklyHits(hrMetrics, m => m.primaryValue <= goal.targetValue);
+                  const pct = (hits / 7) * 100;
+                  return (
+                    <div className="bg-black/40 border border-zinc-800 rounded-sm px-3 py-2 space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/50 text-[10px] uppercase font-bold">Goal: ≤{goal.targetValue} bpm resting</span>
+                        <span className="text-[10px] font-black text-[#FCD000]">{hits}/7 days this week</span>
+                      </div>
+                      <div className="w-full bg-zinc-800 rounded-full h-1.5">
+                        <div className="bg-[#FCD000] h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })()}
                 {healthOpenForm === 'heart_rate' && (
                   <div className="bg-black border border-[#FCD000]/30 rounded-sm p-3 space-y-2">
                     <div className="grid grid-cols-3 gap-2">
@@ -5615,7 +5759,7 @@ export default function Fitness() {
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Resting</span><span className="text-right">Active</span><span></span>
                     </div>
-                    {hrMetrics.map((m) => (
+                    {hrMetrics.slice(0, 7).map((m) => (
                       <div key={m.id} className="grid grid-cols-4 items-center px-2 py-1.5 hover:bg-zinc-800/40 rounded-sm">
                         <span className="text-white/60 text-xs">{m.date}</span>
                         <span className="text-right text-white font-bold text-xs">{m.primaryValue} <span className="text-white/40 text-[10px]">bpm</span></span>
@@ -5645,18 +5789,71 @@ export default function Fitness() {
                       {sleepMetrics[0].primaryValue} hr{sleepMetrics[0].secondaryValue ? ` · quality ${sleepMetrics[0].secondaryValue}/5` : ''}
                     </span>
                   )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="ml-auto border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
-                    onClick={() => setHealthOpenForm(healthOpenForm === 'sleep' ? null : 'sleep')}
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Log
-                  </Button>
+                  <div className="ml-auto flex gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-zinc-600 text-white/50 hover:bg-zinc-700 hover:text-white font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                      onClick={() => { setHealthGoalFormOpen(healthGoalFormOpen === 'sleep' ? null : 'sleep'); setHealthOpenForm(null); }}
+                    >
+                      <Target className="w-3 h-3 mr-1" />
+                      Goal
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                      onClick={() => { setHealthOpenForm(healthOpenForm === 'sleep' ? null : 'sleep'); setHealthGoalFormOpen(null); }}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Log
+                    </Button>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                {healthGoalFormOpen === 'sleep' && (
+                  <div className="bg-black border border-zinc-700 rounded-sm p-3 space-y-2">
+                    <p className="text-white/60 text-[10px] uppercase font-bold">Daily Sleep Goal</p>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        step="0.5"
+                        placeholder={getHealthGoal('sleep') ? String(getHealthGoal('sleep')!.targetValue) : '7.5'}
+                        value={healthGoalInputs.sleep}
+                        onChange={e => setHealthGoalInputs(prev => ({ ...prev, sleep: e.target.value }))}
+                        className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm flex-1"
+                      />
+                      <span className="text-white/40 text-xs">hours/night</span>
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthGoalFormOpen(null)}>Cancel</Button>
+                      <Button
+                        size="sm"
+                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        disabled={!healthGoalInputs.sleep || upsertHealthGoalMutation.isPending}
+                        onClick={() => upsertHealthGoalMutation.mutate({ type: 'sleep', targetValue: parseFloat(healthGoalInputs.sleep) })}
+                      >Save Goal</Button>
+                    </div>
+                  </div>
+                )}
+                {(() => {
+                  const goal = getHealthGoal('sleep');
+                  if (!goal) return null;
+                  const { hits } = getWeeklyHits(sleepMetrics, m => m.primaryValue >= goal.targetValue);
+                  const pct = (hits / 7) * 100;
+                  return (
+                    <div className="bg-black/40 border border-zinc-800 rounded-sm px-3 py-2 space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/50 text-[10px] uppercase font-bold">Goal: {goal.targetValue} hrs/night</span>
+                        <span className="text-[10px] font-black text-[#FCD000]">{hits}/7 days this week</span>
+                      </div>
+                      <div className="w-full bg-zinc-800 rounded-full h-1.5">
+                        <div className="bg-[#FCD000] h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })()}
                 {healthOpenForm === 'sleep' && (
                   <div className="bg-black border border-[#FCD000]/30 rounded-sm p-3 space-y-2">
                     <div className="grid grid-cols-3 gap-2">
@@ -5730,7 +5927,7 @@ export default function Fitness() {
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Hours</span><span className="text-right">Quality</span><span></span>
                     </div>
-                    {sleepMetrics.map((m) => (
+                    {sleepMetrics.slice(0, 7).map((m) => (
                       <div key={m.id} className="grid grid-cols-4 items-center px-2 py-1.5 hover:bg-zinc-800/40 rounded-sm">
                         <span className="text-white/60 text-xs">{m.date}</span>
                         <span className="text-right text-white font-bold text-xs">{m.primaryValue} <span className="text-white/40 text-[10px]">hr</span></span>
@@ -5760,18 +5957,75 @@ export default function Fitness() {
                       {weightMetrics[0].primaryValue} lbs{weightMetrics[0].secondaryValue ? ` · ${weightMetrics[0].secondaryValue}% BF` : ''}
                     </span>
                   )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="ml-auto border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
-                    onClick={() => setHealthOpenForm(healthOpenForm === 'weight' ? null : 'weight')}
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Log
-                  </Button>
+                  <div className="ml-auto flex gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-zinc-600 text-white/50 hover:bg-zinc-700 hover:text-white font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                      onClick={() => { setHealthGoalFormOpen(healthGoalFormOpen === 'weight' ? null : 'weight'); setHealthOpenForm(null); }}
+                    >
+                      <Target className="w-3 h-3 mr-1" />
+                      Goal
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                      onClick={() => { setHealthOpenForm(healthOpenForm === 'weight' ? null : 'weight'); setHealthGoalFormOpen(null); }}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Log
+                    </Button>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                {healthGoalFormOpen === 'weight' && (
+                  <div className="bg-black border border-zinc-700 rounded-sm p-3 space-y-2">
+                    <p className="text-white/60 text-[10px] uppercase font-bold">Target Weight</p>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        step="0.1"
+                        placeholder={getHealthGoal('weight') ? String(getHealthGoal('weight')!.targetValue) : '175'}
+                        value={healthGoalInputs.weight}
+                        onChange={e => setHealthGoalInputs(prev => ({ ...prev, weight: e.target.value }))}
+                        className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 rounded-sm flex-1"
+                      />
+                      <span className="text-white/40 text-xs">lbs</span>
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthGoalFormOpen(null)}>Cancel</Button>
+                      <Button
+                        size="sm"
+                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        disabled={!healthGoalInputs.weight || upsertHealthGoalMutation.isPending}
+                        onClick={() => upsertHealthGoalMutation.mutate({ type: 'weight', targetValue: parseFloat(healthGoalInputs.weight) })}
+                      >Save Goal</Button>
+                    </div>
+                  </div>
+                )}
+                {(() => {
+                  const goal = getHealthGoal('weight');
+                  if (!goal) return null;
+                  const { hits } = getWeeklyHits(weightMetrics, m => m.primaryValue <= goal.targetValue);
+                  const pct = (hits / 7) * 100;
+                  const current = weightMetrics[0]?.primaryValue;
+                  const diff = current != null ? Math.abs(current - goal.targetValue) : null;
+                  return (
+                    <div className="bg-black/40 border border-zinc-800 rounded-sm px-3 py-2 space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/50 text-[10px] uppercase font-bold">
+                          Target: {goal.targetValue} lbs{diff != null ? ` · ${current! <= goal.targetValue ? 'At goal' : `${diff.toFixed(1)} lbs to go`}` : ''}
+                        </span>
+                        <span className="text-[10px] font-black text-[#FCD000]">{hits}/7 days this week</span>
+                      </div>
+                      <div className="w-full bg-zinc-800 rounded-full h-1.5">
+                        <div className="bg-[#FCD000] h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })()}
                 {healthOpenForm === 'weight' && (
                   <div className="bg-black border border-[#FCD000]/30 rounded-sm p-3 space-y-2">
                     <div className="grid grid-cols-3 gap-2">
@@ -5866,7 +6120,7 @@ export default function Fitness() {
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Weight</span><span className="text-right">Body Fat</span><span></span>
                     </div>
-                    {weightMetrics.map((m) => {
+                    {weightMetrics.slice(0, 7).map((m) => {
                       let measurements: Record<string, number> = {};
                       try { if (m.notes) measurements = JSON.parse(m.notes); } catch {}
                       const hasMeasurements = Object.keys(measurements).length > 0;

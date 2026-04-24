@@ -220,6 +220,10 @@ import {
   healthMetrics,
   type HealthMetric,
   type InsertHealthMetric,
+  healthGoals,
+  type HealthGoal,
+  type InsertHealthGoal,
+  type HealthMetricType,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne, gt } from "drizzle-orm";
@@ -672,6 +676,10 @@ export interface IStorage {
   getHealthMetrics(userId: string, metricType: string, limit?: number): Promise<HealthMetric[]>;
   createHealthMetric(data: InsertHealthMetric): Promise<HealthMetric>;
   deleteHealthMetric(id: string, userId: string): Promise<boolean>;
+
+  // Health goal operations
+  getHealthGoals(userId: string): Promise<HealthGoal[]>;
+  upsertHealthGoal(userId: string, metricType: HealthMetricType, targetValue: number): Promise<HealthGoal>;
 
   // VATMEBOP accountability chart
   getVatmebopChart(userId: string, year: number): Promise<VatmebopCheck[]>;
@@ -8183,6 +8191,26 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(healthMetrics.id, id), eq(healthMetrics.userId, userId)))
       .returning({ id: healthMetrics.id });
     return deleted.length > 0;
+  }
+
+  async getHealthGoals(userId: string): Promise<HealthGoal[]> {
+    return db
+      .select()
+      .from(healthGoals)
+      .where(eq(healthGoals.userId, userId))
+      .orderBy(asc(healthGoals.metricType));
+  }
+
+  async upsertHealthGoal(userId: string, metricType: HealthMetricType, targetValue: number): Promise<HealthGoal> {
+    const [row] = await db
+      .insert(healthGoals)
+      .values({ userId, metricType, targetValue, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: [healthGoals.userId, healthGoals.metricType],
+        set: { targetValue, updatedAt: new Date() },
+      })
+      .returning();
+    return row;
   }
 
   async upsertVatmebopCheck(

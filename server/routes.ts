@@ -12326,7 +12326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!VALID_METRIC_TYPES.includes(type as HealthMetricType)) {
         return res.status(400).json({ message: 'Invalid metric type' });
       }
-      const entries = await storage.getHealthMetrics(userId, type);
+      const entries = await storage.getHealthMetrics(userId, type, 30);
       res.json(entries);
     } catch (error) {
       console.error('Error fetching health metrics:', error);
@@ -12368,6 +12368,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       console.error('Error deleting health metric:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // ─── Health Goals ────────────────────────────────────────────────────────────
+
+  app.get('/api/health-goals', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+    try {
+      const userId = req.fitnessUser.id;
+      const goals = await storage.getHealthGoals(userId);
+      res.json(goals);
+    } catch (error) {
+      console.error('Error fetching health goals:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/health-goals/:type', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+    try {
+      const userId = req.fitnessUser.id;
+      const rawType = req.params.type;
+      if (!VALID_METRIC_TYPES.includes(rawType as HealthMetricType)) {
+        return res.status(400).json({ message: 'Invalid metric type' });
+      }
+      const metricType = rawType as HealthMetricType;
+      const targetValue = parseFloat(req.body.targetValue);
+      if (!Number.isFinite(targetValue) || targetValue < 0 || targetValue > 1_000_000) {
+        return res.status(400).json({ message: 'targetValue must be a finite non-negative number within range' });
+      }
+      const goal = await storage.upsertHealthGoal(userId, metricType, targetValue);
+      res.json(goal);
+    } catch (error) {
+      console.error('Error upserting health goal:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
