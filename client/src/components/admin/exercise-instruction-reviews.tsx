@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle, RotateCcw, RefreshCw, ChevronLeft, ChevronRight, Search, AlertTriangle, Pencil, Save, X } from "lucide-react";
+import { CheckCircle, RotateCcw, RefreshCw, ChevronLeft, ChevronRight, Search, AlertTriangle, Pencil, Save, X, Filter } from "lucide-react";
 
 type View = "corrections" | "matched" | "rejected";
 type ConfidenceValue = "high" | "medium" | "low";
+type ConfidenceFilter = "all" | "medium-low" | "low";
 
 interface ReviewRow {
   id: number;
@@ -181,6 +182,7 @@ export default function ExerciseInstructionReviews() {
   const queryClient = useQueryClient();
 
   const [view, setView] = useState<View>("corrections");
+  const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceFilter>("all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -205,9 +207,17 @@ export default function ExerciseInstructionReviews() {
     setDebouncedSearch("");
     setKeptIds(new Set());
     setExpandedId(null);
+    setConfidenceFilter("all");
   };
 
-  const queryKey = ["/api/admin/exercise-instruction-reviews", view, debouncedSearch, page];
+  const cycleConfidenceFilter = () => {
+    setConfidenceFilter((f) =>
+      f === "all" ? "medium-low" : f === "medium-low" ? "low" : "all"
+    );
+    setPage(0);
+  };
+
+  const queryKey = ["/api/admin/exercise-instruction-reviews", view, confidenceFilter, debouncedSearch, page];
 
   const { data, isLoading } = useQuery<ReviewResponse>({
     queryKey,
@@ -217,6 +227,7 @@ export default function ExerciseInstructionReviews() {
         limit: String(PAGE_SIZE),
         offset: String(page * PAGE_SIZE),
       });
+      if (confidenceFilter !== "all") params.set("confidence", confidenceFilter);
       if (debouncedSearch) params.set("search", debouncedSearch);
       const res = await fetch(`/api/admin/exercise-instruction-reviews?${params}`, {
         credentials: "include",
@@ -311,15 +322,34 @@ export default function ExerciseInstructionReviews() {
 
       <p className="text-xs text-gray-500">{VIEW_DESCRIPTIONS[view]}</p>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-        <Input
-          value={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          placeholder="Search by exercise name…"
-          className="pl-8 h-9 text-sm"
-        />
+      {/* Search + confidence filter */}
+      <div className="flex gap-2 items-center flex-wrap">
+        <div className="relative flex-1 min-w-[180px]">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+          <Input
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search by exercise name…"
+            className="pl-8 h-9 text-sm"
+          />
+        </div>
+        <button
+          onClick={cycleConfidenceFilter}
+          className={`px-3 py-1.5 text-xs font-bold rounded border-2 transition-all whitespace-nowrap ${
+            confidenceFilter === "low"
+              ? "bg-red-500 text-white border-red-600"
+              : confidenceFilter === "medium-low"
+              ? "bg-amber-500 text-white border-amber-600"
+              : "bg-white text-black border-black hover:bg-gray-100"
+          }`}
+        >
+          <Filter className="inline h-3 w-3 mr-1" />
+          {confidenceFilter === "low"
+            ? "Low confidence only"
+            : confidenceFilter === "medium-low"
+            ? "Medium + Low"
+            : "All confidence"}
+        </button>
       </div>
 
       {/* Count */}
@@ -327,6 +357,7 @@ export default function ExerciseInstructionReviews() {
         <p className="text-xs text-gray-500">
           {total.toLocaleString()} exercise{total !== 1 ? "s" : ""}
           {search ? ` matching "${search}"` : ""}
+          {confidenceFilter !== "all" ? ` · ${confidenceFilter === "medium-low" ? "medium + low" : "low"} confidence` : ""}
           {view === "corrections" && keptIds.size > 0
             ? ` · ${keptIds.size} kept this session`
             : ""}

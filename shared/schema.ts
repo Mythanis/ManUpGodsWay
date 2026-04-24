@@ -1992,7 +1992,7 @@ export const exerciseInstructionReviews = pgTable("exercise_instruction_reviews"
   rawModelResponse: text("raw_model_response"),       // full JSON string from Claude
   status: varchar("status").notNull().default("pending"), // pending | approved | rejected
   // high | medium | low — populated by reclassify-exercises.ts (Opus combined pass)
-  confidence: varchar("confidence").$type<'high' | 'medium' | 'low'>(),
+  confidence: varchar("confidence").default("high").$type<'high' | 'medium' | 'low'>(),
   processedAt: timestamp("processed_at").defaultNow(),
 });
 

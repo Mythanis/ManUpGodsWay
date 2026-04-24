@@ -9,8 +9,9 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { db } from "./db";
-import { exercises, exerciseSidednessReviews } from "../shared/schema";
+import { exercises, exerciseSidednessReviews, exerciseInstructionReviews } from "../shared/schema";
 import { eq } from "drizzle-orm";
+import { callOpusCombined, withRetry as opusWithRetry, type OpusVerdict } from "./exerciseOpusJob";
 
 export const MODEL = "claude-sonnet-4-20250514";
 export const MAX_RETRIES = 3;
@@ -39,7 +40,7 @@ export type SidednessValue = "bilateral" | "unilateral" | "alternating";
 export interface ClaudeVerdict {
   sidedness: SidednessValue;
   reasoning: string;
-  confidence: "high" | "low";
+  confidence: "high" | "medium" | "low";
   rawResponse: string;
 }
 
@@ -121,11 +122,16 @@ export async function callClaude(
  * Fetches the exercise from DB, calls Claude, and updates the review row with
  * the fresh verdict while resetting status to 'pending'.
  *
+ * Pass `useOpus: true` to use the Opus combined model (sidedness + instructions)
+ * instead of the Sonnet sidedness-only model. When useOpus is true, the instruction
+ * review row is also updated.
+ *
  * Throws if the exercise row is missing (review existence should be checked by
  * the caller before calling this to distinguish 404 from 500).
  */
 export async function reclassifyExerciseSidedness(
-  reviewId: number
+  reviewId: number,
+  options: { useOpus?: boolean } = {}
 ): Promise<{ exerciseName: string; verdict: ClaudeVerdict }> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
@@ -151,6 +157,66 @@ export async function reclassifyExerciseSidedness(
   if (!ex) throw new Error(`Exercise #${review.exerciseId} not found`);
 
   const client = new Anthropic({ apiKey });
+
+  if (options.useOpus) {
+    // Use the Opus combined path (text-only, no video frames for single-exercise requeue)
+    const opus: OpusVerdict = await opusWithRetry(
+      () => callOpusCombined(client, ex, []),
+      `Opus requeue #${reviewId}`
+    );
+
+    // Update sidedness review
+    await db
+      .update(exerciseSidednessReviews)
+      .set({
+        proposedSidedness: opus.sidedness,
+        reasoning: opus.sidednessReasoning,
+        confidence: opus.sidednessConfidence,
+        rawModelResponse: opus.rawResponse,
+        status: "pending",
+        approvedSidedness: null,
+        reviewedAt: null,
+        processedAt: new Date(),
+      })
+      .where(eq(exerciseSidednessReviews.id, reviewId));
+
+    // Upsert instruction review
+    await db
+      .insert(exerciseInstructionReviews)
+      .values({
+        exerciseId: ex.id,
+        exerciseName: ex.name,
+        oldInstructions: ex.instructions ?? "",
+        newInstructions: opus.correctedInstructions,
+        needsReview: !opus.instructionsMatch,
+        confidence: opus.instructionsConfidence,
+        rawModelResponse: opus.rawResponse,
+        status: "pending",
+      })
+      .onConflictDoUpdate({
+        target: exerciseInstructionReviews.exerciseId,
+        set: {
+          oldInstructions: ex.instructions ?? "",
+          newInstructions: opus.correctedInstructions,
+          needsReview: !opus.instructionsMatch,
+          confidence: opus.instructionsConfidence,
+          rawModelResponse: opus.rawResponse,
+          status: "pending",
+          processedAt: new Date(),
+        },
+      });
+
+    // Return as ClaudeVerdict shape for compatibility
+    const verdict: ClaudeVerdict = {
+      sidedness: opus.sidedness,
+      reasoning: opus.sidednessReasoning,
+      confidence: opus.sidednessConfidence,
+      rawResponse: opus.rawResponse,
+    };
+    return { exerciseName: ex.name, verdict };
+  }
+
+  // Default: Sonnet sidedness-only path
   const verdict = await withRetry(() => callClaude(client, ex));
 
   await db

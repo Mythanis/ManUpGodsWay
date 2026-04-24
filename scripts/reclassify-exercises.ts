@@ -73,7 +73,7 @@ import {
 const DEFAULT_CONCURRENCY = 2;
 const RATE_LIMIT_PER_MIN = 20; // conservative for Opus + large image payloads
 const MAX_FRAMES = 12;
-const CONFIRM_THRESHOLD = 10; // run --confirm for batches larger than this
+const CONFIRM_THRESHOLD = 50; // run --confirm for batches larger than this
 
 // ── Token bucket rate limiter ─────────────────────────────────────────────────
 class TokenBucket {
@@ -457,8 +457,12 @@ async function main() {
   console.log();
 
   if (total > CONFIRM_THRESHOLD && !opts.confirm) {
+    // Rough cost estimate: ~$0.20/exercise (12 image frames × ~1K tokens each + text, Opus pricing)
+    const estCost = (total * 0.20).toFixed(0);
     const go = await confirmPrompt(
-      `⚠️  This will send ${total} requests to Claude Opus (real cost — more expensive than Sonnet).\n   Continue? [y/N] `
+      `⚠️  This will send ${total} requests to Claude Opus (real cost — more expensive than Sonnet).\n` +
+      `   Rough estimate: ~$${estCost} USD at current Opus pricing (~$0.20/exercise with video frames).\n` +
+      `   Pass --limit N to process a smaller batch first.\n   Continue? [y/N] `
     );
     if (!go) {
       console.log("Aborted.");

@@ -17439,6 +17439,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      const confidenceQuery = typeof req.query.confidence === 'string' ? req.query.confidence : undefined;
+      if (confidenceQuery === 'medium-low') {
+        conditions.push(inArray(schema.exerciseInstructionReviews.confidence, ['medium', 'low']));
+      } else if (confidenceQuery === 'low' || confidenceQuery === 'medium' || confidenceQuery === 'high') {
+        conditions.push(eq(schema.exerciseInstructionReviews.confidence, confidenceQuery));
+      }
+
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
       const rows = await db
@@ -17450,6 +17457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           newInstructions: schema.exerciseInstructionReviews.newInstructions,
           needsReview: schema.exerciseInstructionReviews.needsReview,
           status: schema.exerciseInstructionReviews.status,
+          confidence: schema.exerciseInstructionReviews.confidence,
           processedAt: schema.exerciseInstructionReviews.processedAt,
           rawModelResponse: schema.exerciseInstructionReviews.rawModelResponse,
           mediaFile: schema.exercises.mediaFile,
@@ -17709,7 +17717,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(1);
       if (!existing) return res.status(404).json({ message: `Sidedness review #${id} not found` });
 
-      const { exerciseName, verdict } = await reclassifyExerciseSidedness(id);
+      const useOpus = req.body?.useOpus === true;
+      const { exerciseName, verdict } = await reclassifyExerciseSidedness(id, { useOpus });
 
       console.log(`[sidedness-reviews] requeue #${id} "${exerciseName}": ${verdict.sidedness} (${verdict.confidence})`);
       res.json({ ok: true, exerciseName, verdict });
