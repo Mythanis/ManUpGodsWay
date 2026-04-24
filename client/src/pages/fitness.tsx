@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -3114,39 +3114,77 @@ export default function Fitness() {
           onValueChange={setActiveFitnessTab}
           className="w-full"
         >
-          <TabsList className="grid grid-cols-4 w-full h-auto p-2 bg-transparent gap-2 border-2 border-[#FCD000] rounded-sm">
-            <TabsTrigger value="workout" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
-              <Dumbbell className="w-5 h-5" />
-              Workout
-            </TabsTrigger>
-            <TabsTrigger value="community" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
-              <Users className="w-5 h-5" />
-              Community
-            </TabsTrigger>
-            <TabsTrigger value="exercises" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
-              <Search className="w-5 h-5" />
-              Exercises
-            </TabsTrigger>
-            <TabsTrigger value="favorites" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
-              <Heart className="w-5 h-5" />
-              Favorites
-            </TabsTrigger>
-            <TabsTrigger value="pre-built-plans" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
-              <BookOpen className="w-5 h-5" />
-              Plans
-            </TabsTrigger>
-            <TabsTrigger value="my-plans" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
-              <List className="w-5 h-5" />
-              My Plans
-            </TabsTrigger>
-            <TabsTrigger value="nutrition" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
-              <Apple className="w-5 h-5" />
-              Nutrition
-            </TabsTrigger>
-            <TabsTrigger value="intake" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
-              <Utensils className="w-5 h-5" />
-              Intake
-            </TabsTrigger>
+          {/* Popular-style tab navigation matching the homepage */}
+          <div className="space-y-2 mb-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+              <h2 className="text-xl font-coalition text-white uppercase tracking-widest">Popular</h2>
+              <div className="flex-1 h-px bg-white/10" />
+            </div>
+
+            {([
+              { value: "workout", icon: <Dumbbell className="w-6 h-6 relative z-10" />, label: "Workout" },
+              { value: "exercises", icon: <Search className="w-6 h-6 relative z-10" />, label: "Exercises" },
+              { value: "pre-built-plans", icon: <BookOpen className="w-6 h-6 relative z-10" />, label: "Plans" },
+              { value: "my-plans", icon: <List className="w-6 h-6 relative z-10" />, label: "My Plans" },
+              { value: "nutrition", icon: <Apple className="w-6 h-6 relative z-10" />, label: "Nutrition" },
+              { value: "intake", icon: <Utensils className="w-6 h-6 relative z-10" />, label: "Intake" },
+            ] as { value: string; icon: ReactNode; label: string }[]).map(({ value, icon, label }) => {
+              const isActive = activeFitnessTab === value;
+              return (
+                <button
+                  key={value}
+                  onClick={() => setActiveFitnessTab(value)}
+                  className={`h-16 w-full flex items-center justify-between border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all ${
+                    isActive ? "bg-black glow-gold" : "bg-[#FCD000] glow-gold"
+                  }`}
+                >
+                  <div className={`h-full w-16 flex items-center justify-center flex-shrink-0 ${isActive ? "bg-[#FCD000]" : "liquid-black"}`}>
+                    <span className={isActive ? "text-black" : "text-white"}>{icon}</span>
+                  </div>
+                  <span className={`flex-1 font-black text-sm text-left px-4 uppercase tracking-wide relative z-10 ${isActive ? "text-[#FCD000]" : "text-black"}`}>
+                    {label}
+                  </span>
+                  <div className="pr-4">
+                    <svg className={`w-6 h-6 ${isActive ? "text-[#FCD000]" : "text-black"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                  </div>
+                </button>
+              );
+            })}
+
+            {/* Community button — styled like the homepage community spot */}
+            <button
+              onClick={() => setActiveFitnessTab("community")}
+              className={`h-16 w-full flex items-center justify-between border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all ${
+                activeFitnessTab === "community" ? "bg-black glow-gold" : "bg-[#FCD000] glow-gold"
+              }`}
+            >
+              <div className={`h-full w-16 flex items-center justify-center flex-shrink-0 ${activeFitnessTab === "community" ? "bg-[#FCD000]" : "liquid-black"}`}>
+                <Users className={`w-6 h-6 relative z-10 ${activeFitnessTab === "community" ? "text-black" : "text-white"}`} />
+              </div>
+              <span className={`flex-1 font-black text-sm text-left px-4 uppercase tracking-wide relative z-10 ${activeFitnessTab === "community" ? "text-[#FCD000]" : "text-black"}`}>
+                Community
+              </span>
+              <div className="pr-4">
+                <svg className={`w-6 h-6 ${activeFitnessTab === "community" ? "text-[#FCD000]" : "text-black"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </div>
+            </button>
+          </div>
+
+          {/* Hidden TabsList needed for Tabs component to function */}
+          <TabsList className="hidden">
+            <TabsTrigger value="workout" />
+            <TabsTrigger value="exercises" />
+            <TabsTrigger value="pre-built-plans" />
+            <TabsTrigger value="my-plans" />
+            <TabsTrigger value="nutrition" />
+            <TabsTrigger value="intake" />
+            <TabsTrigger value="community" />
+            <TabsTrigger value="favorites" />
           </TabsList>
 
           {/* Daily Workout Tab */}
