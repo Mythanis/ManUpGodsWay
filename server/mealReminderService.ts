@@ -80,9 +80,16 @@ class MealReminderService {
           // default is true, proceed
         }
 
-        const label = reminder.label || 'Meal';
+        const mealTypeLabels: Record<string, string> = {
+          breakfast: 'Breakfast',
+          lunch: 'Lunch',
+          dinner: 'Dinner',
+          snack: 'Snack',
+        };
+        const mealTypeLabel = reminder.mealType ? (mealTypeLabels[reminder.mealType] ?? '') : '';
+        const label = mealTypeLabel || reminder.label || 'Meal';
         const title = `🍽️ ${label} Reminder`;
-        const body = `Time for ${label.toLowerCase()}! Log your meal to stay on track.`;
+        const body = `Time for your ${label.toLowerCase()}! Log your meal to stay on track.`;
 
         await sendPushNotification(reminder.userId, {
           title,

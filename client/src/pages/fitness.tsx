@@ -563,8 +563,9 @@ export default function Fitness() {
   const [showMealReminderForm, setShowMealReminderForm] = useState(false);
   const [newMealTime, setNewMealTime] = useState('08:00');
   const [newMealLabel, setNewMealLabel] = useState('');
+  const [newMealType, setNewMealType] = useState('breakfast');
   const [showMealPushConsent, setShowMealPushConsent] = useState(false);
-  const [pendingMealReminder, setPendingMealReminder] = useState<{ time: string; label: string } | null>(null);
+  const [pendingMealReminder, setPendingMealReminder] = useState<{ time: string; label: string; mealType: string } | null>(null);
 
   // Health metrics state
   const [healthOpenForm, setHealthOpenForm] = useState<'steps' | 'heart_rate' | 'sleep' | 'weight' | null>(null);
@@ -684,7 +685,7 @@ export default function Fitness() {
   });
 
   const addMealReminderMutation = useMutation({
-    mutationFn: async (data: { time: string; label: string }) => {
+    mutationFn: async (data: { time: string; label: string; mealType: string }) => {
       return await apiRequest('POST', '/api/meal-reminders', data);
     },
     onSuccess: () => {
@@ -692,6 +693,7 @@ export default function Fitness() {
       setShowMealReminderForm(false);
       setNewMealTime('08:00');
       setNewMealLabel('');
+      setNewMealType('breakfast');
       toast({ title: 'Meal Reminder Added', description: 'You will be notified at the scheduled time.' });
     },
     onError: (err: any) => {
@@ -711,10 +713,11 @@ export default function Fitness() {
   const [editingMealId, setEditingMealId] = useState<string | null>(null);
   const [editMealTime, setEditMealTime] = useState('');
   const [editMealLabel, setEditMealLabel] = useState('');
+  const [editMealType, setEditMealType] = useState('breakfast');
 
   const updateMealReminderMutation = useMutation({
-    mutationFn: async ({ id, time, label }: { id: string; time: string; label: string }) => {
-      return await apiRequest('PATCH', `/api/meal-reminders/${id}`, { time, label });
+    mutationFn: async ({ id, time, label, mealType }: { id: string; time: string; label: string; mealType: string }) => {
+      return await apiRequest('PATCH', `/api/meal-reminders/${id}`, { time, label, mealType });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/meal-reminders'] });
@@ -5024,6 +5027,24 @@ export default function Fitness() {
               {/* Add reminder form */}
               {showMealReminderForm && (
                 <div className="px-4 py-3 border-b border-zinc-700 bg-zinc-900/50 space-y-2">
+                  <div>
+                    <label className="text-zinc-400 text-[10px] font-black uppercase tracking-wide">Meal Type</label>
+                    <div className="mt-1 flex gap-1.5 flex-wrap">
+                      {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => setNewMealType(type)}
+                          className={`px-3 py-1 rounded-sm text-[11px] font-black uppercase tracking-wide transition-colors ${
+                            newMealType === type
+                              ? 'bg-[#FCD000] text-black'
+                              : 'bg-zinc-800 text-zinc-400 border border-zinc-600 hover:border-zinc-400'
+                          }`}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <label className="text-zinc-400 text-[10px] font-black uppercase tracking-wide">Time</label>
@@ -5034,26 +5055,16 @@ export default function Fitness() {
                         className="mt-1 w-full bg-zinc-800 border border-zinc-600 rounded-sm text-white text-sm px-3 py-1.5 focus:outline-none focus:border-zinc-400"
                       />
                     </div>
-                    <div className="flex-1">
-                      <label className="text-zinc-400 text-[10px] font-black uppercase tracking-wide">Label (optional)</label>
-                      <input
-                        type="text"
-                        value={newMealLabel}
-                        onChange={(e) => setNewMealLabel(e.target.value)}
-                        placeholder="e.g. Breakfast"
-                        className="mt-1 w-full bg-zinc-800 border border-zinc-600 rounded-sm text-white text-sm px-3 py-1.5 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400"
-                      />
-                    </div>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
                         if (!newMealTime) return;
                         if (!isPushSubscribed) {
-                          setPendingMealReminder({ time: newMealTime, label: newMealLabel });
+                          setPendingMealReminder({ time: newMealTime, label: newMealLabel, mealType: newMealType });
                           setShowMealPushConsent(true);
                         } else {
-                          addMealReminderMutation.mutate({ time: newMealTime, label: newMealLabel });
+                          addMealReminderMutation.mutate({ time: newMealTime, label: newMealLabel, mealType: newMealType });
                         }
                       }}
                       disabled={!newMealTime || addMealReminderMutation.isPending}
@@ -5084,24 +5095,33 @@ export default function Fitness() {
                     <div key={r.id}>
                       {editingMealId === r.id ? (
                         <div className="px-4 py-3 space-y-2 bg-zinc-900/50">
-                          <div className="flex gap-2">
-                            <input
-                              type="time"
-                              value={editMealTime}
-                              onChange={(e) => setEditMealTime(e.target.value)}
-                              className="w-32 bg-zinc-800 border border-zinc-600 rounded-sm text-white text-sm px-2 py-1 focus:outline-none"
-                            />
-                            <input
-                              type="text"
-                              value={editMealLabel}
-                              onChange={(e) => setEditMealLabel(e.target.value)}
-                              placeholder="Label (optional)"
-                              className="flex-1 bg-zinc-800 border border-zinc-600 rounded-sm text-white text-sm px-2 py-1 placeholder:text-zinc-600 focus:outline-none"
-                            />
+                          <div>
+                            <p className="text-zinc-400 text-[10px] font-black uppercase tracking-wide mb-1">Meal Type</p>
+                            <div className="flex gap-1.5 flex-wrap">
+                              {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((type) => (
+                                <button
+                                  key={type}
+                                  onClick={() => setEditMealType(type)}
+                                  className={`px-2.5 py-0.5 rounded-sm text-[11px] font-black uppercase tracking-wide transition-colors ${
+                                    editMealType === type
+                                      ? 'bg-[#FCD000] text-black'
+                                      : 'bg-zinc-800 text-zinc-400 border border-zinc-600 hover:border-zinc-400'
+                                  }`}
+                                >
+                                  {type}
+                                </button>
+                              ))}
+                            </div>
                           </div>
+                          <input
+                            type="time"
+                            value={editMealTime}
+                            onChange={(e) => setEditMealTime(e.target.value)}
+                            className="w-32 bg-zinc-800 border border-zinc-600 rounded-sm text-white text-sm px-2 py-1 focus:outline-none"
+                          />
                           <div className="flex gap-2">
                             <button
-                              onClick={() => updateMealReminderMutation.mutate({ id: r.id, time: editMealTime, label: editMealLabel })}
+                              onClick={() => updateMealReminderMutation.mutate({ id: r.id, time: editMealTime, label: editMealLabel, mealType: editMealType })}
                               disabled={!editMealTime || updateMealReminderMutation.isPending}
                               className="bg-[#FCD000] text-black font-black text-xs px-3 py-1 rounded-sm disabled:opacity-50"
                             >Save</button>
@@ -5121,10 +5141,12 @@ export default function Fitness() {
                                 return `${h12}:${mm} ${suffix}`;
                               })()}
                             </p>
-                            {r.label && <p className="text-zinc-500 text-[10px]">{r.label}</p>}
+                            <p className="text-zinc-500 text-[10px] capitalize">
+                              {r.mealType || r.label || 'Meal'}
+                            </p>
                           </div>
                           <button
-                            onClick={() => { setEditingMealId(r.id); setEditMealTime(r.time); setEditMealLabel(r.label || ''); }}
+                            onClick={() => { setEditingMealId(r.id); setEditMealTime(r.time); setEditMealLabel(r.label || ''); setEditMealType(r.mealType || 'breakfast'); }}
                             className="text-zinc-600 hover:text-zinc-300 transition-colors"
                           >
                             <Pencil className="w-4 h-4" />

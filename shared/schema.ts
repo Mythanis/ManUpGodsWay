@@ -2829,6 +2829,7 @@ export const mealReminders = pgTable("meal_reminders", {
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   time: varchar("time").notNull(), // "HH:MM" 24-hour
   label: varchar("label", { length: 100 }).default(''), // optional label e.g. "Breakfast"
+  mealType: varchar("meal_type", { length: 20 }).default(''), // "breakfast" | "lunch" | "dinner" | "snack"
   isActive: boolean("is_active").notNull().default(true),
   lastSent: timestamp("last_sent"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

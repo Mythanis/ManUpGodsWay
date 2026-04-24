@@ -12385,12 +12385,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  const VALID_MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack', ''];
+
   app.post('/api/meal-reminders', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { time, label } = req.body;
+      const { time, label, mealType } = req.body;
       if (!time) return res.status(400).json({ message: 'time is required' });
-      const reminder = await storage.addMealReminder({ userId, time, label: label || '', isActive: true });
+      const sanitizedMealType = mealType && VALID_MEAL_TYPES.includes(mealType) ? mealType : '';
+      const reminder = await storage.addMealReminder({ userId, time, label: label || '', mealType: sanitizedMealType, isActive: true });
       res.json(reminder);
     } catch (error) {
       console.error('Error adding meal reminder:', error);
@@ -12401,9 +12404,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/meal-reminders/:id', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { time, label } = req.body;
+      const { time, label, mealType } = req.body;
       if (!time) return res.status(400).json({ message: 'time is required' });
-      const reminder = await storage.updateMealReminder(req.params.id, userId, { time, label });
+      const sanitizedMealType = mealType !== undefined
+        ? (VALID_MEAL_TYPES.includes(mealType) ? mealType : '')
+        : undefined;
+      const reminder = await storage.updateMealReminder(req.params.id, userId, { time, label, mealType: sanitizedMealType });
       if (!reminder) return res.status(404).json({ message: 'Reminder not found' });
       res.json(reminder);
     } catch (error) {
