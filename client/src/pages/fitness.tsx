@@ -83,6 +83,8 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  ReferenceLine,
+  ReferenceArea,
 } from "recharts";
 import { Link } from "wouter";
 import seanMcManusPhoto from "@assets/531400631_10229732604879918_951068179454150284_n_1766855745199.jpeg";
@@ -5587,10 +5589,12 @@ export default function Fitness() {
                           <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
                           <YAxis tick={false} axisLine={false} tickLine={false} />
                           <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [v?.toLocaleString(), 'Steps']} />
+                          <ReferenceLine y={10000} stroke="rgba(252,208,0,0.45)" strokeDasharray="4 3" strokeWidth={1.5} ifOverflow="extendDomain" />
                           <Bar dataKey="value" fill="#FCD000" radius={[2, 2, 0, 0]} maxBarSize={24} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
+                    <p className="text-[10px] text-white/25 text-right pr-1">— Healthy: ≥10,000 steps/day</p>
                   <div className="space-y-1">
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Steps</span><span className="text-right">Calories</span><span></span>
@@ -5749,12 +5753,16 @@ export default function Fitness() {
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={[...hrMetrics].reverse().slice(-7).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
                           <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
-                          <YAxis tick={false} axisLine={false} tickLine={false} />
+                          <YAxis tick={false} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
                           <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} bpm`, 'Resting HR']} />
+                          <ReferenceArea y1={60} y2={100} fill="rgba(252,208,0,0.07)" strokeOpacity={0} ifOverflow="extendDomain" />
+                          <ReferenceLine y={60} stroke="rgba(252,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
+                          <ReferenceLine y={100} stroke="rgba(252,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
                           <Line dataKey="value" stroke="#FCD000" strokeWidth={2} dot={{ fill: '#FCD000', r: 3 }} activeDot={{ r: 4 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
+                    <p className="text-[10px] text-white/25 text-right pr-1">Healthy resting HR: 60–100 bpm</p>
                   <div className="space-y-1">
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Resting</span><span className="text-right">Active</span><span></span>
@@ -5919,10 +5927,14 @@ export default function Fitness() {
                           <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
                           <YAxis tick={false} axisLine={false} tickLine={false} />
                           <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} hr`, 'Sleep']} />
+                          <ReferenceArea y1={7} y2={9} fill="rgba(252,208,0,0.07)" strokeOpacity={0} ifOverflow="extendDomain" />
+                          <ReferenceLine y={7} stroke="rgba(252,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
+                          <ReferenceLine y={9} stroke="rgba(252,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
                           <Bar dataKey="value" fill="#FCD000" radius={[2, 2, 0, 0]} maxBarSize={24} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
+                    <p className="text-[10px] text-white/25 text-right pr-1">Recommended: 7–9 hrs/night</p>
                   <div className="space-y-1">
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Hours</span><span className="text-right">Quality</span><span></span>
@@ -6112,10 +6124,14 @@ export default function Fitness() {
                           <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
                           <YAxis tick={false} axisLine={false} tickLine={false} />
                           <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} lbs`, 'Weight']} />
+                          <ReferenceArea y1={125} y2={169} fill="rgba(252,208,0,0.07)" strokeOpacity={0} ifOverflow="extendDomain" />
+                          <ReferenceLine y={125} stroke="rgba(252,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
+                          <ReferenceLine y={169} stroke="rgba(252,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
                           <Line dataKey="value" stroke="#FCD000" strokeWidth={2} dot={{ fill: '#FCD000', r: 3 }} activeDot={{ r: 4 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
+                    <p className="text-[10px] text-white/25 text-right pr-1">BMI 18.5–25 range (125–169 lbs at 5&apos;9&quot;) · varies by height</p>
                   <div className="space-y-1">
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Weight</span><span className="text-right">Body Fat</span><span></span>
