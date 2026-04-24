@@ -12016,34 +12016,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }).returning();
       res.json(post);
 
-      // Fan-out: notify ALL users with fitnessCommunityNotifications enabled (not the poster)
-      try {
-        const poster = await storage.getUser(userId);
-        // Query users where fitnessCommunityNotifications is not explicitly false
-        const eligiblePrefs = await db
-          .select({ userId: schema.notificationPreferences.userId })
-          .from(schema.notificationPreferences)
-          .where(
-            and(
-              ne(schema.notificationPreferences.userId, userId),
-              or(
-                isNull(schema.notificationPreferences.fitnessCommunityNotifications),
-                eq(schema.notificationPreferences.fitnessCommunityNotifications, true)
-              )
-            )
+      // Fan-out: notify ALL users who have not explicitly opted out of fitnessCommunityNotifications
+      setImmediate(async () => {
+        try {
+          const poster = await storage.getUser(userId);
+          // Get all users (default pref is ON), then exclude those who explicitly opted out
+          const allUsers = await storage.getAllUsers();
+          const optedOut = new Set(
+            (await db
+              .select({ userId: schema.notificationPreferences.userId })
+              .from(schema.notificationPreferences)
+              .where(eq(schema.notificationPreferences.fitnessCommunityNotifications, false))
+            ).map(r => r.userId)
           );
-        for (const pref of eligiblePrefs) {
-          try {
-            await storage.createNotificationWithPreferences({
-              userId: pref.userId,
-              type: 'fitness',
-              title: 'New Fitness Post',
-              message: `${poster?.firstName || 'A brother'} shared something in the Fitness Community.`,
-              relatedId: post.id,
-            });
-          } catch {}
+          for (const u of allUsers) {
+            if (u.id === userId) continue; // don't notify the poster
+            if (optedOut.has(u.id)) continue;
+            try {
+              await storage.createNotificationWithPreferences({
+                userId: u.id,
+                type: 'fitness_community',
+                title: 'New Fitness Post',
+                message: `${poster?.firstName || 'A brother'} shared something in the Fitness Community.`,
+                relatedId: post.id,
+              });
+            } catch (notifErr) {
+              console.error(`[FitnessCommunity] Failed to notify user ${u.id} on new post:`, notifErr);
+            }
+          }
+        } catch (err) {
+          console.error('[FitnessCommunity] Fan-out error on new post:', err);
         }
-      } catch {}
+      });
     } catch (error) {
       console.error('Error creating fitness community post:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -12127,13 +12131,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Send notification to post author (if not self)
         const [post] = await db.select().from(schema.fitnessPosts).where(eq(schema.fitnessPosts.id, postId)).limit(1);
         if (post && post.userId !== userId) {
-          await storage.createNotificationWithPreferences({
-            userId: post.userId,
-            type: 'fitness',
-            title: 'Oh Me! 😩',
-            message: 'Someone reacted "Oh Me" to your fitness post.',
-            relatedId: postId,
-          });
+          try {
+            await storage.createNotificationWithPreferences({
+              userId: post.userId,
+              type: 'fitness_community',
+              title: 'Oh Me! 😩',
+              message: 'Someone reacted "Oh Me" to your fitness post.',
+              relatedId: postId,
+            });
+          } catch (e) {
+            console.error('[FitnessCommunity] Failed to notify post author on Oh Me:', e);
+          }
         }
         return res.json({ ohMe: true });
       }
@@ -12194,13 +12202,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (post && post.userId !== userId) {
         const prefs = await storage.getNotificationPreferences(post.userId);
         if (!prefs || prefs.fitnessCommunityNotifications !== false) {
-          await storage.createNotificationWithPreferences({
-            userId: post.userId,
-            type: 'fitness',
-            title: '💬 New Comment',
-            message: 'Someone commented on your fitness post.',
-            relatedId: postId,
-          });
+          try {
+            await storage.createNotificationWithPreferences({
+              userId: post.userId,
+              type: 'fitness_community',
+              title: '💬 New Comment',
+              message: 'Someone commented on your fitness post.',
+              relatedId: postId,
+            });
+          } catch (e) {
+            console.error('[FitnessCommunity] Failed to notify post author on comment:', e);
+          }
         }
       }
 
@@ -12215,13 +12227,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           notified.add(commenterId);
           const prefs = await storage.getNotificationPreferences(commenterId);
           if (!prefs || prefs.fitnessCommunityNotifications !== false) {
-            await storage.createNotificationWithPreferences({
-              userId: commenterId,
-              type: 'fitness',
-              title: '💬 New Reply',
-              message: 'Someone replied on a fitness post you commented on.',
-              relatedId: postId,
-            });
+            try {
+              await storage.createNotificationWithPreferences({
+                userId: commenterId,
+                type: 'fitness_community',
+                title: '💬 New Reply',
+                message: 'Someone replied on a fitness post you commented on.',
+                relatedId: postId,
+              });
+            } catch (e) {
+              console.error('[FitnessCommunity] Failed to notify prior commenter:', e);
+            }
           }
         }
       }

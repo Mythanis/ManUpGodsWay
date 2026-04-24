@@ -129,19 +129,21 @@ class FitnessReminderService {
       : `Your "${reminder.plan.name}" workout is scheduled — time to man up!`;
 
     // Send push notification
+    const deepLinkUrl = `/fitness?planId=${reminder.planId}`;
+
     await sendPushNotification(userId, {
       title: `💪 ${reminder.plan.name}`,
       body,
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       tag: `fitness-reminder-${reminder.planId}`,
-      url: '/fitness',
+      url: deepLinkUrl,
     });
 
     // Also create an in-app notification
     await storage.createNotificationWithPreferences({
       userId,
-      type: 'fitness',
+      type: 'fitness_plan',
       title: '💪 Workout Reminder',
       message: `Time for your "${reminder.plan.name}" workout! ${body}`,
       relatedId: reminder.planId,

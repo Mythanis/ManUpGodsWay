@@ -80,6 +80,13 @@ export function getPushUrl(type: string, relatedId?: string | null): string {
       return '/notifications';
     case 'prayer_reminder':
       return '/?openPrayerDialog=true';
+    case 'fitness':
+    case 'fitness_plan':
+      return relatedId ? `/fitness?planId=${relatedId}` : '/fitness';
+    case 'fitness_community':
+      return relatedId ? `/fitness?tab=community&post=${relatedId}` : '/fitness?tab=community';
+    case 'fitness_meal':
+      return '/fitness?tab=intake&openAddFood=true';
     default:
       return '/';
   }

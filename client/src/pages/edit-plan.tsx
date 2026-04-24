@@ -351,7 +351,11 @@ export default function EditPlan() {
 
       // Replace reminders: delete existing then add new
       for (const existing of (existingReminders || [])) {
-        try { await apiRequest('DELETE', `/api/fitness-plan-reminders/${existing.id}`); } catch {}
+        try {
+          await apiRequest('DELETE', `/api/fitness-plan-reminders/${existing.id}`);
+        } catch (e) {
+          console.error('[EditPlan] Failed to delete existing reminder', existing.id, e);
+        }
       }
       for (const reminder of reminders) {
         await apiRequest('POST', `/api/fitness-plans/${planId}/reminders`, reminder);

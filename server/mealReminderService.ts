@@ -95,7 +95,7 @@ class MealReminderService {
 
         await storage.createNotificationWithPreferences({
           userId: reminder.userId,
-          type: 'fitness',
+          type: 'fitness_meal',
           title,
           message: body,
           relatedId: null,
