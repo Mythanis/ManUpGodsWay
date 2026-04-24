@@ -3894,6 +3894,12 @@ export class DatabaseStorage implements IStorage {
         return preferences.warRoomNotifications ?? true;
       case 'under_fire_post':
         return preferences.underFireNotifications ?? true;
+      case 'fitness_plan':
+        return preferences.fitnessPlanReminderNotifications ?? true;
+      case 'fitness_community':
+        return preferences.fitnessCommunityNotifications ?? true;
+      case 'fitness_meal':
+        return preferences.mealReminderNotifications ?? true;
       default:
         // For unknown types, default to true (send notification)
         return true;

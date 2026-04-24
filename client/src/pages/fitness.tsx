@@ -134,6 +134,18 @@ interface FitnessPlan {
   exercises?: FitnessPlanExercise[];
 }
 
+interface FitnessComment {
+  id: string;
+  postId: string;
+  userId: string;
+  content: string;
+  parentCommentId: string | null;
+  createdAt: string;
+  authorName?: string;
+  authorProfilePicture?: string;
+  user?: { firstName?: string; lastName?: string; profileImageUrl?: string };
+}
+
 interface FitnessPlanExercise {
   id: string;
   planId: string;
@@ -211,6 +223,10 @@ interface AdminFitnessPlan {
   isPublished: boolean;
 }
 
+interface CommentAddArgs { postId: string; content: string }
+interface CommentAddMutation { mutate: (args: CommentAddArgs) => void; isPending: boolean }
+interface CommentDeleteMutation { mutate: (commentId: string) => void; isPending: boolean }
+
 function CommentsSection({
   postId,
   authUser,
@@ -220,13 +236,13 @@ function CommentsSection({
   setCommentText,
 }: {
   postId: string;
-  authUser: any;
-  addCommentMutation: any;
-  deleteCommentMutation: any;
+  authUser: { id: string } | undefined;
+  addCommentMutation: CommentAddMutation;
+  deleteCommentMutation: CommentDeleteMutation;
   commentText: string;
   setCommentText: (t: string) => void;
 }) {
-  const { data: comments = [], isLoading, refetch } = useQuery<any[]>({
+  const { data: comments = [], isLoading, refetch } = useQuery<FitnessComment[]>({
     queryKey: ['/api/fitness/community/posts', postId, 'comments'],
     queryFn: async () => {
       const res = await fetch(`/api/fitness/community/posts/${postId}/comments`, { credentials: 'include' });
@@ -235,7 +251,7 @@ function CommentsSection({
     },
   });
 
-  const myId = (authUser as any)?.id || (authUser as any)?.claims?.sub;
+  const myId = authUser?.id;
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -270,14 +286,14 @@ function CommentsSection({
   });
 
   // Build tree: top-level comments + their replies
-  const topLevel = comments.filter((c: any) => !c.parentCommentId);
-  const repliesMap: Record<string, any[]> = {};
-  comments.filter((c: any) => c.parentCommentId).forEach((c: any) => {
-    if (!repliesMap[c.parentCommentId]) repliesMap[c.parentCommentId] = [];
-    repliesMap[c.parentCommentId].push(c);
+  const topLevel = comments.filter((c: FitnessComment) => !c.parentCommentId);
+  const repliesMap: Record<string, FitnessComment[]> = {};
+  comments.filter((c: FitnessComment) => c.parentCommentId).forEach((c: FitnessComment) => {
+    if (!repliesMap[c.parentCommentId!]) repliesMap[c.parentCommentId!] = [];
+    repliesMap[c.parentCommentId!].push(c);
   });
 
-  const renderComment = (c: any, isReply = false) => (
+  const renderComment = (c: FitnessComment, isReply = false) => (
     <div key={c.id} className={`flex items-start gap-2 ${isReply ? 'ml-8 mt-1' : ''}`}>
       {c.authorProfilePicture ? (
         <img src={c.authorProfilePicture} alt="" className="w-6 h-6 rounded-full object-cover border border-zinc-700 flex-shrink-0" />
@@ -348,11 +364,11 @@ function CommentsSection({
         <p className="text-zinc-500 text-xs">No comments yet. Be the first!</p>
       ) : (
         <div className="space-y-2">
-          {topLevel.map((c: any) => (
+          {topLevel.map((c: FitnessComment) => (
             <div key={c.id}>
               {renderComment(c)}
               {/* Replies */}
-              {(repliesMap[c.id] || []).map((r: any) => renderComment(r, true))}
+              {(repliesMap[c.id] || []).map((r: FitnessComment) => renderComment(r, true))}
               {/* Reply input */}
               {replyToId === c.id && (
                 <div className="flex gap-1 ml-8 mt-1">
@@ -1077,6 +1093,25 @@ export default function Fitness() {
       return response.json();
     },
   });
+
+  // Deep-link: open specific plan when ?planId=<id> is present in the URL
+  useEffect(() => {
+    if (fitnessPlans.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const deepPlanId = params.get('planId');
+    if (!deepPlanId) return;
+    const plan = (fitnessPlans as FitnessPlan[]).find((p) => p.id === deepPlanId);
+    if (plan) {
+      setActiveFitnessTab('my-plans');
+      setSelectedPlanForView(plan);
+      setShowPlanModal(true);
+      // Remove planId from URL so navigating back doesn't re-open
+      const newParams = new URLSearchParams(window.location.search);
+      newParams.delete('planId');
+      const newSearch = newParams.toString();
+      window.history.replaceState({}, '', newSearch ? `${window.location.pathname}?${newSearch}` : window.location.pathname);
+    }
+  }, [fitnessPlans]);
 
   // Nutrition: search results
   const { data: nutritionSearchData, isLoading: nutritionSearchLoading, error: nutritionSearchError } = useQuery<{
