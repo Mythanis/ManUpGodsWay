@@ -7340,7 +7340,8 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
       </div>
 
       {/* Body */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+      <div className="flex-1 overflow-y-auto">
+        <div className="min-h-full flex flex-col items-center justify-center p-6 pb-10 text-center">
         {phase === 'done' ? (
           <>
             <div className="text-6xl mb-4">🏆</div>
@@ -7696,6 +7697,7 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
             )}
           </>
         )}
+        </div>
       </div>
 
       {/* Written instructions modal — opens paused so the timer freezes
