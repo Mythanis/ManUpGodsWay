@@ -1991,6 +1991,8 @@ export const exerciseInstructionReviews = pgTable("exercise_instruction_reviews"
   needsReview: boolean("needs_review").notNull().default(false),
   rawModelResponse: text("raw_model_response"),       // full JSON string from Claude
   status: varchar("status").notNull().default("pending"), // pending | approved | rejected
+  // high | medium | low — populated by reclassify-exercises.ts (Opus combined pass)
+  confidence: varchar("confidence").$type<'high' | 'medium' | 'low'>(),
   processedAt: timestamp("processed_at").defaultNow(),
 });
 
@@ -2012,8 +2014,8 @@ export const exerciseSidednessReviews = pgTable("exercise_sidedness_reviews", {
   proposedSidedness: varchar("proposed_sidedness").notNull().$type<'bilateral' | 'unilateral' | 'alternating'>(),
   // Claude's one-sentence reason
   reasoning: text("reasoning").notNull(),
-  // 'high' for clear-cut exercises, 'low' for ambiguous ones (admin should double-check)
-  confidence: varchar("confidence").notNull().default("high").$type<'high' | 'low'>(),
+  // 'high' / 'medium' / 'low' — medium means model has slight uncertainty
+  confidence: varchar("confidence").notNull().default("high").$type<'high' | 'medium' | 'low'>(),
   rawModelResponse: text("raw_model_response"),
   // pending → awaiting admin action | approved → written to exercises table | rejected → skipped
   status: varchar("status").notNull().default("pending"),

@@ -40,6 +40,7 @@ async function main() {
       exerciseName: exerciseInstructionReviews.exerciseName,
       needsReview: exerciseInstructionReviews.needsReview,
       newInstructions: exerciseInstructionReviews.newInstructions,
+      confidence: exerciseInstructionReviews.confidence,
     })
     .from(exerciseInstructionReviews)
     .where(eq(exerciseInstructionReviews.status, "pending"));
@@ -47,11 +48,15 @@ async function main() {
   const matched = pending.filter((r) => !r.needsReview);
   const withCorrection = pending.filter((r) => r.needsReview && r.newInstructions);
   const parseErrors = pending.filter((r) => r.needsReview && !r.newInstructions);
+  const mediumConfidence = pending.filter((r) => r.confidence === "medium");
+  const lowConfidence = pending.filter((r) => r.confidence === "low");
 
   console.log(`\n    Pending rows                  : ${pending.length}`);
   console.log(`    Instructions already correct  : ${matched.length}  → will approve`);
   console.log(`    Has AI correction             : ${withCorrection.length}  → ${applyCorrections ? "will apply + approve" : "needs human review (skipped)"}`);
-  console.log(`    Parse errors (no correction)  : ${parseErrors.length}  → will reject\n`);
+  console.log(`    Parse errors (no correction)  : ${parseErrors.length}  → will reject`);
+  console.log(`    Medium confidence             : ${mediumConfidence.length}  → recommend manual review`);
+  console.log(`    Low confidence                : ${lowConfidence.length}  → recommend manual review\n`);
 
   if (!applyCorrections && withCorrection.length > 0) {
     console.log(
@@ -62,6 +67,18 @@ async function main() {
       "      WHERE needs_review = true AND new_instructions IS NOT NULL AND status = 'pending'\n" +
       "      ORDER BY exercise_id;\n" +
       "    Then approve via admin UI (task #90) or rerun with --apply-corrections to bulk-apply.\n"
+    );
+  }
+
+  if (mediumConfidence.length > 0) {
+    console.log(
+      "⚠️   Medium-confidence rows (verify before bulk-approving):\n" +
+      mediumConfidence
+        .slice(0, 20)
+        .map((r) => `      #${r.exerciseId} ${r.exerciseName}`)
+        .join("\n") +
+      (mediumConfidence.length > 20 ? `\n      … and ${mediumConfidence.length - 20} more` : "") +
+      "\n"
     );
   }
 

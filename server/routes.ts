@@ -17588,7 +17588,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const conditions = [eq(schema.exerciseSidednessReviews.status, statusFilter)];
       if (search) conditions.push(ilike(schema.exerciseSidednessReviews.exerciseName, `%${search}%`));
-      if (confidenceFilter) conditions.push(eq(schema.exerciseSidednessReviews.confidence, confidenceFilter));
+      if (confidenceFilter === 'medium-low') {
+        conditions.push(inArray(schema.exerciseSidednessReviews.confidence, ['medium', 'low']));
+      } else if (confidenceFilter === 'low') {
+        conditions.push(eq(schema.exerciseSidednessReviews.confidence, 'low'));
+      }
       const whereClause = and(...conditions);
 
       const orderColumn =
@@ -17721,14 +17725,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // only high-confidence rows automatically; low-confidence rows require individual
       // review. Pass "all" to override and approve every pending row.
       const { confidenceFilter = 'high', search } = req.body as {
-        confidenceFilter?: 'high' | 'low' | 'all';
+        confidenceFilter?: 'high' | 'high-medium' | 'all';
         search?: string;
       };
 
       const conditions = [eq(schema.exerciseSidednessReviews.status, 'pending')];
-      if (confidenceFilter !== 'all') {
-        conditions.push(eq(schema.exerciseSidednessReviews.confidence, confidenceFilter));
+      if (confidenceFilter === 'high') {
+        conditions.push(eq(schema.exerciseSidednessReviews.confidence, 'high'));
+      } else if (confidenceFilter === 'high-medium') {
+        conditions.push(inArray(schema.exerciseSidednessReviews.confidence, ['high', 'medium']));
       }
+      // 'all' adds no confidence condition
       if (search) conditions.push(ilike(schema.exerciseSidednessReviews.exerciseName, `%${search}%`));
       const whereClause = and(...conditions);
 

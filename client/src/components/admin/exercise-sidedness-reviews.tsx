@@ -10,6 +10,8 @@ import { CheckCircle, XCircle, ChevronLeft, ChevronRight, Search, AlertTriangle,
 
 type Status = "pending" | "approved" | "rejected";
 type SidednessValue = "bilateral" | "unilateral" | "alternating";
+type ConfidenceValue = "high" | "medium" | "low";
+type ConfidenceFilter = "all" | "medium-low" | "low";
 type SortBy = "exerciseId" | "exerciseName" | "proposedSidedness" | "confidence";
 type SortDir = "asc" | "desc";
 
@@ -19,7 +21,7 @@ interface ReviewRow {
   exerciseName: string;
   proposedSidedness: SidednessValue;
   reasoning: string;
-  confidence: "high" | "low";
+  confidence: ConfidenceValue;
   status: Status;
   approvedSidedness: SidednessValue | null;
   currentSidedness: string | null;
@@ -95,7 +97,7 @@ export default function ExerciseSidednessReviews() {
   const queryClient = useQueryClient();
 
   const [status, setStatus] = useState<Status>("pending");
-  const [lowConfidenceOnly, setLowConfidenceOnly] = useState(false);
+  const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceFilter>("all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -120,6 +122,14 @@ export default function ExerciseSidednessReviews() {
     setDebouncedSearch("");
     setOverrides({});
     setExpandedId(null);
+    setConfidenceFilter("all");
+  };
+
+  const cycleConfidenceFilter = () => {
+    setConfidenceFilter((f) =>
+      f === "all" ? "medium-low" : f === "medium-low" ? "low" : "all"
+    );
+    setPage(0);
   };
 
   const handleSort = (field: SortBy) => {
@@ -132,7 +142,7 @@ export default function ExerciseSidednessReviews() {
     setPage(0);
   };
 
-  const queryKey = ["/api/admin/exercise-sidedness-reviews", status, lowConfidenceOnly, debouncedSearch, page, sortBy, sortDir];
+  const queryKey = ["/api/admin/exercise-sidedness-reviews", status, confidenceFilter, debouncedSearch, page, sortBy, sortDir];
 
   const { data, isLoading } = useQuery<ReviewResponse>({
     queryKey,
@@ -144,7 +154,7 @@ export default function ExerciseSidednessReviews() {
         sortBy,
         sortDir,
       });
-      if (lowConfidenceOnly) params.set("confidence", "low");
+      if (confidenceFilter !== "all") params.set("confidence", confidenceFilter);
       if (debouncedSearch) params.set("search", debouncedSearch);
       const res = await fetch(`/api/admin/exercise-sidedness-reviews?${params}`, {
         credentials: "include",
@@ -191,9 +201,9 @@ export default function ExerciseSidednessReviews() {
   });
 
   const bulkApproveMutation = useMutation({
-    mutationFn: ({ confidenceFilter }: { confidenceFilter: "high" | "all" }) =>
+    mutationFn: ({ bulkConfidence }: { bulkConfidence: "high" | "high-medium" | "all" }) =>
       apiRequest("POST", "/api/admin/exercise-sidedness-reviews/bulk-approve", {
-        confidenceFilter,
+        confidenceFilter: bulkConfidence,
         search: debouncedSearch || undefined,
       }),
     onSuccess: (res: any) => {
@@ -248,18 +258,21 @@ export default function ExerciseSidednessReviews() {
         </div>
 
         <button
-          onClick={() => {
-            setLowConfidenceOnly((v) => !v);
-            setPage(0);
-          }}
+          onClick={cycleConfidenceFilter}
           className={`px-3 py-1.5 text-xs font-bold rounded border-2 transition-all ${
-            lowConfidenceOnly
+            confidenceFilter === "low"
+              ? "bg-red-500 text-white border-red-600"
+              : confidenceFilter === "medium-low"
               ? "bg-amber-500 text-white border-amber-600"
               : "bg-white text-black border-black hover:bg-gray-100"
           }`}
         >
           <AlertTriangle className="inline h-3 w-3 mr-1" />
-          {lowConfidenceOnly ? "Low confidence only" : "All confidence"}
+          {confidenceFilter === "low"
+            ? "Low confidence only"
+            : confidenceFilter === "medium-low"
+            ? "Medium + Low confidence"
+            : "All confidence"}
         </button>
 
         {status === "pending" && total > 0 && (
@@ -268,8 +281,8 @@ export default function ExerciseSidednessReviews() {
               size="sm"
               className="h-9 text-xs bg-green-700 hover:bg-green-800 text-white"
               onClick={() => {
-                if (window.confirm(`Bulk-approve high-confidence rows${debouncedSearch ? ` matching "${debouncedSearch}"` : ""}? This writes Claude's proposed value to exercises.sidedness. Ambiguous rows are skipped and need individual review.`)) {
-                  bulkApproveMutation.mutate({ confidenceFilter: "high" });
+                if (window.confirm(`Bulk-approve high-confidence rows${debouncedSearch ? ` matching "${debouncedSearch}"` : ""}? This writes Claude's proposed value to exercises.sidedness. Medium and low confidence rows are skipped.`)) {
+                  bulkApproveMutation.mutate({ bulkConfidence: "high" });
                 }
               }}
               disabled={bulkApproveMutation.isPending}
@@ -280,10 +293,23 @@ export default function ExerciseSidednessReviews() {
             <Button
               size="sm"
               variant="outline"
+              className="h-9 text-xs border-2 border-amber-500 text-amber-700 hover:bg-amber-50"
+              onClick={() => {
+                if (window.confirm(`Bulk-approve high + medium confidence rows${debouncedSearch ? ` matching "${debouncedSearch}"` : ""}? Low-confidence rows are skipped. Proceed?`)) {
+                  bulkApproveMutation.mutate({ bulkConfidence: "high-medium" });
+                }
+              }}
+              disabled={bulkApproveMutation.isPending}
+            >
+              Approve high + medium
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
               className="h-9 text-xs border-2 border-green-700 text-green-800 hover:bg-green-50"
               onClick={() => {
                 if (window.confirm(`⚠️ Approve ALL ${total.toLocaleString()} pending rows including ambiguous ones? This writes Claude's proposed value to every pending exercise — including low-confidence rows. Proceed?`)) {
-                  bulkApproveMutation.mutate({ confidenceFilter: "all" });
+                  bulkApproveMutation.mutate({ bulkConfidence: "all" });
                 }
               }}
               disabled={bulkApproveMutation.isPending}
@@ -319,7 +345,7 @@ export default function ExerciseSidednessReviews() {
         <p className="text-xs text-gray-500">
           {total.toLocaleString()} exercise{total !== 1 ? "s" : ""}
           {debouncedSearch ? ` matching "${debouncedSearch}"` : ""}
-          {lowConfidenceOnly ? " · low confidence" : ""}
+          {confidenceFilter !== "all" ? ` · ${confidenceFilter === "medium-low" ? "medium + low" : "low"} confidence` : ""}
         </p>
       )}
 
@@ -364,9 +390,15 @@ export default function ExerciseSidednessReviews() {
                         #{row.exerciseId} — {row.exerciseName}
                       </span>
                       {row.confidence === "low" && (
-                        <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-600 font-semibold">
+                        <span className="inline-flex items-center gap-0.5 text-[10px] text-red-600 font-semibold bg-red-50 px-1 py-0.5 rounded">
                           <AlertTriangle className="h-2.5 w-2.5" />
-                          Ambiguous
+                          Low confidence
+                        </span>
+                      )}
+                      {row.confidence === "medium" && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-600 font-semibold bg-amber-50 px-1 py-0.5 rounded">
+                          <AlertTriangle className="h-2.5 w-2.5" />
+                          Medium confidence
                         </span>
                       )}
                     </div>

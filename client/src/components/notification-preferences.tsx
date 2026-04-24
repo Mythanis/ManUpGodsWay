@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Settings, AlertCircle, Shield } from "lucide-react";
+import { Bell, Settings, AlertCircle, Shield, Dumbbell, Users, Utensils } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface NotificationPreferences {
@@ -20,6 +20,9 @@ interface NotificationPreferences {
   messageNotifications: boolean;
   videoNotifications: boolean;
   communityNotifications: boolean;
+  fitnessPlanReminderNotifications: boolean;
+  fitnessCommunityNotifications: boolean;
+  mealReminderNotifications: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -161,6 +164,24 @@ export function NotificationPreferences() {
       title: 'Community Activity Notifications',
       description: 'General community updates and announcements',
       icon: <Bell className="h-4 w-4" />
+    },
+    {
+      key: 'fitnessPlanReminderNotifications' as const,
+      title: 'Fitness Plan Reminders',
+      description: 'Get notified when it\'s time for a scheduled workout from your fitness plan',
+      icon: <Dumbbell className="h-4 w-4" />
+    },
+    {
+      key: 'fitnessCommunityNotifications' as const,
+      title: 'Fitness Community Notifications',
+      description: 'Be notified of new posts, Amens, and comments in the fitness community',
+      icon: <Users className="h-4 w-4" />
+    },
+    {
+      key: 'mealReminderNotifications' as const,
+      title: 'Meal Reminder Notifications',
+      description: 'Receive reminders to log your meals at your scheduled meal times',
+      icon: <Utensils className="h-4 w-4" />
     }
   ];
 

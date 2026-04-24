@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle, RotateCcw, RefreshCw, ChevronLeft, ChevronRight, Search, AlertTriangle, Pencil, Save, X } from "lucide-react";
 
 type View = "corrections" | "matched" | "rejected";
+type ConfidenceValue = "high" | "medium" | "low";
 
 interface ReviewRow {
   id: number;
@@ -18,6 +19,7 @@ interface ReviewRow {
   newInstructions: string | null;
   needsReview: boolean;
   status: string;
+  confidence: ConfidenceValue | null;
   processedAt: string | null;
   rawModelResponse: string | null;
   mediaFile: string | null;
@@ -365,9 +367,23 @@ export default function ExerciseInstructionReviews() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-sm font-bold truncate">
-                      #{row.exerciseId} — {row.exerciseName}
-                    </CardTitle>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <CardTitle className="text-sm font-bold truncate">
+                        #{row.exerciseId} — {row.exerciseName}
+                      </CardTitle>
+                      {row.confidence === "low" && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] text-red-600 font-semibold bg-red-50 px-1 py-0.5 rounded shrink-0">
+                          <AlertTriangle className="h-2.5 w-2.5" />
+                          Low confidence
+                        </span>
+                      )}
+                      {row.confidence === "medium" && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-600 font-semibold bg-amber-50 px-1 py-0.5 rounded shrink-0">
+                          <AlertTriangle className="h-2.5 w-2.5" />
+                          Medium confidence
+                        </span>
+                      )}
+                    </div>
                     {row.processedAt && (
                       <p className="text-[10px] text-gray-400 mt-0.5">
                         Reviewed {new Date(row.processedAt).toLocaleDateString()}
