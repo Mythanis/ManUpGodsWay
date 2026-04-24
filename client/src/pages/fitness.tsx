@@ -6928,9 +6928,9 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   // rest period mid-workout without leaving the player. Pauses the
   // timer while open and restores the previous pause state on close.
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const [adjustSets, setAdjustSets] = useState('');
-  const [adjustReps, setAdjustReps] = useState('');
-  const [adjustRest, setAdjustRest] = useState('');
+  const [adjustSets, setAdjustSets] = useState(3);
+  const [adjustReps, setAdjustReps] = useState(10);
+  const [adjustRest, setAdjustRest] = useState(60);
   const [adjustSubmitting, setAdjustSubmitting] = useState(false);
   const [pausedBeforeAdjust, setPausedBeforeAdjust] = useState(false);
 
@@ -7176,9 +7176,14 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   const queryClient = useQueryClient();
   const openAdjust = () => {
     if (!currentExercise) return;
-    setAdjustSets(String(currentExercise.sets ?? 3));
-    setAdjustReps(String(currentExercise.reps ?? '10'));
-    setAdjustRest(String(currentExercise.restTime ?? 60));
+    // Sets / rest are stored as numbers; reps may be a string ("10",
+    // "8-12", "30s") so parse the first integer for the slider seed.
+    const repsRaw = String(currentExercise.reps ?? '10');
+    const repsMatch = repsRaw.match(/\d+/);
+    const repsSeed = repsMatch ? parseInt(repsMatch[0], 10) : 10;
+    setAdjustSets(Math.max(1, Math.min(10, currentExercise.sets ?? 3)));
+    setAdjustReps(Math.max(1, Math.min(30, repsSeed)));
+    setAdjustRest(Math.max(0, Math.min(300, currentExercise.restTime ?? 60)));
     setPausedBeforeAdjust(paused);
     setPaused(true);
     setAdjustOpen(true);
@@ -7187,23 +7192,38 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     setAdjustOpen(false);
     setPaused(pausedBeforeAdjust);
   };
-  const saveAdjust = async () => {
+  // Apply the chosen sets/reps/rest values. `scope` controls whether the
+  // change is ephemeral (just this session) or persisted to the plan so
+  // it sticks for every future workout.
+  const saveAdjust = async (scope: 'session' | 'plan') => {
     if (!currentExercise) return;
-    const setsNum = Math.max(1, Math.min(20, parseInt(adjustSets, 10) || 1));
-    const restNum = Math.max(0, Math.min(600, parseInt(adjustRest, 10) || 0));
-    const repsStr = adjustReps.trim() || '10';
+    const setsNum = Math.max(1, Math.min(20, adjustSets));
+    const restNum = Math.max(0, Math.min(600, adjustRest));
+    const repsStr = String(Math.max(1, Math.min(50, adjustReps)));
     setAdjustSubmitting(true);
     try {
-      const updatedRow = await apiRequest('PUT', `/api/fitness-plan-exercises/${currentExercise.id}`, {
-        sets: setsNum,
-        reps: repsStr,
-        restTime: restNum,
-      });
-      setExercises(prev => prev.map((ex, i) => i === exerciseIdx ? { ...ex, ...updatedRow } : ex));
-      // Refresh any cached plan-detail views in the parent so changes
-      // are visible after the workout ends too.
-      queryClient.invalidateQueries({ queryKey: ['/api/fitness-plans'] });
-      toast({ title: 'Updated', description: 'Workout adjustments saved.' });
+      if (scope === 'plan') {
+        const updatedRow = await apiRequest('PUT', `/api/fitness-plan-exercises/${currentExercise.id}`, {
+          sets: setsNum,
+          reps: repsStr,
+          restTime: restNum,
+        });
+        setExercises(prev => prev.map((ex, i) => i === exerciseIdx ? { ...ex, ...updatedRow } : ex));
+        // Refresh any cached plan-detail views in the parent so changes
+        // are visible after the workout ends too.
+        queryClient.invalidateQueries({ queryKey: ['/api/fitness-plans'] });
+        toast({ title: 'Saved to plan', description: 'Future workouts will use these values.' });
+      } else {
+        // Session-only: mutate the local working copy without touching
+        // the persisted plan row. Resets next time this workout starts.
+        setExercises(prev => prev.map((ex, i) => i === exerciseIdx ? {
+          ...ex,
+          sets: setsNum,
+          reps: repsStr,
+          restTime: restNum,
+        } : ex));
+        toast({ title: 'Updated for this workout', description: 'Plan unchanged for next time.' });
+      }
       setAdjustOpen(false);
       setPaused(pausedBeforeAdjust);
     } catch (err) {
@@ -7877,80 +7897,114 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
       </Dialog>
 
       {/* Adjust exercise modal — opens paused so timers freeze while
-          the user tweaks sets / reps / rest period. Saves immediately
-          via PUT and updates the local exercise list so the new values
-          take effect on the next set / rest. */}
+          the user tweaks sets / reps / rest period using sliders styled
+          to match the global Fine-tune dialog. On save, the user picks
+          whether the change applies just to this workout (local state)
+          or sticks for every future workout (PUT to the plan row). */}
       <Dialog open={adjustOpen} onOpenChange={(open) => { if (!open) closeAdjust(); }}>
-        <DialogContent className="bg-zinc-900 border-2 border-[#FCD000] text-white max-w-md w-[92vw] z-[200]" data-testid="dialog-adjust-exercise">
+        <DialogContent className="bg-zinc-950 border-2 border-[#FCD000] text-white sm:max-w-md z-[200]" data-testid="dialog-adjust-exercise">
           <DialogHeader>
-            <DialogTitle className="text-[#FCD000] font-black uppercase tracking-wide">
-              Adjust Exercise
-            </DialogTitle>
-            <DialogDescription className="text-white/60 text-sm">
-              {currentExercise?.exerciseName} — changes save instantly and apply to the next set.
+            <DialogTitle className="text-2xl font-black uppercase">Adjust this exercise</DialogTitle>
+            <DialogDescription className="text-white/60">
+              {currentExercise?.exerciseName} — drag the sliders, then choose whether to save just for today or for every workout going forward.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="text-xs font-black uppercase tracking-widest text-white/70 mb-2 block">Sets</label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={adjustSets}
-                  onChange={(e) => setAdjustSets(e.target.value)}
-                  className="bg-zinc-800 border-2 border-white/20 text-white"
-                  data-testid="input-adjust-sets"
-                />
+
+          <div className="space-y-6 py-4">
+            {/* Sets slider */}
+            <div data-testid="slider-adjust-sets-row">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-black uppercase tracking-widest text-[#FCD000]">Sets</label>
+                <span className="text-xs font-bold tabular-nums text-white/80" data-testid="text-adjust-sets-value">
+                  {adjustSets}
+                </span>
               </div>
-              <div>
-                <label className="text-xs font-black uppercase tracking-widest text-white/70 mb-2 block">Reps</label>
-                <Input
-                  type="text"
-                  value={adjustReps}
-                  onChange={(e) => setAdjustReps(e.target.value)}
-                  placeholder="10 or 8-12 or 30s"
-                  className="bg-zinc-800 border-2 border-white/20 text-white"
-                  data-testid="input-adjust-reps"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-black uppercase tracking-widest text-white/70 mb-2 block">Rest (s)</label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="600"
-                  step="5"
-                  value={adjustRest}
-                  onChange={(e) => setAdjustRest(e.target.value)}
-                  className="bg-zinc-800 border-2 border-white/20 text-white"
-                  data-testid="input-adjust-rest"
-                />
+              <Slider
+                value={[adjustSets]}
+                onValueChange={(v) => setAdjustSets(v[0] ?? 1)}
+                min={1}
+                max={10}
+                step={1}
+                data-testid="slider-adjust-sets"
+              />
+              <div className="flex justify-between text-[10px] text-white/40 mt-1 uppercase">
+                <span>less</span>
+                <span>more</span>
               </div>
             </div>
-            <p className="text-white/40 text-xs">
-              Tip: enter reps as a number ("10"), a range ("8-12"), or seconds for a hold ("30s").
-            </p>
-            <div className="flex gap-2 pt-2">
-              <Button
-                onClick={saveAdjust}
-                disabled={adjustSubmitting}
-                className="bg-[#FCD000] text-black font-black uppercase border-2 border-black flex-1 hover:bg-[#FCD000]/90"
-                data-testid="button-adjust-save"
-              >
-                {adjustSubmitting ? 'Saving…' : 'Save'}
-              </Button>
-              <Button
-                onClick={closeAdjust}
-                disabled={adjustSubmitting}
-                variant="ghost"
-                className="text-white/70 flex-1"
-                data-testid="button-adjust-cancel"
-              >
-                Cancel
-              </Button>
+
+            {/* Reps slider */}
+            <div data-testid="slider-adjust-reps-row">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-black uppercase tracking-widest text-[#FCD000]">Reps</label>
+                <span className="text-xs font-bold tabular-nums text-white/80" data-testid="text-adjust-reps-value">
+                  {adjustReps}
+                </span>
+              </div>
+              <Slider
+                value={[adjustReps]}
+                onValueChange={(v) => setAdjustReps(v[0] ?? 1)}
+                min={1}
+                max={30}
+                step={1}
+                data-testid="slider-adjust-reps"
+              />
+              <div className="flex justify-between text-[10px] text-white/40 mt-1 uppercase">
+                <span>lighter</span>
+                <span>heavier</span>
+              </div>
             </div>
+
+            {/* Rest slider */}
+            <div data-testid="slider-adjust-rest-row">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-black uppercase tracking-widest text-[#FCD000]">Rest time</label>
+                <span className="text-xs font-bold tabular-nums text-white/80" data-testid="text-adjust-rest-value">
+                  {adjustRest}s
+                </span>
+              </div>
+              <Slider
+                value={[adjustRest]}
+                onValueChange={(v) => setAdjustRest(v[0] ?? 0)}
+                min={0}
+                max={300}
+                step={5}
+                data-testid="slider-adjust-rest"
+              />
+              <div className="flex justify-between text-[10px] text-white/40 mt-1 uppercase">
+                <span>shorter</span>
+                <span>longer</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Button
+              disabled={adjustSubmitting}
+              onClick={() => saveAdjust('session')}
+              className="bg-[#FCD000] text-black font-black uppercase border-2 border-black"
+              data-testid="button-adjust-save-session"
+            >
+              {adjustSubmitting ? 'Saving…' : 'Just this workout'}
+            </Button>
+            <Button
+              disabled={adjustSubmitting}
+              onClick={() => saveAdjust('plan')}
+              variant="outline"
+              className="border-2 border-white/40 text-white hover:bg-white/10 font-black uppercase"
+              data-testid="button-adjust-save-plan"
+            >
+              {adjustSubmitting ? 'Saving…' : 'All future workouts'}
+            </Button>
+            <Button
+              disabled={adjustSubmitting}
+              onClick={closeAdjust}
+              variant="ghost"
+              className="text-white/70"
+              data-testid="button-adjust-cancel"
+            >
+              Cancel
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
