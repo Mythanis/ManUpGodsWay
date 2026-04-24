@@ -7297,7 +7297,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     }, 1000);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, exerciseIdx, setIdx, paused]);
+  }, [phase, exerciseIdx, setIdx, paused, awaitingStart]);
 
   const advancePhase = () => {
     if (phase === 'countdown') {
